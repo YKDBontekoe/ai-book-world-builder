@@ -48,4 +48,5 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Documented design system tokens, states, and shadcn/ui usage patterns.
 - Initial changelog scaffold and release process documentation.
 - Documented testing expectations for unit, integration, and accessibility coverage.
+- Added architecture overview covering chat pipeline, persistence, auth, blob storage, and AI SDK wiring.
 
