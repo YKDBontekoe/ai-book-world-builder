@@ -47,4 +47,5 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 ### Added
 - Documented design system tokens, states, and shadcn/ui usage patterns.
 - Initial changelog scaffold and release process documentation.
+- Documented testing expectations for unit, integration, and accessibility coverage.
 
