@@ -16,8 +16,11 @@ This guidance applies to the entire repository. Add more specific rules in neste
 
 ## Changelog Policy
 - Record user-visible changes in the project changelog (or nearest equivalent) as part of each feature or fix. Use clear, action-oriented entries that describe the behavior change.
-- Keep changelog headings aligned with the Keep a Changelog format and remove empty sections before publishing releases.
+- Keep changelog headings aligned with the Keep a Changelog format and remove empty sections before publishing releases. See `CHANGELOG.md` for the expected structure and release cadence.
 - When adding release documentation, ensure the process describes tagging, GitHub Releases, and any automation (or the lack thereof).
+
+## Design system reference
+- Align UI work with the shared tokens and component patterns documented in `docs/design-system.md` (typography, spacing, color tokens, states, and shadcn/ui examples). Link to the guide when adding new UI patterns or extending components.
 
 ## Pull Request Message Format
 Every PR description should include:

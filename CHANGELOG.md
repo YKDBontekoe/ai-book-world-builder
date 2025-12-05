@@ -45,5 +45,6 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 ## [Unreleased]
 
 ### Added
+- Documented design system tokens, states, and shadcn/ui usage patterns.
 - Initial changelog scaffold and release process documentation.
 
