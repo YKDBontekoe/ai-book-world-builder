@@ -48,4 +48,6 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Documented design system tokens, states, and shadcn/ui usage patterns.
 - Initial changelog scaffold and release process documentation.
 - Documented testing expectations for unit, integration, and accessibility coverage.
+- Documented data handling practices for secrets, PII, generated content, rate limiting, logging, and prompt safety.
+- Clarified that `AGENTS.md` files are the authoritative source for contributor guidance.
 

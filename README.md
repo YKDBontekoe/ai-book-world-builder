@@ -61,6 +61,10 @@ pnpm dev
 
 Your app template should now be running on [localhost:3000](http://localhost:3000).
 
+## Data handling and safety
+
+Review [docs/data-handling.md](docs/data-handling.md) for guidance on managing secrets and environment variables, protecting PII, applying rate limits, logging safely, and adding guard rails to model prompts and generated content.
+
 ## Testing
 
 See [docs/testing.md](docs/testing.md) for expectations and commands covering unit (Vitest/React Testing Library), integration/end-to-end (Playwright), and accessibility checks, plus what must pass in CI before merging changes.
