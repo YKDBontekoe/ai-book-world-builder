@@ -105,6 +105,29 @@ export const vote = pgTable(
 
 export type Vote = InferSelectModel<typeof vote>;
 
+export type ProjectFolder = {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+};
+
+export const project = pgTable("Project", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  createdAt: timestamp("createdAt").notNull(),
+  name: text("name").notNull(),
+  description: text("description"),
+  visibility: varchar("visibility", { enum: ["public", "private"] })
+    .notNull()
+    .default("private"),
+  folders: jsonb("folders").$type<ProjectFolder[]>().notNull(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id),
+});
+
+export type Project = InferSelectModel<typeof project>;
+
 export const document = pgTable(
   "Document",
   {

@@ -63,17 +63,26 @@ export function AppSidebar({ user }: { user: User | undefined }) {
         <SidebarHeader>
           <SidebarMenu>
             <div className="flex flex-row items-center justify-between">
-              <Link
-                className="flex flex-row items-center gap-3"
-                href="/"
-                onClick={() => {
-                  setOpenMobile(false);
-                }}
-              >
-                <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                  Chatbot
-                </span>
-              </Link>
+              <div className="flex flex-row items-center gap-2">
+                <Link
+                  className="flex flex-row items-center gap-3"
+                  href="/"
+                  onClick={() => {
+                    setOpenMobile(false);
+                  }}
+                >
+                  <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
+                    Chatbot
+                  </span>
+                </Link>
+                <Link
+                  className="cursor-pointer rounded-md px-2 py-1 text-sm hover:bg-muted"
+                  href="/projects"
+                  onClick={() => setOpenMobile(false)}
+                >
+                  Projects
+                </Link>
+              </div>
               <div className="flex flex-row gap-1">
                 {user && (
                   <Tooltip>

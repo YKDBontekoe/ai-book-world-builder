@@ -9,6 +9,7 @@ import {
   gt,
   gte,
   inArray,
+  or,
   lt,
   type SQL,
 } from "drizzle-orm";
@@ -16,6 +17,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import type { ArtifactKind } from "@/components/artifact";
 import type { VisibilityType } from "@/components/visibility-selector";
+import { DEFAULT_PROJECT_FOLDERS } from "../constants";
 import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
@@ -25,12 +27,14 @@ import {
   type DBMessage,
   document,
   message,
+  project,
   type Suggestion,
   stream,
   suggestion,
   type User,
   user,
   vote,
+  type Project,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -588,6 +592,93 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get stream ids by chat id"
+    );
+  }
+}
+
+export async function createProject({
+  name,
+  description,
+  visibility,
+  userId,
+}: {
+  name: string;
+  description?: string;
+  visibility: VisibilityType;
+  userId: string;
+}): Promise<Project> {
+  try {
+    const folders = DEFAULT_PROJECT_FOLDERS.map((folder) => ({ ...folder }));
+
+    const [createdProject] = await db
+      .insert(project)
+      .values({
+        name,
+        description,
+        visibility,
+        userId,
+        createdAt: new Date(),
+        folders,
+      })
+      .returning();
+
+    return createdProject;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create project"
+    );
+  }
+}
+
+export async function getProjectsVisibleToUser({
+  userId,
+}: {
+  userId: string;
+}): Promise<Project[]> {
+  try {
+    return await db
+      .select()
+      .from(project)
+      .where(or(eq(project.userId, userId), eq(project.visibility, "public")))
+      .orderBy(desc(project.createdAt));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to list projects"
+    );
+  }
+}
+
+export async function getProjectByIdWithAccess({
+  id,
+  userId,
+}: {
+  id: string;
+  userId?: string;
+}): Promise<Project | null> {
+  try {
+    const [selectedProject] = await db
+      .select()
+      .from(project)
+      .where(eq(project.id, id));
+
+    if (!selectedProject) {
+      return null;
+    }
+
+    if (
+      selectedProject.visibility === "private" &&
+      selectedProject.userId !== userId
+    ) {
+      return null;
+    }
+
+    return selectedProject;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load project by id"
     );
   }
 }
