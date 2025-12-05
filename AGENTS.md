@@ -9,10 +9,15 @@ This guidance applies to the entire repository. Add more specific rules in neste
 - **shadcn/ui**: Use the generated shadcn components for shared primitives instead of custom one-off versions. Extend components through props, slots, or composition rather than editing generated files directly unless fixing defects. Keep styling token-driven and avoid inline `style` when `className`/variants suffice.
 - **Accessibility**: Ensure interactive elements are keyboard accessible, labeled, and meet ARIA expectations.
 - **Design Resources**: Link to design tokens and the component library once they are defined so contributors can align implementations consistently.
+- **Design system adherence**: Always align UI changes with the shared design system (see `docs/design-system.md`). Reference tokens, variants, and interaction patterns before introducing new UI affordances.
 
 ## Testing Expectations
 - Prefer fast, deterministic tests. Add or update coverage alongside code changes.
 - Run relevant unit, integration, and end-to-end suites before merging. Document any skipped or flaky tests and justify temporarily disabled cases.
+- Every new feature must include appropriate tests (unit, integration, accessibility) and the suites must be green before merge. Avoid merging with known test failures except for documented, time-bound exceptions.
+
+## Process and Documentation Hygiene
+- When you add repository conventions, testing expectations, or design guidance, update the relevant `AGENTS.md` sections so future contributors can find the rules in one place.
 
 ## Changelog Policy
 - Record user-visible changes in the project changelog (or nearest equivalent) as part of each feature or fix. Use clear, action-oriented entries that describe the behavior change.
