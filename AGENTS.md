@@ -16,6 +16,8 @@ This guidance applies to the entire repository. Add more specific rules in neste
 
 ## Changelog Policy
 - Record user-visible changes in the project changelog (or nearest equivalent) as part of each feature or fix. Use clear, action-oriented entries that describe the behavior change.
+- Keep changelog headings aligned with the Keep a Changelog format and remove empty sections before publishing releases.
+- When adding release documentation, ensure the process describes tagging, GitHub Releases, and any automation (or the lack thereof).
 
 ## Pull Request Message Format
 Every PR description should include:
