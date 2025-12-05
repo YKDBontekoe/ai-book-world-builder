@@ -3,6 +3,8 @@
 ## Scope
 This guidance applies to the entire repository. Add more specific rules in nested `AGENTS.md` files when necessary.
 
+`AGENTS.md` files are the authoritative source for contributor instructions. Consult them first; the `README.md` may not capture the most current guidance.
+
 ## Coding Standards
 - **TypeScript/React**: Prefer function components with hooks, uphold strict typing (no `any` unless unavoidable and documented), and keep components small and composable. Follow existing linting/formatting rules (see `biome.jsonc`).
 - **State Management**: Lift state to the lowest sensible owner and pass explicit props; avoid implicit globals.
