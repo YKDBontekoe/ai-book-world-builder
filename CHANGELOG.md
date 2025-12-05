@@ -49,4 +49,6 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Initial changelog scaffold and release process documentation.
 - Documented testing expectations for unit, integration, and accessibility coverage.
 - Added architecture overview covering chat pipeline, persistence, auth, blob storage, and AI SDK wiring.
+- Documented data handling practices for secrets, PII, generated content, rate limiting, logging, and prompt safety.
+- Clarified that `AGENTS.md` files are the authoritative source for contributor guidance.
 
