@@ -30,6 +30,8 @@ import {
   document,
   type Entity,
   type EntityAttribute,
+  outline,
+  type Outline,
   message,
   project,
   relationship,
@@ -728,6 +730,25 @@ export async function getEntitiesForProject({
   }
 }
 
+export async function getAttributesForProject({
+  projectId,
+}: {
+  projectId: string;
+}): Promise<EntityAttribute[]> {
+  try {
+    return await db
+      .select()
+      .from(entityAttribute)
+      .where(eq(entityAttribute.projectId, projectId))
+      .orderBy(asc(entityAttribute.name));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load attributes for project"
+    );
+  }
+}
+
 export async function getEntityById({
   id,
 }: {
@@ -1032,6 +1053,87 @@ export async function getProjectByIdWithAccess({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to load project by id"
+    );
+  }
+}
+
+export async function createOutline({
+  projectId,
+  title,
+  summary,
+  pov,
+  tone,
+  pacing,
+  beats,
+}: {
+  projectId: string;
+  title: string;
+  summary?: string;
+  pov: string;
+  tone: string;
+  pacing: string;
+  beats: string[];
+}): Promise<Outline> {
+  try {
+    const [createdOutline] = await db
+      .insert(outline)
+      .values({
+        projectId,
+        title,
+        summary,
+        pov,
+        tone,
+        pacing,
+        beats,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return createdOutline;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to save outline"
+    );
+  }
+}
+
+export async function getOutlinesForProject({
+  projectId,
+}: {
+  projectId: string;
+}): Promise<Outline[]> {
+  try {
+    return await db
+      .select()
+      .from(outline)
+      .where(eq(outline.projectId, projectId))
+      .orderBy(desc(outline.updatedAt));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load outlines"
+    );
+  }
+}
+
+export async function getOutlineById({
+  id,
+}: {
+  id: string;
+}): Promise<Outline | null> {
+  try {
+    const [selectedOutline] = await db
+      .select()
+      .from(outline)
+      .where(eq(outline.id, id));
+
+    return selectedOutline ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load outline"
     );
   }
 }
