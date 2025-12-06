@@ -89,7 +89,21 @@ export function ModelSelector({
                 type="button"
               >
                 <div className="flex flex-col items-start gap-1">
-                  <div className="text-sm sm:text-base">{chatModel.name}</div>
+                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span className="rounded-full border border-border px-2 py-0.5 font-medium text-foreground dark:text-foreground">
+                      {chatModel.provider}
+                    </span>
+                    {chatModel.supportsImages ? (
+                      <span className="rounded-full bg-muted px-2 py-0.5">
+                        Vision & text
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-muted px-2 py-0.5">
+                        Text only
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-sm font-medium sm:text-base">{chatModel.name}</div>
                   <div className="line-clamp-2 text-muted-foreground text-xs">
                     {chatModel.description}
                   </div>

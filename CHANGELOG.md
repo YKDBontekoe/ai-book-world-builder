@@ -55,6 +55,7 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Documented migration maintenance steps and CI/CD verification expectations.
 - Added a pre-commit hook that runs linting and type checks before allowing commits.
 - Added a Grok Lite chat option so users can pick a cheaper, text-only model alongside the existing vision and reasoning choices.
+- Expanded the chat model catalog with OpenAI, Google, and Anthropic options surfaced in the model selector UI.
 
 ### Fixed
 - Resolved the project creation page failing build-time client checks by isolating client hooks into a dedicated component.

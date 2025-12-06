@@ -94,6 +94,34 @@ test.describe
       expect(actualNormalized).toEqual(expectedNormalized);
     });
 
+    test("Ada can invoke chat generation with an OpenAI model", async ({
+      adaContext,
+    }) => {
+      const chatId = generateUUID();
+
+      const response = await adaContext.request.post("/api/chat", {
+        data: {
+          id: chatId,
+          message: TEST_PROMPTS.SKY.MESSAGE,
+          selectedChatModel: "openai-gpt-4o-mini",
+          selectedVisibilityType: "private",
+        },
+      });
+
+      expect(response.status()).toBe(200);
+
+      const text = await response.text();
+      const lines = text.split("\n");
+
+      const [_, ...rest] = lines;
+      const actualNormalized = normalizeStreamData(rest.filter(Boolean));
+      const expectedNormalized = normalizeStreamData(
+        TEST_PROMPTS.SKY.OUTPUT_STREAM
+      );
+
+      expect(actualNormalized).toEqual(expectedNormalized);
+    });
+
     test("Babbage cannot append message to Ada's chat", async ({
       babbageContext,
     }) => {
