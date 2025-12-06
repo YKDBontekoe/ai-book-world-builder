@@ -33,6 +33,10 @@ const createMockModel = (): LanguageModel => {
 };
 
 export const chatModel = createMockModel();
+export const liteModel = createMockModel();
 export const reasoningModel = createMockModel();
+export const gpt4oMiniModel = createMockModel();
+export const geminiModel = createMockModel();
+export const haikuModel = createMockModel();
 export const titleModel = createMockModel();
 export const artifactModel = createMockModel();

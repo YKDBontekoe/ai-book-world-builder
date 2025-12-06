@@ -1,3 +1,4 @@
+import { gateway } from "@ai-sdk/gateway";
 import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -17,9 +18,10 @@ import type { ModelCatalog } from "tokenlens/core";
 import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
 import { auth, type UserType } from "@/app/(auth)/auth";
+import { getAvailableChatModels } from "@/app/actions/models";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
-import type { ChatModel } from "@/lib/ai/models";
+import { type ChatModel, getChatModelById } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
@@ -43,7 +45,7 @@ import {
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import { buildProjectContext } from "@/lib/project-context";
+import { buildProjectContextPrompt, buildProjectContext } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
@@ -122,6 +124,7 @@ export async function POST(request: Request) {
     }
 
     const userType: UserType = session.user.type;
+    const { availableChatModelIds } = entitlementsByUserType[userType];
 
     let projectContext: string | undefined;
 
@@ -159,6 +162,47 @@ export async function POST(request: Request) {
 
     if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
       return new ChatSDKError("rate_limit:chat").toResponse();
+    }
+
+    const availableModels = await getAvailableChatModels();
+    const isDynamicModel = availableModels.some(
+      (m) => m.id === selectedChatModel
+    );
+
+    if (!availableChatModelIds.includes(selectedChatModel) && !isDynamicModel) {
+      return new ChatSDKError(
+        "forbidden:chat",
+        "This model is not available for your account."
+      ).toResponse();
+    }
+
+    let chatModel = getChatModelById(selectedChatModel);
+
+    if (!chatModel && isDynamicModel) {
+      const dynamicModel = availableModels.find(
+        (m) => m.id === selectedChatModel
+      );
+      if (dynamicModel) {
+        chatModel = dynamicModel;
+      }
+    }
+
+    if (!chatModel) {
+      return new ChatSDKError(
+        "bad_request:api",
+        "Unknown chat model."
+      ).toResponse();
+    }
+
+    const containsFileAttachments = message.parts.some(
+      (part) => part.type === "file"
+    );
+
+    if (containsFileAttachments && !chatModel.supportsImages) {
+      return new ChatSDKError(
+        "bad_request:api",
+        "Image uploads require a vision-enabled model."
+      ).toResponse();
     }
 
     const chat = await getChatById({ id });
@@ -224,8 +268,12 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        const model = isDynamicModel
+          ? gateway.languageModel(selectedChatModel)
+          : myProvider.languageModel(selectedChatModel);
+
         const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
+          model,
           system: groundedSystemPrompt,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
@@ -255,8 +303,16 @@ export async function POST(request: Request) {
           onFinish: async ({ usage }) => {
             try {
               const providers = await getTokenlensCatalog();
-              const modelId =
-                myProvider.languageModel(selectedChatModel).modelId;
+              let modelId = selectedChatModel;
+
+              if (!isDynamicModel) {
+                try {
+                  modelId = myProvider.languageModel(selectedChatModel).modelId;
+                } catch (e) {
+                  // ignore
+                }
+              }
+
               if (!modelId) {
                 finalMergedUsage = usage;
                 dataStream.write({

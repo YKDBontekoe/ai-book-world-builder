@@ -5,19 +5,28 @@ import {
   wrapLanguageModel,
 } from "ai";
 import { isTestEnvironment } from "../constants";
+import { chatModels } from "./models";
 
 export const myProvider = isTestEnvironment
   ? (() => {
       const {
         artifactModel,
         chatModel,
+        geminiModel,
+        gpt4oMiniModel,
+        haikuModel,
+        liteModel,
         reasoningModel,
         titleModel,
       } = require("./models.mock");
       return customProvider({
         languageModels: {
+          "anthropic-claude-haiku": haikuModel,
           "chat-model": chatModel,
+          "chat-model-lite": liteModel,
           "chat-model-reasoning": reasoningModel,
+          "google-gemini-flash": geminiModel,
+          "openai-gpt-4o-mini": gpt4oMiniModel,
           "title-model": titleModel,
           "artifact-model": artifactModel,
         },
@@ -25,12 +34,24 @@ export const myProvider = isTestEnvironment
     })()
   : customProvider({
       languageModels: {
-        "chat-model": gateway.languageModel("xai/grok-2-vision-1212"),
-        "chat-model-reasoning": wrapLanguageModel({
-          model: gateway.languageModel("xai/grok-3-mini"),
-          middleware: extractReasoningMiddleware({ tagName: "think" }),
-        }),
-        "title-model": gateway.languageModel("xai/grok-2-1212"),
-        "artifact-model": gateway.languageModel("xai/grok-2-1212"),
+        ...Object.fromEntries(
+          chatModels.map((chatModel) => {
+            const baseModel = gateway.languageModel(chatModel.gatewayId);
+
+            if (chatModel.reasoning) {
+              return [
+                chatModel.id,
+                wrapLanguageModel({
+                  model: baseModel,
+                  middleware: extractReasoningMiddleware({ tagName: "think" }),
+                }),
+              ];
+            }
+
+            return [chatModel.id, baseModel];
+          })
+        ),
+        "title-model": gateway.languageModel("openai/gpt-4o-mini"),
+        "artifact-model": gateway.languageModel("openai/gpt-4o-mini"),
       },
     });

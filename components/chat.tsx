@@ -25,9 +25,10 @@ import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { useProjectSelection } from "@/hooks/use-project-selection";
-import type { ProjectSummary } from "@/lib/project-context";
+import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import type { ProjectSummary } from "@/lib/project-context";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
@@ -55,16 +56,18 @@ export function Chat({
   isReadonly,
   autoResume,
   initialLastContext,
+  availableModels,
 }: {
   id: string;
   initialMessages: ChatMessage[];
-  initialChatModel: string;
+  initialChatModel: ChatModelId;
   initialProjectId?: string | null;
   initialProjects?: ProjectSummary[];
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
   autoResume: boolean;
   initialLastContext?: AppUsage;
+  availableModels: ChatModel[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -102,7 +105,8 @@ export function Chat({
   const [input, setInput] = useState<string>("");
   const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
-  const [currentModelId, setCurrentModelId] = useState(initialChatModel);
+  const [currentModelId, setCurrentModelId] =
+    useState<ChatModelId>(initialChatModel);
   const currentModelIdRef = useRef(currentModelId);
 
   useEffect(() => {
@@ -260,10 +264,10 @@ export function Chat({
           <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="space-y-1">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
                   Project context
                 </p>
-                <h2 className="text-lg font-semibold">
+                <h2 className="font-semibold text-lg">
                   Ground responses in your world
                 </h2>
                 <p className="text-muted-foreground text-sm">
@@ -283,11 +287,13 @@ export function Chat({
               ) : (
                 projects.slice(0, 4).map((project) => (
                   <Button
-                    key={project.id}
                     aria-pressed={project.id === selectedProjectId}
+                    key={project.id}
                     onClick={() => applyProjectSelection(project.id)}
                     size="sm"
-                    variant={project.id === selectedProjectId ? "default" : "outline"}
+                    variant={
+                      project.id === selectedProjectId ? "default" : "outline"
+                    }
                   >
                     {project.name}
                   </Button>
@@ -302,7 +308,7 @@ export function Chat({
             <div className="grid gap-3 md:grid-cols-3">
               {quickStartCards.map((card) => (
                 <Card
-                  className="border-dashed transition hover:border-primary focus-within:border-primary"
+                  className="border-dashed transition focus-within:border-primary hover:border-primary"
                   key={card.title}
                 >
                   <button
@@ -323,7 +329,7 @@ export function Chat({
           </div>
         </div>
 
-        <div className="overscroll-behavior-contain flex flex-1 min-w-0 touch-pan-y flex-col">
+        <div className="overscroll-behavior-contain flex min-w-0 flex-1 touch-pan-y flex-col">
           <ChatHeader
             chatId={id}
             isReadonly={isReadonly}
@@ -347,6 +353,7 @@ export function Chat({
             {!isReadonly && (
               <MultimodalInput
                 attachments={attachments}
+                availableModels={availableModels}
                 chatId={id}
                 input={input}
                 messages={messages}
@@ -368,6 +375,7 @@ export function Chat({
 
       <Artifact
         attachments={attachments}
+        availableModels={availableModels}
         chatId={id}
         input={input}
         isReadonly={isReadonly}

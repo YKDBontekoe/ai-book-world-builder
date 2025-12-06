@@ -45,7 +45,18 @@
 
 ## Model Providers
 
-This template uses an AI gateway to access multiple AI models through a unified interface. The default configuration includes [xAI](https://x.ai) models (`grok-2-vision-1212`, `grok-3-mini`) routed through the gateway.
+This template uses an AI gateway to access multiple AI models through a unified interface. The default configuration includes [OpenAI](https://openai.com), [xAI](https://x.ai), [Google](https://ai.google/), and [Anthropic](https://anthropic.com) models routed through the gateway.
+
+Available chat models:
+
+- **GPT-4o mini** (`openai-gpt-4o-mini`): Fast, cost-effective multimodal chats.
+- **Grok Vision** (`chat-model`): Multimodal chat with image upload support.
+- **Gemini 1.5 Flash** (`google-gemini-flash`): Balanced multimodal model with long-context support.
+- **Claude 3.5 Haiku** (`anthropic-claude-haiku`): Affordable, high-quality text responses.
+- **Grok Lite** (`chat-model-lite`): Cost-effective, text-only chats for everyday prompts.
+- **Grok Reasoning** (`chat-model-reasoning`): Chain-of-thought responses for complex tasks.
+
+Image uploads require a vision-enabled model (GPT-4o mini, Grok Vision, or Gemini 1.5 Flash).
 
 ### AI Gateway Authentication
 
