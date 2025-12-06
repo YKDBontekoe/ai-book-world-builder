@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { auth } from "@/app/(auth)/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { auth } from "@/app/(auth)/auth";
 import {
   getEntitiesForProject,
   getProjectByIdWithAccess,
@@ -73,7 +73,8 @@ export default async function EntitiesPage({
     getRelationshipsForProject({ projectId: project.id }),
   ]);
 
-  const canEdit = session.user?.type === "regular" && project.userId === session.user.id;
+  const canEdit =
+    session.user?.type === "regular" && project.userId === session.user.id;
   const warnings = buildWarnings({ entities, relationships });
 
   return (
@@ -83,12 +84,15 @@ export default async function EntitiesPage({
           <p className="text-muted-foreground text-sm">Schema</p>
           <h1 className="font-semibold text-2xl">Entities</h1>
           <p className="text-muted-foreground text-sm">
-            Track world objects, their defining attributes, and how they connect.
+            Track world objects, their defining attributes, and how they
+            connect.
           </p>
         </div>
         {canEdit && (
           <Button asChild>
-            <Link href={`/projects/${project.id}/entities/new`}>Add entity</Link>
+            <Link href={`/projects/${project.id}/entities/new`}>
+              Add entity
+            </Link>
           </Button>
         )}
       </div>
@@ -98,7 +102,7 @@ export default async function EntitiesPage({
           <CardHeader>
             <CardTitle className="text-base">Draft warnings</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-amber-700">
+          <CardContent className="space-y-2 text-amber-700 text-sm">
             {warnings.map((warning) => (
               <p key={warning}>{warning}</p>
             ))}
@@ -112,7 +116,8 @@ export default async function EntitiesPage({
             <CardTitle className="text-base">No entities yet</CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
-            Start adding characters, factions, or locations to surface richer AI suggestions in drafts.
+            Start adding characters, factions, or locations to surface richer AI
+            suggestions in drafts.
           </CardContent>
         </Card>
       ) : (
@@ -131,7 +136,9 @@ export default async function EntitiesPage({
                     >
                       {entity.name}
                     </Link>
-                    <p className="text-muted-foreground text-sm">{entity.summary}</p>
+                    <p className="text-muted-foreground text-sm">
+                      {entity.summary}
+                    </p>
                     <p className="text-muted-foreground text-xs">
                       {entity.startDate && entity.endDate
                         ? `${new Date(entity.startDate).toLocaleDateString()}–${new Date(entity.endDate).toLocaleDateString()}`

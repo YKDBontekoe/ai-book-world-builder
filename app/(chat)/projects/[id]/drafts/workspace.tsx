@@ -18,9 +18,9 @@ import { Textarea } from "@/components/ui/textarea";
 import type { Outline } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import {
-  type OutlineDraftState,
   generateDraftAction,
   generateOutlineAction,
+  type OutlineDraftState,
 } from "./actions";
 
 const POV_OPTIONS = [
@@ -147,7 +147,11 @@ export function DraftWorkspace({
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                   <Label>Point of view</Label>
-                  <Select defaultValue={POV_OPTIONS[1]} name="pov" disabled={!canEdit}>
+                  <Select
+                    defaultValue={POV_OPTIONS[1]}
+                    disabled={!canEdit}
+                    name="pov"
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select POV" />
                     </SelectTrigger>
@@ -162,7 +166,11 @@ export function DraftWorkspace({
                 </div>
                 <div className="space-y-2">
                   <Label>Tone</Label>
-                  <Select defaultValue={TONE_OPTIONS[0]} name="tone" disabled={!canEdit}>
+                  <Select
+                    defaultValue={TONE_OPTIONS[0]}
+                    disabled={!canEdit}
+                    name="tone"
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Choose a tone" />
                     </SelectTrigger>
@@ -177,7 +185,11 @@ export function DraftWorkspace({
                 </div>
                 <div className="space-y-2">
                   <Label>Pacing</Label>
-                  <Select defaultValue={PACING_OPTIONS[1]} name="pacing" disabled={!canEdit}>
+                  <Select
+                    defaultValue={PACING_OPTIONS[1]}
+                    disabled={!canEdit}
+                    name="pacing"
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Pick pacing" />
                     </SelectTrigger>
@@ -207,7 +219,7 @@ export function DraftWorkspace({
                 {activeOutline?.beats?.length ? (
                   <ol className="space-y-2 text-sm">
                     {activeOutline.beats.map((beat, index) => (
-                      <li key={beat + index} className="leading-relaxed">
+                      <li className="leading-relaxed" key={beat + index}>
                         <span className="font-semibold text-muted-foreground">
                           {index + 1}.
                         </span>{" "}
@@ -241,19 +253,21 @@ export function DraftWorkspace({
               <div className="space-y-2">
                 {savedOutlines.map((outline) => (
                   <button
-                    key={outline.id}
                     className={cn(
                       "w-full rounded-lg border px-3 py-2 text-left transition hover:border-primary",
                       outline.id === activeOutlineId
                         ? "border-primary bg-primary/5"
                         : "border-border"
                     )}
+                    key={outline.id}
                     onClick={() => setActiveOutlineId(outline.id)}
                     type="button"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="font-medium leading-tight">{outline.title}</p>
+                        <p className="font-medium leading-tight">
+                          {outline.title}
+                        </p>
                         <p className="text-muted-foreground text-xs">
                           {outline.pov} • {outline.tone}
                         </p>
@@ -261,7 +275,7 @@ export function DraftWorkspace({
                       <Badge variant="outline">{outline.pacing}</Badge>
                     </div>
                     {outline.summary ? (
-                      <p className="text-muted-foreground mt-1 line-clamp-2 text-xs">
+                      <p className="mt-1 line-clamp-2 text-muted-foreground text-xs">
                         {outline.summary}
                       </p>
                     ) : null}
@@ -291,10 +305,10 @@ export function DraftWorkspace({
               <div className="space-y-2">
                 <Label>Use outline</Label>
                 <Select
-                  value={activeOutlineId}
                   disabled={!canEdit || savedOutlines.length === 0}
                   name="outlineId"
                   onValueChange={setActiveOutlineId}
+                  value={activeOutlineId}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select an outline" />
@@ -343,9 +357,7 @@ export function DraftWorkspace({
             <CardContent>
               <div className="h-72 rounded-lg border bg-muted/40 p-3 text-sm leading-relaxed">
                 {aiDraft ? (
-                  <pre className="whitespace-pre-wrap text-left">
-                    {aiDraft}
-                  </pre>
+                  <pre className="whitespace-pre-wrap text-left">{aiDraft}</pre>
                 ) : (
                   <p className="text-muted-foreground">
                     Generate a draft to see the AI suggestion.

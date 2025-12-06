@@ -199,7 +199,9 @@ export async function createRelationshipAction(
 
     await createRelationship(parsed.data);
 
-    revalidatePath(`/projects/${project.id}/entities/${parsed.data.sourceEntityId}`);
+    revalidatePath(
+      `/projects/${project.id}/entities/${parsed.data.sourceEntityId}`
+    );
     revalidatePath(`/projects/${project.id}`);
     revalidatePath(`/projects/${project.id}/entities`);
     return {};

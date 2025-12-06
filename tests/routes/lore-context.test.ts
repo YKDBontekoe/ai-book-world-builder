@@ -71,7 +71,7 @@ test("buildLoreContext lists entities and relationship names", () => {
 
 test("extractBeatsFromText cleans numbering and bullets", () => {
   const beats = extractBeatsFromText(
-    `1. Open on the market square\n- Introduce the tension\n3) Reveal the prophecy`
+    "1. Open on the market square\n- Introduce the tension\n3) Reveal the prophecy"
   );
 
   expect(beats).toEqual([

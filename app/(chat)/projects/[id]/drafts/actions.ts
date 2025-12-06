@@ -1,18 +1,18 @@
 "use server";
 
+import { generateText } from "ai";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { generateText } from "ai";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { myProvider } from "@/lib/ai/providers";
 import {
+  createOutline,
   getAttributesForProject,
   getEntitiesForProject,
   getOutlineById,
   getProjectByIdWithAccess,
   getRelationshipsForProject,
-  createOutline,
 } from "@/lib/db/queries";
 import type { Outline } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";

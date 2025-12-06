@@ -17,11 +17,13 @@ export default async function NewProjectPage() {
       <div className="flex min-h-dvh items-center justify-center p-6">
         <Card className="max-w-lg">
           <CardHeader>
-            <CardTitle className="text-lg">Projects are limited to registered users</CardTitle>
+            <CardTitle className="text-lg">
+              Projects are limited to registered users
+            </CardTitle>
           </CardHeader>
           <CardContent className="text-muted-foreground text-sm">
-            Sign in with a registered account to create and manage projects. Guests can
-            still browse public projects.
+            Sign in with a registered account to create and manage projects.
+            Guests can still browse public projects.
           </CardContent>
         </Card>
       </div>

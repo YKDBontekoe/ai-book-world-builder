@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { auth } from "@/app/(auth)/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { auth } from "@/app/(auth)/auth";
 import { getProjectsVisibleToUser } from "@/lib/db/queries";
 
 export default async function ProjectsPage() {
@@ -49,11 +49,11 @@ export default async function ProjectsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
-            <Card
-              className="transition hover:border-primary"
-              key={project.id}
-            >
-              <Link className="flex h-full flex-col" href={`/projects/${project.id}`}>
+            <Card className="transition hover:border-primary" key={project.id}>
+              <Link
+                className="flex h-full flex-col"
+                href={`/projects/${project.id}`}
+              >
                 <CardHeader>
                   <div className="flex items-start justify-between gap-2">
                     <CardTitle className="text-lg leading-tight">
@@ -62,7 +62,7 @@ export default async function ProjectsPage() {
                     <Badge variant="secondary">{project.visibility}</Badge>
                   </div>
                   {project.description && (
-                    <p className="text-muted-foreground line-clamp-2 text-sm">
+                    <p className="line-clamp-2 text-muted-foreground text-sm">
                       {project.description}
                     </p>
                   )}
@@ -71,10 +71,13 @@ export default async function ProjectsPage() {
                   <div className="flex items-center justify-between">
                     <span>{project.folders.length} folders</span>
                     <span>
-                      {new Date(project.createdAt).toLocaleDateString(undefined, {
-                        month: "short",
-                        day: "numeric",
-                      })}
+                      {new Date(project.createdAt).toLocaleDateString(
+                        undefined,
+                        {
+                          month: "short",
+                          day: "numeric",
+                        }
+                      )}
                     </span>
                   </div>
                 </CardContent>

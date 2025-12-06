@@ -1,12 +1,12 @@
 "use client";
 
 import { useFormState } from "react-dom";
-import { createEntityAction, type EntityActionState } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createEntityAction, type EntityActionState } from "../actions";
 
 const initialState: EntityActionState = {};
 
@@ -33,7 +33,12 @@ export function CreateEntityForm({ projectId }: { projectId: string }) {
             </div>
             <div className="space-y-2">
               <Label htmlFor="kind">Type</Label>
-              <Input id="kind" name="kind" placeholder="Character, city, item" required />
+              <Input
+                id="kind"
+                name="kind"
+                placeholder="Character, city, item"
+                required
+              />
             </div>
           </div>
 
@@ -64,7 +69,7 @@ export function CreateEntityForm({ projectId }: { projectId: string }) {
             </p>
           )}
 
-          <Button type="submit" className="w-full">
+          <Button className="w-full" type="submit">
             Save entity
           </Button>
         </form>

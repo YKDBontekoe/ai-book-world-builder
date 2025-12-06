@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { auth } from "@/app/(auth)/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { auth } from "@/app/(auth)/auth";
 import {
   getEntitiesForProject,
   getEntityWithDetails,
@@ -13,7 +13,9 @@ import {
 import { AttributeForm } from "./attribute-form";
 import { RelationshipForm } from "./relationship-form";
 
-function buildWarnings(entity: Awaited<ReturnType<typeof getEntityWithDetails>>) {
+function buildWarnings(
+  entity: Awaited<ReturnType<typeof getEntityWithDetails>>
+) {
   if (!entity) {
     return [] as string[];
   }
@@ -85,22 +87,25 @@ export default async function EntityDetailPage({
     notFound();
   }
 
-  const canEdit = session.user?.type === "regular" && project.userId === session.user.id;
+  const canEdit =
+    session.user?.type === "regular" && project.userId === session.user.id;
   const warnings = buildWarnings(entity);
 
   return (
     <div className="flex min-h-dvh flex-col gap-6 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="space-y-1">
-          <Button asChild variant="ghost" className="px-0" size="sm">
-            <Link href={`/projects/${project.id}/entities`}>Back to entities</Link>
+          <Button asChild className="px-0" size="sm" variant="ghost">
+            <Link href={`/projects/${project.id}/entities`}>
+              Back to entities
+            </Link>
           </Button>
           <div className="flex items-center gap-2">
             <h1 className="font-semibold text-2xl">{entity.name}</h1>
             <Badge variant="secondary">{entity.kind}</Badge>
           </div>
           {entity.summary && (
-            <p className="text-muted-foreground max-w-3xl">{entity.summary}</p>
+            <p className="max-w-3xl text-muted-foreground">{entity.summary}</p>
           )}
           <p className="text-muted-foreground text-sm">
             {entity.startDate && entity.endDate
@@ -112,7 +117,9 @@ export default async function EntityDetailPage({
         </div>
         {canEdit && (
           <Button asChild>
-            <Link href={`/projects/${project.id}/entities/new`}>Add another entity</Link>
+            <Link href={`/projects/${project.id}/entities/new`}>
+              Add another entity
+            </Link>
           </Button>
         )}
       </div>
@@ -122,7 +129,7 @@ export default async function EntityDetailPage({
           <CardHeader>
             <CardTitle className="text-base">Draft warnings</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-amber-700">
+          <CardContent className="space-y-2 text-amber-700 text-sm">
             {warnings.map((warning) => (
               <p key={warning}>{warning}</p>
             ))}
@@ -138,15 +145,20 @@ export default async function EntityDetailPage({
           <CardContent className="space-y-4">
             {entity.attributes.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                No attributes recorded yet. Add traits, stats, or historical notes to guide drafts.
+                No attributes recorded yet. Add traits, stats, or historical
+                notes to guide drafts.
               </p>
             ) : (
               entity.attributes.map((attribute) => (
                 <div className="space-y-1" key={attribute.id}>
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium leading-tight">{attribute.name}</p>
-                      <p className="text-muted-foreground text-sm">{attribute.value}</p>
+                      <p className="font-medium leading-tight">
+                        {attribute.name}
+                      </p>
+                      <p className="text-muted-foreground text-sm">
+                        {attribute.value}
+                      </p>
                     </div>
                     <Badge variant="outline">{attribute.dataType}</Badge>
                   </div>
@@ -170,7 +182,7 @@ export default async function EntityDetailPage({
               <CardTitle className="text-base">Add attribute</CardTitle>
             </CardHeader>
             <CardContent>
-              <AttributeForm projectId={project.id} entityId={entity.id} />
+              <AttributeForm entityId={entity.id} projectId={project.id} />
             </CardContent>
           </Card>
         )}
@@ -184,7 +196,8 @@ export default async function EntityDetailPage({
           <CardContent className="space-y-4">
             {entity.relationships.length === 0 ? (
               <p className="text-muted-foreground text-sm">
-                No relationships yet. Link this entity to others so AI can keep continuity in drafts.
+                No relationships yet. Link this entity to others so AI can keep
+                continuity in drafts.
               </p>
             ) : (
               entity.relationships.map((relationship) => {
@@ -200,9 +213,12 @@ export default async function EntityDetailPage({
                   <div className="space-y-1" key={relationship.id}>
                     <div className="flex items-center justify-between gap-3">
                       <div>
-                        <p className="font-medium leading-tight">{relationship.type}</p>
+                        <p className="font-medium leading-tight">
+                          {relationship.type}
+                        </p>
                         <p className="text-muted-foreground text-sm">
-                          {relationship.description || "No context provided yet."}
+                          {relationship.description ||
+                            "No context provided yet."}
                         </p>
                         <p className="text-muted-foreground text-xs">
                           Linked to {target?.name ?? "another entity"}

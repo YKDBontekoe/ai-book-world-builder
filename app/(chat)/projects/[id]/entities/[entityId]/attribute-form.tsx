@@ -1,11 +1,11 @@
 "use client";
 
 import { useFormState } from "react-dom";
-import { createAttributeAction, type EntityActionState } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { createAttributeAction, type EntityActionState } from "../actions";
 
 const initialState: EntityActionState = {};
 
@@ -32,14 +32,19 @@ export function AttributeForm({
           id="value"
           name="value"
           placeholder="Describe the attribute with enough context for drafts."
-          rows={3}
           required
+          rows={3}
         />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="dataType">Data type</Label>
-          <Input id="dataType" name="dataType" placeholder="text, date, metric" required />
+          <Input
+            id="dataType"
+            name="dataType"
+            placeholder="text, date, metric"
+            required
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="startDate">Effective start</Label>
@@ -55,7 +60,7 @@ export function AttributeForm({
           {state.error}
         </p>
       )}
-      <Button type="submit" className="w-full">
+      <Button className="w-full" type="submit">
         Add attribute
       </Button>
     </form>

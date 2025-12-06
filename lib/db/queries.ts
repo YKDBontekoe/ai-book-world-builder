@@ -9,8 +9,8 @@ import {
   gt,
   gte,
   inArray,
-  or,
   lt,
+  or,
   type SQL,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -25,24 +25,24 @@ import {
   type Chat,
   chat,
   type DBMessage,
-  entity,
-  entityAttribute,
   document,
   type Entity,
   type EntityAttribute,
-  outline,
-  type Outline,
+  entity,
+  entityAttribute,
   message,
+  type Outline,
+  outline,
+  type Project,
   project,
-  relationship,
   type Relationship,
+  relationship,
   type Suggestion,
   stream,
   suggestion,
   type User,
   user,
   vote,
-  type Project,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -632,16 +632,13 @@ export async function createProject({
 
     return createdProject;
   } catch (_error) {
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to create project"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to create project");
   }
 }
 
 function toDateOrUndefined(value: string | undefined | null) {
   if (!value) {
-    return undefined;
+    return;
   }
 
   const parsed = new Date(value);
@@ -801,7 +798,10 @@ export async function createEntityAttribute({
       .select({ count: count() })
       .from(entityAttribute)
       .where(
-        and(eq(entityAttribute.entityId, entityId), eq(entityAttribute.name, name))
+        and(
+          eq(entityAttribute.entityId, entityId),
+          eq(entityAttribute.name, name)
+        )
       )
       .limit(1);
 
@@ -878,11 +878,15 @@ export async function createRelationship({
       db
         .select()
         .from(entity)
-        .where(and(eq(entity.id, sourceEntityId), eq(entity.projectId, projectId))),
+        .where(
+          and(eq(entity.id, sourceEntityId), eq(entity.projectId, projectId))
+        ),
       db
         .select()
         .from(entity)
-        .where(and(eq(entity.id, targetEntityId), eq(entity.projectId, projectId))),
+        .where(
+          and(eq(entity.id, targetEntityId), eq(entity.projectId, projectId))
+        ),
     ]);
 
     if (!source.length || !target.length) {
@@ -931,10 +935,7 @@ export async function createRelationship({
     const chatError = error instanceof ChatSDKError ? error : null;
     throw (
       chatError ??
-      new ChatSDKError(
-        "bad_request:database",
-        "Failed to create relationship"
-      )
+      new ChatSDKError("bad_request:database", "Failed to create relationship")
     );
   }
 }
@@ -1017,10 +1018,7 @@ export async function getProjectsVisibleToUser({
       .where(or(eq(project.userId, userId), eq(project.visibility, "public")))
       .orderBy(desc(project.createdAt));
   } catch (_error) {
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to list projects"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to list projects");
   }
 }
 
@@ -1092,10 +1090,7 @@ export async function createOutline({
 
     return createdOutline;
   } catch (_error) {
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to save outline"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to save outline");
   }
 }
 
@@ -1111,10 +1106,7 @@ export async function getOutlinesForProject({
       .where(eq(outline.projectId, projectId))
       .orderBy(desc(outline.updatedAt));
   } catch (_error) {
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to load outlines"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to load outlines");
   }
 }
 
@@ -1131,9 +1123,6 @@ export async function getOutlineById({
 
     return selectedOutline ?? null;
   } catch (_error) {
-    throw new ChatSDKError(
-      "bad_request:database",
-      "Failed to load outline"
-    );
+    throw new ChatSDKError("bad_request:database", "Failed to load outline");
   }
 }

@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import { useFormState } from "react-dom";
-import { createProjectAction, type CreateProjectState } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { type CreateProjectState, createProjectAction } from "../actions";
 
 const initialState: CreateProjectState = {};
 
@@ -49,8 +55,8 @@ export function CreateProjectForm() {
         </Select>
         <input name="visibility" type="hidden" value={visibility} />
         <p className="text-muted-foreground text-sm">
-          Private projects are only visible to you; public projects can be shared via
-          link.
+          Private projects are only visible to you; public projects can be
+          shared via link.
         </p>
       </div>
 

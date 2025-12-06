@@ -1,10 +1,10 @@
-import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
+import { auth } from "@/app/(auth)/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { auth } from "@/app/(auth)/auth";
 import {
   getEntitiesForProject,
   getProjectByIdWithAccess,
@@ -87,7 +87,9 @@ export default async function ProjectDetailPage({
             <Badge variant="secondary">{project.visibility}</Badge>
           </div>
           {project.description && (
-            <p className="text-muted-foreground max-w-3xl">{project.description}</p>
+            <p className="max-w-3xl text-muted-foreground">
+              {project.description}
+            </p>
           )}
           <p className="text-muted-foreground text-sm">
             {canEdit
@@ -95,7 +97,7 @@ export default async function ProjectDetailPage({
               : "Viewing with read-only access."}
           </p>
         </div>
-        <div className="text-muted-foreground text-sm text-right">
+        <div className="text-right text-muted-foreground text-sm">
           Created {new Date(project.createdAt).toLocaleDateString()}
         </div>
       </div>
@@ -105,10 +107,11 @@ export default async function ProjectDetailPage({
           <div>
             <CardTitle className="text-lg">Schema overview</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Entities, attributes, and relationships power validation in your drafts.
+              Entities, attributes, and relationships power validation in your
+              drafts.
             </p>
           </div>
-          <Button asChild variant="outline" size="sm">
+          <Button asChild size="sm" variant="outline">
             <Link href={`/projects/${project.id}/entities`}>Manage schema</Link>
           </Button>
         </CardHeader>
@@ -133,7 +136,7 @@ export default async function ProjectDetailPage({
           <CardHeader>
             <CardTitle className="text-base">Draft warnings</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2 text-sm text-amber-700">
+          <CardContent className="space-y-2 text-amber-700 text-sm">
             {warnings.map((warning) => (
               <p key={warning}>{warning}</p>
             ))}
@@ -146,7 +149,8 @@ export default async function ProjectDetailPage({
           <div>
             <CardTitle className="text-lg">Draft workspace</CardTitle>
             <p className="text-muted-foreground text-sm">
-              Generate outlines and drafts grounded in your entities and relationships.
+              Generate outlines and drafts grounded in your entities and
+              relationships.
             </p>
           </div>
           <Button asChild size="sm" variant="default">
@@ -167,7 +171,9 @@ export default async function ProjectDetailPage({
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium leading-tight">{folder.name}</p>
-                  <p className="text-muted-foreground text-sm">{folder.description}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {folder.description}
+                  </p>
                 </div>
                 <Badge variant="outline">{folder.slug}</Badge>
               </div>

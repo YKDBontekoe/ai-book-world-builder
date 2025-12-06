@@ -2,13 +2,19 @@
 
 import { useMemo, useState } from "react";
 import { useFormState } from "react-dom";
-import { createRelationshipAction, type EntityActionState } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import type { Entity } from "@/lib/db/schema";
+import { createRelationshipAction, type EntityActionState } from "../actions";
 
 const initialState: EntityActionState = {};
 
@@ -38,7 +44,12 @@ export function RelationshipForm({
       <input name="sourceEntityId" type="hidden" value={sourceEntityId} />
       <div className="space-y-2">
         <Label htmlFor="type">Relationship type</Label>
-        <Input id="type" name="type" placeholder="Ally, sibling, located in" required />
+        <Input
+          id="type"
+          name="type"
+          placeholder="Ally, sibling, located in"
+          required
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="targetEntityId">Related to</Label>
@@ -80,7 +91,7 @@ export function RelationshipForm({
           {state.error}
         </p>
       )}
-      <Button type="submit" className="w-full">
+      <Button className="w-full" type="submit">
         Add relationship
       </Button>
     </form>
