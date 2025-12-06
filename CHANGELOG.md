@@ -52,6 +52,7 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Documented data handling practices for secrets, PII, generated content, rate limiting, logging, and prompt safety.
 - Clarified that `AGENTS.md` files are the authoritative source for contributor guidance.
 - Added project entities with default world-building folders, list/detail pages, and role-aware creation flows wired to Auth.js.
+- Documented migration maintenance steps and CI/CD verification expectations.
 
 ### Fixed
 - Resolved the project creation page failing build-time client checks by isolating client hooks into a dedicated component.
