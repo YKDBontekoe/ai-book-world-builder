@@ -30,6 +30,7 @@ type EditorProps = {
   isCurrentVersion: boolean;
   currentVersionIndex: number;
   suggestions: Suggestion[];
+  onSelectionChange?: (selectionText: string) => void;
 };
 
 function PureEditor({
@@ -37,6 +38,7 @@ function PureEditor({
   onSaveContent,
   suggestions,
   status,
+  onSelectionChange,
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
@@ -84,11 +86,12 @@ function PureEditor({
             transaction,
             editorRef,
             onSaveContent,
+            onSelectionChange,
           });
         },
       });
     }
-  }, [onSaveContent]);
+  }, [onSaveContent, onSelectionChange]);
 
   useEffect(() => {
     if (editorRef.current && content) {
@@ -157,7 +160,8 @@ function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
     prevProps.isCurrentVersion === nextProps.isCurrentVersion &&
     !(prevProps.status === "streaming" && nextProps.status === "streaming") &&
     prevProps.content === nextProps.content &&
-    prevProps.onSaveContent === nextProps.onSaveContent
+    prevProps.onSaveContent === nextProps.onSaveContent &&
+    prevProps.onSelectionChange === nextProps.onSelectionChange
   );
 }
 

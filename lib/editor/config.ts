@@ -25,10 +25,12 @@ export const handleTransaction = ({
   transaction,
   editorRef,
   onSaveContent,
+  onSelectionChange,
 }: {
   transaction: Transaction;
   editorRef: MutableRefObject<EditorView | null>;
   onSaveContent: (updatedContent: string, debounce: boolean) => void;
+  onSelectionChange?: (selectionText: string) => void;
 }) => {
   if (!editorRef || !editorRef.current) {
     return;
@@ -45,5 +47,16 @@ export const handleTransaction = ({
     } else {
       onSaveContent(updatedContent, true);
     }
+  }
+
+  if (transaction.selectionSet && onSelectionChange) {
+    const { selection } = newState;
+    const selectedText = newState.doc.textBetween(
+      selection.from,
+      selection.to,
+      " "
+    );
+
+    onSelectionChange(selectedText.trim());
   }
 };

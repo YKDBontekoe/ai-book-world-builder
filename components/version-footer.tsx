@@ -1,6 +1,6 @@
 "use client";
 
-import { isAfter } from "date-fns";
+import { formatDistance, isAfter } from "date-fns";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useSWRConfig } from "swr";
@@ -9,18 +9,21 @@ import { useArtifact } from "@/hooks/use-artifact";
 import type { Document } from "@/lib/db/schema";
 import { getDocumentTimestampByIndex } from "@/lib/utils";
 import { LoaderIcon } from "./icons";
+import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
 type VersionFooterProps = {
   handleVersionChange: (type: "next" | "prev" | "toggle" | "latest") => void;
   documents: Document[] | undefined;
   currentVersionIndex: number;
+  mode: "edit" | "diff";
 };
 
 export const VersionFooter = ({
   handleVersionChange,
   documents,
   currentVersionIndex,
+  mode,
 }: VersionFooterProps) => {
   const { artifact } = useArtifact();
 
@@ -31,8 +34,11 @@ export const VersionFooter = ({
   const [isMutating, setIsMutating] = useState(false);
 
   if (!documents) {
-    return;
+    return null;
   }
+
+  const currentDocument = documents[currentVersionIndex];
+  const draftLabel = `Draft ${currentVersionIndex + 1} of ${documents.length}`;
 
   return (
     <motion.div
@@ -43,13 +49,33 @@ export const VersionFooter = ({
       transition={{ type: "spring", stiffness: 140, damping: 20 }}
     >
       <div>
-        <div>You are viewing a previous version</div>
-        <div className="text-muted-foreground text-sm">
-          Restore this version to make edits
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-row flex-wrap items-center gap-2">
+            <Badge variant="outline">{draftLabel}</Badge>
+            {currentDocument?.createdAt ? (
+              <div className="text-muted-foreground text-sm">
+                Saved {" "}
+                {formatDistance(new Date(currentDocument.createdAt), new Date(), {
+                  addSuffix: true,
+                })}
+              </div>
+            ) : null}
+          </div>
+          <div className="text-muted-foreground text-sm">
+            You are viewing a previous version. Restore to keep editing.
+          </div>
         </div>
       </div>
 
       <div className="flex flex-row gap-4">
+        <Button
+          onClick={() => {
+            handleVersionChange("toggle");
+          }}
+          variant="outline"
+        >
+          {mode === "diff" ? "Exit diff" : "View diff"}
+        </Button>
         <Button
           disabled={isMutating}
           onClick={async () => {

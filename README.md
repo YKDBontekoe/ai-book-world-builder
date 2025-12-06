@@ -35,6 +35,7 @@
   - Generate outlines with POV, tone, and pacing controls and save them per project
   - Draft prose side-by-side with AI suggestions grounded in your lore entities
   - Saved outlines stay deduplicated and sorted by newest first in the draft workspace
+  - Highlight text to fire rewrite prompts, review AI rationales, and restore or diff auto-versioned drafts
 - [Auth.js](https://authjs.dev)
   - Simple and secure authentication
 

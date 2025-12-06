@@ -25,6 +25,7 @@ import { ArtifactCloseButton } from "./artifact-close-button";
 import { ArtifactMessages } from "./artifact-messages";
 import { MultimodalInput } from "./multimodal-input";
 import { Toolbar } from "./toolbar";
+import { Badge } from "./ui/badge";
 import { useSidebar } from "./ui/sidebar";
 import { VersionFooter } from "./version-footer";
 import type { VisibilityType } from "./visibility-selector";
@@ -240,6 +241,11 @@ function PureArtifact({
       ? currentVersionIndex === documents.length - 1
       : true;
 
+  const versionCount = documents?.length ?? 1;
+  const draftPosition =
+    currentVersionIndex >= 0 ? currentVersionIndex + 1 : versionCount;
+  const versionLabel = `Draft ${draftPosition} of ${versionCount}`;
+
   const { width: windowWidth, height: windowHeight } = useWindowSize();
   const isMobile = windowWidth ? windowWidth < 768 : false;
 
@@ -422,26 +428,27 @@ function PureArtifact({
               <div className="flex flex-row items-start gap-4">
                 <ArtifactCloseButton />
 
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-1">
                   <div className="font-medium">{artifact.title}</div>
 
-                  {isContentDirty ? (
-                    <div className="text-muted-foreground text-sm">
-                      Saving changes...
-                    </div>
-                  ) : document ? (
-                    <div className="text-muted-foreground text-sm">
-                      {`Updated ${formatDistance(
-                        new Date(document.createdAt),
-                        new Date(),
-                        {
-                          addSuffix: true,
-                        }
-                      )}`}
-                    </div>
-                  ) : (
-                    <div className="mt-2 h-3 w-32 animate-pulse rounded-md bg-muted-foreground/20" />
-                  )}
+                  <div className="flex flex-row flex-wrap items-center gap-2 text-muted-foreground text-sm">
+                    <Badge variant="outline">{versionLabel}</Badge>
+                    {isContentDirty ? (
+                      <div>Saving changes...</div>
+                    ) : document ? (
+                      <div>
+                        {`Updated ${formatDistance(
+                          new Date(document.createdAt),
+                          new Date(),
+                          {
+                            addSuffix: true,
+                          }
+                        )}`}
+                      </div>
+                    ) : (
+                      <div className="mt-2 h-3 w-32 animate-pulse rounded-md bg-muted-foreground/20" />
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -471,6 +478,7 @@ function PureArtifact({
                 metadata={metadata}
                 mode={mode}
                 onSaveContent={saveContent}
+                sendMessage={sendMessage}
                 setMetadata={setMetadata}
                 status={artifact.status}
                 suggestions={[]}
@@ -492,15 +500,16 @@ function PureArtifact({
               </AnimatePresence>
             </div>
 
-            <AnimatePresence>
-              {!isCurrentVersion && (
-                <VersionFooter
-                  currentVersionIndex={currentVersionIndex}
-                  documents={documents}
-                  handleVersionChange={handleVersionChange}
-                />
-              )}
-            </AnimatePresence>
+              <AnimatePresence>
+                {!isCurrentVersion && (
+                  <VersionFooter
+                    currentVersionIndex={currentVersionIndex}
+                    documents={documents}
+                    handleVersionChange={handleVersionChange}
+                    mode={mode}
+                  />
+                )}
+              </AnimatePresence>
           </motion.div>
         </motion.div>
       )}
