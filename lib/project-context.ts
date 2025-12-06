@@ -3,7 +3,9 @@ import type {
   EntityAttribute,
   Project,
   ProjectFolder,
+  Relationship,
 } from "@/lib/db/schema";
+import { buildLoreContext } from "@/lib/story/lore";
 
 export type ProjectSummary = Pick<
   Project,
@@ -72,4 +74,35 @@ export function buildProjectContextPrompt({
   ].filter(Boolean);
 
   return descriptions.join("\n\n");
+}
+
+/**
+ * Builds a richer project context string that combines the project summary
+ * with lore details (entities, attributes, and relationships) for use in
+ * grounding chat prompts.
+ */
+export function buildProjectContext({
+  project,
+  entities,
+  attributes,
+  relationships,
+}: {
+  project: Project;
+  entities: Entity[];
+  attributes: EntityAttribute[];
+  relationships: Relationship[];
+}): string {
+  const projectSummary = buildProjectContextPrompt({
+    project,
+    entities,
+    attributes,
+  });
+
+  const loreContext = buildLoreContext({
+    entities,
+    attributes,
+    relationships,
+  });
+
+  return [projectSummary, loreContext].filter(Boolean).join("\n\n");
 }

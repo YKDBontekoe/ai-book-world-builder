@@ -38,13 +38,14 @@ import {
   getMessageCountByUserId,
   getMessagesByChatId,
   getProjectByIdWithAccess,
+  getRelationshipsForProject,
   saveChat,
   saveMessages,
   updateChatLastContextById,
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import { buildProjectContextPrompt } from "@/lib/project-context";
+import { buildProjectContextPrompt, buildProjectContext } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
@@ -140,15 +141,17 @@ export async function POST(request: Request) {
         ).toResponse();
       }
 
-      const [entities, attributes] = await Promise.all([
+      const [entities, attributes, relationships] = await Promise.all([
         getEntitiesForProject({ projectId }),
         getAttributesForProject({ projectId }),
+        getRelationshipsForProject({ projectId }),
       ]);
 
-      projectContext = buildProjectContextPrompt({
+      projectContext = buildProjectContext({
         project,
         entities,
         attributes,
+        relationships,
       });
     }
 
