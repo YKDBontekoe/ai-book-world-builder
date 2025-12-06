@@ -666,7 +666,7 @@ export async function createEntity({
 
   if (parsedStart && parsedEnd && parsedStart > parsedEnd) {
     throw new ChatSDKError(
-      "bad_request:validation",
+      "bad_request:api",
       "End date cannot be before the start date."
     );
   }
@@ -680,7 +680,7 @@ export async function createEntity({
 
     if (existing?.count && existing.count > 0) {
       throw new ChatSDKError(
-        "bad_request:validation",
+        "bad_request:api",
         "An entity with this name already exists in the project."
       );
     }
@@ -770,7 +770,7 @@ export async function createEntityAttribute({
 
   if (parsedStart && parsedEnd && parsedStart > parsedEnd) {
     throw new ChatSDKError(
-      "bad_request:validation",
+      "bad_request:api",
       "Attribute end date cannot be before the start date."
     );
   }
@@ -786,7 +786,7 @@ export async function createEntityAttribute({
 
     if (existing?.count && existing.count > 0) {
       throw new ChatSDKError(
-        "bad_request:validation",
+        "bad_request:api",
         "This entity already has an attribute with that name."
       );
     }
@@ -840,14 +840,14 @@ export async function createRelationship({
 
   if (parsedStart && parsedEnd && parsedStart > parsedEnd) {
     throw new ChatSDKError(
-      "bad_request:validation",
+      "bad_request:api",
       "Relationship end date cannot be before the start date."
     );
   }
 
   if (sourceEntityId === targetEntityId) {
     throw new ChatSDKError(
-      "bad_request:validation",
+      "bad_request:api",
       "An entity cannot be related to itself."
     );
   }
@@ -866,7 +866,7 @@ export async function createRelationship({
 
     if (!source.length || !target.length) {
       throw new ChatSDKError(
-        "bad_request:validation",
+        "bad_request:api",
         "Both related entities must belong to the same project."
       );
     }
@@ -886,7 +886,7 @@ export async function createRelationship({
 
     if (existingRelationship?.count && existingRelationship.count > 0) {
       throw new ChatSDKError(
-        "bad_request:validation",
+        "bad_request:api",
         "This relationship already exists for the selected entities."
       );
     }

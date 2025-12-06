@@ -58,14 +58,14 @@ async function requireProjectOwner(projectId: string, userId?: string) {
 
   if (!project) {
     throw new ChatSDKError(
-      "not_found:project",
+      "not_found:api",
       "Project not found or you do not have access."
     );
   }
 
   if (project.userId !== userId) {
     throw new ChatSDKError(
-      "bad_request:authorization",
+      "forbidden:api",
       "Only the project owner can update the schema."
     );
   }
@@ -148,7 +148,7 @@ export async function createAttributeAction(
 
     if (!entity || entity.projectId !== project.id) {
       throw new ChatSDKError(
-        "bad_request:validation",
+        "bad_request:api",
         "Entity not found in this project."
       );
     }
