@@ -62,13 +62,14 @@ export function DraftWorkspace({
   const [aiDraft, setAiDraft] = useState("");
   const [editableDraft, setEditableDraft] = useState("");
 
-  const [outlineState, generateOutline] = useFormState<OutlineDraftState>(
-    generateOutlineAction,
-    {}
-  );
-  const [draftState, generateDraft] = useFormState<OutlineDraftState>(
+  const initialState: OutlineDraftState = {};
+  const [outlineState, generateOutline] = useFormState<
+    OutlineDraftState,
+    FormData
+  >(generateOutlineAction, initialState);
+  const [draftState, generateDraft] = useFormState<OutlineDraftState, FormData>(
     generateDraftAction,
-    {}
+    initialState
   );
 
   const activeOutline = useMemo(
