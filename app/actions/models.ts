@@ -17,6 +17,7 @@ export const getAvailableChatModels = unstable_cache(
         id: model.id,
         name: model.name || model.id,
         description: model.description || "",
+        gatewayId: model.id,
         modelType: "language",
         provider: model.provider || model.id.split("/")[0] || "unknown",
         supportsImages:

@@ -1,4 +1,19 @@
-export const chatModels = [
+export type ChatModel = {
+  id: string;
+  name: string;
+  provider: string;
+  gatewayId: string;
+  description: string;
+  supportsImages: boolean;
+  reasoning?: boolean;
+  pricing?: {
+    input: string;
+    output: string;
+    cachedInputTokens?: string;
+  };
+};
+
+export const chatModels: readonly ChatModel[] = [
   {
     id: "openai-gpt-4o-mini",
     name: "GPT-4o mini",
@@ -49,21 +64,7 @@ export const chatModels = [
     supportsImages: false,
     reasoning: true,
   },
-] as const;
-
-export type ChatModel = {
-  id: string;
-  name: string;
-  provider: string;
-  description: string;
-  supportsImages: boolean;
-  reasoning?: boolean;
-  pricing?: {
-    input: string;
-    output: string;
-    cachedInputTokens?: string;
-  };
-};
+];
 
 export type ChatModelId = string;
 
