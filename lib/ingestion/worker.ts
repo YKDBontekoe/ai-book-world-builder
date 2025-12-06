@@ -30,7 +30,11 @@ import {
   splitIntoChunks,
   stripHtml,
 } from "./text";
-import { deriveEntitiesFromContent } from "./entities";
+import type { ExtractedEntity } from "./entities";
+import {
+  type EntityExtractor,
+  createEntityExtractor,
+} from "./entity-extractor";
 
 type BlobFetcher = (url: string) => Promise<Response>;
 
@@ -54,7 +58,7 @@ type ExtractionResult = {
 };
 
 type EntityExtraction = {
-  entities: ReturnType<typeof deriveEntitiesFromContent>;
+  entities: ExtractedEntity[];
   audit: PersistedEntityAuditLog;
 };
 
@@ -76,8 +80,7 @@ type IngestionRepository = {
   }) => Promise<void>;
   persistEntities: (args: {
     material: SourceMaterial;
-    projectFolders: ProjectFolder[];
-    normalizedText: string;
+    entities: ExtractedEntity[];
   }) => Promise<EntityExtraction | null>;
   getProjectFolders: (params: {
     projectId: string;
@@ -242,21 +245,12 @@ class DatabaseIngestionRepository implements IngestionRepository {
 
   async persistEntities({
     material,
-    projectFolders,
-    normalizedText,
+    entities,
   }: {
     material: SourceMaterial;
-    projectFolders: ProjectFolder[];
-    normalizedText: string;
+    entities: ExtractedEntity[];
   }): Promise<EntityExtraction | null> {
-    const entities = deriveEntitiesFromContent({
-      text: normalizedText,
-      projectFolders,
-    });
-
-    if (entities.length === 0) {
-      return null;
-    }
+    if (entities.length === 0) return null;
 
     const audit = await ingestExtractedEntities({
       entities,
@@ -346,6 +340,7 @@ export class SourceMaterialWorker {
   private readonly repository: IngestionRepository;
   private readonly fetcher: BlobFetcher;
   private readonly extractor: SourceMaterialExtractor;
+  private readonly entityExtractor: EntityExtractor;
   private readonly chunkSize: number;
   private readonly batchSize: number;
   private readonly maxAttempts: number;
@@ -354,6 +349,7 @@ export class SourceMaterialWorker {
     repository?: IngestionRepository;
     fetcher?: BlobFetcher;
     extractor?: SourceMaterialExtractor;
+    entityExtractor?: EntityExtractor;
     chunkSize?: number;
     batchSize?: number;
     maxAttempts?: number;
@@ -361,6 +357,8 @@ export class SourceMaterialWorker {
     this.repository = options?.repository ?? new DatabaseIngestionRepository();
     this.fetcher = options?.fetcher ?? fetch;
     this.extractor = options?.extractor ?? new DefaultSourceMaterialExtractor();
+    this.entityExtractor =
+      options?.entityExtractor ?? createEntityExtractor();
     this.chunkSize = options?.chunkSize ?? DEFAULT_CHUNK_SIZE;
     this.batchSize = options?.batchSize ?? DEFAULT_BATCH_SIZE;
     this.maxAttempts = options?.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
@@ -429,10 +427,15 @@ export class SourceMaterialWorker {
         userId: material.userId,
       });
 
+      const entities = await this.entityExtractor.extract({
+        text: normalized.normalizedText,
+        projectFolders,
+        headings: normalized.chapters[0]?.headings,
+      });
+
       const entityExtraction = await this.repository.persistEntities({
         material,
-        projectFolders,
-        normalizedText: normalized.normalizedText,
+        entities,
       });
 
       if (entityExtraction) {

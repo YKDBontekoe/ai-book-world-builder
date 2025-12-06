@@ -8,10 +8,8 @@ import {
   type SourceMaterialExtractor,
   normalizeTextContent,
 } from "@/lib/ingestion/worker";
-import {
-  deriveEntitiesFromContent,
-  type ExtractedEntity,
-} from "@/lib/ingestion/entities";
+import type { EntityExtractor } from "@/lib/ingestion/entity-extractor";
+import { deriveEntitiesFromContent, type ExtractedEntity } from "@/lib/ingestion/entities";
 import { generateUUID } from "@/lib/utils";
 import type {
   Entity,
@@ -152,19 +150,12 @@ class InMemoryRepository implements IngestionRepository {
 
   async persistEntities({
     material,
-    projectFolders,
-    normalizedText,
+    entities,
   }: {
     material: SourceMaterial;
-    projectFolders: ProjectFolder[];
-    normalizedText: string;
+    entities: ExtractedEntity[];
   }) {
-    const derived = deriveEntitiesFromContent({
-      text: normalizedText,
-      projectFolders,
-    });
-
-    if (derived.length === 0) {
+    if (entities.length === 0) {
       this.auditLog = null;
       return null;
     }
@@ -180,7 +171,7 @@ class InMemoryRepository implements IngestionRepository {
     let attributesUpserted = 0;
     let relationshipsUpserted = 0;
 
-    for (const entityDef of derived) {
+    for (const entityDef of entities) {
       const existing = existingByName.get(entityDef.name.toLowerCase());
 
       if (existing) {
@@ -210,7 +201,7 @@ class InMemoryRepository implements IngestionRepository {
       created.push(record);
     }
 
-    for (const entityDef of derived) {
+    for (const entityDef of entities) {
       const parent = existingByName.get(entityDef.name.toLowerCase());
 
       if (!parent) continue;
@@ -299,7 +290,25 @@ class InMemoryRepository implements IngestionRepository {
       relationshipsUpserted,
     } satisfies PersistedEntityAuditLog;
 
-    return { entities: derived, audit: this.auditLog };
+    return { entities, audit: this.auditLog };
+  }
+}
+
+class DeterministicEntityExtractor implements EntityExtractor {
+  async extract({
+    text,
+    projectFolders,
+    headings,
+  }: {
+    text: string;
+    projectFolders?: ProjectFolder[];
+    headings?: string[];
+  }): Promise<ExtractedEntity[]> {
+    return deriveEntitiesFromContent({
+      text,
+      projectFolders,
+      headings,
+    });
   }
 }
 
@@ -343,6 +352,7 @@ describe("SourceMaterialWorker", () => {
       repository: repo,
       extractor,
       fetcher: () => textFetcher("Intro\nBody content that spans multiple chunks."),
+      entityExtractor: new DeterministicEntityExtractor(),
       chunkSize: 20,
       batchSize: 1,
     });
@@ -380,6 +390,7 @@ describe("SourceMaterialWorker", () => {
       extractor,
       fetcher: () => textFetcher(currentText),
       batchSize: 1,
+      entityExtractor: new DeterministicEntityExtractor(),
       chunkSize: 200,
     });
 
@@ -425,6 +436,7 @@ describe("SourceMaterialWorker", () => {
       fetcher: () => textFetcher("irrelevant"),
       batchSize: 1,
       maxAttempts: 2,
+      entityExtractor: new DeterministicEntityExtractor(),
     });
 
     await worker.runBatch();
