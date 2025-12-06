@@ -31,6 +31,10 @@
 - Data Persistence
   - [Neon](https://neon.tech/) for saving chat history and user data
   - Blob storage for efficient file storage
+- Project-aware chat
+  - Switch between recent projects from the chat hero and launch quick-start prompts per world
+  - Ground agent replies in selected project folders and entities via the AI SDK-powered copilot backend
+  - Persist project selection across sessions via URL and cookie context so conversations stay grounded
 - Story workspace
   - Generate outlines with POV, tone, and pacing controls and save them per project
   - Draft prose side-by-side with AI suggestions grounded in your lore entities
@@ -73,3 +77,13 @@ Review [docs/data-handling.md](docs/data-handling.md) for guidance on managing s
 ## Testing
 
 See [docs/testing.md](docs/testing.md) for expectations and commands covering unit (Vitest/React Testing Library), integration/end-to-end (Playwright), and accessibility checks, plus what must pass in CI before merging changes.
+
+## Git hooks
+
+Set the local hooks path to `.githooks` to ensure commits run linting and type checks before landing:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The `pre-commit` hook runs `pnpm lint` and `pnpm exec tsc --noEmit` to catch regressions early.

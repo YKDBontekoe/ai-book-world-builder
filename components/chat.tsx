@@ -2,8 +2,9 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatHeader } from "@/components/chat-header";
@@ -17,9 +18,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useProjectSelection } from "@/hooks/use-project-selection";
+import type { ProjectSummary } from "@/lib/project-context";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage } from "@/lib/types";
@@ -33,10 +39,18 @@ import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import type { VisibilityType } from "./visibility-selector";
 
+type QuickStartCard = {
+  title: string;
+  description: string;
+  prompt: string;
+};
+
 export function Chat({
   id,
   initialMessages,
   initialChatModel,
+  initialProjectId,
+  initialProjects = [],
   initialVisibilityType,
   isReadonly,
   autoResume,
@@ -45,12 +59,26 @@ export function Chat({
   id: string;
   initialMessages: ChatMessage[];
   initialChatModel: string;
+  initialProjectId?: string | null;
+  initialProjects?: ProjectSummary[];
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
   autoResume: boolean;
   initialLastContext?: AppUsage;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const projects = useMemo(() => initialProjects ?? [], [initialProjects]);
+  const {
+    applyProjectSelection,
+    selectedProject,
+    selectedProjectId,
+    selectedProjectIdRef,
+  } = useProjectSelection({
+    initialProjectId,
+    projects,
+  });
 
   const { visibilityType } = useChatVisibility({
     chatId: id,
@@ -102,6 +130,7 @@ export function Chat({
           body: {
             id: request.id,
             message: request.messages.at(-1),
+            projectId: selectedProjectIdRef.current,
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibilityType,
             ...request.body,
@@ -134,8 +163,6 @@ export function Chat({
       }
     },
   });
-
-  const searchParams = useSearchParams();
   const query = searchParams.get("query");
 
   const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
@@ -148,9 +175,11 @@ export function Chat({
       });
 
       setHasAppendedQuery(true);
-      window.history.replaceState({}, "", `/chat/${id}`);
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.delete("query");
+      router.replace(`/chat/${id}${currentUrl.search}`);
     }
-  }, [query, sendMessage, hasAppendedQuery, id]);
+  }, [query, sendMessage, hasAppendedQuery, id, router]);
 
   const { data: votes } = useSWR<Vote[]>(
     messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
@@ -167,46 +196,173 @@ export function Chat({
     setMessages,
   });
 
+  const quickStartCards = useMemo<QuickStartCard[]>(
+    () => [
+      {
+        title: "Design a character",
+        description:
+          "Create a character profile with goals, secrets, and connections to existing factions.",
+        prompt:
+          "Design a new character for this world and outline their motivations, challenges, and relationships.",
+      },
+      {
+        title: "Outline a faction",
+        description:
+          "Draft a faction's purpose, resources, and key members grounded in your world's timeline.",
+        prompt:
+          "Outline a faction that fits the project's setting. Describe its agenda, leaders, and conflicts.",
+      },
+      {
+        title: "Populate a location",
+        description:
+          "Describe a location with notable landmarks, threats, and how it ties to nearby entities.",
+        prompt:
+          "Populate a location with sensory details, inhabitants, and story hooks that align with the project.",
+      },
+    ],
+    []
+  );
+
+  const handleQuickStart = useCallback(
+    (card: QuickStartCard) => {
+      const targetProjectId = selectedProjectId ?? projects[0]?.id ?? null;
+
+      if (!targetProjectId) {
+        toast({
+          description: "Select or create a project to ground quick starts.",
+          type: "error",
+        });
+        return;
+      }
+
+      if (selectedProjectIdRef.current !== targetProjectId) {
+        applyProjectSelection(targetProjectId);
+      }
+
+      const projectName =
+        projects.find((project) => project.id === targetProjectId)?.name ??
+        "this project";
+      const scopedPrompt = `${card.prompt} Keep the response specific to the "${projectName}" project, referencing its folders and entities when relevant.`;
+
+      setInput(scopedPrompt);
+      sendMessage({
+        role: "user" as const,
+        parts: [{ type: "text", text: scopedPrompt }],
+      });
+    },
+    [applyProjectSelection, projects, selectedProjectId, sendMessage]
+  );
+
   return (
     <>
-      <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
-        <ChatHeader
-          chatId={id}
-          isReadonly={isReadonly}
-          selectedVisibilityType={initialVisibilityType}
-        />
+      <div className="flex h-dvh min-w-0 flex-col bg-background">
+        <div className="border-b bg-muted/40">
+          <div className="mx-auto flex max-w-5xl flex-col gap-4 px-4 py-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="space-y-1">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Project context
+                </p>
+                <h2 className="text-lg font-semibold">
+                  Ground responses in your world
+                </h2>
+                <p className="text-muted-foreground text-sm">
+                  {selectedProject
+                    ? `Working in ${selectedProject.name} — project folders and entities will guide the agent.`
+                    : "Select a project to anchor quick starts and AI context."}
+                </p>
+              </div>
+              <Button asChild size="sm" variant="secondary">
+                <Link href="/projects/new">Create project</Link>
+              </Button>
+            </div>
 
-        <Messages
-          chatId={id}
-          isArtifactVisible={isArtifactVisible}
-          isReadonly={isReadonly}
-          messages={messages}
-          regenerate={regenerate}
-          selectedModelId={initialChatModel}
-          setMessages={setMessages}
-          status={status}
-          votes={votes}
-        />
+            <div className="flex flex-wrap items-center gap-2">
+              {projects.length === 0 ? (
+                <Badge variant="secondary">No projects yet</Badge>
+              ) : (
+                projects.slice(0, 4).map((project) => (
+                  <Button
+                    key={project.id}
+                    aria-pressed={project.id === selectedProjectId}
+                    onClick={() => applyProjectSelection(project.id)}
+                    size="sm"
+                    variant={project.id === selectedProjectId ? "default" : "outline"}
+                  >
+                    {project.name}
+                  </Button>
+                ))
+              )}
 
-        <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
-          {!isReadonly && (
-            <MultimodalInput
-              attachments={attachments}
-              chatId={id}
-              input={input}
-              messages={messages}
-              onModelChange={setCurrentModelId}
-              selectedModelId={currentModelId}
-              selectedVisibilityType={visibilityType}
-              sendMessage={sendMessage}
-              setAttachments={setAttachments}
-              setInput={setInput}
-              setMessages={setMessages}
-              status={status}
-              stop={stop}
-              usage={usage}
-            />
-          )}
+              {projects.length > 4 && (
+                <Badge variant="outline">+{projects.length - 4} more</Badge>
+              )}
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-3">
+              {quickStartCards.map((card) => (
+                <Card
+                  className="border-dashed transition hover:border-primary focus-within:border-primary"
+                  key={card.title}
+                >
+                  <button
+                    className="flex h-full w-full flex-col items-start gap-2 text-left"
+                    onClick={() => handleQuickStart(card)}
+                    type="button"
+                  >
+                    <CardHeader className="pb-0">
+                      <CardTitle className="text-base">{card.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-muted-foreground text-sm">
+                      {card.description}
+                    </CardContent>
+                  </button>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="overscroll-behavior-contain flex flex-1 min-w-0 touch-pan-y flex-col">
+          <ChatHeader
+            chatId={id}
+            isReadonly={isReadonly}
+            projectLabel={selectedProject?.name}
+            selectedVisibilityType={initialVisibilityType}
+          />
+
+          <Messages
+            chatId={id}
+            isArtifactVisible={isArtifactVisible}
+            isReadonly={isReadonly}
+            messages={messages}
+            regenerate={regenerate}
+            selectedModelId={initialChatModel}
+            setMessages={setMessages}
+            status={status}
+            votes={votes}
+          />
+
+          <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
+            {!isReadonly && (
+              <MultimodalInput
+                attachments={attachments}
+                chatId={id}
+                input={input}
+                messages={messages}
+                onModelChange={setCurrentModelId}
+                selectedModelId={currentModelId}
+                selectedVisibilityType={visibilityType}
+                sendMessage={sendMessage}
+                setAttachments={setAttachments}
+                setInput={setInput}
+                setMessages={setMessages}
+                status={status}
+                stop={stop}
+                usage={usage}
+              />
+            )}
+          </div>
         </div>
       </div>
 

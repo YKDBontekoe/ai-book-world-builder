@@ -5,7 +5,12 @@ import { Suspense } from "react";
 import { auth } from "@/app/(auth)/auth";
 import { ChatPageContent } from "@/components/chat-page-content";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
-import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
+import {
+  getChatById,
+  getMessagesByChatId,
+  getProjectsVisibleToUser,
+} from "@/lib/db/queries";
+import { serializeProject } from "@/lib/project-context";
 import { convertToUIMessages } from "@/lib/utils";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {
@@ -48,7 +53,17 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 
   const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get("chat-model");
+  const projectFromCookie = cookieStore.get("chat-project");
   const initialChatModel = chatModelFromCookie?.value || DEFAULT_CHAT_MODEL;
+
+  const projects = await getProjectsVisibleToUser({
+    userId: session.user?.id as string,
+  });
+
+  const serializedProjects = projects.map(serializeProject);
+  const initialProjectId = serializedProjects.find(
+    (project) => project.id === projectFromCookie?.value
+  )?.id;
 
   return (
     <ChatPageContent
@@ -57,6 +72,8 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
       initialChatModel={initialChatModel}
       initialLastContext={chat.lastContext ?? undefined}
       initialMessages={uiMessages}
+      initialProjectId={initialProjectId}
+      initialProjects={serializedProjects}
       initialVisibilityType={chat.visibility}
       isReadonly={session?.user?.id !== chat.userId}
     />

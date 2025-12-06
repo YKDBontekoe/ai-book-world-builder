@@ -33,6 +33,9 @@ import {
   getChatById,
   getMessageCountByUserId,
   getMessagesByChatId,
+  getProjectByIdWithAccess,
+  getEntitiesForProject,
+  getAttributesForProject,
   saveChat,
   saveMessages,
   updateChatLastContextById,
@@ -43,6 +46,7 @@ import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
+import { buildProjectContextPrompt } from "@/lib/project-context";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
@@ -99,11 +103,13 @@ export async function POST(request: Request) {
     const {
       id,
       message,
+      projectId,
       selectedChatModel,
       selectedVisibilityType,
     }: {
       id: string;
       message: ChatMessage;
+      projectId?: string | null;
       selectedChatModel: ChatModel["id"];
       selectedVisibilityType: VisibilityType;
     } = requestBody;
@@ -115,6 +121,30 @@ export async function POST(request: Request) {
     }
 
     const userType: UserType = session.user.type;
+
+    let projectContext: string | undefined;
+
+    if (projectId) {
+      const project = await getProjectByIdWithAccess({
+        id: projectId,
+        userId: session.user.id,
+      });
+
+      if (!project) {
+        return new ChatSDKError("forbidden:chat", "Project unavailable").toResponse();
+      }
+
+      const [entities, attributes] = await Promise.all([
+        getEntitiesForProject({ projectId }),
+        getAttributesForProject({ projectId }),
+      ]);
+
+      projectContext = buildProjectContextPrompt({
+        project,
+        entities,
+        attributes,
+      });
+    }
 
     const messageCount = await getMessageCountByUserId({
       id: session.user.id,
@@ -159,6 +189,15 @@ export async function POST(request: Request) {
       country,
     };
 
+    const baseSystemPrompt = systemPrompt({
+      selectedChatModel,
+      requestHints,
+    });
+
+    const groundedSystemPrompt = projectContext
+      ? `${baseSystemPrompt}\n\nProject context:\n${projectContext}`
+      : baseSystemPrompt;
+
     await saveMessages({
       messages: [
         {
@@ -181,7 +220,7 @@ export async function POST(request: Request) {
       execute: ({ writer: dataStream }) => {
         const result = streamText({
           model: myProvider.languageModel(selectedChatModel),
-          system: systemPrompt({ selectedChatModel, requestHints }),
+          system: groundedSystemPrompt,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
           experimental_activeTools:
