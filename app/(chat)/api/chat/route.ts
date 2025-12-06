@@ -242,6 +242,8 @@ export async function POST(request: Request) {
     const baseSystemPrompt = systemPrompt({
       selectedChatModel,
       requestHints,
+      hasProjectContext: Boolean(projectContext),
+      usesStoryTools: Boolean(projectId),
     });
 
     const groundedSystemPrompt = projectContext
