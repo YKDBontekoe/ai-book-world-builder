@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
+import { EmptyState } from "@/components/empty-state";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,24 +81,21 @@ export default async function EntitiesPage({
   const warnings = buildWarnings({ entities, relationships });
 
   return (
-    <div className="flex min-h-dvh flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <p className="text-muted-foreground text-sm">Schema</p>
-          <h1 className="font-semibold text-2xl">Entities</h1>
-          <p className="text-muted-foreground text-sm">
-            Track world objects, their defining attributes, and how they
-            connect.
-          </p>
-        </div>
-        {canEdit && (
-          <Button asChild>
-            <Link href={`/projects/${project.id}/entities/new`}>
-              Add entity
-            </Link>
-          </Button>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        action={
+          canEdit ? (
+            <Button asChild>
+              <Link href={`/projects/${project.id}/entities/new`}>
+                Add entity
+              </Link>
+            </Button>
+          ) : undefined
+        }
+        breadcrumb="Schema"
+        description="Track world objects, their defining attributes, and how they connect."
+        title="Entities"
+      />
 
       {warnings.length > 0 && (
         <Card className="border-amber-500/50">
@@ -111,15 +111,10 @@ export default async function EntitiesPage({
       )}
 
       {entities.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">No entities yet</CardTitle>
-          </CardHeader>
-          <CardContent className="text-muted-foreground text-sm">
-            Start adding characters, factions, or locations to surface richer AI
-            suggestions in drafts.
-          </CardContent>
-        </Card>
+        <EmptyState
+          description="Start adding characters, factions, or locations to surface richer AI suggestions in drafts."
+          title="No entities yet"
+        />
       ) : (
         <Card>
           <CardHeader>
@@ -155,6 +150,6 @@ export default async function EntitiesPage({
           </CardContent>
         </Card>
       )}
-    </div>
+    </PageContainer>
   );
 }

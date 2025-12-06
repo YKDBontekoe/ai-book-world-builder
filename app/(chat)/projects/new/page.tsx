@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
+import { PageContainer } from "@/components/page-container";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CreateProjectForm } from "./create-project-form";
 
@@ -14,7 +15,7 @@ export default async function NewProjectPage() {
 
   if (!canCreate) {
     return (
-      <div className="flex min-h-dvh items-center justify-center p-6">
+      <PageContainer centered>
         <Card className="max-w-lg">
           <CardHeader>
             <CardTitle className="text-lg">
@@ -26,12 +27,12 @@ export default async function NewProjectPage() {
             Guests can still browse public projects.
           </CardContent>
         </Card>
-      </div>
+      </PageContainer>
     );
   }
 
   return (
-    <div className="flex min-h-dvh items-start justify-center p-6">
+    <PageContainer className="items-center">
       <div className="w-full max-w-3xl">
         <Card>
           <CardHeader>
@@ -42,6 +43,6 @@ export default async function NewProjectPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

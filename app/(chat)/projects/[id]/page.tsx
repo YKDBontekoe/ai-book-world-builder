@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -79,27 +81,26 @@ export default async function ProjectDetailPage({
     session.user?.type === "regular" && project.userId === session.user.id;
 
   return (
-    <div className="flex min-h-dvh flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="space-y-2">
+    <PageContainer>
+      <PageHeader
+        description={project.description ?? undefined}
+        metadata={`Created ${new Date(project.createdAt).toLocaleDateString()}`}
+        title={
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="font-semibold text-2xl">{project.name}</h1>
             <Badge variant="secondary">{project.visibility}</Badge>
           </div>
-          {project.description && (
-            <p className="max-w-3xl text-muted-foreground">
-              {project.description}
-            </p>
-          )}
+        }
+      />
+
+      <div className="flex flex-col gap-2">
+        {canEdit ? (
+          <p className="text-muted-foreground text-sm">You own this project.</p>
+        ) : (
           <p className="text-muted-foreground text-sm">
-            {canEdit
-              ? "You own this project."
-              : "Viewing with read-only access."}
+            Viewing with read-only access.
           </p>
-        </div>
-        <div className="text-right text-muted-foreground text-sm">
-          Created {new Date(project.createdAt).toLocaleDateString()}
-        </div>
+        )}
       </div>
 
       <Card>
@@ -182,6 +183,6 @@ export default async function ProjectDetailPage({
           ))}
         </CardContent>
       </Card>
-    </div>
+    </PageContainer>
   );
 }

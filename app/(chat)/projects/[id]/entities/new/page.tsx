@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
@@ -35,16 +37,18 @@ export default async function NewEntityPage({
   }
 
   return (
-    <div className="flex min-h-dvh flex-col gap-6 p-6">
-      <div className="space-y-1">
-        <Button asChild className="px-0" size="sm" variant="ghost">
-          <Link href={`/projects/${project.id}/entities`}>Back to schema</Link>
-        </Button>
-        <h1 className="font-semibold text-2xl">Add a new entity</h1>
-        <p className="text-muted-foreground text-sm">
-          Define the people, places, and artifacts that appear in your drafts.
-        </p>
-      </div>
+    <PageContainer>
+      <PageHeader
+        breadcrumb={
+          <Button asChild className="px-0" size="sm" variant="ghost">
+            <Link href={`/projects/${project.id}/entities`}>
+              Back to schema
+            </Link>
+          </Button>
+        }
+        description="Define the people, places, and artifacts that appear in your drafts."
+        title="Add a new entity"
+      />
 
       <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
         <CreateEntityForm projectId={project.id} />
@@ -65,6 +69,6 @@ export default async function NewEntityPage({
           </CardContent>
         </Card>
       </div>
-    </div>
+    </PageContainer>
   );
 }

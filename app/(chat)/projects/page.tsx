@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
+import { EmptyState } from "@/components/empty-state";
+import { PageContainer } from "@/components/page-container";
+import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,32 +23,28 @@ export default async function ProjectsPage() {
   const canCreate = session.user?.type === "regular";
 
   return (
-    <div className="flex min-h-dvh flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <h1 className="font-semibold text-2xl">Projects</h1>
-          <p className="text-muted-foreground text-sm">
-            Organize world building work across worlds, characters, and drafts.
-          </p>
-        </div>
-        {canCreate && (
-          <Button asChild>
-            <Link href="/projects/new">Create project</Link>
-          </Button>
-        )}
-      </div>
+    <PageContainer>
+      <PageHeader
+        action={
+          canCreate ? (
+            <Button asChild>
+              <Link href="/projects/new">Create project</Link>
+            </Button>
+          ) : undefined
+        }
+        description="Organize world building work across worlds, characters, and drafts."
+        title="Projects"
+      />
 
       {projects.length === 0 ? (
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">No projects yet</CardTitle>
-          </CardHeader>
-          <CardContent className="text-muted-foreground text-sm">
-            {canCreate
+        <EmptyState
+          description={
+            canCreate
               ? "Start your first project to keep worlds, timelines, and drafts together."
-              : "Sign in with a registered account to create and manage projects."}
-          </CardContent>
-        </Card>
+              : "Sign in with a registered account to create and manage projects."
+          }
+          title="No projects yet"
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((project) => (
@@ -86,6 +85,6 @@ export default async function ProjectsPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageContainer>
   );
 }
