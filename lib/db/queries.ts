@@ -13,6 +13,7 @@ import {
   lt,
   lte,
   or,
+  sql,
   type SQL,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
@@ -23,6 +24,7 @@ import { DEFAULT_PROJECT_FOLDERS } from "../constants";
 import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
+import type { ExtractedEntity } from "@/lib/ingestion/entities";
 import {
   type Chapter,
   type ChapterDraft,
@@ -725,6 +727,262 @@ export async function createEntity({
     throw (
       chatError ??
       new ChatSDKError("bad_request:database", "Failed to create entity")
+    );
+  }
+}
+
+export type PersistedEntityAuditLog = {
+  created: Entity[];
+  updated: Entity[];
+  attributesUpserted: number;
+  relationshipsUpserted: number;
+};
+
+function validateProjectAccess({
+  projectRecord,
+  userId,
+}: {
+  projectRecord: Project | undefined;
+  userId: string;
+}) {
+  if (!projectRecord) {
+    throw new ChatSDKError("not_found:api", "Project not found.");
+  }
+
+  if (projectRecord.visibility === "private" && projectRecord.userId !== userId) {
+    throw new ChatSDKError(
+      "forbidden:api",
+      "You do not have access to modify this project."
+    );
+  }
+}
+
+function normalizeAttributes({
+  entities,
+  now,
+  projectId,
+}: {
+  entities: ExtractedEntity[];
+  now: Date;
+  projectId: string;
+}) {
+  const deduped: Record<string, EntityAttribute> = {};
+
+  for (const entityCandidate of entities) {
+    if (!entityCandidate.attributes?.length) continue;
+    const entityId = entityCandidate.id ?? "";
+
+    for (const attribute of entityCandidate.attributes) {
+      if (!entityId || !attribute.name || !attribute.value) continue;
+      const key = `${entityId}:${attribute.name.toLowerCase()}`;
+
+      const parsedStart = toDateOrUndefined(attribute.startDate) ?? null;
+      const parsedEnd = toDateOrUndefined(attribute.endDate) ?? null;
+
+      deduped[key] = {
+        id: generateUUID(),
+        createdAt: now,
+        name: attribute.name,
+        value: attribute.value,
+        dataType: attribute.dataType ?? "text",
+        startDate: parsedStart,
+        endDate: parsedEnd,
+        entityId,
+        projectId,
+      } satisfies EntityAttribute;
+    }
+  }
+
+  return Object.values(deduped);
+}
+
+export async function ingestExtractedEntities({
+  projectId,
+  userId,
+  entities,
+}: {
+  projectId: string;
+  userId: string;
+  entities: ExtractedEntity[];
+}): Promise<PersistedEntityAuditLog> {
+  const uniqueEntities = entities.reduce<ExtractedEntity[]>((acc, entry) => {
+    const key = entry.name.toLowerCase();
+    const existing = acc.find((candidate) => candidate.name.toLowerCase() === key);
+
+    if (existing) {
+      existing.attributes = [
+        ...(existing.attributes ?? []),
+        ...(entry.attributes ?? []),
+      ];
+      existing.relationships = [
+        ...(existing.relationships ?? []),
+        ...(entry.relationships ?? []),
+      ];
+      existing.summary = entry.summary ?? existing.summary;
+      return acc;
+    }
+
+    acc.push({ ...entry });
+    return acc;
+  }, []);
+
+  if (uniqueEntities.length === 0) {
+    return {
+      created: [],
+      updated: [],
+      attributesUpserted: 0,
+      relationshipsUpserted: 0,
+    } satisfies PersistedEntityAuditLog;
+  }
+
+  try {
+    const [projectRecord] = await db
+      .select()
+      .from(project)
+      .where(eq(project.id, projectId));
+
+    validateProjectAccess({ projectRecord, userId });
+
+    const now = new Date();
+
+    return await db.transaction(async (tx) => {
+      const existingEntities = await tx
+        .select({ id: entity.id, name: entity.name })
+        .from(entity)
+        .where(eq(entity.projectId, projectId));
+
+      const existingByName = new Map(
+        existingEntities.map((item) => [item.name.toLowerCase(), item])
+      );
+
+      const upsertedEntities = await tx
+        .insert(entity)
+        .values(
+          uniqueEntities.map((entry) => ({
+            projectId,
+            name: entry.name,
+            kind: entry.kind,
+            summary: entry.summary,
+            startDate: null,
+            endDate: null,
+            createdAt: now,
+            updatedAt: now,
+          }))
+        )
+        .onConflictDoUpdate({
+          target: [entity.projectId, entity.name],
+          set: {
+            summary: sql`excluded.summary`,
+            kind: sql`excluded.kind`,
+            updatedAt: now,
+          },
+        })
+        .returning();
+
+      const entityByName = new Map(
+        upsertedEntities.map((item) => [item.name.toLowerCase(), item])
+      );
+
+      const attributesToUpsert = normalizeAttributes({
+        entities: uniqueEntities.map((entry) => ({
+          ...entry,
+          id: entityByName.get(entry.name.toLowerCase())?.id,
+        })),
+        now,
+        projectId,
+      });
+
+      const updatedAttributeRecords = attributesToUpsert.length
+        ? await tx
+            .insert(entityAttribute)
+            .values(attributesToUpsert)
+            .onConflictDoUpdate({
+              target: [entityAttribute.entityId, entityAttribute.name],
+              set: {
+                value: sql`excluded.value`,
+                dataType: sql`excluded.dataType`,
+                startDate: sql`excluded.startDate`,
+                endDate: sql`excluded.endDate`,
+              },
+            })
+            .returning()
+        : [];
+
+      const relationshipCandidates = uniqueEntities.flatMap((entry) => {
+        const source = entityByName.get(entry.name.toLowerCase());
+        if (!source || !entry.relationships?.length) return [];
+
+        return entry.relationships
+          .map((relation) => {
+            const target = entityByName.get(relation.targetName.toLowerCase());
+            if (!target || target.id === source.id) return null;
+
+            return {
+              id: generateUUID(),
+              createdAt: now,
+              type: relation.type,
+              description: relation.description ?? null,
+              startDate: null,
+              endDate: null,
+              projectId,
+              sourceEntityId: source.id,
+              targetEntityId: target.id,
+            } satisfies Relationship;
+          })
+          .filter((relationship): relationship is Relationship =>
+            Boolean(relationship)
+          );
+      });
+
+      const dedupedRelationships = new Map<string, Relationship>();
+
+      for (const relation of relationshipCandidates) {
+        const key = `${relation.sourceEntityId}:${relation.targetEntityId}:${relation.type}`;
+        dedupedRelationships.set(key, relation);
+      }
+
+      const relationshipsUpserted = dedupedRelationships.size
+        ? await tx
+            .insert(relationship)
+            .values([...dedupedRelationships.values()])
+            .onConflictDoUpdate({
+              target: [
+                relationship.projectId,
+                relationship.sourceEntityId,
+                relationship.targetEntityId,
+                relationship.type,
+              ],
+              set: {
+                description: sql`excluded.description`,
+                startDate: sql`excluded.startDate`,
+                endDate: sql`excluded.endDate`,
+              },
+            })
+            .returning()
+        : [];
+
+      const created = upsertedEntities.filter(
+        (entry) => !existingByName.has(entry.name.toLowerCase())
+      );
+      const updated = upsertedEntities.filter((entry) =>
+        existingByName.has(entry.name.toLowerCase())
+      );
+
+      return {
+        created,
+        updated,
+        attributesUpserted: updatedAttributeRecords.length,
+        relationshipsUpserted: relationshipsUpserted.length,
+      } satisfies PersistedEntityAuditLog;
+    });
+  } catch (error) {
+    const chatError = error instanceof ChatSDKError ? error : null;
+    throw (
+      chatError ??
+      new ChatSDKError(
+        "bad_request:database",
+        "Failed to persist extracted entities"
+      )
     );
   }
 }

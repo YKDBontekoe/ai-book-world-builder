@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { DEFAULT_PROJECT_FOLDERS } from "@/lib/constants";
 import {
   SourceMaterialWorker,
   type ExtractedContent,
@@ -7,14 +8,25 @@ import {
   type SourceMaterialExtractor,
   normalizeTextContent,
 } from "@/lib/ingestion/worker";
+import {
+  deriveEntitiesFromContent,
+  type ExtractedEntity,
+} from "@/lib/ingestion/entities";
 import { generateUUID } from "@/lib/utils";
 import type {
+  Entity,
+  EntityAttribute,
   NewSourceMaterialChapter,
   NewSourceMaterialChunk,
+  ProjectFolder,
+  Relationship,
   SourceMaterial,
   SourceMaterialProcessing,
 } from "@/lib/db/schema";
-import type { SourceMaterialWithProcessing } from "@/lib/db/queries";
+import type {
+  PersistedEntityAuditLog,
+  SourceMaterialWithProcessing,
+} from "@/lib/db/queries";
 
 class InMemoryRepository implements IngestionRepository {
   materials: SourceMaterialWithProcessing[];
@@ -25,8 +37,21 @@ class InMemoryRepository implements IngestionRepository {
 
   processing = new Map<string, SourceMaterialProcessing>();
 
+  projectFolders = new Map<string, ProjectFolder[]>();
+
+  entities: Entity[] = [];
+
+  attributes: EntityAttribute[] = [];
+
+  relationships: Relationship[] = [];
+
+  auditLog: PersistedEntityAuditLog | null = null;
+
   constructor(materials: SourceMaterialWithProcessing[]) {
     this.materials = materials;
+    materials.forEach((entry) => {
+      this.projectFolders.set(entry.material.projectId, DEFAULT_PROJECT_FOLDERS);
+    });
   }
 
   async getReadyMaterials(limit: number): Promise<SourceMaterialWithProcessing[]> {
@@ -115,6 +140,167 @@ class InMemoryRepository implements IngestionRepository {
     this.chapters = chapters;
     this.chunks = chunks;
   }
+
+  async getProjectFolders({
+    projectId,
+  }: {
+    projectId: string;
+    userId: string;
+  }): Promise<ProjectFolder[]> {
+    return this.projectFolders.get(projectId) ?? DEFAULT_PROJECT_FOLDERS;
+  }
+
+  async persistEntities({
+    material,
+    projectFolders,
+    normalizedText,
+  }: {
+    material: SourceMaterial;
+    projectFolders: ProjectFolder[];
+    normalizedText: string;
+  }) {
+    const derived = deriveEntitiesFromContent({
+      text: normalizedText,
+      projectFolders,
+    });
+
+    if (derived.length === 0) {
+      this.auditLog = null;
+      return null;
+    }
+
+    const now = new Date();
+    const existingByName = new Map(
+      this.entities
+        .filter((entityItem) => entityItem.projectId === material.projectId)
+        .map((entry) => [entry.name.toLowerCase(), entry])
+    );
+    const created: Entity[] = [];
+    const updated: Entity[] = [];
+    let attributesUpserted = 0;
+    let relationshipsUpserted = 0;
+
+    for (const entityDef of derived) {
+      const existing = existingByName.get(entityDef.name.toLowerCase());
+
+      if (existing) {
+        existing.kind = entityDef.kind;
+        existing.summary = entityDef.summary ?? existing.summary;
+        existing.updatedAt = now;
+        entityDef.id = existing.id;
+        updated.push(existing);
+        continue;
+      }
+
+      const record: Entity = {
+        id: generateUUID(),
+        createdAt: now,
+        updatedAt: now,
+        name: entityDef.name,
+        kind: entityDef.kind,
+        summary: entityDef.summary ?? null,
+        startDate: null,
+        endDate: null,
+        projectId: material.projectId,
+      };
+
+      this.entities.push(record);
+      existingByName.set(record.name.toLowerCase(), record);
+      entityDef.id = record.id;
+      created.push(record);
+    }
+
+    for (const entityDef of derived) {
+      const parent = existingByName.get(entityDef.name.toLowerCase());
+
+      if (!parent) continue;
+
+      const attributeKeys = new Set(
+        this.attributes
+          .filter((attribute) => attribute.entityId === parent.id)
+          .map((attribute) => attribute.name.toLowerCase())
+      );
+
+      for (const attribute of entityDef.attributes ?? []) {
+        const record: EntityAttribute = {
+          id: generateUUID(),
+          createdAt: now,
+          name: attribute.name,
+          value: attribute.value,
+          dataType: attribute.dataType ?? "text",
+          startDate: null,
+          endDate: null,
+          entityId: parent.id,
+          projectId: material.projectId,
+        };
+
+        if (attributeKeys.has(attribute.name.toLowerCase())) {
+          const index = this.attributes.findIndex(
+            (attributeItem) =>
+              attributeItem.entityId === parent.id &&
+              attributeItem.name.toLowerCase() === attribute.name.toLowerCase()
+          );
+
+          this.attributes[index] = record;
+          attributesUpserted += 1;
+        } else {
+          this.attributes.push(record);
+          attributesUpserted += 1;
+        }
+      }
+
+      const relationshipKeys = new Set(
+        this.relationships
+          .filter((relation) => relation.projectId === material.projectId)
+          .map(
+            (relation) =>
+              `${relation.sourceEntityId}:${relation.targetEntityId}:${relation.type}`
+          )
+      );
+
+      for (const relation of entityDef.relationships ?? []) {
+        const target = existingByName.get(relation.targetName.toLowerCase());
+        if (!target || target.id === parent.id) continue;
+
+        const key = `${parent.id}:${target.id}:${relation.type}`;
+        const record: Relationship = {
+          id: generateUUID(),
+          createdAt: now,
+          type: relation.type,
+          description: relation.description ?? null,
+          startDate: null,
+          endDate: null,
+          projectId: material.projectId,
+          sourceEntityId: parent.id,
+          targetEntityId: target.id,
+        };
+
+        if (relationshipKeys.has(key)) {
+          const index = this.relationships.findIndex(
+            (candidate) =>
+              candidate.sourceEntityId === parent.id &&
+              candidate.targetEntityId === target.id &&
+              candidate.type === relation.type
+          );
+
+          this.relationships[index] = record;
+          relationshipsUpserted += 1;
+        } else {
+          this.relationships.push(record);
+          relationshipsUpserted += 1;
+        }
+      }
+    }
+
+    this.auditLog = {
+      created,
+      updated,
+      attributesUpserted,
+      relationshipsUpserted,
+    } satisfies PersistedEntityAuditLog;
+
+    return { entities: derived, audit: this.auditLog };
+  }
 }
 
 const baseMaterial: SourceMaterial = {
@@ -173,6 +359,54 @@ describe("SourceMaterialWorker", () => {
     expect(processing?.chunks).toBeGreaterThan(0);
     expect(processing?.normalizedCharacters).toBeGreaterThan(0);
     expect(processing?.lastError).toBeNull();
+  });
+
+  it("extracts and upserts entities, attributes, and relationships", async () => {
+    const repo = new InMemoryRepository([
+      { material: baseMaterial, processing: null },
+    ]);
+
+    let currentText = [
+      "Characters:",
+      "- Aria (Guardian): Protector of the realm | Attributes: Virtue=Loyal, Home=Skyhold | Relationships: Cassian=Allies",
+      "- Cassian (Prince): Reluctant heir keeping secrets",
+      "",
+      "Locations:",
+      "- Skyhold (City): Mountain capital where the guardian serves | Relationships: Aria=Protector",
+    ].join("\n");
+
+    const worker = new SourceMaterialWorker({
+      repository: repo,
+      extractor,
+      fetcher: () => textFetcher(currentText),
+      batchSize: 1,
+      chunkSize: 200,
+    });
+
+    await worker.runBatch();
+
+    expect(repo.entities).toHaveLength(3);
+    expect(repo.attributes.length).toBeGreaterThanOrEqual(5);
+    expect(repo.relationships).toHaveLength(2);
+    expect(repo.auditLog?.created.length).toBe(3);
+
+    currentText = [
+      "Characters:",
+      "- Aria (Guardian): Protector of the realm and the skies",
+      "- Cassian (Prince): Determined ally | Relationships: Aria=Allies",
+    ].join("\n");
+
+    await worker.runBatch();
+
+    expect(repo.entities).toHaveLength(3);
+    expect(repo.auditLog?.created.length).toBe(0);
+    expect(repo.auditLog?.updated.length).toBeGreaterThan(0);
+    expect(new Set(
+      repo.relationships.map(
+        (relation) =>
+          `${relation.sourceEntityId}:${relation.targetEntityId}:${relation.type}`
+      )
+    ).size).toBe(repo.relationships.length);
   });
 
   it("backs off on failures and marks the material as failed after max attempts", async () => {

@@ -3,22 +3,34 @@ import { Buffer } from "node:buffer";
 import JSZip from "jszip";
 
 import {
+  getProjectByIdWithAccess,
   getSourceMaterialsReadyForProcessing,
+  ingestExtractedEntities,
   saveSourceMaterialExtraction,
+  type PersistedEntityAuditLog,
   type SourceMaterialWithProcessing,
   type UpsertSourceMaterialProcessingArgs,
   updateSourceMaterial,
   updateSourceMaterialProcessing,
   upsertSourceMaterialProcessing,
 } from "@/lib/db/queries";
+import { ChatSDKError } from "@/lib/errors";
 import type {
   NewSourceMaterialChapter,
   NewSourceMaterialChunk,
+  ProjectFolder,
   SourceMaterial,
   SourceMaterialProcessing,
 } from "@/lib/db/schema";
-import { supportedSourceMaterialMimeTypes } from "@/lib/source-materials";
 import { generateUUID } from "@/lib/utils";
+import {
+  assertSupportedMimeType,
+  cleanText,
+  deriveHeadings,
+  splitIntoChunks,
+  stripHtml,
+} from "./text";
+import { deriveEntitiesFromContent } from "./entities";
 
 type BlobFetcher = (url: string) => Promise<Response>;
 
@@ -31,6 +43,7 @@ type ExtractedContent = {
 type ExtractionResult = {
   chapters: NewSourceMaterialChapter[];
   chunks: NewSourceMaterialChunk[];
+  normalizedText: string;
   metrics: {
     bytesProcessed: number;
     normalizedCharacters: number;
@@ -38,6 +51,11 @@ type ExtractionResult = {
     chunkCount: number;
     metadata?: Record<string, unknown>;
   };
+};
+
+type EntityExtraction = {
+  entities: ReturnType<typeof deriveEntitiesFromContent>;
+  audit: PersistedEntityAuditLog;
 };
 
 type SourceMaterialExtractor = {
@@ -56,61 +74,21 @@ type IngestionRepository = {
     chapters: NewSourceMaterialChapter[];
     chunks: NewSourceMaterialChunk[];
   }) => Promise<void>;
+  persistEntities: (args: {
+    material: SourceMaterial;
+    projectFolders: ProjectFolder[];
+    normalizedText: string;
+  }) => Promise<EntityExtraction | null>;
+  getProjectFolders: (params: {
+    projectId: string;
+    userId: string;
+  }) => Promise<ProjectFolder[]>;
 };
 
 const DEFAULT_CHUNK_SIZE = 1200;
 const DEFAULT_BATCH_SIZE = 5;
 const BASE_BACKOFF_MS = 1000;
 const DEFAULT_MAX_ATTEMPTS = 3;
-
-function cleanText(text: string): string {
-  return text
-    .replace(/\r\n/g, "\n")
-    .replace(/\r/g, "\n")
-    .replace(/\u0000/g, "")
-    .replace(/[\t ]+\n/g, "\n")
-    .trim();
-}
-
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function splitIntoChunks(text: string, chunkSize: number): string[] {
-  if (!text) return [];
-
-  const normalized = cleanText(text);
-  const parts: string[] = [];
-  let cursor = 0;
-
-  while (cursor < normalized.length) {
-    const slice = normalized.slice(cursor, cursor + chunkSize);
-    const lastSpace = slice.lastIndexOf(" ");
-    const end = lastSpace > 0 ? cursor + lastSpace : cursor + slice.length;
-    parts.push(normalized.slice(cursor, end).trim());
-    cursor = end;
-  }
-
-  return parts.filter(Boolean);
-}
-
-function deriveHeadings(text: string): string[] {
-  const headings = new Set<string>();
-  const lines = cleanText(text).split("\n");
-  const headingRegex = /^(?:#+\s+|chapter\s+\d+[:\-\s]*)(.+)/i;
-
-  for (const line of lines) {
-    const match = line.match(headingRegex);
-    if (match?.[1]) {
-      const heading = match[1].trim();
-      if (heading) {
-        headings.add(heading);
-      }
-    }
-  }
-
-  return [...headings];
-}
 
 async function extractFromPdf(bytes: ArrayBuffer): Promise<ExtractedContent> {
   const { default: pdfParse } = await import("pdf-parse");
@@ -186,9 +164,7 @@ class DefaultSourceMaterialExtractor implements SourceMaterialExtractor {
   }): Promise<ExtractedContent> {
     const mimeType = material.mimeType.toLowerCase();
 
-    if (!supportedSourceMaterialMimeTypes.has(mimeType)) {
-      throw new Error(`Unsupported MIME type: ${mimeType}`);
-    }
+    assertSupportedMimeType(mimeType);
 
     if (mimeType === "application/pdf") {
       return extractFromPdf(bytes);
@@ -243,6 +219,52 @@ class DatabaseIngestionRepository implements IngestionRepository {
       projectId: material.projectId,
       userId: material.userId,
     });
+  }
+
+  async getProjectFolders({
+    projectId,
+    userId,
+  }: {
+    projectId: string;
+    userId: string;
+  }): Promise<ProjectFolder[]> {
+    const project = await getProjectByIdWithAccess({ id: projectId, userId });
+
+    if (!project) {
+      throw new ChatSDKError(
+        "forbidden:api",
+        "Project not found or you do not have access."
+      );
+    }
+
+    return project.folders as ProjectFolder[];
+  }
+
+  async persistEntities({
+    material,
+    projectFolders,
+    normalizedText,
+  }: {
+    material: SourceMaterial;
+    projectFolders: ProjectFolder[];
+    normalizedText: string;
+  }): Promise<EntityExtraction | null> {
+    const entities = deriveEntitiesFromContent({
+      text: normalizedText,
+      projectFolders,
+    });
+
+    if (entities.length === 0) {
+      return null;
+    }
+
+    const audit = await ingestExtractedEntities({
+      entities,
+      projectId: material.projectId,
+      userId: material.userId,
+    });
+
+    return { entities, audit };
   }
 }
 
@@ -309,6 +331,7 @@ function normalizeExtraction({
   return {
     chapters,
     chunks,
+    normalizedText,
     metrics: {
       bytesProcessed: bytes.byteLength,
       normalizedCharacters: normalizedText.length,
@@ -401,6 +424,29 @@ export class SourceMaterialWorker {
         chunkSize: this.chunkSize,
       });
 
+      const projectFolders = await this.repository.getProjectFolders({
+        projectId: material.projectId,
+        userId: material.userId,
+      });
+
+      const entityExtraction = await this.repository.persistEntities({
+        material,
+        projectFolders,
+        normalizedText: normalized.normalizedText,
+      });
+
+      if (entityExtraction) {
+        console.info("Ingestion entity extraction", {
+          materialId: material.id,
+          projectId: material.projectId,
+          entities: entityExtraction.entities.length,
+          created: entityExtraction.audit.created.length,
+          updated: entityExtraction.audit.updated.length,
+          attributes: entityExtraction.audit.attributesUpserted,
+          relationships: entityExtraction.audit.relationshipsUpserted,
+        });
+      }
+
       await this.repository.persistExtraction({
         material,
         chapters: normalized.chapters,
@@ -410,6 +456,21 @@ export class SourceMaterialWorker {
       const completedAt = new Date();
       const durationMs = completedAt.getTime() - startedAt.getTime();
 
+      const metadata = {
+        ...normalized.metrics.metadata,
+        ...(entityExtraction
+          ? {
+              entities: {
+                extracted: entityExtraction.entities.length,
+                created: entityExtraction.audit.created.length,
+                updated: entityExtraction.audit.updated.length,
+                attributes: entityExtraction.audit.attributesUpserted,
+                relationships: entityExtraction.audit.relationshipsUpserted,
+              },
+            }
+          : {}),
+      };
+
       await this.repository.saveProcessing({
         attempts: attempts + 1,
         bytesProcessed: normalized.metrics.bytesProcessed,
@@ -418,7 +479,7 @@ export class SourceMaterialWorker {
         completedAt,
         durationMs,
         lastError: null,
-        metadata: normalized.metrics.metadata ?? null,
+        metadata: Object.keys(metadata).length > 0 ? metadata : null,
         nextAttemptAt: completedAt,
         normalizedCharacters: normalized.metrics.normalizedCharacters,
         projectId: material.projectId,
