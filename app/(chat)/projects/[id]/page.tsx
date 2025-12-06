@@ -142,6 +142,22 @@ export default async function ProjectDetailPage({
       )}
 
       <Card>
+        <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">Draft workspace</CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Generate outlines and drafts grounded in your entities and relationships.
+            </p>
+          </div>
+          <Button asChild size="sm" variant="default">
+            <Link href={`/projects/${project.id}/drafts`}>
+              Open draft workspace
+            </Link>
+          </Button>
+        </CardHeader>
+      </Card>
+
+      <Card>
         <CardHeader>
           <CardTitle className="text-lg">Project folders</CardTitle>
         </CardHeader>
