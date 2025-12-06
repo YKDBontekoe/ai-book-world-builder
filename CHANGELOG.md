@@ -59,4 +59,5 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Fixed schema management errors by aligning validation error codes with the shared error map and surfacing descriptive messages.
 - Corrected quick-start project selection notifications to align with the toast API and avoid build-time type errors.
 - Normalized serialized project descriptions to avoid undefined/null type mismatches during builds.
+- Prevented project selection URL syncing from reloading the chat page when the project was already chosen.
 

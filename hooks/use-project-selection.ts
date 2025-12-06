@@ -47,7 +47,15 @@ export function useProjectSelection({
     (projectId: string | null) => {
       if (typeof window === "undefined") return;
       const currentUrl = new URL(window.location.href);
-      if (projectId) {
+      const currentProjectId = currentUrl.searchParams.get("projectId");
+      const normalizedCurrent = currentProjectId ?? null;
+      const normalizedTarget = projectId ?? null;
+
+      if (normalizedCurrent === normalizedTarget) {
+        return;
+      }
+
+      if (normalizedTarget) {
         currentUrl.searchParams.set("projectId", projectId);
       } else {
         currentUrl.searchParams.delete("projectId");
@@ -81,6 +89,7 @@ export function useProjectSelection({
 
   useEffect(() => {
     if (!projectFromSearch) return;
+    if (selectedProjectId === projectFromSearch) return;
 
     const matchingProject = projects.find(
       (project) => project.id === projectFromSearch
@@ -89,13 +98,15 @@ export function useProjectSelection({
     if (matchingProject) {
       applyProjectSelection(matchingProject.id);
     }
-  }, [applyProjectSelection, projectFromSearch, projects]);
+  }, [applyProjectSelection, projectFromSearch, projects, selectedProjectId]);
 
   useEffect(() => {
-    if (!selectedProjectId && projects.length > 0) {
-      applyProjectSelection(projects[0].id);
-    }
-  }, [applyProjectSelection, projects, selectedProjectId]);
+    if (selectedProjectId) return;
+    if (projectFromSearch) return;
+    if (projects.length === 0) return;
+
+    applyProjectSelection(projects[0].id);
+  }, [applyProjectSelection, projectFromSearch, projects, selectedProjectId]);
 
   return {
     applyProjectSelection,
