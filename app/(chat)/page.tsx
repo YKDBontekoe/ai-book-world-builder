@@ -51,7 +51,7 @@ async function NewChatPage() {
       id={id}
       initialChatModel={initialChatModel}
       initialMessages={[]}
-      initialProjectId={undefined}
+      initialProjectId={initialProjectId}
       initialProjects={serializedProjects}
       initialVisibilityType="private"
       isReadonly={false}

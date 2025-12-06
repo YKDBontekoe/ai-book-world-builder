@@ -45,7 +45,9 @@ export function useProjectSelection({
 
   const updateProjectInUrl = useCallback(
     (projectId: string | null) => {
-      if (typeof window === "undefined") return;
+      if (typeof window === "undefined") {
+        return;
+      }
       const currentUrl = new URL(window.location.href);
       const currentProjectId = currentUrl.searchParams.get("projectId");
       const normalizedCurrent = currentProjectId ?? null;
@@ -79,17 +81,25 @@ export function useProjectSelection({
     selectedProjectIdRef.current = selectedProjectId;
 
     if (selectedProjectId) {
-      document.cookie = `chat-project=${selectedProjectId}; path=/; max-age=${
-        60 * 60 * 24 * 30
-      }`;
+      const expires = Date.now() + 1000 * 60 * 60 * 24 * 30;
+      window.cookieStore?.set({
+        expires,
+        name: "chat-project",
+        path: "/",
+        value: selectedProjectId,
+      });
     }
 
     updateProjectInUrl(selectedProjectId);
   }, [projectFromSearch, selectedProjectId, updateProjectInUrl]);
 
   useEffect(() => {
-    if (!projectFromSearch) return;
-    if (selectedProjectId === projectFromSearch) return;
+    if (!projectFromSearch) {
+      return;
+    }
+    if (selectedProjectId === projectFromSearch) {
+      return;
+    }
 
     const matchingProject = projects.find(
       (project) => project.id === projectFromSearch
@@ -101,9 +111,15 @@ export function useProjectSelection({
   }, [applyProjectSelection, projectFromSearch, projects, selectedProjectId]);
 
   useEffect(() => {
-    if (selectedProjectId) return;
-    if (projectFromSearch) return;
-    if (projects.length === 0) return;
+    if (selectedProjectId) {
+      return;
+    }
+    if (projectFromSearch) {
+      return;
+    }
+    if (projects.length === 0) {
+      return;
+    }
 
     applyProjectSelection(projects[0].id);
   }, [applyProjectSelection, projectFromSearch, projects, selectedProjectId]);

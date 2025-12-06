@@ -34,14 +34,14 @@ export function buildLoreContext({
   const attributeMap = new Map<string, EntityAttribute[]>();
   const entityNameMap = new Map<string, string>();
 
-  attributes.forEach((attribute) => {
+  for (const attribute of attributes) {
     const existingAttributes = attributeMap.get(attribute.entityId) ?? [];
     attributeMap.set(attribute.entityId, [...existingAttributes, attribute]);
-  });
+  }
 
-  entities.forEach((entityItem) => {
+  for (const entityItem of entities) {
     entityNameMap.set(entityItem.id, entityItem.name);
-  });
+  }
 
   const entityLines = entities.map((entityItem) => {
     const attributesForEntity = attributeMap.get(entityItem.id) ?? [];

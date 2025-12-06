@@ -254,7 +254,13 @@ export function Chat({
         parts: [{ type: "text", text: scopedPrompt }],
       });
     },
-    [applyProjectSelection, projects, selectedProjectId, sendMessage]
+    [
+      applyProjectSelection,
+      projects,
+      selectedProjectId,
+      selectedProjectIdRef.current,
+      sendMessage,
+    ]
   );
 
   return (

@@ -45,7 +45,7 @@ import {
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import { buildProjectContextPrompt, buildProjectContext } from "@/lib/project-context";
+import { buildProjectContext } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
@@ -308,7 +308,7 @@ export async function POST(request: Request) {
               if (!isDynamicModel) {
                 try {
                   modelId = myProvider.languageModel(selectedChatModel).modelId;
-                } catch (e) {
+                } catch (_e) {
                   // ignore
                 }
               }

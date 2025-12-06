@@ -219,7 +219,10 @@ export function DraftWorkspace({
                 {activeOutline?.beats?.length ? (
                   <ol className="space-y-2 text-sm">
                     {activeOutline.beats.map((beat, index) => (
-                      <li className="leading-relaxed" key={beat + index}>
+                      <li
+                        className="leading-relaxed"
+                        key={`${activeOutline.id ?? "outline"}-${beat}`}
+                      >
                         <span className="font-semibold text-muted-foreground">
                           {index + 1}.
                         </span>{" "}
