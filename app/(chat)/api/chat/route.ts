@@ -30,23 +30,24 @@ import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
   deleteChatById,
+  getAttributesForProject,
   getChatById,
+  getEntitiesForProject,
   getMessageCountByUserId,
   getMessagesByChatId,
   getProjectByIdWithAccess,
-  getEntitiesForProject,
-  getAttributesForProject,
+  getRelationshipsForProject,
   saveChat,
   saveMessages,
   updateChatLastContextById,
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import { buildProjectContext } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
-import { buildProjectContextPrompt } from "@/lib/project-context";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
@@ -131,18 +132,23 @@ export async function POST(request: Request) {
       });
 
       if (!project) {
-        return new ChatSDKError("forbidden:chat", "Project unavailable").toResponse();
+        return new ChatSDKError(
+          "forbidden:chat",
+          "Project unavailable"
+        ).toResponse();
       }
 
-      const [entities, attributes] = await Promise.all([
+      const [entities, attributes, relationships] = await Promise.all([
         getEntitiesForProject({ projectId }),
         getAttributesForProject({ projectId }),
+        getRelationshipsForProject({ projectId }),
       ]);
 
-      projectContext = buildProjectContextPrompt({
+      projectContext = buildProjectContext({
         project,
         entities,
         attributes,
+        relationships,
       });
     }
 
