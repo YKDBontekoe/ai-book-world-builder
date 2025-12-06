@@ -73,6 +73,37 @@ export function useProjectSelection({
     setSelectedProjectId(projectId);
   }, []);
 
+  const cookieStore = useMemo(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const store = (window as unknown as { cookieStore?: unknown }).cookieStore;
+
+    if (!store || typeof store !== "object") {
+      return null;
+    }
+
+    if (
+      !("set" in store) ||
+      typeof (store as { set?: unknown }).set !== "function" ||
+      !("delete" in store) ||
+      typeof (store as { delete?: unknown }).delete !== "function"
+    ) {
+      return null;
+    }
+
+    return store as {
+      delete: (name: string) => Promise<unknown>;
+      set: (options: {
+        expires: Date;
+        name: string;
+        path: string;
+        value: string;
+      }) => Promise<unknown>;
+    };
+  }, []);
+
   useEffect(() => {
     if (selectedProjectId === null && projectFromSearch) {
       return;
@@ -80,26 +111,23 @@ export function useProjectSelection({
 
     selectedProjectIdRef.current = selectedProjectId;
 
-    if (typeof window !== "undefined") {
-      if (selectedProjectId) {
-        const expires = new Date(Date.now() + 60 * 60 * 24 * 30 * 1000);
-        if ("cookieStore" in window && window.cookieStore?.set) {
-          window.cookieStore
-            .set({
-              name: "chat-project",
-              value: selectedProjectId,
-              expires,
-              path: "/",
-            })
-            .catch(() => null);
-        }
-      } else if ("cookieStore" in window && window.cookieStore?.delete) {
-        window.cookieStore.delete("chat-project").catch(() => null);
-      }
+    if (selectedProjectId && cookieStore) {
+      const expires = new Date(Date.now() + 60 * 60 * 24 * 30 * 1000);
+
+      cookieStore
+        .set({
+          name: "chat-project",
+          value: selectedProjectId,
+          expires,
+          path: "/",
+        })
+        .catch(() => null);
+    } else if (!selectedProjectId && cookieStore) {
+      cookieStore.delete("chat-project").catch(() => null);
     }
 
     updateProjectInUrl(selectedProjectId);
-  }, [projectFromSearch, selectedProjectId, updateProjectInUrl]);
+  }, [cookieStore, projectFromSearch, selectedProjectId, updateProjectInUrl]);
 
   useEffect(() => {
     if (!projectFromSearch) {
