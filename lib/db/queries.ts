@@ -25,9 +25,15 @@ import {
   type Chat,
   chat,
   type DBMessage,
+  entity,
+  entityAttribute,
   document,
+  type Entity,
+  type EntityAttribute,
   message,
   project,
+  relationship,
+  type Relationship,
   type Suggestion,
   stream,
   suggestion,
@@ -627,6 +633,353 @@ export async function createProject({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to create project"
+    );
+  }
+}
+
+function toDateOrUndefined(value: string | undefined | null) {
+  if (!value) {
+    return undefined;
+  }
+
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+}
+
+export async function createEntity({
+  projectId,
+  name,
+  kind,
+  summary,
+  startDate,
+  endDate,
+}: {
+  projectId: string;
+  name: string;
+  kind: string;
+  summary?: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<Entity> {
+  const parsedStart = toDateOrUndefined(startDate);
+  const parsedEnd = toDateOrUndefined(endDate);
+
+  if (parsedStart && parsedEnd && parsedStart > parsedEnd) {
+    throw new ChatSDKError(
+      "bad_request:validation",
+      "End date cannot be before the start date."
+    );
+  }
+
+  try {
+    const [existing] = await db
+      .select({ count: count() })
+      .from(entity)
+      .where(and(eq(entity.projectId, projectId), eq(entity.name, name)))
+      .limit(1);
+
+    if (existing?.count && existing.count > 0) {
+      throw new ChatSDKError(
+        "bad_request:validation",
+        "An entity with this name already exists in the project."
+      );
+    }
+
+    const [createdEntity] = await db
+      .insert(entity)
+      .values({
+        projectId,
+        name,
+        kind,
+        summary,
+        startDate: parsedStart,
+        endDate: parsedEnd,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return createdEntity;
+  } catch (error) {
+    const chatError = error instanceof ChatSDKError ? error : null;
+    throw (
+      chatError ??
+      new ChatSDKError("bad_request:database", "Failed to create entity")
+    );
+  }
+}
+
+export async function getEntitiesForProject({
+  projectId,
+}: {
+  projectId: string;
+}): Promise<Entity[]> {
+  try {
+    return await db
+      .select()
+      .from(entity)
+      .where(eq(entity.projectId, projectId))
+      .orderBy(asc(entity.name));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load entities for project"
+    );
+  }
+}
+
+export async function getEntityById({
+  id,
+}: {
+  id: string;
+}): Promise<Entity | null> {
+  try {
+    const [selectedEntity] = await db
+      .select()
+      .from(entity)
+      .where(eq(entity.id, id));
+
+    return selectedEntity ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load entity by id"
+    );
+  }
+}
+
+export async function createEntityAttribute({
+  projectId,
+  entityId,
+  name,
+  value,
+  dataType,
+  startDate,
+  endDate,
+}: {
+  projectId: string;
+  entityId: string;
+  name: string;
+  value: string;
+  dataType: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<EntityAttribute> {
+  const parsedStart = toDateOrUndefined(startDate);
+  const parsedEnd = toDateOrUndefined(endDate);
+
+  if (parsedStart && parsedEnd && parsedStart > parsedEnd) {
+    throw new ChatSDKError(
+      "bad_request:validation",
+      "Attribute end date cannot be before the start date."
+    );
+  }
+
+  try {
+    const [existing] = await db
+      .select({ count: count() })
+      .from(entityAttribute)
+      .where(
+        and(eq(entityAttribute.entityId, entityId), eq(entityAttribute.name, name))
+      )
+      .limit(1);
+
+    if (existing?.count && existing.count > 0) {
+      throw new ChatSDKError(
+        "bad_request:validation",
+        "This entity already has an attribute with that name."
+      );
+    }
+
+    const [createdAttribute] = await db
+      .insert(entityAttribute)
+      .values({
+        projectId,
+        entityId,
+        name,
+        value,
+        dataType,
+        startDate: parsedStart,
+        endDate: parsedEnd,
+        createdAt: new Date(),
+      })
+      .returning();
+
+    return createdAttribute;
+  } catch (error) {
+    const chatError = error instanceof ChatSDKError ? error : null;
+    throw (
+      chatError ??
+      new ChatSDKError(
+        "bad_request:database",
+        "Failed to create entity attribute"
+      )
+    );
+  }
+}
+
+export async function createRelationship({
+  projectId,
+  sourceEntityId,
+  targetEntityId,
+  type,
+  description,
+  startDate,
+  endDate,
+}: {
+  projectId: string;
+  sourceEntityId: string;
+  targetEntityId: string;
+  type: string;
+  description?: string;
+  startDate?: string;
+  endDate?: string;
+}): Promise<Relationship> {
+  const parsedStart = toDateOrUndefined(startDate);
+  const parsedEnd = toDateOrUndefined(endDate);
+
+  if (parsedStart && parsedEnd && parsedStart > parsedEnd) {
+    throw new ChatSDKError(
+      "bad_request:validation",
+      "Relationship end date cannot be before the start date."
+    );
+  }
+
+  if (sourceEntityId === targetEntityId) {
+    throw new ChatSDKError(
+      "bad_request:validation",
+      "An entity cannot be related to itself."
+    );
+  }
+
+  try {
+    const [source, target] = await Promise.all([
+      db
+        .select()
+        .from(entity)
+        .where(and(eq(entity.id, sourceEntityId), eq(entity.projectId, projectId))),
+      db
+        .select()
+        .from(entity)
+        .where(and(eq(entity.id, targetEntityId), eq(entity.projectId, projectId))),
+    ]);
+
+    if (!source.length || !target.length) {
+      throw new ChatSDKError(
+        "bad_request:validation",
+        "Both related entities must belong to the same project."
+      );
+    }
+
+    const [existingRelationship] = await db
+      .select({ count: count() })
+      .from(relationship)
+      .where(
+        and(
+          eq(relationship.projectId, projectId),
+          eq(relationship.sourceEntityId, sourceEntityId),
+          eq(relationship.targetEntityId, targetEntityId),
+          eq(relationship.type, type)
+        )
+      )
+      .limit(1);
+
+    if (existingRelationship?.count && existingRelationship.count > 0) {
+      throw new ChatSDKError(
+        "bad_request:validation",
+        "This relationship already exists for the selected entities."
+      );
+    }
+
+    const [createdRelationship] = await db
+      .insert(relationship)
+      .values({
+        projectId,
+        sourceEntityId,
+        targetEntityId,
+        type,
+        description,
+        startDate: parsedStart,
+        endDate: parsedEnd,
+        createdAt: new Date(),
+      })
+      .returning();
+
+    return createdRelationship;
+  } catch (error) {
+    const chatError = error instanceof ChatSDKError ? error : null;
+    throw (
+      chatError ??
+      new ChatSDKError(
+        "bad_request:database",
+        "Failed to create relationship"
+      )
+    );
+  }
+}
+
+export type EntityWithDetails = Entity & {
+  attributes: EntityAttribute[];
+  relationships: Relationship[];
+};
+
+export async function getEntityWithDetails({
+  id,
+}: {
+  id: string;
+}): Promise<EntityWithDetails | null> {
+  try {
+    const [selectedEntity] = await db
+      .select()
+      .from(entity)
+      .where(eq(entity.id, id));
+
+    if (!selectedEntity) {
+      return null;
+    }
+
+    const [attributes, relationships] = await Promise.all([
+      db
+        .select()
+        .from(entityAttribute)
+        .where(eq(entityAttribute.entityId, id))
+        .orderBy(asc(entityAttribute.name)),
+      db
+        .select()
+        .from(relationship)
+        .where(
+          or(
+            eq(relationship.sourceEntityId, id),
+            eq(relationship.targetEntityId, id)
+          )
+        )
+        .orderBy(desc(relationship.createdAt)),
+    ]);
+
+    return { ...selectedEntity, attributes, relationships };
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load entity details"
+    );
+  }
+}
+
+export async function getRelationshipsForProject({
+  projectId,
+}: {
+  projectId: string;
+}): Promise<Relationship[]> {
+  try {
+    return await db
+      .select()
+      .from(relationship)
+      .where(eq(relationship.projectId, projectId))
+      .orderBy(desc(relationship.createdAt));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load relationships"
     );
   }
 }

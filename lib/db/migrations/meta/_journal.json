@@ -64,6 +64,13 @@
       "when": 1764978812387,
       "tag": "0008_stellar_projects",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1764979916681,
+      "tag": "0009_entity_schema",
+      "breakpoints": true
     }
   ]
 }

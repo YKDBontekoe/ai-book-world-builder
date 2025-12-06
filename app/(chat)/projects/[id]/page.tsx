@@ -1,9 +1,51 @@
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { auth } from "@/app/(auth)/auth";
-import { getProjectByIdWithAccess } from "@/lib/db/queries";
+import {
+  getEntitiesForProject,
+  getProjectByIdWithAccess,
+  getRelationshipsForProject,
+} from "@/lib/db/queries";
+
+function buildWarnings({
+  entities,
+  relationships,
+}: {
+  // biome-ignore lint/suspicious/noExplicitAny: derived from server fetch
+  entities: any[];
+  // biome-ignore lint/suspicious/noExplicitAny: derived from server fetch
+  relationships: any[];
+}) {
+  const warnings: string[] = [];
+
+  entities.forEach((entity) => {
+    if (entity.startDate && entity.endDate) {
+      const start = new Date(entity.startDate);
+      const end = new Date(entity.endDate);
+      if (start > end) {
+        warnings.push(`${entity.name} has conflicting start and end dates.`);
+      }
+    }
+  });
+
+  relationships.forEach((relationship) => {
+    if (relationship.startDate && relationship.endDate) {
+      const start = new Date(relationship.startDate);
+      const end = new Date(relationship.endDate);
+      if (start > end) {
+        warnings.push(
+          `${relationship.type} relationship has conflicting start and end dates.`
+        );
+      }
+    }
+  });
+
+  return warnings;
+}
 
 export default async function ProjectDetailPage({
   params,
@@ -25,6 +67,13 @@ export default async function ProjectDetailPage({
   if (!project) {
     notFound();
   }
+
+  const [entities, relationships] = await Promise.all([
+    getEntitiesForProject({ projectId: project.id }),
+    getRelationshipsForProject({ projectId: project.id }),
+  ]);
+
+  const warnings = buildWarnings({ entities, relationships });
 
   const canEdit =
     session.user?.type === "regular" && project.userId === session.user.id;
@@ -50,6 +99,47 @@ export default async function ProjectDetailPage({
           Created {new Date(project.createdAt).toLocaleDateString()}
         </div>
       </div>
+
+      <Card>
+        <CardHeader className="flex flex-wrap items-start justify-between gap-2">
+          <div>
+            <CardTitle className="text-lg">Schema overview</CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Entities, attributes, and relationships power validation in your drafts.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm">
+            <Link href={`/projects/${project.id}/entities`}>Manage schema</Link>
+          </Button>
+        </CardHeader>
+        <CardContent className="grid gap-4 lg:grid-cols-3">
+          <div>
+            <p className="text-muted-foreground text-sm">Entities</p>
+            <p className="font-semibold text-xl">{entities.length}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground text-sm">Relationships</p>
+            <p className="font-semibold text-xl">{relationships.length}</p>
+          </div>
+          <div>
+            <p className="text-muted-foreground text-sm">Warnings</p>
+            <p className="font-semibold text-xl">{warnings.length}</p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {warnings.length > 0 && (
+        <Card className="border-amber-500/50">
+          <CardHeader>
+            <CardTitle className="text-base">Draft warnings</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2 text-sm text-amber-700">
+            {warnings.map((warning) => (
+              <p key={warning}>{warning}</p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
