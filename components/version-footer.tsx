@@ -54,10 +54,14 @@ export const VersionFooter = ({
             <Badge variant="outline">{draftLabel}</Badge>
             {currentDocument?.createdAt ? (
               <div className="text-muted-foreground text-sm">
-                Saved {" "}
-                {formatDistance(new Date(currentDocument.createdAt), new Date(), {
-                  addSuffix: true,
-                })}
+                Saved{" "}
+                {formatDistance(
+                  new Date(currentDocument.createdAt),
+                  new Date(),
+                  {
+                    addSuffix: true,
+                  }
+                )}
               </div>
             ) : null}
           </div>

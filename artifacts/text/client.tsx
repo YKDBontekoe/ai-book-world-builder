@@ -123,6 +123,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
           content={content}
           currentVersionIndex={currentVersionIndex}
           isCurrentVersion={isCurrentVersion}
+          onSaveContent={onSaveContent}
           onSelectionChange={(selectionText) => {
             if (!canRewriteSelection) {
               setSelectedText("");
@@ -131,7 +132,6 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
 
             setSelectedText(selectionText);
           }}
-          onSaveContent={onSaveContent}
           status={status}
           suggestions={metadata ? metadata.suggestions : []}
         />
@@ -235,7 +235,11 @@ type SelectionRewritePromptProps = {
   lastPrompt: string;
 };
 
-const rewriteIntents: { label: string; intent: RewriteIntent; helper: string }[] = [
+const rewriteIntents: {
+  label: string;
+  intent: RewriteIntent;
+  helper: string;
+}[] = [
   {
     label: "Rewrite",
     intent: "rewrite",
@@ -281,8 +285,8 @@ const SelectionRewritePrompt = ({
       <div className="flex flex-wrap gap-2">
         {rewriteIntents.map(({ label, intent, helper }) => (
           <Button
+            className="min-w-[140px] flex-1 justify-between"
             key={intent}
-            className="flex-1 min-w-[140px] justify-between"
             onClick={() => onPrompt(intent)}
             type="button"
             variant="outline"

@@ -65,7 +65,6 @@ export type ChatModel = {
   };
 };
 
-
 export type ChatModelId = string;
 
 export const DEFAULT_CHAT_MODEL: ChatModelId = chatModels[0].id;

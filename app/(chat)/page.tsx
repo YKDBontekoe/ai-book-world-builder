@@ -1,12 +1,12 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { getAvailableChatModels } from "@/app/actions/models";
 import { ChatPageContent } from "@/components/chat-page-content";
 import { DEFAULT_CHAT_MODEL, getValidChatModelId } from "@/lib/ai/models";
 import { getProjectsVisibleToUser } from "@/lib/db/queries";
 import { serializeProject } from "@/lib/project-context";
 import { generateUUID } from "@/lib/utils";
-import { getAvailableChatModels } from "@/app/actions/models";
 import { auth } from "../(auth)/auth";
 
 export default function Page() {
@@ -47,13 +47,13 @@ async function NewChatPage() {
   return (
     <ChatPageContent
       autoResume={false}
+      availableModels={availableModels}
       id={id}
       initialChatModel={initialChatModel}
       initialMessages={[]}
       initialProjectId={undefined}
       initialProjects={serializedProjects}
       initialVisibilityType="private"
-      availableModels={availableModels}
       isReadonly={false}
       key={id}
     />

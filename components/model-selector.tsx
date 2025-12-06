@@ -1,6 +1,5 @@
 "use client";
 
-import type { Session } from "next-auth";
 import { startTransition, useMemo, useOptimistic, useState } from "react";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,8 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
@@ -38,6 +39,76 @@ export function ModelSelector({
     [optimisticModelId, availableChatModels, fallbackModel]
   );
 
+  // Define recommended models (first 3 models)
+  const recommendedModelIds = useMemo(
+    () => availableChatModels.slice(0, 3).map((m) => m.id),
+    [availableChatModels]
+  );
+
+  const recommendedModels = useMemo(
+    () => availableChatModels.filter((m) => recommendedModelIds.includes(m.id)),
+    [availableChatModels, recommendedModelIds]
+  );
+
+  const otherModels = useMemo(
+    () =>
+      availableChatModels.filter((m) => !recommendedModelIds.includes(m.id)),
+    [availableChatModels, recommendedModelIds]
+  );
+
+  const renderModelItem = (chatModel: ChatModel) => {
+    const { id } = chatModel;
+    const isRecommended = recommendedModelIds.includes(id);
+
+    return (
+      <DropdownMenuItem
+        asChild
+        data-active={id === optimisticModelId}
+        data-testid={`model-selector-item-${id}`}
+        key={id}
+        onSelect={() => {
+          setOpen(false);
+
+          startTransition(() => {
+            setOptimisticModelId(id);
+            saveChatModelAsCookie(id);
+          });
+        }}
+      >
+        <button
+          className="group/item flex w-full flex-row items-center justify-between gap-2"
+          type="button"
+        >
+          <div className="flex flex-col items-start gap-1 py-1">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-sm">{chatModel.name}</span>
+              {isRecommended && (
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 font-medium text-[10px] text-primary">
+                  Popular
+                </span>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
+              <span>{chatModel.provider}</span>
+              <span>•</span>
+              <span>{chatModel.supportsImages ? "Vision" : "Text only"}</span>
+              {chatModel.reasoning && (
+                <>
+                  <span>•</span>
+                  <span>Reasoning</span>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="shrink-0 text-foreground opacity-0 group-data-[active=true]/item:opacity-100 dark:text-foreground">
+            <CheckCircleFillIcon />
+          </div>
+        </button>
+      </DropdownMenuItem>
+    );
+  };
+
   return (
     <DropdownMenu onOpenChange={setOpen} open={open}>
       <DropdownMenuTrigger
@@ -58,64 +129,26 @@ export function ModelSelector({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="start"
-        className="min-w-[280px] max-w-[90vw] sm:min-w-[300px]"
+        className="min-w-[260px] max-w-[90vw] sm:min-w-[280px]"
       >
-        {availableChatModels.map((chatModel) => {
-          const { id } = chatModel;
+        {recommendedModels.length > 0 && (
+          <>
+            <DropdownMenuLabel className="text-muted-foreground text-xs">
+              Recommended
+            </DropdownMenuLabel>
+            {recommendedModels.map(renderModelItem)}
+          </>
+        )}
 
-          return (
-            <DropdownMenuItem
-              asChild
-              data-active={id === optimisticModelId}
-              data-testid={`model-selector-item-${id}`}
-              key={id}
-              onSelect={() => {
-                setOpen(false);
-
-                startTransition(() => {
-                  setOptimisticModelId(id);
-                  saveChatModelAsCookie(id);
-                });
-              }}
-            >
-              <button
-                className="group/item flex w-full flex-row items-center justify-between gap-2 sm:gap-4"
-                type="button"
-              >
-                <div className="flex flex-col items-start gap-1">
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span className="rounded-full border border-border px-2 py-0.5 font-medium text-foreground dark:text-foreground">
-                      {chatModel.provider}
-                    </span>
-                    {chatModel.supportsImages ? (
-                      <span className="rounded-full bg-muted px-2 py-0.5">
-                        Vision & text
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-muted px-2 py-0.5">
-                        Text only
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-sm font-medium sm:text-base">{chatModel.name}</div>
-                  <div className="line-clamp-2 text-muted-foreground text-xs">
-                    {chatModel.description}
-                  </div>
-                  {chatModel.pricing && (
-                    <div className="flex gap-2 text-[10px] text-muted-foreground/80">
-                       <span>In: ${chatModel.pricing.input}</span>
-                       <span>Out: ${chatModel.pricing.output}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="shrink-0 text-foreground opacity-0 group-data-[active=true]/item:opacity-100 dark:text-foreground">
-                  <CheckCircleFillIcon />
-                </div>
-              </button>
-            </DropdownMenuItem>
-          );
-        })}
+        {otherModels.length > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-muted-foreground text-xs">
+              Other Models
+            </DropdownMenuLabel>
+            {otherModels.map(renderModelItem)}
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

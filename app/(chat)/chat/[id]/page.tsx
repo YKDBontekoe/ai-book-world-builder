@@ -71,6 +71,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   return (
     <ChatPageContent
       autoResume={true}
+      availableModels={availableModels}
       id={chat.id}
       initialChatModel={initialChatModel}
       initialLastContext={chat.lastContext ?? undefined}
@@ -78,7 +79,6 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
       initialProjectId={undefined}
       initialProjects={serializedProjects}
       initialVisibilityType={chat.visibility}
-      availableModels={availableModels}
       isReadonly={session?.user?.id !== chat.userId}
     />
   );

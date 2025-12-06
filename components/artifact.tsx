@@ -341,8 +341,8 @@ function PureArtifact({
 
                 <div className="relative flex w-full flex-row items-end gap-2 px-4 pb-4">
                   <MultimodalInput
-                    availableModels={availableModels}
                     attachments={attachments}
+                    availableModels={availableModels}
                     chatId={chatId}
                     className="bg-background dark:bg-muted"
                     input={input}
@@ -504,16 +504,16 @@ function PureArtifact({
               </AnimatePresence>
             </div>
 
-              <AnimatePresence>
-                {!isCurrentVersion && (
-                  <VersionFooter
-                    currentVersionIndex={currentVersionIndex}
-                    documents={documents}
-                    handleVersionChange={handleVersionChange}
-                    mode={mode}
-                  />
-                )}
-              </AnimatePresence>
+            <AnimatePresence>
+              {!isCurrentVersion && (
+                <VersionFooter
+                  currentVersionIndex={currentVersionIndex}
+                  documents={documents}
+                  handleVersionChange={handleVersionChange}
+                  mode={mode}
+                />
+              )}
+            </AnimatePresence>
           </motion.div>
         </motion.div>
       )}

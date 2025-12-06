@@ -1,3 +1,4 @@
+import { gateway } from "@ai-sdk/gateway";
 import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
@@ -7,8 +8,6 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
-import { gateway } from "@ai-sdk/gateway";
-import { getAvailableChatModels } from "@/app/actions/models";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
 import {
@@ -19,6 +18,7 @@ import type { ModelCatalog } from "tokenlens/core";
 import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
 import { auth, type UserType } from "@/app/(auth)/auth";
+import { getAvailableChatModels } from "@/app/actions/models";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type ChatModel, getChatModelById } from "@/lib/ai/models";
@@ -162,8 +162,10 @@ export async function POST(request: Request) {
     }
 
     const availableModels = await getAvailableChatModels();
-    const isDynamicModel = availableModels.some((m) => m.id === selectedChatModel);
-    
+    const isDynamicModel = availableModels.some(
+      (m) => m.id === selectedChatModel
+    );
+
     if (!availableChatModelIds.includes(selectedChatModel) && !isDynamicModel) {
       return new ChatSDKError(
         "forbidden:chat",
@@ -172,12 +174,14 @@ export async function POST(request: Request) {
     }
 
     let chatModel = getChatModelById(selectedChatModel);
-    
+
     if (!chatModel && isDynamicModel) {
-       const dynamicModel = availableModels.find(m => m.id === selectedChatModel);
-       if (dynamicModel) {
-          chatModel = dynamicModel;
-       }
+      const dynamicModel = availableModels.find(
+        (m) => m.id === selectedChatModel
+      );
+      if (dynamicModel) {
+        chatModel = dynamicModel;
+      }
     }
 
     if (!chatModel) {
@@ -261,9 +265,9 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
-        const model = isDynamicModel 
-            ? gateway.languageModel(selectedChatModel)
-            : myProvider.languageModel(selectedChatModel);
+        const model = isDynamicModel
+          ? gateway.languageModel(selectedChatModel)
+          : myProvider.languageModel(selectedChatModel);
 
         const result = streamText({
           model,
@@ -297,13 +301,13 @@ export async function POST(request: Request) {
             try {
               const providers = await getTokenlensCatalog();
               let modelId = selectedChatModel;
-              
+
               if (!isDynamicModel) {
-                 try {
-                   modelId = myProvider.languageModel(selectedChatModel).modelId;
-                 } catch (e) {
-                   // ignore
-                 }
+                try {
+                  modelId = myProvider.languageModel(selectedChatModel).modelId;
+                } catch (e) {
+                  // ignore
+                }
               }
 
               if (!modelId) {

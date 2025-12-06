@@ -54,7 +54,7 @@ export const Suggestion = ({
               <div className="text-muted-foreground text-xs uppercase tracking-wide">
                 Suggested edit
               </div>
-              <div className="mt-1 rounded-lg bg-muted p-2 text-sm font-medium leading-relaxed dark:bg-background">
+              <div className="mt-1 rounded-lg bg-muted p-2 font-medium text-sm leading-relaxed dark:bg-background">
                 {suggestion.suggestedText}
               </div>
             </div>

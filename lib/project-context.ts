@@ -39,7 +39,9 @@ export function buildProjectContextPrompt({
   attributes: EntityAttribute[];
 }) {
   const folderLines = project.folders
-    .map((folder) => `- ${folder.name}: ${folder.description ?? "No description"}`)
+    .map(
+      (folder) => `- ${folder.name}: ${folder.description ?? "No description"}`
+    )
     .join("\n");
 
   const attributesByEntity = attributes.reduce<Record<string, string[]>>(

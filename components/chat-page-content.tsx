@@ -37,6 +37,7 @@ export function ChatPageContent({
     <>
       <Chat
         autoResume={autoResume}
+        availableModels={availableModels}
         id={id}
         initialChatModel={initialChatModel}
         initialLastContext={initialLastContext}
@@ -44,7 +45,6 @@ export function ChatPageContent({
         initialProjectId={initialProjectId}
         initialProjects={initialProjects}
         initialVisibilityType={initialVisibilityType}
-        availableModels={availableModels}
         isReadonly={isReadonly}
         key={id}
       />
