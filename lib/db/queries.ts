@@ -1296,23 +1296,26 @@ export async function upsertSourceMaterialProcessing({
   }
 }
 
-export type UpdateSourceMaterialProcessingArgs = Partial<
-  Pick<
-    SourceMaterialProcessing,
-    | "attempts"
-    | "bytesProcessed"
-    | "chapters"
-    | "chunks"
-    | "completedAt"
-    | "durationMs"
-    | "lastError"
-    | "metadata"
-    | "nextAttemptAt"
-    | "normalizedCharacters"
-    | "startedAt"
-    | "status"
-  > & { sourceMaterialId: string }
->;
+export type UpdateSourceMaterialProcessingArgs = {
+  sourceMaterialId: string;
+} &
+  Partial<
+    Pick<
+      SourceMaterialProcessing,
+      | "attempts"
+      | "bytesProcessed"
+      | "chapters"
+      | "chunks"
+      | "completedAt"
+      | "durationMs"
+      | "lastError"
+      | "metadata"
+      | "nextAttemptAt"
+      | "normalizedCharacters"
+      | "startedAt"
+      | "status"
+    >
+  >;
 
 export async function updateSourceMaterialProcessing({
   sourceMaterialId,
