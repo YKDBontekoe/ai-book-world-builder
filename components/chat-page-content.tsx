@@ -3,6 +3,7 @@
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import type { VisibilityType } from "@/components/visibility-selector";
+import type { ProjectSummary } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 
@@ -10,6 +11,8 @@ type ChatPageContentProps = {
   id: string;
   initialMessages: ChatMessage[];
   initialChatModel: string;
+  initialProjectId?: string;
+  initialProjects?: ProjectSummary[];
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
   autoResume: boolean;
@@ -20,6 +23,8 @@ export function ChatPageContent({
   id,
   initialMessages,
   initialChatModel,
+  initialProjectId,
+  initialProjects,
   initialVisibilityType,
   isReadonly,
   autoResume,
@@ -33,6 +38,8 @@ export function ChatPageContent({
         initialChatModel={initialChatModel}
         initialLastContext={initialLastContext}
         initialMessages={initialMessages}
+        initialProjectId={initialProjectId}
+        initialProjects={initialProjects}
         initialVisibilityType={initialVisibilityType}
         isReadonly={isReadonly}
         key={id}

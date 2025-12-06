@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ChatPageContent } from "@/components/chat-page-content";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { getProjectsVisibleToUser } from "@/lib/db/queries";
+import { serializeProject } from "@/lib/project-context";
 import { generateUUID } from "@/lib/utils";
 import { auth } from "../(auth)/auth";
 
@@ -25,7 +27,17 @@ async function NewChatPage() {
 
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get("chat-model");
+  const projectFromCookie = cookieStore.get("chat-project");
   const initialChatModel = modelIdFromCookie?.value || DEFAULT_CHAT_MODEL;
+
+  const projects = await getProjectsVisibleToUser({
+    userId: session.user?.id as string,
+  });
+
+  const serializedProjects = projects.map(serializeProject);
+  const initialProjectId = serializedProjects.find(
+    (project) => project.id === projectFromCookie?.value
+  )?.id;
 
   return (
     <ChatPageContent
@@ -33,6 +45,8 @@ async function NewChatPage() {
       id={id}
       initialChatModel={initialChatModel}
       initialMessages={[]}
+      initialProjectId={initialProjectId}
+      initialProjects={serializedProjects}
       initialVisibilityType="private"
       isReadonly={false}
     />
