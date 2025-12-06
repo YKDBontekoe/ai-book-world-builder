@@ -18,7 +18,7 @@ export function serializeProject(project: Project): ProjectSummary {
   return {
     id: project.id,
     name: project.name,
-    description: project.description ?? undefined,
+    description: project.description ?? null,
     visibility: project.visibility,
     folders: project.folders as ProjectFolder[],
     createdAt: project.createdAt.toISOString(),
