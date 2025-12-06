@@ -30,7 +30,7 @@ function buildWarnings(
     }
   }
 
-  entity.attributes.forEach((attribute) => {
+  for (const attribute of entity.attributes) {
     if (attribute.startDate && attribute.endDate) {
       const start = new Date(attribute.startDate);
       const end = new Date(attribute.endDate);
@@ -40,9 +40,9 @@ function buildWarnings(
         );
       }
     }
-  });
+  }
 
-  entity.relationships.forEach((relationship) => {
+  for (const relationship of entity.relationships) {
     if (relationship.startDate && relationship.endDate) {
       const start = new Date(relationship.startDate);
       const end = new Date(relationship.endDate);
@@ -52,7 +52,7 @@ function buildWarnings(
         );
       }
     }
-  });
+  }
 
   return warnings;
 }

@@ -45,7 +45,9 @@ export function useProjectSelection({
 
   const updateProjectInUrl = useCallback(
     (projectId: string | null) => {
-      if (typeof window === "undefined") return;
+      if (typeof window === "undefined") {
+        return;
+      }
       const currentUrl = new URL(window.location.href);
       const currentProjectId = currentUrl.searchParams.get("projectId");
       const normalizedCurrent = currentProjectId ?? null;
@@ -71,6 +73,37 @@ export function useProjectSelection({
     setSelectedProjectId(projectId);
   }, []);
 
+  const cookieStore = useMemo(() => {
+    if (typeof window === "undefined") {
+      return null;
+    }
+
+    const store = (window as unknown as { cookieStore?: unknown }).cookieStore;
+
+    if (!store || typeof store !== "object") {
+      return null;
+    }
+
+    if (
+      !("set" in store) ||
+      typeof (store as { set?: unknown }).set !== "function" ||
+      !("delete" in store) ||
+      typeof (store as { delete?: unknown }).delete !== "function"
+    ) {
+      return null;
+    }
+
+    return store as {
+      delete: (name: string) => Promise<unknown>;
+      set: (options: {
+        expires: Date;
+        name: string;
+        path: string;
+        value: string;
+      }) => Promise<unknown>;
+    };
+  }, []);
+
   useEffect(() => {
     if (selectedProjectId === null && projectFromSearch) {
       return;
@@ -78,18 +111,31 @@ export function useProjectSelection({
 
     selectedProjectIdRef.current = selectedProjectId;
 
-    if (selectedProjectId) {
-      document.cookie = `chat-project=${selectedProjectId}; path=/; max-age=${
-        60 * 60 * 24 * 30
-      }`;
+    if (selectedProjectId && cookieStore) {
+      const expires = new Date(Date.now() + 60 * 60 * 24 * 30 * 1000);
+
+      cookieStore
+        .set({
+          name: "chat-project",
+          value: selectedProjectId,
+          expires,
+          path: "/",
+        })
+        .catch(() => null);
+    } else if (!selectedProjectId && cookieStore) {
+      cookieStore.delete("chat-project").catch(() => null);
     }
 
     updateProjectInUrl(selectedProjectId);
-  }, [projectFromSearch, selectedProjectId, updateProjectInUrl]);
+  }, [cookieStore, projectFromSearch, selectedProjectId, updateProjectInUrl]);
 
   useEffect(() => {
-    if (!projectFromSearch) return;
-    if (selectedProjectId === projectFromSearch) return;
+    if (!projectFromSearch) {
+      return;
+    }
+    if (selectedProjectId === projectFromSearch) {
+      return;
+    }
 
     const matchingProject = projects.find(
       (project) => project.id === projectFromSearch
@@ -101,9 +147,15 @@ export function useProjectSelection({
   }, [applyProjectSelection, projectFromSearch, projects, selectedProjectId]);
 
   useEffect(() => {
-    if (selectedProjectId) return;
-    if (projectFromSearch) return;
-    if (projects.length === 0) return;
+    if (selectedProjectId) {
+      return;
+    }
+    if (projectFromSearch) {
+      return;
+    }
+    if (projects.length === 0) {
+      return;
+    }
 
     applyProjectSelection(projects[0].id);
   }, [applyProjectSelection, projectFromSearch, projects, selectedProjectId]);

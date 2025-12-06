@@ -38,7 +38,7 @@ async function NewChatPage() {
   });
 
   const serializedProjects = projects.map(serializeProject);
-  const initialProjectId = serializedProjects.find(
+  const _initialProjectId = serializedProjects.find(
     (project) => project.id === projectFromCookie?.value
   )?.id;
 
