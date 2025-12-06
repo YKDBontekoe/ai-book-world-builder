@@ -230,7 +230,6 @@ export function Chat({
       if (!targetProjectId) {
         toast({
           description: "Select or create a project to ground quick starts.",
-          title: "Project required",
           type: "error",
         });
         return;
