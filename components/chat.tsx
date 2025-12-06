@@ -28,7 +28,7 @@ import { useProjectSelection } from "@/hooks/use-project-selection";
 import type { ProjectSummary } from "@/lib/project-context";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import type { ChatModelId } from "@/lib/ai/models";
+import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
@@ -56,6 +56,7 @@ export function Chat({
   isReadonly,
   autoResume,
   initialLastContext,
+  availableModels,
 }: {
   id: string;
   initialMessages: ChatMessage[];
@@ -66,6 +67,7 @@ export function Chat({
   isReadonly: boolean;
   autoResume: boolean;
   initialLastContext?: AppUsage;
+  availableModels: ChatModel[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -349,6 +351,7 @@ export function Chat({
           <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
             {!isReadonly && (
               <MultimodalInput
+                availableModels={availableModels}
                 attachments={attachments}
                 chatId={id}
                 input={input}
@@ -370,6 +373,7 @@ export function Chat({
       </div>
 
       <Artifact
+        availableModels={availableModels}
         attachments={attachments}
         chatId={id}
         input={input}

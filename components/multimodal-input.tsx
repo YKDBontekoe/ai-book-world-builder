@@ -21,7 +21,7 @@ import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { SelectItem } from "@/components/ui/select";
 import {
-  chatModels,
+  type ChatModel,
   getChatModelById,
   type ChatModelId,
 } from "@/lib/ai/models";
@@ -66,6 +66,7 @@ function PureMultimodalInput({
   selectedModelId,
   onModelChange,
   usage,
+  availableModels,
 }: {
   chatId: string;
   input: string;
@@ -82,6 +83,7 @@ function PureMultimodalInput({
   selectedModelId: ChatModelId;
   onModelChange?: (modelId: ChatModelId) => void;
   usage?: AppUsage;
+  availableModels: ChatModel[];
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -379,6 +381,7 @@ function PureMultimodalInput({
               status={status}
             />
             <ModelSelectorCompact
+              availableModels={availableModels}
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
             />
@@ -459,9 +462,11 @@ const AttachmentsButton = memo(PureAttachmentsButton);
 function PureModelSelectorCompact({
   selectedModelId,
   onModelChange,
+  availableModels,
 }: {
   selectedModelId: ChatModelId;
   onModelChange?: (modelId: ChatModelId) => void;
+  availableModels: ChatModel[];
 }) {
   const [optimisticModelId, setOptimisticModelId] = useState<ChatModelId>(
     selectedModelId
@@ -471,13 +476,14 @@ function PureModelSelectorCompact({
     setOptimisticModelId(selectedModelId);
   }, [selectedModelId]);
 
-  const fallbackModel = chatModels[0];
-  const selectedModel = getChatModelById(optimisticModelId) ?? fallbackModel;
+  const fallbackModel = availableModels[0];
+  const selectedModel =
+    availableModels.find((m) => m.id === optimisticModelId) ?? fallbackModel;
 
   return (
     <PromptInputModelSelect
       onValueChange={(modelName) => {
-        const model = chatModels.find((m) => m.name === modelName);
+        const model = availableModels.find((m) => m.name === modelName);
         if (!model) {
           return;
         }
@@ -501,12 +507,18 @@ function PureModelSelectorCompact({
       </Trigger>
       <PromptInputModelSelectContent className="min-w-[260px] p-0">
         <div className="flex flex-col gap-px">
-          {chatModels.map((model) => (
+          {availableModels.map((model) => (
             <SelectItem key={model.id} value={model.name}>
               <div className="truncate font-medium text-xs">{model.name}</div>
               <div className="mt-px truncate text-[10px] text-muted-foreground leading-tight">
                 {model.description}
               </div>
+              {model.pricing && (
+                <div className="mt-1 flex gap-2 text-[10px] text-muted-foreground/80">
+                  <span>In: ${model.pricing.input}</span>
+                  <span>Out: ${model.pricing.output}</span>
+                </div>
+              )}
             </SelectItem>
           ))}
         </div>

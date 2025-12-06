@@ -10,31 +10,25 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { entitlementsByUserType } from "@/lib/ai/entitlements";
-import { chatModels, type ChatModelId } from "@/lib/ai/models";
+import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import { cn } from "@/lib/utils";
 import { CheckCircleFillIcon, ChevronDownIcon } from "./icons";
 
 export function ModelSelector({
-  session,
   selectedModelId,
   className,
+  models,
 }: {
-  session: Session;
   selectedModelId: ChatModelId;
+  models: ChatModel[];
 } & React.ComponentProps<typeof Button>) {
   const [open, setOpen] = useState(false);
   const [optimisticModelId, setOptimisticModelId] =
     useOptimistic(selectedModelId);
 
-  const userType = session.user.type;
-  const { availableChatModelIds } = entitlementsByUserType[userType];
+  const availableChatModels = models;
 
-  const availableChatModels = chatModels.filter((chatModel) =>
-    availableChatModelIds.includes(chatModel.id)
-  );
-
-  const fallbackModel = availableChatModels[0] ?? chatModels[0];
+  const fallbackModel = availableChatModels[0];
 
   const selectedChatModel = useMemo(
     () =>
@@ -107,6 +101,12 @@ export function ModelSelector({
                   <div className="line-clamp-2 text-muted-foreground text-xs">
                     {chatModel.description}
                   </div>
+                  {chatModel.pricing && (
+                    <div className="flex gap-2 text-[10px] text-muted-foreground/80">
+                       <span>In: ${chatModel.pricing.input}</span>
+                       <span>Out: ${chatModel.pricing.output}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="shrink-0 text-foreground opacity-0 group-data-[active=true]/item:opacity-100 dark:text-foreground">

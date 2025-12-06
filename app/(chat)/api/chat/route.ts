@@ -7,6 +7,8 @@ import {
   stepCountIs,
   streamText,
 } from "ai";
+import { gateway } from "@ai-sdk/gateway";
+import { getAvailableChatModels } from "@/app/actions/models";
 import { unstable_cache as cache } from "next/cache";
 import { after } from "next/server";
 import {
@@ -159,14 +161,24 @@ export async function POST(request: Request) {
       return new ChatSDKError("rate_limit:chat").toResponse();
     }
 
-    if (!availableChatModelIds.includes(selectedChatModel)) {
+    const availableModels = await getAvailableChatModels();
+    const isDynamicModel = availableModels.some((m) => m.id === selectedChatModel);
+    
+    if (!availableChatModelIds.includes(selectedChatModel) && !isDynamicModel) {
       return new ChatSDKError(
         "forbidden:chat",
         "This model is not available for your account."
       ).toResponse();
     }
 
-    const chatModel = getChatModelById(selectedChatModel);
+    let chatModel = getChatModelById(selectedChatModel);
+    
+    if (!chatModel && isDynamicModel) {
+       const dynamicModel = availableModels.find(m => m.id === selectedChatModel);
+       if (dynamicModel) {
+          chatModel = dynamicModel;
+       }
+    }
 
     if (!chatModel) {
       return new ChatSDKError(
@@ -249,8 +261,12 @@ export async function POST(request: Request) {
 
     const stream = createUIMessageStream({
       execute: ({ writer: dataStream }) => {
+        const model = isDynamicModel 
+            ? gateway.languageModel(selectedChatModel)
+            : myProvider.languageModel(selectedChatModel);
+
         const result = streamText({
-          model: myProvider.languageModel(selectedChatModel),
+          model,
           system: groundedSystemPrompt,
           messages: convertToModelMessages(uiMessages),
           stopWhen: stepCountIs(5),
@@ -280,8 +296,16 @@ export async function POST(request: Request) {
           onFinish: async ({ usage }) => {
             try {
               const providers = await getTokenlensCatalog();
-              const modelId =
-                myProvider.languageModel(selectedChatModel).modelId;
+              let modelId = selectedChatModel;
+              
+              if (!isDynamicModel) {
+                 try {
+                   modelId = myProvider.languageModel(selectedChatModel).modelId;
+                 } catch (e) {
+                   // ignore
+                 }
+              }
+
               if (!modelId) {
                 finalMergedUsage = usage;
                 dataStream.write({

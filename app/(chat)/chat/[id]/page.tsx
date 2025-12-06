@@ -3,6 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 
 import { auth } from "@/app/(auth)/auth";
+import { getAvailableChatModels } from "@/app/actions/models";
 import { ChatPageContent } from "@/components/chat-page-content";
 import { DEFAULT_CHAT_MODEL, getValidChatModelId } from "@/lib/ai/models";
 import {
@@ -23,16 +24,24 @@ export default function Page(props: { params: Promise<{ id: string }> }) {
 
 async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const chat = await getChatById({ id });
-
-  if (!chat) {
-    notFound();
-  }
 
   const session = await auth();
 
   if (!session) {
     redirect("/api/auth/guest");
+  }
+
+  /*
+   * Fetch chat data and valid user projects
+   */
+  const [chat, projects, availableModels] = await Promise.all([
+    getChatById({ id }),
+    getProjectsVisibleToUser({ userId: session.user.id }),
+    getAvailableChatModels(),
+  ]);
+
+  if (!chat) {
+    notFound();
   }
 
   if (chat.visibility === "private") {
@@ -53,19 +62,11 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 
   const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get("chat-model");
-  const projectFromCookie = cookieStore.get("chat-project");
   const initialChatModel = getValidChatModelId(
     chatModelFromCookie?.value || DEFAULT_CHAT_MODEL
   );
 
-  const projects = await getProjectsVisibleToUser({
-    userId: session.user?.id as string,
-  });
-
   const serializedProjects = projects.map(serializeProject);
-  const initialProjectId = serializedProjects.find(
-    (project) => project.id === projectFromCookie?.value
-  )?.id;
 
   return (
     <ChatPageContent
@@ -74,9 +75,10 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
       initialChatModel={initialChatModel}
       initialLastContext={chat.lastContext ?? undefined}
       initialMessages={uiMessages}
-      initialProjectId={initialProjectId}
+      initialProjectId={undefined}
       initialProjects={serializedProjects}
       initialVisibilityType={chat.visibility}
+      availableModels={availableModels}
       isReadonly={session?.user?.id !== chat.userId}
     />
   );

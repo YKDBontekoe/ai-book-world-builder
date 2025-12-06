@@ -51,18 +51,29 @@ export const chatModels = [
   },
 ] as const;
 
-export type ChatModel = (typeof chatModels)[number];
-export type ChatModelId = ChatModel["id"];
+export type ChatModel = {
+  id: string;
+  name: string;
+  provider: string;
+  description: string;
+  supportsImages: boolean;
+  reasoning?: boolean;
+  pricing?: {
+    input: string;
+    output: string;
+    cachedInputTokens?: string;
+  };
+};
+
+
+export type ChatModelId = string;
 
 export const DEFAULT_CHAT_MODEL: ChatModelId = chatModels[0].id;
 
-export const chatModelIds = chatModels.map((model) => model.id) as readonly [
-  ChatModelId,
-  ...ChatModelId[],
-];
+export const chatModelIds = chatModels.map((model) => model.id) as string[];
 
 export const isChatModelId = (candidate?: string): candidate is ChatModelId =>
-  chatModelIds.includes(candidate as ChatModelId);
+  chatModelIds.includes(candidate as string);
 
 export const getChatModelById = (id?: string): ChatModel | undefined =>
   chatModels.find((model) => model.id === id);

@@ -6,6 +6,7 @@ import { DEFAULT_CHAT_MODEL, getValidChatModelId } from "@/lib/ai/models";
 import { getProjectsVisibleToUser } from "@/lib/db/queries";
 import { serializeProject } from "@/lib/project-context";
 import { generateUUID } from "@/lib/utils";
+import { getAvailableChatModels } from "@/app/actions/models";
 import { auth } from "../(auth)/auth";
 
 export default function Page() {
@@ -41,16 +42,20 @@ async function NewChatPage() {
     (project) => project.id === projectFromCookie?.value
   )?.id;
 
+  const availableModels = await getAvailableChatModels();
+
   return (
     <ChatPageContent
       autoResume={false}
       id={id}
       initialChatModel={initialChatModel}
       initialMessages={[]}
-      initialProjectId={initialProjectId}
+      initialProjectId={undefined}
       initialProjects={serializedProjects}
       initialVisibilityType="private"
+      availableModels={availableModels}
       isReadonly={false}
+      key={id}
     />
   );
 }
