@@ -212,6 +212,23 @@ export const relationship = pgTable(
 
 export type Relationship = InferSelectModel<typeof relationship>;
 
+export const outline = pgTable("Outline", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  createdAt: timestamp("createdAt").notNull(),
+  updatedAt: timestamp("updatedAt").notNull(),
+  title: text("title").notNull(),
+  summary: text("summary"),
+  pov: varchar("pov", { length: 64 }).notNull(),
+  tone: varchar("tone", { length: 64 }).notNull(),
+  pacing: varchar("pacing", { length: 64 }).notNull(),
+  beats: jsonb("beats").$type<string[] | null>(),
+  projectId: uuid("projectId")
+    .notNull()
+    .references(() => project.id),
+});
+
+export type Outline = InferSelectModel<typeof outline>;
+
 export const document = pgTable(
   "Document",
   {

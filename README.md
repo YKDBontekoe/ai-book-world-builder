@@ -31,6 +31,10 @@
 - Data Persistence
   - [Neon](https://neon.tech/) for saving chat history and user data
   - Blob storage for efficient file storage
+- Story workspace
+  - Generate outlines with POV, tone, and pacing controls and save them per project
+  - Draft prose side-by-side with AI suggestions grounded in your lore entities
+  - Saved outlines stay deduplicated and sorted by newest first in the draft workspace
 - [Auth.js](https://authjs.dev)
   - Simple and secure authentication
 

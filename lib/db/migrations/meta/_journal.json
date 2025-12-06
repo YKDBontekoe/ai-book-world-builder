@@ -71,6 +71,13 @@
       "when": 1764979916681,
       "tag": "0009_entity_schema",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1764982916681,
+      "tag": "0010_outline_table",
+      "breakpoints": true
     }
   ]
 }
