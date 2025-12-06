@@ -40,6 +40,7 @@
   - Draft prose side-by-side with AI suggestions grounded in your lore entities
   - Saved outlines stay deduplicated and sorted by newest first in the draft workspace
   - Highlight text to fire rewrite prompts, review AI rationales, and restore or diff auto-versioned drafts
+  - Plan books with volumes and ordered chapters linked to outlines, then generate sequential chapter drafts while tracking progress
 - [Auth.js](https://authjs.dev)
   - Simple and secure authentication
 

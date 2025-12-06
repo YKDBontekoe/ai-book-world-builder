@@ -12,19 +12,18 @@ import {
   getProjectByIdWithAccess,
   getRelationshipsForProject,
 } from "@/lib/db/queries";
+import type { Entity, Relationship } from "@/lib/db/schema";
 
 function buildWarnings({
   entities,
   relationships,
 }: {
-  // biome-ignore lint/suspicious/noExplicitAny: derived from server fetch
-  entities: any[];
-  // biome-ignore lint/suspicious/noExplicitAny: derived from server fetch
-  relationships: any[];
+  entities: Entity[];
+  relationships: Relationship[];
 }) {
   const warnings: string[] = [];
 
-  entities.forEach((entity) => {
+  for (const entity of entities) {
     if (entity.startDate && entity.endDate) {
       const start = new Date(entity.startDate);
       const end = new Date(entity.endDate);
@@ -32,9 +31,9 @@ function buildWarnings({
         warnings.push(`${entity.name} has conflicting start and end dates.`);
       }
     }
-  });
+  }
 
-  relationships.forEach((relationship) => {
+  for (const relationship of relationships) {
     if (relationship.startDate && relationship.endDate) {
       const start = new Date(relationship.startDate);
       const end = new Date(relationship.endDate);
@@ -44,7 +43,7 @@ function buildWarnings({
         );
       }
     }
-  });
+  }
 
   return warnings;
 }

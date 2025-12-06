@@ -239,7 +239,7 @@ export function Chat({
         return;
       }
 
-      if (selectedProjectIdRef.current !== targetProjectId) {
+      if (selectedProjectId !== targetProjectId) {
         applyProjectSelection(targetProjectId);
       }
 

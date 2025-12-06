@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   getOutlinesForProject,
   getProjectByIdWithAccess,
+  getVolumePlansForProject,
 } from "@/lib/db/queries";
 import type { Outline } from "@/lib/db/schema";
 import { DraftWorkspace } from "./workspace";
@@ -36,6 +37,7 @@ export default async function DraftsPage({
   const outlines: Outline[] = await getOutlinesForProject({
     projectId: project.id,
   });
+  const volumes = await getVolumePlansForProject({ projectId: project.id });
 
   const canEdit =
     session.user?.type === "regular" && session.user?.id === project.userId;
@@ -58,6 +60,7 @@ export default async function DraftsPage({
         outlines={outlines}
         projectId={project.id}
         visibility={project.visibility}
+        volumes={volumes}
       />
     </PageContainer>
   );

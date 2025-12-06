@@ -78,6 +78,13 @@
       "when": 1764982916681,
       "tag": "0010_outline_table",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1764983916681,
+      "tag": "0011_volume_chapters",
+      "breakpoints": true
     }
   ]
 }
