@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Artifact } from "@/components/create-artifact";
 import { DiffView } from "@/components/diffview";
@@ -11,7 +12,9 @@ import {
   UndoIcon,
 } from "@/components/icons";
 import { Editor } from "@/components/text-editor";
+import { Button } from "@/components/ui/button";
 import type { Suggestion } from "@/lib/db/schema";
+import { buildRewritePrompt, type RewriteIntent } from "@/lib/editor/rewrite";
 import { getSuggestions } from "../actions";
 
 type TextArtifactMetadata = {
@@ -63,7 +66,18 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     getDocumentContentById,
     isLoading,
     metadata,
+    sendMessage,
   }) => {
+    const [selectedText, setSelectedText] = useState<string>("");
+    const [lastPrompt, setLastPrompt] = useState<string>("");
+    const canRewriteSelection = isCurrentVersion && status === "idle";
+
+    useEffect(() => {
+      if (!canRewriteSelection) {
+        setSelectedText("");
+      }
+    }, [canRewriteSelection]);
+
     if (isLoading) {
       return <DocumentSkeleton artifactKind="text" />;
     }
@@ -76,11 +90,47 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     }
 
     return (
-      <div className="flex flex-row px-4 py-8 md:p-20">
+      <div className="flex flex-col gap-4 px-4 py-8 md:p-20">
+        {canRewriteSelection && selectedText ? (
+          <SelectionRewritePrompt
+            lastPrompt={lastPrompt}
+            onClearSelection={() => {
+              setSelectedText("");
+            }}
+            onPrompt={(intent) => {
+              const prompt = buildRewritePrompt({
+                selection: selectedText,
+                intent,
+              });
+
+              setLastPrompt(prompt);
+
+              sendMessage({
+                role: "user",
+                parts: [
+                  {
+                    type: "text",
+                    text: prompt,
+                  },
+                ],
+              });
+            }}
+            selection={selectedText}
+          />
+        ) : null}
+
         <Editor
           content={content}
           currentVersionIndex={currentVersionIndex}
           isCurrentVersion={isCurrentVersion}
+          onSelectionChange={(selectionText) => {
+            if (!canRewriteSelection) {
+              setSelectedText("");
+              return;
+            }
+
+            setSelectedText(selectionText);
+          }}
           onSaveContent={onSaveContent}
           status={status}
           suggestions={metadata ? metadata.suggestions : []}
@@ -177,3 +227,82 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
     },
   ],
 });
+
+type SelectionRewritePromptProps = {
+  selection: string;
+  onPrompt: (intent: RewriteIntent) => void;
+  onClearSelection: () => void;
+  lastPrompt: string;
+};
+
+const rewriteIntents: { label: string; intent: RewriteIntent; helper: string }[] = [
+  {
+    label: "Rewrite",
+    intent: "rewrite",
+    helper: "Improve clarity and flow",
+  },
+  {
+    label: "Shorten",
+    intent: "shorten",
+    helper: "Make the selection concise",
+  },
+  {
+    label: "Expand",
+    intent: "expand",
+    helper: "Add richer detail",
+  },
+];
+
+const SelectionRewritePrompt = ({
+  selection,
+  onPrompt,
+  onClearSelection,
+  lastPrompt,
+}: SelectionRewritePromptProps) => {
+  return (
+    <div className="flex flex-col gap-3 rounded-2xl border bg-background/80 p-4 shadow-sm dark:border-zinc-700 dark:bg-muted/60">
+      <div className="flex flex-row items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <div className="font-medium">Rewrite selection</div>
+          <div className="text-muted-foreground text-sm">
+            Choose how you want the assistant to transform the highlighted text.
+          </div>
+        </div>
+
+        <Button onClick={onClearSelection} size="sm" variant="ghost">
+          Clear
+        </Button>
+      </div>
+
+      <div className="rounded-xl bg-muted p-3 text-sm dark:bg-background">
+        “{selection}”
+      </div>
+
+      <div className="flex flex-wrap gap-2">
+        {rewriteIntents.map(({ label, intent, helper }) => (
+          <Button
+            key={intent}
+            className="flex-1 min-w-[140px] justify-between"
+            onClick={() => onPrompt(intent)}
+            type="button"
+            variant="outline"
+          >
+            <span className="text-left">
+              <div className="font-medium leading-tight">{label}</div>
+              <div className="text-muted-foreground text-xs">{helper}</div>
+            </span>
+          </Button>
+        ))}
+      </div>
+
+      {lastPrompt ? (
+        <div className="rounded-xl border bg-background/60 p-3 text-muted-foreground text-xs dark:border-zinc-700 dark:bg-muted/40">
+          Last rewrite request sent:
+          <div className="mt-1 line-clamp-3 font-medium text-foreground">
+            {lastPrompt}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
