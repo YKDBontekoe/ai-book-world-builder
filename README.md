@@ -34,6 +34,7 @@
 - Project-aware chat
   - Switch between recent projects from the chat hero and launch quick-start prompts per world
   - Ground agent replies in selected project folders and entities via the AI SDK-powered copilot backend
+  - Persist project selection across sessions via URL and cookie context so conversations stay grounded
 - Story workspace
   - Generate outlines with POV, tone, and pacing controls and save them per project
   - Draft prose side-by-side with AI suggestions grounded in your lore entities

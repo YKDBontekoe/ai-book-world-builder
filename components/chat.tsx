@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useProjectSelection } from "@/hooks/use-project-selection";
 import type { ProjectSummary } from "@/lib/project-context";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
@@ -69,60 +70,15 @@ export function Chat({
   const searchParams = useSearchParams();
 
   const projects = useMemo(() => initialProjects ?? [], [initialProjects]);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    initialProjectId ?? null
-  );
-  const selectedProjectIdRef = useRef<string | null>(initialProjectId ?? null);
-
-  const updateProjectInUrl = useCallback(
-    (projectId: string | null) => {
-      if (typeof window === "undefined") return;
-      const currentUrl = new URL(window.location.href);
-      if (projectId) {
-        currentUrl.searchParams.set("projectId", projectId);
-      } else {
-        currentUrl.searchParams.delete("projectId");
-      }
-
-      router.replace(currentUrl.pathname + currentUrl.search);
-    },
-    [router]
-  );
-
-  useEffect(() => {
-    if (selectedProjectId === null && projectFromSearch) {
-      return;
-    }
-
-    selectedProjectIdRef.current = selectedProjectId;
-
-    if (selectedProjectId) {
-      document.cookie = `chat-project=${selectedProjectId}; path=/; max-age=${
-        60 * 60 * 24 * 30
-      }`;
-    }
-
-    updateProjectInUrl(selectedProjectId);
-  }, [projectFromSearch, selectedProjectId, updateProjectInUrl]);
-
-  const selectedProject = useMemo(
-    () => projects.find((project) => project.id === selectedProjectId) ?? null,
-    [projects, selectedProjectId]
-  );
-
-  const projectFromSearch = searchParams.get("projectId");
-
-  useEffect(() => {
-    if (!projectFromSearch) return;
-
-    const matchingProject = projects.find(
-      (project) => project.id === projectFromSearch
-    );
-
-    if (matchingProject) {
-      applyProjectSelection(matchingProject.id);
-    }
-  }, [applyProjectSelection, projectFromSearch, projects]);
+  const {
+    applyProjectSelection,
+    selectedProject,
+    selectedProjectId,
+    selectedProjectIdRef,
+  } = useProjectSelection({
+    initialProjectId,
+    projects,
+  });
 
   const { visibilityType } = useChatVisibility({
     chatId: id,
@@ -240,17 +196,6 @@ export function Chat({
     setMessages,
   });
 
-  const applyProjectSelection = useCallback((projectId: string) => {
-    selectedProjectIdRef.current = projectId;
-    setSelectedProjectId(projectId);
-  }, []);
-
-  useEffect(() => {
-    if (!selectedProjectId && projects.length > 0) {
-      applyProjectSelection(projects[0].id);
-    }
-  }, [applyProjectSelection, projects, selectedProjectId]);
-
   const quickStartCards = useMemo<QuickStartCard[]>(
     () => [
       {
@@ -292,8 +237,7 @@ export function Chat({
       }
 
       if (selectedProjectIdRef.current !== targetProjectId) {
-        selectedProjectIdRef.current = targetProjectId;
-        setSelectedProjectId(targetProjectId);
+        applyProjectSelection(targetProjectId);
       }
 
       const projectName =
@@ -307,7 +251,7 @@ export function Chat({
         parts: [{ type: "text", text: scopedPrompt }],
       });
     },
-    [projects, selectedProjectId, sendMessage]
+    [applyProjectSelection, projects, selectedProjectId, sendMessage]
   );
 
   return (
