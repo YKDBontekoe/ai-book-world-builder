@@ -212,6 +212,14 @@ export type SourceMaterialProcessing = InferSelectModel<
   typeof sourceMaterialProcessing
 >;
 
+export type NewSourceMaterialChapter = {
+  id: string;
+  title: string;
+  sequence: number;
+  headings: string[];
+  metadata?: Record<string, unknown>;
+};
+
 export const sourceMaterialChapter = pgTable(
   "SourceMaterialChapter",
   {
@@ -273,6 +281,14 @@ export const sourceMaterialChunk = pgTable(
 );
 
 export type SourceMaterialChunk = InferSelectModel<typeof sourceMaterialChunk>;
+
+export type NewSourceMaterialChunk = {
+  id: string;
+  chapterId: string;
+  sequence: number;
+  text: string;
+  metadata?: Record<string, unknown>;
+};
 
 export const entity = pgTable(
   "Entity",

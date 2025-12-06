@@ -42,6 +42,8 @@ import {
   type Project,
   project,
   type SourceMaterial,
+  type NewSourceMaterialChapter,
+  type NewSourceMaterialChunk,
   type SourceMaterialChapter,
   sourceMaterialChapter,
   type SourceMaterialChunk,
@@ -62,6 +64,8 @@ import {
   vote,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
+
+export type { NewSourceMaterialChapter, NewSourceMaterialChunk } from "./schema";
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -1336,22 +1340,6 @@ export async function updateSourceMaterialProcessing({
     );
   }
 }
-
-export type NewSourceMaterialChapter = {
-  id: string;
-  title: string;
-  sequence: number;
-  headings: string[];
-  metadata?: Record<string, unknown>;
-};
-
-export type NewSourceMaterialChunk = {
-  id: string;
-  chapterId: string;
-  sequence: number;
-  text: string;
-  metadata?: Record<string, unknown>;
-};
 
 export async function saveSourceMaterialExtraction({
   chapters,
