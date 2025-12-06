@@ -20,7 +20,11 @@ import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import { SelectItem } from "@/components/ui/select";
-import { chatModels } from "@/lib/ai/models";
+import {
+  chatModels,
+  getChatModelById,
+  type ChatModelId,
+} from "@/lib/ai/models";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { cn } from "@/lib/utils";
@@ -75,8 +79,8 @@ function PureMultimodalInput({
   sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
   className?: string;
   selectedVisibilityType: VisibilityType;
-  selectedModelId: string;
-  onModelChange?: (modelId: string) => void;
+  selectedModelId: ChatModelId;
+  onModelChange?: (modelId: ChatModelId) => void;
   usage?: AppUsage;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -428,15 +432,17 @@ function PureAttachmentsButton({
 }: {
   fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
   status: UseChatHelpers<ChatMessage>["status"];
-  selectedModelId: string;
+  selectedModelId: ChatModelId;
 }) {
-  const isReasoningModel = selectedModelId === "chat-model-reasoning";
+  const selectedModel = getChatModelById(selectedModelId);
+  const supportsImages = selectedModel?.supportsImages ?? false;
+  const isDisabled = status !== "ready" || !supportsImages;
 
   return (
     <Button
       className="aspect-square h-8 rounded-lg p-1 transition-colors hover:bg-accent"
       data-testid="attachments-button"
-      disabled={status !== "ready" || isReasoningModel}
+      disabled={isDisabled}
       onClick={(event) => {
         event.preventDefault();
         fileInputRef.current?.click();
@@ -454,32 +460,35 @@ function PureModelSelectorCompact({
   selectedModelId,
   onModelChange,
 }: {
-  selectedModelId: string;
-  onModelChange?: (modelId: string) => void;
+  selectedModelId: ChatModelId;
+  onModelChange?: (modelId: ChatModelId) => void;
 }) {
-  const [optimisticModelId, setOptimisticModelId] = useState(selectedModelId);
+  const [optimisticModelId, setOptimisticModelId] = useState<ChatModelId>(
+    selectedModelId
+  );
 
   useEffect(() => {
     setOptimisticModelId(selectedModelId);
   }, [selectedModelId]);
 
-  const selectedModel = chatModels.find(
-    (model) => model.id === optimisticModelId
-  );
+  const fallbackModel = chatModels[0];
+  const selectedModel = getChatModelById(optimisticModelId) ?? fallbackModel;
 
   return (
     <PromptInputModelSelect
       onValueChange={(modelName) => {
         const model = chatModels.find((m) => m.name === modelName);
-        if (model) {
-          setOptimisticModelId(model.id);
-          onModelChange?.(model.id);
-          startTransition(() => {
-            saveChatModelAsCookie(model.id);
-          });
+        if (!model) {
+          return;
         }
+
+        setOptimisticModelId(model.id);
+        onModelChange?.(model.id);
+        startTransition(() => {
+          saveChatModelAsCookie(model.id);
+        });
       }}
-      value={selectedModel?.name}
+      value={selectedModel.name}
     >
       <Trigger asChild>
         <Button className="h-8 px-2" variant="ghost">

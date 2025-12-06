@@ -2,7 +2,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { ChatPageContent } from "@/components/chat-page-content";
-import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { DEFAULT_CHAT_MODEL, getValidChatModelId } from "@/lib/ai/models";
 import { getProjectsVisibleToUser } from "@/lib/db/queries";
 import { serializeProject } from "@/lib/project-context";
 import { generateUUID } from "@/lib/utils";
@@ -28,7 +28,9 @@ async function NewChatPage() {
   const cookieStore = await cookies();
   const modelIdFromCookie = cookieStore.get("chat-model");
   const projectFromCookie = cookieStore.get("chat-project");
-  const initialChatModel = modelIdFromCookie?.value || DEFAULT_CHAT_MODEL;
+  const initialChatModel = getValidChatModelId(
+    modelIdFromCookie?.value || DEFAULT_CHAT_MODEL
+  );
 
   const projects = await getProjectsVisibleToUser({
     userId: session.user?.id as string,

@@ -28,6 +28,7 @@ import { useProjectSelection } from "@/hooks/use-project-selection";
 import type { ProjectSummary } from "@/lib/project-context";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import type { ChatModelId } from "@/lib/ai/models";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
@@ -58,7 +59,7 @@ export function Chat({
 }: {
   id: string;
   initialMessages: ChatMessage[];
-  initialChatModel: string;
+  initialChatModel: ChatModelId;
   initialProjectId?: string | null;
   initialProjects?: ProjectSummary[];
   initialVisibilityType: VisibilityType;
@@ -102,7 +103,9 @@ export function Chat({
   const [input, setInput] = useState<string>("");
   const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
-  const [currentModelId, setCurrentModelId] = useState(initialChatModel);
+  const [currentModelId, setCurrentModelId] = useState<ChatModelId>(
+    initialChatModel
+  );
   const currentModelIdRef = useRef(currentModelId);
 
   useEffect(() => {

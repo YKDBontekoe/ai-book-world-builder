@@ -3,6 +3,7 @@
 import { generateText, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 import type { VisibilityType } from "@/components/visibility-selector";
+import { type ChatModelId, getValidChatModelId } from "@/lib/ai/models";
 import { titlePrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import {
@@ -12,9 +13,9 @@ import {
 } from "@/lib/db/queries";
 import { getTextFromMessage } from "@/lib/utils";
 
-export async function saveChatModelAsCookie(model: string) {
+export async function saveChatModelAsCookie(model: string | ChatModelId) {
   const cookieStore = await cookies();
-  cookieStore.set("chat-model", model);
+  cookieStore.set("chat-model", getValidChatModelId(model));
 }
 
 export async function generateTitleFromUserMessage({

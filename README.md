@@ -47,6 +47,14 @@
 
 This template uses an AI gateway to access multiple AI models through a unified interface. The default configuration includes [xAI](https://x.ai) models (`grok-2-vision-1212`, `grok-3-mini`) routed through the gateway.
 
+Available chat models:
+
+- **Grok Vision** (`chat-model`): Multimodal chat with image upload support.
+- **Grok Lite** (`chat-model-lite`): Cost-effective, text-only chats for everyday prompts.
+- **Grok Reasoning** (`chat-model-reasoning`): Chain-of-thought responses for complex tasks.
+
+Image uploads require the Grok Vision model because it is the only vision-enabled option.
+
 ### AI Gateway Authentication
 
 Provide an AI Gateway API key by setting the `AI_GATEWAY_API_KEY` environment variable in your `.env.local` file.

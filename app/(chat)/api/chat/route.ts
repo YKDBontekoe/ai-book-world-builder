@@ -19,7 +19,7 @@ import { getUsage } from "tokenlens/helpers";
 import { auth, type UserType } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
-import type { ChatModel } from "@/lib/ai/models";
+import { type ChatModel, getChatModelById } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
@@ -30,23 +30,23 @@ import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
   deleteChatById,
+  getAttributesForProject,
   getChatById,
+  getEntitiesForProject,
   getMessageCountByUserId,
   getMessagesByChatId,
   getProjectByIdWithAccess,
-  getEntitiesForProject,
-  getAttributesForProject,
   saveChat,
   saveMessages,
   updateChatLastContextById,
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import { buildProjectContextPrompt } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
-import { buildProjectContextPrompt } from "@/lib/project-context";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
@@ -121,6 +121,7 @@ export async function POST(request: Request) {
     }
 
     const userType: UserType = session.user.type;
+    const { availableChatModelIds } = entitlementsByUserType[userType];
 
     let projectContext: string | undefined;
 
@@ -131,7 +132,10 @@ export async function POST(request: Request) {
       });
 
       if (!project) {
-        return new ChatSDKError("forbidden:chat", "Project unavailable").toResponse();
+        return new ChatSDKError(
+          "forbidden:chat",
+          "Project unavailable"
+        ).toResponse();
       }
 
       const [entities, attributes] = await Promise.all([
@@ -153,6 +157,33 @@ export async function POST(request: Request) {
 
     if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
       return new ChatSDKError("rate_limit:chat").toResponse();
+    }
+
+    if (!availableChatModelIds.includes(selectedChatModel)) {
+      return new ChatSDKError(
+        "forbidden:chat",
+        "This model is not available for your account."
+      ).toResponse();
+    }
+
+    const chatModel = getChatModelById(selectedChatModel);
+
+    if (!chatModel) {
+      return new ChatSDKError(
+        "bad_request:api",
+        "Unknown chat model."
+      ).toResponse();
+    }
+
+    const containsFileAttachments = message.parts.some(
+      (part) => part.type === "file"
+    );
+
+    if (containsFileAttachments && !chatModel.supportsImages) {
+      return new ChatSDKError(
+        "bad_request:api",
+        "Image uploads require a vision-enabled model."
+      ).toResponse();
     }
 
     const chat = await getChatById({ id });

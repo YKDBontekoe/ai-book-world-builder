@@ -66,6 +66,34 @@ test.describe
       chatIdsCreatedByAda.push(chatId);
     });
 
+    test("Ada can invoke chat generation with a lite model", async ({
+      adaContext,
+    }) => {
+      const chatId = generateUUID();
+
+      const response = await adaContext.request.post("/api/chat", {
+        data: {
+          id: chatId,
+          message: TEST_PROMPTS.SKY.MESSAGE,
+          selectedChatModel: "chat-model-lite",
+          selectedVisibilityType: "private",
+        },
+      });
+
+      expect(response.status()).toBe(200);
+
+      const text = await response.text();
+      const lines = text.split("\n");
+
+      const [_, ...rest] = lines;
+      const actualNormalized = normalizeStreamData(rest.filter(Boolean));
+      const expectedNormalized = normalizeStreamData(
+        TEST_PROMPTS.SKY.OUTPUT_STREAM
+      );
+
+      expect(actualNormalized).toEqual(expectedNormalized);
+    });
+
     test("Babbage cannot append message to Ada's chat", async ({
       babbageContext,
     }) => {
@@ -220,6 +248,38 @@ test.describe
       ]);
 
       expect(secondResponseContent).toContain("appendMessage");
+    });
+
+    test("Lite model rejects image attachments", async ({ adaContext }) => {
+      const chatId = generateUUID();
+
+      const response = await adaContext.request.post("/api/chat", {
+        data: {
+          id: chatId,
+          message: {
+            id: generateUUID(),
+            createdAt: new Date().toISOString(),
+            role: "user",
+            content: "Describe this image",
+            parts: [
+              {
+                type: "file",
+                mediaType: "image/png",
+                name: "example.png",
+                url: "https://example.com/example.png",
+              },
+            ],
+          },
+          selectedChatModel: "chat-model-lite",
+          selectedVisibilityType: "private",
+        },
+      });
+
+      expect(response.status()).toBe(400);
+
+      const { code, message } = await response.json();
+      expect(code).toEqual("bad_request:api");
+      expect(message).toContain("vision-enabled model");
     });
 
     test("Ada cannot resume chat generation that has ended", async ({

@@ -11,12 +11,14 @@ export const myProvider = isTestEnvironment
       const {
         artifactModel,
         chatModel,
+        liteModel,
         reasoningModel,
         titleModel,
       } = require("./models.mock");
       return customProvider({
         languageModels: {
           "chat-model": chatModel,
+          "chat-model-lite": liteModel,
           "chat-model-reasoning": reasoningModel,
           "title-model": titleModel,
           "artifact-model": artifactModel,
@@ -26,6 +28,7 @@ export const myProvider = isTestEnvironment
   : customProvider({
       languageModels: {
         "chat-model": gateway.languageModel("xai/grok-2-vision-1212"),
+        "chat-model-lite": gateway.languageModel("xai/grok-2-1212"),
         "chat-model-reasoning": wrapLanguageModel({
           model: gateway.languageModel("xai/grok-3-mini"),
           middleware: extractReasoningMiddleware({ tagName: "think" }),

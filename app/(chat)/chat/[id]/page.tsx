@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { auth } from "@/app/(auth)/auth";
 import { ChatPageContent } from "@/components/chat-page-content";
-import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { DEFAULT_CHAT_MODEL, getValidChatModelId } from "@/lib/ai/models";
 import {
   getChatById,
   getMessagesByChatId,
@@ -54,7 +54,9 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
   const cookieStore = await cookies();
   const chatModelFromCookie = cookieStore.get("chat-model");
   const projectFromCookie = cookieStore.get("chat-project");
-  const initialChatModel = chatModelFromCookie?.value || DEFAULT_CHAT_MODEL;
+  const initialChatModel = getValidChatModelId(
+    chatModelFromCookie?.value || DEFAULT_CHAT_MODEL
+  );
 
   const projects = await getProjectsVisibleToUser({
     userId: session.user?.id as string,

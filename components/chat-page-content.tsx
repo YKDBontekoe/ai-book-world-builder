@@ -3,6 +3,7 @@
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import type { VisibilityType } from "@/components/visibility-selector";
+import type { ChatModelId } from "@/lib/ai/models";
 import type { ProjectSummary } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
@@ -10,7 +11,7 @@ import type { AppUsage } from "@/lib/usage";
 type ChatPageContentProps = {
   id: string;
   initialMessages: ChatMessage[];
-  initialChatModel: string;
+  initialChatModel: ChatModelId;
   initialProjectId?: string;
   initialProjects?: ProjectSummary[];
   initialVisibilityType: VisibilityType;
