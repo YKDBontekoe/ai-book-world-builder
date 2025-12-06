@@ -53,6 +53,7 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Clarified that `AGENTS.md` files are the authoritative source for contributor guidance.
 - Added project entities with default world-building folders, list/detail pages, and role-aware creation flows wired to Auth.js.
 - Documented migration maintenance steps and CI/CD verification expectations.
+- Added a pre-commit hook that runs linting and type checks before allowing commits.
 
 ### Fixed
 - Resolved the project creation page failing build-time client checks by isolating client hooks into a dedicated component.
@@ -60,4 +61,5 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Corrected quick-start project selection notifications to align with the toast API and avoid build-time type errors.
 - Normalized serialized project descriptions to avoid undefined/null type mismatches during builds.
 - Prevented project selection URL syncing from reloading the chat page when the project was already chosen.
+- Guarded project ID URL updates to satisfy type safety and avoid redundant search param rewrites.
 

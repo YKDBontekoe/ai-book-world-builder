@@ -56,7 +56,7 @@ export function useProjectSelection({
       }
 
       if (normalizedTarget) {
-        currentUrl.searchParams.set("projectId", projectId);
+        currentUrl.searchParams.set("projectId", normalizedTarget);
       } else {
         currentUrl.searchParams.delete("projectId");
       }

@@ -77,3 +77,13 @@ Review [docs/data-handling.md](docs/data-handling.md) for guidance on managing s
 ## Testing
 
 See [docs/testing.md](docs/testing.md) for expectations and commands covering unit (Vitest/React Testing Library), integration/end-to-end (Playwright), and accessibility checks, plus what must pass in CI before merging changes.
+
+## Git hooks
+
+Set the local hooks path to `.githooks` to ensure commits run linting and type checks before landing:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The `pre-commit` hook runs `pnpm lint` and `pnpm exec tsc --noEmit` to catch regressions early.
