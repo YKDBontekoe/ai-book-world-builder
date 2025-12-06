@@ -27,7 +27,7 @@ export const Suggestion = ({
       {isExpanded ? (
         <motion.div
           animate={{ opacity: 1, y: -20 }}
-          className="-right-12 md:-right-16 absolute z-50 flex w-56 flex-col gap-3 rounded-2xl border bg-background p-3 font-sans text-sm shadow-xl"
+          className="-right-12 md:-right-16 absolute z-50 flex w-64 flex-col gap-3 rounded-2xl border bg-background p-3 font-sans text-sm shadow-xl"
           exit={{ opacity: 0, y: -10 }}
           initial={{ opacity: 0, y: -10 }}
           key={suggestion.id}
@@ -49,7 +49,27 @@ export const Suggestion = ({
               <CrossIcon size={12} />
             </button>
           </div>
-          <div>{suggestion.description}</div>
+          <div className="flex flex-col gap-2">
+            <div>
+              <div className="text-muted-foreground text-xs uppercase tracking-wide">
+                Suggested edit
+              </div>
+              <div className="mt-1 rounded-lg bg-muted p-2 text-sm font-medium leading-relaxed dark:bg-background">
+                {suggestion.suggestedText}
+              </div>
+            </div>
+
+            {suggestion.description ? (
+              <div>
+                <div className="text-muted-foreground text-xs uppercase tracking-wide">
+                  Rationale
+                </div>
+                <div className="mt-1 rounded-lg bg-background p-2 leading-relaxed dark:bg-muted/40">
+                  {suggestion.description}
+                </div>
+              </div>
+            ) : null}
+          </div>
           <Button
             className="w-fit rounded-full px-3 py-1.5"
             onClick={onApply}
