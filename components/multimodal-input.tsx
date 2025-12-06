@@ -67,6 +67,7 @@ function PureMultimodalInput({
   onModelChange,
   usage,
   availableModels,
+  projectId,
 }: {
   chatId: string;
   input: string;
@@ -84,6 +85,7 @@ function PureMultimodalInput({
   onModelChange?: (modelId: ChatModelId) => void;
   usage?: AppUsage;
   availableModels: ChatModel[];
+  projectId?: string | null;
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -173,32 +175,47 @@ function PureMultimodalInput({
     resetHeight,
   ]);
 
-  const uploadFile = useCallback(async (file: File) => {
-    const formData = new FormData();
-    formData.append("file", file);
-
-    try {
-      const response = await fetch("/api/files/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const { url, pathname, contentType } = data;
-
-        return {
-          url,
-          name: pathname,
-          contentType,
-        };
+  const uploadFile = useCallback(
+    async (file: File) => {
+      if (!projectId) {
+        toast.error("Select a project before uploading files.");
+        return;
       }
-      const { error } = await response.json();
-      toast.error(error);
-    } catch (_error) {
-      toast.error("Failed to upload file, please try again!");
-    }
-  }, []);
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("projectId", projectId);
+
+      try {
+        const response = await fetch("/api/files/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        const payload = await response.json();
+
+        if (response.ok && payload.status === "uploaded") {
+          const material = payload.material;
+          const contentType = material?.mimeType ?? payload.blob?.contentType;
+          const url = material?.blobUrl ?? payload.blob?.url;
+
+          if (material && url) {
+            return {
+              url,
+              name: material.filename,
+              contentType: contentType ?? file.type,
+            };
+          }
+        }
+
+        const errorMessage = payload.message ?? "Failed to upload file.";
+        toast.error(errorMessage);
+      } catch (_error) {
+        toast.error("Failed to upload file, please try again!");
+      }
+    },
+    [projectId]
+  );
 
   const contextProps = useMemo(
     () => ({
@@ -421,6 +438,9 @@ export const MultimodalInput = memo(
       return false;
     }
     if (prevProps.selectedModelId !== nextProps.selectedModelId) {
+      return false;
+    }
+    if (prevProps.projectId !== nextProps.projectId) {
       return false;
     }
 

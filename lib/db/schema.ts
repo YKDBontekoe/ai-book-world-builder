@@ -2,6 +2,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   foreignKey,
+  index,
   integer,
   json,
   jsonb,
@@ -114,6 +115,9 @@ export type ProjectFolder = {
   description: string;
 };
 
+export const sourceMaterialStatus = ["pending", "uploaded", "failed"] as const;
+export type SourceMaterialStatus = (typeof sourceMaterialStatus)[number];
+
 export const project = pgTable("Project", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   createdAt: timestamp("createdAt").notNull(),
@@ -129,6 +133,34 @@ export const project = pgTable("Project", {
 });
 
 export type Project = InferSelectModel<typeof project>;
+
+export const sourceMaterial = pgTable(
+  "SourceMaterial",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    createdAt: timestamp("createdAt").notNull(),
+    updatedAt: timestamp("updatedAt").notNull(),
+    filename: text("filename").notNull(),
+    mimeType: varchar("mimeType", { length: 128 }).notNull(),
+    size: integer("size").notNull(),
+    status: varchar("status", { enum: sourceMaterialStatus })
+      .notNull()
+      .default("pending"),
+    blobUrl: text("blobUrl"),
+    projectId: uuid("projectId")
+      .notNull()
+      .references(() => project.id),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+  },
+  (table) => ({
+    projectIdx: index("source_material_project_idx").on(table.projectId),
+    userIdx: index("source_material_user_idx").on(table.userId),
+  })
+);
+
+export type SourceMaterial = InferSelectModel<typeof sourceMaterial>;
 
 export const entity = pgTable(
   "Entity",

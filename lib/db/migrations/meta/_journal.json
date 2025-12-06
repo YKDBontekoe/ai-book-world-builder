@@ -85,6 +85,13 @@
       "when": 1764983916681,
       "tag": "0011_volume_chapters",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1765034721101,
+      "tag": "0012_source_materials",
+      "breakpoints": true
     }
   ]
 }

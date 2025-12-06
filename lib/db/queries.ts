@@ -39,6 +39,9 @@ import {
   outline,
   type Project,
   project,
+  type SourceMaterial,
+  sourceMaterial,
+  type SourceMaterialStatus,
   type Relationship,
   relationship,
   type Suggestion,
@@ -1057,6 +1060,77 @@ export async function getProjectByIdWithAccess({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to load project by id"
+    );
+  }
+}
+
+export async function createSourceMaterial({
+  blobUrl,
+  filename,
+  mimeType,
+  projectId,
+  size,
+  status,
+  userId,
+}: {
+  blobUrl?: string | null;
+  filename: string;
+  mimeType: string;
+  projectId: string;
+  size: number;
+  status: SourceMaterialStatus;
+  userId: string;
+}): Promise<SourceMaterial> {
+  try {
+    const [material] = await db
+      .insert(sourceMaterial)
+      .values({
+        blobUrl,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        filename,
+        mimeType,
+        projectId,
+        size,
+        status,
+        userId,
+      })
+      .returning();
+
+    return material;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create source material record"
+    );
+  }
+}
+
+export async function updateSourceMaterial({
+  blobUrl,
+  id,
+  status,
+}: {
+  blobUrl?: string | null;
+  id: string;
+  status: SourceMaterialStatus;
+}): Promise<SourceMaterial | null> {
+  try {
+    const [material] = await db
+      .update(sourceMaterial)
+      .set({
+        blobUrl,
+        status,
+        updatedAt: new Date(),
+      })
+      .where(eq(sourceMaterial.id, id))
+      .returning();
+
+    return material ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update source material record"
     );
   }
 }
