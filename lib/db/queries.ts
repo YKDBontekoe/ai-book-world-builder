@@ -9,7 +9,9 @@ import {
   gt,
   gte,
   inArray,
+  isNull,
   lt,
+  lte,
   or,
   type SQL,
 } from "drizzle-orm";
@@ -40,6 +42,12 @@ import {
   type Project,
   project,
   type SourceMaterial,
+  type SourceMaterialChapter,
+  sourceMaterialChapter,
+  type SourceMaterialChunk,
+  sourceMaterialChunk,
+  type SourceMaterialProcessing,
+  sourceMaterialProcessing,
   sourceMaterial,
   type SourceMaterialStatus,
   type Relationship,
@@ -1131,6 +1139,288 @@ export async function updateSourceMaterial({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to update source material record"
+    );
+  }
+}
+
+export type SourceMaterialWithProcessing = {
+  material: SourceMaterial;
+  processing: SourceMaterialProcessing | null;
+};
+
+export async function getSourceMaterialsReadyForProcessing({
+  limit,
+  now,
+}: {
+  limit: number;
+  now?: Date;
+}): Promise<SourceMaterialWithProcessing[]> {
+  const currentDate = now ?? new Date();
+
+  try {
+    const results = await db
+      .select({
+        material: sourceMaterial,
+        processing: sourceMaterialProcessing,
+      })
+      .from(sourceMaterial)
+      .leftJoin(
+        sourceMaterialProcessing,
+        eq(sourceMaterialProcessing.sourceMaterialId, sourceMaterial.id)
+      )
+      .where(
+        and(
+          inArray(
+            sourceMaterial.status,
+            ["uploaded", "processing"] satisfies SourceMaterialStatus[]
+          ),
+          or(
+            isNull(sourceMaterialProcessing.nextAttemptAt),
+            lte(sourceMaterialProcessing.nextAttemptAt, currentDate),
+            isNull(sourceMaterialProcessing.id)
+          )
+        )
+      )
+      .orderBy(asc(sourceMaterial.createdAt))
+      .limit(limit);
+
+    return results;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load source materials for processing"
+    );
+  }
+}
+
+export type UpsertSourceMaterialProcessingArgs = {
+  attempts?: number;
+  bytesProcessed?: number;
+  chapters?: number;
+  chunks?: number;
+  completedAt?: Date | null;
+  durationMs?: number;
+  lastError?: string | null;
+  metadata?: Record<string, unknown> | null;
+  nextAttemptAt?: Date;
+  normalizedCharacters?: number;
+  projectId: string;
+  sourceMaterialId: string;
+  startedAt?: Date | null;
+  status?: SourceMaterialStatus;
+  userId: string;
+};
+
+export async function upsertSourceMaterialProcessing({
+  attempts,
+  bytesProcessed,
+  chapters,
+  chunks,
+  completedAt,
+  durationMs,
+  lastError,
+  metadata,
+  nextAttemptAt,
+  normalizedCharacters,
+  projectId,
+  sourceMaterialId,
+  startedAt,
+  status,
+  userId,
+}: UpsertSourceMaterialProcessingArgs): Promise<SourceMaterialProcessing> {
+  try {
+    const now = new Date();
+
+    return await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(sourceMaterialProcessing)
+        .where(eq(sourceMaterialProcessing.sourceMaterialId, sourceMaterialId))
+        .limit(1);
+
+      if (existing) {
+        const [updated] = await tx
+          .update(sourceMaterialProcessing)
+          .set({
+            attempts: attempts ?? existing.attempts,
+            bytesProcessed: bytesProcessed ?? existing.bytesProcessed,
+            chapters: chapters ?? existing.chapters,
+            chunks: chunks ?? existing.chunks,
+            completedAt: completedAt ?? existing.completedAt,
+            durationMs: durationMs ?? existing.durationMs,
+            lastError: lastError ?? existing.lastError,
+            metadata: metadata ?? existing.metadata,
+            nextAttemptAt: nextAttemptAt ?? existing.nextAttemptAt,
+            normalizedCharacters:
+              normalizedCharacters ?? existing.normalizedCharacters,
+            startedAt: startedAt ?? existing.startedAt,
+            status: status ?? existing.status,
+            updatedAt: now,
+          })
+          .where(eq(sourceMaterialProcessing.id, existing.id))
+          .returning();
+
+        return updated;
+      }
+
+      const [inserted] = await tx
+        .insert(sourceMaterialProcessing)
+        .values({
+          attempts: attempts ?? 0,
+          bytesProcessed: bytesProcessed ?? 0,
+          chapters: chapters ?? 0,
+          chunks: chunks ?? 0,
+          completedAt: completedAt ?? null,
+          createdAt: now,
+          durationMs: durationMs ?? 0,
+          lastError: lastError ?? null,
+          metadata: metadata ?? null,
+          nextAttemptAt: nextAttemptAt ?? now,
+          normalizedCharacters: normalizedCharacters ?? 0,
+          projectId,
+          sourceMaterialId,
+          startedAt: startedAt ?? null,
+          status: status ?? "pending",
+          updatedAt: now,
+          userId,
+        })
+        .returning();
+
+      return inserted;
+    });
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to upsert source material processing record"
+    );
+  }
+}
+
+export type UpdateSourceMaterialProcessingArgs = Partial<
+  Pick<
+    SourceMaterialProcessing,
+    | "attempts"
+    | "bytesProcessed"
+    | "chapters"
+    | "chunks"
+    | "completedAt"
+    | "durationMs"
+    | "lastError"
+    | "metadata"
+    | "nextAttemptAt"
+    | "normalizedCharacters"
+    | "startedAt"
+    | "status"
+  > & { sourceMaterialId: string }
+>;
+
+export async function updateSourceMaterialProcessing({
+  sourceMaterialId,
+  ...updates
+}: UpdateSourceMaterialProcessingArgs): Promise<SourceMaterialProcessing | null> {
+  try {
+    const [updated] = await db
+      .update(sourceMaterialProcessing)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(sourceMaterialProcessing.sourceMaterialId, sourceMaterialId))
+      .returning();
+
+    return updated ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update source material processing record"
+    );
+  }
+}
+
+export type NewSourceMaterialChapter = {
+  id: string;
+  title: string;
+  sequence: number;
+  headings: string[];
+  metadata?: Record<string, unknown>;
+};
+
+export type NewSourceMaterialChunk = {
+  id: string;
+  chapterId: string;
+  sequence: number;
+  text: string;
+  metadata?: Record<string, unknown>;
+};
+
+export async function saveSourceMaterialExtraction({
+  chapters,
+  chunks,
+  materialId,
+  projectId,
+  userId,
+}: {
+  chapters: NewSourceMaterialChapter[];
+  chunks: NewSourceMaterialChunk[];
+  materialId: string;
+  projectId: string;
+  userId: string;
+}): Promise<{ chapters: SourceMaterialChapter[]; chunks: SourceMaterialChunk[] }> {
+  try {
+    const now = new Date();
+
+    return await db.transaction(async (tx) => {
+      await tx
+        .delete(sourceMaterialChunk)
+        .where(eq(sourceMaterialChunk.sourceMaterialId, materialId));
+
+      await tx
+        .delete(sourceMaterialChapter)
+        .where(eq(sourceMaterialChapter.sourceMaterialId, materialId));
+
+      const preparedChapters = chapters.map((chapter) => ({
+        id: chapter.id,
+        createdAt: now,
+        updatedAt: now,
+        title: chapter.title,
+        sequence: chapter.sequence,
+        headings: chapter.headings,
+        metadata: chapter.metadata ?? null,
+        sourceMaterialId: materialId,
+        projectId,
+        userId,
+      }));
+
+      const insertedChapters = preparedChapters.length
+        ? await tx
+            .insert(sourceMaterialChapter)
+            .values(preparedChapters)
+            .returning()
+        : [];
+
+      const insertedChunks = chunks.length
+        ? await tx
+            .insert(sourceMaterialChunk)
+            .values(
+              chunks.map((chunk) => ({
+                id: chunk.id,
+                createdAt: now,
+                updatedAt: now,
+                sequence: chunk.sequence,
+                text: chunk.text,
+                metadata: chunk.metadata ?? null,
+                chapterId: chunk.chapterId,
+                sourceMaterialId: materialId,
+                projectId,
+                userId,
+              }))
+            )
+            .returning()
+        : [];
+
+      return { chapters: insertedChapters, chunks: insertedChunks };
+    });
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to persist extracted source material content"
     );
   }
 }
