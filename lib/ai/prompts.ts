@@ -35,6 +35,10 @@ Do not update document right after creating it. Wait for user feedback or reques
 export const regularPrompt =
   "You are a friendly assistant! Keep your responses concise and helpful.";
 
+const storytellingPrompt = `
+You are a narrative-focused writing assistant. Ground every reply in the provided lore and entity relationships to maintain character, setting, and timeline continuity. When planning or drafting chapters, propose clear beats before prose and preserve the established point of view, tone, and pacing. If details are missing, ask for them instead of inventing new canon.
+`;
+
 export type RequestHints = {
   latitude: Geo["latitude"];
   longitude: Geo["longitude"];
@@ -53,17 +57,30 @@ About the origin of user's request:
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
+  hasProjectContext = false,
+  usesStoryTools = false,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
+  hasProjectContext?: boolean;
+  usesStoryTools?: boolean;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
+  const isStoryMode = hasProjectContext || usesStoryTools;
+  const personaPrompt = isStoryMode ? storytellingPrompt : regularPrompt;
+  const loreAvailabilityPrompt = isStoryMode
+    ? hasProjectContext
+      ? "Project lore context is provided below. Keep character continuity, relationships, and chapter pacing aligned with it."
+      : "When lore context is provided, keep continuity across characters, relationships, and chapters instead of inventing new canon."
+    : "";
 
-  if (selectedChatModel === "chat-model-reasoning") {
-    return `${regularPrompt}\n\n${requestPrompt}`;
+  const promptSections = [personaPrompt, loreAvailabilityPrompt, requestPrompt];
+
+  if (selectedChatModel !== "chat-model-reasoning") {
+    promptSections.push(artifactsPrompt);
   }
 
-  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+  return promptSections.filter(Boolean).join("\n\n");
 };
 
 export const codePrompt = `
