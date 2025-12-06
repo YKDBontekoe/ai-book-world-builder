@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { chatModelIds } from "@/lib/ai/models";
 
 const textPartSchema = z.object({
   type: z.enum(["text"]),
@@ -23,7 +22,7 @@ export const postRequestBodySchema = z.object({
     parts: z.array(partSchema),
   }),
   projectId: z.string().uuid().optional().nullable(),
-  selectedChatModel: z.enum(chatModelIds),
+  selectedChatModel: z.string(),
   selectedVisibilityType: z.enum(["public", "private"]),
 });
 
