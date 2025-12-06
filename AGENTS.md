@@ -21,6 +21,10 @@ This guidance applies to the entire repository. Add more specific rules in neste
 ## Process and Documentation Hygiene
 - When you add repository conventions, testing expectations, or design guidance, update the relevant `AGENTS.md` sections so future contributors can find the rules in one place.
 
+## Database migrations
+- Keep migrations and metadata in sync (SQL under `lib/db/migrations`, snapshots under `lib/db/migrations/meta`).
+- Follow `docs/migrations.md` for generating, applying, and verifying migrations locally and in CI/CD. Confirm deployment logs show the `tsx lib/db/migrate` step completing successfully.
+
 ## Changelog Policy
 - Record user-visible changes in the project changelog (or nearest equivalent) as part of each feature or fix. Use clear, action-oriented entries that describe the behavior change.
 - Keep changelog headings aligned with the Keep a Changelog format and remove empty sections before publishing releases. See `CHANGELOG.md` for the expected structure and release cadence.
