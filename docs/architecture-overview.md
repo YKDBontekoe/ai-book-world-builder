@@ -10,13 +10,14 @@ This document summarizes the key modules that power the chat experience, persist
 ## Data persistence
 - **Database access**: `lib/db/queries.ts` centralizes Drizzle ORM queries against Postgres for users, chats, messages, streams, votes, and documents. It handles lifecycle operations such as creating chats, saving or deleting messages, updating visibility, pagination for history, and persisting usage context for analytics and throttling.【F:lib/db/queries.ts†L1-L200】
 - **Schema coverage**: The same module offers helpers for counting messages per user (used in rate limits), saving stream IDs for resumable transport, pruning trailing messages, and recording votes or suggestions associated with chats.【F:lib/db/queries.ts†L200-L520】
+- **Source material ledger**: The `SourceMaterial` table records uploaded reference files with project and user links, MIME type, size, blob URL, and status transitions, indexed by project and user for quick retrieval during chat grounding.【F:lib/db/schema.ts†L67-L92】
 
 ## Authentication
 - **NextAuth configuration**: `app/(auth)/auth.ts` configures credential-based login and a guest-provider pathway. Sessions attach `id` and `type` to the JWT and session objects, allowing downstream handlers (such as `/api/chat` and file uploads) to authorize requests and apply entitlements based on user type.【F:app/(auth)/auth.ts†L1-L73】
 - **Auth gating**: The chat entry page enforces authentication by redirecting unauthenticated users through the guest sign-in route before instantiating a new chat session, ensuring every chat run is associated with a user identity.【F:app/(chat)/page.tsx†L16-L43】
 
 ## File/blob storage
-- **Uploads via Vercel Blob**: The `/api/files/upload` endpoint validates file uploads (type and 5 MB limit), requires an authenticated session, and writes blobs with public access using Vercel Blob’s `put` API. Errors are surfaced with descriptive responses for client handling.【F:app/(chat)/api/files/upload/route.ts†L1-L63】
+- **Uploads via Vercel Blob**: The `/api/files/upload` endpoint enforces project-scoped uploads (auth + projectId), validates PDF/EPUB/DOCX/TXT MIME types, and applies per-role size limits before creating a pending `SourceMaterial` record. After the blob is written with a project prefix, the handler advances the record to `uploaded` status and returns structured status and error codes for clients.【F:app/(chat)/api/files/upload/route.ts†L1-L158】【F:lib/source-materials.ts†L1-L88】
 
 ## AI SDK integration
 - **Provider registry**: `lib/ai/providers.ts` declares language model IDs via the AI SDK `customProvider`, defaulting to Vercel AI Gateway-backed xAI models in production and mocked models in tests. Reasoning models are wrapped with `extractReasoningMiddleware` to expose “think” traces alongside responses.【F:lib/ai/providers.ts†L1-L29】

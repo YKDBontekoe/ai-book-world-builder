@@ -71,6 +71,7 @@ function PureArtifact({
   selectedVisibilityType,
   selectedModelId,
   availableModels,
+  projectId,
 }: {
   chatId: string;
   input: string;
@@ -88,6 +89,7 @@ function PureArtifact({
   selectedVisibilityType: VisibilityType;
   selectedModelId: ChatModelId;
   availableModels: ChatModel[];
+  projectId?: string | null;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
 
@@ -355,6 +357,7 @@ function PureArtifact({
                     setMessages={setMessages}
                     status={status}
                     stop={stop}
+                    projectId={projectId}
                   />
                 </div>
               </div>
@@ -532,6 +535,9 @@ export const Artifact = memo(PureArtifact, (prevProps, nextProps) => {
     return false;
   }
   if (!equal(prevProps.messages, nextProps.messages.length)) {
+    return false;
+  }
+  if (prevProps.projectId !== nextProps.projectId) {
     return false;
   }
   if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType) {

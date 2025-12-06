@@ -366,6 +366,7 @@ export function Chat({
                 setMessages={setMessages}
                 status={status}
                 stop={stop}
+                projectId={selectedProjectId}
                 usage={usage}
               />
             )}
@@ -383,6 +384,7 @@ export function Chat({
         regenerate={regenerate}
         selectedModelId={currentModelId}
         selectedVisibilityType={visibilityType}
+        projectId={selectedProjectId}
         sendMessage={sendMessage}
         setAttachments={setAttachments}
         setInput={setInput}
