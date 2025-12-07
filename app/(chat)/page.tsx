@@ -1,5 +1,4 @@
 import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { getAvailableChatModels } from "@/app/actions/models";
 import { ChatPageContent } from "@/components/chat-page-content";
@@ -20,8 +19,9 @@ export default function Page() {
 async function NewChatPage() {
   const session = await auth();
 
+  // Middleware will handle redirecting unauthenticated users
   if (!session) {
-    redirect("/api/auth/guest");
+    return null;
   }
 
   const id = generateUUID();

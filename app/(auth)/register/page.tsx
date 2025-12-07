@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
+import { GoogleSignInButton } from "@/components/auth/google-button";
 import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/ui/toast";
@@ -50,27 +51,46 @@ export default function Page() {
   };
 
   return (
-    <div className="flex h-dvh w-screen items-start justify-center bg-background pt-12 md:items-center md:pt-0">
-      <div className="flex w-full max-w-md flex-col gap-12 overflow-hidden rounded-2xl">
-        <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
-          <h3 className="font-semibold text-xl dark:text-zinc-50">Sign Up</h3>
-          <p className="text-gray-500 text-sm dark:text-zinc-400">
-            Create an account with your email and password
+    <div className="flex h-dvh w-screen items-start justify-center bg-gradient-to-br from-violet-50 via-white to-indigo-50 pt-12 md:items-center md:pt-0 dark:from-zinc-950 dark:via-zinc-900 dark:to-violet-950">
+      <div className="flex w-full max-w-md flex-col gap-8 overflow-hidden rounded-2xl border border-zinc-200/50 bg-white/80 p-8 shadow-2xl backdrop-blur-xl dark:border-zinc-800/50 dark:bg-zinc-900/80">
+        <div className="flex flex-col items-center justify-center gap-2 text-center">
+          <h3 className="font-semibold text-2xl text-zinc-900 dark:text-zinc-50">
+            Create Account
+          </h3>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">
+            Start building your story universe today
           </p>
         </div>
-        <AuthForm action={handleSubmit} defaultEmail={email}>
-          <SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
-          <p className="mt-4 text-center text-gray-600 text-sm dark:text-zinc-400">
-            {"Already have an account? "}
-            <Link
-              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
-              href="/login"
-            >
-              Sign in
-            </Link>
-            {" instead."}
-          </p>
-        </AuthForm>
+
+        <div className="flex flex-col gap-4">
+          <GoogleSignInButton mode="signup" />
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-zinc-300 border-t dark:border-zinc-700" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-zinc-500 dark:bg-zinc-900 dark:text-zinc-400">
+                Or continue with email
+              </span>
+            </div>
+          </div>
+
+          <AuthForm action={handleSubmit} defaultEmail={email}>
+            <SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
+          </AuthForm>
+        </div>
+
+        <p className="text-center text-sm text-zinc-600 dark:text-zinc-400">
+          {"Already have an account? "}
+          <Link
+            className="font-semibold text-violet-600 hover:underline dark:text-violet-400"
+            href="/login"
+          >
+            Sign in
+          </Link>
+          {" instead."}
+        </p>
       </div>
     </div>
   );

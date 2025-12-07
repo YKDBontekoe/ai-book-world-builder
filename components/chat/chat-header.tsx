@@ -1,9 +1,10 @@
 "use client";
 
-import { PlusIcon } from "lucide-react";
+import { BookOpenIcon, PlusIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { memo } from "react";
 import { useWindowSize } from "usehooks-ts";
+import { useBookCanvas } from "@/components/book-canvas";
 import {
   VisibilitySelector,
   type VisibilityType,
@@ -12,6 +13,11 @@ import { SidebarToggle } from "@/components/sidebar/sidebar-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/components/ui/sidebar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function PureChatHeader({
   chatId,
@@ -26,6 +32,7 @@ function PureChatHeader({
 }) {
   const router = useRouter();
   const { open } = useSidebar();
+  const { togglePanel, isOpen: isPanelOpen } = useBookCanvas();
 
   const { width: windowWidth } = useWindowSize();
 
@@ -43,6 +50,24 @@ function PureChatHeader({
       )}
 
       <div className="ml-auto flex items-center gap-2">
+        {/* Book Progress Toggle */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              className="h-8 px-2"
+              onClick={togglePanel}
+              size="sm"
+              variant={isPanelOpen ? "default" : "outline"}
+            >
+              <BookOpenIcon size={16} />
+              <span className="sr-only md:not-sr-only md:ml-1">Book</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            {isPanelOpen ? "Hide Book Progress" : "Show Book Progress"}
+          </TooltipContent>
+        </Tooltip>
+
         {(!open || windowWidth < 768) && (
           <Button
             className="h-8 px-2 md:h-fit md:px-2"

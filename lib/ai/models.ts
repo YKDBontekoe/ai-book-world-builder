@@ -15,6 +15,41 @@ export type ChatModel = {
 
 export const chatModels: readonly ChatModel[] = [
   {
+    id: "anthropic-claude-opus-4-5",
+    name: "Claude Opus 4.5",
+    provider: "Anthropic",
+    gatewayId: "anthropic/claude-opus-4-5-latest",
+    description: "The Brain. Best for long-horizon planning and orchestration.",
+    supportsImages: true,
+  },
+  {
+    id: "anthropic-claude-sonnet-4-5",
+    name: "Claude Sonnet 4.5",
+    provider: "Anthropic",
+    gatewayId: "anthropic/claude-sonnet-4-5-latest",
+    description: "The Writer. Warm tone, high speed, perfect for drafting.",
+    supportsImages: true,
+  },
+  {
+    id: "deepseek-reasoner",
+    name: "DeepSeek V3 (Reasoner)",
+    provider: "DeepSeek",
+    gatewayId: "deepseek/deepseek-reasoner",
+    description:
+      "The Logic Check. Chain-of-thought processing for diagnostics.",
+    supportsImages: false,
+    reasoning: true,
+  },
+  {
+    id: "google-gemini-3-pro",
+    name: "Gemini 3 Pro",
+    provider: "Google",
+    gatewayId: "google/gemini-3-pro-preview",
+    description:
+      "The Context Bank. 2M+ token context window for full retrieval.",
+    supportsImages: true,
+  },
+  {
     id: "openai-gpt-4o-mini",
     name: "GPT-4o mini",
     provider: "OpenAI",
@@ -23,52 +58,18 @@ export const chatModels: readonly ChatModel[] = [
     supportsImages: true,
   },
   {
-    id: "chat-model",
-    name: "Grok Vision",
-    provider: "xAI",
-    gatewayId: "xai/grok-2-vision-1212",
-    description: "Advanced multimodal model with vision and text capabilities",
+    id: "openai-gpt-5-mini",
+    name: "GPT-5 mini",
+    provider: "OpenAI",
+    gatewayId: "openai/gpt-5-mini",
+    description: "Next-gen mini model with enhanced reasoning capabilities",
     supportsImages: true,
-  },
-  {
-    id: "google-gemini-flash",
-    name: "Gemini 1.5 Flash",
-    provider: "Google",
-    gatewayId: "google/gemini-1.5-flash-latest",
-    description: "Balanced vision model for images, audio, and long context",
-    supportsImages: true,
-  },
-  {
-    id: "anthropic-claude-haiku",
-    name: "Claude 3.5 Haiku",
-    provider: "Anthropic",
-    gatewayId: "anthropic/claude-3-5-haiku-20241022",
-    description: "Affordable reasoning model for fast, high-quality text",
-    supportsImages: false,
-  },
-  {
-    id: "chat-model-lite",
-    name: "Grok Lite",
-    provider: "xAI",
-    gatewayId: "xai/grok-2-1212",
-    description: "Lower-cost text model for faster, everyday conversations",
-    supportsImages: false,
-  },
-  {
-    id: "chat-model-reasoning",
-    name: "Grok Reasoning",
-    provider: "xAI",
-    gatewayId: "xai/grok-3-mini",
-    description:
-      "Uses advanced chain-of-thought reasoning for complex problems",
-    supportsImages: false,
-    reasoning: true,
   },
 ];
 
 export type ChatModelId = string;
 
-export const DEFAULT_CHAT_MODEL: ChatModelId = chatModels[0].id;
+export const DEFAULT_CHAT_MODEL: ChatModelId = "openai-gpt-5-mini";
 
 export const chatModelIds = chatModels.map((model) => model.id) as string[];
 

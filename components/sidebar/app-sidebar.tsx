@@ -76,15 +76,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   }}
                 >
                   <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                    Chatbot
+                    Story Studio
                   </span>
-                </Link>
-                <Link
-                  className="cursor-pointer rounded-md px-2 py-1 text-sm hover:bg-muted"
-                  href="/projects"
-                  onClick={() => setOpenMobile(false)}
-                >
-                  Projects
                 </Link>
               </div>
               <div className="flex flex-row gap-1">
@@ -121,7 +114,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent align="end" className="hidden md:block">
-                    New Chat
+                    New Story
                   </TooltipContent>
                 </Tooltip>
               </div>
@@ -129,6 +122,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
+          <div className="p-2">
+            <Link href="/" onClick={() => setOpenMobile(false)}>
+              <Button className="w-full justify-start gap-2" variant="default">
+                <PlusIcon size={16} /> New Story
+              </Button>
+            </Link>
+          </div>
           <SidebarHistory user={user} />
         </SidebarContent>
         <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>

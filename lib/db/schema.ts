@@ -199,9 +199,9 @@ export const sourceMaterialProcessing = pgTable(
       .references(() => user.id),
   },
   (table) => ({
-    sourceMaterialIdx: uniqueIndex("source_material_processing_material_idx").on(
-      table.sourceMaterialId
-    ),
+    sourceMaterialIdx: uniqueIndex(
+      "source_material_processing_material_idx"
+    ).on(table.sourceMaterialId),
     projectIdx: index("source_material_processing_project_idx").on(
       table.projectId
     ),
@@ -250,7 +250,9 @@ export const sourceMaterialChapter = pgTable(
   })
 );
 
-export type SourceMaterialChapter = InferSelectModel<typeof sourceMaterialChapter>;
+export type SourceMaterialChapter = InferSelectModel<
+  typeof sourceMaterialChapter
+>;
 
 export const sourceMaterialChunk = pgTable(
   "SourceMaterialChunk",
@@ -523,3 +525,220 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+// Book Generation Pipeline Tables
+
+export const sceneStatus = [
+  "planned",
+  "drafting",
+  "drafted",
+  "review",
+  "final",
+] as const;
+export type SceneStatus = (typeof sceneStatus)[number];
+
+export const scene = pgTable(
+  "Scene",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    createdAt: timestamp("createdAt").notNull(),
+    updatedAt: timestamp("updatedAt").notNull(),
+    title: text("title").notNull(),
+    sequence: integer("sequence").notNull(),
+    content: text("content"),
+    status: varchar("status", { length: 32 }).notNull().default("planned"),
+    chapterId: uuid("chapterId")
+      .notNull()
+      .references(() => chapter.id),
+    projectId: uuid("projectId")
+      .notNull()
+      .references(() => project.id),
+  },
+  (table) => ({
+    chapterIdx: index("scene_chapter_idx").on(table.chapterId),
+    sequenceIdx: uniqueIndex("scene_sequence_chapter_idx").on(
+      table.chapterId,
+      table.sequence
+    ),
+  })
+);
+
+export type Scene = InferSelectModel<typeof scene>;
+
+export type SceneCardData = {
+  emotionalBeats?: string[];
+  characterGoals?: Record<string, string>;
+  constraints?: string[];
+};
+
+export const sceneCard = pgTable(
+  "SceneCard",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    createdAt: timestamp("createdAt").notNull(),
+    updatedAt: timestamp("updatedAt").notNull(),
+    purpose: text("purpose").notNull(),
+    setting: text("setting"),
+    atmosphere: text("atmosphere"),
+    emotionalBeats: jsonb("emotionalBeats").$type<string[] | null>(),
+    characterGoals: jsonb("characterGoals").$type<Record<
+      string,
+      string
+    > | null>(),
+    constraints: jsonb("constraints").$type<string[] | null>(),
+    plannedReveal: text("plannedReveal"),
+    sceneId: uuid("sceneId")
+      .notNull()
+      .references(() => scene.id),
+    projectId: uuid("projectId")
+      .notNull()
+      .references(() => project.id),
+  },
+  (table) => ({
+    sceneIdx: uniqueIndex("scene_card_scene_idx").on(table.sceneId),
+  })
+);
+
+export type SceneCard = InferSelectModel<typeof sceneCard>;
+
+export const generationStatus = [
+  "idle",
+  "running",
+  "paused",
+  "completed",
+  "failed",
+] as const;
+export type GenerationStatus = (typeof generationStatus)[number];
+
+export type CanvasState = {
+  activePane:
+    | "outline"
+    | "scenes"
+    | "draft"
+    | "diagnostics"
+    | "bible"
+    | "changes";
+  paneState: Record<string, unknown>; // scroll positions, expanded items
+  lastUpdated: string;
+};
+
+export type TaskLogEntry = {
+  id: string;
+  timestamp: string;
+  type: "orchestrator" | "tool_call" | "tool_result";
+  modelId: string;
+  content: string; // The thought process or tool output
+  metadata?: Record<string, unknown>;
+};
+
+export type GenerationTaskLog = TaskLogEntry[];
+
+export const bookGeneration = pgTable(
+  "BookGeneration",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    createdAt: timestamp("createdAt").notNull(),
+    updatedAt: timestamp("updatedAt").notNull(),
+    status: varchar("status", { length: 32 }).notNull().default("idle"),
+    canvasState: jsonb("canvasState").$type<CanvasState | null>(),
+    taskLog: jsonb("taskLog").$type<GenerationTaskLog | null>(),
+    error: text("error"),
+    startedAt: timestamp("startedAt"),
+    completedAt: timestamp("completedAt"),
+    outlineId: uuid("outlineId").references(() => outline.id),
+    projectId: uuid("projectId")
+      .notNull()
+      .references(() => project.id),
+  },
+  (table) => ({
+    projectIdx: uniqueIndex("book_generation_project_idx").on(table.projectId),
+  })
+);
+
+export type BookGeneration = InferSelectModel<typeof bookGeneration>;
+
+export type StoryStateData = {
+  characterKnowledge?: Record<string, string[]>;
+  characterInjuries?: Record<string, string[]>;
+  relationshipChanges?: Array<{
+    source: string;
+    target: string;
+    change: string;
+  }>;
+  openThreads?: string[];
+  revealsMade?: string[];
+  worldStateChanges?: string[];
+};
+
+export const storyState = pgTable(
+  "StoryState",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    createdAt: timestamp("createdAt").notNull(),
+    updatedAt: timestamp("updatedAt").notNull(),
+    chapterNumber: integer("chapterNumber").notNull(),
+    characterKnowledge: jsonb("characterKnowledge").$type<Record<
+      string,
+      string[]
+    > | null>(),
+    characterInjuries: jsonb("characterInjuries").$type<Record<
+      string,
+      string[]
+    > | null>(),
+    relationshipChanges: jsonb("relationshipChanges").$type<Array<{
+      source: string;
+      target: string;
+      change: string;
+    }> | null>(),
+    openThreads: jsonb("openThreads").$type<string[] | null>(),
+    revealsMade: jsonb("revealsMade").$type<string[] | null>(),
+    worldStateChanges: jsonb("worldStateChanges").$type<string[] | null>(),
+    generationId: uuid("generationId")
+      .notNull()
+      .references(() => bookGeneration.id),
+    projectId: uuid("projectId")
+      .notNull()
+      .references(() => project.id),
+  },
+  (table) => ({
+    generationIdx: index("story_state_generation_idx").on(table.generationId),
+    chapterIdx: uniqueIndex("story_state_chapter_idx").on(
+      table.generationId,
+      table.chapterNumber
+    ),
+  })
+);
+
+export type StoryState = InferSelectModel<typeof storyState>;
+
+export const bookExportFormat = ["pdf", "epub"] as const;
+export type BookExportFormat = (typeof bookExportFormat)[number];
+
+export const bookExportStatus = ["pending", "completed", "failed"] as const;
+export type BookExportStatus = (typeof bookExportStatus)[number];
+
+export const bookExport = pgTable(
+  "BookExport",
+  {
+    id: uuid("id").primaryKey().notNull().defaultRandom(),
+    createdAt: timestamp("createdAt").notNull(),
+    projectId: uuid("projectId")
+      .notNull()
+      .references(() => project.id),
+    blobUrl: text("blobUrl"),
+    format: varchar("format", { enum: bookExportFormat }).notNull(),
+    status: varchar("status", { enum: bookExportStatus })
+      .notNull()
+      .default("pending"),
+    error: text("error"),
+    userId: uuid("userId")
+      .notNull()
+      .references(() => user.id),
+  },
+  (table) => ({
+    projectIdx: index("book_export_project_idx").on(table.projectId),
+    userIdx: index("book_export_user_idx").on(table.userId),
+  })
+);
+
+export type BookExport = InferSelectModel<typeof bookExport>;

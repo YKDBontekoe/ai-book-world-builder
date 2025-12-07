@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
+import { ExportBookDialog } from "@/components/export-book-dialog";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -158,6 +159,19 @@ export default async function ProjectDetailPage({
               Open draft workspace
             </Link>
           </Button>
+        </CardHeader>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-lg">Export Book</CardTitle>
+            <p className="text-muted-foreground text-sm">
+              Download your book as PDF or EPUB. Exports are saved to your
+              account.
+            </p>
+          </div>
+          <ExportBookDialog projectId={project.id} projectName={project.name} />
         </CardHeader>
       </Card>
 

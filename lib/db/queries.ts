@@ -24,6 +24,9 @@ import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
 import { generateUUID } from "../utils";
 import {
+  type BookGeneration,
+  bookGeneration,
+  type CanvasState,
   type Chapter,
   type ChapterDraft,
   type Chat,
@@ -36,6 +39,8 @@ import {
   type EntityAttribute,
   entity,
   entityAttribute,
+  type GenerationStatus,
+  type GenerationTaskLog,
   message,
   type NewSourceMaterialChapter,
   type NewSourceMaterialChunk,
@@ -45,18 +50,25 @@ import {
   project,
   type Relationship,
   relationship,
+  type Scene,
+  type SceneCard,
   type SourceMaterial,
   type SourceMaterialChapter,
   type SourceMaterialChunk,
   type SourceMaterialProcessing,
   type SourceMaterialStatus,
+  type StoryState,
   type Suggestion,
+  scene,
+  sceneCard,
   sourceMaterial,
   sourceMaterialChapter,
   sourceMaterialChunk,
   sourceMaterialProcessing,
+  storyState,
   stream,
   suggestion,
+  type TaskLogEntry,
   type User,
   user,
   type Volume,
@@ -65,18 +77,14 @@ import {
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
-export type {
-  NewSourceMaterialChapter,
-  NewSourceMaterialChunk,
-} from "./schema";
-
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle
 
 // biome-ignore lint: Forbidden non-null assertion.
 const client = postgres(process.env.POSTGRES_URL!);
-const db = drizzle(client);
+export const db = drizzle(client);
+export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 export async function getUser(email: string): Promise<User[]> {
   try {
@@ -121,14 +129,16 @@ export async function saveChat({
   userId,
   title,
   visibility,
+  tx,
 }: {
   id: string;
   userId: string;
   title: string;
   visibility: VisibilityType;
+  tx?: DbTransaction;
 }) {
   try {
-    return await db.insert(chat).values({
+    return await (tx || db).insert(chat).values({
       id,
       createdAt: new Date(),
       userId,
@@ -279,9 +289,15 @@ export async function getChatById({ id }: { id: string }) {
   }
 }
 
-export async function saveMessages({ messages }: { messages: DBMessage[] }) {
+export async function saveMessages({
+  messages,
+  tx,
+}: {
+  messages: DBMessage[];
+  tx?: DbTransaction;
+}) {
   try {
-    return await db.insert(message).values(messages);
+    return await (tx || db).insert(message).values(messages);
   } catch (_error) {
     throw new ChatSDKError("bad_request:database", "Failed to save messages");
   }
@@ -594,12 +610,14 @@ export async function getMessageCountByUserId({
 export async function createStreamId({
   streamId,
   chatId,
+  tx,
 }: {
   streamId: string;
   chatId: string;
+  tx?: DbTransaction;
 }) {
   try {
-    await db
+    await (tx || db)
       .insert(stream)
       .values({ id: streamId, chatId, createdAt: new Date() });
   } catch (_error) {
@@ -742,11 +760,56 @@ export async function getEntitiesForProject({
       .select()
       .from(entity)
       .where(eq(entity.projectId, projectId))
-      .orderBy(asc(entity.name));
+      .orderBy(desc(entity.createdAt));
   } catch (_error) {
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to load entities for project"
+    );
+  }
+}
+
+export async function getOutlineForProject({
+  projectId,
+}: {
+  projectId: string;
+}) {
+  try {
+    const [result] = await db
+      .select()
+      .from(outline)
+      .where(eq(outline.projectId, projectId));
+
+    return result;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load outline for project"
+    );
+  }
+}
+
+export async function getChaptersForProject({
+  projectId,
+}: {
+  projectId: string;
+}) {
+  try {
+    return await db
+      .select({
+        id: chapter.id,
+        title: chapter.title,
+        sequence: chapter.sequence,
+        status: chapter.status,
+        notes: chapter.notes,
+      })
+      .from(chapter)
+      .where(eq(chapter.projectId, projectId))
+      .orderBy(asc(chapter.sequence));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load chapters for project"
     );
   }
 }
@@ -1736,6 +1799,381 @@ export async function createChapterDraftEntry({
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to save chapter draft"
+    );
+  }
+}
+
+// ============================================
+// Book Generation Pipeline Queries
+// ============================================
+
+export async function getBookGenerationForProject({
+  projectId,
+}: {
+  projectId: string;
+}): Promise<BookGeneration | null> {
+  try {
+    const [generation] = await db
+      .select()
+      .from(bookGeneration)
+      .where(eq(bookGeneration.projectId, projectId));
+
+    return generation ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load book generation"
+    );
+  }
+}
+
+export async function createBookGeneration({
+  projectId,
+  outlineId,
+}: {
+  projectId: string;
+  outlineId?: string;
+}): Promise<BookGeneration> {
+  try {
+    const [generation] = await db
+      .insert(bookGeneration)
+      .values({
+        projectId,
+        outlineId,
+        status: "idle",
+        canvasState: {
+          activePane: "outline",
+          paneState: {},
+          lastUpdated: new Date().toISOString(),
+        },
+        taskLog: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return generation;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create book generation"
+    );
+  }
+}
+
+export async function updateCanvasState({
+  generationId,
+  canvasState,
+}: {
+  generationId: string;
+  canvasState: CanvasState;
+}): Promise<BookGeneration | null> {
+  try {
+    const [updated] = await db
+      .update(bookGeneration)
+      .set({
+        canvasState,
+        updatedAt: new Date(),
+      })
+      .where(eq(bookGeneration.id, generationId))
+      .returning();
+
+    return updated ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update canvas state"
+    );
+  }
+}
+
+export async function addTaskLogEntry({
+  generationId,
+  entry,
+  overallStatus,
+}: {
+  generationId: string;
+  entry: TaskLogEntry;
+  overallStatus?: GenerationStatus;
+}): Promise<BookGeneration | null> {
+  try {
+    const [existing] = await db
+      .select()
+      .from(bookGeneration)
+      .where(eq(bookGeneration.id, generationId));
+
+    if (!existing) {
+      return null;
+    }
+
+    const currentLog = (existing.taskLog as GenerationTaskLog) ?? [];
+    const updatedLog = [...currentLog, entry];
+
+    const [updated] = await db
+      .update(bookGeneration)
+      .set({
+        taskLog: updatedLog,
+        ...(overallStatus ? { status: overallStatus } : {}),
+        updatedAt: new Date(),
+      })
+      .where(eq(bookGeneration.id, generationId))
+      .returning();
+
+    return updated ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to add task log entry"
+    );
+  }
+}
+
+// Replaces updateBookGenerationStage
+// - Function removed as it is no longer compatible with the new schema.
+// - Use updateCanvasState or addTaskLogEntry instead.
+
+export async function getScenesForChapter({
+  chapterId,
+}: {
+  chapterId: string;
+}): Promise<Scene[]> {
+  try {
+    return await db
+      .select()
+      .from(scene)
+      .where(eq(scene.chapterId, chapterId))
+      .orderBy(asc(scene.sequence));
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to load scenes");
+  }
+}
+
+export async function createScene({
+  projectId,
+  chapterId,
+  title,
+  sequence,
+  content,
+  status,
+}: {
+  projectId: string;
+  chapterId: string;
+  title: string;
+  sequence: number;
+  content?: string;
+  status?: string;
+}): Promise<Scene> {
+  try {
+    const [created] = await db
+      .insert(scene)
+      .values({
+        projectId,
+        chapterId,
+        title,
+        sequence,
+        content,
+        status: status ?? "planned",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return created;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to create scene");
+  }
+}
+
+export async function updateSceneContent({
+  sceneId,
+  content,
+  status,
+}: {
+  sceneId: string;
+  content: string;
+  status?: string;
+}): Promise<Scene | null> {
+  try {
+    const [updated] = await db
+      .update(scene)
+      .set({
+        content,
+        status: status ?? "drafted",
+        updatedAt: new Date(),
+      })
+      .where(eq(scene.id, sceneId))
+      .returning();
+
+    return updated ?? null;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update scene content"
+    );
+  }
+}
+
+export async function getSceneCardForScene({
+  sceneId,
+}: {
+  sceneId: string;
+}): Promise<SceneCard | null> {
+  try {
+    const [card] = await db
+      .select()
+      .from(sceneCard)
+      .where(eq(sceneCard.sceneId, sceneId));
+
+    return card ?? null;
+  } catch (_error) {
+    throw new ChatSDKError("bad_request:database", "Failed to load scene card");
+  }
+}
+
+export async function createSceneCard({
+  projectId,
+  sceneId,
+  purpose,
+  setting,
+  atmosphere,
+  emotionalBeats,
+  characterGoals,
+  constraints,
+  plannedReveal,
+}: {
+  projectId: string;
+  sceneId: string;
+  purpose: string;
+  setting?: string;
+  atmosphere?: string;
+  emotionalBeats?: string[];
+  characterGoals?: Record<string, string>;
+  constraints?: string[];
+  plannedReveal?: string;
+}): Promise<SceneCard> {
+  try {
+    const [created] = await db
+      .insert(sceneCard)
+      .values({
+        projectId,
+        sceneId,
+        purpose,
+        setting,
+        atmosphere,
+        emotionalBeats,
+        characterGoals,
+        constraints,
+        plannedReveal,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return created;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create scene card"
+    );
+  }
+}
+
+export async function getStoryStateForGeneration({
+  generationId,
+}: {
+  generationId: string;
+}): Promise<StoryState[]> {
+  try {
+    return await db
+      .select()
+      .from(storyState)
+      .where(eq(storyState.generationId, generationId))
+      .orderBy(asc(storyState.chapterNumber));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to load story state"
+    );
+  }
+}
+
+export async function createOrUpdateStoryState({
+  projectId,
+  generationId,
+  chapterNumber,
+  characterKnowledge,
+  characterInjuries,
+  relationshipChanges,
+  openThreads,
+  revealsMade,
+  worldStateChanges,
+}: {
+  projectId: string;
+  generationId: string;
+  chapterNumber: number;
+  characterKnowledge?: Record<string, string[]>;
+  characterInjuries?: Record<string, string[]>;
+  relationshipChanges?: Array<{
+    source: string;
+    target: string;
+    change: string;
+  }>;
+  openThreads?: string[];
+  revealsMade?: string[];
+  worldStateChanges?: string[];
+}): Promise<StoryState> {
+  try {
+    const [existing] = await db
+      .select()
+      .from(storyState)
+      .where(
+        and(
+          eq(storyState.generationId, generationId),
+          eq(storyState.chapterNumber, chapterNumber)
+        )
+      );
+
+    if (existing) {
+      const [updated] = await db
+        .update(storyState)
+        .set({
+          characterKnowledge: characterKnowledge ?? existing.characterKnowledge,
+          characterInjuries: characterInjuries ?? existing.characterInjuries,
+          relationshipChanges:
+            relationshipChanges ?? existing.relationshipChanges,
+          openThreads: openThreads ?? existing.openThreads,
+          revealsMade: revealsMade ?? existing.revealsMade,
+          worldStateChanges: worldStateChanges ?? existing.worldStateChanges,
+          updatedAt: new Date(),
+        })
+        .where(eq(storyState.id, existing.id))
+        .returning();
+
+      return updated;
+    }
+
+    const [created] = await db
+      .insert(storyState)
+      .values({
+        projectId,
+        generationId,
+        chapterNumber,
+        characterKnowledge,
+        characterInjuries,
+        relationshipChanges,
+        openThreads,
+        revealsMade,
+        worldStateChanges,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return created;
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create/update story state"
     );
   }
 }

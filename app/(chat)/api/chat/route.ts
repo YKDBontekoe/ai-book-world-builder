@@ -1,5 +1,4 @@
 import { gateway } from "@ai-sdk/gateway";
-import { geolocation } from "@vercel/functions";
 import {
   convertToModelMessages,
   createUIMessageStream,
@@ -9,44 +8,34 @@ import {
   streamText,
 } from "ai";
 import { unstable_cache as cache } from "next/cache";
-import { after } from "next/server";
 
 import type { ModelCatalog } from "tokenlens/core";
 import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
-import { auth, type UserType } from "@/app/(auth)/auth";
-import { getAvailableChatModels } from "@/app/actions/models";
+import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
-import { entitlementsByUserType } from "@/lib/ai/entitlements";
-import { type ChatModel, getChatModelById } from "@/lib/ai/models";
-import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
+import type { ChatModel } from "@/lib/ai/models";
 import { myProvider } from "@/lib/ai/providers";
-import { createDocument } from "@/lib/ai/tools/create-document";
-import { getWeather } from "@/lib/ai/tools/get-weather";
-import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
-import { updateDocument } from "@/lib/ai/tools/update-document";
+import { analyzeCharacter } from "@/lib/ai/tools/analyze-character";
+import { assessReadiness } from "@/lib/ai/tools/assess-readiness";
+import { createChapter } from "@/lib/ai/tools/create-chapter";
+import { createEntity } from "@/lib/ai/tools/create-entity";
+import { createOutline } from "@/lib/ai/tools/create-outline";
+import { createRelation } from "@/lib/ai/tools/create-relation";
+import { createTimeline } from "@/lib/ai/tools/create-timeline";
+import { createVolume } from "@/lib/ai/tools/create-volume";
+// Dynamic Book Pipeline Tools
+import { draftScene } from "@/lib/ai/tools/draft-scene";
+import { orchestrateBook } from "@/lib/ai/tools/orchestrate-book";
+import { runDiagnostics } from "@/lib/ai/tools/run-diagnostics";
+import { updateSceneCards } from "@/lib/ai/tools/update-scene-cards";
 import { isProductionEnvironment } from "@/lib/constants";
-import {
-  createStreamId,
-  deleteChatById,
-  getAttributesForProject,
-  getChatById,
-  getEntitiesForProject,
-  getMessageCountByUserId,
-  getMessagesByChatId,
-  getProjectByIdWithAccess,
-  getRelationshipsForProject,
-  saveChat,
-  saveMessages,
-  updateChatLastContextById,
-} from "@/lib/db/queries";
-import type { DBMessage } from "@/lib/db/schema";
+import { saveMessages, updateChatLastContextById } from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
-import { buildProjectContext } from "@/lib/project-context";
+import { initializeChatSession } from "@/lib/services/chat";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
-import { convertToUIMessages, generateUUID } from "@/lib/utils";
-import { generateTitleFromUserMessage } from "../../actions";
+import { generateUUID } from "@/lib/utils";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
@@ -98,148 +87,17 @@ export async function POST(request: Request) {
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
 
-    const userType: UserType = session.user.type;
-    const { availableChatModelIds } = entitlementsByUserType[userType];
-
-    let projectContext: string | undefined;
-
-    if (projectId) {
-      const project = await getProjectByIdWithAccess({
-        id: projectId,
-        userId: session.user.id,
-      });
-
-      if (!project) {
-        return new ChatSDKError(
-          "forbidden:chat",
-          "Project unavailable"
-        ).toResponse();
-      }
-
-      const [entities, attributes, relationships] = await Promise.all([
-        getEntitiesForProject({ projectId }),
-        getAttributesForProject({ projectId }),
-        getRelationshipsForProject({ projectId }),
-      ]);
-
-      projectContext = buildProjectContext({
-        project,
-        entities,
-        attributes,
-        relationships,
-      });
-    }
-
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
-    });
-
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
-      return new ChatSDKError("rate_limit:chat").toResponse();
-    }
-
-    const availableModels = await getAvailableChatModels();
-    const isDynamicModel = availableModels.some(
-      (m) => m.id === selectedChatModel
-    );
-
-    if (!availableChatModelIds.includes(selectedChatModel) && !isDynamicModel) {
-      return new ChatSDKError(
-        "forbidden:chat",
-        "This model is not available for your account."
-      ).toResponse();
-    }
-
-    let chatModel = getChatModelById(selectedChatModel);
-
-    if (!chatModel && isDynamicModel) {
-      const dynamicModel = availableModels.find(
-        (m) => m.id === selectedChatModel
-      );
-      if (dynamicModel) {
-        chatModel = dynamicModel;
-      }
-    }
-
-    if (!chatModel) {
-      return new ChatSDKError(
-        "bad_request:api",
-        "Unknown chat model."
-      ).toResponse();
-    }
-
-    const containsFileAttachments = message.parts.some(
-      (part) => part.type === "file"
-    );
-
-    if (containsFileAttachments && !chatModel.supportsImages) {
-      return new ChatSDKError(
-        "bad_request:api",
-        "Image uploads require a vision-enabled model."
-      ).toResponse();
-    }
-
-    const chat = await getChatById({ id });
-    let messagesFromDb: DBMessage[] = [];
-
-    if (chat) {
-      if (chat.userId !== session.user.id) {
-        return new ChatSDKError("forbidden:chat").toResponse();
-      }
-      // Only fetch messages if chat already exists
-      messagesFromDb = await getMessagesByChatId({ id });
-    } else {
-      const title = await generateTitleFromUserMessage({
-        message,
-      });
-
-      await saveChat({
+    // Initialize chat session using the service
+    const { uiMessages, groundedSystemPrompt, isDynamicModel } =
+      await initializeChatSession({
         id,
-        userId: session.user.id,
-        title,
-        visibility: selectedVisibilityType,
+        message,
+        projectId,
+        selectedChatModel,
+        selectedVisibilityType,
+        user: session.user,
+        request,
       });
-      // New chat - no need to fetch messages, it's empty
-    }
-
-    const uiMessages = [...convertToUIMessages(messagesFromDb), message];
-
-    const { longitude, latitude, city, country } = geolocation(request);
-
-    const requestHints: RequestHints = {
-      longitude,
-      latitude,
-      city,
-      country,
-    };
-
-    const baseSystemPrompt = systemPrompt({
-      selectedChatModel,
-      requestHints,
-      hasProjectContext: Boolean(projectContext),
-      usesStoryTools: Boolean(projectId),
-    });
-
-    const groundedSystemPrompt = projectContext
-      ? `${baseSystemPrompt}\n\nProject context:\n${projectContext}`
-      : baseSystemPrompt;
-
-    await saveMessages({
-      messages: [
-        {
-          chatId: id,
-          id: message.id,
-          role: "user",
-          parts: message.parts,
-          attachments: [],
-          createdAt: new Date(),
-        },
-      ],
-    });
-
-    const streamId = generateUUID();
-    await createStreamId({ streamId, chatId: id });
 
     let finalMergedUsage: AppUsage | undefined;
 
@@ -258,19 +116,51 @@ export async function POST(request: Request) {
             selectedChatModel === "chat-model-reasoning"
               ? []
               : [
-                  "getWeather",
-                  "createDocument",
-                  "updateDocument",
-                  "requestSuggestions",
+                  "createTimeline",
+                  "createVolume",
+                  "analyzeCharacter",
+                  // Dynamic Book Pipeline
+                  "orchestrateBook",
+                  "updateSceneCards",
+                  "draftScene",
+                  "runDiagnostics",
+                  "assessReadiness",
                 ],
           experimental_transform: smoothStream({ chunking: "word" }),
           tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({
+            createEntity: createEntity({
               session,
-              dataStream,
+              projectId: projectId ?? undefined,
+            }),
+            createRelation: createRelation({
+              session,
+              projectId: projectId ?? undefined,
+            }),
+            createChapter: createChapter({
+              session,
+              projectId: projectId ?? undefined,
+            }),
+            createOutline: createOutline({
+              session,
+              projectId: projectId ?? undefined,
+            }),
+            createTimeline: createTimeline({
+              session,
+              projectId: projectId ?? undefined,
+            }),
+            createVolume: createVolume({
+              session,
+              projectId: projectId ?? undefined,
+            }),
+            analyzeCharacter: analyzeCharacter({ session }),
+            // Dynamic Pipeline Tools
+            orchestrateBook,
+            draftScene: draftScene({ session }),
+            updateSceneCards: updateSceneCards({ session }),
+            runDiagnostics: runDiagnostics({ session }),
+            assessReadiness: assessReadiness({
+              session,
+              projectId: projectId ?? undefined,
             }),
           },
           experimental_telemetry: {

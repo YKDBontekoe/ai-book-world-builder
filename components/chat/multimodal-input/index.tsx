@@ -122,8 +122,6 @@ function PureMultimodalInput({
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
 
   const submitForm = useCallback(() => {
-    window.history.pushState({}, "", `/chat/${chatId}`);
-
     sendMessage({
       role: "user",
       parts: [
@@ -156,7 +154,6 @@ function PureMultimodalInput({
     setAttachments,
     setLocalStorageInput,
     width,
-    chatId,
     resetHeight,
   ]);
 

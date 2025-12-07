@@ -4,6 +4,7 @@ import equal from "fast-deep-equal";
 import { SparklesIcon } from "lucide-react";
 import { memo, useState } from "react";
 import { useDataStream } from "@/components/chat/data-stream-provider";
+import { EntityPreview } from "@/components/chat/entity-preview";
 import { PreviewAttachment } from "@/components/chat/preview-attachment";
 import { DocumentToolResult } from "@/components/document";
 import { DocumentPreview } from "@/components/document-preview";
@@ -64,7 +65,7 @@ const PurePreviewMessage = ({
         })}
       >
         {message.role === "assistant" && (
-          <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+          <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm ring-1 ring-white/20">
             <SparklesIcon size={14} />
           </div>
         )}
@@ -263,6 +264,44 @@ const PurePreviewMessage = ({
               );
             }
 
+            if (type === "tool-createEntity") {
+              const { toolCallId } = part;
+              return (
+                <div className="relative" key={toolCallId}>
+                  <EntityPreview result={part.output as any} />
+                </div>
+              );
+            }
+
+            if (type === "tool-createRelation") {
+              const { toolCallId } = part;
+              const output = part.output as any;
+
+              // We can reuse EntityPreview or a simple message for relations for now, or just show the text result
+              // Let's just output the message if successful, or error
+              if (output && "error" in output) {
+                return (
+                  <div
+                    className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
+                    key={toolCallId}
+                  >
+                    Error creating relation: {String(output.error)}
+                  </div>
+                );
+              }
+
+              // If success, maybe a small success indicator or just nothing (letting the following text explain it)
+              // But usually users like to see the tool output card.
+              return (
+                <div
+                  className="mb-2 rounded-lg border bg-muted/20 p-3 text-sm"
+                  key={toolCallId}
+                >
+                  {output?.message}
+                </div>
+              );
+            }
+
             return null;
           })}
 
@@ -313,7 +352,7 @@ export const ThinkingMessage = () => {
       data-testid="message-assistant-loading"
     >
       <div className="flex items-start justify-start gap-3">
-        <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+        <div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-zinc-500 to-zinc-600 text-white shadow-sm ring-1 ring-white/20">
           <div className="animate-pulse">
             <SparklesIcon size={14} />
           </div>

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { Artifact } from "@/components/artifact";
+import { type CanvasPane, useBookCanvas } from "@/components/book-canvas";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { useDataStream } from "@/components/chat/data-stream-provider";
 import { MultimodalInput } from "@/components/chat/multimodal-input";
@@ -78,6 +79,8 @@ export function Chat({
     chatId: id,
     initialVisibilityType,
   });
+
+  const { setActivePane, setOverallStatus } = useBookCanvas();
 
   const { mutate } = useSWRConfig();
 
@@ -158,6 +161,35 @@ export function Chat({
     },
   });
 
+  // Sync Chat Status with Book Canvas
+  useEffect(() => {
+    if (status === "streaming" || status === "submitted") {
+      setOverallStatus("running");
+    } else {
+      setOverallStatus("idle");
+    }
+  }, [status, setOverallStatus]);
+
+  // Listen for Orchestrator decisions to switch panes
+  useEffect(() => {
+    const lastMessage = messages.at(-1);
+    if (!lastMessage?.toolInvocations) {
+      return;
+    }
+
+    for (const toolInvocation of lastMessage.toolInvocations) {
+      if (
+        toolInvocation.toolName === "orchestrateBook" &&
+        toolInvocation.state === "result"
+      ) {
+        const result = toolInvocation.result;
+        if (result.decision?.suggestedCanvasPane) {
+          setActivePane(result.decision.suggestedCanvasPane as CanvasPane);
+        }
+      }
+    }
+  }, [messages, setActivePane]);
+
   const query = searchParams.get("query");
   const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
 
@@ -174,6 +206,18 @@ export function Chat({
       router.replace(`/chat/${id}${currentUrl.search}`);
     }
   }, [query, sendMessage, hasAppendedQuery, id, router]);
+
+  useEffect(() => {
+    if (!router || !id) {
+      return;
+    }
+
+    // Only update URL if we are mostly sure the chat is created (has messages)
+    // and we are currently on the root path
+    if (messages.length > 0 && window.location.pathname === "/") {
+      window.history.replaceState({}, "", `/chat/${id}`);
+    }
+  }, [id, router, messages.length]);
 
   const { data: votes } = useSWR<Vote[]>(
     messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
