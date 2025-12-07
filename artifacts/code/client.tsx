@@ -1,19 +1,19 @@
+import {
+  CopyIcon,
+  MessageSquareIcon,
+  PlayIcon,
+  RedoIcon,
+  ScrollTextIcon,
+  UndoIcon,
+} from "lucide-react";
 import { toast } from "sonner";
+import { Artifact } from "@/components/artifact/create-artifact";
 import { CodeEditor } from "@/components/code-editor";
 import {
   Console,
   type ConsoleOutput,
   type ConsoleOutputContent,
 } from "@/components/console";
-import { Artifact } from "@/components/create-artifact";
-import {
-  CopyIcon,
-  LogsIcon,
-  MessageIcon,
-  PlayIcon,
-  RedoIcon,
-  UndoIcon,
-} from "@/components/icons";
 import { generateUUID } from "@/lib/utils";
 
 const OUTPUT_HANDLERS = {
@@ -247,7 +247,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
   ],
   toolbar: [
     {
-      icon: <MessageIcon />,
+      icon: <MessageSquareIcon size={16} />,
       description: "Add comments",
       onClick: ({ sendMessage }) => {
         sendMessage({
@@ -262,7 +262,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
       },
     },
     {
-      icon: <LogsIcon />,
+      icon: <ScrollTextIcon size={16} />,
       description: "Add logs",
       onClick: ({ sendMessage }) => {
         sendMessage({

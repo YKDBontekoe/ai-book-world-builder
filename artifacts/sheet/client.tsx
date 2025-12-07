@@ -1,13 +1,13 @@
-import { parse, unparse } from "papaparse";
-import { toast } from "sonner";
-import { Artifact } from "@/components/create-artifact";
 import {
   CopyIcon,
   LineChartIcon,
   RedoIcon,
   SparklesIcon,
   UndoIcon,
-} from "@/components/icons";
+} from "lucide-react";
+import { parse, unparse } from "papaparse";
+import { toast } from "sonner";
+import { Artifact } from "@/components/artifact/create-artifact";
 import { SpreadsheetEditor } from "@/components/sheet-editor";
 
 type Metadata = any;
@@ -67,7 +67,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
       },
     },
     {
-      icon: <CopyIcon />,
+      icon: <CopyIcon size={18} />,
       description: "Copy as .csv",
       onClick: ({ content }) => {
         const parsed = parse<string[]>(content, { skipEmptyLines: true });
@@ -86,7 +86,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
   toolbar: [
     {
       description: "Format and clean data",
-      icon: <SparklesIcon />,
+      icon: <SparklesIcon size={16} />,
       onClick: ({ sendMessage }) => {
         sendMessage({
           role: "user",
@@ -98,7 +98,7 @@ export const sheetArtifact = new Artifact<"sheet", Metadata>({
     },
     {
       description: "Analyze and visualize data",
-      icon: <LineChartIcon />,
+      icon: <LineChartIcon size={16} />,
       onClick: ({ sendMessage }) => {
         sendMessage({
           role: "user",

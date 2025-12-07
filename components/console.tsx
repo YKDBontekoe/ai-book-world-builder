@@ -1,3 +1,4 @@
+import { Loader2Icon, TerminalIcon, XIcon } from "lucide-react";
 import {
   type Dispatch,
   type SetStateAction,
@@ -6,11 +7,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { Button } from "@/components/ui/button";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { cn } from "@/lib/utils";
-import { Loader } from "./elements/loader";
-import { CrossSmallIcon, TerminalWindowIcon } from "./icons";
-import { Button } from "./ui/button";
 
 export type ConsoleOutputContent = {
   type: "text" | "image";
@@ -111,7 +110,7 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
         <div className="sticky top-0 z-50 flex h-fit w-full flex-row items-center justify-between border-zinc-200 border-b bg-muted px-2 py-1 dark:border-zinc-700">
           <div className="flex flex-row items-center gap-3 pl-2 text-sm text-zinc-800 dark:text-zinc-50">
             <div className="text-muted-foreground">
-              <TerminalWindowIcon />
+              <TerminalIcon size={16} />
             </div>
             <div>Console</div>
           </div>
@@ -121,7 +120,7 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
             size="icon"
             variant="ghost"
           >
-            <CrossSmallIcon />
+            <XIcon size={16} />
           </Button>
         </div>
 
@@ -148,7 +147,7 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
               ) ? (
                 <div className="flex flex-row gap-2">
                   <div className="mt-0.5 mb-auto size-fit self-center">
-                    <Loader size={16} />
+                    <Loader2Icon className="animate-spin" size={16} />
                   </div>
                   <div className="text-muted-foreground">
                     {consoleOutput.status === "in_progress"

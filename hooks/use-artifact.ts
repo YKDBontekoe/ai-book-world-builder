@@ -5,7 +5,7 @@ import useSWR from "swr";
 import type { UIArtifact } from "@/components/artifact";
 
 export const initialArtifactData: UIArtifact = {
-  documentId: "init",
+  documentId: "",
   content: "",
   kind: "text",
   title: "",

@@ -2,6 +2,12 @@
 
 import equal from "fast-deep-equal";
 import {
+  FileTextIcon,
+  ImageIcon,
+  Loader2Icon,
+  Maximize2Icon,
+} from "lucide-react";
+import {
   type MouseEvent,
   memo,
   useCallback,
@@ -10,17 +16,16 @@ import {
   useRef,
 } from "react";
 import useSWR from "swr";
+import type { ArtifactKind, UIArtifact } from "@/components/artifact/types";
+import { CodeEditor } from "@/components/code-editor";
+import { DocumentToolCall, DocumentToolResult } from "@/components/document";
+import { InlineDocumentSkeleton } from "@/components/document-skeleton";
+import { ImageEditor } from "@/components/image-editor";
+import { SpreadsheetEditor } from "@/components/sheet-editor";
+import { Editor } from "@/components/text-editor";
 import { useArtifact } from "@/hooks/use-artifact";
 import type { Document } from "@/lib/db/schema";
 import { cn, fetcher } from "@/lib/utils";
-import type { ArtifactKind, UIArtifact } from "./artifact";
-import { CodeEditor } from "./code-editor";
-import { DocumentToolCall, DocumentToolResult } from "./document";
-import { InlineDocumentSkeleton } from "./document-skeleton";
-import { FileIcon, FullscreenIcon, ImageIcon, LoaderIcon } from "./icons";
-import { ImageEditor } from "./image-editor";
-import { SpreadsheetEditor } from "./sheet-editor";
-import { Editor } from "./text-editor";
 
 type DocumentPreviewProps = {
   isReadonly: boolean;
@@ -128,7 +133,7 @@ const LoadingSkeleton = ({ artifactKind }: { artifactKind: ArtifactKind }) => (
         <div className="h-4 w-24 animate-pulse rounded-lg bg-muted-foreground/20" />
       </div>
       <div>
-        <FullscreenIcon />
+        <Maximize2Icon size={14} />
       </div>
     </div>
     {artifactKind === "image" ? (
@@ -189,7 +194,7 @@ const PureHitboxLayer = ({
     >
       <div className="flex w-full items-center justify-end p-4">
         <div className="absolute top-[13px] right-[9px] rounded-md p-2 hover:bg-zinc-100 dark:hover:bg-zinc-700">
-          <FullscreenIcon />
+          <Maximize2Icon size={14} />
         </div>
       </div>
     </div>
@@ -217,12 +222,12 @@ const PureDocumentHeader = ({
       <div className="text-muted-foreground">
         {isStreaming ? (
           <div className="animate-spin">
-            <LoaderIcon />
+            <Loader2Icon size={14} />
           </div>
         ) : kind === "image" ? (
-          <ImageIcon />
+          <ImageIcon size={14} />
         ) : (
-          <FileIcon />
+          <FileTextIcon size={14} />
         )}
       </div>
       <div className="-translate-y-1 font-medium sm:translate-y-0">{title}</div>

@@ -2,11 +2,16 @@ import { expect, test } from "@playwright/test";
 
 import { systemPrompt } from "@/lib/ai/prompts";
 
-const requestHints = {
-  latitude: 37.7749,
-  longitude: -122.4194,
-  city: "San Francisco",
-  country: "USA",
+const requestHints: {
+  latitude: string;
+  longitude: string;
+  city: string;
+  country: string;
+} = {
+  latitude: "52.52",
+  longitude: "13.405",
+  city: "Berlin",
+  country: "Germany",
 };
 
 test.describe("system prompt persona", () => {

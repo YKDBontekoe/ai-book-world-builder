@@ -4,8 +4,8 @@ import JSZip from "jszip";
 
 import {
   getSourceMaterialsReadyForProcessing,
-  saveSourceMaterialExtraction,
   type SourceMaterialWithProcessing,
+  saveSourceMaterialExtraction,
   type UpsertSourceMaterialProcessingArgs,
   updateSourceMaterial,
   updateSourceMaterialProcessing,
@@ -41,13 +41,18 @@ type ExtractionResult = {
 };
 
 type SourceMaterialExtractor = {
-  extract: (input: { material: SourceMaterial; bytes: ArrayBuffer }) => Promise<ExtractedContent>;
+  extract: (input: {
+    material: SourceMaterial;
+    bytes: ArrayBuffer;
+  }) => Promise<ExtractedContent>;
 };
 
 type IngestionRepository = {
   getReadyMaterials: (limit: number) => Promise<SourceMaterialWithProcessing[]>;
   markStatus: (id: string, status: SourceMaterial["status"]) => Promise<void>;
-  saveProcessing: (params: UpsertSourceMaterialProcessingArgs) => Promise<SourceMaterialProcessing>;
+  saveProcessing: (
+    params: UpsertSourceMaterialProcessingArgs
+  ) => Promise<SourceMaterialProcessing>;
   updateProcessing: (
     params: Parameters<typeof updateSourceMaterialProcessing>[0]
   ) => Promise<SourceMaterialProcessing | null>;
@@ -73,7 +78,10 @@ function cleanText(text: string): string {
 }
 
 function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+  return html
+    .replace(/<[^>]+>/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 function splitIntoChunks(text: string, chunkSize: number): string[] {
@@ -145,7 +153,9 @@ async function extractFromDocx(bytes: ArrayBuffer): Promise<ExtractedContent> {
 async function extractFromEpub(bytes: ArrayBuffer): Promise<ExtractedContent> {
   const zip = await new JSZip().loadAsync(Buffer.from(bytes));
   const htmlFiles = Object.keys(zip.files).filter(
-    (fileName) => fileName.toLowerCase().endsWith(".xhtml") || fileName.toLowerCase().endsWith(".html")
+    (fileName) =>
+      fileName.toLowerCase().endsWith(".xhtml") ||
+      fileName.toLowerCase().endsWith(".html")
   );
 
   const segments: string[] = [];
@@ -198,7 +208,10 @@ class DefaultSourceMaterialExtractor implements SourceMaterialExtractor {
       return extractFromEpub(bytes);
     }
 
-    if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+    if (
+      mimeType ===
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    ) {
       return extractFromDocx(bytes);
     }
 
@@ -207,11 +220,16 @@ class DefaultSourceMaterialExtractor implements SourceMaterialExtractor {
 }
 
 class DatabaseIngestionRepository implements IngestionRepository {
-  async getReadyMaterials(limit: number): Promise<SourceMaterialWithProcessing[]> {
+  async getReadyMaterials(
+    limit: number
+  ): Promise<SourceMaterialWithProcessing[]> {
     return getSourceMaterialsReadyForProcessing({ limit });
   }
 
-  async markStatus(id: string, status: SourceMaterial["status"]): Promise<void> {
+  async markStatus(
+    id: string,
+    status: SourceMaterial["status"]
+  ): Promise<void> {
     await updateSourceMaterial({ id, status });
   }
 
@@ -261,7 +279,8 @@ function buildChaptersAndChunks({
     return { chapters: [], chunks: [] };
   }
 
-  const derivedHeadings = headings.length > 0 ? headings : deriveHeadings(normalized);
+  const derivedHeadings =
+    headings.length > 0 ? headings : deriveHeadings(normalized);
 
   const chapters: NewSourceMaterialChapter[] = [];
   const chunks: NewSourceMaterialChunk[] = [];

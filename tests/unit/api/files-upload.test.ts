@@ -11,7 +11,8 @@ vi.mock("@/lib/db/queries", () => ({
 }));
 
 vi.mock("@/lib/source-materials", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/lib/source-materials")>();
+  const actual =
+    await importOriginal<typeof import("@/lib/source-materials")>();
 
   return {
     ...actual,
@@ -25,23 +26,27 @@ vi.mock("@vercel/blob", () => ({
   put: vi.fn(),
 }));
 
+import { put } from "@vercel/blob";
+import type { Session } from "next-auth";
 import { auth } from "@/app/(auth)/auth";
 import { POST } from "@/app/(chat)/api/files/upload/route";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
+import type { Project, SourceMaterial } from "@/lib/db/schema";
 import {
   createPendingSourceMaterial,
   markSourceMaterialAsFailed,
   markSourceMaterialAsUploaded,
   sourceMaterialSizeLimits,
 } from "@/lib/source-materials";
-import type { Project, SourceMaterial } from "@/lib/db/schema";
-import { put } from "@vercel/blob";
-import type { Session } from "next-auth";
 
 const mockedAuth = vi.mocked(auth);
 const mockedGetProjectByIdWithAccess = vi.mocked(getProjectByIdWithAccess);
-const mockedCreatePendingSourceMaterial = vi.mocked(createPendingSourceMaterial);
-const mockedMarkSourceMaterialAsUploaded = vi.mocked(markSourceMaterialAsUploaded);
+const mockedCreatePendingSourceMaterial = vi.mocked(
+  createPendingSourceMaterial
+);
+const mockedMarkSourceMaterialAsUploaded = vi.mocked(
+  markSourceMaterialAsUploaded
+);
 const mockedMarkSourceMaterialAsFailed = vi.mocked(markSourceMaterialAsFailed);
 const mockedPut = vi.mocked(put);
 const projectId = "11111111-1111-1111-1111-111111111111";
@@ -71,13 +76,7 @@ function buildProject(projectId: string, userId: string): Project {
   };
 }
 
-function buildRequest({
-  file,
-  projectId,
-}: {
-  file: File;
-  projectId: string;
-}) {
+function buildRequest({ file, projectId }: { file: File; projectId: string }) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("projectId", projectId);
@@ -108,7 +107,7 @@ describe("POST /api/files/upload", () => {
       blobUrl: null,
     };
 
-    mockedAuth.mockResolvedValue(buildSession("user-1", "regular"));
+    mockedAuth.mockResolvedValue(buildSession("user-1", "regular") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(
       buildProject(projectId, "user-1")
     );
@@ -149,14 +148,12 @@ describe("POST /api/files/upload", () => {
   it("rejects unsupported MIME types", async () => {
     const file = new File(["bad"], "image.gif", { type: "image/gif" });
 
-    mockedAuth.mockResolvedValue(buildSession("user-1", "regular"));
+    mockedAuth.mockResolvedValue(buildSession("user-1", "regular") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(
       buildProject(projectId, "user-1")
     );
 
-    const response = await POST(
-      buildRequest({ file, projectId })
-    );
+    const response = await POST(buildRequest({ file, projectId }));
     const payload = await response.json();
 
     expect(response.status).toBe(400);
@@ -171,14 +168,12 @@ describe("POST /api/files/upload", () => {
       type: "application/pdf",
     });
 
-    mockedAuth.mockResolvedValue(buildSession("guest-1", "guest"));
+    mockedAuth.mockResolvedValue(buildSession("guest-1", "guest") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(
       buildProject(projectId, "guest-1")
     );
 
-    const response = await POST(
-      buildRequest({ file, projectId })
-    );
+    const response = await POST(buildRequest({ file, projectId }));
     const payload = await response.json();
 
     expect(response.status).toBe(400);
@@ -190,11 +185,9 @@ describe("POST /api/files/upload", () => {
   it("requires an authenticated session", async () => {
     const file = new File(["hello"], "story.pdf", { type: "application/pdf" });
 
-    mockedAuth.mockResolvedValue(null);
+    mockedAuth.mockResolvedValue(null as any);
 
-    const response = await POST(
-      buildRequest({ file, projectId })
-    );
+    const response = await POST(buildRequest({ file, projectId }));
     const payload = await response.json();
 
     expect(response.status).toBe(401);
@@ -205,12 +198,10 @@ describe("POST /api/files/upload", () => {
   it("returns an error when the project cannot be found", async () => {
     const file = new File(["hello"], "story.pdf", { type: "application/pdf" });
 
-    mockedAuth.mockResolvedValue(buildSession("user-1", "regular"));
+    mockedAuth.mockResolvedValue(buildSession("user-1", "regular") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(null);
 
-    const response = await POST(
-      buildRequest({ file, projectId })
-    );
+    const response = await POST(buildRequest({ file, projectId }));
     const payload = await response.json();
 
     expect(response.status).toBe(403);
@@ -233,7 +224,7 @@ describe("POST /api/files/upload", () => {
       blobUrl: null,
     };
 
-    mockedAuth.mockResolvedValue(buildSession("user-1", "regular"));
+    mockedAuth.mockResolvedValue(buildSession("user-1", "regular") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(
       buildProject(projectId, "user-1")
     );

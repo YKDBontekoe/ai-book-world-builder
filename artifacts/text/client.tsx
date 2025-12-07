@@ -1,16 +1,16 @@
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
-import { Artifact } from "@/components/create-artifact";
-import { DiffView } from "@/components/diffview";
-import { DocumentSkeleton } from "@/components/document-skeleton";
 import {
-  ClockRewind,
   CopyIcon,
-  MessageIcon,
+  MessageSquareIcon,
   PenIcon,
   RedoIcon,
+  RotateCcwIcon,
   UndoIcon,
-} from "@/components/icons";
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Artifact } from "@/components/artifact/create-artifact";
+import { DiffView } from "@/components/diffview";
+import { DocumentSkeleton } from "@/components/document-skeleton";
 import { Editor } from "@/components/text-editor";
 import { Button } from "@/components/ui/button";
 import type { Suggestion } from "@/lib/db/schema";
@@ -144,7 +144,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
   },
   actions: [
     {
-      icon: <ClockRewind size={18} />,
+      icon: <RotateCcwIcon size={18} />,
       description: "View changes",
       onClick: ({ handleVersionChange }) => {
         handleVersionChange("toggle");
@@ -196,7 +196,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
   ],
   toolbar: [
     {
-      icon: <PenIcon />,
+      icon: <PenIcon size={16} />,
       description: "Add final polish",
       onClick: ({ sendMessage }) => {
         sendMessage({
@@ -211,7 +211,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
       },
     },
     {
-      icon: <MessageIcon />,
+      icon: <MessageSquareIcon size={16} />,
       description: "Request suggestions",
       onClick: ({ sendMessage }) => {
         sendMessage({

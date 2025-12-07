@@ -1,20 +1,19 @@
 import { describe, expect, it } from "vitest";
-
-import {
-  SourceMaterialWorker,
-  type ExtractedContent,
-  type IngestionRepository,
-  type SourceMaterialExtractor,
-  normalizeTextContent,
-} from "@/lib/ingestion/worker";
-import { generateUUID } from "@/lib/utils";
+import type { SourceMaterialWithProcessing } from "@/lib/db/queries";
 import type {
   NewSourceMaterialChapter,
   NewSourceMaterialChunk,
   SourceMaterial,
   SourceMaterialProcessing,
 } from "@/lib/db/schema";
-import type { SourceMaterialWithProcessing } from "@/lib/db/queries";
+import {
+  type ExtractedContent,
+  type IngestionRepository,
+  normalizeTextContent,
+  type SourceMaterialExtractor,
+  SourceMaterialWorker,
+} from "@/lib/ingestion/worker";
+import { generateUUID } from "@/lib/utils";
 
 class InMemoryRepository implements IngestionRepository {
   materials: SourceMaterialWithProcessing[];
@@ -29,11 +28,16 @@ class InMemoryRepository implements IngestionRepository {
     this.materials = materials;
   }
 
-  async getReadyMaterials(limit: number): Promise<SourceMaterialWithProcessing[]> {
+  async getReadyMaterials(
+    limit: number
+  ): Promise<SourceMaterialWithProcessing[]> {
     return this.materials.slice(0, limit);
   }
 
-  async markStatus(id: string, status: SourceMaterial["status"]): Promise<void> {
+  async markStatus(
+    id: string,
+    status: SourceMaterial["status"]
+  ): Promise<void> {
     this.materials = this.materials.map((entry) =>
       entry.material.id === id
         ? { ...entry, material: { ...entry.material, status } }
@@ -101,7 +105,11 @@ class InMemoryRepository implements IngestionRepository {
       return null;
     }
 
-    return this.saveProcessing(params);
+    return this.saveProcessing({
+      ...params,
+      projectId: "project-1",
+      userId: "user-1",
+    } as any);
   }
 
   async persistExtraction({
@@ -156,7 +164,8 @@ describe("SourceMaterialWorker", () => {
     const worker = new SourceMaterialWorker({
       repository: repo,
       extractor,
-      fetcher: () => textFetcher("Intro\nBody content that spans multiple chunks."),
+      fetcher: () =>
+        textFetcher("Intro\nBody content that spans multiple chunks."),
       chunkSize: 20,
       batchSize: 1,
     });
@@ -199,7 +208,9 @@ describe("SourceMaterialWorker", () => {
 
     expect(firstProcessing?.status).toBe("uploaded");
     expect(firstProcessing?.attempts).toBe(1);
-    expect(firstProcessing?.nextAttemptAt.getTime()).toBeGreaterThan(Date.now());
+    expect(firstProcessing?.nextAttemptAt.getTime()).toBeGreaterThan(
+      Date.now()
+    );
 
     await worker.runBatch();
 

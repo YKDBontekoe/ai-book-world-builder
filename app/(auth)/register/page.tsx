@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
 import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
-import { toast } from "@/components/toast";
+import { toast } from "@/components/ui/toast";
 import { type RegisterActionState, register } from "../actions";
 
 export default function Page() {

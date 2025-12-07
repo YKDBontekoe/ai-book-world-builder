@@ -1,14 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { MessageSquareIcon, XIcon } from "lucide-react";
 import { useState } from "react";
 import { useWindowSize } from "usehooks-ts";
-
+import type { ArtifactKind } from "@/components/artifact/types";
+import { Button } from "@/components/ui/button";
 import type { UISuggestion } from "@/lib/editor/suggestions";
 import { cn } from "@/lib/utils";
-import type { ArtifactKind } from "./artifact";
-import { CrossIcon, MessageIcon } from "./icons";
-import { Button } from "./ui/button";
 
 export const Suggestion = ({
   suggestion,
@@ -46,7 +45,7 @@ export const Suggestion = ({
               }}
               type="button"
             >
-              <CrossIcon size={12} />
+              <XIcon size={12} />
             </button>
           </div>
           <div className="flex flex-col gap-2">
@@ -89,7 +88,9 @@ export const Suggestion = ({
           }}
           whileHover={{ scale: 1.1 }}
         >
-          <MessageIcon size={windowWidth && windowWidth < 768 ? 16 : 14} />
+          <MessageSquareIcon
+            size={windowWidth && windowWidth < 768 ? 16 : 14}
+          />
         </motion.div>
       )}
     </AnimatePresence>

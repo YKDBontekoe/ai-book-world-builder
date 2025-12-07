@@ -18,7 +18,7 @@ import {
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import type { ArtifactKind } from "@/components/artifact";
-import type { VisibilityType } from "@/components/visibility-selector";
+import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { DEFAULT_PROJECT_FOLDERS } from "../constants";
 import { ChatSDKError } from "../errors";
 import type { AppUsage } from "../usage";
@@ -37,24 +37,24 @@ import {
   entity,
   entityAttribute,
   message,
+  type NewSourceMaterialChapter,
+  type NewSourceMaterialChunk,
   type Outline,
   outline,
   type Project,
   project,
-  type SourceMaterial,
-  type NewSourceMaterialChapter,
-  type NewSourceMaterialChunk,
-  type SourceMaterialChapter,
-  sourceMaterialChapter,
-  type SourceMaterialChunk,
-  sourceMaterialChunk,
-  type SourceMaterialProcessing,
-  sourceMaterialProcessing,
-  sourceMaterial,
-  type SourceMaterialStatus,
   type Relationship,
   relationship,
+  type SourceMaterial,
+  type SourceMaterialChapter,
+  type SourceMaterialChunk,
+  type SourceMaterialProcessing,
+  type SourceMaterialStatus,
   type Suggestion,
+  sourceMaterial,
+  sourceMaterialChapter,
+  sourceMaterialChunk,
+  sourceMaterialProcessing,
   stream,
   suggestion,
   type User,
@@ -65,7 +65,10 @@ import {
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
-export type { NewSourceMaterialChapter, NewSourceMaterialChunk } from "./schema";
+export type {
+  NewSourceMaterialChapter,
+  NewSourceMaterialChunk,
+} from "./schema";
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -1174,10 +1177,10 @@ export async function getSourceMaterialsReadyForProcessing({
       )
       .where(
         and(
-          inArray(
-            sourceMaterial.status,
-            ["uploaded", "processing"] satisfies SourceMaterialStatus[]
-          ),
+          inArray(sourceMaterial.status, [
+            "uploaded",
+            "processing",
+          ] satisfies SourceMaterialStatus[]),
           or(
             isNull(sourceMaterialProcessing.nextAttemptAt),
             lte(sourceMaterialProcessing.nextAttemptAt, currentDate),
@@ -1302,24 +1305,23 @@ export async function upsertSourceMaterialProcessing({
 
 export type UpdateSourceMaterialProcessingArgs = {
   sourceMaterialId: string;
-} &
-  Partial<
-    Pick<
-      SourceMaterialProcessing,
-      | "attempts"
-      | "bytesProcessed"
-      | "chapters"
-      | "chunks"
-      | "completedAt"
-      | "durationMs"
-      | "lastError"
-      | "metadata"
-      | "nextAttemptAt"
-      | "normalizedCharacters"
-      | "startedAt"
-      | "status"
-    >
-  >;
+} & Partial<
+  Pick<
+    SourceMaterialProcessing,
+    | "attempts"
+    | "bytesProcessed"
+    | "chapters"
+    | "chunks"
+    | "completedAt"
+    | "durationMs"
+    | "lastError"
+    | "metadata"
+    | "nextAttemptAt"
+    | "normalizedCharacters"
+    | "startedAt"
+    | "status"
+  >
+>;
 
 export async function updateSourceMaterialProcessing({
   sourceMaterialId,
@@ -1353,7 +1355,10 @@ export async function saveSourceMaterialExtraction({
   materialId: string;
   projectId: string;
   userId: string;
-}): Promise<{ chapters: SourceMaterialChapter[]; chunks: SourceMaterialChunk[] }> {
+}): Promise<{
+  chapters: SourceMaterialChapter[];
+  chunks: SourceMaterialChunk[];
+}> {
   try {
     const now = new Date();
 
