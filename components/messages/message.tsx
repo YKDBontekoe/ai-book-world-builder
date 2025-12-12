@@ -66,9 +66,9 @@ const PurePreviewMessage = ({
 	return (
 		<motion.div
 			className="group/message w-full"
-			initial={{ opacity: 0, y: 10 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.3, ease: "easeOut" }}
+			initial={{ opacity: 0, y: 10, scale: 0.98 }}
+			animate={{ opacity: 1, y: 0, scale: 1 }}
+			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			data-role={message.role}
 			data-testid={`message-${message.role}`}
 		>
@@ -136,16 +136,16 @@ const PurePreviewMessage = ({
 								return (
 									<div key={key}>
 										<MessageContent
-											className={cn({
-												"w-fit break-words rounded-2xl px-3 py-2 text-right text-white":
+											className={cn("shadow-sm", {
+												"w-fit break-words rounded-[20px] px-4 py-2.5 text-right text-white":
 													message.role === "user",
-												"bg-transparent px-0 py-0 text-left":
+												"bg-transparent px-0 py-0 text-left shadow-none":
 													message.role === "assistant",
 											})}
 											data-testid="message-content"
 											style={
 												message.role === "user"
-													? { backgroundColor: "#006cff" }
+													? { backgroundColor: "var(--sidebar-primary)" }
 													: undefined
 											}
 										>
@@ -496,9 +496,9 @@ export const ThinkingMessage = () => {
 	return (
 		<motion.div
 			className="group/message w-full"
-			initial={{ opacity: 0, y: 10 }}
-			animate={{ opacity: 1, y: 0 }}
-			transition={{ duration: 0.3, ease: "easeOut" }}
+			initial={{ opacity: 0, y: 10, scale: 0.98 }}
+			animate={{ opacity: 1, y: 0, scale: 1 }}
+			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			data-role="assistant"
 			data-testid="message-assistant-loading"
 		>

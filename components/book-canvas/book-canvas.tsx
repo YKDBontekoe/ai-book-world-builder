@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	ActivityIcon,
 	BookOpenIcon,
@@ -61,9 +62,9 @@ export function BookCanvas() {
 	// Collapsed state - show expand button
 	if (!isOpen) {
 		return (
-			<div className="hidden h-dvh w-12 flex-shrink-0 flex-col items-center border-l bg-muted/30 py-4 md:flex">
+			<div className="hidden h-dvh w-12 flex-shrink-0 flex-col items-center border-l border-white/10 bg-muted/10 py-4 md:flex z-50">
 				<Button
-					className="h-10 w-10 rounded-full"
+					className="h-10 w-10 rounded-full bg-white/50 backdrop-blur-sm shadow-sm"
 					onClick={() => setIsOpen(true)}
 					size="icon"
 					variant="ghost"
@@ -97,32 +98,32 @@ export function BookCanvas() {
 	return (
 		<div
 			className={cn(
-				"hidden h-dvh w-[380px] flex-shrink-0 flex-col border-l bg-background md:flex lg:w-[420px]",
+				"hidden h-dvh w-[380px] flex-shrink-0 flex-col bg-background/50 md:flex lg:w-[420px] shadow-2xl z-20 backdrop-blur-xl border-l border-white/20 dark:border-white/5",
 				"transition-all duration-300 ease-in-out",
 			)}
 		>
 			{/* Header with gradient */}
-			<div className="flex items-center justify-between border-b bg-gradient-to-r from-primary/5 via-primary/10 to-transparent p-3">
-				<div className="flex items-center gap-2">
-					<div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-						<SparklesIcon className="h-4 w-4 text-primary" />
+			<div className="flex items-center justify-between border-b border-black/5 dark:border-white/5 bg-transparent p-4">
+				<div className="flex items-center gap-3">
+					<div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-500/10 text-blue-500">
+						<SparklesIcon className="h-4 w-4" />
 					</div>
 					<div>
 						<h2 className="font-semibold text-sm">Book Canvas</h2>
 						<span
 							className={cn(
-								"text-xs",
+								"text-xs font-medium",
 								overallStatus === "running"
-									? "text-blue-600 dark:text-blue-400"
+									? "text-blue-500 animate-pulse"
 									: "text-muted-foreground",
 							)}
 						>
-							{overallStatus === "running" ? "✨ Generating..." : "Ready"}
+							{overallStatus === "running" ? "Generating..." : "Ready"}
 						</span>
 					</div>
 				</div>
 				<Button
-					className="h-7 w-7"
+					className="h-8 w-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
 					onClick={() => setIsOpen(false)}
 					size="icon"
 					variant="ghost"
@@ -131,33 +132,57 @@ export function BookCanvas() {
 				</Button>
 			</div>
 
-			{/* Tabs with enhanced styling */}
-			<div className="scrollbar-hide flex overflow-x-auto border-b bg-muted/20">
-				{tabs.map((tab) => (
-					<button
-						className={cn(
-							"flex flex-1 flex-col items-center justify-center gap-0.5 px-2 py-2.5 font-medium text-muted-foreground text-xs transition-all",
-							"hover:bg-muted/50 hover:text-foreground",
-							activePane === tab.id &&
-								"border-primary border-b-2 bg-background text-primary shadow-sm",
-						)}
-						key={tab.id}
-						onClick={() => setActivePane(tab.id)}
-						type="button"
+			{/* Tabs with Segmented Control styling */}
+			<div className="px-3 py-2">
+				<div className="flex overflow-x-auto rounded-lg bg-muted/30 p-1 gap-1 scrollbar-hide">
+					{tabs.map((tab) => {
+						const isActive = activePane === tab.id;
+						return (
+						<button
+							className={cn(
+								"relative flex flex-1 flex-col items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium text-xs transition-all",
+								isActive
+									? "text-foreground shadow-sm"
+									: "text-muted-foreground hover:text-foreground",
+							)}
+							key={tab.id}
+							onClick={() => setActivePane(tab.id)}
+							type="button"
+						>
+							{isActive && (
+								<motion.div
+									layoutId="activeTab"
+									className="absolute inset-0 rounded-md bg-background shadow-sm"
+									transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+								/>
+							)}
+							<span className="relative z-10 flex flex-col items-center gap-1">
+								<tab.icon className="h-4 w-4" />
+								<span className="text-[10px] uppercase tracking-wide">{tab.label}</span>
+							</span>
+						</button>
+					)})}
+				</div>
+			</div>
+
+			{/* Content Area */}
+			<div className="flex-1 overflow-y-auto bg-transparent pb-16 px-1">
+				<AnimatePresence mode="wait">
+					<motion.div
+						key={activePane}
+						initial={{ opacity: 0, x: 10 }}
+						animate={{ opacity: 1, x: 0 }}
+						exit={{ opacity: 0, x: -10 }}
+						transition={{ type: "spring", stiffness: 300, damping: 30 }}
+						className="h-full"
 					>
-						<tab.icon className="h-4 w-4" />
-						<span className="mt-0.5">{tab.label}</span>
-					</button>
-				))}
+						{renderContent()}
+					</motion.div>
+				</AnimatePresence>
 			</div>
 
-			{/* Content Area with subtle background */}
-			<div className="flex-1 overflow-y-auto bg-gradient-to-b from-muted/5 to-muted/20 pb-16">
-				{renderContent()}
-			</div>
-
-			{/* Status Footer with subtle design */}
-			<div className="absolute bottom-0 w-full border-t bg-background/95 p-2 text-muted-foreground text-xs backdrop-blur-sm">
+			{/* Status Footer */}
+			<div className="absolute bottom-0 w-full border-t border-black/5 dark:border-white/5 bg-background/50 p-2 text-muted-foreground text-xs backdrop-blur-sm">
 				<div className="flex items-center justify-between px-2">
 					<div className="flex items-center gap-1.5">
 						<div className="h-1.5 w-1.5 rounded-full bg-green-500" />

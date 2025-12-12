@@ -303,7 +303,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="rounded-xl border border-border bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-border hover:border-muted-foreground/50"
+				className="rounded-[26px] border border-black/5 bg-white/60 p-3 shadow-xl backdrop-blur-xl transition-all duration-200 hover:bg-white/80 dark:border-white/5 dark:bg-zinc-800/60 dark:hover:bg-zinc-800/80"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (status !== "ready") {
@@ -363,8 +363,8 @@ function PureMultimodalInput({
 					/>{" "}
 					<Context {...contextProps} />
 				</div>
-				<PromptInputToolbar className="!border-top-0 border-t-0! p-0 shadow-none dark:border-0 dark:border-transparent!">
-					<PromptInputTools className="gap-0 sm:gap-0.5">
+				<PromptInputToolbar className="!border-top-0 border-t-0! px-1 pb-1 shadow-none dark:border-0 dark:border-transparent!">
+					<PromptInputTools className="gap-1">
 						<AttachmentsButton
 							fileInputRef={fileInputRef}
 							selectedModelId={selectedModelId}
@@ -382,7 +382,7 @@ function PureMultimodalInput({
 					) : (
 						<PromptInputSubmit
 							aria-label="Send message"
-							className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
+							className="size-8 rounded-full bg-blue-500 text-white shadow-sm transition-all duration-200 hover:bg-blue-600 disabled:bg-zinc-100 disabled:text-zinc-400 dark:bg-blue-600 dark:hover:bg-blue-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
 							data-testid="send-button"
 							disabled={!input.trim() || uploadQueue.length > 0}
 							status={status}
