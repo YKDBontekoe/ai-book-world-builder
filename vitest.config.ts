@@ -6,6 +6,7 @@ export default defineConfig({
   test: {
     environment: "jsdom",
     setupFiles: ["./tests/vitest.setup.ts"],
+    environmentMatchGlobs: [["tests/unit/components/**/*.{test,spec}.tsx", "jsdom"]],
   },
   resolve: {
     alias: {

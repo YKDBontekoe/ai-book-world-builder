@@ -90,6 +90,10 @@ Review [docs/data-handling.md](docs/data-handling.md) for guidance on managing s
 
 See [docs/testing.md](docs/testing.md) for expectations and commands covering unit (Vitest/React Testing Library), integration/end-to-end (Playwright), and accessibility checks, plus what must pass in CI before merging changes.
 
+## Generation configuration UI
+
+`docs/generation-config.md` outlines the generation settings panel, its controlled subcomponents, and how to integrate `GenerationConfigPanel` with your own state management.
+
 ## Git hooks
 
 Set the local hooks path to `.githooks` to ensure commits run linting and type checks before landing:
