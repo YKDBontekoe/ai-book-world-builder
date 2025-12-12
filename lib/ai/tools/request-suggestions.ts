@@ -51,7 +51,6 @@ export const requestSuggestions = ({
       });
 
       for await (const element of elementStream) {
-        // @ts-expect-error todo: fix type
         const suggestion: Suggestion = {
           originalText: element.originalSentence,
           suggestedText: element.suggestedSentence,
@@ -59,6 +58,9 @@ export const requestSuggestions = ({
           id: generateUUID(),
           documentId,
           isResolved: false,
+          userId: session?.user?.id ?? "anonymous",
+          createdAt: new Date(),
+          documentCreatedAt: document.createdAt,
         };
 
         dataStream.write({
