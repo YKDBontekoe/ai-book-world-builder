@@ -7,6 +7,7 @@
  * 3. Optional: Fetch from external APIs with caching
  */
 
+import { z } from "zod";
 import { type ChatModel, chatModels } from "./models";
 
 // =============================================================================
@@ -254,21 +255,49 @@ interface ExternalBenchmarkData {
 	writingElo?: number;
 }
 
+const ExternalBenchmarkSchema = z.object({
+	modelId: z.string(),
+	eloScore: z.number().optional(),
+	writingElo: z.number().optional(),
+});
+
 /**
- * Fetch benchmark data from external APIs (placeholder for future implementation)
- * This could fetch from:
- * - LMSYS Chatbot Arena API
- * - Artificial Analysis API
- * - EQ-Bench GitHub releases
+ * Fetch benchmark data from external APIs.
+ *
+ * Uses BENCHMARK_API_URL environment variable if set.
+ * Otherwise defaults to the GitHub Raw URL of the benchmarks.json file in this repository.
  */
 export async function fetchExternalBenchmarks(): Promise<
 	ExternalBenchmarkData[]
 > {
-	// TODO: Implement when APIs are available
-	// For now, return empty array and use static fallback
-	console.log(
-		"[Benchmark Service] External API fetch not implemented, using static data",
-	);
+	const DEFAULT_BENCHMARK_URL =
+		"https://raw.githubusercontent.com/YKDBontekoe/ai-book-world-builder/main/public/data/benchmarks.json";
+	const apiUrl = process.env.BENCHMARK_API_URL || DEFAULT_BENCHMARK_URL;
+
+	try {
+		console.log(`[Benchmark Service] Fetching benchmarks from ${apiUrl}`);
+		const response = await fetch(apiUrl, { next: { revalidate: 3600 } });
+		if (!response.ok) {
+			throw new Error(
+				`Failed to fetch benchmarks: ${response.status} ${response.statusText}`,
+			);
+		}
+		const data = await response.json();
+		const result = z.array(ExternalBenchmarkSchema).safeParse(data);
+		if (result.success) {
+			return result.data;
+		}
+		console.warn(
+			"[Benchmark Service] Invalid external benchmark data format:",
+			result.error,
+		);
+	} catch (error) {
+		console.error(
+			"[Benchmark Service] Error fetching external benchmarks:",
+			error,
+		);
+	}
+
 	return [];
 }
 
