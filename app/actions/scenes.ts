@@ -24,7 +24,7 @@ export async function updateSceneAction({
 
 	const project = await getProjectByIdWithAccess({
 		id: projectId,
-		userId: session.user?.id,
+		userId: session.user.id,
 	});
 
 	if (!project || project.userId !== session.user?.id) {
