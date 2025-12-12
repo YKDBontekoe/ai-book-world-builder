@@ -32,7 +32,7 @@ export function InteractiveWidget({
 			initial={{ opacity: 0, scale: 0.95 }}
 			animate={{ opacity: 1, scale: 1 }}
 			className={cn(
-				"group relative flex w-full max-w-sm flex-col overflow-hidden rounded-xl border bg-card text-card-foreground shadow-sm transition-all",
+				"group relative flex w-full max-w-sm flex-col overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm transition-all",
 				isError ? "border-red-500/50 bg-red-50/50 dark:bg-red-950/10" : "",
 				isEditing
 					? "ring-1 ring-primary dark:ring-primary/50"
