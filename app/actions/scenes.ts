@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
-import { updateScene } from "@/lib/db/queries";
+import { getProjectByIdWithAccess, updateScene } from "@/lib/db/queries";
 
 export async function updateSceneAction({
 	id,
@@ -22,13 +22,21 @@ export async function updateSceneAction({
 		throw new Error("Unauthorized");
 	}
 
-	// TODO: Verify access to project
+	const project = await getProjectByIdWithAccess({
+		id: projectId,
+		userId: session.user.id,
+	});
+
+	if (!project || project.userId !== session.user.id) {
+		throw new Error("Unauthorized");
+	}
 
 	const updatedScene = await updateScene({
 		id,
 		title,
 		status,
 		content,
+		projectId,
 	});
 
 	return {

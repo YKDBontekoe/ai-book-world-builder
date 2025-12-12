@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, eq } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
@@ -81,12 +81,14 @@ export async function updateScene({
 	sequence,
 	content,
 	status,
+	projectId,
 }: {
 	id: string;
 	title?: string;
 	sequence?: number;
 	content?: string;
 	status?: string;
+	projectId?: string;
 }): Promise<Scene> {
 	try {
 		const [updated] = await db
@@ -98,7 +100,11 @@ export async function updateScene({
 				...(status ? { status } : {}),
 				updatedAt: new Date(),
 			})
-			.where(eq(scene.id, id))
+			.where(
+				projectId
+					? and(eq(scene.id, id), eq(scene.projectId, projectId))
+					: eq(scene.id, id),
+			)
 			.returning();
 
 		if (!updated) {

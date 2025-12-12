@@ -88,3 +88,21 @@ try {
   );
 }
 ```
+
+## Security & Authorization
+When accessing resources tied to a project (e.g., scenes, entities), **always verify project ownership** in Server Actions before performing operations.
+
+```typescript
+// app/actions/example.ts
+const project = await getProjectByIdWithAccess({ id: projectId, userId: session.user.id });
+if (!project || project.userId !== session.user.id) {
+    throw new Error("Unauthorized");
+}
+```
+
+Additionally, pass the `projectId` to database queries to ensure the resource belongs to the expected project (preventing IDOR):
+
+```typescript
+// lib/db/queries/example.ts
+.where(and(eq(table.id, id), eq(table.projectId, projectId)))
+```
