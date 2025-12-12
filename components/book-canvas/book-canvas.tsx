@@ -98,8 +98,9 @@ export function BookCanvas() {
 	return (
 		<div
 			className={cn(
-				"hidden h-dvh w-[380px] flex-shrink-0 flex-col bg-background/50 md:flex lg:w-[420px] shadow-2xl z-20 backdrop-blur-xl border-l border-white/20 dark:border-white/5",
+				"fixed inset-0 z-50 flex h-dvh w-full flex-col bg-background/95 backdrop-blur-xl md:static md:flex md:w-[380px] md:bg-background/50 md:backdrop-blur-xl md:shadow-2xl md:border-l border-white/20 dark:border-white/5 flex-shrink-0",
 				"transition-all duration-300 ease-in-out",
+				"lg:w-[420px]",
 			)}
 		>
 			{/* Header with gradient */}
@@ -138,30 +139,33 @@ export function BookCanvas() {
 					{tabs.map((tab) => {
 						const isActive = activePane === tab.id;
 						return (
-						<button
-							className={cn(
-								"relative flex flex-1 flex-col items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium text-xs transition-all",
-								isActive
-									? "text-foreground shadow-sm"
-									: "text-muted-foreground hover:text-foreground",
-							)}
-							key={tab.id}
-							onClick={() => setActivePane(tab.id)}
-							type="button"
-						>
-							{isActive && (
-								<motion.div
-									layoutId="activeTab"
-									className="absolute inset-0 rounded-md bg-background shadow-sm"
-									transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-								/>
-							)}
-							<span className="relative z-10 flex flex-col items-center gap-1">
-								<tab.icon className="h-4 w-4" />
-								<span className="text-[10px] uppercase tracking-wide">{tab.label}</span>
-							</span>
-						</button>
-					)})}
+							<button
+								className={cn(
+									"relative flex flex-1 flex-col items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium text-xs transition-all",
+									isActive
+										? "text-foreground shadow-sm"
+										: "text-muted-foreground hover:text-foreground",
+								)}
+								key={tab.id}
+								onClick={() => setActivePane(tab.id)}
+								type="button"
+							>
+								{isActive && (
+									<motion.div
+										layoutId="activeTab"
+										className="absolute inset-0 rounded-md bg-background shadow-sm"
+										transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+									/>
+								)}
+								<span className="relative z-10 flex flex-col items-center gap-1">
+									<tab.icon className="h-4 w-4" />
+									<span className="text-[10px] uppercase tracking-wide">
+										{tab.label}
+									</span>
+								</span>
+							</button>
+						);
+					})}
 				</div>
 			</div>
 
