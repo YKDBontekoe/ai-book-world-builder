@@ -8,3 +8,5 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
     Element.prototype.releasePointerCapture ||= () => {};
   }
 }
+
+export {};

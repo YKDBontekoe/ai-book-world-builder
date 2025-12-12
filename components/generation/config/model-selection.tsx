@@ -13,7 +13,7 @@ interface ModelSelectionProps {
   label: string;
   task: "writing" | "reviewing";
   tooltip?: string;
-  models?: ChatModel[];
+  models?: readonly ChatModel[];
   selectedModelId?: string;
   onModelChange: (modelId: string) => void;
 }
