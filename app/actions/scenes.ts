@@ -27,7 +27,7 @@ export async function updateSceneAction({
 		userId: session.user.id,
 	});
 
-	if (!project || project.userId !== session.user.id) {
+	if (!project || project.userId !== session.user?.id) {
 		throw new Error("Unauthorized");
 	}
 
