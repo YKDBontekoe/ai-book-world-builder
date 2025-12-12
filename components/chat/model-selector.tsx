@@ -90,6 +90,14 @@ export function ModelSelector({
             </div>
             <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
               <span>{chatModel.provider}</span>
+              {chatModel.pricing && (
+                <>
+                  <span>•</span>
+                  <span className="font-mono text-[10px] opacity-80">
+                    (${chatModel.pricing.input}/{chatModel.pricing.output})
+                  </span>
+                </>
+              )}
               <span>•</span>
               <span>{chatModel.supportsImages ? "Vision" : "Text only"}</span>
               {chatModel.reasoning && (

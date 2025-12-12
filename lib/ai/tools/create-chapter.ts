@@ -7,9 +7,11 @@ import { chapter } from "@/lib/db/schema";
 export const createChapter = ({
   session,
   projectId,
+  dataStream,
 }: {
   session: Session | null;
   projectId?: string;
+  dataStream?: any;
 }) =>
   tool({
     description:
@@ -52,6 +54,14 @@ export const createChapter = ({
         return { error: "Authentication required to create a chapter." };
       }
 
+      if (dataStream) {
+        dataStream.write({
+          type: "tool-log",
+          message: "Verifying volume...",
+          tool: "createChapter",
+        });
+      }
+
       try {
         // Verify the volume exists and get its project/outline info
         const volumePlan = await getVolumePlanById({ id: volumeId });
@@ -71,6 +81,14 @@ export const createChapter = ({
           return {
             error: `A chapter with sequence ${sequence} already exists in this volume. Please use a different sequence number.`,
           };
+        }
+
+        if (dataStream) {
+          dataStream.write({
+            type: "tool-log",
+            message: `Creating chapter '${title}'...`,
+            tool: "createChapter",
+          });
         }
 
         // Create the chapter

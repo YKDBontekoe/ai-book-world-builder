@@ -1,7 +1,10 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { createEntity as createEntityMutation } from "@/lib/db/queries";
+import {
+  createEntity as createEntityMutation,
+  createEntityAttribute,
+} from "@/lib/db/queries";
 
 export const createEntity = ({
   session,
@@ -29,6 +32,16 @@ export const createEntity = ({
         .string()
         .optional()
         .describe("A brief summary or description of the entity."),
+      attributes: z
+        .array(
+          z.object({
+            name: z.string().describe("Name of the attribute (e.g., 'Age', 'Role')"),
+            value: z.string().describe("Value of the attribute"),
+            dataType: z.string().default("text").describe("Data type (text, number, etc.)"),
+          })
+        )
+        .optional()
+        .describe("Key-value attributes to define the entity."),
       projectId: z
         .string()
         .optional()
@@ -37,22 +50,8 @@ export const createEntity = ({
         ),
     }),
     execute: async (args: any) => {
-      const { name, kind, summary, projectId: projectIdInput } = args;
+      const { name, kind, summary, attributes, projectId: projectIdInput } = args;
       const finalProjectId = projectIdInput || projectId;
-      // We need to get the projectId effectively.
-      // In the chat loop, we might not always have it passed explicitly by the LLM unless we put it in the system prompt instructions to ALWAYS pass it.
-      // However, the tool definition doesn't inherently know about the "current" chat's project unless we pass it.
-      // A better approach in route.ts is to pass the projectId to the tool factory if it exists in the URL/context.
-
-      // But wait, the route.ts has `projectId` from the request body. We can pass it into the tool factory.
-
-      // For now, let's assume the caller of the tool factory will provide a projectId fallback if the model doesn't provides one, OR we rely on the model to provide it.
-      // Actually, looking at `createDocument`, it takes `session` and `dataStream`.
-
-      // Let's modify the signature to accept `projectId` from the closure if possible, or expect the model to pass it.
-      // Given `projectId` is critical, let's depend on the model passing it for now, BUT we should probably inject it if we can.
-
-      // Just mocking the DB call for now based on the import.
 
       if (!finalProjectId) {
         return { error: "Project ID is required to create an entity." };
@@ -64,13 +63,28 @@ export const createEntity = ({
           name,
           kind,
           summary,
-          // Start/End dates are optional in mutation, keeping simple for now
         });
+
+        let createdAttributes: any[] = [];
+        if (attributes && attributes.length > 0) {
+          createdAttributes = await Promise.all(
+            attributes.map((attr: any) =>
+              createEntityAttribute({
+                projectId: finalProjectId,
+                entityId: entity.id,
+                name: attr.name,
+                value: attr.value,
+                dataType: attr.dataType || "text",
+              })
+            )
+          );
+        }
 
         return {
           message: `Entity '${name}' created successfully.`,
           entity: {
             ...entity,
+            attributes: createdAttributes,
             createdAt: entity.createdAt.toISOString(),
             updatedAt: entity.updatedAt.toISOString(),
             startDate: entity.startDate?.toISOString() ?? null,

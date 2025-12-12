@@ -1,0 +1,591 @@
+"use client";
+
+import {
+	AlertCircle,
+	BookOpen,
+	CheckCircle2,
+	ChevronDown,
+	ChevronRight,
+	Loader2,
+	Pause,
+	Play,
+	Square,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import {
+	cancelGeneration,
+	getGenerationStatus,
+	pauseGeneration,
+	resumeGeneration,
+} from "@/app/(chat)/projects/[id]/generate/actions";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
+
+interface GenerationDashboardProps {
+	projectId: string;
+	generationId: string | null;
+	onComplete?: () => void;
+}
+
+type StepStatus = "pending" | "running" | "completed" | "failed" | "paused";
+
+interface GenerationStep {
+	id: string;
+	sequence: number;
+	stepType: string;
+	status: StepStatus;
+	chapterId?: string | null;
+	wordCount?: number | null;
+	agentOutput?: string | null;
+	reviewFeedback?: string | null;
+}
+
+interface GenerationAsset {
+	id: string;
+	assetType: string;
+	content?: string | null;
+}
+
+export function GenerationDashboard({
+	projectId,
+	generationId,
+	onComplete,
+}: GenerationDashboardProps) {
+	const [isLoading, setIsLoading] = useState(true);
+	const [isPaused, setIsPaused] = useState(false);
+	const [generationStatus, setGenerationStatus] = useState<string>("idle");
+	const [steps, setSteps] = useState<GenerationStep[]>([]);
+	const [assets, setAssets] = useState<GenerationAsset[]>([]);
+	const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
+	const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
+	const [error, setError] = useState<string | null>(null);
+	const [isExporting, setIsExporting] = useState(false);
+
+	// Fetch generation data
+	const fetchData = useCallback(async () => {
+		if (!generationId) return;
+
+		try {
+			const result = await getGenerationStatus(generationId);
+			if (result.error) {
+				setError(result.error);
+				return;
+			}
+
+			if (result.generation) {
+				setGenerationStatus(result.generation.status);
+				setIsPaused(result.generation.status === "paused");
+
+				if (result.generation.status === "completed") {
+					onComplete?.();
+				}
+			}
+
+			if (result.steps) {
+				setSteps(
+					result.steps.map((s) => ({
+						id: s.id,
+						sequence: s.sequence,
+						stepType: s.stepType,
+						status: s.status as StepStatus,
+						chapterId: s.chapterId,
+						wordCount: s.wordCount,
+						agentOutput: s.agentOutput,
+						reviewFeedback: s.reviewFeedback,
+					})),
+				);
+			}
+
+			if (result.assets) {
+				setAssets(
+					result.assets.map((a) => ({
+						id: a.id,
+						assetType: a.assetType,
+						content: a.content,
+					})),
+				);
+			}
+
+			setIsLoading(false);
+		} catch (_err) {
+			setError("Failed to fetch generation status");
+			setIsLoading(false);
+		}
+	}, [generationId, onComplete]);
+
+	// Poll for updates every 2 seconds
+	useEffect(() => {
+		fetchData();
+
+		const interval = setInterval(() => {
+			if (generationStatus !== "completed" && generationStatus !== "failed") {
+				fetchData();
+			}
+		}, 2000);
+
+		return () => clearInterval(interval);
+	}, [fetchData, generationStatus]);
+
+	const handlePause = async () => {
+		if (!generationId) return;
+		const result = await pauseGeneration(generationId);
+		if (result.success) {
+			setIsPaused(true);
+			setGenerationStatus("paused");
+		}
+	};
+
+	const handleResume = async () => {
+		if (!generationId) return;
+		const result = await resumeGeneration(generationId);
+		if (result.success) {
+			setIsPaused(false);
+			setGenerationStatus("running");
+		}
+	};
+
+	const handleCancel = async () => {
+		if (!generationId) return;
+		const result = await cancelGeneration(generationId);
+		if (result.success) {
+			setGenerationStatus("failed");
+			// Refresh data to show updated state
+			await fetchData();
+		}
+	};
+
+	const handleExport = async (format: "pdf" | "epub") => {
+		if (!projectId) return;
+		setIsExporting(true);
+		try {
+			const res = await fetch(`/api/projects/${projectId}/export`, {
+				method: "POST",
+				body: JSON.stringify({ format }),
+				headers: { "Content-Type": "application/json" },
+			});
+
+			if (!res.ok) {
+				throw new Error(await res.text());
+			}
+
+			// Success - show toast
+			toast.success(
+				`Export started! Check the Exports page for your ${format.toUpperCase()}.`,
+			);
+		} catch (err) {
+			toast.error(
+				`Export failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+			);
+		} finally {
+			setIsExporting(false);
+		}
+	};
+
+	const completedSteps = steps.filter((s) => s.status === "completed").length;
+	const totalSteps = steps.length;
+	const progress = totalSteps > 0 ? (completedSteps / totalSteps) * 100 : 0;
+	const totalWords = steps.reduce((acc, s) => acc + (s.wordCount || 0), 0);
+
+	const currentStep = steps.find((s) => s.status === "running");
+
+	const toggleStep = (stepId: string) => {
+		setExpandedSteps((prev) => {
+			const next = new Set(prev);
+			if (next.has(stepId)) {
+				next.delete(stepId);
+			} else {
+				next.add(stepId);
+			}
+			return next;
+		});
+	};
+
+	const getStepIcon = (step: GenerationStep) => {
+		switch (step.status) {
+			case "completed":
+				return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+			case "running":
+				return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+			case "failed":
+				return <AlertCircle className="h-4 w-4 text-red-500" />;
+			case "paused":
+				return <Pause className="h-4 w-4 text-amber-500" />;
+			default:
+				return <div className="h-4 w-4 rounded-full border-2 border-muted" />;
+		}
+	};
+
+	const getStepLabel = (stepType: string) => {
+		switch (stepType) {
+			case "prologue":
+				return "Prologue";
+			case "epilogue":
+				return "Epilogue";
+			case "chapter_writing":
+				return "Writing";
+			case "chapter_reviewing":
+				return "Reviewing";
+			case "chapter_revision":
+				return "Revising";
+			case "front_cover":
+				return "Cover Art";
+			case "back_cover":
+				return "Back Cover";
+			case "consistency_check":
+				return "Consistency Check";
+			default:
+				return stepType;
+		}
+	};
+
+	// Get preview content
+	const getPreviewContent = () => {
+		const selectedStep = selectedStepId
+			? steps.find((s) => s.id === selectedStepId)
+			: currentStep || steps.find((s) => s.status === "completed");
+
+		if (selectedStep?.agentOutput) {
+			return selectedStep.agentOutput;
+		}
+
+		// Check assets for prologue/epilogue
+		const prologueAsset = assets.find((a) => a.assetType === "prologue");
+		const epilogueAsset = assets.find((a) => a.assetType === "epilogue");
+
+		if (selectedStep?.stepType === "prologue" && prologueAsset?.content) {
+			return prologueAsset.content;
+		}
+
+		if (selectedStep?.stepType === "epilogue" && epilogueAsset?.content) {
+			return epilogueAsset.content;
+		}
+
+		// Default to first completed step with content
+		const firstWithContent = steps.find((s) => s.agentOutput);
+		if (firstWithContent?.agentOutput) {
+			return firstWithContent.agentOutput;
+		}
+
+		if (prologueAsset?.content) {
+			return prologueAsset.content;
+		}
+
+		return null;
+	};
+
+	if (isLoading) {
+		return (
+			<div className="flex h-full items-center justify-center">
+				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+			</div>
+		);
+	}
+
+	if (error) {
+		return (
+			<div className="flex h-full items-center justify-center">
+				<div className="text-center">
+					<AlertCircle className="mx-auto h-8 w-8 text-red-500" />
+					<p className="mt-2 text-sm text-muted-foreground">{error}</p>
+				</div>
+			</div>
+		);
+	}
+
+	const previewContent = getPreviewContent();
+
+	return (
+		<div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden">
+			{/* Left: Progress & Controls */}
+			<div className="border-r flex flex-col min-h-0 overflow-hidden">
+				{/* Stats Header */}
+				<div className="border-b bg-muted/30 px-6 py-4 shrink-0">
+					<div className="flex items-center justify-between">
+						<div>
+							<h2 className="text-lg font-semibold">Generation Progress</h2>
+							<p className="text-sm text-muted-foreground">
+								{currentStep
+									? `Working on: ${getStepLabel(currentStep.stepType)}`
+									: generationStatus === "completed"
+										? "Generation complete!"
+										: "Initializing..."}
+							</p>
+						</div>
+						<Badge
+							variant={isPaused ? "secondary" : "default"}
+							className={cn(
+								generationStatus === "completed"
+									? "bg-green-500/20 text-green-600"
+									: generationStatus === "failed"
+										? "bg-red-500/20 text-red-600"
+										: isPaused
+											? "bg-amber-500/20 text-amber-600"
+											: "bg-blue-500/20 text-blue-600",
+							)}
+						>
+							{generationStatus === "completed"
+								? "Complete"
+								: generationStatus === "failed"
+									? "Failed"
+									: isPaused
+										? "Paused"
+										: "Running"}
+						</Badge>
+					</div>
+
+					{/* Progress Bar */}
+					<div className="mt-4 space-y-2">
+						<div className="flex justify-between text-sm">
+							<span>Overall Progress</span>
+							<span className="font-medium">{Math.round(progress)}%</span>
+						</div>
+						<Progress value={progress} className="h-3" />
+					</div>
+
+					{/* Stats */}
+					<div className="mt-4 grid grid-cols-3 gap-4 text-center">
+						<div>
+							<p className="text-xs text-muted-foreground">Steps</p>
+							<p className="font-mono text-lg font-semibold">
+								{completedSteps}/{totalSteps}
+							</p>
+						</div>
+						<div>
+							<p className="text-xs text-muted-foreground">Words</p>
+							<p className="font-mono text-lg font-semibold">
+								{totalWords.toLocaleString()}
+							</p>
+						</div>
+						<div>
+							<p className="text-xs text-muted-foreground">Status</p>
+							<p className="font-mono text-lg font-semibold capitalize">
+								{generationStatus}
+							</p>
+						</div>
+					</div>
+				</div>
+
+				{/* Controls */}
+				<div className="border-b px-6 py-3">
+					<div className="flex flex-col gap-2">
+						<div className="flex gap-2">
+							{isPaused ? (
+								<Button className="flex-1 gap-2" onClick={handleResume}>
+									<Play className="h-4 w-4" />
+									Resume
+								</Button>
+							) : (
+								<Button
+									variant="outline"
+									className="flex-1 gap-2"
+									onClick={handlePause}
+									disabled={
+										generationStatus === "completed" ||
+										generationStatus === "failed"
+									}
+								>
+									<Pause className="h-4 w-4" />
+									Pause
+								</Button>
+							)}
+							<Button
+								variant="destructive"
+								size="icon"
+								onClick={handleCancel}
+								disabled={
+									generationStatus === "completed" ||
+									generationStatus === "failed"
+								}
+							>
+								<Square className="h-4 w-4" />
+							</Button>
+						</div>
+
+						{/* Export buttons - shown when paused or completed */}
+						{(isPaused ||
+							generationStatus === "completed" ||
+							generationStatus === "failed") &&
+							completedSteps > 0 && (
+								<div className="flex gap-2">
+									<Button
+										variant="outline"
+										size="sm"
+										className="flex-1 gap-2"
+										onClick={() => handleExport("pdf")}
+										disabled={isExporting}
+									>
+										{isExporting ? "Exporting..." : "Export PDF"}
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										className="flex-1 gap-2"
+										onClick={() => handleExport("epub")}
+										disabled={isExporting}
+									>
+										{isExporting ? "Exporting..." : "Export EPUB"}
+									</Button>
+								</div>
+							)}
+					</div>
+				</div>
+
+				{/* Steps List */}
+				<div className="flex-1 overflow-y-auto p-4">
+					<div className="space-y-2">
+						{steps.map((step) => (
+							<button
+								type="button"
+								key={step.id}
+								className={cn(
+									"w-full text-left rounded-lg border bg-card transition-colors cursor-pointer",
+									step.status === "running" &&
+										"border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20",
+									selectedStepId === step.id && "ring-2 ring-primary",
+								)}
+								onClick={() => {
+									setSelectedStepId(step.id);
+									toggleStep(step.id);
+								}}
+							>
+								<div className="flex items-center gap-3 p-3">
+									{getStepIcon(step)}
+									<div className="flex-1 min-w-0">
+										<div className="flex items-center gap-2">
+											<span className="font-medium text-sm truncate">
+												{getStepLabel(step.stepType)}
+												{step.sequence > 1 && ` (${step.sequence})`}
+											</span>
+											<Badge variant="outline" className="text-xs">
+												{getStepLabel(step.stepType)}
+											</Badge>
+										</div>
+										{step.wordCount && (
+											<p className="text-xs text-muted-foreground">
+												{step.wordCount.toLocaleString()} words
+											</p>
+										)}
+									</div>
+									{expandedSteps.has(step.id) ? (
+										<ChevronDown className="h-4 w-4 text-muted-foreground" />
+									) : (
+										<ChevronRight className="h-4 w-4 text-muted-foreground" />
+									)}
+								</div>
+
+								{expandedSteps.has(step.id) && (
+									<div className="border-t bg-muted/20 p-3">
+										<p className="text-xs text-muted-foreground mb-2">
+											{step.agentOutput
+												? `Content available (${step.wordCount || 0} words)`
+												: step.status === "completed"
+													? "Step completed"
+													: step.status === "running"
+														? "Currently generating..."
+														: "Pending"}
+										</p>
+									</div>
+								)}
+							</button>
+						))}
+					</div>
+				</div>
+			</div>
+
+			{/* Right: Agent Logs & Preview */}
+			<div className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
+				<Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
+					<div className="border-b px-6">
+						<TabsList className="my-2">
+							<TabsTrigger value="preview">Preview</TabsTrigger>
+							<TabsTrigger value="logs">Agent Logs</TabsTrigger>
+							<TabsTrigger value="notes">Notes</TabsTrigger>
+						</TabsList>
+					</div>
+
+					<TabsContent value="preview" className="flex-1 overflow-hidden m-0">
+						<div className="h-full overflow-y-auto p-6">
+							{previewContent ? (
+								<div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
+									{previewContent}
+								</div>
+							) : (
+								<div className="flex h-full items-center justify-center">
+									<div className="text-center">
+										<BookOpen className="mx-auto h-12 w-12 text-muted-foreground/50" />
+										<p className="mt-2 text-sm text-muted-foreground">
+											{generationStatus === "running"
+												? "Content will appear here as it's generated..."
+												: "No content generated yet."}
+										</p>
+									</div>
+								</div>
+							)}
+						</div>
+					</TabsContent>
+
+					<TabsContent value="logs" className="flex-1 overflow-hidden m-0">
+						<div className="h-full overflow-y-auto p-6 font-mono text-sm">
+							<div className="space-y-2">
+								{steps
+									.filter(
+										(s) => s.status === "completed" || s.status === "running",
+									)
+									.map((step) => (
+										<div
+											key={step.id}
+											className={cn(
+												"rounded-lg border p-3",
+												step.status === "running"
+													? "border-blue-500/30 bg-blue-50/50 dark:bg-blue-950/20"
+													: "border-green-500/30 bg-green-50/50 dark:bg-green-950/20",
+											)}
+										>
+											[{step.status === "running" ? "Running" : "Complete"}]{" "}
+											{getStepLabel(step.stepType)}
+											{step.wordCount
+												? ` - ${step.wordCount.toLocaleString()} words`
+												: ""}
+										</div>
+									))}
+								{generationStatus === "running" && (
+									<div className="flex items-center gap-2 text-muted-foreground">
+										<Loader2 className="h-4 w-4 animate-spin" />
+										<span>Generating content...</span>
+									</div>
+								)}
+							</div>
+						</div>
+					</TabsContent>
+
+					<TabsContent value="notes" className="flex-1 overflow-hidden m-0">
+						<div className="h-full overflow-y-auto p-6">
+							<Card>
+								<CardHeader>
+									<CardTitle className="text-base">Add Note</CardTitle>
+								</CardHeader>
+								<CardContent>
+									<textarea
+										className="w-full min-h-[100px] rounded-md border bg-transparent px-3 py-2 text-sm"
+										placeholder="Add feedback for the AI to incorporate in future chapters..."
+									/>
+									<div className="mt-3 flex gap-2">
+										<Button size="sm">Add Global Note</Button>
+										<Button variant="outline" size="sm">
+											Add to Current Chapter
+										</Button>
+									</div>
+								</CardContent>
+							</Card>
+						</div>
+					</TabsContent>
+				</Tabs>
+			</div>
+		</div>
+	);
+}

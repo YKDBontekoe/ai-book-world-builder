@@ -1,261 +1,152 @@
-import Link from "next/link";
-import { notFound, redirect } from "next/navigation";
-import { auth } from "@/app/(auth)/auth";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { eq } from "drizzle-orm";
 import {
-  getEntitiesForProject,
-  getEntityWithDetails,
-  getProjectByIdWithAccess,
-} from "@/lib/db/queries";
-import { AttributeForm } from "./attribute-form";
-import { RelationshipForm } from "./relationship-form";
+	ArrowLeft,
+	BookOpen,
+	Calendar,
+	MapPin,
+	Package,
+	User,
+	Users,
+} from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { db } from "@/lib/db/queries";
+import { entityAttribute, entity as entityTable } from "@/lib/db/schema";
 
-function buildWarnings(
-  entity: Awaited<ReturnType<typeof getEntityWithDetails>>
-) {
-  if (!entity) {
-    return [] as string[];
-  }
-
-  const warnings: string[] = [];
-
-  if (entity.startDate && entity.endDate) {
-    const start = new Date(entity.startDate);
-    const end = new Date(entity.endDate);
-    if (start > end) {
-      warnings.push("Entity end date cannot be before the start date.");
-    }
-  }
-
-  for (const attribute of entity.attributes) {
-    if (attribute.startDate && attribute.endDate) {
-      const start = new Date(attribute.startDate);
-      const end = new Date(attribute.endDate);
-      if (start > end) {
-        warnings.push(
-          `${attribute.name} has an end date before its start date. Update the timeline to avoid draft conflicts.`
-        );
-      }
-    }
-  }
-
-  for (const relationship of entity.relationships) {
-    if (relationship.startDate && relationship.endDate) {
-      const start = new Date(relationship.startDate);
-      const end = new Date(relationship.endDate);
-      if (start > end) {
-        warnings.push(
-          `${relationship.type} relationship has conflicting dates. Drafts may mis-sequence events.`
-        );
-      }
-    }
-  }
-
-  return warnings;
+interface PageProps {
+	params: Promise<{
+		id: string;
+		entityId: string;
+	}>;
 }
 
-export default async function EntityDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string; entityId: string }>;
-}) {
-  const { id, entityId } = await params;
-  const session = await auth();
+const entityIcons = {
+	character: User,
+	location: MapPin,
+	item: Package,
+	organization: Users,
+	event: Calendar,
+	other: BookOpen,
+};
 
-  if (!session) {
-    redirect("/api/auth/guest");
-  }
+const entityColors = {
+	character:
+		"text-violet-700 bg-violet-100 dark:text-violet-300 dark:bg-violet-900/40",
+	location:
+		"text-emerald-700 bg-emerald-100 dark:text-emerald-300 dark:bg-emerald-900/40",
+	item: "text-amber-700 bg-amber-100 dark:text-amber-300 dark:bg-amber-900/40",
+	organization:
+		"text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/40",
+	event:
+		"text-orange-700 bg-orange-100 dark:text-orange-300 dark:bg-orange-900/40",
+	other: "text-zinc-700 bg-zinc-100 dark:text-zinc-300 dark:bg-zinc-800/40",
+};
 
-  const project = await getProjectByIdWithAccess({
-    id,
-    userId: session.user?.id,
-  });
+export default async function EntityPage({ params }: PageProps) {
+	const { id: projectId, entityId } = await params;
 
-  if (!project) {
-    notFound();
-  }
+	const [entity] = await db
+		.select()
+		.from(entityTable)
+		.where(eq(entityTable.id, entityId))
+		.limit(1);
 
-  const [entity, entities] = await Promise.all([
-    getEntityWithDetails({ id: entityId }),
-    getEntitiesForProject({ projectId: project.id }),
-  ]);
+	if (!entity || entity.projectId !== projectId) {
+		notFound();
+	}
 
-  if (!entity || entity.projectId !== project.id) {
-    notFound();
-  }
+	const attributes = await db
+		.select()
+		.from(entityAttribute)
+		.where(eq(entityAttribute.entityId, entityId));
 
-  const canEdit =
-    session.user?.type === "regular" && project.userId === session.user.id;
-  const warnings = buildWarnings(entity);
+	const Icon = entityIcons[entity.kind as keyof typeof entityIcons] || BookOpen;
+	const colorClass =
+		entityColors[entity.kind as keyof typeof entityColors] ||
+		entityColors.other;
 
-  return (
-    <div className="flex min-h-dvh flex-col gap-6 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="space-y-1">
-          <Button asChild className="px-0" size="sm" variant="ghost">
-            <Link href={`/projects/${project.id}/entities`}>
-              Back to entities
-            </Link>
-          </Button>
-          <div className="flex items-center gap-2">
-            <h1 className="font-semibold text-2xl">{entity.name}</h1>
-            <Badge variant="secondary">{entity.kind}</Badge>
-          </div>
-          {entity.summary && (
-            <p className="max-w-3xl text-muted-foreground">{entity.summary}</p>
-          )}
-          <p className="text-muted-foreground text-sm">
-            {entity.startDate && entity.endDate
-              ? `${new Date(entity.startDate).toLocaleDateString()}–${new Date(entity.endDate).toLocaleDateString()}`
-              : entity.startDate
-                ? `Active since ${new Date(entity.startDate).toLocaleDateString()}`
-                : "Timeline not set"}
-          </p>
-        </div>
-        {canEdit && (
-          <Button asChild>
-            <Link href={`/projects/${project.id}/entities/new`}>
-              Add another entity
-            </Link>
-          </Button>
-        )}
-      </div>
+	return (
+		<div className="flex flex-col h-full overflow-hidden">
+			<header className="flex items-center gap-2 border-b bg-background/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+				<Link href={`/chat`}>
+					<Button variant="ghost" size="icon" className="h-8 w-8">
+						<ArrowLeft size={16} />
+					</Button>
+				</Link>
+				<div className="flex items-center gap-2">
+					<div className={`p-1.5 rounded-md ${colorClass}`}>
+						<Icon size={16} />
+					</div>
+					<h1 className="text-lg font-semibold">{entity.name}</h1>
+				</div>
+			</header>
 
-      {warnings.length > 0 && (
-        <Card className="border-amber-500/50">
-          <CardHeader>
-            <CardTitle className="text-base">Draft warnings</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-amber-700 text-sm">
-            {warnings.map((warning) => (
-              <p key={warning}>{warning}</p>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+			<main className="flex-1 overflow-y-auto p-6 md:p-8 max-w-4xl mx-auto w-full space-y-8">
+				<section className="space-y-4">
+					<h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+						Overview
+					</h2>
+					<div className="prose dark:prose-invert max-w-none">
+						<p className="text-lg leading-relaxed">
+							{entity.summary || "No summary available."}
+						</p>
+					</div>
+				</section>
 
-      <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Attributes</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {entity.attributes.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No attributes recorded yet. Add traits, stats, or historical
-                notes to guide drafts.
-              </p>
-            ) : (
-              entity.attributes.map((attribute) => (
-                <div className="space-y-1" key={attribute.id}>
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium leading-tight">
-                        {attribute.name}
-                      </p>
-                      <p className="text-muted-foreground text-sm">
-                        {attribute.value}
-                      </p>
-                    </div>
-                    <Badge variant="outline">{attribute.dataType}</Badge>
-                  </div>
-                  <p className="text-muted-foreground text-xs">
-                    {attribute.startDate && attribute.endDate
-                      ? `${new Date(attribute.startDate).toLocaleDateString()}–${new Date(attribute.endDate).toLocaleDateString()}`
-                      : attribute.startDate
-                        ? `Effective ${new Date(attribute.startDate).toLocaleDateString()}`
-                        : "Timeline not set"}
-                  </p>
-                  <Separator />
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+				{(entity.startDate || entity.endDate) && (
+					<section className="space-y-4">
+						<h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+							Timeline
+						</h2>
+						<div className="flex flex-wrap gap-4">
+							{entity.startDate && (
+								<div className="flex flex-col">
+									<span className="text-xs text-muted-foreground">
+										Start Date
+									</span>
+									<span className="font-medium">
+										{new Date(entity.startDate).toLocaleDateString()}
+									</span>
+								</div>
+							)}
+							{entity.endDate && (
+								<div className="flex flex-col">
+									<span className="text-xs text-muted-foreground">
+										End Date
+									</span>
+									<span className="font-medium">
+										{new Date(entity.endDate).toLocaleDateString()}
+									</span>
+								</div>
+							)}
+						</div>
+					</section>
+				)}
 
-        {canEdit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Add attribute</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <AttributeForm entityId={entity.id} projectId={project.id} />
-            </CardContent>
-          </Card>
-        )}
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Relationships</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {entity.relationships.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                No relationships yet. Link this entity to others so AI can keep
-                continuity in drafts.
-              </p>
-            ) : (
-              entity.relationships.map((relationship) => {
-                const target = entities.find(
-                  (candidate) =>
-                    candidate.id ===
-                    (relationship.sourceEntityId === entity.id
-                      ? relationship.targetEntityId
-                      : relationship.sourceEntityId)
-                );
-
-                return (
-                  <div className="space-y-1" key={relationship.id}>
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-medium leading-tight">
-                          {relationship.type}
-                        </p>
-                        <p className="text-muted-foreground text-sm">
-                          {relationship.description ||
-                            "No context provided yet."}
-                        </p>
-                        <p className="text-muted-foreground text-xs">
-                          Linked to {target?.name ?? "another entity"}
-                        </p>
-                      </div>
-                      <Badge variant="outline">Timeline</Badge>
-                    </div>
-                    <p className="text-muted-foreground text-xs">
-                      {relationship.startDate && relationship.endDate
-                        ? `${new Date(relationship.startDate).toLocaleDateString()}–${new Date(relationship.endDate).toLocaleDateString()}`
-                        : relationship.startDate
-                          ? `Starts ${new Date(relationship.startDate).toLocaleDateString()}`
-                          : "Timeline not set"}
-                    </p>
-                    <Separator />
-                  </div>
-                );
-              })
-            )}
-          </CardContent>
-        </Card>
-
-        {canEdit && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Add relationship</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RelationshipForm
-                entities={entities}
-                projectId={project.id}
-                sourceEntityId={entity.id}
-              />
-            </CardContent>
-          </Card>
-        )}
-      </div>
-    </div>
-  );
+				{attributes.length > 0 && (
+					<section className="space-y-4">
+						<h2 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">
+							Attributes
+						</h2>
+						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+							{attributes.map((attr) => (
+								<div
+									key={attr.id}
+									className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm"
+								>
+									<h3 className="text-xs font-semibold text-muted-foreground uppercase mb-1">
+										{attr.name}
+									</h3>
+									<p className="text-sm font-medium break-words">
+										{attr.value}
+									</p>
+								</div>
+							))}
+						</div>
+					</section>
+				)}
+			</main>
+		</div>
+	);
 }

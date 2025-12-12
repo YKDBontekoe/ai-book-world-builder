@@ -18,6 +18,8 @@ export async function generateEmbeddings(chunks: string[]) {
   return embeddings;
 }
 
+const embeddingCache = new Map<string, number[]>();
+
 /**
  * Simple in-memory RAG for the current session context.
  * In a production app, this would query a vector DB.
@@ -38,19 +40,41 @@ export async function retrieveContext({
     value: query,
   });
 
-  // 2. Embed candidates (caching strategies would be applied here in prod)
-  // For this implementation, we assume candidates are already text.
-  // Optimization: In a real scenario, we'd store pre-computed embeddings.
-  const { embeddings: candidateEmbeddings } = await embedMany({
-    model: gateway.textEmbeddingModel("openai/text-embedding-3-small"),
-    values: candidates.map((c) => c.content),
+  // 2. Embed candidates with caching
+  const embeddings: number[][] = [];
+  const missIndices: number[] = [];
+  const missValues: string[] = [];
+
+  // Check cache first
+  candidates.forEach((candidate, index) => {
+    if (embeddingCache.has(candidate.content)) {
+      embeddings[index] = embeddingCache.get(candidate.content)!;
+    } else {
+      missIndices.push(index);
+      missValues.push(candidate.content);
+    }
   });
+
+  // Fetch missing embeddings in one batch
+  if (missValues.length > 0) {
+    const { embeddings: newEmbeddings } = await embedMany({
+      model: gateway.textEmbeddingModel("openai/text-embedding-3-small"),
+      values: missValues,
+    });
+
+    newEmbeddings.forEach((emb, i) => {
+      const originalIndex = missIndices[i];
+      const content = missValues[i];
+      embeddingCache.set(content, emb);
+      embeddings[originalIndex] = emb;
+    });
+  }
 
   // 3. Calculate similarity
   const results = candidates.map((candidate, i) => ({
     content: candidate.content,
     metadata: candidate.metadata || {},
-    similarity: cosineSimilarity(queryEmbedding, candidateEmbeddings[i]),
+    similarity: cosineSimilarity(queryEmbedding, embeddings[i]),
   }));
 
   // 4. Sort and retrieval

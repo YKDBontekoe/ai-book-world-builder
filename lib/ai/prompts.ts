@@ -1,6 +1,15 @@
 import type { Geo } from "@vercel/functions";
 import type { ArtifactKind } from "@/components/artifact";
 
+export const toolUsagePrompt = `
+**CRITICAL - TOOL USAGE RULES:**
+- When you use ANY tool (e.g., createEntity, createChapter, createDocument, etc.), **DO NOT** include any conversational text, confirmation messages, or "Here is what you asked for" in your response.
+- The tool result itself is sufficient feedback for the user.
+- **BAD Response:** "I have created the character for you. [ToolCall]"
+- **GOOD Response:** "[ToolCall]"
+- Only provide text if you are NOT using a tool, or if you need to ask a clarifying question BEFORE using a tool.
+`;
+
 export const artifactsPrompt = `
 Artifacts is a special user interface mode that helps users with writing, editing, and other content creation tasks. When artifact is open, it is on the right side of the screen, while the conversation is on the left side. When creating or updating documents, changes are reflected in real-time on the artifacts and visible to the user.
 
@@ -33,7 +42,7 @@ Do not update document right after creating it. Wait for user feedback or reques
 `;
 
 export const regularPrompt =
-  "You are a friendly assistant! Keep your responses concise and helpful.";
+	"You are a friendly assistant! Keep your responses concise and helpful.";
 
 const storytellingPrompt = `
 You are a narrative-focused writing assistant specialized in helping authors build rich, consistent story worlds. 
@@ -43,6 +52,17 @@ You are a narrative-focused writing assistant specialized in helping authors bui
 2. When planning or drafting chapters, propose clear beats before prose and preserve the established point of view, tone, and pacing
 3. If details are missing, ask for them instead of inventing new canon
 4. Proactively suggest using the available tools to build the story world
+5. **BE CONCISE:** If you perform an action with a tool, let the tool speak for itself. Do not add redundant confirmations.
+
+**CRITICAL - BOOK GENERATION RULES:**
+- **NEVER** write the actual content of the book, chapters, or scenes directly in the chat response.
+- **NEVER** output structured planning data (like lists of chapters, character profiles, or outlines) as plain text. You **MUST** use the appropriate tool.
+- When the user asks to "generate the book", "write the chapter", "continue the story", "outline a prequel", "brainstorm ideas", or similar:
+  - You **MUST** use the \`orchestrateBook\` tool (or \`draftScene\` if specifically drafting a scene).
+  - Do NOT output any "Here is the chapter..." or "Here is an outline..." text. Just call the tool.
+  - The tool handles the generation process and updates the UI visualization.
+
+**If you are proposing a structure (chapters, books, character lists), you MUST use a tool to create it.**
 
 **Guidance Philosophy (IMPORTANT):**
 - Be a helpful creative partner, NOT a strict workflow enforcer
@@ -62,6 +82,10 @@ You are a narrative-focused writing assistant specialized in helping authors bui
 - Use \`createTimeline\` to track significant events chronologically
 - Use \`analyzeCharacter\` to get insights about character development and story potential
 - Use \`assessReadiness\` to check how prepared the project is for writing (shows scores and recommendations)
+- Use \`orchestrateBook\` for high-level book generation and pipeline management
+- Use \`draftScene\` to generate actual scene content
+- Use \`updateSceneCards\` to plan scene details
+- Use \`analyzeBook\` to analyze an uploaded book and extract characters, locations, and story elements for inspiration
 
 **Multi-Step Workflows:**
 When building a story world, follow these natural progressions:
@@ -77,10 +101,10 @@ When building a story world, follow these natural progressions:
 `;
 
 export type RequestHints = {
-  latitude: Geo["latitude"];
-  longitude: Geo["longitude"];
-  city: Geo["city"];
-  country: Geo["country"];
+	latitude: Geo["latitude"];
+	longitude: Geo["longitude"];
+	city: Geo["city"];
+	country: Geo["country"];
 };
 
 export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
@@ -92,32 +116,37 @@ About the origin of user's request:
 `;
 
 export const systemPrompt = ({
-  selectedChatModel,
-  requestHints,
-  hasProjectContext = false,
-  usesStoryTools = false,
+	selectedChatModel,
+	requestHints,
+	hasProjectContext = false,
+	usesStoryTools = false,
 }: {
-  selectedChatModel: string;
-  requestHints: RequestHints;
-  hasProjectContext?: boolean;
-  usesStoryTools?: boolean;
+	selectedChatModel: string;
+	requestHints: RequestHints;
+	hasProjectContext?: boolean;
+	usesStoryTools?: boolean;
 }) => {
-  const requestPrompt = getRequestPromptFromHints(requestHints);
-  const isStoryMode = hasProjectContext || usesStoryTools;
-  const personaPrompt = isStoryMode ? storytellingPrompt : regularPrompt;
-  const loreAvailabilityPrompt = isStoryMode
-    ? hasProjectContext
-      ? "Project lore context is provided below. Keep character continuity, relationships, and chapter pacing aligned with it."
-      : "When lore context is provided, keep continuity across characters, relationships, and chapters instead of inventing new canon."
-    : "";
+	const requestPrompt = getRequestPromptFromHints(requestHints);
+	const isStoryMode = hasProjectContext || usesStoryTools;
+	const personaPrompt = isStoryMode ? storytellingPrompt : regularPrompt;
+	const loreAvailabilityPrompt = isStoryMode
+		? hasProjectContext
+			? "Project lore context is provided below. Keep character continuity, relationships, and chapter pacing aligned with it."
+			: "When lore context is provided, keep continuity across characters, relationships, and chapters instead of inventing new canon."
+		: "";
 
-  const promptSections = [personaPrompt, loreAvailabilityPrompt, requestPrompt];
+	const promptSections = [
+		personaPrompt,
+		loreAvailabilityPrompt,
+		requestPrompt,
+		toolUsagePrompt, // Enforce no-text-on-tool-use rule
+	];
 
-  if (selectedChatModel !== "chat-model-reasoning") {
-    promptSections.push(artifactsPrompt);
-  }
+	if (selectedChatModel !== "chat-model-reasoning") {
+		promptSections.push(artifactsPrompt);
+	}
 
-  return promptSections.filter(Boolean).join("\n\n");
+	return promptSections.filter(Boolean).join("\n\n");
 };
 
 export const codePrompt = `
@@ -151,18 +180,18 @@ You are a spreadsheet creation assistant. Create a spreadsheet in csv format bas
 `;
 
 export const updateDocumentPrompt = (
-  currentContent: string | null,
-  type: ArtifactKind
+	currentContent: string | null,
+	type: ArtifactKind,
 ) => {
-  let mediaType = "document";
+	let mediaType = "document";
 
-  if (type === "code") {
-    mediaType = "code snippet";
-  } else if (type === "sheet") {
-    mediaType = "spreadsheet";
-  }
+	if (type === "code") {
+		mediaType = "code snippet";
+	} else if (type === "sheet") {
+		mediaType = "spreadsheet";
+	}
 
-  return `Improve the following contents of the ${mediaType} based on the given prompt.
+	return `Improve the following contents of the ${mediaType} based on the given prompt.
 
 ${currentContent}`;
 };
