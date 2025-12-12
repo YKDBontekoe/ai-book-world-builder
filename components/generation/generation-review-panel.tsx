@@ -9,7 +9,6 @@ import {
 	FileText,
 	HelpCircle,
 	Image,
-	Lightbulb,
 	List,
 	PenTool,
 	RefreshCw,
@@ -19,7 +18,10 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Progress } from "@/components/ui/progress";
+import { StatCard } from "@/components/ui/stat-card";
+import { TipCard } from "@/components/ui/tip-card";
 import {
 	Tooltip,
 	TooltipContent,
@@ -179,7 +181,7 @@ export function GenerationReviewPanel({
 		<TooltipProvider>
 			<div className="space-y-6">
 				{/* Header - Glassmorphic */}
-				<div className="rounded-2xl border border-border/50 bg-background/50 p-8 text-center backdrop-blur-sm">
+				<GlassCard padding="lg" rounded="2xl" className="text-center">
 					<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-emerald-500/20 bg-emerald-500/10 backdrop-blur-sm">
 						<CheckCircle2 className="h-8 w-8 text-emerald-500" />
 					</div>
@@ -187,7 +189,7 @@ export function GenerationReviewPanel({
 					<p className="mt-2 text-muted-foreground">
 						Review your settings before starting generation
 					</p>
-				</div>
+				</GlassCard>
 
 				<div className="grid gap-6 lg:grid-cols-2">
 					{/* Readiness Card - Glassmorphic */}
@@ -300,27 +302,24 @@ export function GenerationReviewPanel({
 						</CardHeader>
 						<CardContent>
 							<div className="grid grid-cols-3 gap-3">
-								<div className="rounded-xl border border-border/50 bg-background/50 p-4 text-center backdrop-blur-sm">
-									<FileText className="mx-auto h-5 w-5 text-blue-500" />
-									<p className="mt-2 font-mono text-2xl font-bold">
-										{costEstimate.estimatedWords.toLocaleString()}
-									</p>
-									<p className="text-xs text-muted-foreground">Words</p>
-								</div>
-								<div className="rounded-xl border border-border/50 bg-background/50 p-4 text-center backdrop-blur-sm">
-									<Clock className="mx-auto h-5 w-5 text-amber-500" />
-									<p className="mt-2 font-mono text-2xl font-bold">
-										{estimatedTime}m
-									</p>
-									<p className="text-xs text-muted-foreground">Est. Time</p>
-								</div>
-								<div className="rounded-xl border border-border/50 bg-background/50 p-4 text-center backdrop-blur-sm">
-									<Coins className="mx-auto h-5 w-5 text-emerald-500" />
-									<p className="mt-2 font-mono text-2xl font-bold">
-										${costEstimate.totalCost.toFixed(2)}
-									</p>
-									<p className="text-xs text-muted-foreground">Est. Cost</p>
-								</div>
+								<StatCard
+									icon={<FileText className="h-5 w-5" />}
+									value={costEstimate.estimatedWords.toLocaleString()}
+									label="Words"
+									iconColor="blue"
+								/>
+								<StatCard
+									icon={<Clock className="h-5 w-5" />}
+									value={`${estimatedTime}m`}
+									label="Est. Time"
+									iconColor="amber"
+								/>
+								<StatCard
+									icon={<Coins className="h-5 w-5" />}
+									value={`$${costEstimate.totalCost.toFixed(2)}`}
+									label="Est. Cost"
+									iconColor="emerald"
+								/>
 							</div>
 
 							{/* Cost breakdown */}
@@ -382,30 +381,24 @@ export function GenerationReviewPanel({
 				</Card>
 
 				{/* Pro Tips - Glassmorphic */}
-				<div className="rounded-2xl border border-blue-500/20 bg-blue-500/5 p-4 backdrop-blur-sm">
-					<div className="flex items-start gap-3">
-						<Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-blue-500" />
-						<div>
-							<p className="font-medium text-blue-700 dark:text-blue-300">
-								Tips
-							</p>
-							<ul className="mt-2 space-y-1 text-sm text-blue-600 dark:text-blue-400">
-								<li className="flex items-center gap-2">
-									<Check className="h-3 w-3" /> Generation runs in the
-									background
-								</li>
-								<li className="flex items-center gap-2">
-									<Check className="h-3 w-3" /> You can pause and resume at any
-									time
-								</li>
-								<li className="flex items-center gap-2">
-									<Check className="h-3 w-3" /> Review each chapter as it
-									completes
-								</li>
-							</ul>
-						</div>
+				<TipCard>
+					<div>
+						<p className="font-medium">Tips</p>
+						<ul className="mt-2 space-y-1 text-sm">
+							<li className="flex items-center gap-2">
+								<Check className="h-3 w-3" /> Generation runs in the background
+							</li>
+							<li className="flex items-center gap-2">
+								<Check className="h-3 w-3" /> You can pause and resume at any
+								time
+							</li>
+							<li className="flex items-center gap-2">
+								<Check className="h-3 w-3" /> Review each chapter as it
+								completes
+							</li>
+						</ul>
 					</div>
-				</div>
+				</TipCard>
 			</div>
 		</TooltipProvider>
 	);

@@ -16,6 +16,7 @@ import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import type { ContextSelection } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
@@ -251,7 +252,7 @@ export function ContextSelectionPanel({
 	return (
 		<div className="space-y-6">
 			{/* Header - Glassmorphic */}
-			<div className="rounded-2xl border border-border/50 bg-background/50 p-6 backdrop-blur-sm">
+			<GlassCard padding="lg" rounded="2xl">
 				<div className="flex items-center gap-3">
 					<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
 						<BookOpen className="h-6 w-6 text-primary" />
@@ -263,7 +264,7 @@ export function ContextSelectionPanel({
 						</p>
 					</div>
 				</div>
-			</div>
+			</GlassCard>
 
 			{/* Quick Actions - Glassmorphic */}
 			<div className="flex flex-wrap items-center gap-2">
@@ -316,9 +317,11 @@ export function ContextSelectionPanel({
 					if (group.items.length === 0) return null;
 
 					return (
-						<div
+						<GlassCard
 							key={group.id}
-							className="overflow-hidden rounded-xl border border-border/50 bg-background/50 backdrop-blur-sm"
+							padding="none"
+							rounded="xl"
+							className="overflow-hidden"
 						>
 							{/* Group Header */}
 							<div
@@ -384,7 +387,8 @@ export function ContextSelectionPanel({
 														: "hover:bg-muted/50",
 												)}
 												onClick={(e) => {
-													if ((e.target as HTMLElement).closest("button")) return;
+													if ((e.target as HTMLElement).closest("button"))
+														return;
 													toggleItem(group.id, item.id);
 												}}
 												onKeyDown={(e) => {
@@ -422,7 +426,7 @@ export function ContextSelectionPanel({
 									No items match "{searchQuery}"
 								</div>
 							)}
-						</div>
+						</GlassCard>
 					);
 				})}
 			</div>

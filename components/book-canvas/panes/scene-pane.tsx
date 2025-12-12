@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpenIcon, Loader2, PlusIcon, SparklesIcon } from "lucide-react";
+import { BookOpenIcon, PlusIcon, SparklesIcon } from "lucide-react";
 import { useState } from "react";
 import useSWR from "swr";
 import {
@@ -8,6 +8,8 @@ import {
 	type SerializedChapterWithScenes,
 } from "@/app/actions/scene-data";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 import { SceneCard } from "../cards/scene-card";
@@ -90,20 +92,19 @@ export function ScenePane() {
 
 	if (!projectId) {
 		return (
-			<div className="flex h-full flex-col items-center justify-center p-8 text-center">
-				<BookOpenIcon className="h-10 w-10 text-muted-foreground/50 mb-3" />
-				<p className="font-medium text-sm">No Project Selected</p>
-				<p className="text-xs text-muted-foreground mt-1">
-					Select a project to view scene cards
-				</p>
-			</div>
+			<EmptyState
+				icon={BookOpenIcon}
+				title="No Project Selected"
+				description="Select a project to view scene cards"
+				className="h-full m-4"
+			/>
 		);
 	}
 
 	if (isLoading && !chapters) {
 		return (
 			<div className="flex h-full flex-col items-center justify-center p-8">
-				<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+				<LoadingSpinner size="lg" variant="muted" />
 				<p className="mt-2 text-sm text-muted-foreground">
 					Loading specific details...
 				</p>
@@ -113,16 +114,14 @@ export function ScenePane() {
 
 	if (!chapters || chapters.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/10 m-4 p-8 text-center">
-				<div className="mb-4 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 p-4">
-					<SparklesIcon className="h-6 w-6 text-amber-500" />
-				</div>
-				<h4 className="font-medium text-sm">No Scenes Found</h4>
-				<p className="mt-1 max-w-xs text-xs text-muted-foreground">
-					Your story outline hasn't been broken down into scenes yet. Ask the AI
-					to "Plan scene cards for Chapter 1".
-				</p>
-			</div>
+			<EmptyState
+				icon={SparklesIcon}
+				iconClassName="text-amber-500"
+				title="No Scenes Found"
+				description="Your story outline hasn't been broken down into scenes yet. Ask the AI to 'Plan scene cards for Chapter 1'."
+				className="m-4"
+				suggestions={["Plan scene cards for Chapter 1"]}
+			/>
 		);
 	}
 

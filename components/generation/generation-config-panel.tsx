@@ -4,13 +4,11 @@ import {
 	BookOpen,
 	Brain,
 	CheckCircle2,
-	ChevronDown,
 	Coins,
 	FileText,
 	HelpCircle,
 	Image,
 	Info,
-	Lightbulb,
 	Palette,
 	PenTool,
 	RefreshCw,
@@ -20,13 +18,8 @@ import {
 	Wand2,
 	Zap,
 } from "lucide-react";
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { CollapsibleSection } from "@/components/ui/collapsible-section";
+import { GlassCard } from "@/components/ui/glass-card";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -38,6 +31,7 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { TipCard } from "@/components/ui/tip-card";
 import {
 	Tooltip,
 	TooltipContent,
@@ -168,65 +162,7 @@ function ModelCard({
 	);
 }
 
-function TipCard({ tip, icon }: { tip: string; icon?: React.ReactNode }) {
-	return (
-		<div className="flex items-start gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 p-3 backdrop-blur-sm">
-			{icon || <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />}
-			<p className="text-sm text-blue-700 dark:text-blue-300">{tip}</p>
-		</div>
-	);
-}
-
-function GlassSection({
-	title,
-	icon,
-	children,
-	defaultOpen = false,
-	accentColor = "primary",
-}: {
-	title: string;
-	icon: React.ReactNode;
-	children: React.ReactNode;
-	defaultOpen?: boolean;
-	accentColor?: "primary" | "blue" | "violet" | "pink" | "amber" | "emerald";
-}) {
-	const [isOpen, setIsOpen] = useState(defaultOpen);
-
-	const colorClasses = {
-		primary: "text-primary",
-		blue: "text-blue-500",
-		violet: "text-violet-500",
-		pink: "text-pink-500",
-		amber: "text-amber-500",
-		emerald: "text-emerald-500",
-	};
-
-	return (
-		<Collapsible open={isOpen} onOpenChange={setIsOpen}>
-			<Card className="overflow-hidden border-border/50 bg-background/50 backdrop-blur-sm">
-				<CollapsibleTrigger asChild>
-					<CardHeader className="cursor-pointer transition-colors hover:bg-muted/30">
-						<CardTitle className="flex items-center justify-between text-base">
-							<div className="flex items-center gap-2">
-								<span className={colorClasses[accentColor]}>{icon}</span>
-								{title}
-							</div>
-							<ChevronDown
-								className={cn(
-									"h-4 w-4 text-muted-foreground transition-transform",
-									isOpen && "rotate-180",
-								)}
-							/>
-						</CardTitle>
-					</CardHeader>
-				</CollapsibleTrigger>
-				<CollapsibleContent>
-					<CardContent className="space-y-4 pt-0">{children}</CardContent>
-				</CollapsibleContent>
-			</Card>
-		</Collapsible>
-	);
-}
+// TipCard and GlassSection (CollapsibleSection) moved to components/ui/
 
 export function GenerationConfigPanel({
 	settings,
@@ -259,7 +195,7 @@ export function GenerationConfigPanel({
 		<TooltipProvider>
 			<div className="space-y-4">
 				{/* Header */}
-				<div className="rounded-2xl border border-border/50 bg-background/50 p-6 backdrop-blur-sm">
+				<GlassCard padding="lg" rounded="2xl">
 					<div className="flex items-center gap-3">
 						<div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
 							<Settings className="h-6 w-6 text-primary" />
@@ -271,10 +207,10 @@ export function GenerationConfigPanel({
 							</p>
 						</div>
 					</div>
-				</div>
+				</GlassCard>
 
 				{/* Live Cost Estimator - Glass Card */}
-				<div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 backdrop-blur-sm">
+				<GlassCard variant="primary" padding="md" rounded="2xl">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">
 							<Coins className="h-5 w-5 text-primary" />
@@ -301,16 +237,16 @@ export function GenerationConfigPanel({
 							</p>
 						</div>
 					</div>
-				</div>
+				</GlassCard>
 
 				{/* AI Model Configuration */}
-				<GlassSection
+				<CollapsibleSection
 					title="AI Model Configuration"
 					icon={<Brain className="h-5 w-5" />}
 					defaultOpen={true}
 					accentColor="violet"
 				>
-					<TipCard tip={TIPS.models} />
+					<TipCard>{TIPS.models}</TipCard>
 
 					{/* Writer Model */}
 					<div className="space-y-3">
@@ -402,16 +338,16 @@ export function GenerationConfigPanel({
 							</div>
 						</div>
 					)}
-				</GlassSection>
+				</CollapsibleSection>
 
 				{/* Chapter Settings */}
-				<GlassSection
+				<CollapsibleSection
 					title="Chapter Structure"
 					icon={<BookOpen className="h-5 w-5" />}
 					defaultOpen={true}
 					accentColor="blue"
 				>
-					<TipCard tip={TIPS.chapters} />
+					<TipCard>{TIPS.chapters}</TipCard>
 
 					<div className="space-y-6">
 						<div className="space-y-3">
@@ -485,10 +421,10 @@ export function GenerationConfigPanel({
 							</p>
 						</div>
 					</div>
-				</GlassSection>
+				</CollapsibleSection>
 
 				{/* Writing Style */}
-				<GlassSection
+				<CollapsibleSection
 					title="Writing Style"
 					icon={<Palette className="h-5 w-5" />}
 					accentColor="pink"
@@ -525,7 +461,7 @@ export function GenerationConfigPanel({
 
 					{settings.writingStylePreset === "custom" && (
 						<>
-							<TipCard tip={TIPS.style} />
+							<TipCard>{TIPS.style}</TipCard>
 							<div className="space-y-2">
 								<Label>Custom Style Description</Label>
 								<Textarea
@@ -556,10 +492,10 @@ export function GenerationConfigPanel({
 							className="rounded-xl border-border/50 bg-background/50"
 						/>
 					</div>
-				</GlassSection>
+				</CollapsibleSection>
 
 				{/* Book Metadata */}
-				<GlassSection
+				<CollapsibleSection
 					title="Book Metadata"
 					icon={<FileText className="h-5 w-5" />}
 					accentColor="amber"
@@ -607,10 +543,10 @@ export function GenerationConfigPanel({
 							</Select>
 						</div>
 					</div>
-				</GlassSection>
+				</CollapsibleSection>
 
 				{/* Additional Options */}
-				<GlassSection
+				<CollapsibleSection
 					title="Additional Options"
 					icon={<Zap className="h-5 w-5" />}
 					accentColor="emerald"
@@ -700,7 +636,7 @@ export function GenerationConfigPanel({
 							</div>
 						))}
 					</div>
-				</GlassSection>
+				</CollapsibleSection>
 			</div>
 		</TooltipProvider>
 	);

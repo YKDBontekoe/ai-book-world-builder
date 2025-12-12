@@ -8,7 +8,6 @@ import {
 	Check,
 	FileTextIcon,
 	LinkIcon,
-	Loader2,
 	MapPinIcon,
 	MoreHorizontal,
 	PackageIcon,
@@ -42,12 +41,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
@@ -75,14 +77,30 @@ const entityTypeConfig: Record<
 	string,
 	{ label: string; icon: React.ElementType; color: string }
 > = {
-	character: { label: "Characters", icon: UsersIcon, color: "text-purple-500" },
-	location: { label: "Locations", icon: MapPinIcon, color: "text-emerald-500" },
-	item: { label: "Items", icon: PackageIcon, color: "text-amber-500" },
-	event: { label: "Events", icon: CalendarIcon, color: "text-blue-500" },
+	character: {
+		label: "Characters",
+		icon: UsersIcon,
+		color: "text-[var(--entity-character)]",
+	},
+	location: {
+		label: "Locations",
+		icon: MapPinIcon,
+		color: "text-[var(--entity-location)]",
+	},
+	item: {
+		label: "Items",
+		icon: PackageIcon,
+		color: "text-[var(--entity-item)]",
+	},
+	event: {
+		label: "Events",
+		icon: CalendarIcon,
+		color: "text-[var(--entity-event)]",
+	},
 	organization: {
 		label: "Organizations",
 		icon: BuildingIcon,
-		color: "text-rose-500",
+		color: "text-[var(--entity-organization)]",
 	},
 };
 
@@ -170,7 +188,7 @@ function EntityActions({
 						>
 							{isDeleting ? (
 								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+									<LoadingSpinner size="sm" className="mr-2" />
 									Deleting...
 								</>
 							) : (
@@ -194,7 +212,7 @@ function EntityCard({
 	projectId: string; // Made optional or required? Based on usage it's available.
 }) {
 	return (
-		<div className="group relative rounded-lg border bg-card p-3 shadow-sm transition-all hover:bg-accent/50 hover:shadow-md pr-8">
+		<Card variant="interactive" className="group relative p-3 pr-8">
 			<div className="flex items-start justify-between gap-2">
 				<div className="flex-1 min-w-0">
 					<h4 className="font-medium text-sm truncate">{entity.name}</h4>
@@ -216,7 +234,7 @@ function EntityCard({
 				projectId={projectId}
 				entityName={entity.name}
 			/>
-		</div>
+		</Card>
 	);
 }
 
@@ -340,7 +358,7 @@ function SourceMaterialsSection({ projectId }: { projectId: string }) {
 									disabled={isPending}
 								>
 									{isPending ? (
-										<Loader2 className="h-3 w-3 animate-spin" />
+										<LoadingSpinner size="xs" />
 									) : (
 										<SparklesIcon className="h-3 w-3" />
 									)}
@@ -459,9 +477,7 @@ export function BiblePane() {
 						</span>
 					</div>
 				)}
-				{isLoading && !entities && (
-					<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-				)}
+				{isLoading && !entities && <LoadingSpinner size="sm" variant="muted" />}
 			</div>
 
 			{/* Source Materials for Analysis */}
@@ -480,35 +496,24 @@ export function BiblePane() {
 					))}
 				</div>
 			) : (
-				<div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/10 p-8 text-center">
-					{isLoading ? (
-						<div className="flex flex-col items-center gap-3">
-							<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-							<span className="text-sm text-muted-foreground">
-								Loading entities...
-							</span>
-						</div>
-					) : (
-						<>
-							<div className="mb-4 rounded-full bg-gradient-to-br from-purple-500/20 to-blue-500/20 p-4">
-								<SparklesIcon className="h-6 w-6 text-purple-500" />
-							</div>
-							<h4 className="font-medium text-sm">Build Your World</h4>
-							<p className="mt-1 max-w-xs text-xs text-muted-foreground">
-								Ask the AI to create characters, locations, items, and events to
-								populate your Story Bible.
-							</p>
-							<div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-								<span className="rounded-full border px-2 py-1">
-									"Create a protagonist"
-								</span>
-								<span className="rounded-full border px-2 py-1">
-									"Add a mysterious forest"
-								</span>
-							</div>
-						</>
-					)}
-				</div>
+				<EmptyState
+					icon={isLoading ? undefined : SparklesIcon}
+					iconClassName="text-[var(--entity-character)]"
+					title={isLoading ? "Loading entities..." : "Build Your World"}
+					description={
+						isLoading
+							? undefined
+							: "Ask the AI to create characters, locations, items, and events to populate your Story Bible."
+					}
+					suggestions={
+						isLoading
+							? undefined
+							: ['"Create a protagonist"', '"Add a mysterious forest"']
+					}
+					action={
+						isLoading ? <LoadingSpinner size="md" variant="muted" /> : undefined
+					}
+				/>
 			)}
 		</div>
 	);

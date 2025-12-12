@@ -1,11 +1,13 @@
 "use client";
 
-import { CalendarIcon, ClockIcon, Loader2 } from "lucide-react";
+import { CalendarIcon, ClockIcon } from "lucide-react";
 import useSWR from "swr";
 import {
 	getTimelineEvents,
 	type TimelineEvent,
 } from "@/app/actions/project-stats";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
@@ -78,17 +80,18 @@ export function TimelinePane() {
 
 	if (!projectId) {
 		return (
-			<div className="flex h-full flex-col items-center justify-center p-8 text-center">
-				<CalendarIcon className="h-10 w-10 text-muted-foreground/50 mb-3" />
-				<p className="font-medium text-sm">No Project Selected</p>
-			</div>
+			<EmptyState
+				icon={CalendarIcon}
+				title="No Project Selected"
+				className="h-full m-4"
+			/>
 		);
 	}
 
 	if (isLoading && !events) {
 		return (
 			<div className="flex h-full flex-col items-center justify-center p-8">
-				<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+				<LoadingSpinner size="lg" variant="muted" />
 				<p className="mt-2 text-sm text-muted-foreground">
 					Loading timeline...
 				</p>
@@ -98,23 +101,17 @@ export function TimelinePane() {
 
 	if (!events || events.length === 0) {
 		return (
-			<div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/10 m-4 p-8 text-center">
-				<div className="mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-cyan-500/20 p-4">
-					<ClockIcon className="h-6 w-6 text-blue-500" />
-				</div>
-				<h4 className="font-medium text-sm">No Events Yet</h4>
-				<p className="mt-1 max-w-xs text-xs text-muted-foreground">
-					Create timeline events to track your story's history. Ask the AI:
-				</p>
-				<div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-					<span className="rounded-full border px-2 py-1">
-						"Create an event called The Great War"
-					</span>
-					<span className="rounded-full border px-2 py-1">
-						"Add the birth of the hero in 1990"
-					</span>
-				</div>
-			</div>
+			<EmptyState
+				icon={ClockIcon}
+				iconClassName="text-blue-500"
+				title="No Events Yet"
+				description="Create timeline events to track your story's history. Ask the AI:"
+				className="m-4"
+				suggestions={[
+					"Create an event called The Great War",
+					"Add the birth of the hero in 1990",
+				]}
+			/>
 		);
 	}
 

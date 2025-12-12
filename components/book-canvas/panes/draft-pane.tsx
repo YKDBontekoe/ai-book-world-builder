@@ -5,7 +5,6 @@ import {
 	CopyIcon,
 	DownloadIcon,
 	FileTextIcon,
-	Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -17,6 +16,8 @@ import {
 	type SerializedChapter,
 } from "@/app/actions/project-stats";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import {
 	Select,
 	SelectContent,
@@ -87,10 +88,11 @@ export function DraftPane() {
 
 	if (!projectId) {
 		return (
-			<div className="flex h-full flex-col items-center justify-center p-8 text-center bg-muted/5 rounded-xl border border-dashed m-4">
-				<FileTextIcon className="h-10 w-10 text-muted-foreground/50 mb-3" />
-				<p className="font-medium text-sm">No Project Selected</p>
-			</div>
+			<EmptyState
+				icon={FileTextIcon}
+				title="No Project Selected"
+				className="m-4"
+			/>
 		);
 	}
 
@@ -157,7 +159,7 @@ export function DraftPane() {
 			<div className="flex-1 overflow-auto p-6 md:p-8 bg-background">
 				{isLoadingDraft ? (
 					<div className="flex h-full items-center justify-center">
-						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+						<LoadingSpinner size="lg" variant="muted" />
 					</div>
 				) : draftContent ? (
 					<div className="prose prose-sm dark:prose-invert max-w-none">

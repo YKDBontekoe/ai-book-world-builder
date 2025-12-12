@@ -6,7 +6,6 @@ import {
 	CheckCircle2,
 	ChevronDown,
 	ChevronRight,
-	Loader2,
 	Pause,
 	Play,
 	Square,
@@ -22,7 +21,10 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Progress } from "@/components/ui/progress";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
@@ -208,13 +210,15 @@ export function GenerationDashboard({
 	const getStepIcon = (step: GenerationStep) => {
 		switch (step.status) {
 			case "completed":
-				return <CheckCircle2 className="h-4 w-4 text-green-500" />;
+				return (
+					<CheckCircle2 className="h-4 w-4 text-[var(--status-success)]" />
+				);
 			case "running":
-				return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+				return <LoadingSpinner size="sm" variant="info" />;
 			case "failed":
-				return <AlertCircle className="h-4 w-4 text-red-500" />;
+				return <AlertCircle className="h-4 w-4 text-[var(--status-error)]" />;
 			case "paused":
-				return <Pause className="h-4 w-4 text-amber-500" />;
+				return <Pause className="h-4 w-4 text-[var(--status-warning)]" />;
 			default:
 				return <div className="h-4 w-4 rounded-full border-2 border-muted" />;
 		}
@@ -281,7 +285,7 @@ export function GenerationDashboard({
 	if (isLoading) {
 		return (
 			<div className="flex h-full items-center justify-center">
-				<Loader2 className="h-8 w-8 animate-spin text-primary" />
+				<LoadingSpinner size="lg" variant="primary" />
 			</div>
 		);
 	}
@@ -289,10 +293,12 @@ export function GenerationDashboard({
 	if (error) {
 		return (
 			<div className="flex h-full items-center justify-center">
-				<div className="text-center">
-					<AlertCircle className="mx-auto h-8 w-8 text-red-500" />
-					<p className="mt-2 text-sm text-muted-foreground">{error}</p>
-				</div>
+				<EmptyState
+					icon={AlertCircle}
+					iconClassName="text-[var(--status-error)]"
+					title="Error"
+					description={error}
+				/>
 			</div>
 		);
 	}
@@ -316,17 +322,16 @@ export function GenerationDashboard({
 										: "Initializing..."}
 							</p>
 						</div>
-						<Badge
-							variant={isPaused ? "secondary" : "default"}
-							className={cn(
+						<StatusBadge
+							status={
 								generationStatus === "completed"
-									? "bg-green-500/20 text-green-600"
+									? "success"
 									: generationStatus === "failed"
-										? "bg-red-500/20 text-red-600"
+										? "error"
 										: isPaused
-											? "bg-amber-500/20 text-amber-600"
-											: "bg-blue-500/20 text-blue-600",
-							)}
+											? "warning"
+											: "running"
+							}
 						>
 							{generationStatus === "completed"
 								? "Complete"
@@ -335,7 +340,7 @@ export function GenerationDashboard({
 									: isPaused
 										? "Paused"
 										: "Running"}
-						</Badge>
+						</StatusBadge>
 					</div>
 
 					{/* Progress Bar */}
@@ -555,7 +560,7 @@ export function GenerationDashboard({
 									))}
 								{generationStatus === "running" && (
 									<div className="flex items-center gap-2 text-muted-foreground">
-										<Loader2 className="h-4 w-4 animate-spin" />
+										<LoadingSpinner size="sm" variant="muted" />
 										<span>Generating content...</span>
 									</div>
 								)}

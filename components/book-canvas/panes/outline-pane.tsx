@@ -4,7 +4,6 @@ import {
 	BookOpenIcon,
 	ChevronRightIcon,
 	FileTextIcon,
-	Loader2,
 	PenIcon,
 	SparklesIcon,
 } from "lucide-react";
@@ -14,6 +13,8 @@ import {
 	getOutlineData,
 	type SerializedOutline,
 } from "@/app/actions/project-stats";
+import { EmptyState } from "@/components/ui/empty-state";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
@@ -146,20 +147,19 @@ export function OutlinePane() {
 
 	if (!projectId) {
 		return (
-			<div className="flex h-full flex-col items-center justify-center p-8 text-center">
-				<BookOpenIcon className="h-10 w-10 text-muted-foreground/50 mb-3" />
-				<p className="font-medium text-sm">No Project Selected</p>
-				<p className="text-xs text-muted-foreground mt-1">
-					Select a project to view the story outline
-				</p>
-			</div>
+			<EmptyState
+				icon={BookOpenIcon}
+				title="No Project Selected"
+				description="Select a project to view the story outline"
+				className="h-full m-4"
+			/>
 		);
 	}
 
 	if (isLoading && !outline) {
 		return (
 			<div className="flex h-full flex-col items-center justify-center p-8">
-				<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+				<LoadingSpinner size="lg" variant="muted" />
 				<p className="mt-2 text-sm text-muted-foreground">Loading outline...</p>
 			</div>
 		);
@@ -167,24 +167,14 @@ export function OutlinePane() {
 
 	if (!outline) {
 		return (
-			<div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/10 m-4 p-8 text-center">
-				<div className="mb-4 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-500/20 p-4">
-					<PenIcon className="h-6 w-6 text-blue-500" />
-				</div>
-				<h4 className="font-medium text-sm">No Outline Yet</h4>
-				<p className="mt-1 max-w-xs text-xs text-muted-foreground">
-					Ask the AI to create an outline for your story. Describe your plot,
-					genre, and key characters.
-				</p>
-				<div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-					<span className="rounded-full border px-2 py-1">
-						"Create a fantasy outline"
-					</span>
-					<span className="rounded-full border px-2 py-1">
-						"Plan a 12-chapter thriller"
-					</span>
-				</div>
-			</div>
+			<EmptyState
+				icon={PenIcon}
+				iconClassName="text-blue-500"
+				title="No Outline Yet"
+				description="Ask the AI to create an outline for your story. Describe your plot, genre, and key characters."
+				className="m-4"
+				suggestions={["Create a fantasy outline", "Plan a 12-chapter thriller"]}
+			/>
 		);
 	}
 
@@ -202,9 +192,7 @@ export function OutlinePane() {
 					<h3 className="font-semibold text-lg">Outline</h3>
 					<p className="text-muted-foreground text-sm">Your story structure</p>
 				</div>
-				{isLoading && (
-					<Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
-				)}
+				{isLoading && <LoadingSpinner size="xs" variant="muted" />}
 			</div>
 
 			{/* Outline metadata */}
