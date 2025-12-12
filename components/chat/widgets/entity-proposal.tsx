@@ -68,86 +68,93 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 
 	if (status === "completed" || status === "error") {
 		return (
-			<div className="rounded-lg border p-4 text-sm bg-muted/50">
+			<div className="rounded-lg border border-border/50 p-4 text-sm bg-muted/30 flex items-center gap-2">
 				{status === "completed" && (
-					<CheckIcon className="inline mr-2 h-4 w-4 text-green-500" />
+					<CheckIcon className="h-4 w-4 text-green-500" />
 				)}
-				{status === "error" && (
-					<XIcon className="inline mr-2 h-4 w-4 text-red-500" />
-				)}
-				{resultMessage}
+				{status === "error" && <XIcon className="h-4 w-4 text-red-500" />}
+				<span className="text-muted-foreground">{resultMessage}</span>
 			</div>
 		);
 	}
 
 	return (
-		<Card className="w-full max-w-md">
-			<CardHeader className="pb-3">
+		<Card className="w-full max-w-md border-border/60 shadow-sm">
+			<CardHeader className="pb-3 px-4 pt-4">
 				<CardTitle className="text-base">Proposed Changes</CardTitle>
-				<CardDescription>
+				<CardDescription className="text-xs">
 					Review the following changes to your entities.
 				</CardDescription>
 			</CardHeader>
-			<CardContent className="grid gap-2 text-sm">
+			<CardContent className="grid gap-2 text-sm px-4 pb-2">
 				{operations.map((op, idx) => (
 					<div
 						key={idx}
-						className="flex items-start gap-2 rounded-md border p-2 bg-background"
+						className="group flex items-start gap-3 rounded-lg border border-border/40 p-3 bg-card hover:bg-muted/30 transition-colors"
 					>
-						<div className="mt-0.5">
+						<div className="mt-0.5 shrink-0">
 							{op.action === "create" && (
-								<PlusIcon className="h-4 w-4 text-green-500" />
+								<div className="flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
+									<PlusIcon className="h-3 w-3" />
+								</div>
 							)}
 							{op.action === "update" && (
-								<PencilIcon className="h-4 w-4 text-amber-500" />
+								<div className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400">
+									<PencilIcon className="h-3 w-3" />
+								</div>
 							)}
 							{op.action === "delete" && (
-								<TrashIcon className="h-4 w-4 text-red-500" />
+								<div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400">
+									<TrashIcon className="h-3 w-3" />
+								</div>
 							)}
 						</div>
-						<div className="flex-1 space-y-1">
-							<div className="font-medium capitalize">{op.action} Entity</div>
-							{op.payload?.name && (
-								<div>
-									Name:{" "}
-									<span className="text-muted-foreground">
-										{op.payload.name}
+						<div className="flex-1 space-y-1 min-w-0">
+							<div className="flex items-center justify-between">
+								<span className="font-medium capitalize text-foreground/90">
+									{op.action} Entity
+								</span>
+								{op.action === "delete" && op.entityId && (
+									<span className="font-mono text-[10px] text-muted-foreground/50 truncate max-w-[60px]">
+										{op.entityId}
 									</span>
+								)}
+							</div>
+
+							{op.payload?.name && (
+								<div className="text-xs">
+									<span className="text-muted-foreground">Name: </span>
+									<span className="font-medium">{op.payload.name}</span>
 								</div>
 							)}
 							{op.payload?.kind && (
-								<div>
-									Kind:{" "}
-									<span className="text-muted-foreground">
-										{op.payload.kind}
-									</span>
+								<div className="text-xs">
+									<span className="text-muted-foreground">Kind: </span>
+									<span className="font-medium">{op.payload.kind}</span>
 								</div>
 							)}
-							{op.action === "delete" && op.entityId && (
-								<div>
-									ID: <span className="font-mono text-xs">{op.entityId}</span>
-								</div>
-							)}
+
 							{op.payload?.summary && (
-								<div className="text-xs text-muted-foreground line-clamp-2">
-									{op.payload.summary}
+								<div className="text-[11px] text-muted-foreground/80 line-clamp-2 italic pt-0.5">
+									"{op.payload.summary}"
 								</div>
 							)}
 							{op.payload?.attributes && op.payload.attributes.length > 0 && (
-								<div className="text-xs text-muted-foreground">
-									{op.payload.attributes.length} attribute(s)
+								<div className="text-[10px] text-muted-foreground pt-1">
+									<span className="font-medium">{op.payload.attributes.length}</span> attribute(s) modified
 								</div>
 							)}
 						</div>
 					</div>
 				))}
 			</CardContent>
-			<CardFooter className="flex justify-end gap-2 pt-2">
+			<CardFooter className="flex justify-end gap-2 p-3 bg-muted/5 border-t border-border/30">
 				<Button
 					variant="ghost"
 					size="sm"
 					onClick={handleCancel}
 					disabled={status === "executing"}
+					className="h-7 text-xs"
 				>
 					Cancel
 				</Button>
@@ -155,11 +162,12 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 					size="sm"
 					onClick={handleConfirm}
 					disabled={status === "executing"}
+					className="h-7 text-xs"
 				>
 					{status === "executing" && (
-						<Loader2Icon className="mr-2 h-3.5 w-3.5 animate-spin" />
+						<Loader2Icon className="mr-2 h-3 w-3 animate-spin" />
 					)}
-					Confirm
+					Confirm Changes
 				</Button>
 			</CardFooter>
 		</Card>

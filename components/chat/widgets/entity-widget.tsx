@@ -69,9 +69,6 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 	const [summary, setSummary] = useState(entity.summary ?? "");
 	const [attributes, setAttributes] = useState(entity.attributes ?? []);
 
-	// Sync state when prop changes (if needed, though mostly used for initial render)
-	// useEffect(() => { ... }, [entity]);
-
 	const Icon = entityIcons[entity.kind as keyof typeof entityIcons] || BookOpen;
 	const colorClass =
 		entityColors[entity.kind as keyof typeof entityColors] ||
@@ -120,7 +117,7 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 		return (
 			<InteractiveWidget
 				isEditing={true}
-				headerIcon={<Icon size={18} />}
+				headerIcon={<Icon size={16} />}
 				headerTitle="Edit Entity"
 				headerColor={colorClass.replace("bg-", "bg- bg-opacity-20")}
 			>
@@ -214,7 +211,7 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 						</Button>
 						<Button size="sm" onClick={handleSave} disabled={isSaving}>
 							{isSaving && <Loader2 className="mr-2 size-3 animate-spin" />}
-							Save Changes
+							Save
 						</Button>
 					</div>
 				</div>
@@ -226,12 +223,12 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 
 	return (
 		<InteractiveWidget
-			headerIcon={<Icon size={18} />}
+			headerIcon={<Icon size={16} />}
 			headerTitle={entity.name}
 			headerSubtitle={entity.kind}
 			headerColor={colorClass.replace("bg-", "bg- bg-opacity-20")}
 		>
-			<div className="group/content flex flex-col gap-3 px-4 py-3">
+			<div className="group/content flex flex-col gap-3 px-4 pt-2 pb-4">
 				{entity.summary && (
 					<div className="text-muted-foreground text-sm leading-relaxed">
 						{entity.summary}
@@ -240,15 +237,17 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 
 				{/* Dates */}
 				{(entity.startDate || entity.endDate) && (
-					<div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+					<div className="flex flex-wrap gap-2 text-xs text-muted-foreground mt-1">
 						{entity.startDate && (
-							<span className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-								Start: {new Date(entity.startDate).toLocaleDateString()}
+							<span className="flex items-center gap-1 opacity-80">
+								<Calendar size={10} className="opacity-50" />
+								{new Date(entity.startDate).toLocaleDateString()}
 							</span>
 						)}
 						{entity.endDate && (
-							<span className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded">
-								End: {new Date(entity.endDate).toLocaleDateString()}
+							<span className="flex items-center gap-1 opacity-80">
+								<span>→</span>
+								{new Date(entity.endDate).toLocaleDateString()}
 							</span>
 						)}
 					</div>
@@ -256,39 +255,38 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 
 				{/* Attributes */}
 				{hasAttributes && (
-					<div className="grid grid-cols-2 gap-2">
-						{entity.attributes?.slice(0, 4).map((attr, i) => (
+					<div className="flex flex-wrap gap-2 mt-1">
+						{entity.attributes?.slice(0, 6).map((attr, i) => (
 							<div
 								key={i}
-								className="flex flex-col rounded-md border bg-muted/30 p-2"
+								className="flex items-center gap-1.5 rounded-full bg-secondary/50 px-2.5 py-1 text-xs transition-colors hover:bg-secondary"
 							>
-								<span className="text-[10px] uppercase text-muted-foreground font-semibold">
+								<span className="text-[10px] uppercase text-muted-foreground/70 font-semibold tracking-wide">
 									{attr.name}
 								</span>
-								<span
-									className="text-xs font-medium truncate"
-									title={attr.value}
-								>
+								<span className="w-[1px] h-3 bg-border/50" />
+								<span className="font-medium text-foreground/90">
 									{attr.value}
 								</span>
 							</div>
 						))}
-						{(entity.attributes?.length || 0) > 4 && (
-							<div className="text-[10px] text-muted-foreground self-center">
-								+{entity.attributes!.length - 4} more
+						{(entity.attributes?.length || 0) > 6 && (
+							<div className="text-[10px] text-muted-foreground self-center px-1">
+								+{entity.attributes!.length - 6} more
 							</div>
 						)}
 					</div>
 				)}
 			</div>
 
-			<div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2">
+			<div className="flex items-center justify-between border-t border-border/40 px-4 py-2 bg-muted/5 mt-auto">
 				{projectId || entity.projectId ? (
 					<Link
-						className="text-primary text-xs hover:underline"
+						className="text-primary/80 text-xs hover:underline hover:text-primary transition-colors flex items-center gap-1"
 						href={`/projects/${projectId || entity.projectId}/entities/${entity.id}`}
 					>
-						View details →
+						<span>Details</span>
+						<span className="text-[10px]">→</span>
 					</Link>
 				) : (
 					<span />
@@ -297,7 +295,7 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 				<Button
 					variant="ghost"
 					size="sm"
-					className="h-6 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+					className="h-6 gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2"
 					onClick={() => setIsEditing(true)}
 				>
 					<Pencil size={10} />

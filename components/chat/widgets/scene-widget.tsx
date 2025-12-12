@@ -85,7 +85,7 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 		return (
 			<InteractiveWidget
 				isEditing={true}
-				headerIcon={<ClapperboardIcon size={18} className="text-primary" />}
+				headerIcon={<ClapperboardIcon size={16} className="text-primary" />}
 				headerTitle="Edit Scene"
 				headerColor="bg-primary/10 ring-primary/20"
 			>
@@ -130,7 +130,7 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 						</Button>
 						<Button size="sm" onClick={handleSave} disabled={isSaving}>
 							{isSaving && <Loader2 className="mr-2 size-3 animate-spin" />}
-							Save Changes
+							Save
 						</Button>
 					</div>
 				</div>
@@ -140,26 +140,25 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 
 	return (
 		<InteractiveWidget
-			headerIcon={<ClapperboardIcon size={18} className="text-primary" />}
+			headerIcon={<ClapperboardIcon size={16} className="text-primary" />}
 			headerTitle={title}
 			headerSubtitle={`Seq: ${scene.sequence}`}
 			headerColor="bg-primary/10 ring-primary/20"
+			headerEnd={
+				<span
+					className={cn(
+						"rounded-full px-2 py-0.5 text-[10px] uppercase font-semibold tracking-wider",
+						statusColor,
+					)}
+				>
+					{status}
+				</span>
+			}
 		>
-			<div className="relative flex flex-col">
-				<div className="absolute top-3 right-4">
-					<span
-						className={cn(
-							"rounded-full px-1.5 py-0.5 text-[10px] uppercase font-semibold tracking-wider",
-							statusColor,
-						)}
-					>
-						{status}
-					</span>
-				</div>
-
+			<div className="relative flex flex-col pt-2">
 				{scene.content && (
-					<div className="px-4 py-8 text-muted-foreground text-sm leading-relaxed line-clamp-3">
-						<div className="flex items-center gap-1.5 mb-1 text-xs font-medium text-foreground/80">
+					<div className="px-4 pb-4 text-muted-foreground text-sm leading-relaxed line-clamp-3">
+						<div className="flex items-center gap-1.5 mb-1.5 text-xs font-medium text-foreground/80 opacity-60">
 							<FileTextIcon size={12} />
 							<span>Preview</span>
 						</div>
@@ -168,15 +167,15 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 				)}
 
 				{!scene.content && (
-					<div className="px-4 py-6 text-center text-xs text-muted-foreground italic">
+					<div className="px-4 pb-4 text-center text-xs text-muted-foreground italic opacity-50">
 						No content generated yet.
 					</div>
 				)}
 
-				<div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2">
+				<div className="flex items-center justify-between border-t border-border/40 px-4 py-2 bg-muted/5">
 					{projectId || scene.projectId ? (
 						<Link
-							className="flex items-center gap-1.5 text-primary text-xs hover:underline"
+							className="flex items-center gap-1.5 text-primary/80 text-xs hover:underline hover:text-primary transition-colors"
 							href={`/projects/${projectId || scene.projectId}/drafts`}
 						>
 							<Edit3Icon size={12} />
@@ -189,7 +188,7 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 					<Button
 						variant="ghost"
 						size="sm"
-						className="h-6 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
+						className="h-6 gap-1.5 text-xs text-muted-foreground hover:text-foreground px-2"
 						onClick={() => setIsEditing(true)}
 					>
 						<Pencil size={10} />
