@@ -24,6 +24,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { Progress } from "@/components/ui/progress";
+import { SectionHeader } from "@/components/ui/section-header";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
@@ -311,37 +312,38 @@ export function GenerationDashboard({
 			<div className="border-r flex flex-col min-h-0 overflow-hidden">
 				{/* Stats Header */}
 				<div className="border-b bg-muted/30 px-6 py-4 shrink-0">
-					<div className="flex items-center justify-between">
-						<div>
-							<h2 className="text-lg font-semibold">Generation Progress</h2>
-							<p className="text-sm text-muted-foreground">
-								{currentStep
-									? `Working on: ${getStepLabel(currentStep.stepType)}`
-									: generationStatus === "completed"
-										? "Generation complete!"
-										: "Initializing..."}
-							</p>
-						</div>
-						<StatusBadge
-							status={
-								generationStatus === "completed"
-									? "success"
+					<SectionHeader
+						title="Generation Progress"
+						description={
+							currentStep
+								? `Working on: ${getStepLabel(currentStep.stepType)}`
+								: generationStatus === "completed"
+									? "Generation complete!"
+									: "Initializing..."
+						}
+						action={
+							<StatusBadge
+								status={
+									generationStatus === "completed"
+										? "success"
+										: generationStatus === "failed"
+											? "error"
+											: isPaused
+												? "warning"
+												: "running"
+								}
+							>
+								{generationStatus === "completed"
+									? "Complete"
 									: generationStatus === "failed"
-										? "error"
+										? "Failed"
 										: isPaused
-											? "warning"
-											: "running"
-							}
-						>
-							{generationStatus === "completed"
-								? "Complete"
-								: generationStatus === "failed"
-									? "Failed"
-									: isPaused
-										? "Paused"
-										: "Running"}
-						</StatusBadge>
-					</div>
+											? "Paused"
+											: "Running"}
+							</StatusBadge>
+						}
+						className="mb-4"
+					/>
 
 					{/* Progress Bar */}
 					<div className="mt-4 space-y-2">
