@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { SectionHeader } from "@/components/ui/section-header";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 import { SceneCard } from "../cards/scene-card";
@@ -127,16 +128,16 @@ export function ScenePane() {
 
 	return (
 		<div className="p-4 space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h3 className="font-semibold text-lg">Scene Cards</h3>
-					<p className="text-muted-foreground text-sm">Beat-by-beat planning</p>
-				</div>
-				<Button size="sm" className="h-8 gap-1.5">
-					<SparklesIcon className="h-3.5 w-3.5" />
-					Auto-Plan
-				</Button>
-			</div>
+			<SectionHeader
+				title="Scene Cards"
+				description="Beat-by-beat planning"
+				action={
+					<Button size="sm" className="h-8 gap-1.5">
+						<SparklesIcon className="h-3.5 w-3.5" />
+						Auto-Plan
+					</Button>
+				}
+			/>
 
 			<div className="space-y-6">
 				{chapters.map((chapter) => (

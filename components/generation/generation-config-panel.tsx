@@ -13,9 +13,8 @@ import {
 	PenTool,
 	RefreshCw,
 	Settings,
-	Sparkles,
 	User,
-	Wand2,
+	Wand2, // Keep Wand2 used in header
 	Zap,
 } from "lucide-react";
 import { CollapsibleSection } from "@/components/ui/collapsible-section";
@@ -28,6 +27,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { SelectionCard } from "@/components/ui/selection-card";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
@@ -89,78 +89,7 @@ const imageModels = [
 	},
 ];
 
-function ModelCard({
-	model,
-	selected,
-	onSelect,
-	role,
-}: {
-	model: ChatModel;
-	selected: boolean;
-	onSelect: () => void;
-	role: "writing" | "reviewing";
-}) {
-	const benchmark = getModelBenchmark(model.id);
-	const isRecommended = isRecommendedFor(model.id, role);
-	const score = benchmark
-		? role === "writing"
-			? benchmark.writingScore
-			: benchmark.reviewingScore
-		: 3;
-	const costTier = benchmark?.costTier || "standard";
-
-	return (
-		<button
-			type="button"
-			onClick={onSelect}
-			className={cn(
-				"relative flex w-full items-center gap-3 rounded-lg border p-3 text-left transition-all",
-				selected
-					? "border-primary bg-primary/5 ring-2 ring-primary"
-					: "border-border/50 bg-background/50 hover:bg-muted/50 hover:border-border",
-				isRecommended && !selected && "border-amber-500/40",
-			)}
-		>
-			{/* Score circle */}
-			<div
-				className={cn(
-					"flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
-					score >= 5 &&
-						"bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-					score === 4 && "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-					score === 3 && "bg-amber-500/15 text-amber-600 dark:text-amber-400",
-					score < 3 && "bg-muted text-muted-foreground",
-				)}
-			>
-				{score}/5
-			</div>
-
-			{/* Content */}
-			<div className="flex-1 min-w-0">
-				<div className="flex items-center gap-2">
-					<span className="font-medium truncate">{model.name}</span>
-					{isRecommended && (
-						<Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-					)}
-				</div>
-				<div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
-					<span>${model.pricing?.output}/1M</span>
-					<span className="opacity-40">·</span>
-					<span className="capitalize">{costTier}</span>
-					{benchmark?.contextWindow && (
-						<>
-							<span className="opacity-40">·</span>
-							<span>{benchmark.contextWindow}</span>
-						</>
-					)}
-				</div>
-			</div>
-
-			{/* Selection indicator */}
-			{selected && <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />}
-		</button>
-	);
-}
+// ModelCard removed, replaced by SelectionCard
 
 // TipCard and GlassSection (CollapsibleSection) moved to components/ui/
 
@@ -263,15 +192,45 @@ export function GenerationConfigPanel({
 							</Tooltip>
 						</div>
 						<div className="grid gap-2 sm:grid-cols-2">
-							{chatModels.map((model) => (
-								<ModelCard
-									key={model.id}
-									model={model}
-									selected={settings.writerModelId === model.id}
-									onSelect={() => updateSetting("writerModelId", model.id)}
-									role="writing"
-								/>
-							))}
+							{chatModels.map((model) => {
+								const benchmark = getModelBenchmark(model.id);
+								const isRecommended = isRecommendedFor(model.id, "writing");
+								const score = benchmark ? benchmark.writingScore : 3;
+								const costTier = benchmark?.costTier || "standard";
+
+								return (
+									<SelectionCard
+										key={model.id}
+										selected={settings.writerModelId === model.id}
+										recommended={isRecommended}
+										onClick={() => updateSetting("writerModelId", model.id)}
+										title={model.name}
+										icon={
+											<div
+												className={cn(
+													"flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+													score >= 5 &&
+														"bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+													score === 4 &&
+														"bg-blue-500/15 text-blue-600 dark:text-blue-400",
+													score === 3 &&
+														"bg-amber-500/15 text-amber-600 dark:text-amber-400",
+													score < 3 && "bg-muted text-muted-foreground",
+												)}
+											>
+												{score}/5
+											</div>
+										}
+										footer={
+											<div className="flex items-center gap-1.5 opacity-80">
+												<span>${model.pricing?.output}/1M</span>
+												<span className="opacity-40">·</span>
+												<span className="capitalize">{costTier}</span>
+											</div>
+										}
+									/>
+								);
+							})}
 						</div>
 					</div>
 
@@ -293,15 +252,45 @@ export function GenerationConfigPanel({
 							</Tooltip>
 						</div>
 						<div className="grid gap-2 sm:grid-cols-2">
-							{chatModels.map((model) => (
-								<ModelCard
-									key={model.id}
-									model={model}
-									selected={settings.reviewerModelId === model.id}
-									onSelect={() => updateSetting("reviewerModelId", model.id)}
-									role="reviewing"
-								/>
-							))}
+							{chatModels.map((model) => {
+								const benchmark = getModelBenchmark(model.id);
+								const isRecommended = isRecommendedFor(model.id, "reviewing");
+								const score = benchmark ? benchmark.reviewingScore : 3;
+								const costTier = benchmark?.costTier || "standard";
+
+								return (
+									<SelectionCard
+										key={model.id}
+										selected={settings.reviewerModelId === model.id}
+										recommended={isRecommended}
+										onClick={() => updateSetting("reviewerModelId", model.id)}
+										title={model.name}
+										icon={
+											<div
+												className={cn(
+													"flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold",
+													score >= 5 &&
+														"bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+													score === 4 &&
+														"bg-blue-500/15 text-blue-600 dark:text-blue-400",
+													score === 3 &&
+														"bg-amber-500/15 text-amber-600 dark:text-amber-400",
+													score < 3 && "bg-muted text-muted-foreground",
+												)}
+											>
+												{score}/5
+											</div>
+										}
+										footer={
+											<div className="flex items-center gap-1.5 opacity-80">
+												<span>${model.pricing?.output}/1M</span>
+												<span className="opacity-40">·</span>
+												<span className="capitalize">{costTier}</span>
+											</div>
+										}
+									/>
+								);
+							})}
 						</div>
 					</div>
 
@@ -316,24 +305,18 @@ export function GenerationConfigPanel({
 							</div>
 							<div className="grid gap-2 sm:grid-cols-3">
 								{imageModels.map((model) => (
-									<button
+									<SelectionCard
 										key={model.id}
-										type="button"
-										className={cn(
-											"flex flex-col gap-1 rounded-xl border p-3 text-left backdrop-blur-sm transition-all",
-											model.id === "dall-e-3"
-												? "border-primary bg-primary/5 ring-1 ring-primary"
-												: "border-border/50 bg-background/50 hover:bg-background/80",
-										)}
-									>
-										<span className="font-medium">{model.name}</span>
-										<span className="text-xs text-muted-foreground">
-											{model.description}
-										</span>
-										<span className="text-xs text-primary">
-											{model.pricing}
-										</span>
-									</button>
+										// Since image model selection isn't in settings interface yet, we mock selection logic or check if it's there
+										// For now, assuming first is default or check generic
+										selected={false}
+										// Note: real implementation would need imageModelId in settingsSchema.
+										// Leaving onClick as placeholder
+										onClick={() => {}}
+										title={model.name}
+										description={model.description}
+										pricing={model.pricing}
+									/>
 								))}
 							</div>
 						</div>
