@@ -109,7 +109,7 @@ function PureSuggestedActions({
 							});
 						}}
 						className={cn(
-							"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shadow-sm backdrop-blur-sm",
+							"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap",
 							getCompactStyle(action.type),
 						)}
 					>
@@ -123,21 +123,21 @@ function PureSuggestedActions({
 
 	return (
 		<div
-			className="grid w-full gap-3 sm:grid-cols-2"
+			className="grid w-full gap-2 sm:grid-cols-2"
 			data-testid="suggested-actions"
 		>
 			{displaySuggestions.map((action, index) => (
 				<motion.div
 					animate={{ opacity: 1, y: 0 }}
-					exit={{ opacity: 0, y: 20 }}
-					initial={{ opacity: 0, y: 20 }}
+					exit={{ opacity: 0, y: 10 }}
+					initial={{ opacity: 0, y: 10 }}
 					key={action.label + index}
 					transition={{ delay: 0.05 * index }}
 				>
 					<Button
 						className={cn(
-							"group relative h-auto w-full flex-col items-start gap-2 overflow-hidden rounded-xl border p-4 text-left transition-all duration-300",
-							"hover:shadow-md",
+							"group relative h-auto w-full flex-col items-start gap-1 overflow-hidden rounded-lg border p-3 text-left transition-all duration-200",
+							"hover:bg-muted/50",
 							getCardStyle(action.type),
 						)}
 						onClick={() => {
@@ -148,29 +148,24 @@ function PureSuggestedActions({
 						}}
 						variant="ghost"
 					>
-						<div className="flex items-center gap-2 mb-1 w-full">
+						<div className="flex items-center gap-2 w-full">
 							<div
 								className={cn(
-									"p-1.5 rounded-md text-foreground",
-									getIconBg(action.type),
+									"flex size-6 items-center justify-center rounded-md bg-background/80 shadow-sm ring-1 ring-border/50",
 								)}
 							>
 								{getIconForType(action.type)}
 							</div>
-							<span className="font-semibold text-sm">{action.label}</span>
-							{action.reasoning && (
-								<span className="ml-auto text-[10px] opacity-60 uppercase font-bold tracking-wider border px-1.5 py-0.5 rounded-full">
-									AI
-								</span>
-							)}
+							<span className="font-medium text-sm text-foreground/90">
+								{action.label}
+							</span>
 						</div>
 
-						<div className="text-muted-foreground text-xs line-clamp-2 pl-1">
-							{action.reasoning || "Suggested based on your project context."}
-						</div>
-
-						{/* Hover Shine Effect */}
-						<div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:animate-shine pointer-events-none" />
+						{action.reasoning && (
+							<div className="text-muted-foreground text-[10px] line-clamp-1 pl-8 opacity-70">
+								{action.reasoning}
+							</div>
+						)}
 					</Button>
 				</motion.div>
 			))}
@@ -182,69 +177,29 @@ function PureSuggestedActions({
 function getIconForType(type: SuggestionType) {
 	switch (type) {
 		case "character":
-			return <UsersIcon className="size-4" />;
+			return <UsersIcon className="size-3.5" />;
 		case "world":
-			return <MapPinIcon className="size-4" />;
+			return <MapPinIcon className="size-3.5" />;
 		case "story":
-			return <BookOpenIcon className="size-4" />;
+			return <BookOpenIcon className="size-3.5" />;
 		case "analysis":
-			return <CalendarIcon className="size-4" />; // Using Calendar as placeholder or maybe a Chart icon if available
+			return <CalendarIcon className="size-3.5" />; // Using Calendar as placeholder or maybe a Chart icon if available
 		case "brainstorm":
-			return <LightbulbIcon className="size-4" />;
+			return <LightbulbIcon className="size-3.5" />;
 		default:
-			return <SparklesIcon className="size-4" />;
+			return <SparklesIcon className="size-3.5" />;
 	}
 }
 
 function getCompactStyle(type: SuggestionType) {
-	switch (type) {
-		case "character":
-			return "bg-blue-500/10 border-blue-500/20 text-blue-700 dark:text-blue-300 hover:bg-blue-500/20";
-		case "world":
-			return "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20";
-		case "story":
-			return "bg-amber-500/10 border-amber-500/20 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20";
-		case "analysis":
-			return "bg-purple-500/10 border-purple-500/20 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20";
-		case "brainstorm":
-			return "bg-cyan-500/10 border-cyan-500/20 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-500/20";
-		default:
-			return "bg-pink-500/10 border-pink-500/20 text-pink-700 dark:text-pink-300 hover:bg-pink-500/20";
-	}
+	// Simplified styles: removed specific colors for borders/backgrounds to reduce noise
+	// Now using a more uniform look with subtle tinting if needed, or just standard badges
+	return "bg-secondary/50 border-transparent hover:bg-secondary text-secondary-foreground";
 }
 
 function getCardStyle(type: SuggestionType) {
-	switch (type) {
-		case "character":
-			return "bg-gradient-to-br from-blue-500/5 to-transparent border-blue-200 dark:border-blue-900/50 hover:border-blue-400/50";
-		case "world":
-			return "bg-gradient-to-br from-emerald-500/5 to-transparent border-emerald-200 dark:border-emerald-900/50 hover:border-emerald-400/50";
-		case "story":
-			return "bg-gradient-to-br from-amber-500/5 to-transparent border-amber-200 dark:border-amber-900/50 hover:border-amber-400/50";
-		case "analysis":
-			return "bg-gradient-to-br from-purple-500/5 to-transparent border-purple-200 dark:border-purple-900/50 hover:border-purple-400/50";
-		case "brainstorm":
-			return "bg-gradient-to-br from-cyan-500/5 to-transparent border-cyan-200 dark:border-cyan-900/50 hover:border-cyan-400/50";
-		default:
-			return "bg-gradient-to-br from-pink-500/5 to-transparent border-pink-200 dark:border-pink-900/50 hover:border-pink-400/50";
-	}
-}
-
-function getIconBg(type: SuggestionType) {
-	switch (type) {
-		case "character":
-			return "bg-blue-100 dark:bg-blue-900/30";
-		case "world":
-			return "bg-emerald-100 dark:bg-emerald-900/30";
-		case "story":
-			return "bg-amber-100 dark:bg-amber-900/30";
-		case "analysis":
-			return "bg-purple-100 dark:bg-purple-900/30";
-		case "brainstorm":
-			return "bg-cyan-100 dark:bg-cyan-900/30";
-		default:
-			return "bg-pink-100 dark:bg-pink-900/30";
-	}
+	// Simplified card styles: flattened, less borders, no gradients
+	return "bg-card hover:border-primary/20";
 }
 
 function getFallbackSuggestions(
