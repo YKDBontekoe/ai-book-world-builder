@@ -3,6 +3,7 @@
 import { put } from "@vercel/blob";
 import { asc, eq } from "drizzle-orm";
 import epub from "epub-gen-memory";
+import path from "path";
 import PDFDocument from "pdfkit";
 import type { FullProjectData } from "@/lib/book-generation";
 import { db } from "@/lib/db/queries";
@@ -174,6 +175,14 @@ export async function generatePdf(
 			size: "A4",
 			margins: { top: 72, bottom: 72, left: 72, right: 72 },
 		});
+
+		// Register fonts explicitly to avoid ENOENT issues in Vercel/Next.js
+		const fontPath = path.join(process.cwd(), "lib", "fonts");
+		doc.registerFont("Helvetica", path.join(fontPath, "Helvetica.afm"));
+		doc.registerFont(
+			"Helvetica-Bold",
+			path.join(fontPath, "Helvetica-Bold.afm"),
+		);
 
 		const chunks: Buffer[] = [];
 
