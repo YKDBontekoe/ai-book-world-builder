@@ -5,3 +5,4 @@
 ## 2025-05-21 - [MacOS Design Overhaul Implementation]
 **Learning:** To achieve a "Native macOS" aesthetic using Tailwind and shadcn/ui, standard `rounded-md` tokens were insufficient. Updating base components (Button, Input, Select) to use `rounded-lg` (mapped to 16px via `--radius`) provided the desired floating, capsule-like appearance. Consistency across interactive elements is key to this design language.
 **Extension:** Applied 'bubble' styling to assistant messages and refined nested border radii in Book Canvas to maintain the fluid, rounded aesthetic throughout the application.
+**Conclusion:** Completed the macOS overhaul by updating all remaining UI components (Sheet, Toast, Tooltip, Sidebar controls) to use the `rounded-lg` (16px) radius and glass/translucent effects, ensuring a consistent design system across the entire application.

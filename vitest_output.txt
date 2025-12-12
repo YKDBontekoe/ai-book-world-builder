@@ -2,8 +2,8 @@
 
  RUN  v3.2.4 /app
 
- ❯ tests/unit/components/generation/config/metadata-section.test.tsx (1 test | 1 failed) 553ms
-   × MetadataSection > updates metadata fields through callbacks 552ms
+ ❯ tests/unit/components/generation/config/metadata-section.test.tsx (1 test | 1 failed) 570ms
+   × MetadataSection > updates metadata fields through callbacks 569ms
      → Found a label with the text of: Genre, however no form control was found associated to that label. Make sure you're using the "for" attribute or "aria-labelledby" attribute correctly.
 
 Ignored nodes: comments, script, style
@@ -191,8 +191,8 @@ Ignored nodes: comments, script, style
     [36m</div>[39m
   [36m</div>[39m
 [36m</body>[39m
- ❯ tests/unit/components/generation/config/writing-style-section.test.tsx (2 tests | 1 failed) 674ms
-   × WritingStyleSection > exposes preset selection changes 310ms
+ ❯ tests/unit/components/generation/config/writing-style-section.test.tsx (2 tests | 1 failed) 807ms
+   × WritingStyleSection > exposes preset selection changes 430ms
      → Found a label with the text of: Style Preset, however no form control was found associated to that label. Make sure you're using the "for" attribute or "aria-labelledby" attribute correctly.
 
 Ignored nodes: comments, script, style
@@ -358,4 +358,21 @@ Ignored nodes: comments, script, style
     [36m</div>[39m
   [36m</div>[39m
 [36m</body>[39m
-   ✓ WritingStyleSection > renders custom inputs and forwards updates  362ms
+   ✓ WritingStyleSection > renders custom inputs and forwards updates  376ms
+ ❯ tests/unit/api/files-upload.test.ts (6 tests | 5 failed) 25095ms
+   × POST /api/files/upload > persists a supported file type and returns the uploaded material 5016ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   × POST /api/files/upload > rejects unsupported MIME types 5006ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   × POST /api/files/upload > enforces per-role size caps 5008ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ POST /api/files/upload > requires an authenticated session 57ms
+   × POST /api/files/upload > returns an error when the project cannot be found 5002ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   × POST /api/files/upload > marks a pending material as failed when blob persistence errors 5002ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
