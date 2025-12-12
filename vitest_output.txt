@@ -1,0 +1,378 @@
+ DEPRECATED  "environmentMatchGlobs" is deprecated. Use `test.projects` to define different configurations instead.
+
+ RUN  v3.2.4 /app
+
+ ❯ tests/unit/components/generation/config/metadata-section.test.tsx (1 test | 1 failed) 518ms
+   × MetadataSection > updates metadata fields through callbacks 515ms
+     → Found a label with the text of: Genre, however no form control was found associated to that label. Make sure you're using the "for" attribute or "aria-labelledby" attribute correctly.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-state[39m=[32m"open"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border text-card-foreground shadow-sm overflow-hidden border-border/50 bg-background/50 backdrop-blur-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33maria-controls[39m=[32m"radix-:r3:"[39m
+          [33maria-expanded[39m=[32m"true"[39m
+          [33mclass[39m=[32m"flex flex-col space-y-1.5 p-6 cursor-pointer transition-colors hover:bg-muted/30"[39m
+          [33mdata-state[39m=[32m"open"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"font-semibold tracking-tight flex items-center justify-between text-base"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-amber-500"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33mclass[39m=[32m"lucide lucide-file-text h-5 w-5"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M14 2v4a2 2 0 0 0 2 2h4"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M10 9H8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 13H8"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M16 17H8"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [0mBook Metadata[0m
+            [36m</div>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform rotate-180"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m6 9 6 6 6-6"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mdata-state[39m=[32m"open"[39m
+          [33mid[39m=[32m"radix-:r3:"[39m
+          [33mstyle[39m=[32m"transition-duration: 0s; animation-name: none;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"p-6 space-y-4 pt-0"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"grid gap-4 sm:grid-cols-2"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"[39m
+                  [33mfor[39m=[32m":r0:"[39m
+                [36m>[39m
+                  [0mBook Title[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-xl border border-border/50 bg-background/50 px-3 py-2 text-sm backdrop-blur-sm transition-colors focus:ring-2 focus:ring-primary/20"[39m
+                  [33mid[39m=[32m":r0:"[39m
+                  [33mplaceholder[39m=[32m"Enter book title..."[39m
+                  [33mtype[39m=[32m"text"[39m
+                  [33mvalue[39m=[32m"Draft Title"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"[39m
+                  [33mfor[39m=[32m":r1:"[39m
+                [36m>[39m
+                  [0mAuthor Name[0m
+                [36m</label>[39m
+                [36m<input[39m
+                  [33mclass[39m=[32m"flex h-10 w-full rounded-xl border border-border/50 bg-background/50 px-3 py-2 text-sm backdrop-blur-sm transition-colors focus:ring-2 focus:ring-primary/20"[39m
+                  [33mid[39m=[32m":r1:"[39m
+                  [33mplaceholder[39m=[32m"Enter author name..."[39m
+                  [33mtype[39m=[32m"text"[39m
+                  [33mvalue[39m=[32m"Alex Writer"[39m
+                [36m/>[39m
+              [36m</div>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-2 sm:col-span-2"[39m
+              [36m>[39m
+                [36m<label[39m
+                  [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"[39m
+                  [33mfor[39m=[32m":r2:"[39m
+                [36m>[39m
+                  [0mGenre[0m
+                [36m</label>[39m
+                [36m<select>[39m
+                  [36m<option[39m
+                    [33mdisabled[39m=[32m""[39m
+                    [33mhidden[39m=[32m""[39m
+                    [33mvalue[39m=[32m""[39m
+                  [36m>[39m
+                    [0mSelect genre...[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"fantasy"[39m
+                  [36m>[39m
+                    [0mFantasy[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"scifi"[39m
+                  [36m>[39m
+                    [0mScience Fiction[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"mystery"[39m
+                  [36m>[39m
+                    [0mMystery[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"romance"[39m
+                  [36m>[39m
+                    [0mRomance[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"thriller"[39m
+                  [36m>[39m
+                    [0mThriller[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"literary"[39m
+                  [36m>[39m
+                    [0mLiterary Fiction[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"horror"[39m
+                  [36m>[39m
+                    [0mHorror[0m
+                  [36m</option>[39m
+                  [36m<option[39m
+                    [33mvalue[39m=[32m"historical"[39m
+                  [36m>[39m
+                    [0mHistorical Fiction[0m
+                  [36m</option>[39m
+                [36m</select>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ tests/unit/components/generation/config/writing-style-section.test.tsx (2 tests | 1 failed) 678ms
+   × WritingStyleSection > exposes preset selection changes 369ms
+     → Found a label with the text of: Style Preset, however no form control was found associated to that label. Make sure you're using the "for" attribute or "aria-labelledby" attribute correctly.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mdata-state[39m=[32m"open"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border text-card-foreground shadow-sm overflow-hidden border-border/50 bg-background/50 backdrop-blur-sm"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33maria-controls[39m=[32m"radix-:r3:"[39m
+          [33maria-expanded[39m=[32m"true"[39m
+          [33mclass[39m=[32m"flex flex-col space-y-1.5 p-6 cursor-pointer transition-colors hover:bg-muted/30"[39m
+          [33mdata-state[39m=[32m"open"[39m
+          [33mtype[39m=[32m"button"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"font-semibold tracking-tight flex items-center justify-between text-base"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex items-center gap-2"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-pink-500"[39m
+              [36m>[39m
+                [36m<svg[39m
+                  [33mclass[39m=[32m"lucide lucide-palette h-5 w-5"[39m
+                  [33mfill[39m=[32m"none"[39m
+                  [33mheight[39m=[32m"24"[39m
+                  [33mstroke[39m=[32m"currentColor"[39m
+                  [33mstroke-linecap[39m=[32m"round"[39m
+                  [33mstroke-linejoin[39m=[32m"round"[39m
+                  [33mstroke-width[39m=[32m"2"[39m
+                  [33mviewBox[39m=[32m"0 0 24 24"[39m
+                  [33mwidth[39m=[32m"24"[39m
+                  [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+                [36m>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"13.5"[39m
+                    [33mcy[39m=[32m"6.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m".5"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"17.5"[39m
+                    [33mcy[39m=[32m"10.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m".5"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"8.5"[39m
+                    [33mcy[39m=[32m"7.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m".5"[39m
+                  [36m/>[39m
+                  [36m<circle[39m
+                    [33mcx[39m=[32m"6.5"[39m
+                    [33mcy[39m=[32m"12.5"[39m
+                    [33mfill[39m=[32m"currentColor"[39m
+                    [33mr[39m=[32m".5"[39m
+                  [36m/>[39m
+                  [36m<path[39m
+                    [33md[39m=[32m"M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"[39m
+                  [36m/>[39m
+                [36m</svg>[39m
+              [36m</span>[39m
+              [0mWriting Style[0m
+            [36m</div>[39m
+            [36m<svg[39m
+              [33mclass[39m=[32m"lucide lucide-chevron-down h-4 w-4 text-muted-foreground transition-transform rotate-180"[39m
+              [33mfill[39m=[32m"none"[39m
+              [33mheight[39m=[32m"24"[39m
+              [33mstroke[39m=[32m"currentColor"[39m
+              [33mstroke-linecap[39m=[32m"round"[39m
+              [33mstroke-linejoin[39m=[32m"round"[39m
+              [33mstroke-width[39m=[32m"2"[39m
+              [33mviewBox[39m=[32m"0 0 24 24"[39m
+              [33mwidth[39m=[32m"24"[39m
+              [33mxmlns[39m=[32m"http://www.w3.org/2000/svg"[39m
+            [36m>[39m
+              [36m<path[39m
+                [33md[39m=[32m"m6 9 6 6 6-6"[39m
+              [36m/>[39m
+            [36m</svg>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mdata-state[39m=[32m"open"[39m
+          [33mid[39m=[32m"radix-:r3:"[39m
+          [33mstyle[39m=[32m"transition-duration: 0s; animation-name: none;"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"p-6 space-y-4 pt-0"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"space-y-2"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"[39m
+                [33mfor[39m=[32m":r0:"[39m
+              [36m>[39m
+                [0mStyle Preset[0m
+              [36m</label>[39m
+              [36m<select>[39m
+                [36m<option[39m
+                  [33mdisabled[39m=[32m""[39m
+                  [33mhidden[39m=[32m""[39m
+                  [33mvalue[39m=[32m""[39m
+                [36m/>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"hemingway"[39m
+                [36m>[39m
+                  [0mHemingway Sparse, direct prose[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"tolkien"[39m
+                [36m>[39m
+                  [0mTolkien Rich, descriptive worldbuilding[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"king"[39m
+                [36m>[39m
+                  [0mStephen King Suspenseful, character-driven[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"rowling"[39m
+                [36m>[39m
+                  [0mJ.K. Rowling Whimsical, accessible[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"sanderson"[39m
+                [36m>[39m
+                  [0mSanderson Systematic magic, epic scope[0m
+                [36m</option>[39m
+                [36m<option[39m
+                  [33mvalue[39m=[32m"custom"[39m
+                [36m>[39m
+                  [0mCustom Define your own style[0m
+                [36m</option>[39m
+              [36m</select>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"space-y-2"[39m
+            [36m>[39m
+              [36m<label[39m
+                [33mclass[39m=[32m"text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"[39m
+                [33mfor[39m=[32m":r2:"[39m
+              [36m>[39m
+                [0mAuthor Inspirations[0m
+              [36m</label>[39m
+              [36m<textarea[39m
+                [33mclass[39m=[32m"flex min-h-[80px] w-full border px-3 py-2 text-base shadow-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm rounded-xl border-border/50 bg-background/50"[39m
+                [33mid[39m=[32m":r2:"[39m
+                [33mplaceholder[39m=[32m"e.g., Brandon Sanderson, Patrick Rothfuss..."[39m
+                [33mrows[39m=[32m"2"[39m
+              [36m/>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+   ✓ WritingStyleSection > renders custom inputs and forwards updates  307ms
+ ❯ tests/unit/api/files-upload.test.ts (6 tests | 5 failed) 25056ms
+   × POST /api/files/upload > persists a supported file type and returns the uploaded material 5028ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   × POST /api/files/upload > rejects unsupported MIME types 5009ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   × POST /api/files/upload > enforces per-role size caps 5003ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   ✓ POST /api/files/upload > requires an authenticated session 6ms
+   × POST /api/files/upload > returns an error when the project cannot be found 5002ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+   × POST /api/files/upload > marks a pending material as failed when blob persistence errors 5001ms
+     → Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".

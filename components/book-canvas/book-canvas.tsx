@@ -140,7 +140,7 @@ export function BookCanvas() {
 						return (
 						<button
 							className={cn(
-								"relative flex flex-1 flex-col items-center justify-center gap-1 rounded-md px-2 py-1.5 font-medium text-xs transition-all",
+								"relative flex flex-1 flex-col items-center justify-center gap-1 rounded-sm px-2 py-1.5 font-medium text-xs transition-all",
 								isActive
 									? "text-foreground shadow-sm"
 									: "text-muted-foreground hover:text-foreground",
@@ -152,7 +152,7 @@ export function BookCanvas() {
 							{isActive && (
 								<motion.div
 									layoutId="activeTab"
-									className="absolute inset-0 rounded-md bg-background shadow-sm"
+									className="absolute inset-0 rounded-sm bg-background shadow-sm"
 									transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
 								/>
 							)}
