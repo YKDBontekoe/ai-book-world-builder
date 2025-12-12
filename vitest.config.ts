@@ -4,7 +4,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    environment: "node",
+    environment: "jsdom",
     setupFiles: ["./tests/vitest.setup.ts"],
     environmentMatchGlobs: [["tests/unit/components/**/*.{test,spec}.tsx", "jsdom"]],
   },

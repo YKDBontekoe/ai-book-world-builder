@@ -15,6 +15,7 @@ import {
 } from "@/app/actions/project-stats";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { SectionHeader } from "@/components/ui/section-header";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
@@ -187,13 +188,12 @@ export function OutlinePane() {
 	return (
 		<div className="flex flex-col gap-4 p-4">
 			{/* Header */}
-			<div className="flex items-center justify-between">
-				<div>
-					<h3 className="font-semibold text-lg">Outline</h3>
-					<p className="text-muted-foreground text-sm">Your story structure</p>
-				</div>
-				{isLoading && <LoadingSpinner size="xs" variant="muted" />}
-			</div>
+			{/* Header */}
+			<SectionHeader
+				title="Outline"
+				description="Your story structure"
+				action={isLoading && <LoadingSpinner size="xs" variant="muted" />}
+			/>
 
 			{/* Outline metadata */}
 			<OutlineHeader outline={outline} />

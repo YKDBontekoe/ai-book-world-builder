@@ -10,7 +10,7 @@ This document summarizes the key modules that power the chat experience, persist
 ## Data persistence
 - **Database access**: `lib/db/queries.ts` centralizes Drizzle ORM queries against Postgres for users, chats, messages, streams, votes, and documents. It handles lifecycle operations such as creating chats, saving or deleting messages, updating visibility, pagination for history, and persisting usage context for analytics and throttling.【F:lib/db/queries.ts†L1-L200】
 - **Schema coverage**: The same module offers helpers for counting messages per user (used in rate limits), saving stream IDs for resumable transport, pruning trailing messages, and recording votes or suggestions associated with chats.【F:lib/db/queries.ts†L200-L520】
-- **Source material ledger**: The `SourceMaterial` table records uploaded reference files with project and user links, MIME type, size, blob URL, and status transitions, indexed by project and user for quick retrieval during chat grounding.【F:lib/db/schema.ts†L67-L92】
+- **Source material ledger**: The `SourceMaterial` table records uploaded reference files with project and user links, MIME type, size, blob URL, and status transitions, indexed by project and user for quick retrieval during chat grounding.【F:lib/db/schema/source-material.ts†L17-L52】
 
 ## Authentication
 - **NextAuth configuration**: `app/(auth)/auth.ts` configures credential-based login and a guest-provider pathway. Sessions attach `id` and `type` to the JWT and session objects, allowing downstream handlers (such as `/api/chat` and file uploads) to authorize requests and apply entitlements based on user type.【F:app/(auth)/auth.ts†L1-L73】

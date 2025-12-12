@@ -3,7 +3,7 @@
 This repository uses Drizzle migrations stored in `lib/db/migrations`. Follow these steps to create, apply, and verify migrations locally and in CI/CD.
 
 ## Creating a migration
-- Update the schema in `lib/db/schema.ts` and run `pnpm db:generate` to produce a new SQL migration under `lib/db/migrations`.
+- Update the schema modules in `lib/db/schema` (barreled via `lib/db/schema/index.ts`) and run `pnpm db:generate` to produce a new SQL migration under `lib/db/migrations`.
 - Review the generated SQL for safety (idempotence where appropriate) and check the snapshot in `lib/db/migrations/meta` into version control.
 - Add any manual backfill scripts separately if data migrations are required.
 
