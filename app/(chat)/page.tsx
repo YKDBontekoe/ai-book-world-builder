@@ -9,53 +9,53 @@ import { generateUUID } from "@/lib/utils";
 import { auth } from "../(auth)/auth";
 
 export default function Page() {
-  return (
-    <Suspense fallback={<div className="flex h-dvh" />}>
-      <NewChatPage />
-    </Suspense>
-  );
+	return (
+		<Suspense fallback={<div className="flex h-dvh bg-background" />}>
+			<NewChatPage />
+		</Suspense>
+	);
 }
 
 async function NewChatPage() {
-  const session = await auth();
+	const session = await auth();
 
-  // Middleware will handle redirecting unauthenticated users
-  if (!session) {
-    return null;
-  }
+	// Middleware will handle redirecting unauthenticated users
+	if (!session) {
+		return null;
+	}
 
-  const id = generateUUID();
+	const id = generateUUID();
 
-  const cookieStore = await cookies();
-  const modelIdFromCookie = cookieStore.get("chat-model");
-  const projectFromCookie = cookieStore.get("chat-project");
-  const initialChatModel = getValidChatModelId(
-    modelIdFromCookie?.value || DEFAULT_CHAT_MODEL
-  );
+	const cookieStore = await cookies();
+	const modelIdFromCookie = cookieStore.get("chat-model");
+	const projectFromCookie = cookieStore.get("chat-project");
+	const initialChatModel = getValidChatModelId(
+		modelIdFromCookie?.value || DEFAULT_CHAT_MODEL,
+	);
 
-  const projects = await getProjectsVisibleToUser({
-    userId: session.user?.id as string,
-  });
+	const projects = await getProjectsVisibleToUser({
+		userId: session.user?.id as string,
+	});
 
-  const serializedProjects = projects.map(serializeProject);
-  const _initialProjectId = serializedProjects.find(
-    (project) => project.id === projectFromCookie?.value
-  )?.id;
+	const serializedProjects = projects.map(serializeProject);
+	const _initialProjectId = serializedProjects.find(
+		(project) => project.id === projectFromCookie?.value,
+	)?.id;
 
-  const availableModels = await getAvailableChatModels();
+	const availableModels = await getAvailableChatModels();
 
-  return (
-    <ChatPageContent
-      autoResume={false}
-      availableModels={availableModels}
-      id={id}
-      initialChatModel={initialChatModel}
-      initialMessages={[]}
-      initialProjectId={undefined}
-      initialProjects={serializedProjects}
-      initialVisibilityType="private"
-      isReadonly={false}
-      key={id}
-    />
-  );
+	return (
+		<ChatPageContent
+			autoResume={false}
+			availableModels={availableModels}
+			id={id}
+			initialChatModel={initialChatModel}
+			initialMessages={[]}
+			initialProjectId={undefined}
+			initialProjects={serializedProjects}
+			initialVisibilityType="private"
+			isReadonly={false}
+			key={id}
+		/>
+	);
 }

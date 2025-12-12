@@ -270,7 +270,7 @@ export function Chat({
 				mutate(["outline", projectId]);
 			}
 		}
-	}, [messages, mutate]);
+	}, [messages, mutate, selectedProjectIdRef]);
 
 	const query = searchParams.get("query");
 	const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
@@ -295,11 +295,17 @@ export function Chat({
 		}
 
 		// Only update URL if we are mostly sure the chat is created (has messages)
-		// and we are currently on the root path
-		if (messages.length > 0 && window.location.pathname === "/") {
+		// and we are currently on the root path. We wait for at least 2 messages (user + assistant)
+		// or if we have 1 message and it is NOT loading (which shouldn't happen for new chat but valid safety)
+		if (
+			messages.length > 0 &&
+			window.location.pathname === "/" &&
+			!status.includes("streaming") &&
+			messages.some((m) => m.role !== "user")
+		) {
 			window.history.replaceState({}, "", `/chat/${id}`);
 		}
-	}, [id, router, messages.length]);
+	}, [id, router, messages, status]);
 
 	const { data: votes } = useSWR<Vote[]>(
 		messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
