@@ -343,59 +343,63 @@ export function Chat({
 						selectedVisibilityType={initialVisibilityType}
 					/>
 
-					<Messages
-						chatId={id}
-						isArtifactVisible={isArtifactVisible}
-						isReadonly={isReadonly}
-						messages={messages}
-						regenerate={regenerate}
-						selectedModelId={initialChatModel}
-						selectedProject={selectedProject}
-						selectedVisibilityType={visibilityType}
-						sendMessage={sendMessage}
-						setMessages={setMessages}
-						status={status}
-						votes={votes}
-					/>
+					<div className="relative flex-1 overflow-hidden">
+						<Messages
+							chatId={id}
+							isArtifactVisible={isArtifactVisible}
+							isReadonly={isReadonly}
+							messages={messages}
+							regenerate={regenerate}
+							selectedModelId={initialChatModel}
+							selectedProject={selectedProject}
+							selectedVisibilityType={visibilityType}
+							sendMessage={sendMessage}
+							setMessages={setMessages}
+							status={status}
+							votes={votes}
+						/>
 
-					<div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl flex-col gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
-						<ProcessLogs logs={processLogs} />
-						{!isReadonly && (
-							<>
-								{messages.length > 0 && (
-									<div className="mb-2">
-										<SuggestedActions
+						<div className="absolute bottom-0 z-10 w-full bg-gradient-to-t from-background via-background/80 to-transparent pb-4 pt-10">
+							<div className="mx-auto flex w-full max-w-4xl flex-col gap-2 px-2 md:px-4">
+								<ProcessLogs logs={processLogs} />
+								{!isReadonly && (
+									<>
+										{messages.length > 0 && (
+											<div className="mb-2">
+												<SuggestedActions
+													chatId={id}
+													selectedProject={selectedProject}
+													selectedVisibilityType={visibilityType}
+													sendMessage={sendMessage}
+													isCompact={true}
+													messages={messages}
+													selectedModelId={currentModelId}
+												/>
+											</div>
+										)}
+										<AgentCapabilities className="mb-2" />
+										<MultimodalInput
+											attachments={attachments}
+											availableModels={availableModels}
 											chatId={id}
-											selectedProject={selectedProject}
+											input={input}
+											messages={messages}
+											onModelChange={setCurrentModelId}
+											projectId={selectedProjectId}
+											selectedModelId={currentModelId}
 											selectedVisibilityType={visibilityType}
 											sendMessage={sendMessage}
-											isCompact={true}
-											messages={messages}
-											selectedModelId={currentModelId}
+											setAttachments={setAttachments}
+											setInput={setInput}
+											setMessages={setMessages}
+											status={status}
+											stop={stop}
+											usage={usage}
 										/>
-									</div>
+									</>
 								)}
-								<AgentCapabilities className="mb-2" />
-								<MultimodalInput
-									attachments={attachments}
-									availableModels={availableModels}
-									chatId={id}
-									input={input}
-									messages={messages}
-									onModelChange={setCurrentModelId}
-									projectId={selectedProjectId}
-									selectedModelId={currentModelId}
-									selectedVisibilityType={visibilityType}
-									sendMessage={sendMessage}
-									setAttachments={setAttachments}
-									setInput={setInput}
-									setMessages={setMessages}
-									status={status}
-									stop={stop}
-									usage={usage}
-								/>
-							</>
-						)}
+							</div>
+						</div>
 					</div>
 				</div>
 			</div>

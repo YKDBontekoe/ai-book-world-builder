@@ -37,17 +37,20 @@
 	--chart-3: hsl(197 37% 24%);
 	--chart-4: hsl(43 74% 66%);
 	--chart-5: hsl(27 87% 67%);
-	--sidebar-background: hsl(0 0% 98%);
+
+	/* MacOS Style Sidebar */
+	--sidebar-background: hsl(0 0% 96% / 0.8);
 	--sidebar-foreground: hsl(240 5.3% 26.1%);
-	--sidebar-primary: hsl(240 5.9% 10%);
-	--sidebar-primary-foreground: hsl(0 0% 98%);
-	--sidebar-accent: hsl(240 4.8% 95.9%);
+	--sidebar-primary: hsl(212 100% 48%); /* Apple Blue */
+	--sidebar-primary-foreground: hsl(0 0% 100%);
+	--sidebar-accent: hsl(240 4.8% 90%);
 	--sidebar-accent-foreground: hsl(240 5.9% 10%);
-	--sidebar-border: hsl(220 13% 91%);
+	--sidebar-border: hsl(220 13% 91% / 0.5);
 	--sidebar-ring: hsl(217.2 91.2% 59.8%);
-	/* border radius unit */
-	--radius: 0.75rem;
-	--sidebar: hsl(0 0% 98%);
+
+	/* border radius unit - Larger for MacOS feel */
+	--radius: 1rem;
+	--sidebar: hsl(0 0% 96% / 0.8);
 
 	/* Status Colors */
 	--status-success: hsl(142 76% 36%);
@@ -76,18 +79,18 @@
 	--entity-organization-bg: hsl(340 65% 55% / 0.1);
 
 	/* Glass Effect */
-	--glass-bg: hsl(0 0% 100% / 0.5);
-	--glass-border: hsl(0 0% 0% / 0.05);
-	--glass-blur: 8px;
+	--glass-bg: hsl(0 0% 100% / 0.7);
+	--glass-border: hsl(0 0% 100% / 0.2);
+	--glass-blur: 20px;
 }
 
 /* define design tokens (dark mode) */
 .dark {
 	--background: hsl(240 10% 3.9%);
 	--foreground: hsl(0 0% 98%);
-	--card: hsl(240 10% 3.9%);
+	--card: hsl(240 10% 5%);
 	--card-foreground: hsl(0 0% 98%);
-	--popover: hsl(240 10% 3.9%);
+	--popover: hsl(240 10% 5%);
 	--popover-foreground: hsl(0 0% 98%);
 	--primary: hsl(0 0% 98%);
 	--primary-foreground: hsl(240 5.9% 10%);
@@ -107,18 +110,20 @@
 	--chart-3: hsl(30 80% 55%);
 	--chart-4: hsl(280 65% 60%);
 	--chart-5: hsl(340 75% 55%);
-	--sidebar-background: hsl(240 5.9% 10%);
+
+	/* MacOS Dark Sidebar */
+	--sidebar-background: hsl(240 5.9% 10% / 0.7);
 	--sidebar-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-primary: hsl(224.3 76.3% 48%);
+	--sidebar-primary: hsl(212 100% 50%);
 	--sidebar-primary-foreground: hsl(0 0% 100%);
-	--sidebar-accent: hsl(240 3.7% 15.9%);
+	--sidebar-accent: hsl(240 3.7% 20%);
 	--sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-border: hsl(240 3.7% 15.9%);
+	--sidebar-border: hsl(240 3.7% 15.9% / 0.3);
 	--sidebar-ring: hsl(217.2 91.2% 59.8%);
-	--sidebar: hsl(240 5.9% 10%);
+	--sidebar: hsl(240 5.9% 10% / 0.7);
 
 	/* Glass Effect - Dark mode */
-	--glass-bg: hsl(0 0% 0% / 0.5);
+	--glass-bg: hsl(0 0% 15% / 0.6);
 	--glass-border: hsl(0 0% 100% / 0.1);
 }
 
@@ -181,9 +186,6 @@
   The default border color has changed to `currentcolor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
   looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
 */
 @layer base {
 	*,
@@ -226,24 +228,26 @@
 		}
 	}
 
-	/* Glassmorphism Utilities */
+	/* Glassmorphism Utilities - Refined for Apple Look */
 	.glass-panel {
-		@apply bg-background/60 backdrop-blur-xl border-border/50;
+		@apply bg-sidebar/80 backdrop-blur-2xl border-sidebar-border/50;
 	}
 
+    .glass {
+        @apply bg-white/70 dark:bg-black/60 backdrop-blur-xl backdrop-saturate-150 border border-white/20 dark:border-white/10;
+    }
+
 	.glass-overlay {
-		@apply bg-black/30 backdrop-blur-sm;
+		@apply bg-black/30 backdrop-blur-md;
 	}
 
 	.glass-surface {
-		@apply bg-background/50 backdrop-blur-sm;
+		@apply bg-background/50 backdrop-blur-md;
 	}
 }
 
 @layer base {
-	* {
-		@apply border-border;
-	}
+    /* REMOVED: * { @apply border-border; } - This was causing the "Grid" look */
 
 	body {
 		@apply bg-background text-foreground;
@@ -359,8 +363,9 @@
 }
 
 @layer base {
+    /* Only apply outline ring if needed, but remove general border-border */
 	* {
-		@apply border-border outline-ring/50;
+		@apply outline-ring/50;
 	}
 	body {
 		@apply bg-background text-foreground;
