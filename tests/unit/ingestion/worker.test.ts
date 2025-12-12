@@ -1,18 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { SourceMaterialWithProcessing } from "@/lib/db/queries";
 import type {
   NewSourceMaterialChapter,
   NewSourceMaterialChunk,
   SourceMaterial,
   SourceMaterialProcessing,
 } from "@/lib/db/schema";
-import {
-  type ExtractedContent,
-  type IngestionRepository,
-  normalizeTextContent,
-  type SourceMaterialExtractor,
-  SourceMaterialWorker,
-} from "@/lib/ingestion/worker";
+import { ExtractorRegistry } from "@/lib/ingestion/extractors";
+import type { IngestionRepository, SourceMaterialWithProcessing } from "@/lib/ingestion/repository";
+import { SourceMaterialWorker, normalizeTextContent } from "@/lib/ingestion/worker";
+import type { ExtractionStrategy } from "@/lib/ingestion/types";
 import { generateUUID } from "@/lib/utils";
 
 class InMemoryRepository implements IngestionRepository {
@@ -144,8 +140,9 @@ const textFetcher = async (body: string) =>
     headers: { "content-type": "text/plain" },
   });
 
-const extractor: SourceMaterialExtractor = {
-  extract: async ({ bytes }): Promise<ExtractedContent> => {
+const extractorStrategy: ExtractionStrategy = {
+  mimeTypes: ["text/plain"],
+  extract: async ({ bytes }) => {
     const text = new TextDecoder().decode(bytes);
     return {
       text,
@@ -153,6 +150,12 @@ const extractor: SourceMaterialExtractor = {
       metadata: { bytes: bytes.byteLength },
     };
   },
+};
+
+const registryWith = (strategy: ExtractionStrategy): ExtractorRegistry => {
+  const registry = new ExtractorRegistry();
+  registry.register(strategy);
+  return registry;
 };
 
 describe("SourceMaterialWorker", () => {
@@ -163,9 +166,8 @@ describe("SourceMaterialWorker", () => {
 
     const worker = new SourceMaterialWorker({
       repository: repo,
-      extractor,
-      fetcher: () =>
-        textFetcher("Intro\nBody content that spans multiple chunks."),
+      extractorRegistry: registryWith(extractorStrategy),
+      fetcher: () => textFetcher("Intro\nBody content that spans multiple chunks."),
       chunkSize: 20,
       batchSize: 1,
     });
@@ -188,30 +190,31 @@ describe("SourceMaterialWorker", () => {
     const material: SourceMaterial = { ...baseMaterial, id: generateUUID() };
 
     const repo = new InMemoryRepository([{ material, processing: null }]);
-    const failingExtractor: SourceMaterialExtractor = {
+    const failingRegistry = registryWith({
+      mimeTypes: ["text/plain"],
       extract: async () => {
         throw new Error("Unable to parse file");
       },
-    };
+    });
 
     const worker = new SourceMaterialWorker({
       repository: repo,
-      extractor: failingExtractor,
+      extractorRegistry: failingRegistry,
       fetcher: () => textFetcher("irrelevant"),
       batchSize: 1,
-      maxAttempts: 2,
+      backoff: { maxAttempts: 2, baseDelayMs: 10 },
     });
 
+    const startedAt = Date.now();
     await worker.runBatch();
 
     const firstProcessing = repo.processing.get(material.id);
 
     expect(firstProcessing?.status).toBe("uploaded");
     expect(firstProcessing?.attempts).toBe(1);
-    expect(firstProcessing?.nextAttemptAt.getTime()).toBeGreaterThan(
-      Date.now()
-    );
+    expect(firstProcessing?.nextAttemptAt.getTime()).toBeGreaterThan(startedAt);
 
+    await new Promise((resolve) => setTimeout(resolve, 25));
     await worker.runBatch();
 
     const finalProcessing = repo.processing.get(material.id);
