@@ -225,6 +225,19 @@
 			--background-end-rgb: 0, 0, 0;
 		}
 	}
+
+	/* Glassmorphism Utilities */
+	.glass-panel {
+		@apply bg-background/60 backdrop-blur-xl border-border/50;
+	}
+
+	.glass-overlay {
+		@apply bg-black/30 backdrop-blur-sm;
+	}
+
+	.glass-surface {
+		@apply bg-background/50 backdrop-blur-sm;
+	}
 }
 
 @layer base {

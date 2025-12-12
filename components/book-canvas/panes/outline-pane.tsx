@@ -107,7 +107,7 @@ function ChapterItem({
 
 function OutlineHeader({ outline }: { outline: SerializedOutline }) {
 	return (
-		<div className="rounded-xl border bg-gradient-to-br from-primary/5 to-transparent p-4">
+		<div className="rounded-xl border glass-panel p-4">
 			<div className="flex items-start justify-between gap-3">
 				<div className="flex-1 min-w-0">
 					<h4 className="font-semibold text-base truncate">{outline.title}</h4>

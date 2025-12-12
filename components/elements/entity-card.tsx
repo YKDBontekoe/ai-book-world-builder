@@ -147,7 +147,10 @@ export function EntityCard({
 	return (
 		<Card
 			variant="interactive"
-			className={cn("group relative p-3 pr-8", className)}
+			className={cn(
+				"group relative p-3 pr-8 glass-surface border-border/50",
+				className,
+			)}
 		>
 			<div className="flex items-start justify-between gap-2">
 				<div className="flex-1 min-w-0">

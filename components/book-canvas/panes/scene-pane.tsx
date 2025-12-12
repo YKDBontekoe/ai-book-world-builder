@@ -21,7 +21,7 @@ function ChapterSection({ chapter }: { chapter: SerializedChapterWithScenes }) {
 	return (
 		<div className="space-y-2">
 			<button
-				className="flex w-full items-center justify-between sticky top-0 z-10 bg-background/95 backdrop-blur-sm p-2 -mx-2 border-b cursor-pointer hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-left"
+				className="flex w-full items-center justify-between sticky top-0 z-10 glass-panel rounded-lg mb-2 p-3 cursor-pointer hover:bg-muted/50 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring text-left"
 				onClick={() => setExpanded(!expanded)}
 				type="button"
 			>
@@ -55,7 +55,7 @@ function ChapterSection({ chapter }: { chapter: SerializedChapterWithScenes }) {
 			</button>
 
 			{expanded && (
-				<div className="space-y-3 pl-2 border-l-2 border-muted ml-1">
+				<div className="space-y-3 px-1">
 					{chapter.scenes.length > 0 ? (
 						chapter.scenes.map((scene) => (
 							<SceneCard

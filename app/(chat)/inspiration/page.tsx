@@ -58,8 +58,11 @@ export default async function InspirationPage() {
 							</h2>
 							<GridList columns={{ md: 2 }}>
 								{processedMaterials.map((material) => (
-									<Card key={material.id} className="relative overflow-hidden">
-										<div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+									<Card
+										key={material.id}
+										className="relative overflow-hidden glass-surface border-border/50"
+									>
+										<div className="absolute inset-0 pointer-events-none" />
 										<CardHeader className="flex flex-row items-start justify-between gap-4">
 											<div className="flex items-start gap-3">
 												<FileIcon mimeType={material.mimeType} size={32} />
@@ -102,7 +105,10 @@ export default async function InspirationPage() {
 							</h2>
 							<GridList columns={{ md: 2 }}>
 								{pendingMaterials.map((material) => (
-									<Card key={material.id} className="opacity-60">
+									<Card
+										key={material.id}
+										className="opacity-60 glass-surface border-border/40"
+									>
 										<CardHeader className="flex flex-row items-center gap-4">
 											<FileIcon
 												mimeType={material.mimeType}
