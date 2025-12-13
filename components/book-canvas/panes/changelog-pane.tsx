@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
 	ActivityIcon,
 	CheckCircle2Icon,
@@ -7,21 +8,24 @@ import {
 	Loader2,
 	XCircleIcon,
 } from "lucide-react";
-import useSWR from "swr";
 import { getGenerationLog } from "@/app/actions/project-stats";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { GenerationTaskLog } from "@/lib/db/schema";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
 export function ChangeLogPane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: log, isLoading } = useSWR(
-		projectId ? ["generation-log", projectId] : null,
-		([_, id]) => getGenerationLog(id),
-		{ refreshInterval: 3000 }, // Live monitoring
-	);
+	const { data: log, isLoading } = useQuery({
+		queryKey: projectId
+			? QUERY_KEYS.changelog(projectId)
+			: ["changelog", "null"],
+		queryFn: () => (projectId ? getGenerationLog(projectId) : Promise.resolve(null)),
+		enabled: !!projectId,
+		refetchInterval: 3000,
+	});
 
 	// Safely parse log if needed, but schema says it's typed.
 	// However, Drizzle returns JSON fields as `unknown` or typed object if asserted.

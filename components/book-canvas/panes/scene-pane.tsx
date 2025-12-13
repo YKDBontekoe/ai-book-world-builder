@@ -1,8 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { BookOpenIcon, PlusIcon, SparklesIcon } from "lucide-react";
 import { useState } from "react";
-import useSWR from "swr";
 import {
 	getScenesData,
 	type SerializedChapterWithScenes,
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SectionHeader } from "@/components/ui/section-header";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 import { SceneCard } from "../cards/scene-card";
@@ -85,11 +86,12 @@ function ChapterSection({ chapter }: { chapter: SerializedChapterWithScenes }) {
 export function ScenePane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: chapters, isLoading } = useSWR(
-		projectId ? ["scenes", projectId] : null,
-		([_, id]) => getScenesData(id),
-		{ refreshInterval: 5000 },
-	);
+	const { data: chapters, isLoading } = useQuery({
+		queryKey: projectId ? QUERY_KEYS.scenes(projectId) : ["scenes", "null"],
+		queryFn: () => (projectId ? getScenesData(projectId) : Promise.resolve(null)),
+		enabled: !!projectId,
+		refetchInterval: 5000,
+	});
 
 	if (!projectId) {
 		return (

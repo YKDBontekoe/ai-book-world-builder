@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	BookOpenIcon,
 	BookUp2Icon,
@@ -13,9 +14,8 @@ import {
 	SparklesIcon,
 	UsersIcon,
 } from "lucide-react";
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import useSWR, { useSWRConfig } from "swr";
 import {
 	analyzeBook,
 	getSourceMaterialsForProject,
@@ -31,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SectionHeader } from "@/components/ui/section-header";
-import { cn } from "@/lib/utils";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { useBookCanvas } from "../book-canvas-context";
 
 type SerializedEntity = {
@@ -130,15 +130,53 @@ function EntityGroupSection({
 
 // Source Materials Section with Analyze Button
 function SourceMaterialsSection({ projectId }: { projectId: string }) {
-	const [isPending, startTransition] = useTransition();
+	const queryClient = useQueryClient();
 	const [analyzedIds, setAnalyzedIds] = useState<Set<string>>(new Set());
-	const { mutate } = useSWRConfig();
 
-	const { data: materials, isLoading } = useSWR(
-		["source-materials", projectId],
-		([_, id]) => getSourceMaterialsForProject(id),
-		{ refreshInterval: 10000 },
-	);
+	// Source materials often don't have a specific key factory, let's assume one or use inline
+	const { data: materials, isLoading } = useQuery({
+		queryKey: ["source-materials", projectId],
+		queryFn: () => getSourceMaterialsForProject(projectId),
+		refetchInterval: 10000,
+	});
+
+	const { mutate: analyze, isPending } = useMutation({
+		mutationFn: async ({
+			materialId,
+			filename,
+		}: { materialId: string; filename: string }) => {
+			return analyzeBook({
+				sourceMaterialId: materialId,
+				projectId,
+				extractRelationships: true,
+			});
+		},
+		onMutate: ({ filename }) => {
+			return { toastId: toast.loading(`Analyzing "${filename}"...`) };
+		},
+		onSuccess: (response, { materialId }, context) => {
+			if (response.success) {
+				toast.success(
+					`Created ${response.result.stats.entitiesCreated} entities and ${response.result.stats.relationshipsCreated} relationships!`,
+					{ id: context?.toastId },
+				);
+				setAnalyzedIds((prev) => new Set([...prev, materialId]));
+				// Refresh entities and relationships
+				queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entities(projectId) });
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.relationships(projectId),
+				});
+			} else {
+				toast.error(response.error, { id: context?.toastId });
+			}
+		},
+		onError: (error, _, context) => {
+			toast.error(
+				error instanceof Error ? error.message : "Analysis failed",
+				{ id: context?.toastId },
+			);
+		},
+	});
 
 	const processedMaterials =
 		materials?.filter((m) => m.status === "processed") ?? [];
@@ -146,31 +184,6 @@ function SourceMaterialsSection({ projectId }: { projectId: string }) {
 	if (isLoading || processedMaterials.length === 0) {
 		return null;
 	}
-
-	const handleAnalyze = (materialId: string, filename: string) => {
-		startTransition(async () => {
-			const toastId = toast.loading(`Analyzing "${filename}"...`);
-
-			const response = await analyzeBook({
-				sourceMaterialId: materialId,
-				projectId,
-				extractRelationships: true,
-			});
-
-			if (response.success) {
-				toast.success(
-					`Created ${response.result.stats.entitiesCreated} entities and ${response.result.stats.relationshipsCreated} relationships!`,
-					{ id: toastId },
-				);
-				setAnalyzedIds((prev) => new Set([...prev, materialId]));
-				// Refresh entities and relationships
-				await mutate(["entities", projectId]);
-				await mutate(["relationships", projectId]);
-			} else {
-				toast.error(response.error, { id: toastId });
-			}
-		});
-	};
 
 	return (
 		<div className="space-y-2 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
@@ -203,7 +216,9 @@ function SourceMaterialsSection({ projectId }: { projectId: string }) {
 									size="sm"
 									variant="ghost"
 									className="h-7 px-2 gap-1 shrink-0"
-									onClick={() => handleAnalyze(material.id, material.filename)}
+									onClick={() =>
+										analyze({ materialId: material.id, filename: material.filename })
+									}
 									disabled={isPending}
 								>
 									{isPending ? (
@@ -225,17 +240,21 @@ function SourceMaterialsSection({ projectId }: { projectId: string }) {
 export function BiblePane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: entities, isLoading: entitiesLoading } = useSWR(
-		projectId ? ["entities", projectId] : null,
-		([_, id]) => getEntities(id),
-		{ refreshInterval: 3000 },
-	);
+	const { data: entities, isLoading: entitiesLoading } = useQuery({
+		queryKey: projectId ? QUERY_KEYS.entities(projectId) : ["entities", "null"],
+		queryFn: () => (projectId ? getEntities(projectId) : Promise.resolve([])),
+		enabled: !!projectId,
+		refetchInterval: 3000,
+	});
 
-	const { data: relationships, isLoading: relationshipsLoading } = useSWR(
-		projectId ? ["relationships", projectId] : null,
-		([_, id]) => getRelationships(id),
-		{ refreshInterval: 5000 },
-	);
+	const { data: relationships, isLoading: relationshipsLoading } = useQuery({
+		queryKey: projectId
+			? QUERY_KEYS.relationships(projectId)
+			: ["relationships", "null"],
+		queryFn: () => (projectId ? getRelationships(projectId) : Promise.resolve([])),
+		enabled: !!projectId,
+		refetchInterval: 5000,
+	});
 
 	const isLoading = entitiesLoading || relationshipsLoading;
 

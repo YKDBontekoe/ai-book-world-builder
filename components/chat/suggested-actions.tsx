@@ -1,6 +1,7 @@
 "use client";
 
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
 	BookOpenIcon,
@@ -13,8 +14,8 @@ import {
 	UsersIcon,
 } from "lucide-react";
 import { memo } from "react";
-import useSWR from "swr";
 import { Button } from "@/components/ui/button";
+import { api } from "@/lib/api-client";
 import type { ChatModelId } from "@/lib/ai/models";
 import type { ProjectSummary } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
@@ -57,35 +58,28 @@ function PureSuggestedActions({
 	const lastMessageId = messages.at(-1)?.id ?? "init";
 	const shouldFetch = !!projectId || messages.length > 0;
 
-	const { data: suggestions, isLoading, mutate, isValidating } = useSWR<Suggestion[]>(
-		shouldFetch
-			? ["suggestions", projectId, lastMessageId, selectedModelId]
-			: null,
-		async ([_, pid, mid, modelId]) => {
-			if (!pid && messages.length === 0) return null;
+	const { data: suggestions, isLoading, refetch, isRefetching } = useQuery({
+		queryKey: ["suggestions", projectId, lastMessageId, selectedModelId],
+		queryFn: async () => {
+			if (!projectId && messages.length === 0) return null;
 
-			const res = await fetch("/api/ai-suggestions", {
-				method: "POST",
-				body: JSON.stringify({
-					projectId: pid,
-					messages: messages
-						.map((m: any) => ({ role: m.role, content: m.content }))
-						.slice(-5),
-					modelId: modelId,
-				}),
+			return api.post<Suggestion[]>("/api/ai-suggestions", {
+				projectId: projectId,
+				messages: messages
+					.map((m: any) => ({ role: m.role, content: m.content }))
+					.slice(-5),
+				modelId: selectedModelId,
 			});
-			if (!res.ok) throw new Error("Failed to fetch suggestions");
-			return res.json();
 		},
-		{
-			revalidateOnFocus: false,
-			dedupingInterval: 60000,
-			fallbackData: getFallbackSuggestions(selectedProject?.name, isCompact),
-		},
-	);
+		enabled: shouldFetch,
+		staleTime: 60000,
+		placeholderData: getFallbackSuggestions(selectedProject?.name, isCompact),
+	});
 
 	const displaySuggestions =
 		suggestions ?? getFallbackSuggestions(selectedProject?.name, isCompact);
+
+	const isValidating = isRefetching; // Map for compatibility
 
 	// Compact Mode (Bottom of Chat)
 	if (isCompact) {
@@ -97,7 +91,7 @@ function PureSuggestedActions({
 				{!isLoading && !isValidating && (
 					<button
 						type="button"
-						onClick={() => mutate()}
+						onClick={() => refetch()}
 						className="mr-1 text-muted-foreground hover:text-foreground transition-colors"
 					>
 						<RefreshCwIcon className="size-3" />
@@ -137,7 +131,7 @@ function PureSuggestedActions({
 					variant="ghost"
 					size="icon"
 					className="h-6 w-6"
-					onClick={() => mutate()}
+					onClick={() => refetch()}
 					disabled={isLoading || isValidating}
 				>
 					<RefreshCwIcon className={cn("h-3.5 w-3.5", (isLoading || isValidating) && "animate-spin")} />

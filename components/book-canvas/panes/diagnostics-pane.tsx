@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
 	AlertTriangleIcon,
 	BookIcon,
@@ -13,9 +14,9 @@ import {
 	UsersIcon,
 } from "lucide-react";
 import Link from "next/link";
-import useSWR from "swr";
 import { getProjectStats } from "@/app/actions/project-stats";
 import { Button } from "@/components/ui/button";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
@@ -108,11 +109,14 @@ function FeedbackItem({
 export function DiagnosticsPane() {
 	const { projectId, triggerChatAction } = useBookCanvas();
 
-	const { data: stats, isLoading } = useSWR(
-		projectId ? ["project-stats", projectId] : null,
-		([_, id]) => getProjectStats(id),
-		{ refreshInterval: 5000 },
-	);
+	const { data: stats, isLoading } = useQuery({
+		queryKey: projectId
+			? QUERY_KEYS.diagnostics(projectId)
+			: ["diagnostics", "null"],
+		queryFn: () => (projectId ? getProjectStats(projectId) : Promise.resolve(null)),
+		enabled: !!projectId,
+		refetchInterval: 5000,
+	});
 
 	if (!projectId) {
 		return (

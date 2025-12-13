@@ -1,89 +1,114 @@
 "use client";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import useSWR from "swr";
 import type { UIArtifact } from "@/components/artifact";
+import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 
 export const initialArtifactData: UIArtifact = {
-  documentId: "",
-  content: "",
-  kind: "text",
-  title: "",
-  status: "idle",
-  isVisible: false,
-  boundingBox: {
-    top: 0,
-    left: 0,
-    width: 0,
-    height: 0,
-  },
+	documentId: "",
+	content: "",
+	kind: "text",
+	title: "",
+	status: "idle",
+	isVisible: false,
+	boundingBox: {
+		top: 0,
+		left: 0,
+		width: 0,
+		height: 0,
+	},
 };
 
 type Selector<T> = (state: UIArtifact) => T;
 
 export function useArtifactSelector<Selected>(selector: Selector<Selected>) {
-  const { data: localArtifact } = useSWR<UIArtifact>("artifact", null, {
-    fallbackData: initialArtifactData,
-  });
+	const { data: localArtifact } = useQuery({
+		queryKey: QUERY_KEYS.artifact(),
+		staleTime: STALE_TIMES.LOCAL,
+		gcTime: GC_TIMES.LOCAL,
+		initialData: initialArtifactData,
+	});
 
-  const selectedValue = useMemo(() => {
-    if (!localArtifact) {
-      return selector(initialArtifactData);
-    }
-    return selector(localArtifact);
-  }, [localArtifact, selector]);
+	const selectedValue = useMemo(() => {
+		if (!localArtifact) {
+			return selector(initialArtifactData);
+		}
+		return selector(localArtifact);
+	}, [localArtifact, selector]);
 
-  return selectedValue;
+	return selectedValue;
 }
 
 export function useArtifact() {
-  const { data: localArtifact, mutate: setLocalArtifact } = useSWR<UIArtifact>(
-    "artifact",
-    null,
-    {
-      fallbackData: initialArtifactData,
-    }
-  );
+	const queryClient = useQueryClient();
 
-  const artifact = useMemo(() => {
-    if (!localArtifact) {
-      return initialArtifactData;
-    }
-    return localArtifact;
-  }, [localArtifact]);
+	const { data: localArtifact } = useQuery({
+		queryKey: QUERY_KEYS.artifact(),
+		staleTime: STALE_TIMES.LOCAL,
+		gcTime: GC_TIMES.LOCAL,
+		initialData: initialArtifactData,
+	});
 
-  const setArtifact = useCallback(
-    (updaterFn: UIArtifact | ((currentArtifact: UIArtifact) => UIArtifact)) => {
-      setLocalArtifact((currentArtifact) => {
-        const artifactToUpdate = currentArtifact || initialArtifactData;
+	const artifact = useMemo(() => {
+		if (!localArtifact) {
+			return initialArtifactData;
+		}
+		return localArtifact;
+	}, [localArtifact]);
 
-        if (typeof updaterFn === "function") {
-          return updaterFn(artifactToUpdate);
-        }
+	const setArtifact = useCallback(
+		(updaterFn: UIArtifact | ((currentArtifact: UIArtifact) => UIArtifact)) => {
+			queryClient.setQueryData(
+				QUERY_KEYS.artifact(),
+				(currentArtifact: UIArtifact | undefined) => {
+					const artifactToUpdate = currentArtifact || initialArtifactData;
 
-        return updaterFn;
-      });
-    },
-    [setLocalArtifact]
-  );
+					if (typeof updaterFn === "function") {
+						return updaterFn(artifactToUpdate);
+					}
 
-  const { data: localArtifactMetadata, mutate: setLocalArtifactMetadata } =
-    useSWR<any>(
-      () =>
-        artifact.documentId ? `artifact-metadata-${artifact.documentId}` : null,
-      null,
-      {
-        fallbackData: null,
-      }
-    );
+					return updaterFn;
+				},
+			);
+		},
+		[queryClient],
+	);
 
-  return useMemo(
-    () => ({
-      artifact,
-      setArtifact,
-      metadata: localArtifactMetadata,
-      setMetadata: setLocalArtifactMetadata,
-    }),
-    [artifact, setArtifact, localArtifactMetadata, setLocalArtifactMetadata]
-  );
+	const { data: localArtifactMetadata } = useQuery({
+		queryKey: artifact.documentId
+			? QUERY_KEYS.artifactMetadata(artifact.documentId)
+			: ["artifact-metadata", "null"], // Use a dummy key if null to allow hook to run, but enabled: false might be better
+		enabled: !!artifact.documentId,
+		staleTime: STALE_TIMES.LOCAL,
+		gcTime: GC_TIMES.LOCAL,
+		initialData: null,
+	});
+
+	const setMetadata = useCallback(
+		(updaterFn: any) => {
+			if (!artifact.documentId) return;
+
+			queryClient.setQueryData(
+				QUERY_KEYS.artifactMetadata(artifact.documentId),
+				(currentMetadata: any) => {
+					if (typeof updaterFn === "function") {
+						return updaterFn(currentMetadata);
+					}
+					return updaterFn;
+				},
+			);
+		},
+		[queryClient, artifact.documentId],
+	);
+
+	return useMemo(
+		() => ({
+			artifact,
+			setArtifact,
+			metadata: localArtifactMetadata,
+			setMetadata,
+		}),
+		[artifact, setArtifact, localArtifactMetadata, setMetadata],
+	);
 }
