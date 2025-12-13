@@ -14,35 +14,35 @@ import type { Project } from "@/lib/db/schema";
 
 function ProjectCard({ project }: { project: Project }) {
 	return (
-		<Link href={`/projects/${project.id}`} className="block h-full">
+		<Link href={`/projects/${project.id}`} className="block h-full group">
 			<GlassCard
-				variant="default"
+				variant="liquid"
 				interactive
-				className="h-full flex flex-col justify-between space-y-4"
+				className="h-full flex flex-col justify-between space-y-6 p-6"
 			>
-				<div className="space-y-2">
-					<div className="flex items-center gap-2">
-						<div className="p-2 rounded-md bg-primary/10">
-							<FolderIcon className="h-5 w-5 text-primary" />
+				<div className="space-y-4">
+					<div className="flex items-center gap-3">
+						<div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
+							<FolderIcon className="h-6 w-6" />
 						</div>
-						<h3 className="font-semibold truncate">{project.name}</h3>
+						<h3 className="font-bold text-lg truncate tracking-tight">{project.name}</h3>
 					</div>
 					{project.description && (
-						<p className="text-sm text-muted-foreground line-clamp-2">
+						<p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
 							{project.description}
 						</p>
 					)}
 				</div>
-				<div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/50">
-					<div className="flex items-center">
-						<CalendarIcon className="mr-1 h-3 w-3" />
+				<div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30">
+					<div className="flex items-center gap-1">
+						<CalendarIcon className="h-3.5 w-3.5" />
 						<span>
 							{formatDistanceToNow(project.createdAt, {
 								addSuffix: true,
 							})}
 						</span>
 					</div>
-					{project.visibility === "public" && <Globe className="h-3 w-3" />}
+					{project.visibility === "public" && <Globe className="h-3.5 w-3.5" />}
 				</div>
 			</GlassCard>
 		</Link>
@@ -67,10 +67,12 @@ export default async function ProjectsPage() {
 	});
 
 	return (
-		<PageContainer className="p-8">
-			<PageHeader title="Projects" />
+		<PageContainer className="p-8 md:p-12 max-w-[1800px] mx-auto">
+			<div className="mb-8">
+				<PageHeader title="Projects" />
+			</div>
 
-			<Tabs defaultValue="mine" className="mt-6">
+			<Tabs defaultValue="mine" className="mt-8">
 				<TabsList className="mb-6">
 					<TabsTrigger value="mine" className="gap-2">
 						<User className="h-4 w-4" />
@@ -82,7 +84,7 @@ export default async function ProjectsPage() {
 					</TabsTrigger>
 				</TabsList>
 
-				<TabsContent value="mine">
+				<TabsContent value="mine" className="mt-6">
 					{myProjects.length === 0 ? (
 						<EmptyState
 							title="No projects found"
@@ -90,7 +92,7 @@ export default async function ProjectsPage() {
 							icon={FolderIcon}
 						/>
 					) : (
-						<GridList columns={{ sm: 2, lg: 3 }}>
+						<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
 							{myProjects.map((project) => (
 								<ProjectCard key={project.id} project={project} />
 							))}
@@ -98,7 +100,7 @@ export default async function ProjectsPage() {
 					)}
 				</TabsContent>
 
-				<TabsContent value="shared">
+				<TabsContent value="shared" className="mt-6">
 					{sharedProjects.length === 0 ? (
 						<EmptyState
 							title="No shared projects"
@@ -106,7 +108,7 @@ export default async function ProjectsPage() {
 							icon={Globe}
 						/>
 					) : (
-						<GridList columns={{ sm: 2, lg: 3 }}>
+						<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
 							{sharedProjects.map((project) => (
 								<ProjectCard key={project.id} project={project} />
 							))}

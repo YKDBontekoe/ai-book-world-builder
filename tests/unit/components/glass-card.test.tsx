@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { GlassCard } from "@/components/ui/glass-card";
+import { GlassCard } from "../../../components/ui/glass-card";
 
 describe("GlassCard", () => {
 	it("renders correctly with default props", () => {
@@ -16,7 +16,7 @@ describe("GlassCard", () => {
 	it("renders correctly with liquid variant", () => {
 		render(<GlassCard variant="liquid">Liquid Content</GlassCard>);
 		const card = screen.getByText("Liquid Content");
-		expect(card.className).toContain("hover:bg-glass");
+		expect(card.className).toContain("hover:bg-glass/80");
 		expect(card.className).toContain("hover:scale-[1.01]");
 	});
 

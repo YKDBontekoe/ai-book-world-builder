@@ -1,16 +1,21 @@
 import { render, screen } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
-import { GenerationView } from "@/components/generation/generation-view";
-import { Project } from "@/lib/db/schema";
+import { GenerationView } from "../../../components/generation/generation-view";
+import { Project } from "../../../lib/db/schema";
 
 // Mock actions
-vi.mock("@/app/(chat)/projects/[id]/generate/actions", () => ({
+vi.mock("../../../app/(chat)/projects/[id]/generate/actions", () => ({
   startGeneration: vi.fn(),
 }));
 
 // Mock dashboard
-vi.mock("@/components/generation/generation-dashboard", () => ({
+vi.mock("../../../components/generation/generation-dashboard", () => ({
   GenerationDashboard: () => <div data-testid="dashboard">Dashboard</div>,
+}));
+
+// Mock settings form
+vi.mock("../../../components/generation/generation-settings-form", () => ({
+  GenerationSettingsForm: () => <div data-testid="settings-form">Settings Form</div>,
 }));
 
 // Mock Lucide icons
@@ -35,7 +40,7 @@ describe("GenerationView", () => {
   it("renders settings form initially", () => {
     render(<GenerationView project={mockProject} />);
     expect(screen.getByText("New Generation")).toBeDefined();
-    expect(screen.getByLabelText("Genre")).toBeDefined();
+    expect(screen.getByTestId("settings-form")).toBeDefined();
     expect(screen.getByText("Ready to Write")).toBeDefined();
   });
 

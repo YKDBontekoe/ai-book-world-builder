@@ -19,7 +19,7 @@
 	--card-foreground: hsl(240 10% 3.9%);
 	--popover: hsl(0 0% 100%);
 	--popover-foreground: hsl(240 10% 3.9%);
-	--primary: hsl(240 5.9% 10%);
+	--primary: hsl(262 80% 60%);
 	--primary-foreground: hsl(0 0% 98%);
 	--secondary: hsl(240 4.8% 95.9%);
 	--secondary-foreground: hsl(240 5.9% 10%);
@@ -39,9 +39,9 @@
 	--chart-5: hsl(27 87% 67%);
 
 	/* MacOS Style Sidebar & Glass - Liquid 2025 */
-	--sidebar-background: hsl(0 0% 96% / 0.75); /* Increased transparency */
+	--sidebar-background: hsl(0 0% 96% / 0.6); /* Increased transparency */
 	--sidebar-foreground: hsl(240 5.3% 26.1%);
-	--sidebar-primary: hsl(212 100% 48%); /* Apple Blue */
+	--sidebar-primary: hsl(262 80% 60%); /* Creative Violet */
 	--sidebar-primary-foreground: hsl(0 0% 100%);
 	--sidebar-accent: hsl(240 4.8% 90%);
 	--sidebar-accent-foreground: hsl(240 5.9% 10%);
@@ -97,8 +97,8 @@
 	--card-foreground: hsl(0 0% 98%);
 	--popover: hsl(240 10% 5%);
 	--popover-foreground: hsl(0 0% 98%);
-	--primary: hsl(0 0% 98%);
-	--primary-foreground: hsl(240 5.9% 10%);
+	--primary: hsl(262 80% 65%);
+	--primary-foreground: hsl(0 0% 100%);
 	--secondary: hsl(240 3.7% 15.9%);
 	--secondary-foreground: hsl(0 0% 98%);
 	--muted: hsl(240 3.7% 15.9%);
@@ -117,9 +117,9 @@
 	--chart-5: hsl(340 75% 55%);
 
 	/* MacOS Dark Sidebar */
-	--sidebar-background: hsl(240 5.9% 10% / 0.65);
+	--sidebar-background: hsl(240 5.9% 10% / 0.5);
 	--sidebar-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-primary: hsl(212 100% 50%);
+	--sidebar-primary: hsl(262 80% 65%);
 	--sidebar-primary-foreground: hsl(0 0% 100%);
 	--sidebar-accent: hsl(240 3.7% 20%);
 	--sidebar-accent-foreground: hsl(240 4.8% 95.9%);

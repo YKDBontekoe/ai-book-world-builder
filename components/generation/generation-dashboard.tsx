@@ -17,17 +17,18 @@ import {
 	getGenerationStatus,
 	pauseGeneration,
 	resumeGeneration,
-} from "@/app/(chat)/projects/[id]/generate/actions";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { Progress } from "@/components/ui/progress";
-import { SectionHeader } from "@/components/ui/section-header";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+} from "../../app/(chat)/projects/[id]/generate/actions";
+import { Badge } from "../ui/badge";
+import { Button } from "../ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { EmptyState } from "../ui/empty-state";
+import { GlassCard } from "../ui/glass-card";
+import { LoadingSpinner } from "../ui/loading-spinner";
+import { Progress } from "../ui/progress";
+import { SectionHeader } from "../ui/section-header";
+import { StatusBadge } from "../ui/status-badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+import { cn } from "../../lib/utils";
 
 interface GenerationDashboardProps {
 	projectId: string;
@@ -307,11 +308,18 @@ export function GenerationDashboard({
 	const previewContent = getPreviewContent();
 
 	return (
-		<div className="grid h-full min-h-0 grid-cols-1 lg:grid-cols-3 gap-0 overflow-hidden">
+		<div className="relative flex flex-col lg:flex-row h-full gap-6 p-4 lg:p-8 bg-muted/5 overflow-hidden">
+			{/* Ambient Background */}
+			<div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+
 			{/* Left: Progress & Controls */}
-			<div className="border-r flex flex-col min-h-0 overflow-hidden">
+			<GlassCard
+				variant="liquid"
+				padding="none"
+				className="w-full lg:w-1/3 flex flex-col overflow-hidden border-glass-border/50 shadow-xl"
+			>
 				{/* Stats Header */}
-				<div className="border-b bg-muted/30 px-6 py-4 shrink-0">
+				<div className="border-b border-border/10 bg-white/40 dark:bg-black/20 backdrop-blur-md px-6 py-4 shrink-0">
 					<SectionHeader
 						title="Generation Progress"
 						description={
@@ -378,7 +386,7 @@ export function GenerationDashboard({
 				</div>
 
 				{/* Controls */}
-				<div className="border-b px-6 py-3">
+				<div className="border-b border-border/10 px-6 py-4 bg-background/20">
 					<div className="flex flex-col gap-2">
 						<div className="flex gap-2">
 							{isPaused ? (
@@ -443,17 +451,18 @@ export function GenerationDashboard({
 				</div>
 
 				{/* Steps List */}
-				<div className="flex-1 overflow-y-auto p-4">
+				<div className="flex-1 overflow-y-auto p-4 bg-background/30 backdrop-blur-sm">
 					<div className="space-y-2">
 						{steps.map((step) => (
 							<button
 								type="button"
 								key={step.id}
 								className={cn(
-									"w-full text-left rounded-lg border bg-card transition-colors cursor-pointer",
+									"w-full text-left rounded-xl transition-all cursor-pointer border border-transparent hover:bg-white/40 dark:hover:bg-white/5",
 									step.status === "running" &&
-										"border-blue-500/50 bg-blue-50/50 dark:bg-blue-950/20",
-									selectedStepId === step.id && "ring-2 ring-primary",
+										"bg-primary/5 border-primary/20 shadow-sm",
+									selectedStepId === step.id && "ring-2 ring-primary ring-offset-2 ring-offset-transparent",
+									step.status !== "running" && "bg-white/20 dark:bg-black/20"
 								)}
 								onClick={() => {
 									setSelectedStepId(step.id);
@@ -464,13 +473,11 @@ export function GenerationDashboard({
 									{getStepIcon(step)}
 									<div className="flex-1 min-w-0">
 										<div className="flex items-center gap-2">
-											<span className="font-medium text-sm truncate">
+											<span className={cn("font-medium text-sm truncate", step.status === "running" ? "text-primary" : "text-foreground")}>
 												{getStepLabel(step.stepType)}
 												{step.sequence > 1 && ` (${step.sequence})`}
 											</span>
-											<Badge variant="outline" className="text-xs">
-												{getStepLabel(step.stepType)}
-											</Badge>
+											{/* Removed Badge for cleaner look, or make it subtle */}
 										</div>
 										{step.wordCount && (
 											<p className="text-xs text-muted-foreground">
@@ -486,7 +493,7 @@ export function GenerationDashboard({
 								</div>
 
 								{expandedSteps.has(step.id) && (
-									<div className="border-t bg-muted/20 p-3">
+									<div className="border-t border-primary/10 bg-primary/5 p-3 rounded-b-xl">
 										<p className="text-xs text-muted-foreground mb-2">
 											{step.agentOutput
 												? `Content available (${step.wordCount || 0} words)`
@@ -502,20 +509,24 @@ export function GenerationDashboard({
 						))}
 					</div>
 				</div>
-			</div>
+			</GlassCard>
 
 			{/* Right: Agent Logs & Preview */}
-			<div className="lg:col-span-2 flex flex-col min-h-0 overflow-hidden">
+			<GlassCard
+				variant="liquid"
+				padding="none"
+				className="flex-1 flex flex-col overflow-hidden border-glass-border/50 shadow-xl"
+			>
 				<Tabs defaultValue="preview" className="flex-1 flex flex-col min-h-0">
-					<div className="border-b px-6">
-						<TabsList className="my-2">
+					<div className="border-b border-border/10 px-6 bg-white/40 dark:bg-black/20 backdrop-blur-md">
+						<TabsList className="my-2 bg-black/5 dark:bg-white/10">
 							<TabsTrigger value="preview">Preview</TabsTrigger>
 							<TabsTrigger value="logs">Agent Logs</TabsTrigger>
 							<TabsTrigger value="notes">Notes</TabsTrigger>
 						</TabsList>
 					</div>
 
-					<TabsContent value="preview" className="flex-1 overflow-hidden m-0">
+					<TabsContent value="preview" className="flex-1 overflow-hidden m-0 bg-background/30 backdrop-blur-sm">
 						<div className="h-full overflow-y-auto p-6">
 							{previewContent ? (
 								<div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap">
@@ -592,7 +603,7 @@ export function GenerationDashboard({
 						</div>
 					</TabsContent>
 				</Tabs>
-			</div>
+			</GlassCard>
 		</div>
 	);
 }
