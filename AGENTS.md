@@ -55,6 +55,7 @@ Adhere to the **Native macOS** aesthetic defined in [`docs/design-system.md`](do
 3.  **Verify**:
     *   Run `pnpm lint` and `pnpm format` (using `ultracite`).
     *   Run `pnpm test` (Unit/E2E).
+    *   Run `pnpm storybook` to visually check components if modifying UI.
     *   Run Python visual verification scripts.
 4.  **Document**: Update JSDoc, READMEs, and `.agent` docs.
 5.  **Reflect**:
