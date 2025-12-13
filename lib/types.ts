@@ -122,6 +122,7 @@ export type ChatMessage = UIMessage<
 	CustomUIDataTypes,
 	ChatTools
 > & {
+	content?: string;
 	toolInvocations?: ToolInvocation[];
 	usage?: AppUsage;
 };
