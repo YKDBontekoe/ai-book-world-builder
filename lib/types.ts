@@ -6,9 +6,9 @@ import type { analyzeCharacter } from "./ai/tools/analyze-character";
 export interface ToolInvocation {
 	toolCallId: string;
 	toolName: string;
-	args: any;
+	args: Record<string, unknown>;
 	state: "partial-call" | "call" | "result";
-	result?: any;
+	result?: unknown;
 }
 
 import type { assessReadiness } from "./ai/tools/assess-readiness";
