@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 
 interface KeyValueTableProps {
-	data: any;
+	data: unknown;
 	className?: string;
 	maxHeight?: number;
 }
@@ -17,7 +17,7 @@ function formatKey(key: string): string {
 		.trim();
 }
 
-function formatValue(value: any): string {
+function formatValue(value: unknown): string {
 	if (value === null || value === undefined) return "—";
 	if (typeof value === "boolean") return value ? "Yes" : "No";
 	if (typeof value === "number") return value.toLocaleString();
@@ -60,7 +60,7 @@ export function KeyValueTable({
 		);
 	}
 
-	const entries = Object.entries(data);
+	const entries = Object.entries(data as Record<string, unknown>);
 
 	if (entries.length === 0) {
 		return <div className="text-muted-foreground text-xs italic">No data</div>;

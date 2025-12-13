@@ -1,11 +1,12 @@
 "use client";
 
-import { ChevronUp, Loader2Icon } from "lucide-react";
+import { ChevronUp, Loader2Icon, Settings } from "lucide-react";
 import Image from "next/image";
 import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { toast } from "sonner";
+import { useState } from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -18,10 +19,12 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { SettingsDialog } from "@/components/settings-dialog";
 
 export function SidebarUserNav({ user }: { user: User }) {
 	const { status } = useSession();
 	const { setTheme, resolvedTheme } = useTheme();
+    const [showSettings, setShowSettings] = useState(false);
 
 	return (
 		<SidebarMenu>
@@ -64,6 +67,14 @@ export function SidebarUserNav({ user }: { user: User }) {
 						data-testid="user-nav-menu"
 						side="top"
 					>
+                        <DropdownMenuItem
+                            className="cursor-pointer gap-2"
+                            onSelect={() => setShowSettings(true)}
+                        >
+                            <Settings className="h-4 w-4" />
+                            Settings
+                        </DropdownMenuItem>
+						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							className="cursor-pointer"
 							data-testid="user-nav-item-theme"
@@ -98,6 +109,8 @@ export function SidebarUserNav({ user }: { user: User }) {
 					</DropdownMenuContent>
 				</DropdownMenu>
 			</SidebarMenuItem>
+
+            <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
 		</SidebarMenu>
 	);
 }
