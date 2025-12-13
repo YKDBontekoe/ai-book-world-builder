@@ -1,4 +1,4 @@
-CREATE TABLE "User" (
+CREATE TABLE IF NOT EXISTS "User" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text,
 	"email" varchar(64) NOT NULL,
@@ -8,7 +8,7 @@ CREATE TABLE "User" (
 	CONSTRAINT "User_email_unique" UNIQUE("email")
 );
 --> statement-breakpoint
-CREATE TABLE "UserPreferences" (
+CREATE TABLE IF NOT EXISTS "UserPreferences" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"userId" uuid NOT NULL,
 	"favoriteModels" jsonb DEFAULT '[]'::jsonb NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE "UserPreferences" (
 	CONSTRAINT "UserPreferences_userId_unique" UNIQUE("userId")
 );
 --> statement-breakpoint
-CREATE TABLE "Account" (
+CREATE TABLE IF NOT EXISTS "Account" (
 	"userId" uuid NOT NULL,
 	"type" text NOT NULL,
 	"provider" text NOT NULL,
@@ -33,7 +33,7 @@ CREATE TABLE "Account" (
 	CONSTRAINT "Account_provider_providerAccountId_pk" PRIMARY KEY("provider","providerAccountId")
 );
 --> statement-breakpoint
-CREATE TABLE "Chat" (
+CREATE TABLE IF NOT EXISTS "Chat" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"title" text NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE "Chat" (
 	"lastContext" jsonb
 );
 --> statement-breakpoint
-CREATE TABLE "Message_v2" (
+CREATE TABLE IF NOT EXISTS "Message_v2" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"chatId" uuid NOT NULL,
 	"role" varchar NOT NULL,
@@ -52,21 +52,21 @@ CREATE TABLE "Message_v2" (
 	"createdAt" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Stream" (
+CREATE TABLE IF NOT EXISTS "Stream" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"chatId" uuid NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	CONSTRAINT "Stream_id_pk" PRIMARY KEY("id")
 );
 --> statement-breakpoint
-CREATE TABLE "Vote_v2" (
+CREATE TABLE IF NOT EXISTS "Vote_v2" (
 	"chatId" uuid NOT NULL,
 	"messageId" uuid NOT NULL,
 	"isUpvoted" boolean NOT NULL,
 	CONSTRAINT "Vote_v2_chatId_messageId_pk" PRIMARY KEY("chatId","messageId")
 );
 --> statement-breakpoint
-CREATE TABLE "Document" (
+CREATE TABLE IF NOT EXISTS "Document" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"title" text NOT NULL,
@@ -76,7 +76,7 @@ CREATE TABLE "Document" (
 	CONSTRAINT "Document_id_createdAt_pk" PRIMARY KEY("id","createdAt")
 );
 --> statement-breakpoint
-CREATE TABLE "Project" (
+CREATE TABLE IF NOT EXISTS "Project" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"name" text NOT NULL,
@@ -86,7 +86,7 @@ CREATE TABLE "Project" (
 	"userId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Suggestion" (
+CREATE TABLE IF NOT EXISTS "Suggestion" (
 	"id" uuid DEFAULT gen_random_uuid() NOT NULL,
 	"documentId" uuid NOT NULL,
 	"documentCreatedAt" timestamp NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE "Suggestion" (
 	CONSTRAINT "Suggestion_id_pk" PRIMARY KEY("id")
 );
 --> statement-breakpoint
-CREATE TABLE "SourceMaterial" (
+CREATE TABLE IF NOT EXISTS "SourceMaterial" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -112,7 +112,7 @@ CREATE TABLE "SourceMaterial" (
 	"userId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "SourceMaterialChapter" (
+CREATE TABLE IF NOT EXISTS "SourceMaterialChapter" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -125,7 +125,7 @@ CREATE TABLE "SourceMaterialChapter" (
 	"userId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "SourceMaterialChunk" (
+CREATE TABLE IF NOT EXISTS "SourceMaterialChunk" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -138,7 +138,7 @@ CREATE TABLE "SourceMaterialChunk" (
 	"userId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "SourceMaterialProcessing" (
+CREATE TABLE IF NOT EXISTS "SourceMaterialProcessing" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -159,7 +159,7 @@ CREATE TABLE "SourceMaterialProcessing" (
 	"userId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Entity" (
+CREATE TABLE IF NOT EXISTS "Entity" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -171,7 +171,7 @@ CREATE TABLE "Entity" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "EntityAttribute" (
+CREATE TABLE IF NOT EXISTS "EntityAttribute" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"name" text NOT NULL,
@@ -183,7 +183,7 @@ CREATE TABLE "EntityAttribute" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Relationship" (
+CREATE TABLE IF NOT EXISTS "Relationship" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"type" varchar(64) NOT NULL,
@@ -195,7 +195,7 @@ CREATE TABLE "Relationship" (
 	"targetEntityId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Chapter" (
+CREATE TABLE IF NOT EXISTS "Chapter" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -208,7 +208,7 @@ CREATE TABLE "Chapter" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "ChapterDraft" (
+CREATE TABLE IF NOT EXISTS "ChapterDraft" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -219,7 +219,7 @@ CREATE TABLE "ChapterDraft" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Outline" (
+CREATE TABLE IF NOT EXISTS "Outline" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -232,7 +232,7 @@ CREATE TABLE "Outline" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Volume" (
+CREATE TABLE IF NOT EXISTS "Volume" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -242,7 +242,7 @@ CREATE TABLE "Volume" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "BookExport" (
+CREATE TABLE IF NOT EXISTS "BookExport" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"projectId" uuid NOT NULL,
@@ -253,7 +253,7 @@ CREATE TABLE "BookExport" (
 	"userId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "BookGeneration" (
+CREATE TABLE IF NOT EXISTS "BookGeneration" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -274,7 +274,7 @@ CREATE TABLE "BookGeneration" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "BookGenerationAsset" (
+CREATE TABLE IF NOT EXISTS "BookGenerationAsset" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"generationId" uuid NOT NULL,
 	"assetType" varchar(32) NOT NULL,
@@ -285,7 +285,7 @@ CREATE TABLE "BookGenerationAsset" (
 	"updatedAt" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "BookGenerationStep" (
+CREATE TABLE IF NOT EXISTS "BookGenerationStep" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"generationId" uuid NOT NULL,
 	"chapterId" uuid,
@@ -303,7 +303,7 @@ CREATE TABLE "BookGenerationStep" (
 	"updatedAt" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "ChapterVersion" (
+CREATE TABLE IF NOT EXISTS "ChapterVersion" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"chapterId" uuid NOT NULL,
 	"generationId" uuid,
@@ -314,7 +314,7 @@ CREATE TABLE "ChapterVersion" (
 	"createdAt" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "GenerationNote" (
+CREATE TABLE IF NOT EXISTS "GenerationNote" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"generationId" uuid NOT NULL,
 	"chapterId" uuid,
@@ -324,7 +324,7 @@ CREATE TABLE "GenerationNote" (
 	"createdAt" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "GenerationTemplate" (
+CREATE TABLE IF NOT EXISTS "GenerationTemplate" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"name" text NOT NULL,
 	"description" text,
@@ -335,7 +335,7 @@ CREATE TABLE "GenerationTemplate" (
 	"updatedAt" timestamp NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "Scene" (
+CREATE TABLE IF NOT EXISTS "Scene" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -347,7 +347,7 @@ CREATE TABLE "Scene" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "SceneCard" (
+CREATE TABLE IF NOT EXISTS "SceneCard" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -362,7 +362,7 @@ CREATE TABLE "SceneCard" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE "StoryState" (
+CREATE TABLE IF NOT EXISTS "StoryState" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"createdAt" timestamp NOT NULL,
 	"updatedAt" timestamp NOT NULL,
@@ -377,92 +377,376 @@ CREATE TABLE "StoryState" (
 	"projectId" uuid NOT NULL
 );
 --> statement-breakpoint
-ALTER TABLE "UserPreferences" ADD CONSTRAINT "UserPreferences_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE cascade ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Chat" ADD CONSTRAINT "Chat_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Message_v2" ADD CONSTRAINT "Message_v2_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Stream" ADD CONSTRAINT "Stream_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Vote_v2" ADD CONSTRAINT "Vote_v2_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Vote_v2" ADD CONSTRAINT "Vote_v2_messageId_Message_v2_id_fk" FOREIGN KEY ("messageId") REFERENCES "public"."Message_v2"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Document" ADD CONSTRAINT "Document_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Project" ADD CONSTRAINT "Project_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Suggestion" ADD CONSTRAINT "Suggestion_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Suggestion" ADD CONSTRAINT "Suggestion_documentId_documentCreatedAt_Document_id_createdAt_fk" FOREIGN KEY ("documentId","documentCreatedAt") REFERENCES "public"."Document"("id","createdAt") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterial" ADD CONSTRAINT "SourceMaterial_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterial" ADD CONSTRAINT "SourceMaterial_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialChapter" ADD CONSTRAINT "SourceMaterialChapter_sourceMaterialId_SourceMaterial_id_fk" FOREIGN KEY ("sourceMaterialId") REFERENCES "public"."SourceMaterial"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialChapter" ADD CONSTRAINT "SourceMaterialChapter_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialChapter" ADD CONSTRAINT "SourceMaterialChapter_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_chapterId_SourceMaterialChapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."SourceMaterialChapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_sourceMaterialId_SourceMaterial_id_fk" FOREIGN KEY ("sourceMaterialId") REFERENCES "public"."SourceMaterial"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialProcessing" ADD CONSTRAINT "SourceMaterialProcessing_sourceMaterialId_SourceMaterial_id_fk" FOREIGN KEY ("sourceMaterialId") REFERENCES "public"."SourceMaterial"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialProcessing" ADD CONSTRAINT "SourceMaterialProcessing_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SourceMaterialProcessing" ADD CONSTRAINT "SourceMaterialProcessing_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Entity" ADD CONSTRAINT "Entity_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "EntityAttribute" ADD CONSTRAINT "EntityAttribute_entityId_Entity_id_fk" FOREIGN KEY ("entityId") REFERENCES "public"."Entity"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "EntityAttribute" ADD CONSTRAINT "EntityAttribute_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Relationship" ADD CONSTRAINT "Relationship_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Relationship" ADD CONSTRAINT "Relationship_sourceEntityId_Entity_id_fk" FOREIGN KEY ("sourceEntityId") REFERENCES "public"."Entity"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Relationship" ADD CONSTRAINT "Relationship_targetEntityId_Entity_id_fk" FOREIGN KEY ("targetEntityId") REFERENCES "public"."Entity"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_volumeId_Volume_id_fk" FOREIGN KEY ("volumeId") REFERENCES "public"."Volume"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_volumeId_Volume_id_fk" FOREIGN KEY ("volumeId") REFERENCES "public"."Volume"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Outline" ADD CONSTRAINT "Outline_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Volume" ADD CONSTRAINT "Volume_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Volume" ADD CONSTRAINT "Volume_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "BookExport" ADD CONSTRAINT "BookExport_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "BookExport" ADD CONSTRAINT "BookExport_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "BookGeneration" ADD CONSTRAINT "BookGeneration_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "BookGeneration" ADD CONSTRAINT "BookGeneration_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "BookGenerationAsset" ADD CONSTRAINT "BookGenerationAsset_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "BookGenerationStep" ADD CONSTRAINT "BookGenerationStep_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "BookGenerationStep" ADD CONSTRAINT "BookGenerationStep_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ChapterVersion" ADD CONSTRAINT "ChapterVersion_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "ChapterVersion" ADD CONSTRAINT "ChapterVersion_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "GenerationNote" ADD CONSTRAINT "GenerationNote_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "GenerationNote" ADD CONSTRAINT "GenerationNote_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "GenerationTemplate" ADD CONSTRAINT "GenerationTemplate_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Scene" ADD CONSTRAINT "Scene_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "Scene" ADD CONSTRAINT "Scene_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SceneCard" ADD CONSTRAINT "SceneCard_sceneId_Scene_id_fk" FOREIGN KEY ("sceneId") REFERENCES "public"."Scene"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "SceneCard" ADD CONSTRAINT "SceneCard_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "StoryState" ADD CONSTRAINT "StoryState_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE "StoryState" ADD CONSTRAINT "StoryState_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-CREATE INDEX "user_preferences_user_idx" ON "UserPreferences" USING btree ("userId");--> statement-breakpoint
-CREATE INDEX "chat_user_id_created_at_idx" ON "Chat" USING btree ("userId","createdAt");--> statement-breakpoint
-CREATE INDEX "message_chat_id_created_at_idx" ON "Message_v2" USING btree ("chatId","createdAt");--> statement-breakpoint
-CREATE INDEX "source_material_project_idx" ON "SourceMaterial" USING btree ("projectId");--> statement-breakpoint
-CREATE INDEX "source_material_user_idx" ON "SourceMaterial" USING btree ("userId");--> statement-breakpoint
-CREATE INDEX "source_material_chapter_material_idx" ON "SourceMaterialChapter" USING btree ("sourceMaterialId");--> statement-breakpoint
-CREATE INDEX "source_material_chapter_project_idx" ON "SourceMaterialChapter" USING btree ("projectId");--> statement-breakpoint
-CREATE INDEX "source_material_chunk_chapter_idx" ON "SourceMaterialChunk" USING btree ("chapterId");--> statement-breakpoint
-CREATE INDEX "source_material_chunk_project_idx" ON "SourceMaterialChunk" USING btree ("projectId");--> statement-breakpoint
-CREATE UNIQUE INDEX "source_material_processing_material_idx" ON "SourceMaterialProcessing" USING btree ("sourceMaterialId");--> statement-breakpoint
-CREATE INDEX "source_material_processing_project_idx" ON "SourceMaterialProcessing" USING btree ("projectId");--> statement-breakpoint
-CREATE UNIQUE INDEX "entity_name_project_idx" ON "Entity" USING btree ("projectId","name");--> statement-breakpoint
-CREATE UNIQUE INDEX "entity_attribute_name_idx" ON "EntityAttribute" USING btree ("entityId","name");--> statement-breakpoint
-CREATE UNIQUE INDEX "relationship_unique_idx" ON "Relationship" USING btree ("projectId","sourceEntityId","targetEntityId","type");--> statement-breakpoint
-CREATE UNIQUE INDEX "chapter_sequence_volume_idx" ON "Chapter" USING btree ("volumeId","sequence");--> statement-breakpoint
-CREATE INDEX "book_export_project_idx" ON "BookExport" USING btree ("projectId");--> statement-breakpoint
-CREATE INDEX "book_export_user_idx" ON "BookExport" USING btree ("userId");--> statement-breakpoint
-CREATE UNIQUE INDEX "book_generation_project_idx" ON "BookGeneration" USING btree ("projectId");--> statement-breakpoint
-CREATE INDEX "book_generation_asset_generation_idx" ON "BookGenerationAsset" USING btree ("generationId");--> statement-breakpoint
-CREATE INDEX "book_generation_asset_type_idx" ON "BookGenerationAsset" USING btree ("generationId","assetType");--> statement-breakpoint
-CREATE INDEX "book_generation_step_generation_idx" ON "BookGenerationStep" USING btree ("generationId");--> statement-breakpoint
-CREATE INDEX "book_generation_step_sequence_idx" ON "BookGenerationStep" USING btree ("generationId","sequence");--> statement-breakpoint
-CREATE INDEX "chapter_version_chapter_idx" ON "ChapterVersion" USING btree ("chapterId");--> statement-breakpoint
-CREATE INDEX "chapter_version_version_idx" ON "ChapterVersion" USING btree ("chapterId","version");--> statement-breakpoint
-CREATE INDEX "generation_note_generation_idx" ON "GenerationNote" USING btree ("generationId");--> statement-breakpoint
-CREATE INDEX "generation_note_chapter_idx" ON "GenerationNote" USING btree ("chapterId");--> statement-breakpoint
-CREATE INDEX "generation_template_user_idx" ON "GenerationTemplate" USING btree ("userId");--> statement-breakpoint
-CREATE INDEX "scene_chapter_idx" ON "Scene" USING btree ("chapterId");--> statement-breakpoint
-CREATE UNIQUE INDEX "scene_sequence_chapter_idx" ON "Scene" USING btree ("chapterId","sequence");--> statement-breakpoint
-CREATE UNIQUE INDEX "scene_card_scene_idx" ON "SceneCard" USING btree ("sceneId");--> statement-breakpoint
-CREATE INDEX "story_state_generation_idx" ON "StoryState" USING btree ("generationId");--> statement-breakpoint
-CREATE UNIQUE INDEX "story_state_chapter_idx" ON "StoryState" USING btree ("generationId","chapterNumber");
+DO $$ BEGIN
+ ALTER TABLE "UserPreferences" ADD CONSTRAINT "UserPreferences_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Account" ADD CONSTRAINT "Account_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE cascade ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Chat" ADD CONSTRAINT "Chat_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Message_v2" ADD CONSTRAINT "Message_v2_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Stream" ADD CONSTRAINT "Stream_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Vote_v2" ADD CONSTRAINT "Vote_v2_chatId_Chat_id_fk" FOREIGN KEY ("chatId") REFERENCES "public"."Chat"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Vote_v2" ADD CONSTRAINT "Vote_v2_messageId_Message_v2_id_fk" FOREIGN KEY ("messageId") REFERENCES "public"."Message_v2"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Document" ADD CONSTRAINT "Document_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Project" ADD CONSTRAINT "Project_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Suggestion" ADD CONSTRAINT "Suggestion_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Suggestion" ADD CONSTRAINT "Suggestion_documentId_documentCreatedAt_Document_id_createdAt_fk" FOREIGN KEY ("documentId","documentCreatedAt") REFERENCES "public"."Document"("id","createdAt") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterial" ADD CONSTRAINT "SourceMaterial_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterial" ADD CONSTRAINT "SourceMaterial_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialChapter" ADD CONSTRAINT "SourceMaterialChapter_sourceMaterialId_SourceMaterial_id_fk" FOREIGN KEY ("sourceMaterialId") REFERENCES "public"."SourceMaterial"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialChapter" ADD CONSTRAINT "SourceMaterialChapter_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialChapter" ADD CONSTRAINT "SourceMaterialChapter_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_chapterId_SourceMaterialChapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."SourceMaterialChapter"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_sourceMaterialId_SourceMaterial_id_fk" FOREIGN KEY ("sourceMaterialId") REFERENCES "public"."SourceMaterial"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialChunk" ADD CONSTRAINT "SourceMaterialChunk_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialProcessing" ADD CONSTRAINT "SourceMaterialProcessing_sourceMaterialId_SourceMaterial_id_fk" FOREIGN KEY ("sourceMaterialId") REFERENCES "public"."SourceMaterial"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialProcessing" ADD CONSTRAINT "SourceMaterialProcessing_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SourceMaterialProcessing" ADD CONSTRAINT "SourceMaterialProcessing_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Entity" ADD CONSTRAINT "Entity_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "EntityAttribute" ADD CONSTRAINT "EntityAttribute_entityId_Entity_id_fk" FOREIGN KEY ("entityId") REFERENCES "public"."Entity"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "EntityAttribute" ADD CONSTRAINT "EntityAttribute_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Relationship" ADD CONSTRAINT "Relationship_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Relationship" ADD CONSTRAINT "Relationship_sourceEntityId_Entity_id_fk" FOREIGN KEY ("sourceEntityId") REFERENCES "public"."Entity"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Relationship" ADD CONSTRAINT "Relationship_targetEntityId_Entity_id_fk" FOREIGN KEY ("targetEntityId") REFERENCES "public"."Entity"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_volumeId_Volume_id_fk" FOREIGN KEY ("volumeId") REFERENCES "public"."Volume"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_volumeId_Volume_id_fk" FOREIGN KEY ("volumeId") REFERENCES "public"."Volume"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "ChapterDraft" ADD CONSTRAINT "ChapterDraft_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Outline" ADD CONSTRAINT "Outline_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Volume" ADD CONSTRAINT "Volume_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Volume" ADD CONSTRAINT "Volume_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "BookExport" ADD CONSTRAINT "BookExport_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "BookExport" ADD CONSTRAINT "BookExport_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "BookGeneration" ADD CONSTRAINT "BookGeneration_outlineId_Outline_id_fk" FOREIGN KEY ("outlineId") REFERENCES "public"."Outline"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "BookGeneration" ADD CONSTRAINT "BookGeneration_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "BookGenerationAsset" ADD CONSTRAINT "BookGenerationAsset_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "BookGenerationStep" ADD CONSTRAINT "BookGenerationStep_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "BookGenerationStep" ADD CONSTRAINT "BookGenerationStep_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "ChapterVersion" ADD CONSTRAINT "ChapterVersion_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "ChapterVersion" ADD CONSTRAINT "ChapterVersion_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "GenerationNote" ADD CONSTRAINT "GenerationNote_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "GenerationNote" ADD CONSTRAINT "GenerationNote_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "GenerationTemplate" ADD CONSTRAINT "GenerationTemplate_userId_User_id_fk" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Scene" ADD CONSTRAINT "Scene_chapterId_Chapter_id_fk" FOREIGN KEY ("chapterId") REFERENCES "public"."Chapter"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "Scene" ADD CONSTRAINT "Scene_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SceneCard" ADD CONSTRAINT "SceneCard_sceneId_Scene_id_fk" FOREIGN KEY ("sceneId") REFERENCES "public"."Scene"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "SceneCard" ADD CONSTRAINT "SceneCard_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "StoryState" ADD CONSTRAINT "StoryState_generationId_BookGeneration_id_fk" FOREIGN KEY ("generationId") REFERENCES "public"."BookGeneration"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;
+--> statement-breakpoint
+DO $$ BEGIN
+ ALTER TABLE "StoryState" ADD CONSTRAINT "StoryState_projectId_Project_id_fk" FOREIGN KEY ("projectId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;
+EXCEPTION
+ WHEN duplicate_object THEN null;
+END $$;--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "user_preferences_user_idx" ON "UserPreferences" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "chat_user_id_created_at_idx" ON "Chat" USING btree ("userId","createdAt");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "message_chat_id_created_at_idx" ON "Message_v2" USING btree ("chatId","createdAt");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "source_material_project_idx" ON "SourceMaterial" USING btree ("projectId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "source_material_user_idx" ON "SourceMaterial" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "source_material_chapter_material_idx" ON "SourceMaterialChapter" USING btree ("sourceMaterialId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "source_material_chapter_project_idx" ON "SourceMaterialChapter" USING btree ("projectId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "source_material_chunk_chapter_idx" ON "SourceMaterialChunk" USING btree ("chapterId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "source_material_chunk_project_idx" ON "SourceMaterialChunk" USING btree ("projectId");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "source_material_processing_material_idx" ON "SourceMaterialProcessing" USING btree ("sourceMaterialId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "source_material_processing_project_idx" ON "SourceMaterialProcessing" USING btree ("projectId");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "entity_name_project_idx" ON "Entity" USING btree ("projectId","name");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "entity_attribute_name_idx" ON "EntityAttribute" USING btree ("entityId","name");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "relationship_unique_idx" ON "Relationship" USING btree ("projectId","sourceEntityId","targetEntityId","type");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "chapter_sequence_volume_idx" ON "Chapter" USING btree ("volumeId","sequence");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "book_export_project_idx" ON "BookExport" USING btree ("projectId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "book_export_user_idx" ON "BookExport" USING btree ("userId");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "book_generation_project_idx" ON "BookGeneration" USING btree ("projectId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "book_generation_asset_generation_idx" ON "BookGenerationAsset" USING btree ("generationId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "book_generation_asset_type_idx" ON "BookGenerationAsset" USING btree ("generationId","assetType");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "book_generation_step_generation_idx" ON "BookGenerationStep" USING btree ("generationId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "book_generation_step_sequence_idx" ON "BookGenerationStep" USING btree ("generationId","sequence");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "chapter_version_chapter_idx" ON "ChapterVersion" USING btree ("chapterId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "chapter_version_version_idx" ON "ChapterVersion" USING btree ("chapterId","version");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "generation_note_generation_idx" ON "GenerationNote" USING btree ("generationId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "generation_note_chapter_idx" ON "GenerationNote" USING btree ("chapterId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "generation_template_user_idx" ON "GenerationTemplate" USING btree ("userId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "scene_chapter_idx" ON "Scene" USING btree ("chapterId");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "scene_sequence_chapter_idx" ON "Scene" USING btree ("chapterId","sequence");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "scene_card_scene_idx" ON "SceneCard" USING btree ("sceneId");--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "story_state_generation_idx" ON "StoryState" USING btree ("generationId");--> statement-breakpoint
+CREATE UNIQUE INDEX IF NOT EXISTS "story_state_chapter_idx" ON "StoryState" USING btree ("generationId","chapterNumber");
