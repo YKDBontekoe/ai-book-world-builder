@@ -4,13 +4,12 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import { ArrowUpIcon } from "lucide-react";
 import {
-	type Dispatch,
 	memo,
-	type SetStateAction,
 	useCallback,
 	useEffect,
 	useMemo,
 	useRef,
+	useState,
 } from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
@@ -35,8 +34,6 @@ import { StopButton } from "./stop-button";
 
 function PureMultimodalInput({
 	chatId,
-	input,
-	setInput,
 	status,
 	stop,
 	setMessages,
@@ -50,8 +47,6 @@ function PureMultimodalInput({
 	projectId,
 }: {
 	chatId: string;
-	input: string;
-	setInput: Dispatch<SetStateAction<string>>;
 	status: UseChatHelpers<ChatMessage>["status"];
 	stop: () => void;
 	setMessages: UseChatHelpers<ChatMessage>["setMessages"];
@@ -64,6 +59,7 @@ function PureMultimodalInput({
 	availableModels: ChatModel[];
 	projectId?: string | null;
 }) {
+	const [input, setInput] = useState("");
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const { width } = useWindowSize();
 
@@ -100,7 +96,7 @@ function PureMultimodalInput({
 		}
 		// Only run once after hydration
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [adjustHeight, localStorageInput, setInput]);
+	}, [adjustHeight, localStorageInput]);
 
 	useEffect(() => {
 		setLocalStorageInput(input);
@@ -286,9 +282,6 @@ function PureMultimodalInput({
 export const MultimodalInput = memo(
 	PureMultimodalInput,
 	(prevProps, nextProps) => {
-		if (prevProps.input !== nextProps.input) {
-			return false;
-		}
 		if (prevProps.status !== nextProps.status) {
 			return false;
 		}
