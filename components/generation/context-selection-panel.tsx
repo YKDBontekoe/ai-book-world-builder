@@ -13,11 +13,12 @@ import {
 	Wand2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
+import { api } from "@/lib/api-client";
 import type { ContextSelection } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
@@ -42,22 +43,15 @@ type ProjectContextResponse = {
 	sourceMaterials: Array<{ id: string; filename: string }>;
 };
 
-async function fetchProjectContext(
-	projectId: string,
-): Promise<ProjectContextResponse> {
-	const res = await fetch(`/api/projects/${projectId}/context`);
-	if (!res.ok) throw new Error("Failed to fetch context");
-	return res.json();
-}
-
 export function ContextSelectionPanel({
 	projectId,
 	onChange,
 }: ContextSelectionPanelProps) {
-	const { data, isLoading } = useSWR(
-		["project-context", projectId],
-		() => fetchProjectContext(projectId),
-	);
+	const { data, isLoading } = useQuery({
+		queryKey: ["project-context", projectId],
+		queryFn: () =>
+			api.get<ProjectContextResponse>(`/api/projects/${projectId}/context`),
+	});
 
 	const [selection, setSelection] = useState<ContextSelection>({
 		entities: [],

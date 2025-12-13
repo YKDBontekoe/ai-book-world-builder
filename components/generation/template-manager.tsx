@@ -2,7 +2,7 @@
 
 import { BookTemplate, Save, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
-import useSWR from "swr";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { SectionHeader } from "@/components/ui/section-header";
 import { SelectionCard } from "@/components/ui/selection-card";
 import { Textarea } from "@/components/ui/textarea";
+import { api } from "@/lib/api-client";
 import type { GenerationSettings } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
@@ -34,12 +35,6 @@ interface TemplateManagerProps {
 	projectId: string;
 	currentSettings: Partial<GenerationSettings>;
 	onApplyTemplate: (settings: GenerationSettings) => void;
-}
-
-async function fetchTemplates(): Promise<Template[]> {
-	const res = await fetch("/api/generation/templates");
-	if (!res.ok) throw new Error("Failed to fetch templates");
-	return res.json();
 }
 
 const BUILT_IN_TEMPLATES: Template[] = [
@@ -140,11 +135,11 @@ export function TemplateManager({
 	currentSettings,
 	onApplyTemplate,
 }: TemplateManagerProps) {
-	const { data: userTemplates = [], mutate } = useSWR(
-		["templates", projectId],
-		fetchTemplates,
-		{ fallbackData: [] },
-	);
+	const queryClient = useQueryClient();
+	const { data: userTemplates = [] } = useQuery({
+		queryKey: ["templates", projectId],
+		queryFn: () => api.get<Template[]>("/api/generation/templates"),
+	});
 
 	const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
 		null,
@@ -152,50 +147,51 @@ export function TemplateManager({
 	const [showSaveDialog, setShowSaveDialog] = useState(false);
 	const [newTemplateName, setNewTemplateName] = useState("");
 	const [newTemplateDescription, setNewTemplateDescription] = useState("");
-	const [isSaving, setIsSaving] = useState(false);
+
+	const createTemplate = useMutation({
+		mutationFn: (data: {
+			name: string;
+			description: string;
+			settings: Partial<GenerationSettings>;
+		}) => api.post("/api/generation/templates", data),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["templates", projectId] });
+			setShowSaveDialog(false);
+			setNewTemplateName("");
+			setNewTemplateDescription("");
+		},
+		onError: (error) => {
+			console.error("Failed to save template:", error);
+		},
+	});
+
+	const deleteTemplate = useMutation({
+		mutationFn: (templateId: string) =>
+			api.delete(`/api/generation/templates/${templateId}`),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ["templates", projectId] });
+		},
+		onError: (error) => {
+			console.error("Failed to delete template:", error);
+		},
+	});
 
 	const handleApplyTemplate = (template: Template) => {
 		setSelectedTemplateId(template.id);
 		onApplyTemplate(template.settings);
 	};
 
-	const handleSaveAsTemplate = async () => {
+	const handleSaveAsTemplate = () => {
 		if (!newTemplateName.trim()) return;
-
-		setIsSaving(true);
-		try {
-			const res = await fetch("/api/generation/templates", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					name: newTemplateName,
-					description: newTemplateDescription,
-					settings: currentSettings,
-				}),
-			});
-
-			if (!res.ok) throw new Error("Failed to save template");
-
-			await mutate();
-			setShowSaveDialog(false);
-			setNewTemplateName("");
-			setNewTemplateDescription("");
-		} catch (error) {
-			console.error("Failed to save template:", error);
-		} finally {
-			setIsSaving(false);
-		}
+		createTemplate.mutate({
+			name: newTemplateName,
+			description: newTemplateDescription,
+			settings: currentSettings,
+		});
 	};
 
-	const handleDeleteTemplate = async (templateId: string) => {
-		try {
-			await fetch(`/api/generation/templates/${templateId}`, {
-				method: "DELETE",
-			});
-			await mutate();
-		} catch (error) {
-			console.error("Failed to delete template:", error);
-		}
+	const handleDeleteTemplate = (templateId: string) => {
+		deleteTemplate.mutate(templateId);
 	};
 
 	return (
@@ -254,9 +250,9 @@ export function TemplateManager({
 									</Button>
 									<Button
 										onClick={handleSaveAsTemplate}
-										disabled={isSaving || !newTemplateName.trim()}
+										disabled={createTemplate.isPending || !newTemplateName.trim()}
 									>
-										{isSaving ? "Saving..." : "Save Template"}
+										{createTemplate.isPending ? "Saving..." : "Save Template"}
 									</Button>
 								</DialogFooter>
 							</DialogContent>

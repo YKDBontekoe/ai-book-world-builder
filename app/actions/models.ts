@@ -5,19 +5,31 @@ import { unstable_cache } from "next/cache";
 
 import type { ChatModel } from "@/lib/ai/models";
 
+// Helper type for Gateway response structure
+type GatewayModel = {
+  id: string;
+  modelType?: string | null;
+  name?: string | null;
+  description?: string | null;
+  provider?: string;
+  pricing?: any;
+};
+
 export const getAvailableChatModels = unstable_cache(
   async (): Promise<ChatModel[]> => {
     try {
       const { models } = await gateway.getAvailableModels();
-      const languageModels = models.filter(
-        (model: any) => model.modelType === "language"
+      // Cast the filter predicate or the array to avoid strict type mismatch if Gateway types are loose
+      const languageModels = (models as unknown as GatewayModel[]).filter(
+        (model) => model.modelType === "language"
       );
 
-      return languageModels.map((model: any) => ({
+      return languageModels.map((model) => ({
         id: model.id,
         name: model.name || model.id,
         description: model.description || "",
         gatewayId: model.id,
+        // Since we filtered by modelType === "language", we know it's a language model
         modelType: "language",
         provider: model.provider || model.id.split("/")[0] || "unknown",
         supportsImages:

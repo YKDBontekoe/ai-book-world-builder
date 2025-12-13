@@ -10,3 +10,10 @@
 ## 2024-05-23 - Fixed HTML Nesting in TipCard
 
 Fixed a console error `<p> cannot contain a nested <p>` by changing the outer container of the `TipCard` component from a `<p>` tag to a `<div>` tag. This allows the `TipCard` to validly contain block-level elements (like `<ul>`, `<div>`, `<p>`) passed via the `children` prop, as seen in `GenerationReviewPanel`. This change adheres to HTML specifications and prevents hydration mismatches or layout issues.
+
+## 2025-12-13 - Architectural Improvements: TanStack Query & Strict Typing
+
+- **Centralized API**: Replaced scattered `fetch` calls with a typed `lib/api-client.ts` wrapper. This standardizes error handling and base URL management.
+- **State Management**: Introduced `@tanstack/react-query` to replace `useSWR` for server state (fetching). This allows for better caching, background refetching, and mutation handling. Components like `ContextSelectionPanel` now use `useQuery`.
+- **Strict Typing in Tools**: Refactored AI tools (e.g., `create-entity`) to use `z.infer<typeof schema>` for arguments instead of `any`. This catches type errors at compile time and improves safety.
+- **Verification Performance**: Updated `verification/runner.py` to use `ThreadPoolExecutor` for parallel execution, significantly speeding up the visual verification workflow.

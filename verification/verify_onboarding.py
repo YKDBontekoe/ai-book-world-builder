@@ -1,3 +1,4 @@
+import os
 from playwright.sync_api import sync_playwright, expect
 
 def verify_onboarding():
@@ -7,8 +8,9 @@ def verify_onboarding():
         page = context.new_page()
 
         try:
-            print("Navigating to onboarding page...")
-            page.goto("http://localhost:3000/onboarding")
+            base_url = os.getenv("BASE_URL", "http://localhost:3000")
+            print(f"Navigating to {base_url}/onboarding...")
+            page.goto(f"{base_url}/onboarding")
 
             # Wait for content to load
             expect(page.get_by_role("heading", name="Build Your Story Universe")).to_be_visible()
