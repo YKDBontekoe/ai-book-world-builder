@@ -104,7 +104,6 @@ export function Chat({
 
 	const { setDataStream } = useSetDataStream();
 
-	const [input, setInput] = useState<string>("");
 	const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
 	const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
 	const [currentModelId, setCurrentModelId] =
@@ -335,13 +334,11 @@ export function Chat({
 										<MultimodalInput
 											availableModels={availableModels}
 											chatId={id}
-											input={input}
 											onModelChange={setCurrentModelId}
 											projectId={selectedProjectId}
 											selectedModelId={currentModelId}
 											selectedVisibilityType={visibilityType}
 											sendMessage={sendMessage}
-											setInput={setInput}
 											setMessages={setMessages}
 											status={status}
 											stop={stop}
