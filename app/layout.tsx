@@ -4,6 +4,7 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
+import { QueryProvider } from "@/components/providers/query-provider";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
@@ -81,7 +82,9 @@ export default function RootLayout({
 					enableSystem
 				>
 					<Toaster position="top-center" />
-					<SessionProvider>{children}</SessionProvider>
+					<SessionProvider>
+						<QueryProvider>{children}</QueryProvider>
+					</SessionProvider>
 				</ThemeProvider>
 			</body>
 		</html>

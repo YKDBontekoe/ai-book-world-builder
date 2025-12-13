@@ -3,20 +3,23 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { createProject as createProjectMutation } from "@/lib/db/queries";
 
-export const createProject = ({
-  session,
-}: {
-  session: Session | null;
-}) =>
+const inputSchema = z.object({
+  name: z.string().min(2).describe("The name of the project."),
+  description: z
+    .string()
+    .optional()
+    .describe("A brief description of the project."),
+  visibility: z
+    .enum(["private", "public"])
+    .default("private")
+    .describe("Visibility of the project."),
+});
+
+export const createProject = ({ session }: { session: Session | null }) =>
   tool({
-    description:
-      "Create a new project (story/book world) for the user.",
-    inputSchema: z.object({
-      name: z.string().min(2).describe("The name of the project."),
-      description: z.string().optional().describe("A brief description of the project."),
-      visibility: z.enum(["private", "public"]).default("private").describe("Visibility of the project."),
-    }),
-    execute: async (args: any) => {
+    description: "Create a new project (story/book world) for the user.",
+    inputSchema,
+    execute: async (args: z.infer<typeof inputSchema>) => {
       const { name, description, visibility } = args;
 
       if (!session?.user?.id) {

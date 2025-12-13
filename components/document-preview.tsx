@@ -15,7 +15,7 @@ import {
   useMemo,
   useRef,
 } from "react";
-import useSWR from "swr";
+import { useQuery } from "@tanstack/react-query";
 import type { ArtifactKind, UIArtifact } from "@/components/artifact/types";
 import { CodeEditor } from "@/components/code-editor";
 import { DocumentToolCall, DocumentToolResult } from "@/components/document";
@@ -24,8 +24,9 @@ import { ImageEditor } from "@/components/image-editor";
 import { SpreadsheetEditor } from "@/components/sheet-editor";
 import { Editor } from "@/components/text-editor";
 import { useArtifact } from "@/hooks/use-artifact";
+import { api } from "@/lib/api-client";
 import type { Document } from "@/lib/db/schema";
-import { cn, fetcher } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 type DocumentPreviewProps = {
   isReadonly: boolean;
@@ -40,9 +41,12 @@ export function DocumentPreview({
 }: DocumentPreviewProps) {
   const { artifact, setArtifact } = useArtifact();
 
-  const { data: documents, isLoading: isDocumentsFetching } = useSWR<
-    Document[]
-  >(result ? `/api/document?id=${result.id}` : null, fetcher);
+  const { data: documents, isLoading: isDocumentsFetching } = useQuery({
+    queryKey: ["document", result?.id],
+    queryFn: () =>
+      api.get<Document[]>("/api/document", { params: { id: result.id } }),
+    enabled: !!result?.id,
+  });
 
   const previewDocument = useMemo(() => documents?.[0], [documents]);
   const hitboxRef = useRef<HTMLDivElement>(null);

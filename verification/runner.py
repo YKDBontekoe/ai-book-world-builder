@@ -1,6 +1,20 @@
 import os
 import subprocess
 import sys
+import concurrent.futures
+
+def run_script(script_path, repo_root, env):
+    script_name = os.path.basename(script_path)
+    print(f"Starting {script_name}...")
+    # Capture output to prevent interleaving
+    result = subprocess.run(
+        [sys.executable, script_path],
+        cwd=repo_root,
+        env=env,
+        capture_output=True,
+        text=True
+    )
+    return script_name, result
 
 def run_verification_scripts():
     # verification directory is the directory containing this script
@@ -20,19 +34,32 @@ def run_verification_scripts():
     # Ensure we run from the repo root
     repo_root = os.path.dirname(verification_dir)
 
-    for script in scripts:
-        print(f"\n--- Running {script} ---")
-        script_path = os.path.join(verification_dir, script)
+    # Set default BASE_URL if not present
+    env = os.environ.copy()
+    if "BASE_URL" not in env:
+        env["BASE_URL"] = "http://localhost:3000"
 
-        # Run the script using the current python executable
-        # We pass the environment variables (like BASE_URL)
-        result = subprocess.run([sys.executable, script_path], cwd=repo_root, env=os.environ.copy())
+    print(f"Running scripts in parallel (max_workers=4) against {env['BASE_URL']}...")
 
-        if result.returncode != 0:
-            print(f"❌ {script} failed.")
-            failed_scripts.append(script)
-        else:
-            print(f"✅ {script} passed.")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {
+            executor.submit(run_script, os.path.join(verification_dir, s), repo_root, env): s
+            for s in scripts
+        }
+
+        for future in concurrent.futures.as_completed(futures):
+            script_name, result = future.result()
+
+            if result.returncode != 0:
+                print(f"❌ {script_name} failed.")
+                print(f"--- STDOUT ({script_name}) ---")
+                print(result.stdout)
+                print(f"--- STDERR ({script_name}) ---")
+                print(result.stderr)
+                print("---------------------------------")
+                failed_scripts.append(script_name)
+            else:
+                print(f"✅ {script_name} passed.")
 
     print("\n--- Summary ---")
     if failed_scripts:

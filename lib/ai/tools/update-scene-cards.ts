@@ -25,21 +25,23 @@ const sceneUpdateSchema = z.object({
   operation: z.enum(["create", "update", "delete"]),
 });
 
+const inputSchema = z.object({
+  projectId: z.string().describe("The ID of the project"),
+  chapterId: z
+    .string()
+    .describe("The ID of the chapter to update scene cards for"),
+  instructions: z
+    .string()
+    .optional()
+    .describe("Instructions for replanning (e.g., 'Add a fight scene')"),
+});
+
 export const updateSceneCards = ({ session }: { session: Session | null }) =>
   tool({
     description:
       "The Orchestrator. Updates the scene structure for a chapter (Plan/Replan).",
-    inputSchema: z.object({
-      projectId: z.string().describe("The ID of the project"),
-      chapterId: z
-        .string()
-        .describe("The ID of the chapter to update scene cards for"),
-      instructions: z
-        .string()
-        .optional()
-        .describe("Instructions for replanning (e.g., 'Add a fight scene')"),
-    }),
-    execute: async (args: any) => {
+    inputSchema,
+    execute: async (args: z.infer<typeof inputSchema>) => {
       const { projectId, chapterId, instructions } = args;
       if (!session?.user) return { error: "Authentication required." };
 
