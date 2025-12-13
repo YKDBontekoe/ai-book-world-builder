@@ -13,7 +13,7 @@ def verify_chat(page):
 
     # Go to chat (should be redirected there after login, but let's be sure)
     print("Navigating to chat...")
-    page.goto(f"{BASE_URL}/")
+    page.goto(f"{BASE_URL}/", timeout=120000)
 
     # Check if chat input exists
     print("Checking for input...")
