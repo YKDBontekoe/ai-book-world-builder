@@ -1,11 +1,12 @@
-## 2025-05-20 - [Chat Input Accessibility]
-**Learning:** The chat input area relies heavily on icon-only buttons (Send, Stop, Attach) which lack accessible names. This makes the primary interaction method difficult for screen reader users.
-**Action:** Always verify icon-only buttons have `aria-label` or `aria-labelledby`, especially in high-traffic areas like input forms.
+## 2024-05-23 - Chat UX Robustness
+- **Collapsible Logs**: Tool logs can be overwhelming. Making them collapsible by default but expandable for details strikes a good balance between transparency and cleanliness.
+- **Retry Strategy**: Implementing a "Retry" on the *last* user message is tricky with optimistic UIs. Using `regenerate()` from the AI SDK works well as it resends the history.
+- **Visual Feedback**: Adding subtle animations (like the thinking dots or loading spinners) significantly improves the perceived responsiveness of the app.
+## 2024-05-23 - Type Safety Refactoring
 
-## 2025-05-21 - [MacOS Design Overhaul Implementation]
-**Learning:** To achieve a "Native macOS" aesthetic using Tailwind and shadcn/ui, standard `rounded-md` tokens were insufficient. Updating base components (Button, Input, Select) to use `rounded-lg` (mapped to 16px via `--radius`) provided the desired floating, capsule-like appearance. Consistency across interactive elements is key to this design language.
+*   **Replacing `any` with `unknown`**: When refactoring loose types in a large codebase, replacing `any` with `unknown` (e.g., in `ToolInvocation.args`) is a safer first step than trying to define perfect types immediately. It forces explicit casting or checking at usage sites, revealing assumptions.
+*   **Component Mocks in Tests**: Encountered issues with testing library failing to find labels when component mocks don't accurately reflect the DOM structure of complex libraries like Radix UI. Simplistic mocks (e.g., `select` instead of `SelectTrigger` + `SelectContent`) can cause `getByLabelText` to fail if the ID association is lost.
+*   **Accessibility Linting**: `ultracite`/Biome is strict about `useSemanticElements` (e.g., `div role="button"`). While fixing these is ideal, pragmatic suppression with comments is sometimes necessary to avoid breaking complex UI interactions (like nested click handlers) or hydration issues without a full rewrite.
+## 2024-05-23 - Fixed HTML Nesting in TipCard
 
-## 2025-12-13 - Liquid Glass Primitives
-Learned that directly applying `.glass-input` to primitive components (Input, Textarea) provides a consistent "Liquid Glass" look across the app. Overlays like `DropdownMenu` and `Select` benefit from replacing `bg-popover` with `.glass-panel` to maintain transparency and blur effects consistent with the macOS aesthetic.
-## 2025-05-22 - [Documentation Source of Truth]
-**Learning:** Establishing `AGENTS.md` as the single source of truth that orchestrates other documentation files (like `docs/design-system.md` and `.agent/`) prevents knowledge fragmentation. Explicitly documenting implicit rules (like dynamic imports for shared libs and dual verification strategies) ensures consistent agent behavior and reduces error rates in complex environments.
+Fixed a console error `<p> cannot contain a nested <p>` by changing the outer container of the `TipCard` component from a `<p>` tag to a `<div>` tag. This allows the `TipCard` to validly contain block-level elements (like `<ul>`, `<div>`, `<p>`) passed via the `children` prop, as seen in `GenerationReviewPanel`. This change adheres to HTML specifications and prevents hydration mismatches or layout issues.

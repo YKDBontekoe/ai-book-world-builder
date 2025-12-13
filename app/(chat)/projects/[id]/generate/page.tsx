@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
-import { getProjectByIdWithAccess } from "@/lib/db/queries";
+import {
+	getBookGenerationForProject,
+	getProjectByIdWithAccess,
+} from "@/lib/db/queries";
 import { GenerationPageContent } from "./generation-page-content";
 
 export default async function GeneratePage({
@@ -12,7 +15,7 @@ export default async function GeneratePage({
 	const { id: projectId } = await params;
 
 	if (!session?.user?.id) {
-		redirect("/api/auth/guest");
+		redirect("/login");
 	}
 
 	const project = await getProjectByIdWithAccess({
@@ -24,5 +27,12 @@ export default async function GeneratePage({
 		redirect("/");
 	}
 
-	return <GenerationPageContent project={project} />;
+	const generation = await getBookGenerationForProject({ projectId });
+
+	return (
+		<GenerationPageContent
+			project={project}
+			initialGenerationId={generation?.id}
+		/>
+	);
 }

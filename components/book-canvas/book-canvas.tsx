@@ -10,6 +10,7 @@ import {
 	HistoryIcon,
 	LayoutIcon,
 	LibraryIcon,
+	type LucideIcon,
 	SparklesIcon,
 	XIcon,
 } from "lucide-react";
@@ -49,7 +50,7 @@ export function BookCanvas() {
 		}
 	};
 
-	const tabs: { id: CanvasPane; label: string; icon: any }[] = [
+	const tabs: { id: CanvasPane; label: string; icon: LucideIcon }[] = [
 		{ id: "outline", label: "Outline", icon: LayoutIcon },
 		{ id: "timeline", label: "Timeline", icon: CalendarIcon },
 		{ id: "scenes", label: "Scenes", icon: LibraryIcon },
@@ -77,8 +78,8 @@ export function BookCanvas() {
 							className={cn(
 								"h-9 w-9 rounded-xl transition-all duration-300",
 								activePane === tab.id
-                                    ? "bg-primary/10 text-primary shadow-sm scale-105"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-white/10"
+									? "bg-primary/10 text-primary shadow-sm scale-105"
+									: "text-muted-foreground hover:text-foreground hover:bg-white/10",
 							)}
 							key={tab.id}
 							onClick={() => {
@@ -101,7 +102,7 @@ export function BookCanvas() {
 		<div
 			className={cn(
 				"fixed inset-0 z-50 flex h-dvh w-full flex-col md:static md:flex flex-shrink-0",
-                "glass border-l border-glass-border shadow-2xl",
+				"glass border-l border-glass-border shadow-2xl",
 				"transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]", // MacOS curve
 				"md:w-96 lg:w-[28rem]", // Standardized widths
 			)}
@@ -113,7 +114,9 @@ export function BookCanvas() {
 						<SparklesIcon className="h-4 w-4" />
 					</div>
 					<div>
-						<h2 className="font-semibold text-sm tracking-tight">Book Canvas</h2>
+						<h2 className="font-semibold text-sm tracking-tight">
+							Book Canvas
+						</h2>
 						<span
 							className={cn(
 								"text-xs font-medium transition-colors",
@@ -193,9 +196,9 @@ export function BookCanvas() {
 				<div className="flex items-center justify-between px-2">
 					<div className="flex items-center gap-2">
 						<div className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                        </div>
+							<span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+							<span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+						</div>
 						<span className="font-medium opacity-80">AI Ready</span>
 					</div>
 					<span className="text-muted-foreground/60">

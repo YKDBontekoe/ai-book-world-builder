@@ -20,7 +20,8 @@ import { runGeneration } from "@/lib/generation";
  */
 export async function startGeneration(
 	projectId: string,
-	settings: GenerationSettings,
+	settings: Partial<GenerationSettings>,
+	suggestions?: string,
 ) {
 	const session = await auth();
 	if (!session?.user?.id) {
@@ -35,6 +36,32 @@ export async function startGeneration(
 	if (!project) {
 		return { error: "Project not found" };
 	}
+
+	// Default settings
+	const fullSettings: GenerationSettings = {
+		totalChapters: 10,
+		pagesPerChapter: 10,
+		revisionRounds: 1,
+		writingStylePreset: "custom",
+		writerModelId: "anthropic-claude-sonnet-4-5",
+		reviewerModelId: "openai-gpt-4o-mini",
+		includePrologue: false,
+		includeEpilogue: false,
+		generateBackCoverBlurb: true,
+		generateFrontCover: false,
+		generateCharacterSheets: false,
+		generateChapterSummaries: true,
+		generateTableOfContents: true,
+		runConsistencyCheck: false,
+		contextSelection: {
+			entities: [],
+			outlines: [],
+			scenes: [],
+			drafts: [],
+			sourceMaterials: [],
+		},
+		...settings,
+	};
 
 	try {
 		// Delete any existing generation for this project (due to unique constraint)
@@ -65,8 +92,8 @@ export async function startGeneration(
 			.values({
 				projectId,
 				status: "running",
-				settings: settings as any,
-				totalSteps: calculateTotalSteps(settings),
+				settings: fullSettings as any,
+				totalSteps: calculateTotalSteps(fullSettings),
 				completedSteps: 0,
 				startedAt: new Date(),
 				createdAt: new Date(),
@@ -74,8 +101,18 @@ export async function startGeneration(
 			})
 			.returning();
 
+		// Add user suggestions as a global note if provided
+		if (suggestions && suggestions.trim()) {
+			await db.insert(generationNote).values({
+				generationId: generation.id,
+				content: suggestions,
+				isGlobal: true,
+				createdAt: new Date(),
+			});
+		}
+
 		// Create initial steps
-		const steps = buildGenerationSteps(generation.id, settings);
+		const steps = buildGenerationSteps(generation.id, fullSettings);
 		if (steps.length > 0) {
 			await db.insert(bookGenerationStep).values(steps);
 		}
@@ -86,7 +123,7 @@ export async function startGeneration(
 			generationId: generation.id,
 			projectId,
 			userId: session.user.id,
-			settings,
+			settings: fullSettings,
 			callbacks: {
 				onLog: (message, type) => {
 					console.log(`[${type.toUpperCase()}] ${message}`);

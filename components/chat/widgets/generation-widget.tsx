@@ -5,6 +5,7 @@ import {
 	ChevronDown,
 	ChevronUp,
 	Loader2,
+	type LucideIcon,
 	MapPinIcon,
 	PenIcon,
 	SparklesIcon,
@@ -18,11 +19,44 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { InteractiveWidget } from "./interactive-widget";
 
+interface WidgetInput {
+	userRequest?: string;
+	instructions?: string;
+	[key: string]: unknown;
+}
+
+interface WidgetOutput {
+	error?: string;
+	decision?: {
+		actionIcon?: string;
+		actionTitle?: string;
+		nextAction?: string;
+		targetName?: string;
+		[key: string]: unknown;
+	};
+	projectStats?: {
+		characters?: number;
+		locations?: number;
+		chapters?: number;
+		scenes?: number;
+		draftedScenes?: number;
+		[key: string]: unknown;
+	};
+	readinessScore?: number;
+	projectName?: string;
+	nextStepPreview?: string;
+	preview?: string;
+	wordCount?: number;
+	sceneId?: string;
+	message?: string;
+	[key: string]: unknown;
+}
+
 interface GenerationWidgetProps {
 	toolName: string;
 	state: string;
-	input: any;
-	output?: any;
+	input: WidgetInput;
+	output?: WidgetOutput;
 }
 
 // Helper component for stat badges
@@ -31,7 +65,7 @@ function StatBadge({
 	value,
 	label,
 }: {
-	icon: any;
+	icon: LucideIcon;
 	value: number;
 	label: string;
 }) {
@@ -114,7 +148,7 @@ export function GenerationWidget({
 				isError
 			>
 				<div className="p-4 text-sm text-red-600 dark:text-red-400">
-					{output.error}
+					{output?.error}
 				</div>
 			</InteractiveWidget>
 		);
@@ -194,30 +228,30 @@ export function GenerationWidget({
 					{/* Project Stats */}
 					{stats && (
 						<div className="flex flex-wrap gap-1.5">
-							{stats.characters > 0 && (
+							{(stats.characters ?? 0) > 0 && (
 								<StatBadge
 									icon={UsersIcon}
-									value={stats.characters}
+									value={stats.characters ?? 0}
 									label="chars"
 								/>
 							)}
-							{stats.locations > 0 && (
+							{(stats.locations ?? 0) > 0 && (
 								<StatBadge
 									icon={MapPinIcon}
-									value={stats.locations}
+									value={stats.locations ?? 0}
 									label="places"
 								/>
 							)}
-							{stats.chapters > 0 && (
+							{(stats.chapters ?? 0) > 0 && (
 								<StatBadge
 									icon={BookOpenIcon}
-									value={stats.chapters}
+									value={stats.chapters ?? 0}
 									label="chaps"
 								/>
 							)}
-							{stats.scenes > 0 && (
+							{(stats.scenes ?? 0) > 0 && (
 								<span className="flex items-center gap-1 text-xs text-muted-foreground">
-									({stats.draftedScenes}/{stats.scenes} scenes drafted)
+									({stats.draftedScenes ?? 0}/{stats.scenes} scenes drafted)
 								</span>
 							)}
 						</div>
