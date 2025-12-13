@@ -37,7 +37,7 @@ export function useChatVisibility({
 
 	const visibilityType = useMemo(() => {
 		if (!historyData) {
-			return localVisibility;
+			return localVisibility ?? "private";
 		}
 
 		// Flatten pages to find the chat
