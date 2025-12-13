@@ -14,56 +14,48 @@ https://nextjs.org/telemetry
 
  ✓ Ready in 2.9s
  ○ Compiling /register ...
- GET /register 200 in 9.6s (compile: 8.3s, proxy.ts: 258ms, render: 983ms)
- POST /register 200 in 3.8s (compile: 16ms, proxy.ts: 43ms, render: 3.8s)
- GET /api/auth/session 200 in 4.8s (compile: 4.8s, render: 37ms)
- GET /api/auth/session 200 in 96ms (compile: 53ms, render: 43ms)
+ GET /register 200 in 9.7s (compile: 8.4s, proxy.ts: 273ms, render: 1108ms)
+ POST /register 200 in 3.3s (compile: 15ms, proxy.ts: 42ms, render: 3.3s)
+ GET /api/auth/session 200 in 4.9s (compile: 4.9s, render: 80ms)
+ GET /api/auth/session 200 in 116ms (compile: 62ms, render: 54ms)
  ○ Compiling / ...
- GET / 200 in 32.8s (compile: 31.5s, proxy.ts: 17ms, render: 1315ms)
- GET / 200 in 673ms (compile: 12ms, proxy.ts: 24ms, render: 636ms)
- GET /register 200 in 200ms (compile: 8ms, proxy.ts: 8ms, render: 184ms)
- GET /api/auth/session 200 in 123ms (compile: 113ms, render: 10ms)
- GET /api/auth/session 200 in 10ms (compile: 4ms, render: 6ms)
- POST /register 200 in 1022ms (compile: 7ms, proxy.ts: 14ms, render: 1002ms)
- GET /api/auth/session 200 in 42ms (compile: 11ms, render: 30ms)
- GET / 200 in 539ms (compile: 13ms, proxy.ts: 26ms, render: 500ms)
- GET /api/history?limit=20 200 in 342ms (compile: 6ms, proxy.ts: 51ms, render: 285ms)
- GET / 200 in 1422ms (compile: 10ms, proxy.ts: 14ms, render: 1398ms)
- GET /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 405ms (compile: 18ms, proxy.ts: 21ms, render: 366ms)
- POST / 200 in 1453ms (compile: 34ms, proxy.ts: 57ms, render: 1362ms)
- ⨯ Error: Failed query: insert into "UserPreferences" ("id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt") values (default, $1, $2, $3, $4, $5) returning "id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt"
-params: d4d48192-7d58-460d-9394-484275003756,[],[],2025-12-13T16:34:37.762Z,2025-12-13T16:34:37.762Z
-    at async getUserPreferences (lib/db/queries/user-preferences.ts:27:20)
-    at async getModelPreferences (app/actions/model-preferences.ts:24:16)
-  25 | 	// Create new preferences
-  26 | 	const now = new Date();
-> 27 | 	const [created] = await db
-     | 	                  ^
-  28 | 		.insert(userPreferences)
-  29 | 		.values({
-  30 | 			userId, {
-  query: 'insert into "UserPreferences" ("id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt") values (default, $1, $2, $3, $4, $5) returning "id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt"',
-  params: [Array],
-  digest: '1100805443',
-  [cause]: Error [PostgresError]: duplicate key value violates unique constraint "UserPreferences_userId_key"
-      at ignore-listed frames {
-    severity_local: 'ERROR',
-    severity: 'ERROR',
-    code: '23505',
-    detail: 'Key ("userId")=(d4d48192-7d58-460d-9394-484275003756) already exists.',
-    schema_name: 'public',
-    table_name: 'UserPreferences',
-    constraint_name: 'UserPreferences_userId_key',
-    file: 'nbtinsert.c',
-    line: '667',
-    routine: '_bt_check_unique'
-  }
+ GET / 200 in 41s (compile: 39.4s, proxy.ts: 15ms, render: 1489ms)
+ GET / 200 in 18.8s (compile: 14.6s, proxy.ts: 24ms, render: 4.2s)
+ GET /register 200 in 233ms (compile: 11ms, proxy.ts: 9ms, render: 213ms)
+ GET /api/auth/session 200 in 143ms (compile: 122ms, render: 21ms)
+ GET /api/auth/session 200 in 15ms (compile: 6ms, render: 8ms)
+ POST /register 200 in 1051ms (compile: 6ms, proxy.ts: 11ms, render: 1034ms)
+ GET /api/auth/session 200 in 29ms (compile: 7ms, render: 21ms)
+ GET / 200 in 547ms (compile: 16ms, proxy.ts: 26ms, render: 505ms)
+ GET / 200 in 520ms (compile: 25ms, proxy.ts: 61ms, render: 434ms)
+ GET /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 457ms (compile: 21ms, proxy.ts: 83ms, render: 352ms)
+ POST / 200 in 940ms (compile: 13ms, proxy.ts: 79ms, render: 847ms)
+ POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 935ms (compile: 94ms, proxy.ts: 75ms, render: 765ms)
+ POST /api/ai-suggestions 200 in 2.3s (compile: 1737ms, proxy.ts: 91ms, render: 437ms)
+ GET /api/history?limit=20 200 in 2.5s (compile: 1402ms, proxy.ts: 34ms, render: 1034ms)
+Suggestion Generation Error: Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
 }
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 500 in 2.8s (compile: 82ms, proxy.ts: 810ms, render: 1884ms)
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 1656ms (compile: 26ms, proxy.ts: 1358ms, render: 272ms)
- ○ Compiling /api/chat ...
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 319ms (compile: 22ms, proxy.ts: 24ms, render: 273ms)
- POST /api/ai-suggestions 200 in 5.1s (compile: 11ms, proxy.ts: 165ms, render: 4.9s)
- POST /api/ai-suggestions 200 in 7.2s (compile: 2.0s, proxy.ts: 21ms, render: 5.1s)
- POST /api/chat 200 in 5.1s (compile: 4.9s, proxy.ts: 164ms, render: 37ms)
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 873ms (compile: 847ms, proxy.ts: 18ms, render: 8ms)
+ ⨯ Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
+}
+ ⨯ Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
+}
+ GET /api/auth/session 200 in 220ms (compile: 153ms, render: 68ms)
+ GET / 200 in 2.8s (compile: 110ms, proxy.ts: 78ms, render: 2.6s)
+ GET /api/auth/session 200 in 104ms (compile: 15ms, render: 90ms)
+ GET /api/history?limit=20 200 in 589ms (compile: 34ms, proxy.ts: 224ms, render: 331ms)
+ POST / 200 in 915ms (compile: 26ms, proxy.ts: 144ms, render: 745ms)
+ GET /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 794ms (compile: 50ms, proxy.ts: 97ms, render: 646ms)
+ POST / 200 in 309ms (compile: 17ms, proxy.ts: 20ms, render: 272ms)
+ POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 328ms (compile: 13ms, proxy.ts: 45ms, render: 270ms)
+ POST / 200 in 299ms (compile: 9ms, proxy.ts: 45ms, render: 245ms)
+ POST / 200 in 276ms (compile: 10ms, proxy.ts: 14ms, render: 253ms)
+ POST / 200 in 268ms (compile: 10ms, proxy.ts: 13ms, render: 244ms)
+ POST / 200 in 266ms (compile: 9ms, proxy.ts: 13ms, render: 243ms)
+ POST / 200 in 271ms (compile: 9ms, proxy.ts: 13ms, render: 250ms)
+ POST /api/ai-suggestions 200 in 26.3s (compile: 32ms, proxy.ts: 83ms, render: 26.2s)

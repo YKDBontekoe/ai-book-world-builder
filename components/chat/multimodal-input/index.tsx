@@ -1,7 +1,6 @@
 "use client";
 
 import type { UseChatHelpers } from "@ai-sdk/react";
-import type { UIMessage } from "ai";
 import { ArrowUpIcon } from "lucide-react";
 import {
 	type Dispatch,
@@ -13,7 +12,6 @@ import {
 	useRef,
 } from "react";
 import { toast } from "sonner";
-import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { Context } from "@/components/elements/context";
 import {
@@ -23,12 +21,13 @@ import {
 	PromptInputToolbar,
 	PromptInputTools,
 } from "@/components/elements/prompt-input";
+import { useFileAttachments } from "@/hooks/use-file-attachments";
+import { useMultimodalInput } from "@/hooks/use-multimodal-input";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { cn } from "@/lib/utils";
 import { PreviewAttachment } from "../preview-attachment";
-import { useFileAttachments } from "@/hooks/use-file-attachments";
 import { AttachmentsButton } from "./attachments-button";
 import { ModelSelectorCompact } from "./model-selector";
 import { StopButton } from "./stop-button";
@@ -64,51 +63,10 @@ function PureMultimodalInput({
 	availableModels: ChatModel[];
 	projectId?: string | null;
 }) {
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
-	const { width } = useWindowSize();
-
-	const adjustHeight = useCallback(() => {
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "44px";
-		}
-	}, []);
-
-	useEffect(() => {
-		if (textareaRef.current) {
-			adjustHeight();
-		}
-	}, [adjustHeight]);
-
-	const resetHeight = useCallback(() => {
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "44px";
-		}
-	}, []);
-
-	const [localStorageInput, setLocalStorageInput] = useLocalStorage(
-		"input",
-		"",
-	);
-
-	useEffect(() => {
-		if (textareaRef.current) {
-			const domValue = textareaRef.current.value;
-			// Prefer DOM value over localStorage to handle hydration
-			const finalValue = domValue || localStorageInput || "";
-			setInput(finalValue);
-			adjustHeight();
-		}
-		// Only run once after hydration
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [adjustHeight, localStorageInput, setInput]);
-
-	useEffect(() => {
-		setLocalStorageInput(input);
-	}, [input, setLocalStorageInput]);
-
-	const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setInput(event.target.value);
-	};
+	const { textareaRef, width, resetHeight, handleInput } = useMultimodalInput({
+		input,
+		setInput,
+	});
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -138,7 +96,6 @@ function PureMultimodalInput({
 		});
 
 		setAttachments([]);
-		setLocalStorageInput("");
 		resetHeight();
 		setInput("");
 
@@ -151,9 +108,9 @@ function PureMultimodalInput({
 		attachments,
 		sendMessage,
 		setAttachments,
-		setLocalStorageInput,
 		width,
 		resetHeight,
+		textareaRef,
 	]);
 
 	const contextProps = useMemo(
@@ -162,7 +119,6 @@ function PureMultimodalInput({
 		}),
 		[usage],
 	);
-
 
 	// Add paste event listener to textarea
 	useEffect(() => {
@@ -173,7 +129,7 @@ function PureMultimodalInput({
 
 		textarea.addEventListener("paste", handlePaste);
 		return () => textarea.removeEventListener("paste", handlePaste);
-	}, [handlePaste]);
+	}, [handlePaste, textareaRef]);
 
 	return (
 		<div className={cn("relative flex w-full flex-col gap-4", className)}>
@@ -188,10 +144,10 @@ function PureMultimodalInput({
 
 			<PromptInput
 				className={cn(
-                    "rounded-[28px] glass-input p-3 transition-all duration-300 ease-out",
-                    "hover:shadow-lg hover:border-white/20 dark:hover:border-white/10 hover:bg-glass-input/80",
-                    "focus-within:shadow-xl focus-within:ring-1 focus-within:ring-white/20 dark:focus-within:ring-white/10"
-                )}
+					"rounded-[28px] glass-input p-3 transition-all duration-300 ease-out",
+					"hover:shadow-lg hover:border-white/20 dark:hover:border-white/10 hover:bg-glass-input/80",
+					"focus-within:shadow-xl focus-within:ring-1 focus-within:ring-white/20 dark:focus-within:ring-white/10",
+				)}
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (status !== "ready") {

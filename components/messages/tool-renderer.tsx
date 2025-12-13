@@ -25,9 +25,8 @@ interface ToolMessagePart {
 	type: string;
 	toolCallId: string;
 	state: "partial-call" | "call" | "result";
-	input?: any;
-	output?: any;
-	[key: string]: any;
+	input?: Record<string, unknown>;
+	output?: Record<string, unknown> & { error?: string };
 }
 
 interface ToolRendererProps {
@@ -103,7 +102,7 @@ const RequestSuggestionsRenderer = ({
 	} else if (state === "call") {
 		uiState = "input-available";
 	} else if (state === "result") {
-		if (output && typeof output === "object" && "error" in output) {
+		if (output && "error" in output) {
 			uiState = "output-error";
 		} else {
 			uiState = "output-available";
@@ -128,7 +127,7 @@ const RequestSuggestionsRenderer = ({
 							) : (
 								<DocumentToolResult
 									isReadonly={isReadonly}
-									result={output}
+									result={output as any}
 									type="request-suggestions"
 								/>
 							)
@@ -158,12 +157,11 @@ const EntityRenderer = ({ part }: ToolRendererProps) => {
 
 	if (!output?.entity) return null;
 
+	const entity = output.entity as any;
+
 	return (
 		<div className="relative" key={toolCallId}>
-			<EntityWidget
-				entity={output.entity}
-				projectId={output?.entity?.projectId}
-			/>
+			<EntityWidget entity={entity} projectId={entity.projectId} />
 		</div>
 	);
 };
@@ -175,11 +173,13 @@ const ProposeManageEntitiesRenderer = ({ part }: ToolRendererProps) => {
 
 	if (!output?.proposal) return null;
 
+	const proposal = output.proposal as any;
+
 	return (
 		<div className="relative" key={toolCallId}>
 			<EntityProposal
-				projectId={output.proposal.projectId}
-				operations={output.proposal.operations}
+				projectId={proposal.projectId}
+				operations={proposal.operations}
 			/>
 		</div>
 	);
@@ -203,9 +203,11 @@ const SceneRenderer = ({ part }: ToolRendererProps) => {
 
 	if (!output?.scene) return null;
 
+	const scene = output.scene as any;
+
 	return (
 		<div className="relative" key={toolCallId}>
-			<SceneWidget scene={output.scene} projectId={output?.scene?.projectId} />
+			<SceneWidget scene={scene} projectId={scene.projectId} />
 		</div>
 	);
 };
@@ -221,8 +223,8 @@ const GenerationRenderer = ({ part }: ToolRendererProps) => {
 			<GenerationWidget
 				toolName={toolName}
 				state={state}
-				input={input}
-				output={output}
+				input={input as any}
+				output={output as any}
 			/>
 		</div>
 	);
@@ -249,7 +251,7 @@ const CreateRelationRenderer = ({ part }: ToolRendererProps) => {
 			className="mb-2 rounded-lg border bg-muted/20 p-3 text-sm"
 			key={toolCallId}
 		>
-			{output?.message}
+			{output?.message as string}
 		</div>
 	);
 };
