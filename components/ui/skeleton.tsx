@@ -1,15 +1,20 @@
-import { cn } from "@/lib/utils"
+"use client";
+
+import { cn } from "@/lib/utils";
+import { FadeIn } from "./animated";
 
 function Skeleton({
-  className,
-  ...props
+	className,
+	...props
 }: React.HTMLAttributes<HTMLDivElement>) {
-  return (
-    <div
-      className={cn("animate-pulse rounded-md bg-muted", className)}
-      {...props}
-    />
-  )
+	return (
+		<FadeIn duration={0.3}>
+			<div
+				className={cn("animate-pulse rounded-md bg-muted", className)}
+				{...props}
+			/>
+		</FadeIn>
+	);
 }
 
-export { Skeleton }
+export { Skeleton };
