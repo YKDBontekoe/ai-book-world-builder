@@ -15,6 +15,13 @@
       "when": 1765623590093,
       "tag": "0001_parallel_molten_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765641840937,
+      "tag": "0002_mixed_longshot",
+      "breakpoints": true
     }
   ]
 }

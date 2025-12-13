@@ -13,6 +13,7 @@ import {
 } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
+import type { AppUsage } from "../../usage";
 import { project } from "./projects";
 import { chapter, outline } from "./outlines";
 
@@ -337,6 +338,7 @@ export const bookGenerationStep = pgTable(
     reviewFeedback: text("reviewFeedback"),
     wordCount: integer("wordCount"),
     tokenCount: integer("tokenCount"),
+    usage: jsonb("usage").$type<AppUsage>(),
     startedAt: timestamp("startedAt"),
     completedAt: timestamp("completedAt"),
     createdAt: timestamp("createdAt").notNull(),

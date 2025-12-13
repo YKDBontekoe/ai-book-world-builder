@@ -1,12 +1,13 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DownloadIcon, FolderIcon, PlusIcon, TrashIcon } from "lucide-react";
+import { DownloadIcon, FolderIcon, PlusIcon, TrashIcon, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useState } from "react";
 import { toast } from "sonner";
+import { DashboardSheet } from "@/components/dashboard/dashboard-sheet";
 import { SidebarHistory } from "@/components/sidebar/sidebar-history";
 import { SidebarUserNav } from "@/components/sidebar/sidebar-user-nav";
 import {
@@ -134,6 +135,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 								<FolderIcon size={16} /> Projects
 							</Button>
 						</Link>
+						<DashboardSheet
+							trigger={
+								<Button className="w-full justify-start gap-2" variant="ghost">
+									<LayoutDashboard size={16} /> Dashboard
+								</Button>
+							}
+						/>
 						<Link href="/exports" onClick={() => setOpenMobile(false)}>
 							<Button className="w-full justify-start gap-2" variant="ghost">
 								<DownloadIcon size={16} /> My Exports
