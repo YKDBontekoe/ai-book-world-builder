@@ -211,6 +211,16 @@ async function processStep(
 				settings,
 			);
 			await saveAsset(step.generationId, "prologue", result.content);
+			await db
+				.update(bookGenerationStep)
+				.set({
+					agentOutput: result.content,
+					wordCount: result.wordCount,
+					tokenCount: result.tokenCount,
+					usage: result.usage,
+					updatedAt: new Date(),
+				})
+				.where(eq(bookGenerationStep.id, step.id));
 			log(`Prologue complete: ${result.wordCount} words`, "writer");
 			break;
 		}
@@ -245,6 +255,7 @@ async function processStep(
 					agentOutput: result.content,
 					wordCount: result.wordCount,
 					tokenCount: result.tokenCount,
+					usage: result.usage,
 					updatedAt: new Date(),
 				})
 				.where(eq(bookGenerationStep.id, step.id));
@@ -280,6 +291,7 @@ async function processStep(
 				.update(bookGenerationStep)
 				.set({
 					reviewFeedback: JSON.stringify(review),
+					usage: review.usage,
 					updatedAt: new Date(),
 				})
 				.where(eq(bookGenerationStep.id, step.id));
@@ -305,6 +317,16 @@ async function processStep(
 				settings,
 			);
 			await saveAsset(step.generationId, "epilogue", result.content);
+			await db
+				.update(bookGenerationStep)
+				.set({
+					agentOutput: result.content,
+					wordCount: result.wordCount,
+					tokenCount: result.tokenCount,
+					usage: result.usage,
+					updatedAt: new Date(),
+				})
+				.where(eq(bookGenerationStep.id, step.id));
 			log(`Epilogue complete: ${result.wordCount} words`, "writer");
 			break;
 		}

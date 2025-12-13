@@ -2,7 +2,7 @@
  * Reviewer Agent - Reviews chapters for quality, consistency, and provides feedback
  */
 
-import { generateObject } from "ai";
+import { generateObject, type LanguageModelUsage } from "ai";
 import { z } from "zod";
 import { myProvider } from "@/lib/ai/providers";
 import type { GenerationSettings } from "@/lib/db/schema";
@@ -40,6 +40,7 @@ export interface ReviewResult {
 		notes: string;
 	};
 	revisionPriority: "none" | "minor" | "major" | "rewrite";
+	usage?: LanguageModelUsage & { modelId?: string };
 }
 
 const reviewSchema = z.object({
@@ -125,7 +126,10 @@ Provide a detailed review following the schema.`;
 		schema: reviewSchema,
 	});
 
-	return response.object as ReviewResult;
+	return {
+		...(response.object as ReviewResult),
+		usage: { ...response.usage, modelId: input.settings.reviewerModelId },
+	};
 }
 
 /**

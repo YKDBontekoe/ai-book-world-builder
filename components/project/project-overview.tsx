@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { BookOpen, Copy, Edit, Loader2 } from "lucide-react";
+import { BookOpen, Copy, Edit, Loader2, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
+import { DashboardSheet } from "@/components/dashboard/dashboard-sheet";
 import { toast } from "sonner";
 import { forkProject } from "@/app/actions/projects";
 import type { Project } from "@/lib/db/schema";
@@ -59,10 +60,21 @@ export function ProjectOverview({ project, isOwner, chapters }: ProjectOverviewP
         </div>
         <div className="flex gap-2 shrink-0">
           {isOwner ? (
-             <Button onClick={() => router.push(`/projects/${project.id}/generate`)}>
+            <>
+              <DashboardSheet
+                projectId={project.id}
+                trigger={
+                  <Button variant="outline" className="glass-panel">
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Button>
+                }
+              />
+              <Button onClick={() => router.push(`/projects/${project.id}/generate`)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Open Workspace
-             </Button>
+              </Button>
+            </>
           ) : (
              <Button onClick={handleFork} disabled={isForking}>
                {isForking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Copy className="mr-2 h-4 w-4" />}

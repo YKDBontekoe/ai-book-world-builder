@@ -1,0 +1,1 @@
+ALTER TABLE "BookGenerationStep" ADD COLUMN "usage" jsonb;

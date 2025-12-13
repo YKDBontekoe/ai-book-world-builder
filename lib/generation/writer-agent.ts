@@ -17,10 +17,13 @@ export interface WriterAgentInput {
 	settings: GenerationSettings;
 }
 
+import type { LanguageModelUsage } from "ai";
+
 export interface WriterAgentOutput {
 	content: string;
 	wordCount: number;
 	tokenCount?: number;
+	usage?: LanguageModelUsage & { modelId?: string };
 }
 
 /**
@@ -115,6 +118,7 @@ Begin writing the chapter now:`;
 		content,
 		wordCount,
 		tokenCount: response.usage?.totalTokens,
+		usage: { ...response.usage, modelId: input.settings.writerModelId },
 	};
 }
 
@@ -183,6 +187,7 @@ Write an engaging prologue that hooks the reader and sets up the story.`,
 		content: response.text,
 		wordCount: response.text.split(/\s+/).length,
 		tokenCount: response.usage?.totalTokens,
+		usage: { ...response.usage, modelId: settings.writerModelId },
 	};
 }
 
@@ -209,5 +214,6 @@ Write a satisfying epilogue that provides closure while leaving room for reader 
 		content: response.text,
 		wordCount: response.text.split(/\s+/).length,
 		tokenCount: response.usage?.totalTokens,
+		usage: { ...response.usage, modelId: settings.writerModelId },
 	};
 }
