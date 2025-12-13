@@ -32,7 +32,13 @@ export const project = pgTable("Project", {
   userId: uuid("userId")
     .notNull()
     .references(() => user.id),
-});
+  forkedFromId: uuid("forkedFromId"),
+}, (table) => ({
+  forkedFromFk: foreignKey({
+    columns: [table.forkedFromId],
+    foreignColumns: [table.id],
+  }),
+}));
 
 export type Project = InferSelectModel<typeof project>;
 

@@ -1,8 +1,48 @@
 import "server-only";
-import { asc, eq } from "drizzle-orm";
+import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
-import { type ChapterDraft, chapter, chapterDraft } from "@/lib/db/schema";
+import {
+	type ChapterDraft,
+	chapter,
+	chapterDraft,
+	chapterVersion,
+} from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+
+export async function getChaptersWithContent({
+	projectId,
+}: {
+	projectId: string;
+}) {
+	try {
+		const chapters = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.projectId, projectId))
+			.orderBy(asc(chapter.sequence));
+
+		const result = [];
+		for (const ch of chapters) {
+			const [version] = await db
+				.select({ content: chapterVersion.content })
+				.from(chapterVersion)
+				.where(eq(chapterVersion.chapterId, ch.id))
+				.orderBy(desc(chapterVersion.version))
+				.limit(1);
+
+			result.push({
+				...ch,
+				content: version?.content || null,
+			});
+		}
+		return result;
+	} catch (_error) {
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load chapters with content",
+		);
+	}
+}
 
 export async function getChaptersForProject({
 	projectId,
