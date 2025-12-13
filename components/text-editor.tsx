@@ -4,7 +4,7 @@ import { exampleSetup } from "prosemirror-example-setup";
 import { inputRules } from "prosemirror-inputrules";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 
 import type { Suggestion } from "@/lib/db/schema";
 import {
@@ -22,6 +22,7 @@ import {
   suggestionsPlugin,
   suggestionsPluginKey,
 } from "@/lib/editor/suggestions";
+import { EditorBubbleMenu } from "@/components/writer/tools/editor-bubble-menu";
 
 type EditorProps = {
   content: string;
@@ -42,6 +43,8 @@ function PureEditor({
 }: EditorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<EditorView | null>(null);
+  // Force re-render for menu when editor instance changes (though ref mutation doesn't trigger it usually)
+  const [, setMounted] = useState(false);
 
   useEffect(() => {
     if (containerRef.current && !editorRef.current) {
@@ -66,6 +69,7 @@ function PureEditor({
       editorRef.current = new EditorView(containerRef.current, {
         state,
       });
+      setMounted(true);
     }
 
     return () => {
@@ -149,7 +153,9 @@ function PureEditor({
   }, [suggestions, content]);
 
   return (
-    <div className="prose dark:prose-invert relative" ref={containerRef} />
+    <div className="prose dark:prose-invert relative" ref={containerRef}>
+      <EditorBubbleMenu editorView={editorRef.current} />
+    </div>
   );
 }
 
