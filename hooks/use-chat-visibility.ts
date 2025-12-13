@@ -1,53 +1,63 @@
 "use client";
 
+import { type InfiniteData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import useSWR, { useSWRConfig } from "swr";
-import { unstable_serialize } from "swr/infinite";
 import { updateChatVisibility } from "@/app/(chat)/actions";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
-import {
-  type ChatHistory,
-  getChatHistoryPaginationKey,
-} from "@/components/sidebar/sidebar-history";
+import { type ChatHistory } from "@/components/sidebar/sidebar-history";
+import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 
 export function useChatVisibility({
-  chatId,
-  initialVisibilityType,
+	chatId,
+	initialVisibilityType,
 }: {
-  chatId: string;
-  initialVisibilityType: VisibilityType;
+	chatId: string;
+	initialVisibilityType: VisibilityType;
 }) {
-  const { mutate, cache } = useSWRConfig();
-  const history: ChatHistory = cache.get("/api/history")?.data;
+	const queryClient = useQueryClient();
 
-  const { data: localVisibility, mutate: setLocalVisibility } = useSWR(
-    `${chatId}-visibility`,
-    null,
-    {
-      fallbackData: initialVisibilityType,
-    }
-  );
+	// Access history from cache
+	// We use generic undefined check because the query might not have run yet
+	const historyData = queryClient.getQueryData<InfiniteData<ChatHistory>>(
+		QUERY_KEYS.chatHistory(),
+	);
 
-  const visibilityType = useMemo(() => {
-    if (!history) {
-      return localVisibility;
-    }
-    const chat = history.chats.find((currentChat) => currentChat.id === chatId);
-    if (!chat) {
-      return "private";
-    }
-    return chat.visibility;
-  }, [history, chatId, localVisibility]);
+	const { data: localVisibility } = useQuery({
+		queryKey: QUERY_KEYS.chatVisibility(chatId),
+		staleTime: STALE_TIMES.LOCAL,
+		gcTime: GC_TIMES.LOCAL,
+		initialData: initialVisibilityType,
+	});
 
-  const setVisibilityType = (updatedVisibilityType: VisibilityType) => {
-    setLocalVisibility(updatedVisibilityType);
-    mutate(unstable_serialize(getChatHistoryPaginationKey));
+	const visibilityType = useMemo(() => {
+		if (!historyData) {
+			return localVisibility;
+		}
 
-    updateChatVisibility({
-      chatId,
-      visibility: updatedVisibilityType,
-    });
-  };
+		// Flatten pages to find the chat
+		const allChats = historyData.pages.flatMap((page) => page.chats);
+		const chat = allChats.find((currentChat) => currentChat.id === chatId);
 
-  return { visibilityType, setVisibilityType };
+		if (!chat) {
+			return "private";
+		}
+		return chat.visibility;
+	}, [historyData, chatId, localVisibility]);
+
+	const setVisibilityType = (updatedVisibilityType: VisibilityType) => {
+		queryClient.setQueryData(
+			QUERY_KEYS.chatVisibility(chatId),
+			updatedVisibilityType,
+		);
+
+		// Revalidate history
+		queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatHistory() });
+
+		updateChatVisibility({
+			chatId,
+			visibility: updatedVisibilityType,
+		});
+	};
+
+	return { visibilityType, setVisibilityType };
 }

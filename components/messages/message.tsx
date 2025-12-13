@@ -29,6 +29,7 @@ import { MessageReasoning } from "@/components/messages/message-reasoning";
 import { MessageSources } from "@/components/messages/message-sources";
 import { MessageUsage } from "@/components/messages/message-usage";
 import { Weather } from "@/components/weather";
+import { springs } from "@/lib/animations";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage, SourceCitation } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
@@ -71,7 +72,7 @@ const PurePreviewMessage = ({
 			className="group/message w-full"
 			initial={{ opacity: 0, y: 10, scale: 0.98 }}
 			animate={{ opacity: 1, y: 0, scale: 1 }}
-			transition={{ type: "spring", stiffness: 450, damping: 30 }}
+			transition={springs.liquid}
 			data-role={message.role}
 			data-testid={`message-${message.role}`}
 		>
@@ -149,9 +150,10 @@ const PurePreviewMessage = ({
 											style={
 												message.role === "user"
 													? {
-                                                        backgroundImage: "linear-gradient(to top left, hsl(212 100% 45%), hsl(212 100% 55%))",
-                                                        boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)"
-                                                      }
+															backgroundImage:
+																"linear-gradient(to top left, hsl(212 100% 45%), hsl(212 100% 55%))",
+															boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)",
+													  }
 													: undefined
 											}
 										>
@@ -495,7 +497,7 @@ export const ThinkingMessage = () => {
 			className="group/message w-full"
 			initial={{ opacity: 0, y: 10, scale: 0.98 }}
 			animate={{ opacity: 1, y: 0, scale: 1 }}
-			transition={{ type: "spring", stiffness: 400, damping: 25 }}
+			transition={springs.liquid}
 			data-role="assistant"
 			data-testid="message-assistant-loading"
 		>

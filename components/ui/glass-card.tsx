@@ -2,7 +2,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const glassCardVariants = cva("border backdrop-blur-[40px] shadow-sm transition-all duration-300", {
+const glassCardVariants = cva("border backdrop-blur-[40px] shadow-sm transition-all duration-300 ease-[var(--ease-liquid)]", {
 	variants: {
 		variant: {
 			default: "border-glass-border bg-glass",

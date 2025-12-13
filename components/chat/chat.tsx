@@ -1,11 +1,10 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DefaultChatTransport } from "ai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import useSWR, { useSWRConfig } from "swr";
-import { unstable_serialize } from "swr/infinite";
 import { Artifact } from "@/components/artifact";
 import { type CanvasPane, useBookCanvas } from "@/components/book-canvas";
 import { AgentCapabilities } from "@/components/chat/agent-capabilities";
@@ -17,7 +16,6 @@ import { SuggestedActions } from "@/components/chat/suggested-actions";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { Messages } from "@/components/messages/messages";
 import { ProjectContextBar } from "@/components/sidebar/project-context-bar";
-import { getChatHistoryPaginationKey } from "@/components/sidebar/sidebar-history";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -33,13 +31,15 @@ import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { useProjectSelection } from "@/hooks/use-project-selection";
+import { api } from "@/lib/api-client";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { ProjectSummary } from "@/lib/project-context";
+import { QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
-import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
+import { fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 
 export function Chat({
 	id,
@@ -66,6 +66,7 @@ export function Chat({
 }) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
+	const queryClient = useQueryClient();
 
 	const projects = initialProjects ?? [];
 	const {
@@ -84,8 +85,6 @@ export function Chat({
 	});
 
 	const { setActivePane, setOverallStatus, setProjectId } = useBookCanvas();
-
-	const { mutate } = useSWRConfig();
 
 	// Sync Project ID with Book Canvas
 	useEffect(() => {
@@ -172,7 +171,7 @@ export function Chat({
 			}
 		},
 		onFinish: () => {
-			mutate(unstable_serialize(getChatHistoryPaginationKey));
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatHistory() });
 		},
 		onError: (error) => {
 			if (error instanceof ChatSDKError) {
@@ -257,8 +256,12 @@ export function Chat({
 
 			// Bible Pane Updates
 			if (toolName === "manageEntities" || toolName === "createRelation") {
-				mutate(["entities", projectId]);
-				mutate(["relationships", projectId]);
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.entities(projectId),
+				});
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.relationships(projectId),
+				});
 			}
 
 			// Outline Pane Updates
@@ -267,10 +270,12 @@ export function Chat({
 				toolName === "createOutline" ||
 				toolName === "createVolume"
 			) {
-				mutate(["outline", projectId]);
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.outline(projectId),
+				});
 			}
 		}
-	}, [messages, mutate, selectedProjectIdRef]);
+	}, [messages, queryClient, selectedProjectIdRef]);
 
 	const query = searchParams.get("query");
 	const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
@@ -307,10 +312,12 @@ export function Chat({
 		}
 	}, [id, router, messages, status]);
 
-	const { data: votes } = useSWR<Vote[]>(
-		messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
-		fetcher,
-	);
+	const { data: votes } = useQuery({
+		queryKey: QUERY_KEYS.votes(id),
+		queryFn: () => api.get<Vote[]>(`/api/vote`, { params: { chatId: id } }),
+		enabled: messages.length >= 2,
+		staleTime: STALE_TIMES.STANDARD,
+	});
 
 	const [attachments, setAttachments] = useState<Attachment[]>([]);
 	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);

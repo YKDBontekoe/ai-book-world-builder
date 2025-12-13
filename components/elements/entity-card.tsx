@@ -1,9 +1,9 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { LinkIcon, MoreHorizontal, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { useSWRConfig } from "swr";
 import { deleteEntityAction } from "@/app/actions/entities";
 import {
 	AlertDialog,
@@ -24,6 +24,7 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 
 export type EntityCardProps = {
@@ -50,24 +51,25 @@ function EntityActions({
 	onDeleteSuccess?: () => void;
 }) {
 	const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-	const [isDeleting, setIsDeleting] = useState(false);
-	const { mutate } = useSWRConfig();
+	const queryClient = useQueryClient();
 
-	const handleDelete = async () => {
-		setIsDeleting(true);
-		try {
+	const { mutate: handleDelete, isPending: isDeleting } = useMutation({
+		mutationFn: async () => {
 			await deleteEntityAction(entityId);
-			// Optimistically update or just revalidate
-			await mutate(["entities", projectId]);
-			await mutate(["relationships", projectId]);
+		},
+		onSuccess: () => {
+			// Invalidate queries to refresh the list
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entities(projectId) });
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.relationships(projectId),
+			});
 			onDeleteSuccess?.();
-		} catch (error) {
-			console.error("Failed to delete entity:", error);
-		} finally {
-			setIsDeleting(false);
 			setShowDeleteAlert(false);
-		}
-	};
+		},
+		onError: (error) => {
+			console.error("Failed to delete entity:", error);
+		},
+	});
 
 	return (
 		<>

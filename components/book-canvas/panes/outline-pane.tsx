@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
 	BookOpenIcon,
 	ChevronRightIcon,
@@ -8,7 +9,6 @@ import {
 	SparklesIcon,
 } from "lucide-react";
 import { useState } from "react";
-import useSWR from "swr";
 import {
 	getOutlineData,
 	type SerializedOutline,
@@ -16,6 +16,7 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { SectionHeader } from "@/components/ui/section-header";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
@@ -140,11 +141,12 @@ function OutlineHeader({ outline }: { outline: SerializedOutline }) {
 export function OutlinePane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: outline, isLoading } = useSWR(
-		projectId ? ["outline", projectId] : null,
-		([_, id]) => getOutlineData(id),
-		{ refreshInterval: 5000 },
-	);
+	const { data: outline, isLoading } = useQuery({
+		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],
+		queryFn: () => (projectId ? getOutlineData(projectId) : Promise.resolve(null)),
+		enabled: !!projectId,
+		refetchInterval: 5000,
+	});
 
 	if (!projectId) {
 		return (

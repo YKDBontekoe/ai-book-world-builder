@@ -1,13 +1,14 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { CalendarIcon, ClockIcon } from "lucide-react";
-import useSWR from "swr";
 import {
 	getTimelineEvents,
 	type TimelineEvent,
 } from "@/app/actions/project-stats";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 import { useBookCanvas } from "../book-canvas-context";
 
@@ -72,11 +73,13 @@ function TimelineEventCard({
 export function TimelinePane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: events, isLoading } = useSWR(
-		projectId ? ["timeline", projectId] : null,
-		([_, id]) => getTimelineEvents(id),
-		{ refreshInterval: 5000 },
-	);
+	const { data: events, isLoading } = useQuery({
+		queryKey: projectId ? QUERY_KEYS.timeline(projectId) : ["timeline", "null"],
+		queryFn: () =>
+			projectId ? getTimelineEvents(projectId) : Promise.resolve(null),
+		enabled: !!projectId,
+		refetchInterval: 5000,
+	});
 
 	if (!projectId) {
 		return (

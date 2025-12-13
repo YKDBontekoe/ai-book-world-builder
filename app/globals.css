@@ -80,10 +80,13 @@
 
 	/* Glass Effect - Liquid 2025 */
 	--glass-bg: hsl(0 0% 100% / 0.65);
-    --glass-input-bg: hsl(0 0% 100% / 0.5);
+	--glass-input-bg: hsl(0 0% 100% / 0.5);
 	--glass-border: hsl(0 0% 100% / 0.4);
 	--glass-blur: 40px;
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+	--glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+
+    /* Animation Timing - Liquid Spring Approximation */
+    --ease-liquid: cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 /* define design tokens (dark mode) */
@@ -126,9 +129,9 @@
 
 	/* Glass Effect - Dark mode */
 	--glass-bg: hsl(240 5.9% 10% / 0.6);
-    --glass-input-bg: hsl(240 5.9% 10% / 0.5);
+	--glass-input-bg: hsl(240 5.9% 10% / 0.5);
 	--glass-border: hsl(0 0% 100% / 0.08);
-    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+	--glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* define theme */
@@ -185,9 +188,30 @@
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
 
-    --color-glass: var(--glass-bg);
-    --color-glass-input: var(--glass-input-bg);
-    --color-glass-border: var(--glass-border);
+	--color-glass: var(--glass-bg);
+	--color-glass-input: var(--glass-input-bg);
+	--color-glass-border: var(--glass-border);
+
+    --ease-liquid: var(--ease-liquid);
+    --animate-accordion-down: accordion-down 0.2s ease-out;
+	--animate-accordion-up: accordion-up 0.2s ease-out;
+
+    @keyframes accordion-down {
+		from {
+			height: 0;
+		}
+		to {
+			height: var(--radix-accordion-content-height);
+		}
+	}
+	@keyframes accordion-up {
+		from {
+			height: var(--radix-accordion-content-height);
+		}
+		to {
+			height: 0;
+		}
+	}
 }
 
 /*
@@ -239,17 +263,17 @@
 	/* Glassmorphism Utilities - Refined for Liquid Glass 2025 */
 	.glass-panel {
 		@apply bg-sidebar/70 backdrop-blur-[40px] border-sidebar-border;
-        box-shadow: var(--glass-shadow);
+		box-shadow: var(--glass-shadow);
 	}
 
-    .glass {
-        @apply bg-glass backdrop-blur-[40px] backdrop-saturate-150 border border-glass-border;
-        box-shadow: var(--glass-shadow);
-    }
+	.glass {
+		@apply bg-glass backdrop-blur-[40px] backdrop-saturate-150 border border-glass-border;
+		box-shadow: var(--glass-shadow);
+	}
 
-    .glass-input {
-        @apply bg-glass-input backdrop-blur-xl border border-glass-border shadow-sm;
-    }
+	.glass-input {
+		@apply bg-glass-input backdrop-blur-xl border border-glass-border shadow-sm;
+	}
 
 	.glass-overlay {
 		@apply bg-black/30 backdrop-blur-md;
@@ -261,7 +285,7 @@
 }
 
 @layer base {
-    /* REMOVED: * { @apply border-border; } - This was causing the "Grid" look */
+	/* REMOVED: * { @apply border-border; } - This was causing the "Grid" look */
 
 	body {
 		@apply bg-background text-foreground;
@@ -377,7 +401,7 @@
 }
 
 @layer base {
-    /* Only apply outline ring if needed, but remove general border-border */
+	/* Only apply outline ring if needed, but remove general border-border */
 	* {
 		@apply outline-ring/50;
 	}
