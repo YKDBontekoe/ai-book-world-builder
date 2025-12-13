@@ -1,13 +1,13 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	ChevronDownIcon,
 	ChevronUpIcon,
 	Loader2,
 	TerminalIcon,
 } from "lucide-react";
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useId, useState } from "react";
 import { springs } from "@/lib/animations";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,7 @@ export type ProcessLog = {
 
 export function ProcessLogs({ logs }: { logs: ProcessLog[] }) {
 	const [isExpanded, setIsExpanded] = useState(false);
+	const contentId = useId();
 
 	if (logs.length === 0) return null;
 
@@ -32,15 +33,15 @@ export function ProcessLogs({ logs }: { logs: ProcessLog[] }) {
 				transition={springs.liquid}
 				className={cn(
 					"flex flex-col rounded-lg border bg-background/50 backdrop-blur-sm transition-all overflow-hidden",
-					isExpanded
-						? "border-primary/20 shadow-md"
-						: "border-border/50",
+					isExpanded ? "border-primary/20 shadow-md" : "border-border/50",
 				)}
 			>
 				<button
 					type="button"
+					aria-expanded={isExpanded}
+					aria-controls={contentId}
 					onClick={() => setIsExpanded(!isExpanded)}
-					className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-muted/30 transition-colors"
+					className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left hover:bg-muted/30 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg"
 				>
 					<div className="flex items-center gap-2 text-foreground/80 min-w-0 flex-1">
 						<div className="flex size-5 items-center justify-center rounded bg-primary/10 text-primary shrink-0">
@@ -75,6 +76,7 @@ export function ProcessLogs({ logs }: { logs: ProcessLog[] }) {
 				<AnimatePresence>
 					{isExpanded && (
 						<motion.div
+							id={contentId}
 							initial={{ height: 0, opacity: 0 }}
 							animate={{ height: "auto", opacity: 1 }}
 							exit={{ height: 0, opacity: 0 }}
@@ -84,7 +86,7 @@ export function ProcessLogs({ logs }: { logs: ProcessLog[] }) {
 							<div className="flex flex-col gap-1 p-3 max-h-48 overflow-y-auto font-mono text-xs">
 								{logs.map((log, i) => (
 									<div
-										key={i}
+										key={`${log.timestamp}-${i}`}
 										className="flex gap-2 items-start opacity-80 hover:opacity-100"
 									>
 										<span className="text-muted-foreground shrink-0 select-none opacity-50">
