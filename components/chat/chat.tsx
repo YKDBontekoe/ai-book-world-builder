@@ -297,7 +297,7 @@ export function Chat({
 						selectedVisibilityType={initialVisibilityType}
 					/>
 
-					<div className="relative flex-1 overflow-hidden">
+					<div className="relative flex-1 overflow-hidden flex flex-col">
 						<Messages
 							chatId={id}
 							isArtifactVisible={isArtifactVisible}

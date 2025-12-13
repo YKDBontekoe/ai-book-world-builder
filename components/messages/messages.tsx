@@ -1,7 +1,6 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
-import equal from "fast-deep-equal";
 import { ArrowDownIcon } from "lucide-react";
-import { memo } from "react";
+import { useRef } from "react";
 import { SuggestedActions } from "@/components/chat/suggested-actions";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { Greeting } from "@/components/messages/greeting";
@@ -121,26 +120,4 @@ function PureMessages({
 	);
 }
 
-export const Messages = memo(PureMessages, (prevProps, nextProps) => {
-	if (prevProps.isArtifactVisible && nextProps.isArtifactVisible) {
-		return true;
-	}
-
-	if (prevProps.status !== nextProps.status) {
-		return false;
-	}
-	if (prevProps.selectedModelId !== nextProps.selectedModelId) {
-		return false;
-	}
-	if (prevProps.messages !== nextProps.messages) {
-		return false;
-	}
-	if (prevProps.votes !== nextProps.votes) {
-		return false;
-	}
-	if (prevProps.selectedProject?.id !== nextProps.selectedProject?.id) {
-		return false;
-	}
-
-	return true;
-});
+export const Messages = PureMessages;

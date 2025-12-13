@@ -46,11 +46,8 @@ const PurePreviewMessage = ({
 		message.parts?.filter((part) => part.type === "file") ?? [];
 
 	return (
-		<motion.div
+		<div
 			className="group/message w-full"
-			initial={{ opacity: 0, y: 10, scale: 0.98 }}
-			animate={{ opacity: 1, y: 0, scale: 1 }}
-			transition={springs.liquid}
 			data-role={message.role}
 			data-testid={`message-${message.role}`}
 		>
@@ -99,30 +96,31 @@ const PurePreviewMessage = ({
 						</div>
 					)}
 
-					{(!message.parts || message.parts.length === 0) && message.content && (
-						<div key={`message-${message.id}-content`}>
-							<MessageContent
-								className={cn("shadow-sm", {
-									"w-fit break-words rounded-3xl px-6 py-4 text-base leading-relaxed text-right text-white":
-										message.role === "user",
-									"bg-transparent px-0 py-0 text-left shadow-none":
-										message.role === "assistant",
-								})}
-								data-testid="message-content"
-								style={
-									message.role === "user"
-										? {
-												backgroundImage:
-													"linear-gradient(to top left, hsl(212 95% 48%), hsl(220 90% 58%))",
-												boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
-											}
-										: undefined
-								}
-							>
-								<Response>{sanitizeText(message.content)}</Response>
-							</MessageContent>
-						</div>
-					)}
+					{(!message.parts || message.parts.length === 0) &&
+						message.content && (
+							<div key={`message-${message.id}-content`}>
+								<MessageContent
+									className={cn("shadow-sm", {
+										"w-fit break-words rounded-3xl px-6 py-4 text-base leading-relaxed text-right text-white":
+											message.role === "user",
+										"bg-transparent px-0 py-0 text-left shadow-none":
+											message.role === "assistant",
+									})}
+									data-testid="message-content"
+									style={
+										message.role === "user"
+											? {
+													backgroundImage:
+														"linear-gradient(to top left, hsl(212 95% 48%), hsl(220 90% 58%))",
+													boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+												}
+											: undefined
+									}
+								>
+									<Response>{sanitizeText(message.content)}</Response>
+								</MessageContent>
+							</div>
+						)}
 
 					{message.parts?.map((part, index) => {
 						const { type } = part;
@@ -241,7 +239,7 @@ const PurePreviewMessage = ({
 					</div>
 				</div>
 			</div>
-		</motion.div>
+		</div>
 	);
 };
 
