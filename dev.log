@@ -12,27 +12,50 @@ This information is used to shape Next.js' roadmap and prioritize features.
 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
 https://nextjs.org/telemetry
 
- ✓ Ready in 2.9s
+ ✓ Ready in 3.3s
  ○ Compiling /register ...
- GET /register 200 in 9.6s (compile: 8.3s, proxy.ts: 258ms, render: 983ms)
- POST /register 200 in 3.8s (compile: 16ms, proxy.ts: 43ms, render: 3.8s)
- GET /api/auth/session 200 in 4.8s (compile: 4.8s, render: 37ms)
- GET /api/auth/session 200 in 96ms (compile: 53ms, render: 43ms)
+ GET /register 200 in 10.5s (compile: 9.0s, proxy.ts: 479ms, render: 1043ms)
+ POST /register 200 in 3.2s (compile: 20ms, proxy.ts: 39ms, render: 3.1s)
+ GET /api/auth/session 200 in 5.0s (compile: 5.0s, render: 55ms)
+ GET /api/auth/session 200 in 107ms (compile: 59ms, render: 49ms)
  ○ Compiling / ...
- GET / 200 in 32.8s (compile: 31.5s, proxy.ts: 17ms, render: 1315ms)
- GET / 200 in 673ms (compile: 12ms, proxy.ts: 24ms, render: 636ms)
- GET /register 200 in 200ms (compile: 8ms, proxy.ts: 8ms, render: 184ms)
- GET /api/auth/session 200 in 123ms (compile: 113ms, render: 10ms)
- GET /api/auth/session 200 in 10ms (compile: 4ms, render: 6ms)
- POST /register 200 in 1022ms (compile: 7ms, proxy.ts: 14ms, render: 1002ms)
- GET /api/auth/session 200 in 42ms (compile: 11ms, render: 30ms)
- GET / 200 in 539ms (compile: 13ms, proxy.ts: 26ms, render: 500ms)
- GET /api/history?limit=20 200 in 342ms (compile: 6ms, proxy.ts: 51ms, render: 285ms)
- GET / 200 in 1422ms (compile: 10ms, proxy.ts: 14ms, render: 1398ms)
- GET /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 405ms (compile: 18ms, proxy.ts: 21ms, render: 366ms)
- POST / 200 in 1453ms (compile: 34ms, proxy.ts: 57ms, render: 1362ms)
+ GET /register 200 in 226ms (compile: 8ms, proxy.ts: 11ms, render: 207ms)
+ GET /api/auth/session 200 in 162ms (compile: 147ms, render: 15ms)
+ GET /api/auth/session 200 in 16ms (compile: 5ms, render: 11ms)
+ POST /register 200 in 1053ms (compile: 10ms, proxy.ts: 12ms, render: 1031ms)
+ GET /api/auth/session 200 in 50ms (compile: 4ms, render: 47ms)
+ GET / 200 in 461ms (compile: 13ms, proxy.ts: 26ms, render: 421ms)
+ GET / 200 in 592ms (compile: 21ms, proxy.ts: 90ms, render: 481ms)
+ GET / 200 in 967ms (compile: 17ms, proxy.ts: 42ms, render: 908ms)
+ POST / 200 in 1659ms (compile: 25ms, proxy.ts: 159ms, render: 1474ms)
+ GET /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 696ms (compile: 32ms, proxy.ts: 209ms, render: 454ms)
+ GET /api/history?limit=20 200 in 3.0s (compile: 1525ms, proxy.ts: 104ms, render: 1410ms)
+ ⨯ Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
+}
+ ⨯ Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
+}
+Suggestion Generation Error: SyntaxError: Unexpected end of JSON input
+    at JSON.parse (<anonymous>)
+    at POST (app/api/ai-suggestions/route.ts:23:58)
+  21 | 		}
+  22 |
+> 23 | 		const { projectId, messages, modelId } = await request.json();
+     | 		                                                       ^
+  24 |
+  25 | 		let projectContext = "No project selected. The user is brainstorming.";
+  26 |
+ ○ Compiling /api/ai-suggestions ...
+ GET /api/auth/session 200 in 322ms (compile: 179ms, render: 143ms)
+ GET /api/auth/session 200 in 150ms (compile: 23ms, render: 127ms)
+ GET /api/history?limit=20 200 in 369ms (compile: 48ms, proxy.ts: 42ms, render: 279ms)
+ POST / 200 in 1291ms (compile: 19ms, proxy.ts: 51ms, render: 1220ms)
+ GET /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 901ms (compile: 30ms, proxy.ts: 35ms, render: 836ms)
  ⨯ Error: Failed query: insert into "UserPreferences" ("id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt") values (default, $1, $2, $3, $4, $5) returning "id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt"
-params: d4d48192-7d58-460d-9394-484275003756,[],[],2025-12-13T16:34:37.762Z,2025-12-13T16:34:37.762Z
+params: 9272f1d9-54df-4453-a66b-5ac9a3f9763c,[],[],2025-12-13T17:40:18.192Z,2025-12-13T17:40:18.192Z
     at async getUserPreferences (lib/db/queries/user-preferences.ts:27:20)
     at async getModelPreferences (app/actions/model-preferences.ts:24:16)
   25 | 	// Create new preferences
@@ -44,13 +67,13 @@ params: d4d48192-7d58-460d-9394-484275003756,[],[],2025-12-13T16:34:37.762Z,2025
   30 | 			userId, {
   query: 'insert into "UserPreferences" ("id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt") values (default, $1, $2, $3, $4, $5) returning "id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt"',
   params: [Array],
-  digest: '1100805443',
+  digest: '3060445731',
   [cause]: Error [PostgresError]: duplicate key value violates unique constraint "UserPreferences_userId_key"
       at ignore-listed frames {
     severity_local: 'ERROR',
     severity: 'ERROR',
     code: '23505',
-    detail: 'Key ("userId")=(d4d48192-7d58-460d-9394-484275003756) already exists.',
+    detail: 'Key ("userId")=(9272f1d9-54df-4453-a66b-5ac9a3f9763c) already exists.',
     schema_name: 'public',
     table_name: 'UserPreferences',
     constraint_name: 'UserPreferences_userId_key',
@@ -59,11 +82,9 @@ params: d4d48192-7d58-460d-9394-484275003756,[],[],2025-12-13T16:34:37.762Z,2025
     routine: '_bt_check_unique'
   }
 }
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 500 in 2.8s (compile: 82ms, proxy.ts: 810ms, render: 1884ms)
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 1656ms (compile: 26ms, proxy.ts: 1358ms, render: 272ms)
- ○ Compiling /api/chat ...
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 319ms (compile: 22ms, proxy.ts: 24ms, render: 273ms)
- POST /api/ai-suggestions 200 in 5.1s (compile: 11ms, proxy.ts: 165ms, render: 4.9s)
- POST /api/ai-suggestions 200 in 7.2s (compile: 2.0s, proxy.ts: 21ms, render: 5.1s)
- POST /api/chat 200 in 5.1s (compile: 4.9s, proxy.ts: 164ms, render: 37ms)
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 873ms (compile: 847ms, proxy.ts: 18ms, render: 8ms)
+ POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 1191ms (compile: 19ms, proxy.ts: 44ms, render: 1127ms)
+ POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 500 in 1188ms (compile: 30ms, proxy.ts: 43ms, render: 1115ms)
+ POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 289ms (compile: 10ms, proxy.ts: 15ms, render: 264ms)
+ POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 272ms (compile: 10ms, proxy.ts: 16ms, render: 246ms)
+ POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 273ms (compile: 11ms, proxy.ts: 14ms, render: 248ms)
+ POST /api/ai-suggestions 200 in 5.5s (compile: 8ms, proxy.ts: 59ms, render: 5.4s)
