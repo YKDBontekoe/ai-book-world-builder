@@ -22,6 +22,7 @@ const badgeVariants = cva(
 				error:
 					"border-transparent bg-[var(--status-error-bg)] text-[var(--status-error-foreground)]",
 				info: "border-transparent bg-[var(--status-info-bg)] text-[var(--status-info-foreground)]",
+				glass: "glass text-foreground hover:bg-glass/80",
 			},
 		},
 		defaultVariants: {

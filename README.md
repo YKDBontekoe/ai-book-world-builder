@@ -47,6 +47,13 @@ This project adheres to a **Native macOS Aesthetic** to provide a premium, deskt
 
 See [`docs/design-system.md`](docs/design-system.md) for full guidelines.
 
+### Component Showcase (Storybook)
+To view and test UI components in isolation:
+```bash
+pnpm storybook
+```
+This launches a local Storybook server at `http://localhost:6006`.
+
 ## Verification
 
 We employ a **Dual Verification Strategy** to ensure high quality and stability.
