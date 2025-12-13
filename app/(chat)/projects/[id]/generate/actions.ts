@@ -37,6 +37,13 @@ export async function startGeneration(
 		return { error: "Project not found" };
 	}
 
+	if (project.userId !== session.user.id) {
+		return {
+			error:
+				"Unauthorized: You can only generate content for your own projects. Please fork this project to make changes.",
+		};
+	}
+
 	// Default settings
 	const fullSettings: GenerationSettings = {
 		totalChapters: 10,
@@ -160,6 +167,22 @@ export async function pauseGeneration(generationId: string) {
 	}
 
 	try {
+		const [gen] = await db
+			.select()
+			.from(bookGeneration)
+			.where(eq(bookGeneration.id, generationId));
+
+		if (!gen) return { error: "Generation not found" };
+
+		const project = await getProjectByIdWithAccess({
+			id: gen.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
 		await db
 			.update(bookGeneration)
 			.set({
@@ -185,6 +208,22 @@ export async function resumeGeneration(generationId: string) {
 	}
 
 	try {
+		const [gen] = await db
+			.select()
+			.from(bookGeneration)
+			.where(eq(bookGeneration.id, generationId));
+
+		if (!gen) return { error: "Generation not found" };
+
+		const project = await getProjectByIdWithAccess({
+			id: gen.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
 		await db
 			.update(bookGeneration)
 			.set({
@@ -210,6 +249,22 @@ export async function cancelGeneration(generationId: string) {
 	}
 
 	try {
+		const [gen] = await db
+			.select()
+			.from(bookGeneration)
+			.where(eq(bookGeneration.id, generationId));
+
+		if (!gen) return { error: "Generation not found" };
+
+		const project = await getProjectByIdWithAccess({
+			id: gen.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
 		await db
 			.update(bookGeneration)
 			.set({
@@ -240,6 +295,22 @@ export async function addGenerationNote(
 	}
 
 	try {
+		const [gen] = await db
+			.select()
+			.from(bookGeneration)
+			.where(eq(bookGeneration.id, generationId));
+
+		if (!gen) return { error: "Generation not found" };
+
+		const project = await getProjectByIdWithAccess({
+			id: gen.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
 		const [note] = await db
 			.insert(generationNote)
 			.values({

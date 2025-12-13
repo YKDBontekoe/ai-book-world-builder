@@ -1,5 +1,5 @@
 import "server-only";
-import { desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, ne, or } from "drizzle-orm";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { DEFAULT_PROJECT_FOLDERS } from "@/lib/constants";
 import { db } from "@/lib/db/drizzle";
@@ -40,14 +40,32 @@ export async function createProject({
 
 export async function getProjectsVisibleToUser({
 	userId,
+	filter = "all",
 }: {
 	userId: string;
+	filter?: "all" | "mine" | "shared";
 }): Promise<Project[]> {
 	try {
+		let whereClause;
+
+		if (filter === "mine") {
+			whereClause = eq(project.userId, userId);
+		} else if (filter === "shared") {
+			whereClause = and(
+				eq(project.visibility, "public"),
+				ne(project.userId, userId),
+			);
+		} else {
+			whereClause = or(
+				eq(project.userId, userId),
+				eq(project.visibility, "public"),
+			);
+		}
+
 		return await db
 			.select()
 			.from(project)
-			.where(or(eq(project.userId, userId), eq(project.visibility, "public")))
+			.where(whereClause)
 			.orderBy(desc(project.createdAt));
 	} catch (_error) {
 		throw new ChatSDKError("bad_request:database", "Failed to list projects");

@@ -27,6 +27,11 @@ export default async function GeneratePage({
 		redirect("/");
 	}
 
+	// Redirect visitors to the overview page
+	if (project.userId !== session.user.id) {
+		redirect(`/projects/${projectId}`);
+	}
+
 	const generation = await getBookGenerationForProject({ projectId });
 
 	return (

@@ -48,3 +48,10 @@ storybook-static
 
 # typescript
 *.tsbuildinfo
+
+# Python verification
+verification/__pycache__/
+verification/screenshots/
+
+# Logs
+*.log
