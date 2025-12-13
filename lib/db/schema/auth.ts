@@ -1,9 +1,20 @@
 import type { InferSelectModel } from "drizzle-orm";
-import { index, jsonb, pgTable, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  index,
+  jsonb,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 export const user = pgTable("User", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
-  email: varchar("email", { length: 64 }).notNull(),
+  name: text("name"),
+  email: varchar("email", { length: 64 }).notNull().unique(),
+  emailVerified: timestamp("emailVerified", { mode: "date" }),
+  image: text("image"),
   password: varchar("password", { length: 64 }),
 });
 

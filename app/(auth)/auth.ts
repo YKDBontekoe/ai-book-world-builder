@@ -1,10 +1,13 @@
 import { compare } from "bcrypt-ts";
 import NextAuth, { type DefaultSession } from "next-auth";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { DUMMY_PASSWORD } from "@/lib/constants";
 import { getUser } from "@/lib/db/queries/user";
+import { db } from "@/lib/db/drizzle";
+import { account, user as userTable } from "@/lib/db/schema";
 import { authConfig } from "./auth.config";
 
 export type UserType = "regular";
@@ -39,10 +42,18 @@ export const {
 	signOut,
 } = NextAuth({
 	...authConfig,
+    adapter: DrizzleAdapter(db, {
+        usersTable: userTable,
+        accountsTable: account,
+    }),
+    session: {
+        strategy: "jwt",
+    },
 	providers: [
 		Google({
 			clientId: process.env.GOOGLE_CLIENT_ID,
 			clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            allowDangerousEmailAccountLinking: true,
 			authorization: {
 				params: {
 					prompt: "consent",

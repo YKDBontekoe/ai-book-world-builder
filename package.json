@@ -4,7 +4,7 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev --turbo",
-		"build": "tsx lib/db/migrate && next build",
+		"build": "next build",
 		"start": "next start",
 		"lint": "npx ultracite@latest check",
 		"format": "npx ultracite@latest fix",
@@ -22,6 +22,7 @@
 		"@ai-sdk/provider": "2.0.0",
 		"@ai-sdk/react": "2.0.26",
 		"@ai-sdk/xai": "2.0.13",
+		"@auth/drizzle-adapter": "^1.11.1",
 		"@codemirror/lang-javascript": "^6.2.2",
 		"@codemirror/lang-python": "^6.1.6",
 		"@codemirror/state": "^6.5.0",
@@ -53,7 +54,7 @@
 		"date-fns": "^4.1.0",
 		"diff-match-patch": "^1.0.5",
 		"dotenv": "^16.4.5",
-		"drizzle-orm": "^0.34.0",
+		"drizzle-orm": "^0.45.1",
 		"embla-carousel-react": "^8.6.0",
 		"epub-gen-memory": "^1.1.2",
 		"fast-deep-equal": "^3.1.3",
@@ -65,7 +66,7 @@
 		"mammoth": "^1.8.0",
 		"nanoid": "^5.0.8",
 		"next": "16.0.7",
-		"next-auth": "5.0.0-beta.25",
+		"next-auth": "5.0.0-beta.30",
 		"next-themes": "^0.3.0",
 		"orderedmap": "^2.1.1",
 		"papaparse": "^5.5.2",
@@ -115,7 +116,7 @@
 		"@types/react": "^18",
 		"@types/react-dom": "^18",
 		"@types/react-syntax-highlighter": "^15.5.13",
-		"drizzle-kit": "^0.25.0",
+		"drizzle-kit": "^0.31.8",
 		"jsdom": "^27.3.0",
 		"postcss": "^8",
 		"tailwindcss": "^4.1.13",
@@ -124,5 +125,10 @@
 		"ultracite": "5.3.9",
 		"vitest": "^3.2.4"
 	},
-	"packageManager": "pnpm@9.12.3"
+	"packageManager": "pnpm@9.12.3",
+	"pnpm": {
+		"overrides": {
+			"@auth/core": "0.41.1"
+		}
+	}
 }
