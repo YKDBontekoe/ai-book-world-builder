@@ -336,6 +336,7 @@ function PureModelSelectorCompact({
 								<div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
 									<button
 										type="button"
+										aria-label={`Move ${model.name} up in favorites`}
 										onPointerDown={(event) =>
 											handleMoveFavorite(event, model.id, "up")
 										}
@@ -346,6 +347,7 @@ function PureModelSelectorCompact({
 									</button>
 									<button
 										type="button"
+										aria-label={`Move ${model.name} down in favorites`}
 										onPointerDown={(event) =>
 											handleMoveFavorite(event, model.id, "down")
 										}
@@ -362,6 +364,11 @@ function PureModelSelectorCompact({
 							<FavoriteToggle
 								isFavorite={isFavorite}
 								onToggle={(event) => handleToggleFavorite(event, model.id)}
+								label={
+									isFavorite
+										? `Remove ${model.name} from favorites`
+										: `Add ${model.name} to favorites`
+								}
 							/>
 						</div>
 					</div>
