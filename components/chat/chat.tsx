@@ -313,8 +313,8 @@ export function Chat({
 							votes={votes}
 						/>
 
-						<div className="absolute bottom-0 z-10 w-full bg-gradient-to-t from-background via-background/80 to-transparent pb-4 pt-10">
-							<div className="mx-auto flex w-full max-w-4xl flex-col gap-2 px-2 md:px-4">
+						<div className="absolute bottom-0 z-10 w-full bg-gradient-to-t from-background via-background/90 to-transparent pb-6 pt-16">
+							<div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 md:px-6">
 								<ProcessLogs logs={processLogs} />
 								{!isReadonly && (
 									<>

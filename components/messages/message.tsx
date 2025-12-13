@@ -119,7 +119,7 @@ const PurePreviewMessage = ({
 									<div key={key}>
 										<MessageContent
 											className={cn("shadow-sm", {
-												"w-fit break-words rounded-[22px] px-5 py-3 text-[15px] leading-relaxed text-right text-white":
+												"w-fit break-words rounded-3xl px-6 py-4 text-base leading-relaxed text-right text-white":
 													message.role === "user",
 												"bg-transparent px-0 py-0 text-left shadow-none":
 													message.role === "assistant",
@@ -129,8 +129,8 @@ const PurePreviewMessage = ({
 												message.role === "user"
 													? {
 															backgroundImage:
-																"linear-gradient(to top left, hsl(212 100% 45%), hsl(212 100% 55%))",
-															boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)",
+																"linear-gradient(to top left, hsl(212 95% 48%), hsl(220 90% 58%))",
+															boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
 														}
 													: undefined
 											}
