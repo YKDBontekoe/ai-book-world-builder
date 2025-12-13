@@ -14,7 +14,7 @@ export default async function ExportsPage() {
 	const session = await auth();
 
 	if (!session?.user?.id) {
-		redirect("/api/auth/guest");
+		redirect("/login");
 	}
 
 	const exports = await getExportsForUser({ userId: session.user.id });

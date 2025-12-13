@@ -1,4 +1,5 @@
 export * from "./auth";
+export * from "./account";
 export * from "./chat";
 export * from "./projects";
 export * from "./source-material";

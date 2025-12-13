@@ -12,7 +12,7 @@ export default async function GeneratePage({
 	const { id: projectId } = await params;
 
 	if (!session?.user?.id) {
-		redirect("/api/auth/guest");
+		redirect("/login");
 	}
 
 	const project = await getProjectByIdWithAccess({

@@ -16,7 +16,7 @@ export default async function InspirationPage() {
 	const session = await auth();
 
 	if (!session?.user?.id) {
-		redirect("/api/auth/guest");
+		redirect("/login");
 	}
 
 	const materials = await getSourceMaterialsForUser({
