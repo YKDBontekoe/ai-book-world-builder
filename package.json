@@ -18,7 +18,7 @@
 		"db:up": "drizzle-kit up",
 		"test": "export PLAYWRIGHT=True && pnpm exec playwright test",
 		"storybook": "storybook dev -p 6006",
-		"build-storybook": "storybook build"
+		"build-storybook": "storybook build",
 		"test:unit": "vitest run",
 		"test:e2e": "export PLAYWRIGHT=True && playwright test",
 		"test:visual": "python3 verification/runner.py"
