@@ -9,7 +9,7 @@ import { Artifact } from "@/components/artifact";
 import { useBookCanvas } from "@/components/book-canvas";
 import { AgentCapabilities } from "@/components/chat/agent-capabilities";
 import { ChatHeader } from "@/components/chat/chat-header";
-import { useDataStream } from "@/components/chat/data-stream-provider";
+import { useSetDataStream } from "@/components/chat/data-stream-provider";
 import { MultimodalInput } from "@/components/chat/multimodal-input";
 import { type ProcessLog, ProcessLogs } from "@/components/chat/process-logs";
 import { SuggestedActions } from "@/components/chat/suggested-actions";
@@ -32,8 +32,8 @@ import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatToolEffects } from "@/hooks/use-chat-tool-effects";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { useProjectSelection } from "@/hooks/use-project-selection";
-import { api } from "@/lib/api-client";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
+import { api } from "@/lib/api-client";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { ProjectSummary } from "@/lib/project-context";
@@ -102,7 +102,7 @@ export function Chat({
 		return () => window.removeEventListener("popstate", handlePopState);
 	}, [router]);
 
-	const { setDataStream } = useDataStream();
+	const { setDataStream } = useSetDataStream();
 
 	const [input, setInput] = useState<string>("");
 	const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);

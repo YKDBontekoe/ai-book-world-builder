@@ -2,14 +2,14 @@ import { eq } from "drizzle-orm";
 import type { NextRequest } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
-import { bookGeneration, bookGenerationStep } from "@/lib/db/schema";
+import { bookGeneration, bookGenerationStep, project } from "@/lib/db/schema";
 
 /**
  * SSE Stream for real-time generation progress updates
  * Sends events: step_start, step_complete, progress, log, error, complete
  */
 export async function GET(
-	request: NextRequest,
+	_request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	const session = await auth();
@@ -19,14 +19,25 @@ export async function GET(
 
 	const { id: generationId } = await params;
 
-	// Verify the generation exists
+	// Verify the generation exists and user has access
 	const [generation] = await db
-		.select()
+		.select({
+			id: bookGeneration.id,
+			status: bookGeneration.status,
+			completedSteps: bookGeneration.completedSteps,
+			totalSteps: bookGeneration.totalSteps,
+			projectUserId: project.userId,
+		})
 		.from(bookGeneration)
+		.innerJoin(project, eq(bookGeneration.projectId, project.id))
 		.where(eq(bookGeneration.id, generationId));
 
 	if (!generation) {
 		return new Response("Generation not found", { status: 404 });
+	}
+
+	if (generation.projectUserId !== session.user.id) {
+		return new Response("Unauthorized", { status: 401 });
 	}
 
 	// Create a readable stream for SSE
@@ -45,7 +56,7 @@ export async function GET(
 							`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`,
 						),
 					);
-				} catch (e) {
+				} catch (_e) {
 					// Stream closed
 					isActive = false;
 				}

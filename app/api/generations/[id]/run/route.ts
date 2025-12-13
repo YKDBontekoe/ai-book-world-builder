@@ -4,7 +4,11 @@ import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
-import { bookGeneration, type GenerationSettings } from "@/lib/db/schema";
+import {
+	bookGeneration,
+	type GenerationSettings,
+	project,
+} from "@/lib/db/schema";
 import { runGeneration } from "@/lib/generation";
 
 /**
@@ -25,8 +29,15 @@ export async function POST(
 	try {
 		// Fetch the generation record
 		const [generation] = await db
-			.select()
+			.select({
+				id: bookGeneration.id,
+				status: bookGeneration.status,
+				projectId: bookGeneration.projectId,
+				settings: bookGeneration.settings,
+				projectUserId: project.userId,
+			})
 			.from(bookGeneration)
+			.innerJoin(project, eq(bookGeneration.projectId, project.id))
 			.where(eq(bookGeneration.id, generationId));
 
 		if (!generation) {
@@ -34,6 +45,11 @@ export async function POST(
 				{ error: "Generation not found" },
 				{ status: 404 },
 			);
+		}
+
+		// Verify ownership
+		if (generation.projectUserId !== session.user.id) {
+			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
 		// Don't start if already completed or failed
