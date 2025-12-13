@@ -17,3 +17,9 @@ Fixed a console error `<p> cannot contain a nested <p>` by changing the outer co
 - **State Management**: Introduced `@tanstack/react-query` to replace `useSWR` for server state (fetching). This allows for better caching, background refetching, and mutation handling. Components like `ContextSelectionPanel` now use `useQuery`.
 - **Strict Typing in Tools**: Refactored AI tools (e.g., `create-entity`) to use `z.infer<typeof schema>` for arguments instead of `any`. This catches type errors at compile time and improves safety.
 - **Verification Performance**: Updated `verification/runner.py` to use `ThreadPoolExecutor` for parallel execution, significantly speeding up the visual verification workflow.
+
+## 2025-05-24 - Client-Side Caching with TanStack Query
+
+*   **Local Persistence**: Implemented `PersistQueryClientProvider` with `createSyncStoragePersister` to cache query data in `localStorage`. This improves load times for static or semi-static data like templates and project context.
+*   **Caching Strategy**: Defined centralized caching constants (`QUERY_KEYS`, `STALE_TIMES`, `GC_TIMES`) in `lib/query-options.ts`. Used high `gcTime` (24h) and reasonable `staleTime` to balance freshness and performance.
+*   **Vitest Configuration**: Noticed that the existing `vitest.config.ts` is heavily tailored for Storybook integration, which complicates running isolated unit tests.

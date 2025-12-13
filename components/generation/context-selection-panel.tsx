@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import {
 	BookOpen,
 	Check,
@@ -13,13 +14,13 @@ import {
 	Wand2,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api-client";
 import type { ContextSelection } from "@/lib/db/schema";
+import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 
 interface ContextSelectionPanelProps {
@@ -48,9 +49,11 @@ export function ContextSelectionPanel({
 	onChange,
 }: ContextSelectionPanelProps) {
 	const { data, isLoading } = useQuery({
-		queryKey: ["project-context", projectId],
+		queryKey: QUERY_KEYS.projectContext(projectId),
 		queryFn: () =>
 			api.get<ProjectContextResponse>(`/api/projects/${projectId}/context`),
+		staleTime: STALE_TIMES.CONTEXT,
+		gcTime: GC_TIMES.CONTEXT,
 	});
 
 	const [selection, setSelection] = useState<ContextSelection>({
