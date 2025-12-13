@@ -23,12 +23,12 @@ import {
 	PromptInputToolbar,
 	PromptInputTools,
 } from "@/components/elements/prompt-input";
+import { useFileAttachments } from "@/hooks/use-file-attachments";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { cn } from "@/lib/utils";
 import { PreviewAttachment } from "../preview-attachment";
-import { useFileAttachments } from "@/hooks/use-file-attachments";
 import { AttachmentsButton } from "./attachments-button";
 import { ModelSelectorCompact } from "./model-selector";
 import { StopButton } from "./stop-button";
@@ -163,7 +163,6 @@ function PureMultimodalInput({
 		[usage],
 	);
 
-
 	// Add paste event listener to textarea
 	useEffect(() => {
 		const textarea = textareaRef.current;
@@ -188,10 +187,10 @@ function PureMultimodalInput({
 
 			<PromptInput
 				className={cn(
-                    "rounded-[28px] glass-input p-3 transition-all duration-300 ease-out",
-                    "hover:shadow-lg hover:border-white/20 dark:hover:border-white/10 hover:bg-glass-input/80",
-                    "focus-within:shadow-xl focus-within:ring-1 focus-within:ring-white/20 dark:focus-within:ring-white/10"
-                )}
+					"rounded-3xl glass-input p-4 transition-all duration-300 ease-[var(--ease-liquid)]",
+					"hover:shadow-xl hover:border-primary/5 dark:hover:border-white/10 hover:bg-glass-input/90",
+					"focus-within:shadow-2xl focus-within:ring-1 focus-within:ring-primary/10 dark:focus-within:ring-white/10 focus-within:bg-glass-input/100",
+				)}
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (status !== "ready") {
@@ -234,7 +233,7 @@ function PureMultimodalInput({
 						))}
 					</div>
 				)}
-				<div className="flex flex-row items-start gap-1 sm:gap-2">
+				<div className="flex flex-row items-start gap-3 px-1">
 					<PromptInputTextarea
 						aria-label="Message input"
 						autoFocus
