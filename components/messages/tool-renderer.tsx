@@ -19,21 +19,33 @@ import type { ChatMessage } from "@/lib/types";
 // Extract the Part type from ChatMessage
 type MessagePart = ChatMessage["parts"][number];
 
+// Helper type for tool parts which guaranteed have these properties
+// when handled by their specific renderers
+interface ToolMessagePart {
+	type: string;
+	toolCallId: string;
+	state: "partial-call" | "call" | "result";
+	input?: any;
+	output?: any;
+	[key: string]: any;
+}
+
 interface ToolRendererProps {
 	part: MessagePart;
 	isReadonly: boolean;
 }
 
 const CreateDocumentRenderer = ({ part, isReadonly }: ToolRendererProps) => {
-	const { toolCallId } = part;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { toolCallId } = toolPart;
 
-	if (part.output && "error" in part.output) {
+	if (toolPart.output && "error" in toolPart.output) {
 		return (
 			<div
 				className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
 				key={toolCallId}
 			>
-				Error creating document: {String(part.output.error)}
+				Error creating document: {String(toolPart.output.error)}
 			</div>
 		);
 	}
@@ -42,21 +54,22 @@ const CreateDocumentRenderer = ({ part, isReadonly }: ToolRendererProps) => {
 		<DocumentPreview
 			isReadonly={isReadonly}
 			key={toolCallId}
-			result={part.output}
+			result={toolPart.output}
 		/>
 	);
 };
 
 const UpdateDocumentRenderer = ({ part, isReadonly }: ToolRendererProps) => {
-	const { toolCallId } = part;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { toolCallId } = toolPart;
 
-	if (part.output && "error" in part.output) {
+	if (toolPart.output && "error" in toolPart.output) {
 		return (
 			<div
 				className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
 				key={toolCallId}
 			>
-				Error updating document: {String(part.output.error)}
+				Error updating document: {String(toolPart.output.error)}
 			</div>
 		);
 	}
@@ -64,9 +77,9 @@ const UpdateDocumentRenderer = ({ part, isReadonly }: ToolRendererProps) => {
 	return (
 		<div className="relative" key={toolCallId}>
 			<DocumentPreview
-				args={{ ...part.output, isUpdate: true }}
+				args={{ ...toolPart.output, isUpdate: true }}
 				isReadonly={isReadonly}
-				result={part.output}
+				result={toolPart.output}
 			/>
 		</div>
 	);
@@ -76,25 +89,46 @@ const RequestSuggestionsRenderer = ({
 	part,
 	isReadonly,
 }: ToolRendererProps) => {
-	const { toolCallId, state } = part;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { toolCallId, state, output } = toolPart;
+
+	let uiState:
+		| "input-streaming"
+		| "input-available"
+		| "output-available"
+		| "output-error" = "input-available";
+
+	if (state === "partial-call") {
+		uiState = "input-streaming";
+	} else if (state === "call") {
+		uiState = "input-available";
+	} else if (state === "result") {
+		if (output && typeof output === "object" && "error" in output) {
+			uiState = "output-error";
+		} else {
+			uiState = "output-available";
+		}
+	}
 
 	return (
 		<Tool defaultOpen={true} key={toolCallId}>
-			<ToolHeader state={state} type="tool-requestSuggestions" />
+			<ToolHeader state={uiState} type="tool-requestSuggestions" />
 			<ToolContent>
-				{state === "input-available" && <ToolInput input={part.input} />}
-				{state === "output-available" && (
+				{state === "partial-call" || state === "call" ? (
+					<ToolInput input={toolPart.input} />
+				) : null}
+				{state === "result" && (
 					<ToolOutput
 						errorText={undefined}
 						output={
-							"error" in part.output ? (
+							output && "error" in output ? (
 								<div className="rounded border p-2 text-red-500">
-									Error: {String(part.output.error)}
+									Error: {String(output.error)}
 								</div>
 							) : (
 								<DocumentToolResult
 									isReadonly={isReadonly}
-									result={part.output}
+									result={output}
 									type="request-suggestions"
 								/>
 							)
@@ -107,8 +141,9 @@ const RequestSuggestionsRenderer = ({
 };
 
 const EntityRenderer = ({ part }: ToolRendererProps) => {
-	const { toolCallId } = part;
-	const output = part.output as any;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { toolCallId } = toolPart;
+	const output = toolPart.output;
 
 	if (output?.error) {
 		return (
@@ -134,8 +169,9 @@ const EntityRenderer = ({ part }: ToolRendererProps) => {
 };
 
 const ProposeManageEntitiesRenderer = ({ part }: ToolRendererProps) => {
-	const { toolCallId } = part;
-	const output = part.output as any;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { toolCallId } = toolPart;
+	const output = toolPart.output;
 
 	if (!output?.proposal) return null;
 
@@ -150,8 +186,9 @@ const ProposeManageEntitiesRenderer = ({ part }: ToolRendererProps) => {
 };
 
 const SceneRenderer = ({ part }: ToolRendererProps) => {
-	const { toolCallId } = part;
-	const output = part.output as any;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { toolCallId } = toolPart;
+	const output = toolPart.output;
 
 	if (output?.error) {
 		return (
@@ -168,17 +205,15 @@ const SceneRenderer = ({ part }: ToolRendererProps) => {
 
 	return (
 		<div className="relative" key={toolCallId}>
-			<SceneWidget
-				scene={output.scene}
-				projectId={output?.scene?.projectId}
-			/>
+			<SceneWidget scene={output.scene} projectId={output?.scene?.projectId} />
 		</div>
 	);
 };
 
 const GenerationRenderer = ({ part }: ToolRendererProps) => {
-	const { type } = part;
-	const { toolCallId, state, input, output } = part;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { type } = toolPart;
+	const { toolCallId, state, input, output } = toolPart;
 	const toolName = type.replace("tool-", "");
 
 	return (
@@ -194,8 +229,9 @@ const GenerationRenderer = ({ part }: ToolRendererProps) => {
 };
 
 const CreateRelationRenderer = ({ part }: ToolRendererProps) => {
-	const { toolCallId } = part;
-	const output = part.output as any;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { toolCallId } = toolPart;
+	const output = toolPart.output;
 
 	if (output && "error" in output) {
 		return (
@@ -219,9 +255,9 @@ const CreateRelationRenderer = ({ part }: ToolRendererProps) => {
 };
 
 const GenericToolRenderer = ({ part }: ToolRendererProps) => {
-	const { type } = part;
+	const toolPart = part as unknown as ToolMessagePart;
+	const { type } = toolPart;
 	const toolName = type.replace("tool-", "");
-	const toolPart = part as any;
 	const { toolCallId, state, input, output } = toolPart;
 
 	return (
