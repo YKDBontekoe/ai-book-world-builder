@@ -5,7 +5,6 @@ import equal from "fast-deep-equal";
 import { motion } from "framer-motion";
 import { SparklesIcon } from "lucide-react";
 import { memo, useState } from "react";
-import { useDataStream } from "@/components/chat/data-stream-provider";
 import { GenericTool } from "@/components/chat/generic-tool";
 import { PreviewAttachment } from "@/components/chat/preview-attachment";
 import { EntityProposal } from "@/components/chat/widgets/entity-proposal";
@@ -26,12 +25,12 @@ import {
 import { MessageActions } from "@/components/messages/message-actions";
 import { MessageEditor } from "@/components/messages/message-editor";
 import { MessageReasoning } from "@/components/messages/message-reasoning";
-import { MessageSources } from "@/components/messages/message-sources";
+import { MessageStreamingSources } from "@/components/messages/message-streaming-sources";
 import { MessageUsage } from "@/components/messages/message-usage";
 import { Weather } from "@/components/weather";
 import { springs } from "@/lib/animations";
 import type { Vote } from "@/lib/db/schema";
-import type { ChatMessage, SourceCitation } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 
 const PurePreviewMessage = ({
@@ -59,13 +58,6 @@ const PurePreviewMessage = ({
 
 	const attachmentsFromMessage =
 		message.parts?.filter((part) => part.type === "file") ?? [];
-
-	const { dataStream } = useDataStream();
-
-	// Extract sources from data stream
-	const sources = dataStream
-		.filter((item) => item.type === "data-sources")
-		.flatMap((item) => item.data as SourceCitation[]);
 
 	return (
 		<motion.div
@@ -153,7 +145,7 @@ const PurePreviewMessage = ({
 															backgroundImage:
 																"linear-gradient(to top left, hsl(212 100% 45%), hsl(212 100% 55%))",
 															boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)",
-													  }
+														}
 													: undefined
 											}
 										>
@@ -432,8 +424,8 @@ const PurePreviewMessage = ({
 						)}
 
 					{/* Display source citations for assistant messages */}
-					{message.role === "assistant" && sources.length > 0 && (
-						<MessageSources sources={sources} />
+					{message.role === "assistant" && isLoading && (
+						<MessageStreamingSources />
 					)}
 
 					{message.role === "assistant" &&
