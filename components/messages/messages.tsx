@@ -135,18 +135,15 @@ export const Messages = memo(PureMessages, (prevProps, nextProps) => {
 	if (prevProps.selectedModelId !== nextProps.selectedModelId) {
 		return false;
 	}
-	if (prevProps.messages.length !== nextProps.messages.length) {
+	if (prevProps.messages !== nextProps.messages) {
 		return false;
 	}
-	if (!equal(prevProps.messages, nextProps.messages)) {
-		return false;
-	}
-	if (!equal(prevProps.votes, nextProps.votes)) {
+	if (prevProps.votes !== nextProps.votes) {
 		return false;
 	}
 	if (prevProps.selectedProject?.id !== nextProps.selectedProject?.id) {
 		return false;
 	}
 
-	return false;
+	return true;
 });
