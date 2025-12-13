@@ -1,21 +1,67 @@
 # Agent and Contributor Guidelines
 
-## Core Principles
-1. **Performance First**: Prioritize efficient code (Server Components, optimized images).
-2. **Type Safety**: strict TypeScript usage; zero `any`.
-3. **Accessibility**: Interactive elements must be keyboard accessible and labeled.
-4. **Design System**: Strict adherence to shadcn/ui and Tailwind tokens.
-5. **Testing & Documentation**: No code is complete without tests and documentation.
+This document serves as the **Single Source of Truth** for all agents and contributors working on the AI Book World Builder project.
 
-## Mandatory Requirements
+## Core Principles
+
+1.  **Performance First**: Prioritize efficient code (Server Components, optimized images, minimal client-side bundles).
+2.  **Type Safety**: **Strict TypeScript usage is mandatory.** usage of `any` is strictly prohibited.
+3.  **Accessibility**: Interactive elements must be keyboard accessible, labeled, and testable via `axe-core`.
+4.  **Design System**: Strict adherence to the [Native macOS Aesthetic](docs/design-system.md) and shadcn/ui tokens.
+5.  **Testing & Documentation**: No code is complete without tests (Unit + E2E + Visual) and documentation.
+
+## Critical Technical Rules
+
+### 1. Dynamic Imports for Shared Libraries
+Shared library files (e.g., in `lib/`) that use Node.js modules like `fs` **MUST** use dynamic imports and environment checks (`typeof window === 'undefined'`) to ensure compatibility with Client Components.
+- *Why*: Importing Node.js modules directly in files used by Client Components causes build failures.
+
+### 2. Strict Type Safety
+- **No `any`**: You must properly type all variables and function returns.
+- **Explicit Returns**: Exported functions should have explicit return types.
+- **Generics**: Use generics for reusable components/utilities.
+
+### 3. Server Action Security
+- **Ownership Verification**: All Server Actions accessing user data must verify ownership (e.g., `getProjectByIdWithAccess`).
+- **Boundary Enforcement**: Pass parent IDs (e.g., `projectId`) to DB queries to prevent IDOR.
+
+## Verification Strategy
 
 > [!IMPORTANT]
-> **Every change must be tested and documented.**
-> 1. **Testing**: You must implement usage of the project's test strategy (`docs/testing.md`). All new features and bug fixes require corresponding tests (Unit, Integration, or E2E).
-> 2. **Documentation**: You must update relevant documentation (JSDoc, README, `.agent` docs) to reflect your changes.
+> You must perform **BOTH** types of verification before marking a task as complete.
+
+### 1. Functional & CI Verification (TypeScript)
+Run the project's test suite to ensure logic correctness and prevent regressions.
+- **Unit**: `pnpm exec vitest run`
+- **E2E/Integration**: `pnpm exec playwright test`
+- **Reference**: `docs/testing.md`
+
+### 2. Visual Verification (Python)
+Use Python scripts with Playwright (typically in `verification/`) to generate screenshots of your changes.
+- **Purpose**: Visually verify that UI changes match the "Native macOS" aesthetic and don't break layout.
+- **Action**: Create a script if one doesn't exist for your feature.
+
+## Design System
+
+Adhere to the **Native macOS** aesthetic defined in [`docs/design-system.md`](docs/design-system.md).
+- **Roundedness**: `rounded-lg` (16px) for buttons/inputs, `rounded-2xl` for dialogs.
+- **Materials**: Use `.glass` or `.glass-panel` for translucency.
+- **Motion**: Use spring physics (stiffness: 400, damping: 25) for animations.
+
+## Agent Workflow
+
+1.  **Plan**: Analyze requirements. Check `docs/` and `.agent/` guidelines.
+2.  **Implement**: Write code following specific workflows (see below).
+3.  **Verify**:
+    *   Run `pnpm lint` and `pnpm format` (using `ultracite`).
+    *   Run `pnpm test` (Unit/E2E).
+    *   Run Python visual verification scripts.
+4.  **Document**: Update JSDoc, READMEs, and `.agent` docs.
+5.  **Reflect**:
+    *   **MANDATORY**: Log critical UX, accessibility, or architectural learnings in `.AgentName/palette.md` (e.g., `.Jules/palette.md`).
+    *   Format: `## YYYY-MM-DD - [Title]`.
 
 ## Agent Resources
-The `.agent` directory contains detailed guidelines and workflows. **ALWAYS** refer to these before starting a task.
 
 ### 📚 Guidelines
 - [Next.js Patterns](.agent/guidelines/nextjs-patterns.md): Server vs Client components, Route Handlers.
@@ -33,19 +79,3 @@ The `.agent` directory contains detailed guidelines and workflows. **ALWAYS** re
 ### 📖 Context
 - [Project Overview](.agent/context/project-overview.md)
 - [Conventions](.agent/context/conventions.md)
-
-## Development Process
-1. **Plan**: Analyze requirements and check relevant guidelines.
-2. **Implement**: Follow specific workflows (e.g., "Add Feature").
-3. **Verify**: 
-   - **Test**: Run `pnpm test` and ensure all tests pass. Write new tests for new code.
-   - **Lint**: Run `pnpm lint` and `pnpm format`.
-   - **Document**: Update all affected documentation.
-4. **Review**: Self-review against checklist in workflows.
-
-## Pull Request Policy
-- Descriptions must follow the format defined in [Pull Request Message Format].
-- **Testing coverage** must be included in the PR description.
-- **Documentation updates** must be included in the PR.
-- All CI checks (lint, build, test) must pass.
-- Migrations must be verified locally.
