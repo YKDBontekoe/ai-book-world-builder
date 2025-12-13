@@ -12,6 +12,8 @@ import {
 	type GenerationSettings,
 	generationNote,
 	generationTemplate,
+	chapter,
+	scene,
 } from "@/lib/db/schema";
 import { runGeneration } from "@/lib/generation";
 
@@ -490,6 +492,169 @@ export async function restoreChapterVersion(versionId: string) {
 		return { success: true };
 	} catch (error) {
 		return { error: "Failed to restore version" };
+	}
+}
+
+/**
+ * Get the full project structure (chapters and scenes) for the writer mode
+ */
+export async function getProjectStructure(projectId: string) {
+	const session = await auth();
+	if (!session?.user?.id) {
+		return { error: "Authentication required" };
+	}
+
+	try {
+		// Verify access
+		const project = await getProjectByIdWithAccess({
+			id: projectId,
+			userId: session.user.id,
+		});
+
+		if (!project) {
+			return { error: "Project not found" };
+		}
+
+		// Get all chapters sorted by sequence
+		// We join with the first outline/volume for now, assuming a linear structure
+		const chapters = await db.query.chapter.findMany({
+			where: (chapter, { eq }) => eq(chapter.projectId, projectId),
+			orderBy: (chapter, { asc }) => [asc(chapter.sequence)],
+			with: {
+				// Get scenes for each chapter
+				// Note: We need to define this relation in the schema relations if not present
+				// If relations aren't defined in Drizzle, we might need a separate query
+			},
+		});
+
+		// Since relations might not be fully set up in Drizzle schema for direct `with` querying across files,
+		// let's fetch scenes separately and map them.
+		const scenes = await db.query.scene.findMany({
+			where: (scene, { eq }) => eq(scene.projectId, projectId),
+			orderBy: (scene, { asc }) => [asc(scene.sequence)],
+		});
+
+		// Group scenes by chapter
+		const structure = chapters.map((ch) => ({
+			...ch,
+			scenes: scenes.filter((s) => s.chapterId === ch.id),
+		}));
+
+		return { structure };
+	} catch (error) {
+		console.error("Failed to fetch project structure:", error);
+		return { error: "Failed to fetch project structure" };
+	}
+}
+
+/**
+ * Update the content of a scene
+ */
+/**
+ * Create a snapshot (ChapterVersion) from the current scene contents of a chapter
+ */
+export async function createChapterSnapshot(chapterId: string) {
+	const session = await auth();
+	if (!session?.user?.id) {
+		return { error: "Authentication required" };
+	}
+
+	try {
+		// Verify ownership
+		const [targetChapter] = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.id, chapterId));
+
+		if (!targetChapter) return { error: "Chapter not found" };
+
+		const project = await getProjectByIdWithAccess({
+			id: targetChapter.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
+		// Gather all scenes
+		const scenes = await db
+			.select()
+			.from(scene)
+			.where(eq(scene.chapterId, chapterId))
+			.orderBy(scene.sequence);
+
+		// Combine content
+		const fullContent = scenes
+			.map((s) => s.content || "")
+			.join("\n\n***\n\n"); // Standard scene separator
+
+		// Get next version number
+		const [latestVersion] = await db
+			.select()
+			.from(chapterVersion)
+			.where(eq(chapterVersion.chapterId, chapterId))
+			.orderBy(desc(chapterVersion.version))
+			.limit(1);
+
+		const nextVersion = (latestVersion?.version || 0) + 1;
+
+		await db.insert(chapterVersion).values({
+			chapterId,
+			content: fullContent,
+			version: nextVersion,
+			wordCount: fullContent.split(/\s+/).length,
+			createdBy: "user",
+			createdAt: new Date(),
+		});
+
+		return { success: true, version: nextVersion };
+	} catch (error) {
+		console.error("Failed to create snapshot:", error);
+		return { error: "Failed to create snapshot" };
+	}
+}
+
+export async function updateSceneContent(sceneId: string, content: string) {
+	const session = await auth();
+	if (!session?.user?.id) {
+		return { error: "Authentication required" };
+	}
+
+	try {
+		// Verify ownership via project
+		const [targetScene] = await db
+			.select()
+			.from(scene)
+			.where(eq(scene.id, sceneId));
+
+		if (!targetScene) {
+			return { error: "Scene not found" };
+		}
+
+		const project = await getProjectByIdWithAccess({
+			id: targetScene.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
+		// Update scene content
+		await db
+			.update(scene)
+			.set({
+				content,
+				updatedAt: new Date(),
+				status: "drafting", // Mark as drafting when manually edited
+			})
+			.where(eq(scene.id, sceneId));
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to update scene content:", error);
+		return { error: "Failed to update scene content" };
 	}
 }
 
