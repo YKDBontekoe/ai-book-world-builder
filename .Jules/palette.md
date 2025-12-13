@@ -4,3 +4,6 @@
 
 ## 2025-05-21 - [MacOS Design Overhaul Implementation]
 **Learning:** To achieve a "Native macOS" aesthetic using Tailwind and shadcn/ui, standard `rounded-md` tokens were insufficient. Updating base components (Button, Input, Select) to use `rounded-lg` (mapped to 16px via `--radius`) provided the desired floating, capsule-like appearance. Consistency across interactive elements is key to this design language.
+
+## 2025-12-13 - Liquid Glass Primitives
+Learned that directly applying `.glass-input` to primitive components (Input, Textarea) provides a consistent "Liquid Glass" look across the app. Overlays like `DropdownMenu` and `Select` benefit from replacing `bg-popover` with `.glass-panel` to maintain transparency and blur effects consistent with the macOS aesthetic.

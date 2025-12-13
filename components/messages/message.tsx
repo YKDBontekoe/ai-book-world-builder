@@ -68,18 +68,18 @@ const PurePreviewMessage = ({
 			className="group/message w-full"
 			initial={{ opacity: 0, y: 10, scale: 0.98 }}
 			animate={{ opacity: 1, y: 0, scale: 1 }}
-			transition={{ type: "spring", stiffness: 400, damping: 25 }}
+			transition={{ type: "spring", stiffness: 450, damping: 30 }}
 			data-role={message.role}
 			data-testid={`message-${message.role}`}
 		>
 			<div
-				className={cn("flex w-full items-start gap-2 md:gap-3", {
+				className={cn("flex w-full items-start gap-3", {
 					"justify-end": message.role === "user" && mode !== "edit",
 					"justify-start": message.role === "assistant",
 				})}
 			>
 				{message.role === "assistant" && (
-					<div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm ring-1 ring-white/20">
+					<div className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md ring-1 ring-white/20">
 						<SparklesIcon size={14} />
 					</div>
 				)}
@@ -137,7 +137,7 @@ const PurePreviewMessage = ({
 									<div key={key}>
 										<MessageContent
 											className={cn("shadow-sm", {
-												"w-fit break-words rounded-[20px] px-4 py-2.5 text-right text-white":
+												"w-fit break-words rounded-[22px] px-5 py-3 text-[15px] leading-relaxed text-right text-white":
 													message.role === "user",
 												"bg-transparent px-0 py-0 text-left shadow-none":
 													message.role === "assistant",
@@ -145,7 +145,10 @@ const PurePreviewMessage = ({
 											data-testid="message-content"
 											style={
 												message.role === "user"
-													? { backgroundColor: "var(--sidebar-primary)" }
+													? {
+                                                        backgroundImage: "linear-gradient(to top left, hsl(212 100% 45%), hsl(212 100% 55%))",
+                                                        boxShadow: "0 2px 8px rgba(37, 99, 235, 0.2)"
+                                                      }
 													: undefined
 											}
 										>

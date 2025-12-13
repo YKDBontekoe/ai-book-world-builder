@@ -38,8 +38,8 @@
 	--chart-4: hsl(43 74% 66%);
 	--chart-5: hsl(27 87% 67%);
 
-	/* MacOS Style Sidebar */
-	--sidebar-background: hsl(0 0% 96% / 0.8);
+	/* MacOS Style Sidebar & Glass - Liquid 2025 */
+	--sidebar-background: hsl(0 0% 96% / 0.75); /* Increased transparency */
 	--sidebar-foreground: hsl(240 5.3% 26.1%);
 	--sidebar-primary: hsl(212 100% 48%); /* Apple Blue */
 	--sidebar-primary-foreground: hsl(0 0% 100%);
@@ -50,7 +50,7 @@
 
 	/* border radius unit - Larger for MacOS feel */
 	--radius: 1rem;
-	--sidebar: hsl(0 0% 96% / 0.8);
+	--sidebar: hsl(0 0% 96% / 0.75);
 
 	/* Status Colors */
 	--status-success: hsl(142 76% 36%);
@@ -78,10 +78,12 @@
 	--entity-organization: hsl(340 65% 55%);
 	--entity-organization-bg: hsl(340 65% 55% / 0.1);
 
-	/* Glass Effect */
-	--glass-bg: hsl(0 0% 100% / 0.7);
-	--glass-border: hsl(0 0% 100% / 0.2);
-	--glass-blur: 20px;
+	/* Glass Effect - Liquid 2025 */
+	--glass-bg: hsl(0 0% 100% / 0.65);
+    --glass-input-bg: hsl(0 0% 100% / 0.5);
+	--glass-border: hsl(0 0% 100% / 0.4);
+	--glass-blur: 40px;
+    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
 /* define design tokens (dark mode) */
@@ -112,19 +114,21 @@
 	--chart-5: hsl(340 75% 55%);
 
 	/* MacOS Dark Sidebar */
-	--sidebar-background: hsl(240 5.9% 10% / 0.7);
+	--sidebar-background: hsl(240 5.9% 10% / 0.65);
 	--sidebar-foreground: hsl(240 4.8% 95.9%);
 	--sidebar-primary: hsl(212 100% 50%);
 	--sidebar-primary-foreground: hsl(0 0% 100%);
 	--sidebar-accent: hsl(240 3.7% 20%);
 	--sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-border: hsl(240 3.7% 15.9% / 0.3);
+	--sidebar-border: hsl(240 3.7% 15.9% / 0.2);
 	--sidebar-ring: hsl(217.2 91.2% 59.8%);
-	--sidebar: hsl(240 5.9% 10% / 0.7);
+	--sidebar: hsl(240 5.9% 10% / 0.65);
 
 	/* Glass Effect - Dark mode */
-	--glass-bg: hsl(0 0% 15% / 0.6);
-	--glass-border: hsl(0 0% 100% / 0.1);
+	--glass-bg: hsl(240 5.9% 10% / 0.6);
+    --glass-input-bg: hsl(240 5.9% 10% / 0.5);
+	--glass-border: hsl(0 0% 100% / 0.08);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 }
 
 /* define theme */
@@ -180,6 +184,10 @@
 	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
 	--color-sidebar-border: var(--sidebar-border);
 	--color-sidebar-ring: var(--sidebar-ring);
+
+    --color-glass: var(--glass-bg);
+    --color-glass-input: var(--glass-input-bg);
+    --color-glass-border: var(--glass-border);
 }
 
 /*
@@ -228,13 +236,19 @@
 		}
 	}
 
-	/* Glassmorphism Utilities - Refined for Apple Look */
+	/* Glassmorphism Utilities - Refined for Liquid Glass 2025 */
 	.glass-panel {
-		@apply bg-sidebar/80 backdrop-blur-2xl border-sidebar-border/50;
+		@apply bg-sidebar/70 backdrop-blur-[40px] border-sidebar-border;
+        box-shadow: var(--glass-shadow);
 	}
 
     .glass {
-        @apply bg-white/70 dark:bg-black/60 backdrop-blur-xl backdrop-saturate-150 border border-white/20 dark:border-white/10;
+        @apply bg-glass backdrop-blur-[40px] backdrop-saturate-150 border border-glass-border;
+        box-shadow: var(--glass-shadow);
+    }
+
+    .glass-input {
+        @apply bg-glass-input backdrop-blur-xl border border-glass-border shadow-sm;
     }
 
 	.glass-overlay {

@@ -129,7 +129,7 @@ const SidebarInset = React.forwardRef<
 	return (
 		<main
 			className={cn(
-				"relative flex w-full flex-1 flex-col bg-background",
+				"relative flex w-full flex-1 flex-col bg-background/50", // Changed to bg-background/50 to allow underlying content/blur to show if needed
 				"md:peer-data-[state=collapsed]:peer-data-[variant=inset]:ml-2 md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow",
 				className,
 			)}
@@ -194,7 +194,7 @@ const SidebarSeparator = React.forwardRef<
 >(({ className, ...props }, ref) => {
 	return (
 		<Separator
-			className={cn("mx-2 w-auto bg-sidebar-border", className)}
+			className={cn("mx-2 w-auto bg-sidebar-border/50", className)} // Added opacity
 			data-sidebar="separator"
 			ref={ref}
 			{...props}
