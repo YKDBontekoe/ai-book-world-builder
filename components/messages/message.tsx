@@ -101,9 +101,9 @@ const PurePreviewMessage = ({
 							<div key={`message-${message.id}-content`}>
 								<MessageContent
 									className={cn("shadow-sm", {
-										"w-fit break-words rounded-3xl px-6 py-4 text-base leading-relaxed text-right text-white":
+										"w-fit break-words rounded-[20px] rounded-br-sm px-5 py-2.5 text-base leading-relaxed text-left text-white":
 											message.role === "user",
-										"bg-transparent px-0 py-0 text-left shadow-none":
+										"w-fit break-words rounded-[20px] rounded-bl-sm px-5 py-2.5 text-base leading-relaxed text-left bg-muted text-foreground":
 											message.role === "assistant",
 									})}
 									data-testid="message-content"
@@ -142,9 +142,9 @@ const PurePreviewMessage = ({
 									<div key={key}>
 										<MessageContent
 											className={cn("shadow-sm", {
-												"w-fit break-words rounded-3xl px-6 py-4 text-base leading-relaxed text-right text-white":
+												"w-fit break-words rounded-[20px] rounded-br-sm px-5 py-2.5 text-base leading-relaxed text-left text-white":
 													message.role === "user",
-												"bg-transparent px-0 py-0 text-left shadow-none":
+												"w-fit break-words rounded-[20px] rounded-bl-sm px-5 py-2.5 text-base leading-relaxed text-left bg-muted text-foreground":
 													message.role === "assistant",
 											})}
 											data-testid="message-content"
