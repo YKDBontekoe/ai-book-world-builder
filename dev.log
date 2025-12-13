@@ -12,58 +12,16 @@ This information is used to shape Next.js' roadmap and prioritize features.
 You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
 https://nextjs.org/telemetry
 
- ✓ Ready in 2.9s
+ ✓ Ready in 2.8s
  ○ Compiling /register ...
- GET /register 200 in 9.6s (compile: 8.3s, proxy.ts: 258ms, render: 983ms)
- POST /register 200 in 3.8s (compile: 16ms, proxy.ts: 43ms, render: 3.8s)
- GET /api/auth/session 200 in 4.8s (compile: 4.8s, render: 37ms)
- GET /api/auth/session 200 in 96ms (compile: 53ms, render: 43ms)
+ GET /register 200 in 9.7s (compile: 8.4s, proxy.ts: 406ms, render: 946ms)
+ POST /register 200 in 3.4s (compile: 19ms, proxy.ts: 43ms, render: 3.4s)
+ GET /api/auth/session 200 in 4.5s (compile: 4.5s, render: 45ms)
+ GET /api/auth/session 200 in 92ms (compile: 41ms, render: 52ms)
  ○ Compiling / ...
- GET / 200 in 32.8s (compile: 31.5s, proxy.ts: 17ms, render: 1315ms)
- GET / 200 in 673ms (compile: 12ms, proxy.ts: 24ms, render: 636ms)
- GET /register 200 in 200ms (compile: 8ms, proxy.ts: 8ms, render: 184ms)
- GET /api/auth/session 200 in 123ms (compile: 113ms, render: 10ms)
- GET /api/auth/session 200 in 10ms (compile: 4ms, render: 6ms)
- POST /register 200 in 1022ms (compile: 7ms, proxy.ts: 14ms, render: 1002ms)
- GET /api/auth/session 200 in 42ms (compile: 11ms, render: 30ms)
- GET / 200 in 539ms (compile: 13ms, proxy.ts: 26ms, render: 500ms)
- GET /api/history?limit=20 200 in 342ms (compile: 6ms, proxy.ts: 51ms, render: 285ms)
- GET / 200 in 1422ms (compile: 10ms, proxy.ts: 14ms, render: 1398ms)
- GET /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 405ms (compile: 18ms, proxy.ts: 21ms, render: 366ms)
- POST / 200 in 1453ms (compile: 34ms, proxy.ts: 57ms, render: 1362ms)
- ⨯ Error: Failed query: insert into "UserPreferences" ("id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt") values (default, $1, $2, $3, $4, $5) returning "id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt"
-params: d4d48192-7d58-460d-9394-484275003756,[],[],2025-12-13T16:34:37.762Z,2025-12-13T16:34:37.762Z
-    at async getUserPreferences (lib/db/queries/user-preferences.ts:27:20)
-    at async getModelPreferences (app/actions/model-preferences.ts:24:16)
-  25 | 	// Create new preferences
-  26 | 	const now = new Date();
-> 27 | 	const [created] = await db
-     | 	                  ^
-  28 | 		.insert(userPreferences)
-  29 | 		.values({
-  30 | 			userId, {
-  query: 'insert into "UserPreferences" ("id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt") values (default, $1, $2, $3, $4, $5) returning "id", "userId", "favoriteModels", "recentModels", "createdAt", "updatedAt"',
-  params: [Array],
-  digest: '1100805443',
-  [cause]: Error [PostgresError]: duplicate key value violates unique constraint "UserPreferences_userId_key"
-      at ignore-listed frames {
-    severity_local: 'ERROR',
-    severity: 'ERROR',
-    code: '23505',
-    detail: 'Key ("userId")=(d4d48192-7d58-460d-9394-484275003756) already exists.',
-    schema_name: 'public',
-    table_name: 'UserPreferences',
-    constraint_name: 'UserPreferences_userId_key',
-    file: 'nbtinsert.c',
-    line: '667',
-    routine: '_bt_check_unique'
-  }
-}
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 500 in 2.8s (compile: 82ms, proxy.ts: 810ms, render: 1884ms)
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 1656ms (compile: 26ms, proxy.ts: 1358ms, render: 272ms)
- ○ Compiling /api/chat ...
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 319ms (compile: 22ms, proxy.ts: 24ms, render: 273ms)
- POST /api/ai-suggestions 200 in 5.1s (compile: 11ms, proxy.ts: 165ms, render: 4.9s)
- POST /api/ai-suggestions 200 in 7.2s (compile: 2.0s, proxy.ts: 21ms, render: 5.1s)
- POST /api/chat 200 in 5.1s (compile: 4.9s, proxy.ts: 164ms, render: 37ms)
- POST /?projectId=d973bc89-6794-4321-be70-3ca6912b3aa4 200 in 873ms (compile: 847ms, proxy.ts: 18ms, render: 8ms)
+ GET / 200 in 32.1s (compile: 31.0s, proxy.ts: 15ms, render: 1095ms)
+ GET /api/auth/session 200 in 192ms (compile: 142ms, render: 50ms)
+ GET /api/auth/session 200 in 236ms (compile: 7ms, render: 229ms)
+ GET / 200 in 11.6s (compile: 6.9s, proxy.ts: 34ms, render: 4.7s)
+ POST / 200 in 2.4s (compile: 26ms, proxy.ts: 87ms, render: 2.3s)
+ GET /api/history?limit=20 200 in 2.5s (compile: 2.3s, proxy.ts: 95ms, render: 83ms)
