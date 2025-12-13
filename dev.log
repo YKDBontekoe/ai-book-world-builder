@@ -7,19 +7,39 @@
    - Network:       http://192.168.0.2:3000
 
  ✓ Starting...
- ✓ Ready in 3.6s
- ○ Compiling /register ...
- GET /register 200 in 7.0s (compile: 6.0s, proxy.ts: 30ms, render: 1010ms)
- GET /register 200 in 7.0s (compile: 6.0s, proxy.ts: 34ms, render: 1031ms)
- GET /onboarding 200 in 7.3s (compile: 5.6s, proxy.ts: 31ms, render: 1717ms)
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+
+ ✓ Ready in 2.8s
+ ○ Compiling /onboarding ...
+ GET /register 200 in 12.7s (compile: 10.0s, proxy.ts: 436ms, render: 2.3s)
+ GET /register 200 in 12.7s (compile: 10.4s, proxy.ts: 453ms, render: 1862ms)
+ GET /register 200 in 12.7s (compile: 10.4s, proxy.ts: 443ms, render: 1853ms)
+ GET /onboarding 200 in 13.6s (compile: 9.7s, proxy.ts: 438ms, render: 3.4s)
  ○ Compiling /api/auth/[...nextauth] ...
- POST /register 200 in 3.6s (compile: 38ms, proxy.ts: 34ms, render: 3.5s)
- POST /register 200 in 3.6s (compile: 416ms, proxy.ts: 47ms, render: 3.1s)
- GET /api/auth/session 200 in 5.4s (compile: 5.4s, render: 56ms)
- GET /api/auth/session 200 in 5.6s (compile: 5.5s, render: 59ms)
- GET /api/auth/session 200 in 180ms (compile: 72ms, render: 108ms)
- GET /api/auth/session 200 in 83ms (compile: 12ms, render: 72ms)
+ POST /register 200 in 2.5s (compile: 39ms, proxy.ts: 39ms, render: 2.4s)
+ POST /register 200 in 4.7s (compile: 54ms, proxy.ts: 73ms, render: 4.6s)
+ POST /register 200 in 4.6s (compile: 27ms, proxy.ts: 991ms, render: 3.6s)
+ GET /api/auth/session 200 in 6.5s (compile: 6.4s, render: 94ms)
+ GET /api/auth/session 200 in 6.7s (compile: 6.6s, render: 105ms)
+ GET /api/auth/session 200 in 6.9s (compile: 6.8s, render: 114ms)
+ GET /api/auth/session 200 in 66ms (compile: 49ms, render: 18ms)
+ GET /api/auth/session 200 in 100ms (compile: 14ms, render: 86ms)
+ GET /api/auth/session 200 in 106ms (compile: 29ms, render: 77ms)
  ○ Compiling / ...
- GET /projects 200 in 19.5s (compile: 16.8s, proxy.ts: 86ms, render: 2.6s)
- GET /api/auth/session 200 in 194ms (compile: 139ms, render: 55ms)
- GET /api/auth/session 200 in 67ms (compile: 31ms, render: 36ms)
+ GET /onboarding 200 in 891ms (compile: 12ms, proxy.ts: 10ms, render: 868ms)
+ GET /api/auth/session 200 in 227ms (compile: 180ms, render: 47ms)
+ GET /api/auth/session 200 in 58ms (compile: 23ms, render: 35ms)
+ GET /onboarding 200 in 855ms (compile: 11ms, proxy.ts: 12ms, render: 832ms)
+ GET /api/auth/session 200 in 157ms (compile: 128ms, render: 29ms)
+ GET /api/auth/session 200 in 48ms (compile: 7ms, render: 40ms)
+ GET /register 200 in 227ms (compile: 22ms, proxy.ts: 28ms, render: 178ms)
+ GET /api/auth/session 200 in 149ms (compile: 85ms, render: 63ms)
+ GET /projects 200 in 21.7s (compile: 19.6s, proxy.ts: 13ms, render: 2.0s)
+ GET /api/auth/session 200 in 68ms (compile: 4ms, render: 65ms)
+ GET /api/history?limit=20 200 in 4.5s (compile: 3.8s, proxy.ts: 38ms, render: 709ms)
+ GET /login?callbackUrl=http%3A%2F%2Flocalhost%3A3000%2Fprojects%2Fregister%2Fgenerate 200 in 1302ms (compile: 1010ms, proxy.ts: 10ms, render: 282ms)
+ GET /api/auth/session 200 in 113ms (compile: 105ms, render: 9ms)
+ GET /api/auth/session 200 in 12ms (compile: 4ms, render: 8ms)
