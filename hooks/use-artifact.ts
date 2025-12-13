@@ -25,6 +25,8 @@ type Selector<T> = (state: UIArtifact) => T;
 export function useArtifactSelector<Selected>(selector: Selector<Selected>) {
 	const { data: localArtifact } = useQuery({
 		queryKey: QUERY_KEYS.artifact(),
+		queryFn: () => null,
+		enabled: false,
 		staleTime: STALE_TIMES.LOCAL,
 		gcTime: GC_TIMES.LOCAL,
 		initialData: initialArtifactData,
@@ -45,6 +47,8 @@ export function useArtifact() {
 
 	const { data: localArtifact } = useQuery({
 		queryKey: QUERY_KEYS.artifact(),
+		queryFn: () => null,
+		enabled: false,
 		staleTime: STALE_TIMES.LOCAL,
 		gcTime: GC_TIMES.LOCAL,
 		initialData: initialArtifactData,
@@ -78,8 +82,9 @@ export function useArtifact() {
 	const { data: localArtifactMetadata } = useQuery({
 		queryKey: artifact.documentId
 			? QUERY_KEYS.artifactMetadata(artifact.documentId)
-			: ["artifact-metadata", "null"], // Use a dummy key if null to allow hook to run, but enabled: false might be better
-		enabled: !!artifact.documentId,
+			: ["artifact-metadata", "null"],
+		queryFn: () => null,
+		enabled: false,
 		staleTime: STALE_TIMES.LOCAL,
 		gcTime: GC_TIMES.LOCAL,
 		initialData: null,

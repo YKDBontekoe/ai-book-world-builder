@@ -1,10 +1,14 @@
 "use client";
 
-import { type InfiniteData, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	type InfiniteData,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { useMemo } from "react";
 import { updateChatVisibility } from "@/app/(chat)/actions";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
-import { type ChatHistory } from "@/components/sidebar/sidebar-history";
+import type { ChatHistory } from "@/components/sidebar/sidebar-history";
 import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 
 export function useChatVisibility({
@@ -24,6 +28,8 @@ export function useChatVisibility({
 
 	const { data: localVisibility } = useQuery({
 		queryKey: QUERY_KEYS.chatVisibility(chatId),
+		queryFn: () => null,
+		enabled: false,
 		staleTime: STALE_TIMES.LOCAL,
 		gcTime: GC_TIMES.LOCAL,
 		initialData: initialVisibilityType,
