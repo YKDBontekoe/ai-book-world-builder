@@ -1,105 +1,112 @@
 <p align="center">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
+  <img alt="AI Book World Builder" src="app/(chat)/opengraph-image.png">
 </p>
 
-<h1 align="center">Chat SDK</h1>
+<h1 align="center">AI Book World Builder</h1>
 
 <p align="center">
-    Chat SDK is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
+  A specialized AI tool for authors to build worlds, plan stories, and generate books using advanced LLMs.
 </p>
 
 <p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
+  <a href="#getting-started"><strong>Getting Started</strong></a> ·
+  <a href="#design-system"><strong>Design System</strong></a> ·
+  <a href="#verification"><strong>Verification</strong></a>
 </p>
 <br/>
 
+**AI Book World Builder** helps authors craft complex narratives by grounding AI generations in their custom world data. It combines project-aware chat with structured book generation workflows.
+
 ## Features
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://ai-sdk.dev/docs/introduction)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon](https://neon.tech/) for saving chat history and user data
-  - Blob storage for efficient file storage
-- Project-aware chat
-  - Switch between recent projects from the chat hero and launch quick-start prompts per world
-  - Ground agent replies in selected project folders and entities via the AI SDK-powered copilot backend
-  - Persist project selection across sessions via URL and cookie context so conversations stay grounded
-- Story workspace
-  - Generate outlines with POV, tone, and pacing controls and save them per project
-  - Draft prose side-by-side with AI suggestions grounded in your lore entities
-  - Saved outlines stay deduplicated and sorted by newest first in the draft workspace
-  - Highlight text to fire rewrite prompts, review AI rationales, and restore or diff auto-versioned drafts
-  - Plan books with volumes and ordered chapters linked to outlines, then generate sequential chapter drafts while tracking progress
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+### 📚 Book Generation
+A step-by-step wizard to go from concept to draft:
+- **Context Selection**: Choose specific entities, outlines, and scenes to ground the generation.
+- **Configuration**: Select AI models (Writer/Reviewer), set writing style, and define revision rounds.
+- **Review & Generate**: Verify settings before launching the generation process.
+- **Dashboard**: Monitor progress as chapters are written, reviewed, and refined in real-time.
 
-## Model Providers
+### 🌍 Project-Aware Chat
+- **Context Grounding**: Chat with an AI that knows your project's specific entities (characters, locations, lore).
+- **Persistent Context**: Project selection is preserved across sessions via URL and cookies.
+- **Quick Prompts**: Launch context-specific prompts directly from the project dashboard.
 
-This template uses an AI gateway to access multiple AI models through a unified interface. The default configuration includes [OpenAI](https://openai.com), [xAI](https://x.ai), [Google](https://ai.google/), and [Anthropic](https://anthropic.com) models routed through the gateway.
+### 📝 Story Workspace
+- **Outlining**: Create and manage outlines with controls for POV, tone, and pacing.
+- **Drafting**: Write side-by-side with AI suggestions.
+- **Versioning**: Auto-save drafts, diff versions, and restore previous states.
+- **Entity Management**: Organize your world's lore in a structured database.
 
-Available chat models:
+## Design System
 
-- **GPT-4o mini** (`openai-gpt-4o-mini`): Fast, cost-effective multimodal chats.
-- **Grok Vision** (`chat-model`): Multimodal chat with image upload support.
-- **Gemini 1.5 Flash** (`google-gemini-flash`): Balanced multimodal model with long-context support.
-- **Claude 3.5 Haiku** (`anthropic-claude-haiku`): Affordable, high-quality text responses.
-- **Grok Lite** (`chat-model-lite`): Cost-effective, text-only chats for everyday prompts.
-- **Grok Reasoning** (`chat-model-reasoning`): Chain-of-thought responses for complex tasks.
+This project adheres to a **Native macOS Aesthetic** to provide a premium, desktop-class experience on the web.
+- **Visuals**: Extensive use of glassmorphism (`.glass`, `.glass-panel`), translucent materials, and `rounded-lg` (16px) or `rounded-2xl` corners.
+- **Motion**: Fluid animations using spring physics (stiffness: 400, damping: 25).
+- **Typography**: Clean, legible sans-serif fonts optimized for reading and writing.
 
-Image uploads require a vision-enabled model (GPT-4o mini, Grok Vision, or Gemini 1.5 Flash).
+See [`docs/design-system.md`](docs/design-system.md) for full guidelines.
 
-### AI Gateway Authentication
+## Verification
 
-Provide an AI Gateway API key by setting the `AI_GATEWAY_API_KEY` environment variable in your `.env.local` file.
+We employ a **Dual Verification Strategy** to ensure high quality and stability.
 
-With the [AI SDK](https://ai-sdk.dev/docs/introduction), you can also switch to direct LLM providers like [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://ai-sdk.dev/providers/ai-sdk-providers) with just a few lines of code.
+### 1. Functional Verification (TypeScript)
+We use **Playwright** and **Vitest** for logic and regression testing.
+- Run Unit Tests: `pnpm exec vitest run`
+- Run E2E Tests: `pnpm exec playwright test`
 
-## Running locally
+### 2. Visual Verification (Python)
+We use Python scripts with Playwright to perform visual verification, ensuring the UI matches the design system.
+- Scripts are located in the `verification/` directory.
+- These scripts capture screenshots to verify layout and styling.
 
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. Copy the example file to `.env.local` and fill in the required values for your chosen providers.
+> **Note**: Both functional and visual checks must pass before merging changes. See [`AGENTS.md`](AGENTS.md) for the contributor workflow.
 
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
+## Getting Started
 
-1. Install dependencies with your preferred package manager (examples below use `pnpm`).
-2. Copy `.env.example` to `.env.local` and update the environment variables.
+### Prerequisites
+- Node.js & pnpm
+- PostgreSQL database (e.g., Neon)
+- Blob storage (e.g., Vercel Blob)
+- AI Gateway API key (or keys for individual providers like OpenAI, Anthropic)
 
-```bash
-pnpm install
-pnpm db:migrate # Setup database or apply latest database changes
-pnpm dev
-```
+### Installation
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+1.  **Clone and Install**
+    ```bash
+    git clone https://github.com/YKDBontekoe/ai-book-world-builder.git
+    cd ai-book-world-builder
+    pnpm install
+    ```
 
-## Data handling and safety
+2.  **Environment Setup**
+    Copy `.env.example` to `.env.local` and fill in your keys:
+    ```bash
+    cp .env.example .env.local
+    ```
 
-Review [docs/data-handling.md](docs/data-handling.md) for guidance on managing secrets and environment variables, protecting PII, applying rate limits, logging safely, and adding guard rails to model prompts and generated content.
+3.  **Database Setup**
+    Initialize the database schema:
+    ```bash
+    pnpm db:migrate
+    ```
 
-## Testing
+4.  **Run Locally**
+    ```bash
+    pnpm dev
+    ```
+    The app will be available at `http://localhost:3000`.
 
-See [docs/testing.md](docs/testing.md) for expectations and commands covering unit (Vitest/React Testing Library), integration/end-to-end (Playwright), and accessibility checks, plus what must pass in CI before merging changes.
+## Tech Stack
 
-## Generation configuration UI
+- **Framework**: Next.js 14 (App Router)
+- **AI**: Vercel AI SDK
+- **Database**: Drizzle ORM + PostgreSQL
+- **Styling**: Tailwind CSS v4
+- **Auth**: Auth.js
+- **Testing**: Playwright, Vitest
 
-`docs/generation-config.md` outlines the generation settings panel, its controlled subcomponents, and how to integrate `GenerationConfigPanel` with your own state management.
+## License
 
-## Git hooks
-
-Set the local hooks path to `.githooks` to ensure commits run linting and type checks before landing:
-
-```bash
-git config core.hooksPath .githooks
-```
-
-The `pre-commit` hook runs `pnpm lint` and `pnpm exec tsc --noEmit` to catch regressions early.
+This project is open source.
