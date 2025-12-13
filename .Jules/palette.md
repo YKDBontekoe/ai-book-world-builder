@@ -14,3 +14,12 @@ I refactored the Storybook configuration to support co-located stories (`compone
 ## 2025-12-13 - Accessibility for Custom Disclosures
 **Learning:** Custom disclosure widgets built with `framer-motion` often lack critical ARIA attributes (`aria-expanded`, `aria-controls`) unlike Radix primitives.
 **Action:** Explicitly add `aria-expanded` and `aria-controls` to toggle buttons and ensure the content container has a matching `id` for accessible custom animations.
+
+## 2025-05-20 - Premium Glassmorphism & Visual Hierarchy
+
+I redesigned the Projects and Generation interfaces to adhere to a "Premium" Native macOS aesthetic.
+
+**Learnings:**
+- **Liquid Glass:** Enhancing the standard glass card with `backdrop-blur-[30px]`, `bg-glass/50`, and a softer border creates a much more "premium" feel than standard `backdrop-blur-md` with solid borders. The key is reducing opacity and increasing blur radius.
+- **Layout Breathing Room:** Increasing padding from `p-6` to `p-12` and grid gaps from `4` to `8` significantly improves the "Professional" perception, reducing visual clutter.
+- **Semantic Colors:** Shifting the primary accent from "SaaS Blue" to a "Creative Violet" (`hsl(262, 80%, 60%)`) aligns better with the "World Builder" persona, making the UI feel distinct and branded rather than generic.

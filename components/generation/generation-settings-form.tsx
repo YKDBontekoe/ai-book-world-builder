@@ -2,19 +2,19 @@
 
 import { Loader2, Play } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from "../ui/button";
+import { Input } from "../ui/input";
+import { Label } from "../ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
-import { Textarea } from "@/components/ui/textarea";
-import { writingStylePresets } from "@/lib/db/schema";
+} from "../ui/select";
+import { Slider } from "../ui/slider";
+import { Textarea } from "../ui/textarea";
+import { writingStylePresets } from "../../lib/db/schema";
 
 type FormValues = {
     genre: string;
@@ -58,8 +58,8 @@ export function GenerationSettingsForm({
             onSubmit={handleSubmit}
             className="space-y-8"
           >
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Story Settings</h2>
+            <div className="space-y-6">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 pl-1">Story Settings</h2>
 
               <div className="space-y-2">
                 <Label htmlFor="genre">Genre</Label>
@@ -98,8 +98,8 @@ export function GenerationSettingsForm({
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Structure</h2>
+            <div className="space-y-6">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 pl-1">Structure</h2>
 
               <div className="space-y-2">
                 <div className="flex justify-between">
@@ -134,8 +134,8 @@ export function GenerationSettingsForm({
               </div>
             </div>
 
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold">Guidance</h2>
+            <div className="space-y-6">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground/80 pl-1">Guidance</h2>
               <div className="space-y-2">
                 <Label htmlFor="suggestions">AI Instructions (Optional)</Label>
                 <Textarea
@@ -153,11 +153,11 @@ export function GenerationSettingsForm({
           </form>
       </div>
 
-      <div className="border-t p-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="p-6 bg-gradient-to-t from-background/50 to-transparent pt-0">
         <Button
           type="submit"
           form="generation-form"
-          className="w-full gap-2"
+          className="w-full gap-2 shadow-lg hover:shadow-primary/25 transition-all duration-300"
           size="lg"
           disabled={isStarting}
         >
