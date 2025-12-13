@@ -1,0 +1,2 @@
+ALTER TABLE "Project" ADD COLUMN "forkedFromId" uuid;--> statement-breakpoint
+ALTER TABLE "Project" ADD CONSTRAINT "Project_forkedFromId_Project_id_fk" FOREIGN KEY ("forkedFromId") REFERENCES "public"."Project"("id") ON DELETE no action ON UPDATE no action;

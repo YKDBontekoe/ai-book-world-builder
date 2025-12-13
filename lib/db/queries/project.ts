@@ -33,7 +33,8 @@ export async function createProject({
 			.returning();
 
 		return createdProject;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError("bad_request:database", "Failed to create project");
 	}
 }
@@ -67,7 +68,8 @@ export async function getProjectsVisibleToUser({
 			.from(project)
 			.where(whereClause)
 			.orderBy(desc(project.createdAt));
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError("bad_request:database", "Failed to list projects");
 	}
 }
@@ -97,7 +99,8 @@ export async function getProjectByIdWithAccess({
 		}
 
 		return selectedProject;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to load project by id",

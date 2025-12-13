@@ -8,6 +8,13 @@
       "when": 1765613231321,
       "tag": "0000_slim_anthem",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1765623590093,
+      "tag": "0001_parallel_molten_man",
+      "breakpoints": true
     }
   ]
 }
