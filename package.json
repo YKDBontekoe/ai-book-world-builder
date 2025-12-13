@@ -1,6 +1,7 @@
 {
-	"name": "ai-chatbot",
+	"name": "ai-book-world-builder",
 	"version": "3.1.0",
+	"description": "AI-powered tool for authors to build worlds and generate books",
 	"private": true,
 	"scripts": {
 		"dev": "next dev --turbo",

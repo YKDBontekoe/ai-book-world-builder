@@ -7,3 +7,5 @@
 
 ## 2025-12-13 - Liquid Glass Primitives
 Learned that directly applying `.glass-input` to primitive components (Input, Textarea) provides a consistent "Liquid Glass" look across the app. Overlays like `DropdownMenu` and `Select` benefit from replacing `bg-popover` with `.glass-panel` to maintain transparency and blur effects consistent with the macOS aesthetic.
+## 2025-05-22 - [Documentation Source of Truth]
+**Learning:** Establishing `AGENTS.md` as the single source of truth that orchestrates other documentation files (like `docs/design-system.md` and `.agent/`) prevents knowledge fragmentation. Explicitly documenting implicit rules (like dynamic imports for shared libs and dual verification strategies) ensures consistent agent behavior and reduces error rates in complex environments.

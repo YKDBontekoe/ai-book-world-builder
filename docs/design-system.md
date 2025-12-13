@@ -37,6 +37,24 @@ Use the `bg-*`, `text-*`, `border-*`, and `ring-*` Tailwind utilities that resol
 - **Disabled**: Add `disabled:opacity-50 disabled:cursor-not-allowed` while keeping text legible. Avoid removing focus outlines on disabled form controls; instead, rely on aria attributes (`aria-disabled`, `aria-busy`) from shadcn/ui components.
 - **Validation**: Use `text-destructive` and `border-destructive` for errors; lean on helper text to describe the issue.
 
+## Aesthetic Principles (Native macOS)
+
+The project adheres to a "Native macOS" design aesthetic, favoring fluidity, translucency, and rounded geometry.
+
+### Roundedness & Geometry
+- **Primary Interactive Elements**: Use `rounded-lg` (16px) for buttons, inputs, selects, and small cards. This matches the project's `--radius` token.
+- **Dialogs & Panels**: Use `rounded-2xl` for larger detached surfaces like Dialogs, Sheets, or floating panels.
+- **Segmented Controls**: Prefer segmented controls (tabs with `bg-muted` pill indicators) over traditional underline tabs.
+
+### Materials & Translucency
+- **Glass**: Use `.glass` or `.glass-panel` classes to apply backdrop blur and translucency. This is critical for floating elements like the chat input or sticky headers.
+- **Borders**: Use subtle borders (`border-white/10` in dark mode) to define edges without heavy lines.
+- **Shadows**: Use soft, diffuse shadows (`shadow-sm`, `shadow-md`) to lift elements slightly off the background, mimicking macOS window layering.
+
+### Animation & Physics
+- **Spring Physics**: Animations should feel physical. Favor spring curves (stiffness: 400, damping: 25) over linear ease-in-out for interactions like opening dialogs or expanding cards.
+- **Fluidity**: Elements should morph or slide rather than abruptly appear.
+
 ## Component usage patterns (shadcn/ui)
 
 ### Buttons
