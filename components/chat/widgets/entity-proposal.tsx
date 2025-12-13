@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	CheckIcon,
 	Loader2Icon,
@@ -10,7 +11,6 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useSWRConfig } from "swr";
 import { executeEntityOperations } from "@/app/(chat)/entity-actions";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,7 +21,7 @@ import {
 	CardHeader,
 	CardTitle,
 } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { QUERY_KEYS } from "@/lib/query-options";
 
 type EntityOperation = {
 	action: "create" | "update" | "delete";
@@ -35,29 +35,36 @@ interface EntityProposalProps {
 }
 
 export function EntityProposal({ projectId, operations }: EntityProposalProps) {
+	const queryClient = useQueryClient();
 	const [status, setStatus] = useState<
 		"pending" | "executing" | "completed" | "error"
 	>("pending");
 	const [resultMessage, setResultMessage] = useState<string | null>(null);
-	const { mutate } = useSWRConfig();
 
-	const handleConfirm = async () => {
-		setStatus("executing");
-		try {
-			const result = await executeEntityOperations({ projectId, operations });
+	const { mutate: handleConfirm, isPending: isExecuting } = useMutation({
+		mutationFn: async () => {
+			return executeEntityOperations({ projectId, operations });
+		},
+		onMutate: () => {
+			setStatus("executing");
+		},
+		onSuccess: () => {
 			setStatus("completed");
 			setResultMessage("Changes applied successfully.");
 			toast.success("Changes applied successfully.");
 
 			// Refresh entity lists
-			await mutate(["entities", projectId]);
-			await mutate(["relationships", projectId]);
-		} catch (error) {
+			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entities(projectId) });
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.relationships(projectId),
+			});
+		},
+		onError: () => {
 			setStatus("error");
 			setResultMessage("Failed to apply changes.");
 			toast.error("Failed to apply changes.");
-		}
-	};
+		},
+	});
 
 	const handleCancel = () => {
 		// Just visually disable it or maybe feedback to AI?
@@ -153,18 +160,18 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 					variant="ghost"
 					size="sm"
 					onClick={handleCancel}
-					disabled={status === "executing"}
+					disabled={isExecuting}
 					className="h-7 text-xs"
 				>
 					Cancel
 				</Button>
 				<Button
 					size="sm"
-					onClick={handleConfirm}
-					disabled={status === "executing"}
+					onClick={() => handleConfirm()}
+					disabled={isExecuting}
 					className="h-7 text-xs"
 				>
-					{status === "executing" && (
+					{isExecuting && (
 						<Loader2Icon className="mr-2 h-3 w-3 animate-spin" />
 					)}
 					Confirm Changes

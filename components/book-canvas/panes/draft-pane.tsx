@@ -1,5 +1,6 @@
 "use client";
 
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	BookOpenIcon,
 	CopyIcon,
@@ -7,9 +8,8 @@ import {
 	FileTextIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import useSWR from "swr";
 import {
 	getChapterDraft,
 	getOutlineData,
@@ -25,6 +25,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { api } from "@/lib/api-client";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { useBookCanvas } from "../book-canvas-context";
 
 export function DraftPane() {
@@ -32,52 +34,50 @@ export function DraftPane() {
 	const [selectedChapterId, setSelectedChapterId] = useState<string | null>(
 		null,
 	);
-	const [isExporting, setIsExporting] = useState(false);
 	const router = useRouter();
 
 	// Fetch chapters
-	const { data: outline } = useSWR(
-		projectId ? ["outline", projectId] : null,
-		([_, id]) => getOutlineData(id),
-	);
+	const { data: outline } = useQuery({
+		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],
+		queryFn: () => (projectId ? getOutlineData(projectId) : Promise.resolve(null)),
+		enabled: !!projectId,
+	});
 
 	// Fetch draft content when chapter is selected
-	const { data: draftContent, isLoading: isLoadingDraft } = useSWR(
-		selectedChapterId ? ["draft", selectedChapterId] : null,
-		([_, id]) => getChapterDraft(id),
-	);
+	const { data: draftContent, isLoading: isLoadingDraft } = useQuery({
+		queryKey: selectedChapterId
+			? QUERY_KEYS.draft(selectedChapterId)
+			: ["draft", "null"],
+		queryFn: () =>
+			selectedChapterId
+				? getChapterDraft(selectedChapterId)
+				: Promise.resolve(null),
+		enabled: !!selectedChapterId,
+	});
 
 	// Auto-select first chapter if none selected
-	if (outline?.chapters?.length && !selectedChapterId) {
-		setSelectedChapterId(outline.chapters[0].id);
-	}
+	useEffect(() => {
+		if (outline?.chapters?.length && !selectedChapterId) {
+			setSelectedChapterId(outline.chapters[0].id);
+		}
+	}, [outline, selectedChapterId]);
 
-	const handleExport = async (format: "pdf" | "epub") => {
-		if (!projectId) return;
-		setIsExporting(true);
-		try {
-			const res = await fetch(`/api/projects/${projectId}/export`, {
-				method: "POST",
-				body: JSON.stringify({ format }),
-				headers: { "Content-Type": "application/json" },
-			});
-
-			if (!res.ok) {
-				throw new Error(await res.text());
-			}
-
-			await res.json();
+	const { mutate: exportProject, isPending: isExporting } = useMutation({
+		mutationFn: async (format: "pdf" | "epub") => {
+			if (!projectId) throw new Error("No project selected");
+			return api.post(`/api/projects/${projectId}/export`, { format });
+		},
+		onSuccess: () => {
 			toast.success(`Export started! Check "My Exports" page.`);
 			router.push("/exports");
-		} catch (error) {
+		},
+		onError: (error) => {
 			toast.error(
 				"Export failed: " +
 					(error instanceof Error ? error.message : "Unknown error"),
 			);
-		} finally {
-			setIsExporting(false);
-		}
-	};
+		},
+	});
 
 	const copyToClipboard = () => {
 		if (draftContent) {
@@ -136,7 +136,7 @@ export function DraftPane() {
 						variant="outline"
 						size="sm"
 						className="h-8 text-xs gap-1.5"
-						onClick={() => handleExport("pdf")}
+						onClick={() => exportProject("pdf")}
 						disabled={isExporting}
 					>
 						<DownloadIcon className="h-3.5 w-3.5" />
@@ -146,7 +146,7 @@ export function DraftPane() {
 						variant="outline"
 						size="sm"
 						className="h-8 text-xs gap-1.5"
-						onClick={() => handleExport("epub")}
+						onClick={() => exportProject("epub")}
 						disabled={isExporting}
 					>
 						<BookOpenIcon className="h-3.5 w-3.5" />

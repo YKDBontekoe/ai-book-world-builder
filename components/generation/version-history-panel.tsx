@@ -1,8 +1,8 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { Clock, History, RotateCcw, Sparkles } from "lucide-react";
 import { useState } from "react";
-import useSWR from "swr";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -13,6 +13,8 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { api } from "@/lib/api-client";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 
 interface ChapterVersion {
@@ -32,23 +34,18 @@ interface VersionHistoryPanelProps {
 	onRestore: (content: string, versionId: string) => void;
 }
 
-async function fetchVersions(chapterId: string): Promise<ChapterVersion[]> {
-	const res = await fetch(`/api/chapters/${chapterId}/versions`);
-	if (!res.ok) return [];
-	return res.json();
-}
-
 export function VersionHistoryPanel({
 	chapterId,
 	chapterTitle,
 	currentContent,
 	onRestore,
 }: VersionHistoryPanelProps) {
-	const { data: versions = [], isLoading } = useSWR(
-		["chapter-versions", chapterId],
-		() => fetchVersions(chapterId),
-		{ fallbackData: [] },
-	);
+	const { data: versions = [], isLoading } = useQuery({
+		queryKey: QUERY_KEYS.versions(chapterId),
+		queryFn: () =>
+			api.get<ChapterVersion[]>(`/api/chapters/${chapterId}/versions`),
+		initialData: [],
+	});
 
 	const [selectedVersion, setSelectedVersion] = useState<ChapterVersion | null>(
 		null,
