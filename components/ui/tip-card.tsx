@@ -63,9 +63,9 @@ const TipCard = React.forwardRef<HTMLDivElement, TipCardProps>(
 					)}
 					aria-hidden="true"
 				/>
-				<p className={cn("text-sm", tipCardTextColors[variant || "info"])}>
+				<div className={cn("text-sm", tipCardTextColors[variant || "info"])}>
 					{children}
-				</p>
+				</div>
 			</div>
 		);
 	},
