@@ -2,7 +2,6 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import equal from "fast-deep-equal";
 import { ArrowDownIcon } from "lucide-react";
 import { memo } from "react";
-import { useDataStream } from "@/components/chat/data-stream-provider";
 import { SuggestedActions } from "@/components/chat/suggested-actions";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { Greeting } from "@/components/messages/greeting";
@@ -50,8 +49,6 @@ function PureMessages({
 	} = useMessages({
 		status,
 	});
-
-	useDataStream();
 
 	return (
 		<div className="relative flex-1">
