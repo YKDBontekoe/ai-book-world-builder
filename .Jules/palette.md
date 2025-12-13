@@ -1,11 +1,3 @@
-## 2025-05-20 - [Chat Input Accessibility]
-**Learning:** The chat input area relies heavily on icon-only buttons (Send, Stop, Attach) which lack accessible names. This makes the primary interaction method difficult for screen reader users.
-**Action:** Always verify icon-only buttons have `aria-label` or `aria-labelledby`, especially in high-traffic areas like input forms.
+## 2024-05-23 - Fixed HTML Nesting in TipCard
 
-## 2025-05-21 - [MacOS Design Overhaul Implementation]
-**Learning:** To achieve a "Native macOS" aesthetic using Tailwind and shadcn/ui, standard `rounded-md` tokens were insufficient. Updating base components (Button, Input, Select) to use `rounded-lg` (mapped to 16px via `--radius`) provided the desired floating, capsule-like appearance. Consistency across interactive elements is key to this design language.
-
-## 2025-12-13 - Liquid Glass Primitives
-Learned that directly applying `.glass-input` to primitive components (Input, Textarea) provides a consistent "Liquid Glass" look across the app. Overlays like `DropdownMenu` and `Select` benefit from replacing `bg-popover` with `.glass-panel` to maintain transparency and blur effects consistent with the macOS aesthetic.
-## 2025-05-22 - [Documentation Source of Truth]
-**Learning:** Establishing `AGENTS.md` as the single source of truth that orchestrates other documentation files (like `docs/design-system.md` and `.agent/`) prevents knowledge fragmentation. Explicitly documenting implicit rules (like dynamic imports for shared libs and dual verification strategies) ensures consistent agent behavior and reduces error rates in complex environments.
+Fixed a console error `<p> cannot contain a nested <p>` by changing the outer container of the `TipCard` component from a `<p>` tag to a `<div>` tag. This allows the `TipCard` to validly contain block-level elements (like `<ul>`, `<div>`, `<p>`) passed via the `children` prop, as seen in `GenerationReviewPanel`. This change adheres to HTML specifications and prevents hydration mismatches or layout issues.
