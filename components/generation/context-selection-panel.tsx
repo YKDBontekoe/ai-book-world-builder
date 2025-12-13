@@ -34,7 +34,17 @@ type ContextGroup = {
 	items: Array<{ id: string; name: string; kind?: string; included: boolean }>;
 };
 
-async function fetchProjectContext(projectId: string) {
+type ProjectContextResponse = {
+	entities: Array<{ id: string; name: string; kind?: string }>;
+	outlines: Array<{ id: string; title: string }>;
+	scenes: Array<{ id: string; title: string; chapterId?: string }>;
+	drafts: Array<{ id: string; chapterTitle: string }>;
+	sourceMaterials: Array<{ id: string; filename: string }>;
+};
+
+async function fetchProjectContext(
+	projectId: string,
+): Promise<ProjectContextResponse> {
 	const res = await fetch(`/api/projects/${projectId}/context`);
 	if (!res.ok) throw new Error("Failed to fetch context");
 	return res.json();
@@ -47,7 +57,6 @@ export function ContextSelectionPanel({
 	const { data, isLoading } = useSWR(
 		["project-context", projectId],
 		() => fetchProjectContext(projectId),
-		{ fallbackData: null },
 	);
 
 	const [selection, setSelection] = useState<ContextSelection>({
@@ -68,33 +77,33 @@ export function ContextSelectionPanel({
 		if (data) {
 			const newSelection: ContextSelection = {
 				entities:
-					data.entities?.map((e: any) => ({
+					data.entities?.map((e) => ({
 						id: e.id,
 						name: e.name,
-						kind: e.kind,
+						kind: e.kind || "other",
 						included: true,
 					})) || [],
 				outlines:
-					data.outlines?.map((o: any) => ({
+					data.outlines?.map((o) => ({
 						id: o.id,
 						title: o.title,
 						included: true,
 					})) || [],
 				scenes:
-					data.scenes?.map((s: any) => ({
+					data.scenes?.map((s) => ({
 						id: s.id,
 						title: s.title,
-						chapterId: s.chapterId,
+						chapterId: s.chapterId || "",
 						included: true,
 					})) || [],
 				drafts:
-					data.drafts?.map((d: any) => ({
+					data.drafts?.map((d) => ({
 						id: d.id,
 						chapterTitle: d.chapterTitle,
 						included: true,
 					})) || [],
 				sourceMaterials:
-					data.sourceMaterials?.map((m: any) => ({
+					data.sourceMaterials?.map((m) => ({
 						id: m.id,
 						filename: m.filename,
 						included: false,
@@ -177,17 +186,23 @@ export function ContextSelectionPanel({
 	};
 
 	const toggleItem = (groupId: keyof ContextSelection, itemId: string) => {
-		const group = selection[groupId] as any[];
-		const updated = group.map((item: any) =>
+		// Use a specific type assertion to help TS understand the structure
+		const group = selection[groupId] as Array<
+			{ id: string; included: boolean } & Record<string, unknown>
+		>;
+		const updated = group.map((item) =>
 			item.id === itemId ? { ...item, included: !item.included } : item,
 		);
-		updateSelection({ ...selection, [groupId]: updated });
+		// Cast updated back to any to satisfy the complex ContextSelection types
+		updateSelection({ ...selection, [groupId]: updated as any });
 	};
 
 	const toggleAll = (groupId: keyof ContextSelection, included: boolean) => {
-		const group = selection[groupId] as any[];
-		const updated = group.map((item: any) => ({ ...item, included }));
-		updateSelection({ ...selection, [groupId]: updated });
+		const group = selection[groupId] as Array<
+			{ id: string; included: boolean } & Record<string, unknown>
+		>;
+		const updated = group.map((item) => ({ ...item, included }));
+		updateSelection({ ...selection, [groupId]: updated as any });
 	};
 
 	const selectAllEssential = () => {
@@ -324,6 +339,7 @@ export function ContextSelectionPanel({
 							className="overflow-hidden"
 						>
 							{/* Group Header */}
+							{/* biome-ignore lint/a11y/useSemanticElements: Nested interactive elements require div */}
 							<div
 								role="button"
 								tabIndex={0}
@@ -378,6 +394,7 @@ export function ContextSelectionPanel({
 										{filteredItems.map((item) => (
 											<div
 												key={item.id}
+												// biome-ignore lint/a11y/useSemanticElements: Checkbox inside requires div
 												role="button"
 												tabIndex={0}
 												className={cn(

@@ -232,8 +232,8 @@ export function Chat({
 				toolInvocation.toolName === "orchestrateBook" &&
 				toolInvocation.state === "result"
 			) {
-				const result = toolInvocation.result;
-				if (result.decision?.suggestedCanvasPane) {
+				const result = toolInvocation.result as any;
+				if (result?.decision?.suggestedCanvasPane) {
 					setActivePane(result.decision.suggestedCanvasPane as CanvasPane);
 				}
 			}
