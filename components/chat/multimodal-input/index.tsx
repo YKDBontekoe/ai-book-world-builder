@@ -303,7 +303,11 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="rounded-[26px] border border-black/5 bg-white/60 p-3 shadow-xl backdrop-blur-xl transition-all duration-200 hover:bg-white/80 dark:border-white/5 dark:bg-zinc-800/60 dark:hover:bg-zinc-800/80"
+				className={cn(
+                    "rounded-[28px] glass-input p-3 transition-all duration-300 ease-out",
+                    "hover:shadow-lg hover:border-white/20 dark:hover:border-white/10 hover:bg-glass-input/80",
+                    "focus-within:shadow-xl focus-within:ring-1 focus-within:ring-white/20 dark:focus-within:ring-white/10"
+                )}
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (status !== "ready") {
@@ -350,13 +354,13 @@ function PureMultimodalInput({
 					<PromptInputTextarea
 						aria-label="Message input"
 						autoFocus
-						className="grow resize-none border-0! border-none! bg-transparent p-2 text-sm outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-none border-0! border-none! bg-transparent p-2 text-[15px] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
 						maxHeight={200}
 						minHeight={44}
 						onChange={handleInput}
-						placeholder="Send a message..."
+						placeholder="What would you like to create?"
 						ref={textareaRef}
 						rows={1}
 						value={input}
@@ -382,12 +386,12 @@ function PureMultimodalInput({
 					) : (
 						<PromptInputSubmit
 							aria-label="Send message"
-							className="size-8 rounded-full bg-blue-500 text-white shadow-sm transition-all duration-200 hover:bg-blue-600 disabled:bg-zinc-100 disabled:text-zinc-400 dark:bg-blue-600 dark:hover:bg-blue-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
+							className="size-8 rounded-full bg-blue-500 text-white shadow-sm transition-all duration-300 hover:bg-blue-600 hover:scale-105 disabled:bg-zinc-100 disabled:text-zinc-400 dark:bg-blue-600 dark:hover:bg-blue-500 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-600"
 							data-testid="send-button"
 							disabled={!input.trim() || uploadQueue.length > 0}
 							status={status}
 						>
-							<ArrowUpIcon size={14} />
+							<ArrowUpIcon size={16} strokeWidth={2.5} />
 						</PromptInputSubmit>
 					)}
 				</PromptInputToolbar>
