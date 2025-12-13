@@ -50,6 +50,7 @@ export default defineConfig({
 	resolve: {
 		alias: {
 			"@": path.resolve(dirname),
+			"katex/dist/katex.min.css": path.resolve(dirname, "tests/__mocks__/styleMock.js"),
 		},
 	},
 });

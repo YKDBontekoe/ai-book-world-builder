@@ -9,4 +9,9 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
   }
 }
 
+import { vi } from 'vitest';
+
+// Mock styles that might cause issues in jsdom
+vi.mock('katex/dist/katex.min.css', () => ({}));
+
 export {};
