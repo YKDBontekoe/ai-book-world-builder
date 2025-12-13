@@ -28,7 +28,7 @@ export function useChatVisibility({
 
 	const { data: localVisibility } = useQuery({
 		queryKey: QUERY_KEYS.chatVisibility(chatId),
-		queryFn: () => null,
+		queryFn: () => initialVisibilityType,
 		enabled: false,
 		staleTime: STALE_TIMES.LOCAL,
 		gcTime: GC_TIMES.LOCAL,

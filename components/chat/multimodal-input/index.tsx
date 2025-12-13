@@ -43,7 +43,6 @@ function PureMultimodalInput({
 	stop,
 	attachments,
 	setAttachments,
-	messages,
 	setMessages,
 	sendMessage,
 	className,
@@ -61,7 +60,6 @@ function PureMultimodalInput({
 	stop: () => void;
 	attachments: Attachment[];
 	setAttachments: Dispatch<SetStateAction<Attachment[]>>;
-	messages: UIMessage[];
 	setMessages: UseChatHelpers<ChatMessage>["setMessages"];
 	sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
 	className?: string;

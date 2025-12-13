@@ -219,7 +219,9 @@ export function Chat({
 		}
 	}, [status, setOverallStatus]);
 
-	// Listen for Orchestrator decisions to switch panes
+	const processedToolCallIdsRef = useRef<Set<string>>(new Set());
+
+	// Listen for Orchestrator decisions and Tool Results
 	useEffect(() => {
 		const lastMessage = messages.at(-1);
 		if (!lastMessage?.toolInvocations) {
@@ -228,54 +230,50 @@ export function Chat({
 
 		for (const toolInvocation of lastMessage.toolInvocations) {
 			if (
-				toolInvocation.toolName === "orchestrateBook" &&
-				toolInvocation.state === "result"
-			) {
-				const result = toolInvocation.result as any;
-				if (result?.decision?.suggestedCanvasPane) {
-					setActivePane(result.decision.suggestedCanvasPane as CanvasPane);
+				toolInvocation.state !== "result" ||
+				processedToolCallIdsRef.current.has(toolInvocation.toolCallId)
+			)
+				continue;
+
+			const { toolName, result } = toolInvocation;
+
+			// 1. Handle Orchestrator Pane Switching
+			if (toolName === "orchestrateBook") {
+				const res = result as any;
+				if (res?.decision?.suggestedCanvasPane) {
+					setActivePane(res.decision.suggestedCanvasPane as CanvasPane);
 				}
 			}
-		}
-	}, [messages, setActivePane]);
 
-	// Listen for Tool Results to trigger SWR revalidation
-	useEffect(() => {
-		const lastMessage = messages.at(-1);
-		if (!lastMessage?.toolInvocations) {
-			return;
-		}
-
-		for (const toolInvocation of lastMessage.toolInvocations) {
-			if (toolInvocation.state !== "result") continue;
-
-			const { toolName } = toolInvocation;
+			// 2. Handle Query Invalidation
 			const projectId = selectedProjectIdRef.current;
+			if (projectId) {
+				// Bible Pane Updates
+				if (toolName === "manageEntities" || toolName === "createRelation") {
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.entities(projectId),
+					});
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.relationships(projectId),
+					});
+				}
 
-			if (!projectId) continue;
-
-			// Bible Pane Updates
-			if (toolName === "manageEntities" || toolName === "createRelation") {
-				queryClient.invalidateQueries({
-					queryKey: QUERY_KEYS.entities(projectId),
-				});
-				queryClient.invalidateQueries({
-					queryKey: QUERY_KEYS.relationships(projectId),
-				});
+				// Outline Pane Updates
+				if (
+					toolName === "manageStory" ||
+					toolName === "createOutline" ||
+					toolName === "createVolume"
+				) {
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.outline(projectId),
+					});
+				}
 			}
 
-			// Outline Pane Updates
-			if (
-				toolName === "manageStory" ||
-				toolName === "createOutline" ||
-				toolName === "createVolume"
-			) {
-				queryClient.invalidateQueries({
-					queryKey: QUERY_KEYS.outline(projectId),
-				});
-			}
+			// Mark as processed
+			processedToolCallIdsRef.current.add(toolInvocation.toolCallId);
 		}
-	}, [messages, queryClient, selectedProjectIdRef]);
+	}, [messages, queryClient, selectedProjectIdRef, setActivePane]);
 
 	const query = searchParams.get("query");
 	const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
@@ -390,7 +388,6 @@ export function Chat({
 											availableModels={availableModels}
 											chatId={id}
 											input={input}
-											messages={messages}
 											onModelChange={setCurrentModelId}
 											projectId={selectedProjectId}
 											selectedModelId={currentModelId}
