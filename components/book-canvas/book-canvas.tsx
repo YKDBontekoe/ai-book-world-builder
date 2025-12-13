@@ -16,14 +16,44 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import dynamic from "next/dynamic";
+import { LoadingSpinner } from "../ui/loading-spinner";
 import { type CanvasPane, useBookCanvas } from "./book-canvas-context";
-import { BiblePane } from "./panes/bible-pane";
-import { ChangeLogPane } from "./panes/changelog-pane";
-import { DiagnosticsPane } from "./panes/diagnostics-pane";
-import { DraftPane } from "./panes/draft-pane";
-import { OutlinePane } from "./panes/outline-pane";
-import { ScenePane } from "./panes/scene-pane";
-import { TimelinePane } from "./panes/timeline-pane";
+
+const LoadingPane = () => (
+	<div className="flex h-full items-center justify-center">
+		<LoadingSpinner />
+	</div>
+);
+
+const BiblePane = dynamic(
+	() => import("./panes/bible-pane").then((mod) => mod.BiblePane),
+	{ loading: LoadingPane },
+);
+const ChangeLogPane = dynamic(
+	() => import("./panes/changelog-pane").then((mod) => mod.ChangeLogPane),
+	{ loading: LoadingPane },
+);
+const DiagnosticsPane = dynamic(
+	() => import("./panes/diagnostics-pane").then((mod) => mod.DiagnosticsPane),
+	{ loading: LoadingPane },
+);
+const DraftPane = dynamic(
+	() => import("./panes/draft-pane").then((mod) => mod.DraftPane),
+	{ loading: LoadingPane },
+);
+const OutlinePane = dynamic(
+	() => import("./panes/outline-pane").then((mod) => mod.OutlinePane),
+	{ loading: LoadingPane },
+);
+const ScenePane = dynamic(
+	() => import("./panes/scene-pane").then((mod) => mod.ScenePane),
+	{ loading: LoadingPane },
+);
+const TimelinePane = dynamic(
+	() => import("./panes/timeline-pane").then((mod) => mod.TimelinePane),
+	{ loading: LoadingPane },
+);
 
 export function BookCanvas() {
 	const { isOpen, setIsOpen, activePane, setActivePane, overallStatus } =

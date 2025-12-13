@@ -6,8 +6,21 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { GenerationView } from "@/components/generation/generation-view";
-import { WriterView } from "@/components/writer/writer-view";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { Project } from "@/lib/db/schema";
+import dynamic from "next/dynamic";
+
+const WriterView = dynamic(
+  () => import("@/components/writer/writer-view").then((mod) => mod.WriterView),
+  {
+    loading: () => (
+      <div className="flex h-full items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
+    ),
+    ssr: false,
+  },
+);
 
 interface GenerationPageContentProps {
   project: Project;
