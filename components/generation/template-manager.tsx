@@ -1,8 +1,8 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookTemplate, Save, Sparkles, Trash2 } from "lucide-react";
 import { useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -21,7 +21,7 @@ import { SelectionCard } from "@/components/ui/selection-card";
 import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/lib/api-client";
 import type { GenerationSettings } from "@/lib/db/schema";
-import { cn } from "@/lib/utils";
+import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 
 interface Template {
 	id: string;
@@ -137,8 +137,10 @@ export function TemplateManager({
 }: TemplateManagerProps) {
 	const queryClient = useQueryClient();
 	const { data: userTemplates = [] } = useQuery({
-		queryKey: ["templates", projectId],
+		queryKey: QUERY_KEYS.templates(projectId),
 		queryFn: () => api.get<Template[]>("/api/generation/templates"),
+		staleTime: STALE_TIMES.TEMPLATES,
+		gcTime: GC_TIMES.TEMPLATES,
 	});
 
 	const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(
@@ -155,7 +157,9 @@ export function TemplateManager({
 			settings: Partial<GenerationSettings>;
 		}) => api.post("/api/generation/templates", data),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["templates", projectId] });
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.templates(projectId),
+			});
 			setShowSaveDialog(false);
 			setNewTemplateName("");
 			setNewTemplateDescription("");
@@ -169,7 +173,9 @@ export function TemplateManager({
 		mutationFn: (templateId: string) =>
 			api.delete(`/api/generation/templates/${templateId}`),
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["templates", projectId] });
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.templates(projectId),
+			});
 		},
 		onError: (error) => {
 			console.error("Failed to delete template:", error);
@@ -250,7 +256,9 @@ export function TemplateManager({
 									</Button>
 									<Button
 										onClick={handleSaveAsTemplate}
-										disabled={createTemplate.isPending || !newTemplateName.trim()}
+										disabled={
+											createTemplate.isPending || !newTemplateName.trim()
+										}
 									>
 										{createTemplate.isPending ? "Saving..." : "Save Template"}
 									</Button>
