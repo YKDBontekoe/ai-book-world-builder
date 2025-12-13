@@ -6,7 +6,7 @@ import { DefaultChatTransport } from "ai";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Artifact } from "@/components/artifact";
-import { type CanvasPane, useBookCanvas } from "@/components/book-canvas";
+import { useBookCanvas } from "@/components/book-canvas";
 import { AgentCapabilities } from "@/components/chat/agent-capabilities";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { useDataStream } from "@/components/chat/data-stream-provider";
@@ -29,6 +29,7 @@ import {
 import { toast } from "@/components/ui/toast";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
+import { useChatToolEffects } from "@/hooks/use-chat-tool-effects";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { useProjectSelection } from "@/hooks/use-project-selection";
 import { api } from "@/lib/api-client";
@@ -37,7 +38,7 @@ import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { ProjectSummary } from "@/lib/project-context";
 import { QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
-import type { Attachment, ChatMessage } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 
@@ -84,7 +85,7 @@ export function Chat({
 		initialVisibilityType,
 	});
 
-	const { setActivePane, setOverallStatus, setProjectId } = useBookCanvas();
+	const { setOverallStatus, setProjectId } = useBookCanvas();
 
 	// Sync Project ID with Book Canvas
 	useEffect(() => {
@@ -219,61 +220,10 @@ export function Chat({
 		}
 	}, [status, setOverallStatus]);
 
-	const processedToolCallIdsRef = useRef<Set<string>>(new Set());
-
-	// Listen for Orchestrator decisions and Tool Results
-	useEffect(() => {
-		const lastMessage = messages.at(-1);
-		if (!lastMessage?.toolInvocations) {
-			return;
-		}
-
-		for (const toolInvocation of lastMessage.toolInvocations) {
-			if (
-				toolInvocation.state !== "result" ||
-				processedToolCallIdsRef.current.has(toolInvocation.toolCallId)
-			)
-				continue;
-
-			const { toolName, result } = toolInvocation;
-
-			// 1. Handle Orchestrator Pane Switching
-			if (toolName === "orchestrateBook") {
-				const res = result as any;
-				if (res?.decision?.suggestedCanvasPane) {
-					setActivePane(res.decision.suggestedCanvasPane as CanvasPane);
-				}
-			}
-
-			// 2. Handle Query Invalidation
-			const projectId = selectedProjectIdRef.current;
-			if (projectId) {
-				// Bible Pane Updates
-				if (toolName === "manageEntities" || toolName === "createRelation") {
-					queryClient.invalidateQueries({
-						queryKey: QUERY_KEYS.entities(projectId),
-					});
-					queryClient.invalidateQueries({
-						queryKey: QUERY_KEYS.relationships(projectId),
-					});
-				}
-
-				// Outline Pane Updates
-				if (
-					toolName === "manageStory" ||
-					toolName === "createOutline" ||
-					toolName === "createVolume"
-				) {
-					queryClient.invalidateQueries({
-						queryKey: QUERY_KEYS.outline(projectId),
-					});
-				}
-			}
-
-			// Mark as processed
-			processedToolCallIdsRef.current.add(toolInvocation.toolCallId);
-		}
-	}, [messages, queryClient, selectedProjectIdRef, setActivePane]);
+	useChatToolEffects({
+		messages,
+		selectedProjectId,
+	});
 
 	const query = searchParams.get("query");
 	const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
@@ -317,7 +267,6 @@ export function Chat({
 		staleTime: STALE_TIMES.STANDARD,
 	});
 
-	const [attachments, setAttachments] = useState<Attachment[]>([]);
 	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
 	useAutoResume({
@@ -384,7 +333,6 @@ export function Chat({
 										)}
 										<AgentCapabilities className="mb-2" />
 										<MultimodalInput
-											attachments={attachments}
 											availableModels={availableModels}
 											chatId={id}
 											input={input}
@@ -393,7 +341,6 @@ export function Chat({
 											selectedModelId={currentModelId}
 											selectedVisibilityType={visibilityType}
 											sendMessage={sendMessage}
-											setAttachments={setAttachments}
 											setInput={setInput}
 											setMessages={setMessages}
 											status={status}

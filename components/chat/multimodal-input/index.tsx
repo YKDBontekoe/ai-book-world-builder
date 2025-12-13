@@ -2,10 +2,8 @@
 
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
-import equal from "fast-deep-equal";
 import { ArrowUpIcon } from "lucide-react";
 import {
-	type ChangeEvent,
 	type Dispatch,
 	memo,
 	type SetStateAction,
@@ -13,7 +11,6 @@ import {
 	useEffect,
 	useMemo,
 	useRef,
-	useState,
 } from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
@@ -27,10 +24,11 @@ import {
 	PromptInputTools,
 } from "@/components/elements/prompt-input";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
-import type { Attachment, ChatMessage } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { cn } from "@/lib/utils";
 import { PreviewAttachment } from "../preview-attachment";
+import { useFileAttachments } from "@/hooks/use-file-attachments";
 import { AttachmentsButton } from "./attachments-button";
 import { ModelSelectorCompact } from "./model-selector";
 import { StopButton } from "./stop-button";
@@ -41,8 +39,6 @@ function PureMultimodalInput({
 	setInput,
 	status,
 	stop,
-	attachments,
-	setAttachments,
 	setMessages,
 	sendMessage,
 	className,
@@ -58,8 +54,6 @@ function PureMultimodalInput({
 	setInput: Dispatch<SetStateAction<string>>;
 	status: UseChatHelpers<ChatMessage>["status"];
 	stop: () => void;
-	attachments: Attachment[];
-	setAttachments: Dispatch<SetStateAction<Attachment[]>>;
 	setMessages: UseChatHelpers<ChatMessage>["setMessages"];
 	sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
 	className?: string;
@@ -117,7 +111,14 @@ function PureMultimodalInput({
 	};
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
-	const [uploadQueue, setUploadQueue] = useState<string[]>([]);
+
+	const {
+		attachments,
+		setAttachments,
+		uploadQueue,
+		handleFileChange,
+		handlePaste,
+	} = useFileAttachments({ projectId });
 
 	const submitForm = useCallback(() => {
 		sendMessage({
@@ -155,48 +156,6 @@ function PureMultimodalInput({
 		resetHeight,
 	]);
 
-	const uploadFile = useCallback(
-		async (file: File) => {
-			if (!projectId) {
-				toast.error("Select a project before uploading files.");
-				return;
-			}
-
-			const formData = new FormData();
-			formData.append("file", file);
-			formData.append("projectId", projectId);
-
-			try {
-				const response = await fetch("/api/files/upload", {
-					method: "POST",
-					body: formData,
-				});
-
-				const payload = await response.json();
-
-				if (response.ok && payload.status === "uploaded") {
-					const material = payload.material;
-					const contentType = material?.mimeType ?? payload.blob?.contentType;
-					const url = material?.blobUrl ?? payload.blob?.url;
-
-					if (material && url) {
-						return {
-							url,
-							name: material.filename,
-							contentType: contentType ?? file.type,
-						};
-					}
-				}
-
-				const errorMessage = payload.message ?? "Failed to upload file.";
-				toast.error(errorMessage);
-			} catch (_error) {
-				toast.error("Failed to upload file, please try again!");
-			}
-		},
-		[projectId],
-	);
-
 	const contextProps = useMemo(
 		() => ({
 			usage,
@@ -204,79 +163,6 @@ function PureMultimodalInput({
 		[usage],
 	);
 
-	const handleFileChange = useCallback(
-		async (event: ChangeEvent<HTMLInputElement>) => {
-			const files = Array.from(event.target.files || []);
-
-			setUploadQueue(files.map((file) => file.name));
-
-			try {
-				const uploadPromises = files.map((file) => uploadFile(file));
-				const uploadedAttachments = await Promise.all(uploadPromises);
-				const successfullyUploadedAttachments = uploadedAttachments.filter(
-					(attachment) => attachment !== undefined,
-				);
-
-				setAttachments((currentAttachments) => [
-					...currentAttachments,
-					...successfullyUploadedAttachments,
-				]);
-			} catch (error) {
-				console.error("Error uploading files!", error);
-			} finally {
-				setUploadQueue([]);
-			}
-		},
-		[setAttachments, uploadFile],
-	);
-
-	const handlePaste = useCallback(
-		async (event: ClipboardEvent) => {
-			const items = event.clipboardData?.items;
-			if (!items) {
-				return;
-			}
-
-			const imageItems = Array.from(items).filter((item) =>
-				item.type.startsWith("image/"),
-			);
-
-			if (imageItems.length === 0) {
-				return;
-			}
-
-			// Prevent default paste behavior for images
-			event.preventDefault();
-
-			setUploadQueue((prev) => [...prev, "Pasted image"]);
-
-			try {
-				const uploadPromises = imageItems
-					.map((item) => item.getAsFile())
-					.filter((file): file is File => file !== null)
-					.map((file) => uploadFile(file));
-
-				const uploadedAttachments = await Promise.all(uploadPromises);
-				const successfullyUploadedAttachments = uploadedAttachments.filter(
-					(attachment) =>
-						attachment !== undefined &&
-						attachment.url !== undefined &&
-						attachment.contentType !== undefined,
-				);
-
-				setAttachments((curr) => [
-					...curr,
-					...(successfullyUploadedAttachments as Attachment[]),
-				]);
-			} catch (error) {
-				console.error("Error uploading pasted images:", error);
-				toast.error("Failed to upload pasted image(s)");
-			} finally {
-				setUploadQueue([]);
-			}
-		},
-		[setAttachments, uploadFile],
-	);
 
 	// Add paste event listener to textarea
 	useEffect(() => {
@@ -405,9 +291,6 @@ export const MultimodalInput = memo(
 			return false;
 		}
 		if (prevProps.status !== nextProps.status) {
-			return false;
-		}
-		if (!equal(prevProps.attachments, nextProps.attachments)) {
 			return false;
 		}
 		if (prevProps.selectedVisibilityType !== nextProps.selectedVisibilityType) {
