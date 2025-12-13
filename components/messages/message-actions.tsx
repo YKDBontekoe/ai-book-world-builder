@@ -1,9 +1,11 @@
 "use client";
 
+import type { UseChatHelpers } from "@ai-sdk/react";
 import equal from "fast-deep-equal";
 import {
   CopyIcon,
   PencilIcon,
+  RefreshCcw,
   ThumbsDownIcon,
   ThumbsUpIcon,
 } from "lucide-react";
@@ -20,13 +22,17 @@ export function PureMessageActions({
   message,
   vote,
   isLoading,
+  isLast,
   setMode,
+  regenerate,
 }: {
   chatId: string;
   message: ChatMessage;
   vote: Vote | undefined;
   isLoading: boolean;
+  isLast?: boolean;
   setMode?: (mode: "view" | "edit") => void;
+  regenerate: UseChatHelpers<ChatMessage>["regenerate"];
 }) {
   const { mutate } = useSWRConfig();
   const [_, copyToClipboard] = useCopyToClipboard();
@@ -51,7 +57,7 @@ export function PureMessageActions({
     toast.success("Copied to clipboard!");
   };
 
-  // User messages get edit (on hover) and copy actions
+  // User messages
   if (message.role === "user") {
     return (
       <Actions className="-mr-0.5 justify-end">
@@ -66,19 +72,47 @@ export function PureMessageActions({
               <PencilIcon size={14} />
             </Action>
           )}
+
           <Action onClick={handleCopy} tooltip="Copy">
             <CopyIcon size={14} />
           </Action>
+
+          {/* Retry mechanism for the last user message if needed */}
+          {isLast && (
+             <Action
+                onClick={() => {
+                   regenerate();
+                   toast.success("Retrying...");
+                }}
+                tooltip="Retry"
+             >
+                <RefreshCcw size={14} />
+             </Action>
+          )}
         </div>
       </Actions>
     );
   }
 
+  // Assistant messages
   return (
     <Actions className="-ml-0.5">
       <Action onClick={handleCopy} tooltip="Copy">
         <CopyIcon size={14} />
       </Action>
+
+      {/* Regenerate for last assistant message */}
+      {isLast && (
+          <Action
+             onClick={() => {
+                 regenerate();
+                 toast.success("Regenerating response...");
+             }}
+             tooltip="Regenerate"
+          >
+              <RefreshCcw size={14} />
+          </Action>
+      )}
 
       <Action
         data-testid="message-upvote"
@@ -188,6 +222,9 @@ export const MessageActions = memo(
       return false;
     }
     if (prevProps.isLoading !== nextProps.isLoading) {
+      return false;
+    }
+    if (prevProps.isLast !== nextProps.isLast) {
       return false;
     }
 

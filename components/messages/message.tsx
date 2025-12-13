@@ -1,4 +1,5 @@
 "use client";
+
 import type { UseChatHelpers } from "@ai-sdk/react";
 import equal from "fast-deep-equal";
 import { motion } from "framer-motion";
@@ -37,6 +38,7 @@ const PurePreviewMessage = ({
 	message,
 	vote,
 	isLoading,
+	isLast,
 	setMessages,
 	regenerate,
 	isReadonly,
@@ -46,6 +48,7 @@ const PurePreviewMessage = ({
 	message: ChatMessage;
 	vote: Vote | undefined;
 	isLoading: boolean;
+	isLast?: boolean;
 	setMessages: UseChatHelpers<ChatMessage>["setMessages"];
 	regenerate: UseChatHelpers<ChatMessage>["regenerate"];
 	isReadonly: boolean;
@@ -438,18 +441,7 @@ const PurePreviewMessage = ({
 								message.parts[0].type === "text" &&
 								message.parts[0].text.length === 0)) && (
 							<div className="flex items-center gap-1 p-0 text-muted-foreground text-sm">
-								<span className="animate-pulse">Thinking</span>
-								<span className="inline-flex">
-									<span className="animate-bounce [animation-delay:0ms]">
-										.
-									</span>
-									<span className="animate-bounce [animation-delay:150ms]">
-										.
-									</span>
-									<span className="animate-bounce [animation-delay:300ms]">
-										.
-									</span>
-								</span>
+								<span className="animate-pulse">Thinking...</span>
 							</div>
 						)}
 
@@ -458,8 +450,10 @@ const PurePreviewMessage = ({
 							<MessageActions
 								chatId={chatId}
 								isLoading={isLoading}
+								isLast={isLast}
 								key={`action-${message.id}`}
 								message={message}
+								regenerate={regenerate}
 								setMode={setMode}
 								vote={vote}
 							/>
@@ -506,20 +500,32 @@ export const ThinkingMessage = () => {
 			data-testid="message-assistant-loading"
 		>
 			<div className="flex items-start justify-start gap-3">
-				<div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-zinc-500 to-zinc-600 text-white shadow-sm ring-1 ring-white/20">
+				<div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-sm ring-1 ring-white/20">
 					<div className="animate-pulse">
 						<SparklesIcon size={14} />
 					</div>
 				</div>
 
 				<div className="flex w-full flex-col gap-2 md:gap-4">
-					<div className="flex items-center gap-1 p-0 text-muted-foreground text-sm">
-						<span className="animate-pulse">Thinking</span>
-						<span className="inline-flex">
-							<span className="animate-bounce [animation-delay:0ms]">.</span>
-							<span className="animate-bounce [animation-delay:150ms]">.</span>
-							<span className="animate-bounce [animation-delay:300ms]">.</span>
-						</span>
+					<div className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-muted-foreground text-sm backdrop-blur-sm w-fit">
+						<div className="flex gap-1">
+							<motion.span
+								animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+								transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+								className="size-1.5 rounded-full bg-foreground/50"
+							/>
+							<motion.span
+								animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+								transition={{ duration: 1, repeat: Infinity, delay: 0.2 }}
+								className="size-1.5 rounded-full bg-foreground/50"
+							/>
+							<motion.span
+								animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+								transition={{ duration: 1, repeat: Infinity, delay: 0.4 }}
+								className="size-1.5 rounded-full bg-foreground/50"
+							/>
+						</div>
+						<span className="font-medium">Thinking</span>
 					</div>
 				</div>
 			</div>

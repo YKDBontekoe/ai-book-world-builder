@@ -22,75 +22,63 @@ export const Greeting = ({ selectedProject }: GreetingProps) => {
       {/* Animated icon cluster */}
       <motion.div
         animate={{ opacity: 1, scale: 1 }}
-        className="mb-6 flex items-center gap-3"
+        className="mb-8 flex items-center justify-center gap-4"
         initial={{ opacity: 0, scale: 0.95 }}
         transition={{ delay: 0.2, duration: 0.4 }}
       >
-        <div className="-space-x-2 flex">
-          <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-lg">
-            <SparklesIcon className="size-5" />
-          </div>
-          <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg">
-            <BookOpenIcon className="size-5" />
-          </div>
-          <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-orange-500 to-amber-600 text-white shadow-lg">
-            <UsersIcon className="size-5" />
-          </div>
-          <div className="flex size-10 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-green-600 text-white shadow-lg">
-            <MapPinIcon className="size-5" />
-          </div>
+        <div className="relative flex items-center justify-center">
+             <div className="absolute inset-0 animate-pulse rounded-full bg-primary/20 blur-xl" />
+             <div className="relative flex size-16 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/80 to-primary text-primary-foreground shadow-xl ring-1 ring-white/20 backdrop-blur-md">
+                <SparklesIcon className="size-8" />
+             </div>
         </div>
       </motion.div>
 
       {/* Main greeting */}
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="font-semibold text-2xl md:text-3xl"
-        exit={{ opacity: 0, y: 10 }}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.3 }}
-      >
-        {selectedProject
-          ? `Welcome to ${selectedProject.name}`
-          : "Build Your World"}
-      </motion.div>
-
-      {/* Subtitle */}
-      <motion.div
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-2 text-lg text-zinc-500 md:text-xl"
-        exit={{ opacity: 0, y: 10 }}
-        initial={{ opacity: 0, y: 10 }}
-        transition={{ delay: 0.4 }}
-      >
-        {selectedProject
-          ? "Let's continue crafting your story together"
-          : "Create characters, locations, and narratives with AI assistance"}
-      </motion.div>
-
-      {/* Context hint */}
-      {selectedProject && (
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4 inline-flex items-center gap-2 rounded-full bg-muted/50 px-4 py-2 text-muted-foreground text-sm"
-          initial={{ opacity: 0, y: 10 }}
-          transition={{ delay: 0.5 }}
+      <div className="text-center">
+        <motion.h1
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text font-bold text-3xl text-transparent md:text-4xl tracking-tight"
+            exit={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 10 }}
+            transition={{ delay: 0.3 }}
         >
-          <div className="size-2 animate-pulse rounded-full bg-green-500" />
-          AI is context-aware of your project's entities and lore
-        </motion.div>
-      )}
+            {selectedProject
+            ? `Welcome to ${selectedProject.name}`
+            : "Build Your World"}
+        </motion.h1>
 
-      {!selectedProject && (
-        <motion.div
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-4 text-muted-foreground text-sm"
-          initial={{ opacity: 0, y: 10 }}
-          transition={{ delay: 0.5 }}
+        {/* Subtitle */}
+        <motion.p
+            animate={{ opacity: 1, y: 0 }}
+            className="mx-auto mt-4 max-w-lg text-lg text-muted-foreground md:text-xl font-light"
+            exit={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 10 }}
+            transition={{ delay: 0.4 }}
         >
-          Select a project above to ground AI responses in your world
-        </motion.div>
-      )}
+            {selectedProject
+            ? "Ready to expand your universe? I can help you draft scenes, develop characters, or brainstorm plot twists."
+            : "Start by selecting a project or create a new universe to begin your journey."}
+        </motion.p>
+      </div>
+
+      {/* Feature Pills */}
+      <motion.div
+        className="mt-8 flex flex-wrap justify-center gap-2"
+        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 10 }}
+        transition={{ delay: 0.5 }}
+      >
+          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+            <UsersIcon className="size-3.5" /> Characters
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+            <MapPinIcon className="size-3.5" /> Locations
+          </div>
+          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
+            <BookOpenIcon className="size-3.5" /> Lore
+          </div>
+      </motion.div>
     </div>
   );
 };

@@ -82,6 +82,7 @@ function PureMessages({
 							isLoading={
 								status === "streaming" && messages.length - 1 === index
 							}
+							isLast={index === messages.length - 1}
 							isReadonly={isReadonly}
 							key={message.id}
 							message={message}

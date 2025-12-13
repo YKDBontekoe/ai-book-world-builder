@@ -8,6 +8,7 @@ import {
 	LightbulbIcon,
 	Loader2Icon,
 	MapPinIcon,
+	RefreshCwIcon,
 	SparklesIcon,
 	UsersIcon,
 } from "lucide-react";
@@ -53,18 +54,14 @@ function PureSuggestedActions({
 	selectedModelId,
 }: SuggestedActionsProps) {
 	const projectId = selectedProject?.id;
-
-	// Fetch suggestions from AI
-	// We key off projectId, the last message content, AND the selected model to ensure freshness and correct model usage
 	const lastMessageId = messages.at(-1)?.id ?? "init";
 	const shouldFetch = !!projectId || messages.length > 0;
 
-	const { data: suggestions, isLoading } = useSWR<Suggestion[]>(
+	const { data: suggestions, isLoading, mutate, isValidating } = useSWR<Suggestion[]>(
 		shouldFetch
 			? ["suggestions", projectId, lastMessageId, selectedModelId]
 			: null,
 		async ([_, pid, mid, modelId]) => {
-			// Only fetch if we have a project or at least some messages
 			if (!pid && messages.length === 0) return null;
 
 			const res = await fetch("/api/ai-suggestions", {
@@ -82,7 +79,7 @@ function PureSuggestedActions({
 		},
 		{
 			revalidateOnFocus: false,
-			dedupingInterval: 60000, // Cache for 1 minute
+			dedupingInterval: 60000,
 			fallbackData: getFallbackSuggestions(selectedProject?.name, isCompact),
 		},
 	);
@@ -90,11 +87,21 @@ function PureSuggestedActions({
 	const displaySuggestions =
 		suggestions ?? getFallbackSuggestions(selectedProject?.name, isCompact);
 
+	// Compact Mode (Bottom of Chat)
 	if (isCompact) {
 		return (
 			<div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide mask-fade-right items-center">
-				{isLoading && (
-					<Loader2Icon className="size-3 animate-spin text-muted-foreground mr-1" />
+				{(isLoading || isValidating) && (
+					<Loader2Icon className="size-3 animate-spin text-muted-foreground mr-1 shrink-0" />
+				)}
+				{!isLoading && !isValidating && (
+					<button
+						type="button"
+						onClick={() => mutate()}
+						className="mr-1 text-muted-foreground hover:text-foreground transition-colors"
+					>
+						<RefreshCwIcon className="size-3" />
+					</button>
 				)}
 				{displaySuggestions.map((action, index) => (
 					<motion.button
@@ -109,11 +116,11 @@ function PureSuggestedActions({
 							});
 						}}
 						className={cn(
-							"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors whitespace-nowrap",
-							getCompactStyle(action.type),
+							"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shadow-sm",
+							"bg-background/80 hover:bg-muted backdrop-blur-sm",
 						)}
 					>
-						<span className="opacity-70">{getIconForType(action.type)}</span>
+						<span className="opacity-70 text-primary">{getIconForType(action.type)}</span>
 						<span>{action.label}</span>
 					</motion.button>
 				))}
@@ -121,54 +128,67 @@ function PureSuggestedActions({
 		);
 	}
 
+	// Expanded Mode (Empty State)
 	return (
-		<div
-			className="grid w-full gap-2 sm:grid-cols-2"
-			data-testid="suggested-actions"
-		>
-			{displaySuggestions.map((action, index) => (
-				<motion.div
-					animate={{ opacity: 1, y: 0 }}
-					exit={{ opacity: 0, y: 10 }}
-					initial={{ opacity: 0, y: 10 }}
-					key={action.label + index}
-					transition={{ delay: 0.05 * index }}
+		<div className="flex flex-col gap-4">
+			<div className="flex items-center justify-between px-1">
+				<h3 className="text-sm font-medium text-muted-foreground">Suggested Actions</h3>
+				<Button
+					variant="ghost"
+					size="icon"
+					className="h-6 w-6"
+					onClick={() => mutate()}
+					disabled={isLoading || isValidating}
 				>
-					<Button
-						className={cn(
-							"group relative h-auto w-full flex-col items-start gap-1 overflow-hidden rounded-lg border p-3 text-left transition-all duration-200",
-							"hover:bg-muted/50",
-							getCardStyle(action.type),
-						)}
-						onClick={() => {
-							sendMessage({
-								role: "user",
-								parts: [{ type: "text", text: action.prompt }],
-							});
-						}}
-						variant="ghost"
-					>
-						<div className="flex items-center gap-2 w-full">
-							<div
-								className={cn(
-									"flex size-6 items-center justify-center rounded-md bg-background/80 shadow-sm ring-1 ring-border/50",
-								)}
-							>
-								{getIconForType(action.type)}
-							</div>
-							<span className="font-medium text-sm text-foreground/90">
-								{action.label}
-							</span>
-						</div>
+					<RefreshCwIcon className={cn("h-3.5 w-3.5", (isLoading || isValidating) && "animate-spin")} />
+				</Button>
+			</div>
 
-						{action.reasoning && (
-							<div className="text-muted-foreground text-[10px] line-clamp-1 pl-8 opacity-70">
-								{action.reasoning}
+			<div
+				className="grid w-full gap-3 sm:grid-cols-2"
+				data-testid="suggested-actions"
+			>
+				{displaySuggestions.map((action, index) => (
+					<motion.div
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: 10 }}
+						initial={{ opacity: 0, y: 10 }}
+						key={action.label + index}
+						transition={{ delay: 0.05 * index }}
+					>
+						<Button
+							className={cn(
+								"group relative h-auto w-full flex-col items-start gap-1 overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 shadow-sm",
+								"bg-card hover:bg-muted/50 hover:border-primary/30 hover:shadow-md",
+							)}
+							onClick={() => {
+								sendMessage({
+									role: "user",
+									parts: [{ type: "text", text: action.prompt }],
+								});
+							}}
+							variant="ghost"
+						>
+							<div className="flex items-center gap-3 w-full mb-1">
+								<div
+									className={cn(
+										"flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary shadow-sm ring-1 ring-inset ring-primary/20",
+									)}
+								>
+									{getIconForType(action.type)}
+								</div>
+								<span className="font-semibold text-sm text-foreground">
+									{action.label}
+								</span>
 							</div>
-						)}
-					</Button>
-				</motion.div>
-			))}
+
+							<div className="text-muted-foreground text-xs line-clamp-2 pl-11 opacity-80 leading-relaxed">
+								{action.reasoning || action.prompt}
+							</div>
+						</Button>
+					</motion.div>
+				))}
+			</div>
 		</div>
 	);
 }
@@ -177,61 +197,70 @@ function PureSuggestedActions({
 function getIconForType(type: SuggestionType) {
 	switch (type) {
 		case "character":
-			return <UsersIcon className="size-3.5" />;
+			return <UsersIcon className="size-4" />;
 		case "world":
-			return <MapPinIcon className="size-3.5" />;
+			return <MapPinIcon className="size-4" />;
 		case "story":
-			return <BookOpenIcon className="size-3.5" />;
+			return <BookOpenIcon className="size-4" />;
 		case "analysis":
-			return <CalendarIcon className="size-3.5" />; // Using Calendar as placeholder or maybe a Chart icon if available
+			return <CalendarIcon className="size-4" />;
 		case "brainstorm":
-			return <LightbulbIcon className="size-3.5" />;
+			return <LightbulbIcon className="size-4" />;
 		default:
-			return <SparklesIcon className="size-3.5" />;
+			return <SparklesIcon className="size-4" />;
 	}
-}
-
-function getCompactStyle(type: SuggestionType) {
-	// Simplified styles: removed specific colors for borders/backgrounds to reduce noise
-	// Now using a more uniform look with subtle tinting if needed, or just standard badges
-	return "bg-secondary/50 border-transparent hover:bg-secondary text-secondary-foreground";
-}
-
-function getCardStyle(type: SuggestionType) {
-	// Simplified card styles: flattened, less borders, no gradients
-	return "bg-card hover:border-primary/20";
 }
 
 function getFallbackSuggestions(
 	projectName = "this world",
 	isCompact = false,
 ): Suggestion[] {
+	if (isCompact) {
+		return [
+			{
+				label: "Expand Scene",
+				prompt: "Help me expand this scene with more sensory details.",
+				type: "story",
+			},
+			{
+				label: "Check Consistency",
+				prompt: "Analyze the last few messages for any lore inconsistencies.",
+				type: "analysis",
+			},
+			{
+				label: "Dialogue Check",
+				prompt: "Review the dialogue for natural flow and character voice.",
+				type: "character",
+			},
+		];
+	}
+
 	return [
 		{
 			label: "Conjure a New World",
 			prompt:
 				"I want to create a new book project. Help me Brainstorm a genre and title.",
 			type: "creative",
-			reasoning: "Start here",
+			reasoning: "Start from scratch with a fresh concept.",
 		},
 		{
 			label: "Surprise Me",
 			prompt:
 				"Generate a unique story concept involving a twist on a classic trope.",
 			type: "creative",
-			reasoning: "Get inspired",
+			reasoning: "Get inspired by something unexpected.",
 		},
 		{
 			label: "Flesh Out Characters",
 			prompt: `Help me add more depth to the characters in ${projectName}.`,
 			type: "character",
-			reasoning: "Deepen your cast",
+			reasoning: "Deepen your cast's backgrounds and motivations.",
 		},
 		{
 			label: "Outline Story",
 			prompt: `Review the current state of ${projectName} and propose a chapter outline.`,
 			type: "story",
-			reasoning: "Structure your plot",
+			reasoning: "Structure your plot for better flow.",
 		},
 	];
 }
