@@ -37,7 +37,7 @@ export const batchCreateScenes = ({
 				.optional()
 				.describe("Project ID (optional if context is clear)."),
 		}),
-		execute: async (args: any) => {
+		execute: async (args) => {
 			const { chapterId, scenes, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 

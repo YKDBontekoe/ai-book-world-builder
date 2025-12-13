@@ -40,7 +40,7 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 				.optional()
 				.describe("Current state of the UI canvas"),
 		}),
-		execute: async (args: any) => {
+		execute: async (args) => {
 			const { projectId, userRequest, currentCanvasState } = args;
 			let generationId: string | undefined;
 

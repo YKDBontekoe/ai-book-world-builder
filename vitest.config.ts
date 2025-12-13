@@ -49,7 +49,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			"@": path.resolve(dirname),
+			"@": path.resolve(process.cwd()),
 		},
 	},
 });

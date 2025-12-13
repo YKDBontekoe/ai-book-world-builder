@@ -22,7 +22,7 @@ export const updateScene = ({
 				.optional()
 				.describe("New status."),
 		}),
-		execute: async (args: any) => {
+		execute: async (args) => {
 			const { id, title, sequence, content, status } = args;
 
 			try {

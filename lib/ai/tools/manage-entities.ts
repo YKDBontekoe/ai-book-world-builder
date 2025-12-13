@@ -72,7 +72,7 @@ export const manageEntities = ({
 				)
 				.describe("List of entities to process."),
 		}),
-		execute: async (args: any) => {
+		execute: async (args) => {
 			const { projectId: projectIdInput, action, entities } = args;
 			const finalProjectId = projectIdInput || projectId;
 

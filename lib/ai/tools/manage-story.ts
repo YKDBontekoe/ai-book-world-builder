@@ -65,7 +65,7 @@ export const manageStory = ({
 				)
 				.describe("List of items to process."),
 		}),
-		execute: async (args: any) => {
+		execute: async (args) => {
 			const { projectId: projectIdInput, target, action, data } = args;
 			const finalProjectId = projectIdInput || projectId;
 

@@ -19,7 +19,7 @@ export const suggestPlot = ({ session }: { session: Session | null }) =>
           "Optional focus area for plot suggestions. Defaults to 'general'."
         ),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const { projectId, focus = "general" } = args;
 
       if (!session?.user) {

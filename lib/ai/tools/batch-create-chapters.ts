@@ -34,7 +34,7 @@ export const batchCreateChapters = ({
 				.optional()
 				.describe("Project ID (optional if context is clear)."),
 		}),
-		execute: async (args: any) => {
+		execute: async (args) => {
 			const { volumeId, chapters, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 

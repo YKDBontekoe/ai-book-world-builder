@@ -55,7 +55,7 @@ export const batchCreateEntities = ({
 					"The ID of the project to create the entities in. If not provided, it will infer from context or fail.",
 				),
 		}),
-		execute: async (args: any) => {
+		execute: async (args) => {
 			const { entities, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 

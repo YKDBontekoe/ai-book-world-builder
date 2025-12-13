@@ -44,7 +44,7 @@ export const createVolume = ({
         )
         .describe("An array of chapters to create in this volume."),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const {
         title,
         summary,

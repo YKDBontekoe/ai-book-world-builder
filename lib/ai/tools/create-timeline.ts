@@ -35,7 +35,7 @@ export const createTimeline = ({
         ),
       projectId: z.string().describe("The ID of the project/world."),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const {
         name,
         description,

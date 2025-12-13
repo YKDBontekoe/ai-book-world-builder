@@ -33,7 +33,7 @@ export const updateEntity = ({
       startDate: z.string().optional().describe("Start date (YYYY-MM-DD)."),
       endDate: z.string().optional().describe("End date (YYYY-MM-DD)."),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const { id, name, kind, summary, startDate, endDate } = args;
 
       try {

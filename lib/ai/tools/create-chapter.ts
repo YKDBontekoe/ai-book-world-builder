@@ -35,20 +35,8 @@ export const createChapter = ({
         .optional()
         .describe("The status of the chapter. Defaults to 'planned'."),
     }),
-    execute: async (args: any) => {
-      const {
-        title,
-        notes,
-        sequence,
-        volumeId,
-        status,
-        projectId: projectIdInput,
-      } = args;
-      // Note: Chapter creation usually relies on volumeId, which has projectId.
-      // However, we might need projectId for other checks or if we change schema.
-      // Currently, `createChapter` uses `volumePlan` which fetched from DB.
-      // But let's keep consistency if we need it later.
-      const finalProjectId = projectIdInput || projectId;
+    execute: async (args) => {
+      const { title, notes, sequence, volumeId, status } = args;
 
       if (!session?.user) {
         return { error: "Authentication required to create a chapter." };

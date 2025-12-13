@@ -21,7 +21,7 @@ export const exportBook = ({
       format: z.enum(["pdf", "epub"]).default("pdf").describe("The format to export the book in."),
       projectId: z.string().optional().describe("The ID of the project to export. If not provided, will use the current context."),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const { format, projectId: projectIdInput } = args;
       const finalProjectId = projectIdInput || projectId;
 

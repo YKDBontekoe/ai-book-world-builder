@@ -23,7 +23,7 @@ export const draftScene = ({ session }: { session: Session | null }) =>
         .optional()
         .describe("Specific drafting instructions (e.g. 'Make it more tense')"),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const { projectId, chapterId, sceneId, instructions } = args;
       try {
         if (!projectId || !chapterId || !sceneId) {

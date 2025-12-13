@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ToolRenderer } from "@/components/messages/tool-renderer";
+import { ToolRenderer } from "../../../../components/messages/tool-renderer";
 
 // Mock the child components
 vi.mock("@/components/document-preview", () => ({

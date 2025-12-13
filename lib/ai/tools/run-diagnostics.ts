@@ -17,7 +17,7 @@ export const runDiagnostics = ({ session }: { session: Session | null }) =>
       projectId: z.string().describe("The ID of the project"),
       chapterId: z.string().describe("The ID of the chapter to diagnose"),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const { projectId, chapterId } = args;
       if (!session?.user) return { error: "Authentication required." };
 

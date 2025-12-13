@@ -38,7 +38,7 @@ export const createOutline = ({
         ),
       projectId: z.string().describe("The ID of the project/world."),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const {
         title,
         summary,

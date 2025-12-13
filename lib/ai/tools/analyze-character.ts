@@ -13,7 +13,7 @@ export const analyzeCharacter = ({ session }: { session: Session | null }) =>
         .describe("The name of the character entity to analyze."),
       projectId: z.string().describe("The ID of the project/world."),
     }),
-    execute: async (args: any) => {
+    execute: async (args) => {
       const { entityName, projectId } = args;
 
       if (!session?.user) {
