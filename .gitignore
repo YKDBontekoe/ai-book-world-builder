@@ -43,3 +43,10 @@ yarn-error.log*
 /blob-report/
 /playwright/*
 *.tsbuildinfo
+
+# Python verification
+verification/__pycache__/
+verification/screenshots/
+
+# Logs
+*.log

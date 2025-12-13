@@ -46,6 +46,22 @@ pnpm exec playwright test --project=e2e tests/e2e/chat.test.ts
 pnpm exec playwright test --project=e2e tests/e2e/chat.test.ts --headed --debug
 ```
 
+## Visual Verification (Python)
+
+- Use **Python Playwright scripts** to generate screenshots for visual verification. This is separate from the CI/Logic tests and focuses on the "Native macOS" aesthetic.
+- Scripts live in `verification/`.
+- Use the provided utilities in `verification/utils.py` to handle authentication and screenshots.
+- See `verification/README.md` for detailed instructions.
+- Sample commands:
+
+```bash
+# Run all visual verification scripts
+pnpm test:visual
+
+# Run a specific script
+python verification/verify_my_feature.py
+```
+
 ## Accessibility testing
 
 - Automate accessibility checks alongside Playwright flows by injecting **axe-core** (for example, via `@axe-core/playwright`) into key screens. Capture and fail on WCAG violations instead of relying solely on manual audits. Add the axe dependency to `devDependencies` if it is not already present.
