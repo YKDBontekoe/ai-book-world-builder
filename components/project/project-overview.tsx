@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { BookOpen, Copy, Edit, Loader2, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { GlassCard } from "@/components/ui/glass-card";
-import { DashboardSheet } from "@/components/dashboard/dashboard-sheet";
 import { toast } from "sonner";
 import { forkProject } from "@/app/actions/projects";
 import type { Project } from "@/lib/db/schema";
@@ -61,15 +60,10 @@ export function ProjectOverview({ project, isOwner, chapters }: ProjectOverviewP
         <div className="flex gap-2 shrink-0">
           {isOwner ? (
             <>
-              <DashboardSheet
-                projectId={project.id}
-                trigger={
-                  <Button variant="outline" className="glass-panel">
-                    <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Dashboard
-                  </Button>
-                }
-              />
+              <Button variant="outline" className="glass-panel" onClick={() => router.push(`/projects/${project.id}/dashboard`)}>
+                <LayoutDashboard className="mr-2 h-4 w-4" />
+                Dashboard
+              </Button>
               <Button onClick={() => router.push(`/projects/${project.id}/generate`)}>
                 <Edit className="mr-2 h-4 w-4" />
                 Open Workspace
