@@ -8,12 +8,15 @@ import {
 	ChevronRight,
 	FileText,
 	Layers,
+	Loader2,
 	Search,
 	Sparkles,
 	Users,
 	Wand2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
+import { toast } from "sonner";
+import { predictRelevantContext } from "@/app/actions/context-selection";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -22,6 +25,7 @@ import { api } from "@/lib/api-client";
 import type { ContextSelection } from "@/lib/db/schema";
 import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
+import { useSearchParams } from "next/navigation";
 
 interface ContextSelectionPanelProps {
 	projectId: string;
@@ -48,6 +52,7 @@ export function ContextSelectionPanel({
 	projectId,
 	onChange,
 }: ContextSelectionPanelProps) {
+	const searchParams = useSearchParams();
 	const { data, isLoading } = useQuery({
 		queryKey: QUERY_KEYS.projectContext(projectId),
 		queryFn: () =>
@@ -70,15 +75,25 @@ export function ContextSelectionPanel({
 
 	const [searchQuery, setSearchQuery] = useState("");
 
+	// Initialize focus from URL if available (Chat Bridge)
+	const [focusQuery, setFocusQuery] = useState(searchParams.get('focus') || "");
+	const [isPredicting, startPrediction] = useTransition();
+
+	// Effect to apply pre-selected IDs from URL (Chat Bridge)
+	const [hasAppliedUrlParams, setHasAppliedUrlParams] = useState(false);
+
 	useEffect(() => {
 		if (data) {
+			const urlEntities = searchParams.get('entities')?.split(',') || [];
+			const urlScenes = searchParams.get('scenes')?.split(',') || [];
+
 			const newSelection: ContextSelection = {
 				entities:
 					data.entities?.map((e) => ({
 						id: e.id,
 						name: e.name,
 						kind: e.kind || "other",
-						included: true,
+						included: urlEntities.includes(e.id) || true, // Default to true if not specified, or respect logic
 					})) || [],
 				outlines:
 					data.outlines?.map((o) => ({
@@ -91,7 +106,7 @@ export function ContextSelectionPanel({
 						id: s.id,
 						title: s.title,
 						chapterId: s.chapterId || "",
-						included: true,
+						included: urlScenes.includes(s.id) || true,
 					})) || [],
 				drafts:
 					data.drafts?.map((d) => ({
@@ -106,14 +121,66 @@ export function ContextSelectionPanel({
 						included: false,
 					})) || [],
 			};
+
+			// If URL params exist, be specific
+			if (urlEntities.length > 0 || urlScenes.length > 0) {
+				newSelection.entities.forEach(e => e.included = urlEntities.includes(e.id));
+				newSelection.scenes.forEach(s => s.included = urlScenes.includes(s.id));
+				if (!hasAppliedUrlParams) {
+					toast.success("Context pre-selected from chat!");
+					setHasAppliedUrlParams(true);
+				}
+			}
+
 			setSelection(newSelection);
 			onChange?.(newSelection);
 		}
-	}, [data, onChange]);
+	}, [data, onChange, searchParams, hasAppliedUrlParams]);
 
 	const updateSelection = (newSelection: ContextSelection) => {
 		setSelection(newSelection);
 		onChange?.(newSelection);
+	};
+
+	const handleMagicSelect = () => {
+		if (!focusQuery.trim()) {
+			toast.error("Please enter a focus for generation (e.g. 'Chapter 5 battle')");
+			return;
+		}
+
+		startPrediction(async () => {
+			try {
+				const result = await predictRelevantContext(projectId, focusQuery);
+
+				// Apply selection based on result
+				const newSelection = { ...selection };
+
+				// Helper to update inclusion based on ID lists
+				const updateGroup = (
+					groupKey: keyof ContextSelection,
+					relevantIds: string[]
+				) => {
+					// @ts-ignore - dynamic key access
+					newSelection[groupKey] = newSelection[groupKey].map((item: any) => ({
+						...item,
+						included: relevantIds.includes(item.id)
+					}));
+				};
+
+				updateGroup('entities', result.entityIds);
+				updateGroup('scenes', result.sceneIds);
+				updateGroup('outlines', result.outlineIds);
+
+				updateSelection(newSelection);
+				toast.success("Context intelligently selected!");
+
+				// Automatically expand relevant groups
+				setExpandedGroups(new Set(['entities', 'scenes', 'outlines']));
+			} catch (error) {
+				console.error(error);
+				toast.error("Failed to predict context. Try selecting manually.");
+			}
+		});
 	};
 
 	const groups: ContextGroup[] = [
@@ -278,6 +345,35 @@ export function ContextSelectionPanel({
 				</div>
 			</GlassCard>
 
+			{/* Magic Select - NEW FEATURE */}
+			<GlassCard padding="md" rounded="xl" className="bg-primary/5 border-primary/20">
+				<div className="space-y-3">
+					<div className="flex items-center gap-2 text-primary font-medium">
+						<Sparkles className="w-4 h-4" />
+						<span>Magic Auto-Select</span>
+					</div>
+					<div className="flex gap-2">
+						<Input
+							placeholder="What are you writing? (e.g. 'Chapter 3: The Heist')"
+							value={focusQuery}
+							onChange={(e) => setFocusQuery(e.target.value)}
+							className="bg-background/50 border-primary/20"
+						/>
+						<Button
+							onClick={handleMagicSelect}
+							disabled={isPredicting || !focusQuery}
+							className="gap-2 shrink-0"
+						>
+							{isPredicting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+							Auto-Select
+						</Button>
+					</div>
+					<p className="text-xs text-muted-foreground">
+						AI will analyze your request and select the most relevant entities and scenes.
+					</p>
+				</div>
+			</GlassCard>
+
 			{/* Quick Actions - Glassmorphic */}
 			<div className="flex flex-wrap items-center gap-2">
 				<Button
@@ -286,7 +382,7 @@ export function ContextSelectionPanel({
 					onClick={selectAllEssential}
 					className="gap-1.5 rounded-xl border-border/50 bg-background/50 backdrop-blur-sm"
 				>
-					<Wand2 className="h-3.5 w-3.5" />
+					<Check className="h-3.5 w-3.5" />
 					Essential Only
 				</Button>
 				<Button

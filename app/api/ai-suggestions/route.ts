@@ -92,6 +92,7 @@ ${recentChapters || "None"}
 									"analysis",
 									"creative",
 									"brainstorm",
+									"consistency", // Added new type
 								])
 								.describe("Category for styling"),
 							reasoning: z
@@ -118,6 +119,7 @@ CRITICAL: The "type" field MUST be EXACTLY one of these values (no variations):
 - "analysis" - for critique, feedback, theme analysis, pacing review
 - "creative" - for surprises, twists, creative prompts
 - "brainstorm" - for brainstorming, ideation, exploring options
+- "consistency" - proactively flag potential plot holes or lore contradictions if you detect them
 
 DO NOT use any other type values like "scene", "relationship", "draft", etc. Map those concepts to the above categories.
 
@@ -125,6 +127,7 @@ GUIDELINES:
 - If no project, suggest brainstorming or world creation
 - If project has characters, suggest developing them (type: "character")
 - If chapters exist, suggest drafting next chapter (type: "story")
+- If you notice a potential contradiction (e.g., character behavior, plot hole), Suggest a "consistency" action to review it.
 - Make prompts actionable
 `,
 		});

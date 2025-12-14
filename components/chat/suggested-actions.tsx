@@ -4,6 +4,7 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import {
+	AlertTriangleIcon,
 	BookOpenIcon,
 	CalendarIcon,
 	LightbulbIcon,
@@ -28,7 +29,8 @@ type SuggestionType =
 	| "world"
 	| "analysis"
 	| "creative"
-	| "brainstorm";
+	| "brainstorm"
+	| "consistency";
 
 type Suggestion = {
 	label: string;
@@ -97,7 +99,9 @@ function PureSuggestedActions({
 						<RefreshCwIcon className="size-3" />
 					</button>
 				)}
-				{displaySuggestions.map((action, index) => (
+				{displaySuggestions.map((action, index) => {
+					const isConsistency = action.type === "consistency";
+					return (
 					<motion.button
 						key={action.label + index}
 						initial={{ opacity: 0, scale: 0.9 }}
@@ -112,12 +116,13 @@ function PureSuggestedActions({
 						className={cn(
 							"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shadow-sm",
 							"bg-background/80 hover:bg-muted backdrop-blur-sm",
+							isConsistency && "border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400"
 						)}
 					>
-						<span className="opacity-70 text-primary">{getIconForType(action.type)}</span>
+						<span className={cn("opacity-70 text-primary", isConsistency && "text-amber-500")}>{getIconForType(action.type)}</span>
 						<span>{action.label}</span>
 					</motion.button>
-				))}
+				)})}
 			</div>
 		);
 	}
@@ -142,7 +147,9 @@ function PureSuggestedActions({
 				className="grid w-full gap-3 sm:grid-cols-2"
 				data-testid="suggested-actions"
 			>
-				{displaySuggestions.map((action, index) => (
+				{displaySuggestions.map((action, index) => {
+					const isConsistency = action.type === "consistency";
+					return (
 					<motion.div
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: 10 }}
@@ -154,6 +161,7 @@ function PureSuggestedActions({
 							className={cn(
 								"group relative h-auto w-full flex-col items-start gap-1 overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 shadow-sm",
 								"bg-card hover:bg-muted/50 hover:border-primary/30 hover:shadow-md",
+								isConsistency && "border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/50"
 							)}
 							onClick={() => {
 								sendMessage({
@@ -167,11 +175,12 @@ function PureSuggestedActions({
 								<div
 									className={cn(
 										"flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary shadow-sm ring-1 ring-inset ring-primary/20",
+										isConsistency && "bg-amber-500/10 text-amber-600 ring-amber-500/20"
 									)}
 								>
 									{getIconForType(action.type)}
 								</div>
-								<span className="font-semibold text-sm text-foreground">
+								<span className={cn("font-semibold text-sm text-foreground", isConsistency && "text-amber-700 dark:text-amber-400")}>
 									{action.label}
 								</span>
 							</div>
@@ -181,7 +190,7 @@ function PureSuggestedActions({
 							</div>
 						</Button>
 					</motion.div>
-				))}
+				)})}
 			</div>
 		</div>
 	);
@@ -200,6 +209,8 @@ function getIconForType(type: SuggestionType) {
 			return <CalendarIcon className="size-4" />;
 		case "brainstorm":
 			return <LightbulbIcon className="size-4" />;
+		case "consistency":
+			return <AlertTriangleIcon className="size-4" />;
 		default:
 			return <SparklesIcon className="size-4" />;
 	}
