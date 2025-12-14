@@ -1,17 +1,13 @@
 "use client";
 
-import { useChat } from "@ai-sdk/react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { DefaultChatTransport } from "ai";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Artifact } from "@/components/artifact";
 import { useBookCanvas } from "@/components/book-canvas";
 import { AgentCapabilities } from "@/components/chat/agent-capabilities";
 import { ChatHeader } from "@/components/chat/chat-header";
-import { useSetDataStream } from "@/components/chat/data-stream-provider";
 import { MultimodalInput } from "@/components/chat/multimodal-input";
-import { type ProcessLog, ProcessLogs } from "@/components/chat/process-logs";
+import { ProcessLogs } from "@/components/chat/process-logs";
 import { SuggestedActions } from "@/components/chat/suggested-actions";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { Messages } from "@/components/messages/messages";
@@ -26,21 +22,20 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "@/components/ui/toast";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
+import { useChatController } from "@/hooks/use-chat-controller";
 import { useChatToolEffects } from "@/hooks/use-chat-tool-effects";
+import { useChatUrl } from "@/hooks/use-chat-url";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { useProjectSelection } from "@/hooks/use-project-selection";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import { api } from "@/lib/api-client";
 import type { Vote } from "@/lib/db/schema";
-import { ChatSDKError } from "@/lib/errors";
 import type { ProjectSummary } from "@/lib/project-context";
 import { QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
-import { fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 
 export function Chat({
 	id,
@@ -65,10 +60,6 @@ export function Chat({
 	initialLastContext?: AppUsage;
 	availableModels: ChatModel[];
 }) {
-	const router = useRouter();
-	const searchParams = useSearchParams();
-	const queryClient = useQueryClient();
-
 	const projects = initialProjects ?? [];
 	const {
 		applyProjectSelection,
@@ -85,35 +76,13 @@ export function Chat({
 		initialVisibilityType,
 	});
 
-	const { setOverallStatus, setProjectId } = useBookCanvas();
+	const { setOverallStatus, setProjectId, chatAction, triggerChatAction } =
+		useBookCanvas();
 
 	// Sync Project ID with Book Canvas
 	useEffect(() => {
 		setProjectId(selectedProjectId || null);
 	}, [selectedProjectId, setProjectId]);
-
-	// Handle browser back/forward navigation
-	useEffect(() => {
-		const handlePopState = () => {
-			router.refresh();
-		};
-
-		window.addEventListener("popstate", handlePopState);
-		return () => window.removeEventListener("popstate", handlePopState);
-	}, [router]);
-
-	const { setDataStream } = useSetDataStream();
-
-	const [usage, setUsage] = useState<AppUsage | undefined>(initialLastContext);
-	const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
-	const [currentModelId, setCurrentModelId] =
-		useState<ChatModelId>(initialChatModel);
-	const currentModelIdRef = useRef(currentModelId);
-	const [processLogs, setProcessLogs] = useState<ProcessLog[]>([]);
-
-	useEffect(() => {
-		currentModelIdRef.current = currentModelId;
-	}, [currentModelId]);
 
 	const {
 		messages,
@@ -123,73 +92,28 @@ export function Chat({
 		stop,
 		regenerate,
 		resumeStream,
-	} = useChat<ChatMessage>({
+		usage,
+		showCreditCardAlert,
+		setShowCreditCardAlert,
+		currentModelId,
+		setCurrentModelId,
+		processLogs,
+		setProcessLogs,
+	} = useChatController({
 		id,
-		messages: initialMessages,
-		experimental_throttle: 100,
-		generateId: generateUUID,
-		transport: new DefaultChatTransport({
-			api: "/api/chat",
-			fetch: fetchWithErrorHandlers,
-			prepareSendMessagesRequest(request) {
-				return {
-					body: {
-						id: request.id,
-						message: request.messages.at(-1),
-						projectId: selectedProjectIdRef.current,
-						selectedChatModel: currentModelIdRef.current,
-						selectedVisibilityType: visibilityType,
-						...request.body,
-					},
-				};
-			},
-		}),
-		onData: (dataPart) => {
-			setDataStream((ds) => (ds ? [...ds, dataPart] : []));
-			if (dataPart.type === "data-usage") {
-				setUsage(dataPart.data);
-
-				setMessages((prevMessages) => {
-					const lastMessage = prevMessages.at(-1);
-					if (lastMessage && lastMessage.role === "assistant") {
-						const newMessages = [...prevMessages];
-						newMessages[newMessages.length - 1] = {
-							...lastMessage,
-							usage: dataPart.data as AppUsage,
-						};
-						return newMessages;
-					}
-					return prevMessages;
-				});
-			}
-			const part = dataPart as any;
-			if (part.type === "tool-log") {
-				setProcessLogs((prev) => [
-					...prev,
-					{ ...part, timestamp: Date.now() } as ProcessLog,
-				]);
-			}
-		},
-		onFinish: () => {
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatHistory() });
-		},
-		onError: (error) => {
-			if (error instanceof ChatSDKError) {
-				if (
-					error.message?.includes("AI Gateway requires a valid credit card")
-				) {
-					setShowCreditCardAlert(true);
-				} else {
-					toast({
-						type: "error",
-						description: error.message,
-					});
-				}
-			}
-		},
+		initialMessages,
+		initialChatModel,
+		initialLastContext,
+		selectedProjectIdRef,
+		visibilityType,
 	});
 
-	const { chatAction, triggerChatAction } = useBookCanvas();
+	useChatUrl({
+		id,
+		messages,
+		status,
+		sendMessage,
+	});
 
 	// Listen for chat actions from Book Canvas
 	useEffect(() => {
@@ -217,47 +141,12 @@ export function Chat({
 		} else {
 			setOverallStatus("idle");
 		}
-	}, [status, setOverallStatus]);
+	}, [status, setOverallStatus, setProcessLogs]);
 
 	useChatToolEffects({
 		messages,
 		selectedProjectId,
 	});
-
-	const query = searchParams.get("query");
-	const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
-
-	useEffect(() => {
-		if (query && !hasAppendedQuery) {
-			sendMessage({
-				role: "user" as const,
-				parts: [{ type: "text", text: query }],
-			});
-
-			setHasAppendedQuery(true);
-			const currentUrl = new URL(window.location.href);
-			currentUrl.searchParams.delete("query");
-			window.history.replaceState({}, "", `/chat/${id}${currentUrl.search}`);
-		}
-	}, [query, sendMessage, hasAppendedQuery, id]);
-
-	useEffect(() => {
-		if (!router || !id) {
-			return;
-		}
-
-		// Only update URL if we are mostly sure the chat is created (has messages)
-		// and we are currently on the root path. We wait for at least 2 messages (user + assistant)
-		// or if we have 1 message and it is NOT loading (which shouldn't happen for new chat but valid safety)
-		if (
-			messages.length > 0 &&
-			window.location.pathname === "/" &&
-			!status.includes("streaming") &&
-			messages.some((m) => m.role !== "user")
-		) {
-			window.history.replaceState({}, "", `/chat/${id}`);
-		}
-	}, [id, router, messages, status]);
 
 	const { data: votes } = useQuery({
 		queryKey: QUERY_KEYS.votes(id),
