@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";

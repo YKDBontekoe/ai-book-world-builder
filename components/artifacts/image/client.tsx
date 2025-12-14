@@ -1,7 +1,7 @@
 import { CopyIcon, RedoIcon, UndoIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Artifact } from "@/components/artifact/create-artifact";
-import { ImageEditor } from "@/components/image-editor";
+import { ImageEditor } from "@/components/editor/image-editor";
 
 export const imageArtifact = new Artifact({
   kind: "image",

@@ -5,8 +5,8 @@ import { EntityProposal } from "@/components/chat/widgets/entity-proposal";
 import { EntityWidget } from "@/components/chat/widgets/entity-widget";
 import { GenerationWidget } from "@/components/chat/widgets/generation-widget";
 import { SceneWidget } from "@/components/chat/widgets/scene-widget";
-import { DocumentToolResult } from "@/components/document";
-import { DocumentPreview } from "@/components/document-preview";
+import { DocumentToolResult } from "@/components/document/document";
+import { DocumentPreview } from "@/components/document/document-preview";
 import {
 	Tool,
 	ToolContent,

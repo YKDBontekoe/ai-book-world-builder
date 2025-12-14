@@ -1,8 +1,8 @@
 import type { UIMessageStreamWriter } from "ai";
 import type { Session } from "next-auth";
-import { codeDocumentHandler } from "@/artifacts/code/server";
-import { sheetDocumentHandler } from "@/artifacts/sheet/server";
-import { textDocumentHandler } from "@/artifacts/text/server";
+import { codeDocumentHandler } from "@/components/artifacts/code/server";
+import { sheetDocumentHandler } from "@/components/artifacts/sheet/server";
+import { textDocumentHandler } from "@/components/artifacts/text/server";
 import type { ArtifactKind } from "@/components/artifact";
 import { saveDocument } from "../db/queries";
 import type { Document } from "../db/schema";
