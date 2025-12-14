@@ -24,28 +24,57 @@ export type ChatAction = {
 	payload: string;
 } | null;
 
-type BookCanvasContextType = {
+type BookCanvasState = {
 	isOpen: boolean;
+	activePane: CanvasPane;
+	overallStatus: GenerationStatus;
+	projectId: string | null;
+	generationId: string | null;
+	chatAction: ChatAction;
+};
+
+type BookCanvasActions = {
 	setIsOpen: (open: boolean) => void;
 	togglePanel: () => void;
-	activePane: CanvasPane;
 	setActivePane: (pane: CanvasPane) => void;
-	overallStatus: GenerationStatus;
 	setOverallStatus: (status: GenerationStatus) => void;
-	projectId: string | null;
 	setProjectId: (id: string | null) => void;
-	generationId: string | null;
 	setGenerationId: (id: string | null) => void;
-	chatAction: ChatAction;
 	triggerChatAction: (action: ChatAction) => void;
 };
 
-const BookCanvasContext = createContext<BookCanvasContextType | null>(null);
+// Kept for backward compatibility
+export type BookCanvasContextType = BookCanvasState & BookCanvasActions;
+
+const BookCanvasValueContext = createContext<BookCanvasState | null>(null);
+const BookCanvasActionsContext = createContext<BookCanvasActions | null>(null);
 
 export function useBookCanvas() {
-	const context = useContext(BookCanvasContext);
-	if (!context) {
+	const state = useContext(BookCanvasValueContext);
+	const actions = useContext(BookCanvasActionsContext);
+
+	if (!state || !actions) {
 		throw new Error("useBookCanvas must be used within a BookCanvasProvider");
+	}
+	return { ...state, ...actions };
+}
+
+export function useBookCanvasValue() {
+	const context = useContext(BookCanvasValueContext);
+	if (!context) {
+		throw new Error(
+			"useBookCanvasValue must be used within a BookCanvasProvider",
+		);
+	}
+	return context;
+}
+
+export function useBookCanvasActions() {
+	const context = useContext(BookCanvasActionsContext);
+	if (!context) {
+		throw new Error(
+			"useBookCanvasActions must be used within a BookCanvasProvider",
+		);
 	}
 	return context;
 }
@@ -62,36 +91,36 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 		setIsOpen((prev) => !prev);
 	}, []);
 
-	const value = useMemo(
+	const actions = useMemo(
 		() => ({
-			isOpen,
 			setIsOpen,
 			togglePanel,
-			activePane,
 			setActivePane,
-			overallStatus,
 			setOverallStatus,
-			projectId,
 			setProjectId,
-			generationId,
 			setGenerationId,
-			chatAction,
 			triggerChatAction,
 		}),
-		[
+		[togglePanel],
+	);
+
+	const state = useMemo(
+		() => ({
 			isOpen,
 			activePane,
 			overallStatus,
 			projectId,
 			generationId,
-			togglePanel,
 			chatAction,
-		],
+		}),
+		[isOpen, activePane, overallStatus, projectId, generationId, chatAction],
 	);
 
 	return (
-		<BookCanvasContext.Provider value={value}>
-			{children}
-		</BookCanvasContext.Provider>
+		<BookCanvasValueContext.Provider value={state}>
+			<BookCanvasActionsContext.Provider value={actions}>
+				{children}
+			</BookCanvasActionsContext.Provider>
+		</BookCanvasValueContext.Provider>
 	);
 }

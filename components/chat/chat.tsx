@@ -3,8 +3,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Artifact } from "@/components/artifact";
-import { useBookCanvas } from "@/components/book-canvas";
+import { useBookCanvasActions } from "@/components/book-canvas";
 import { AgentCapabilities } from "@/components/chat/agent-capabilities";
+import { ChatActionHandler } from "@/components/chat/chat-action-handler";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { MultimodalInput } from "@/components/chat/multimodal-input";
 import { ProcessLogs } from "@/components/chat/process-logs";
@@ -76,8 +77,8 @@ export function Chat({
 		initialVisibilityType,
 	});
 
-	const { setOverallStatus, setProjectId, chatAction, triggerChatAction } =
-		useBookCanvas();
+	const { setOverallStatus, setProjectId, triggerChatAction } =
+		useBookCanvasActions();
 
 	// Sync Project ID with Book Canvas
 	useEffect(() => {
@@ -115,22 +116,6 @@ export function Chat({
 		sendMessage,
 	});
 
-	// Listen for chat actions from Book Canvas
-	useEffect(() => {
-		if (chatAction?.type === "send_message") {
-			sendMessage(
-				{
-					role: "user",
-					parts: [{ type: "text", text: chatAction.payload }],
-				},
-				{
-					// Optional: ensure it treats it as a new message submission
-				},
-			);
-			triggerChatAction(null);
-		}
-	}, [chatAction, sendMessage, triggerChatAction]);
-
 	// Sync Chat Status with Book Canvas
 	useEffect(() => {
 		if (status === "streaming" || status === "submitted") {
@@ -166,6 +151,10 @@ export function Chat({
 
 	return (
 		<>
+			<ChatActionHandler
+				sendMessage={sendMessage}
+				triggerChatAction={triggerChatAction}
+			/>
 			<div className="flex h-dvh min-w-0 flex-col bg-background">
 				{/* Compact Project Context Bar - only show for new chats */}
 				{messages.length === 0 && (
