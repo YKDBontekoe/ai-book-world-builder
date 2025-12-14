@@ -10,6 +10,8 @@ import {
 	scene,
 	sceneCard,
 } from "@/lib/db/schema";
+import { auth } from "@/app/(auth)/auth";
+import { getProjectByIdWithAccess } from "@/lib/db/queries";
 
 export type SerializedScene = Scene & {
 	card: SceneCard | null;
@@ -23,6 +25,19 @@ export async function getScenesData(
 	projectId: string,
 ): Promise<SerializedChapterWithScenes[]> {
 	try {
+		const session = await auth();
+		const userId = session?.user?.id;
+
+		const project = await getProjectByIdWithAccess({
+			id: projectId,
+			userId,
+		});
+
+		if (!project) {
+			console.error("Access denied to project:", projectId);
+			return [];
+		}
+
 		// 1. Fetch all chapters for the project
 		const chapters = await db
 			.select()
