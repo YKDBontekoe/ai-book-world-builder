@@ -8,7 +8,7 @@ import {
 import { parse, unparse } from "papaparse";
 import { toast } from "sonner";
 import { Artifact } from "@/components/artifact/create-artifact";
-import { SpreadsheetEditor } from "@/components/sheet-editor";
+import { SpreadsheetEditor } from "@/components/editor/sheet-editor";
 
 type Metadata = any;
 

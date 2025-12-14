@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { ToolRenderer } from "@/components/messages/tool-renderer";
 
 // Mock the child components
-vi.mock("@/components/document-preview", () => ({
+vi.mock("@/components/document/document-preview", () => ({
 	DocumentPreview: ({ result }: any) => (
 		<div data-testid="document-preview">{result.title}</div>
 	),

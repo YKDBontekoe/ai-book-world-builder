@@ -9,9 +9,9 @@ import {
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Artifact } from "@/components/artifact/create-artifact";
-import { DiffView } from "@/components/diffview";
-import { DocumentSkeleton } from "@/components/document-skeleton";
-import { Editor } from "@/components/text-editor";
+import { DiffView } from "@/components/editor/diffview";
+import { DocumentSkeleton } from "@/components/document/document-skeleton";
+import { Editor } from "@/components/editor/text-editor";
 import { Button } from "@/components/ui/button";
 import type { Suggestion } from "@/lib/db/schema";
 import { buildRewritePrompt, type RewriteIntent } from "@/lib/editor/rewrite";

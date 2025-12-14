@@ -17,12 +17,12 @@ import {
 	useRef,
 } from "react";
 import type { ArtifactKind, UIArtifact } from "@/components/artifact/types";
-import { CodeEditor } from "@/components/code-editor";
-import { DocumentToolCall, DocumentToolResult } from "@/components/document";
-import { InlineDocumentSkeleton } from "@/components/document-skeleton";
-import { ImageEditor } from "@/components/image-editor";
-import { SpreadsheetEditor } from "@/components/sheet-editor";
-import { Editor } from "@/components/text-editor";
+import { CodeEditor } from "@/components/editor/code-editor";
+import { DocumentToolCall, DocumentToolResult } from "@/components/document/document";
+import { InlineDocumentSkeleton } from "@/components/document/document-skeleton";
+import { ImageEditor } from "@/components/editor/image-editor";
+import { SpreadsheetEditor } from "@/components/editor/sheet-editor";
+import { Editor } from "@/components/editor/text-editor";
 import { useArtifact } from "@/hooks/use-artifact";
 import { api } from "@/lib/api-client";
 import type { Document } from "@/lib/db/schema";

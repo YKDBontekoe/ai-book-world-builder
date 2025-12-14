@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Artifact } from "@/components/artifact/create-artifact";
-import { CodeEditor } from "@/components/code-editor";
+import { CodeEditor } from "@/components/editor/code-editor";
 import {
   Console,
   type ConsoleOutput,

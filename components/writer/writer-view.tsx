@@ -13,7 +13,7 @@ import { getProjectStructure, updateSceneContent, createChapterSnapshot } from "
 import { Project } from "@/lib/db/schema";
 import { Loader2, FileText, ChevronRight, Save, History } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Editor } from "@/components/text-editor";
+import { Editor } from "@/components/editor/text-editor";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
 import { AISidebar } from "@/components/writer/tools/ai-sidebar";

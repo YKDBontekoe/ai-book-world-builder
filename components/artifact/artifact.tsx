@@ -9,7 +9,7 @@ import { useWindowSize } from "usehooks-ts";
 import {
 	DocumentSkeleton,
 	InlineDocumentSkeleton,
-} from "@/components/document-skeleton";
+} from "@/components/document/document-skeleton";
 import { useArtifact } from "@/hooks/use-artifact";
 import { api } from "@/lib/api-client";
 import type { Document } from "@/lib/db/schema";

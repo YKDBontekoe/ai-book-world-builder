@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { DocumentSkeleton } from "@/components/document-skeleton";
+import { DocumentSkeleton } from "@/components/document/document-skeleton";
 import type { Document } from "@/lib/db/schema"; // Assuming Document type location
 import type { UIArtifact } from "./types";
 
