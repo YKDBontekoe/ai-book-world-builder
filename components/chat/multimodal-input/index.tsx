@@ -1,16 +1,8 @@
 "use client";
 
 import type { UseChatHelpers } from "@ai-sdk/react";
-import type { UIMessage } from "ai";
 import { ArrowUpIcon } from "lucide-react";
-import {
-	memo,
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
@@ -27,13 +19,13 @@ import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { cn } from "@/lib/utils";
-import { PreviewAttachment } from "../preview-attachment";
+import { AttachmentPreviewList } from "./attachment-preview-list";
 import { AttachmentsButton } from "./attachments-button";
 import { ModelSelectorCompact } from "./model-selector";
 import { StopButton } from "./stop-button";
 
 function PureMultimodalInput({
-	chatId,
+	chatId: _chatId,
 	status,
 	stop,
 	setMessages,
@@ -63,24 +55,6 @@ function PureMultimodalInput({
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const { width } = useWindowSize();
 
-	const adjustHeight = useCallback(() => {
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "44px";
-		}
-	}, []);
-
-	useEffect(() => {
-		if (textareaRef.current) {
-			adjustHeight();
-		}
-	}, [adjustHeight]);
-
-	const resetHeight = useCallback(() => {
-		if (textareaRef.current) {
-			textareaRef.current.style.height = "44px";
-		}
-	}, []);
-
 	const [localStorageInput, setLocalStorageInput] = useLocalStorage(
 		"input",
 		"",
@@ -92,11 +66,10 @@ function PureMultimodalInput({
 			// Prefer DOM value over localStorage to handle hydration
 			const finalValue = domValue || localStorageInput || "";
 			setInput(finalValue);
-			adjustHeight();
 		}
 		// Only run once after hydration
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [adjustHeight, localStorageInput]);
+	}, [localStorageInput]);
 
 	useEffect(() => {
 		setLocalStorageInput(input);
@@ -135,7 +108,6 @@ function PureMultimodalInput({
 
 		setAttachments([]);
 		setLocalStorageInput("");
-		resetHeight();
 		setInput("");
 
 		if (width && width > 768) {
@@ -143,13 +115,11 @@ function PureMultimodalInput({
 		}
 	}, [
 		input,
-		setInput,
 		attachments,
 		sendMessage,
 		setAttachments,
 		setLocalStorageInput,
 		width,
-		resetHeight,
 	]);
 
 	const contextProps = useMemo(
@@ -169,6 +139,18 @@ function PureMultimodalInput({
 		textarea.addEventListener("paste", handlePaste);
 		return () => textarea.removeEventListener("paste", handlePaste);
 	}, [handlePaste]);
+
+	const onRemoveAttachment = useCallback(
+		(url: string) => {
+			setAttachments((currentAttachments) =>
+				currentAttachments.filter((a) => a.url !== url),
+			);
+			if (fileInputRef.current) {
+				fileInputRef.current.value = "";
+			}
+		},
+		[setAttachments],
+	);
 
 	return (
 		<div className={cn("relative flex w-full flex-col gap-4", className)}>
@@ -196,46 +178,18 @@ function PureMultimodalInput({
 					}
 				}}
 			>
-				{(attachments.length > 0 || uploadQueue.length > 0) && (
-					<div
-						className="flex flex-row items-end gap-2 overflow-x-scroll"
-						data-testid="attachments-preview"
-					>
-						{attachments.map((attachment) => (
-							<PreviewAttachment
-								attachment={attachment}
-								key={attachment.url}
-								onRemove={() => {
-									setAttachments((currentAttachments) =>
-										currentAttachments.filter((a) => a.url !== attachment.url),
-									);
-									if (fileInputRef.current) {
-										fileInputRef.current.value = "";
-									}
-								}}
-							/>
-						))}
+				<AttachmentPreviewList
+					attachments={attachments}
+					uploadQueue={uploadQueue}
+					onRemoveAttachment={onRemoveAttachment}
+				/>
 
-						{uploadQueue.map((filename) => (
-							<PreviewAttachment
-								attachment={{
-									url: "",
-									name: filename,
-									contentType: "",
-								}}
-								isUploading={true}
-								key={filename}
-							/>
-						))}
-					</div>
-				)}
 				<div className="flex flex-row items-start gap-3 px-1">
 					<PromptInputTextarea
 						aria-label="Message input"
 						autoFocus
 						className="grow resize-none border-0! border-none! bg-transparent p-2 text-[15px] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
-						disableAutoResize={true}
 						maxHeight={200}
 						minHeight={44}
 						onChange={handleInput}
