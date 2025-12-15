@@ -29,6 +29,13 @@
       "when": 1765824883627,
       "tag": "0003_noisy_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1765826118923,
+      "tag": "0004_skinny_bullseye",
+      "breakpoints": true
     }
   ]
 }
