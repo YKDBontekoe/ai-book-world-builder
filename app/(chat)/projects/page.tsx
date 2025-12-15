@@ -1,10 +1,11 @@
 import { formatDistanceToNow } from "date-fns";
-import { CalendarIcon, FolderIcon, Globe, User } from "lucide-react";
+import { CalendarIcon, FolderIcon, Globe, Plus, User } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GridList } from "@/components/ui/grid-list";
@@ -90,6 +91,14 @@ export default async function ProjectsPage() {
 							title="No projects found"
 							description="Create a new story to get started with your first project."
 							icon={FolderIcon}
+							action={
+								<Button asChild>
+									<Link href="/" className="gap-2">
+										<Plus className="h-4 w-4" />
+										Create Story
+									</Link>
+								</Button>
+							}
 						/>
 					) : (
 						<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
