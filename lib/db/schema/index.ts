@@ -7,4 +7,5 @@ export * from "./entities";
 export * from "./outlines";
 export * from "./scenes";
 export * from "./generation";
+export * from "./timeline";
 export * as legacySchema from "./legacy";
