@@ -31,3 +31,8 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 ## 2025-05-25 - Actionable Empty States
 **Observation:** The "Projects" page empty state was a dead end, informing the user of zero projects but providing no path to create one.
 **Recommendation:** Always include a primary CTA (Call to Action) in Empty States to guide the user to the next step, converting a "dead end" into a "starting point".
+
+## 2025-12-15 - Verification of Protected Pages
+**Observation:** Verifying UI states on pages that require specific database states (like a Project Overview with chapters) is difficult with pure UI automation if the creation flow is complex (e.g., AI-driven).
+**Solution:** Implementing temporary "Test Utility" API endpoints (`app/api/test-utils/`) allows verification scripts to programmatically seed the database with precise states (Empty, Populated, Error), enabling robust visual regression testing without flakiness.
+**Action:** For complex entities, prefer seeding data via API over UI automation for verification.
