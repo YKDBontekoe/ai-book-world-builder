@@ -23,7 +23,8 @@ export async function getBookGenerationForProject({
 			.where(eq(bookGeneration.projectId, projectId));
 
 		return generation ?? null;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to load book generation",
@@ -57,7 +58,8 @@ export async function createBookGeneration({
 			.returning();
 
 		return generation;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to create book generation",
@@ -83,7 +85,8 @@ export async function updateCanvasState({
 			.returning();
 
 		return updated ?? null;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to update canvas state",
@@ -124,7 +127,8 @@ export async function addTaskLogEntry({
 			.returning();
 
 		return updated ?? null;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to add task log entry",

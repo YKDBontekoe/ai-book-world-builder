@@ -9,6 +9,7 @@ import {
   timestamp,
   uuid,
   varchar,
+  index,
 } from "drizzle-orm/pg-core";
 
 import { user } from "./auth";
@@ -38,6 +39,7 @@ export const project = pgTable("Project", {
     columns: [table.forkedFromId],
     foreignColumns: [table.id],
   }),
+  userIdx: index("project_user_idx").on(table.userId),
 }));
 
 export type Project = InferSelectModel<typeof project>;
@@ -59,6 +61,7 @@ export const document = pgTable(
   (table) => {
     return {
       pk: primaryKey({ columns: [table.id, table.createdAt] }),
+      userIdx: index("document_user_idx").on(table.userId),
     };
   }
 );
