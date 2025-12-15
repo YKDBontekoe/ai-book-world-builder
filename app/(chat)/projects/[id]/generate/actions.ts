@@ -16,6 +16,8 @@ import {
 	scene,
 } from "@/lib/db/schema";
 import { runGeneration } from "@/lib/generation";
+import { generateText } from "ai";
+import { openai } from "@ai-sdk/openai";
 
 /**
  * Start a new book generation with the given settings
@@ -540,12 +542,305 @@ export async function getProjectStructure(projectId: string) {
 			scenes: scenes.filter((s) => s.chapterId === ch.id),
 		}));
 
-		return { structure };
+		// Generate text representation for the editor
+		const structureText = structure
+			.map(
+				(ch) =>
+					`Chapter ${ch.sequence}: ${ch.title}\n${ch.scenes
+						.map((s) => `- Scene: ${s.title}`)
+						.join("\n")}`,
+			)
+			.join("\n\n");
+
+		return { structure, structureText };
 	} catch (error) {
 		console.error("Failed to fetch project structure:", error);
 		return { error: "Failed to fetch project structure" };
 	}
 }
+
+/**
+ * Update the project structure based on text input
+ */
+export async function saveProjectStructure(
+	projectId: string,
+	structureText: string,
+) {
+	const session = await auth();
+	if (!session?.user?.id) {
+		return { error: "Authentication required" };
+	}
+
+	try {
+		const project = await getProjectByIdWithAccess({
+			id: projectId,
+			userId: session.user.id,
+		});
+
+		if (!project) {
+			return { error: "Project not found" };
+		}
+
+		if (project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
+		// Ensure we have a volume and outline
+		// For simplicity, we get the first one or create if missing
+		let [outline] = await db.query.outline.findMany({
+			where: (outline, { eq }) => eq(outline.projectId, projectId),
+			limit: 1,
+		});
+
+		// If no outline exists, we need to create one, but we need minimal data
+		if (!outline) {
+			// This is a fallback, ideally outline exists from creation
+			const [newOutline] = await db
+				.insert(schema.outline)
+				.values({
+					projectId,
+					title: "Main Outline",
+					pov: "Third Person", // Defaults
+					tone: "Neutral",
+					pacing: "Moderate",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})
+				.returning();
+			outline = newOutline;
+		}
+
+		let [volume] = await db.query.volume.findMany({
+			where: (volume, { eq }) => eq(volume.projectId, projectId),
+			limit: 1,
+		});
+
+		if (!volume) {
+			const [newVolume] = await db
+				.insert(schema.volume)
+				.values({
+					projectId,
+					outlineId: outline.id,
+					title: "Volume 1",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})
+				.returning();
+			volume = newVolume;
+		}
+
+		// Parse the text
+		// Expected format:
+		// Chapter X: Title
+		// - Scene: Title
+		// or just Title
+		const lines = structureText.split("\n");
+		const newStructure: {
+			title: string;
+			sequence: number;
+			scenes: { title: string; sequence: number }[];
+		}[] = [];
+
+		let currentChapter: (typeof newStructure)[0] | null = null;
+		let chapterSeq = 1;
+		let sceneSeq = 1;
+
+		for (const line of lines) {
+			const trimmed = line.trim();
+			if (!trimmed) continue;
+
+			if (
+				trimmed.toLowerCase().startsWith("chapter") ||
+				(!trimmed.startsWith("-") && !trimmed.startsWith("*"))
+			) {
+				// New Chapter
+				const title = trimmed.replace(/^chapter\s*\d*[:.]?\s*/i, "").trim();
+				currentChapter = {
+					title: title || `Chapter ${chapterSeq}`,
+					sequence: chapterSeq++,
+					scenes: [],
+				};
+				newStructure.push(currentChapter);
+				sceneSeq = 1;
+			} else if (currentChapter && (trimmed.startsWith("-") || trimmed.startsWith("*"))) {
+				// Scene for current chapter
+				const title = trimmed.replace(/^[-*]\s*(scene:?)?\s*/i, "").trim();
+				currentChapter.scenes.push({
+					title: title || `Scene ${sceneSeq}`,
+					sequence: sceneSeq++,
+				});
+			}
+		}
+
+		// Now sync with DB
+		// Strategy: Delete existing structure and recreate?
+		// Risky for content preservation.
+		// Better: Upsert. But matching is hard if titles change.
+		// For now, to support "Bulk Edit", we will map by SEQUENCE.
+		// This implies reordering in text reorders in DB.
+
+		// 1. Get existing chapters
+		const existingChapters = await db.query.chapter.findMany({
+			where: (c, { eq }) => eq(c.projectId, projectId),
+			with: {
+				// Assuming standard Drizzle relation name, otherwise fetch separately
+			},
+		});
+
+		// 2. Loop through new structure and update/create
+		// Logic: Match by TITLE first to preserve ID (and content).
+		const processedChapterIds = new Set<string>();
+
+		for (const newCh of newStructure) {
+			let chapterId: string;
+
+			// Find existing chapter by title
+			const existingCh = existingChapters.find(
+				(c) => c.title.toLowerCase() === newCh.title.toLowerCase()
+			);
+
+			if (existingCh) {
+				// Update sequence if needed
+				await db
+					.update(chapter)
+					.set({
+						sequence: newCh.sequence,
+						updatedAt: new Date(),
+					})
+					.where(eq(chapter.id, existingCh.id));
+				chapterId = existingCh.id;
+				processedChapterIds.add(existingCh.id);
+			} else {
+				// Create new chapter
+				const [created] = await db
+					.insert(chapter)
+					.values({
+						projectId,
+						outlineId: outline.id,
+						volumeId: volume.id,
+						title: newCh.title,
+						sequence: newCh.sequence,
+						status: "planned",
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					})
+					.returning();
+				chapterId = created.id;
+			}
+
+			// Handle Scenes for this chapter
+			const existingScenes = await db.query.scene.findMany({
+				where: (s, { eq }) => eq(s.chapterId, chapterId),
+			});
+
+			const processedSceneIds = new Set<string>();
+
+			for (const newSc of newCh.scenes) {
+				const existingSc = existingScenes.find(
+					(s) => s.title.toLowerCase() === newSc.title.toLowerCase()
+				);
+
+				if (existingSc) {
+					// Update sequence
+					await db
+						.update(scene)
+						.set({
+							sequence: newSc.sequence,
+							updatedAt: new Date(),
+						})
+						.where(eq(scene.id, existingSc.id));
+					processedSceneIds.add(existingSc.id);
+				} else {
+					// Create new scene
+					await db
+						.insert(scene)
+						.values({
+							projectId,
+							chapterId,
+							title: newSc.title,
+							sequence: newSc.sequence,
+							status: "planned",
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						});
+				}
+			}
+
+			// Delete scenes that are NOT in the new structure for this chapter
+			// (Since this is a "Bulk Editor" that reflects the desired state)
+			for (const s of existingScenes) {
+				if (!processedSceneIds.has(s.id)) {
+					// Ideally we might want to archive, but "Editor" implies deletion of removed text.
+					await db.delete(scene).where(eq(scene.id, s.id));
+				}
+			}
+		}
+
+		// Delete chapters not in new structure
+		for (const c of existingChapters) {
+			if (!processedChapterIds.has(c.id)) {
+				// Cascade delete scenes first
+				await db.delete(scene).where(eq(scene.chapterId, c.id));
+				await db.delete(chapter).where(eq(chapter.id, c.id));
+			}
+		}
+
+		revalidatePath(`/projects/${projectId}/generate`);
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to save structure:", error);
+		return { error: "Failed to save structure" };
+	}
+}
+
+/**
+ * Generate content for a scene using AI
+ */
+export async function generateSceneContent(
+	sceneId: string,
+	prompt: string,
+) {
+	const session = await auth();
+	if (!session?.user?.id) {
+		return { error: "Authentication required" };
+	}
+
+	try {
+		// 1. Get Scene & Project
+		const [targetScene] = await db
+			.select()
+			.from(scene)
+			.where(eq(scene.id, sceneId));
+
+		if (!targetScene) return { error: "Scene not found" };
+
+		const project = await getProjectByIdWithAccess({
+			id: targetScene.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project) return { error: "Project not found" };
+
+		// 2. Call AI
+		// Retrieve context (basic implementation for now)
+		const chapterTitle = "Unknown Chapter"; // Ideally fetch from DB relation
+
+		const { text } = await generateText({
+			model: openai("gpt-4o"), // Or use a project setting model
+			system: `You are an expert fiction writer. Write a scene based on the user's prompt.
+					 Context: Project '${project.name}'.
+					 Adhere to the project's tone and style.`,
+			prompt: `Scene ID: ${sceneId}\nPrompt: ${prompt}\n\nWrite the scene content:`,
+		});
+
+		return { success: true, content: text };
+
+	} catch (error) {
+		return { error: "Failed to generate content" };
+	}
+}
+
+import * as schema from "@/lib/db/schema";
 
 /**
  * Update the content of a scene

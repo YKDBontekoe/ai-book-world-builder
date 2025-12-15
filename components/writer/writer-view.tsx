@@ -17,6 +17,9 @@ import { Editor } from "@/components/editor/text-editor";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
 import { AISidebar } from "@/components/writer/tools/ai-sidebar";
+import { StructureEditorDialog } from "@/components/writer/structure-editor-dialog";
+import { AIWriterPanel } from "@/components/writer/ai-writer-panel";
+import { Wand2 } from "lucide-react";
 
 interface WriterViewProps {
   project: Project;
@@ -40,12 +43,14 @@ type Chapter = {
 
 export function WriterView({ project }: WriterViewProps) {
   const [structure, setStructure] = useState<Chapter[] | null>(null);
+  const [structureText, setStructureText] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
   const [sceneContent, setSceneContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSnapshotting, setIsSnapshotting] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [showAIWriter, setShowAIWriter] = useState(false);
 
   // Find the active scene object
   const activeScene = structure
@@ -64,6 +69,9 @@ export function WriterView({ project }: WriterViewProps) {
     const result = await getProjectStructure(project.id);
     if (result.structure) {
       setStructure(result.structure);
+      if (result.structureText) {
+        setStructureText(result.structureText);
+      }
       // Default to first scene of first chapter if available, only if no active scene selected yet
       if (
         !activeSceneId &&
@@ -125,12 +133,17 @@ export function WriterView({ project }: WriterViewProps) {
   return (
     <div className="flex h-full w-full overflow-hidden">
       {/* Left Sidebar: Navigation */}
-      <aside className="w-64 shrink-0 border-r bg-muted/20 backdrop-blur-xl">
+      <aside className="w-64 shrink-0 border-r bg-muted/20 backdrop-blur-xl flex flex-col">
         <div className="p-4 border-b">
           <h2 className="font-semibold mb-1">Outline</h2>
-          <p className="text-xs text-muted-foreground">Select a scene to edit</p>
+          <p className="text-xs text-muted-foreground mb-2">Select a scene to edit</p>
+          <StructureEditorDialog
+            project={project}
+            initialStructureText={structureText}
+            onStructureUpdate={fetchStructure}
+          />
         </div>
-        <ScrollArea className="h-[calc(100vh-100px)]">
+        <ScrollArea className="flex-1">
           {loading ? (
             <div className="flex items-center justify-center p-8">
               <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
@@ -185,21 +198,33 @@ export function WriterView({ project }: WriterViewProps) {
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {activeScene && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 px-2 text-xs"
-                onClick={handleSnapshot}
-                disabled={isSnapshotting}
-                title="Save current state as a chapter version"
-              >
-                {isSnapshotting ? (
-                   <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                ) : (
-                   <History className="mr-1 h-3 w-3" />
-                )}
-                Snapshot
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setShowAIWriter(!showAIWriter)}
+                >
+                  <Wand2 className="mr-1 h-3 w-3" />
+                  AI Assist
+                </Button>
+                <div className="h-4 w-[1px] bg-border mx-1" />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={handleSnapshot}
+                  disabled={isSnapshotting}
+                  title="Save current state as a chapter version"
+                >
+                  {isSnapshotting ? (
+                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                  ) : (
+                    <History className="mr-1 h-3 w-3" />
+                  )}
+                  Snapshot
+                </Button>
+              </>
             )}
             <div className="h-4 w-[1px] bg-border mx-1" />
             {isSaving ? (
@@ -218,6 +243,14 @@ export function WriterView({ project }: WriterViewProps) {
         <div className="flex-1 overflow-y-auto">
           {activeSceneId ? (
             <div className="max-w-3xl mx-auto min-h-full py-8 px-8">
+              {showAIWriter && activeScene && (
+                <AIWriterPanel
+                  sceneId={activeSceneId}
+                  projectId={project.id}
+                  onContentGenerated={(content) => handleContentChange(sceneContent ? sceneContent + "\n" + content : content)}
+                  onClose={() => setShowAIWriter(false)}
+                />
+              )}
               <Editor
                 key={activeSceneId}
                 content={sceneContent}
@@ -235,17 +268,7 @@ export function WriterView({ project }: WriterViewProps) {
           )}
         </div>
       </div>
-
-      {/* Right Sidebar: AI Tools */}
-      {activeScene && (
-        <AISidebar
-          context={`Project: ${project.name}\nChapter: ${
-            structure?.find((c) => c.id === activeScene.chapterId)?.title
-          }\nScene: ${activeScene.title}`}
-          currentText={sceneContent}
-          onInsertText={(text) => handleContentChange(sceneContent + "\n" + text)}
-        />
-      )}
+      {/* AISidebar removed as requested to move away from Chat interface */}
     </div>
   );
 }
