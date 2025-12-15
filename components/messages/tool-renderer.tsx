@@ -1,17 +1,78 @@
 "use client";
 
-import { CreateDocumentRenderer } from "@/components/messages/tools/create-document-renderer";
-import { CreateRelationRenderer } from "@/components/messages/tools/create-relation-renderer";
-import { EntityRenderer } from "@/components/messages/tools/entity-renderer";
-import { GenerationRenderer } from "@/components/messages/tools/generation-renderer";
-import { GenericToolRenderer } from "@/components/messages/tools/generic-tool-renderer";
-import { ProposeManageEntitiesRenderer } from "@/components/messages/tools/propose-manage-entities-renderer";
-import { RequestSuggestionsRenderer } from "@/components/messages/tools/request-suggestions-renderer";
-import { SceneRenderer } from "@/components/messages/tools/scene-renderer";
-import type { ToolRendererProps } from "@/components/messages/tools/types";
-import { UpdateDocumentRenderer } from "@/components/messages/tools/update-document-renderer";
+import dynamic from "next/dynamic";
+import { Skeleton } from "../ui/skeleton";
+import type { ToolRendererProps } from "./tools/types";
 
-const toolRenderers: Record<string, React.FC<ToolRendererProps>> = {
+// Loading fallback for tools
+const ToolSkeleton = () => <Skeleton className="h-32 w-full" />;
+
+// Dynamically import tool renderers to reduce initial bundle size
+const CreateDocumentRenderer = dynamic(
+	() =>
+		import("./tools/create-document-renderer").then(
+			(mod) => mod.CreateDocumentRenderer,
+		),
+	{ loading: ToolSkeleton },
+);
+
+const CreateRelationRenderer = dynamic(
+	() =>
+		import("./tools/create-relation-renderer").then(
+			(mod) => mod.CreateRelationRenderer,
+		),
+	{ loading: ToolSkeleton },
+);
+
+const EntityRenderer = dynamic(
+	() => import("./tools/entity-renderer").then((mod) => mod.EntityRenderer),
+	{ loading: ToolSkeleton },
+);
+
+const GenerationRenderer = dynamic(
+	() =>
+		import("./tools/generation-renderer").then((mod) => mod.GenerationRenderer),
+	{ loading: ToolSkeleton },
+);
+
+const GenericToolRenderer = dynamic(
+	() =>
+		import("./tools/generic-tool-renderer").then(
+			(mod) => mod.GenericToolRenderer,
+		),
+	{ loading: ToolSkeleton },
+);
+
+const ProposeManageEntitiesRenderer = dynamic(
+	() =>
+		import("./tools/propose-manage-entities-renderer").then(
+			(mod) => mod.ProposeManageEntitiesRenderer,
+		),
+	{ loading: ToolSkeleton },
+);
+
+const RequestSuggestionsRenderer = dynamic(
+	() =>
+		import("./tools/request-suggestions-renderer").then(
+			(mod) => mod.RequestSuggestionsRenderer,
+		),
+	{ loading: ToolSkeleton },
+);
+
+const SceneRenderer = dynamic(
+	() => import("./tools/scene-renderer").then((mod) => mod.SceneRenderer),
+	{ loading: ToolSkeleton },
+);
+
+const UpdateDocumentRenderer = dynamic(
+	() =>
+		import("./tools/update-document-renderer").then(
+			(mod) => mod.UpdateDocumentRenderer,
+		),
+	{ loading: ToolSkeleton },
+);
+
+const toolRenderers: Record<string, React.ComponentType<ToolRendererProps>> = {
 	"tool-createDocument": CreateDocumentRenderer,
 	"tool-updateDocument": UpdateDocumentRenderer,
 	"tool-requestSuggestions": RequestSuggestionsRenderer,

@@ -1,8 +1,41 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ToolRenderer } from "@/components/messages/tool-renderer";
+import { ToolRenderer } from "../../../../components/messages/tool-renderer";
+
+vi.mock("next/dynamic", async () => {
+	const React = await import("react");
+	return {
+		default: (loader: () => Promise<any>, options: any) => {
+			const DynamicComponent = (props: any) => {
+				const [Component, setComponent] = React.useState<any>(null);
+
+				React.useEffect(() => {
+					let mounted = true;
+					loader().then((component) => {
+						if (mounted) {
+							setComponent(() => component);
+						}
+					});
+					return () => {
+						mounted = false;
+					};
+				}, []);
+
+				if (!Component) {
+					return options?.loading ? <options.loading /> : null;
+				}
+				return <Component {...props} />;
+			};
+			return DynamicComponent;
+		},
+	};
+});
 
 // Mock the child components
+vi.mock("../../../../components/ui/skeleton", () => ({
+	Skeleton: () => <div data-testid="skeleton">Skeleton</div>,
+}));
+
 vi.mock("@/components/document/document-preview", () => ({
 	DocumentPreview: ({ result }: any) => (
 		<div data-testid="document-preview">{result.title}</div>
@@ -42,7 +75,7 @@ vi.mock("@/components/chat/widgets/generation-widget", () => ({
 }));
 
 describe("ToolRenderer", () => {
-	it("renders DocumentPreview for tool-createDocument", () => {
+	it("renders DocumentPreview for tool-createDocument", async () => {
 		const part = {
 			type: "tool-createDocument",
 			toolCallId: "call_123",
@@ -54,12 +87,12 @@ describe("ToolRenderer", () => {
 
 		render(<ToolRenderer part={part} isReadonly={false} />);
 
-		expect(screen.getByTestId("document-preview")).toHaveTextContent(
-			"Test Doc",
-		);
+		expect(
+			await screen.findByTestId("document-preview", {}, { timeout: 3000 }),
+		).toHaveTextContent("Test Doc");
 	});
 
-	it("renders GenericTool for unknown tool", () => {
+	it("renders GenericTool for unknown tool", async () => {
 		const part = {
 			type: "tool-unknownTool",
 			toolCallId: "call_456",
@@ -71,7 +104,9 @@ describe("ToolRenderer", () => {
 
 		render(<ToolRenderer part={part} isReadonly={false} />);
 
-		expect(screen.getByTestId("generic-tool")).toHaveTextContent("unknownTool");
+		expect(
+			await screen.findByTestId("generic-tool", {}, { timeout: 3000 }),
+		).toHaveTextContent("unknownTool");
 	});
 
 	it("returns null for non-tool parts", () => {
