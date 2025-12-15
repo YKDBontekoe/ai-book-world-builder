@@ -15,3 +15,7 @@ export interface ToolRendererProps {
 	part: MessagePart;
 	isReadonly: boolean;
 }
+
+export function isToolPart(part: MessagePart): part is ToolMessagePart & MessagePart {
+	return part.type.startsWith("tool-");
+}

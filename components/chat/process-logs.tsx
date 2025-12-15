@@ -8,15 +8,11 @@ import {
 	TerminalIcon,
 } from "lucide-react";
 import { useState } from "react";
+import type { ProcessLog } from "@/lib/types";
 import { springs } from "../../lib/animations";
 import { cn } from "../../lib/utils";
 
-export type ProcessLog = {
-	type: "tool-log";
-	message: string;
-	tool: string;
-	timestamp: number;
-};
+export type { ProcessLog };
 
 export function ProcessLogs({ logs }: { logs: ProcessLog[] }) {
 	const [isExpanded, setIsExpanded] = useState(false);

@@ -1,4 +1,4 @@
-import type { InferUITool, UIMessage } from "ai";
+import type { DataUIPart, InferUITool, UIMessage } from "ai";
 import { z } from "zod";
 import type { ArtifactKind } from "@/components/artifact/types";
 import type { analyzeCharacter } from "./ai/tools/analyze-character";
@@ -34,7 +34,18 @@ import type { updateSceneCards } from "./ai/tools/update-scene-cards";
 import type { Suggestion } from "./db/schema";
 import type { AppUsage } from "./usage";
 
-export type DataPart = { type: "append-message"; message: string };
+export type ProcessLog = {
+	type: "tool-log";
+	message: string;
+	tool: string;
+	timestamp: number;
+};
+
+// DataPart includes standard DataUIParts (derived from CustomUIDataTypes) and custom parts
+export type DataPart =
+  | DataUIPart<CustomUIDataTypes>
+  | { type: "append-message"; message: string }
+  | ProcessLog;
 
 export const messageMetadataSchema = z.object({
 	createdAt: z.string(),
