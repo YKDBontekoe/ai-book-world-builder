@@ -1,9 +1,6 @@
-## 2024-05-22 - [IDOR in Generation Endpoints]
-**Vulnerability:** API endpoints (`/api/generations/[id]/run`) used direct `db.select()` on `bookGeneration` without verifying `project.userId`, allowing users to run generations on public projects owned by others.
-**Learning:** `getProjectByIdWithAccess` permits `public` visibility, which is unsafe for "write/execute" actions (like running an LLM generation). The `bookGeneration` table does not have a `userId` column, necessitating a JOIN with `project`.
-**Prevention:** Always verify `project.userId === session.user.id` for any action that consumes resources or modifies state, even if the resource is "public". Prefer `innerJoin(project)` to strictly enforce ownership in queries.
+# Sentinel Journal
 
-## 2025-12-14 - Missing Auth Check in Server Actions
-**Vulnerability:** `getScenesData` server action lacked authentication and authorization checks, allowing IDOR.
-**Learning:** Server Actions with `"use server"` are public endpoints. `getScenesData` was completely exposed. Imports like `getProjectByIdWithAccess` must be used explicitly.
-**Prevention:** Audit all exported `"use server"` functions for `auth()` and ownership verification.
+## 2025-02-18 - [AI Tool IDOR Vulnerability]
+**Vulnerability:** AI Tools (like `draft-scene`) were using `projectId` for context fetching but failing to verify that the user owned the project. Furthermore, they blindly trusted that dependent IDs (like `sceneId`) belonged to the authorized `projectId`.
+**Learning:** AI Tools are often treated as trusted internal functions, but when exposed to user prompts, they are effectively public API endpoints and require the same rigorous authorization checks as Server Actions.
+**Prevention:** Every AI Tool `execute` function must start with explicit ownership verification of the primary resource (Project) and validate that all secondary resources (Scenes, Chapters) belong to that Project.
