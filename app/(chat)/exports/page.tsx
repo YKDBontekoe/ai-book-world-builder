@@ -6,7 +6,8 @@ import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { GlassCard } from "@/components/ui/glass-card";
 import { getExportsForUser } from "@/lib/db/queries/book-export";
 import { DeleteExportButton } from "./delete-export-button";
 
@@ -28,23 +29,21 @@ export default async function ExportsPage() {
 			/>
 
 			{exports.length === 0 ? (
-				<Card>
-					<CardContent className="flex flex-col items-center justify-center py-12">
-						<BookOpen className="size-12 text-muted-foreground mb-4" />
-						<h3 className="text-lg font-medium mb-2">No exports yet</h3>
-						<p className="text-muted-foreground text-sm text-center mb-4">
-							Export your books from the project page to see them here.
-						</p>
+				<EmptyState
+					title="No exports yet"
+					description="Export your books from the project page to see them here."
+					icon={BookOpen}
+					action={
 						<Button asChild>
 							<Link href="/">Go to Projects</Link>
 						</Button>
-					</CardContent>
-				</Card>
+					}
+				/>
 			) : (
 				<div className="grid gap-4">
 					{exports.map((exportItem) => (
-						<Card key={exportItem.id}>
-							<CardHeader className="flex flex-row items-center justify-between gap-4">
+						<GlassCard key={exportItem.id} variant="liquid">
+							<div className="flex flex-row items-center justify-between gap-4">
 								<div className="flex items-center gap-4">
 									{exportItem.format === "pdf" ? (
 										<FileText className="size-8 text-red-500" />
@@ -52,9 +51,9 @@ export default async function ExportsPage() {
 										<BookOpen className="size-8 text-blue-500" />
 									)}
 									<div>
-										<CardTitle className="text-base">
+										<h3 className="font-semibold text-base">
 											{exportItem.projectName}
-										</CardTitle>
+										</h3>
 										<div className="flex items-center gap-2 mt-1">
 											<Badge variant="outline">
 												{exportItem.format.toUpperCase()}
@@ -88,13 +87,13 @@ export default async function ExportsPage() {
 									)}
 									<DeleteExportButton exportId={exportItem.id} />
 								</div>
-							</CardHeader>
+							</div>
 							{exportItem.error && (
-								<CardContent>
+								<div className="mt-4 border-t pt-4 border-border/50">
 									<p className="text-destructive text-sm">{exportItem.error}</p>
-								</CardContent>
+								</div>
 							)}
-						</Card>
+						</GlassCard>
 					))}
 				</div>
 			)}

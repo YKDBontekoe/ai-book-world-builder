@@ -31,3 +31,8 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 ## 2025-05-25 - Actionable Empty States
 **Observation:** The "Projects" page empty state was a dead end, informing the user of zero projects but providing no path to create one.
 **Recommendation:** Always include a primary CTA (Call to Action) in Empty States to guide the user to the next step, converting a "dead end" into a "starting point".
+
+## 2025-05-26 - Exports Page Polish & Consistency
+- **Visual Consistency (GlassCard)**: Migrated the Exports list to use `GlassCard` (variant `liquid`) to match the Projects page. This reinforces the "Native macOS" aesthetic across routes.
+- **Graceful Loading (Skeletons)**: Added `loading.tsx` to the Exports route. Mirroring the exact structure of `page.tsx` (PageHeader + Grid) prevents layout shifts and improves perceived performance.
+- **Empty State Standardization**: Refactored custom "No exports" cards to use the system `EmptyState` component. This ensures all empty states have consistent iconography, spacing, and clear CTAs.

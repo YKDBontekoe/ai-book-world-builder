@@ -112,8 +112,8 @@ export default async function ProjectsPage() {
 				<TabsContent value="shared" className="mt-6">
 					{sharedProjects.length === 0 ? (
 						<EmptyState
-							title="No shared projects"
-							description="Explore projects shared by the community here."
+							title="No community projects"
+							description="Projects shared by the community will appear here. Be the first to share your work by making a project public!"
 							icon={Globe}
 						/>
 					) : (
