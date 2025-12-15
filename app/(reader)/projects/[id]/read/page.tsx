@@ -6,6 +6,8 @@ import {
 } from "@/lib/db/queries";
 import { ReaderView } from "@/components/reader/reader-view";
 
+export const dynamic = "force-dynamic";
+
 export default async function ReaderPage({
   params,
 }: {
