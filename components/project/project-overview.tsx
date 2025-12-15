@@ -81,6 +81,10 @@ export function ProjectOverview({ project, isOwner, chapters }: ProjectOverviewP
                Fork Project
              </Button>
           )}
+          <Button variant="secondary" onClick={() => router.push(`/projects/${project.id}/read`)}>
+            <BookOpen className="mr-2 h-4 w-4" />
+            Read Book
+          </Button>
         </div>
       </div>
 

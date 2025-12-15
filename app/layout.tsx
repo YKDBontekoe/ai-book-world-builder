@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 
 import "./globals.css";
 import { QueryProvider } from "@/components/providers/query-provider";
+import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
 import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
@@ -83,7 +84,10 @@ export default function RootLayout({
 				>
 					<Toaster position="top-center" />
 					<SessionProvider>
-						<QueryProvider>{children}</QueryProvider>
+						<QueryProvider>
+							<ServiceWorkerRegister />
+							{children}
+						</QueryProvider>
 					</SessionProvider>
 				</ThemeProvider>
 			</body>
