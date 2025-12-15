@@ -15,7 +15,8 @@ export async function getScenesForChapter({
 			.from(scene)
 			.where(eq(scene.chapterId, chapterId))
 			.orderBy(asc(scene.sequence));
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError("bad_request:database", "Failed to load scenes");
 	}
 }
@@ -31,7 +32,8 @@ export async function getScenesForProject({
 			.from(scene)
 			.where(eq(scene.projectId, projectId))
 			.orderBy(asc(scene.sequence));
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to load project scenes",
@@ -70,7 +72,8 @@ export async function createScene({
 			.returning();
 
 		return created;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError("bad_request:database", "Failed to create scene");
 	}
 }
@@ -112,7 +115,8 @@ export async function updateScene({
 		}
 
 		return updated;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError("bad_request:database", "Failed to update scene");
 	}
 }
@@ -138,7 +142,8 @@ export async function updateSceneContent({
 			.returning();
 
 		return updated ?? null;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to update scene content",
@@ -158,7 +163,8 @@ export async function getSceneCardForScene({
 			.where(eq(sceneCard.sceneId, sceneId));
 
 		return card ?? null;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError("bad_request:database", "Failed to load scene card");
 	}
 }
@@ -203,7 +209,8 @@ export async function createSceneCard({
 			.returning();
 
 		return created;
-	} catch (_error) {
+	} catch (error) {
+		console.error(error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to create scene card",
