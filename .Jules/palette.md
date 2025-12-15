@@ -23,3 +23,7 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 - **Liquid Glass:** Enhancing the standard glass card with `backdrop-blur-[30px]`, `bg-glass/50`, and a softer border creates a much more "premium" feel than standard `backdrop-blur-md` with solid borders. The key is reducing opacity and increasing blur radius.
 - **Layout Breathing Room:** Increasing padding from `p-6` to `p-12` and grid gaps from `4` to `8` significantly improves the "Professional" perception, reducing visual clutter.
 - **Semantic Colors:** Shifting the primary accent from "SaaS Blue" to a "Creative Violet" (`hsl(262, 80%, 60%)`) aligns better with the "World Builder" persona, making the UI feel distinct and branded rather than generic.
+
+## 2025-05-25 - Actionable Empty States
+**Observation:** The "Projects" page empty state was a dead end, informing the user of zero projects but providing no path to create one.
+**Recommendation:** Always include a primary CTA (Call to Action) in Empty States to guide the user to the next step, converting a "dead end" into a "starting point".
