@@ -5,10 +5,10 @@ import {
   getProjectByIdWithAccess,
 } from "@/lib/db/queries";
 import { ReaderView } from "@/components/reader/reader-view";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
-export const dynamic = "force-dynamic";
-
-export default async function ReaderPage({
+async function ReaderContent({
   params,
 }: {
   params: Promise<{ id: string }>;
@@ -34,5 +34,23 @@ export default async function ReaderPage({
       chapters={chapters}
       userId={userId}
     />
+  );
+}
+
+export default function ReaderPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen w-screen items-center justify-center bg-background text-muted-foreground">
+          <Loader2 className="h-6 w-6 animate-spin" />
+        </div>
+      }
+    >
+      <ReaderContent params={params} />
+    </Suspense>
   );
 }
