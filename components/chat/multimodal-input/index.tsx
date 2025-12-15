@@ -2,9 +2,8 @@
 
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { ArrowUpIcon } from "lucide-react";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useMemo } from "react";
 import { toast } from "sonner";
-import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { Context } from "@/components/elements/context";
 import {
@@ -14,7 +13,7 @@ import {
 	PromptInputToolbar,
 	PromptInputTools,
 } from "@/components/elements/prompt-input";
-import { useFileAttachments } from "@/hooks/use-file-attachments";
+import { useMultimodalInput } from "@/hooks/use-multimodal-input";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
@@ -51,105 +50,23 @@ function PureMultimodalInput({
 	availableModels: ChatModel[];
 	projectId?: string | null;
 }) {
-	const [input, setInput] = useState("");
-	const textareaRef = useRef<HTMLTextAreaElement>(null);
-	const { width } = useWindowSize();
-
-	const [localStorageInput, setLocalStorageInput] = useLocalStorage(
-		"input",
-		"",
-	);
-
-	useEffect(() => {
-		if (textareaRef.current) {
-			const domValue = textareaRef.current.value;
-			// Prefer DOM value over localStorage to handle hydration
-			const finalValue = domValue || localStorageInput || "";
-			setInput(finalValue);
-		}
-		// Only run once after hydration
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [localStorageInput]);
-
-	useEffect(() => {
-		setLocalStorageInput(input);
-	}, [input, setLocalStorageInput]);
-
-	const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setInput(event.target.value);
-	};
-
-	const fileInputRef = useRef<HTMLInputElement>(null);
-
 	const {
+		input,
+		handleInput,
 		attachments,
-		setAttachments,
 		uploadQueue,
 		handleFileChange,
-		handlePaste,
-	} = useFileAttachments({ projectId });
-
-	const submitForm = useCallback(() => {
-		sendMessage({
-			role: "user",
-			parts: [
-				...attachments.map((attachment) => ({
-					type: "file" as const,
-					url: attachment.url,
-					name: attachment.name,
-					mediaType: attachment.contentType,
-				})),
-				{
-					type: "text",
-					text: input,
-				},
-			],
-		});
-
-		setAttachments([]);
-		setLocalStorageInput("");
-		setInput("");
-
-		if (width && width > 768) {
-			textareaRef.current?.focus();
-		}
-	}, [
-		input,
-		attachments,
-		sendMessage,
-		setAttachments,
-		setLocalStorageInput,
-		width,
-	]);
+		submitForm,
+		textareaRef,
+		fileInputRef,
+		onRemoveAttachment,
+	} = useMultimodalInput({ projectId, sendMessage });
 
 	const contextProps = useMemo(
 		() => ({
 			usage,
 		}),
 		[usage],
-	);
-
-	// Add paste event listener to textarea
-	useEffect(() => {
-		const textarea = textareaRef.current;
-		if (!textarea) {
-			return;
-		}
-
-		textarea.addEventListener("paste", handlePaste);
-		return () => textarea.removeEventListener("paste", handlePaste);
-	}, [handlePaste]);
-
-	const onRemoveAttachment = useCallback(
-		(url: string) => {
-			setAttachments((currentAttachments) =>
-				currentAttachments.filter((a) => a.url !== url),
-			);
-			if (fileInputRef.current) {
-				fileInputRef.current.value = "";
-			}
-		},
-		[setAttachments],
 	);
 
 	return (

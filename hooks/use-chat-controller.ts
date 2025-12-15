@@ -2,18 +2,17 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { DefaultChatTransport } from "ai";
 import { useEffect, useRef, useState } from "react";
 import { useSetDataStream } from "@/components/chat/data-stream-provider";
-import type { ProcessLog } from "@/components/chat/process-logs";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { toast } from "@/components/ui/toast";
+import { createChatTransport } from "@/lib/ai/chat-transport";
 import type { ChatModelId } from "@/lib/ai/models";
 import { ChatSDKError } from "@/lib/errors";
 import { QUERY_KEYS } from "@/lib/query-options";
-import type { ChatMessage } from "@/lib/types";
+import type { ChatMessage, DataPart, ProcessLog } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
-import { fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
+import { generateUUID } from "@/lib/utils";
 
 interface UseChatControllerProps {
 	id: string;
@@ -59,26 +58,19 @@ export function useChatController({
 		messages: initialMessages,
 		experimental_throttle: 100,
 		generateId: generateUUID,
-		transport: new DefaultChatTransport({
-			api: "/api/chat",
-			fetch: fetchWithErrorHandlers,
-			prepareSendMessagesRequest(request) {
-				return {
-					body: {
-						id: request.id,
-						message: request.messages.at(-1),
-						projectId: selectedProjectIdRef.current,
-						selectedChatModel: currentModelIdRef.current,
-						selectedVisibilityType: visibilityType,
-						...request.body,
-					},
-				};
-			},
+		transport: createChatTransport({
+			getProjectId: () => selectedProjectIdRef.current,
+			getModelId: () => currentModelIdRef.current,
+			getVisibilityType: () => visibilityType,
 		}),
-		onData: (dataPart) => {
-			setDataStream((ds) => (ds ? [...ds, dataPart] : []));
-			if (dataPart.type === "data-usage") {
-				setUsage(dataPart.data);
+		onData: (dataPart: unknown) => {
+			// Cast safely or validate
+			const part = dataPart as DataPart;
+
+			setDataStream((ds) => (ds ? [...ds, part] : []));
+
+			if (part.type === "data-usage") {
+				setUsage(part.data);
 
 				setMessages((prevMessages) => {
 					const lastMessage = prevMessages.at(-1);
@@ -86,15 +78,13 @@ export function useChatController({
 						const newMessages = [...prevMessages];
 						newMessages[newMessages.length - 1] = {
 							...lastMessage,
-							usage: dataPart.data as AppUsage,
+							usage: part.data,
 						};
 						return newMessages;
 					}
 					return prevMessages;
 				});
-			}
-			const part = dataPart as any;
-			if (part.type === "tool-log") {
+			} else if (part.type === "tool-log") {
 				setProcessLogs((prev) => [
 					...prev,
 					{ ...part, timestamp: Date.now() } as ProcessLog,

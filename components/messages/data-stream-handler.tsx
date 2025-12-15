@@ -1,9 +1,11 @@
 "use client";
 
+import type { DataUIPart } from "ai";
 import { useEffect } from "react";
 import { artifactDefinitions } from "@/components/artifact/definitions";
 import { useDataStream } from "@/components/chat/data-stream-provider";
 import { initialArtifactData, useArtifact } from "@/hooks/use-artifact";
+import type { CustomUIDataTypes } from "@/lib/types";
 
 export function DataStreamHandler() {
   const { dataStream, setDataStream } = useDataStream();
@@ -19,6 +21,13 @@ export function DataStreamHandler() {
     setDataStream([]);
 
     for (const delta of newDeltas) {
+      if (delta.type === 'tool-log' || delta.type === 'append-message') {
+        continue;
+      }
+
+      // Safe cast as we filtered out custom parts
+      const dataPart = delta as DataUIPart<CustomUIDataTypes>;
+
       const artifactDefinition = artifactDefinitions.find(
         (currentArtifactDefinition) =>
           currentArtifactDefinition.kind === artifact.kind
@@ -26,7 +35,7 @@ export function DataStreamHandler() {
 
       if (artifactDefinition?.onStreamPart) {
         artifactDefinition.onStreamPart({
-          streamPart: delta,
+          streamPart: dataPart,
           setArtifact,
           setMetadata,
         });
@@ -37,25 +46,25 @@ export function DataStreamHandler() {
           return { ...initialArtifactData, status: "streaming" };
         }
 
-        switch (delta.type) {
+        switch (dataPart.type) {
           case "data-id":
             return {
               ...draftArtifact,
-              documentId: delta.data,
+              documentId: dataPart.data,
               status: "streaming",
             };
 
           case "data-title":
             return {
               ...draftArtifact,
-              title: delta.data,
+              title: dataPart.data,
               status: "streaming",
             };
 
           case "data-kind":
             return {
               ...draftArtifact,
-              kind: delta.data,
+              kind: dataPart.data,
               status: "streaming",
             };
 

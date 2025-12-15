@@ -5,8 +5,6 @@ import equal from "fast-deep-equal";
 import { motion } from "framer-motion";
 import { SparklesIcon } from "lucide-react";
 import { memo, useState } from "react";
-import { PreviewAttachment } from "@/components/chat/preview-attachment";
-import { MessageContent } from "@/components/elements/message";
 import { Response } from "@/components/elements/response";
 import { MessageActions } from "@/components/messages/message-actions";
 import { MessageEditor } from "@/components/messages/message-editor";
@@ -14,10 +12,12 @@ import { MessageReasoning } from "@/components/messages/message-reasoning";
 import { MessageStreamingSources } from "@/components/messages/message-streaming-sources";
 import { MessageUsage } from "@/components/messages/message-usage";
 import { ToolRenderer } from "@/components/messages/tool-renderer";
+import { isToolPart } from "@/components/messages/tools/types";
 import { springs } from "@/lib/animations";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
+import { MessageAttachments, MessageBubble } from "./message-ui";
 
 const PurePreviewMessage = ({
 	chatId,
@@ -44,6 +44,14 @@ const PurePreviewMessage = ({
 
 	const attachmentsFromMessage =
 		message.parts?.filter((part) => part.type === "file") ?? [];
+
+	// Helper to extract attachments correctly typed
+	const attachments = attachmentsFromMessage.map(a => ({
+		url: a.url,
+		filename: a.filename,
+		mediaType: a.mediaType,
+		// Removed incorrect contentType access
+	}));
 
 	return (
 		<div
@@ -78,47 +86,14 @@ const PurePreviewMessage = ({
 							message.role === "user" && mode !== "edit",
 					})}
 				>
-					{attachmentsFromMessage.length > 0 && (
-						<div
-							className="flex flex-row justify-end gap-2"
-							data-testid={"message-attachments"}
-						>
-							{attachmentsFromMessage.map((attachment) => (
-								<PreviewAttachment
-									attachment={{
-										name: attachment.filename ?? "file",
-										contentType: attachment.mediaType,
-										url: attachment.url,
-									}}
-									key={attachment.url}
-								/>
-							))}
-						</div>
-					)}
+					<MessageAttachments attachments={attachments} />
 
 					{(!message.parts || message.parts.length === 0) &&
 						message.content && (
 							<div key={`message-${message.id}-content`}>
-								<MessageContent
-									className={cn("shadow-sm", {
-										"w-fit break-words rounded-[20px] rounded-br-sm px-5 py-2.5 text-base leading-relaxed text-left text-white":
-											message.role === "user",
-										"w-fit break-words rounded-[20px] rounded-bl-sm px-5 py-2.5 text-base leading-relaxed text-left bg-muted text-foreground":
-											message.role === "assistant",
-									})}
-									data-testid="message-content"
-									style={
-										message.role === "user"
-											? {
-													backgroundImage:
-														"linear-gradient(to top left, hsl(212 95% 48%), hsl(220 90% 58%))",
-													boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
-												}
-											: undefined
-									}
-								>
+								<MessageBubble role={message.role}>
 									<Response>{sanitizeText(message.content)}</Response>
-								</MessageContent>
+								</MessageBubble>
 							</div>
 						)}
 
@@ -140,26 +115,9 @@ const PurePreviewMessage = ({
 							if (mode === "view") {
 								return (
 									<div key={key}>
-										<MessageContent
-											className={cn("shadow-sm", {
-												"w-fit break-words rounded-[20px] rounded-br-sm px-5 py-2.5 text-base leading-relaxed text-left text-white":
-													message.role === "user",
-												"w-fit break-words rounded-[20px] rounded-bl-sm px-5 py-2.5 text-base leading-relaxed text-left bg-muted text-foreground":
-													message.role === "assistant",
-											})}
-											data-testid="message-content"
-											style={
-												message.role === "user"
-													? {
-															backgroundImage:
-																"linear-gradient(to top left, hsl(212 95% 48%), hsl(220 90% 58%))",
-															boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
-														}
-													: undefined
-											}
-										>
+										<MessageBubble role={message.role}>
 											<Response>{sanitizeText(part.text)}</Response>
-										</MessageContent>
+										</MessageBubble>
 									</div>
 								);
 							}
@@ -185,8 +143,8 @@ const PurePreviewMessage = ({
 							}
 						}
 
-						if (type.startsWith("tool-")) {
-							const toolCallId = (part as any).toolCallId;
+						if (isToolPart(part)) {
+							const toolCallId = part.toolCallId;
 							return (
 								<ToolRenderer
 									key={toolCallId || key}
