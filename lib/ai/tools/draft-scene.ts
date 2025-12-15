@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   addTaskLogEntry,
   getBookGenerationForProject,
+  getProjectByIdWithAccess,
   getSceneCardForScene,
   getScenesForChapter,
   updateSceneContent,
@@ -31,6 +32,16 @@ export const draftScene = ({ session }: { session: Session | null }) =>
         }
         if (!session?.user) return { error: "Authentication required." };
 
+        // Verify Project Ownership
+        const project = await getProjectByIdWithAccess({
+          id: projectId,
+          userId: session.user.id,
+        });
+
+        if (!project || project.userId !== session.user.id) {
+          return { error: "Unauthorized access to project." };
+        }
+
         const generation = await getBookGenerationForProject({ projectId });
 
         if (!generation) return { error: "Book generation not initialized." };
@@ -39,6 +50,11 @@ export const draftScene = ({ session }: { session: Session | null }) =>
         const currentScene = scenes.find((s) => s.id === sceneId);
 
         if (!currentScene) return { error: "Scene not found in chapter." };
+
+        // Verify Scene belongs to Project
+        if (currentScene.projectId !== projectId) {
+          return { error: "Scene validation failed." };
+        }
 
         // Get Scene Card Data
         const sceneCard = await getSceneCardForScene({ sceneId });
