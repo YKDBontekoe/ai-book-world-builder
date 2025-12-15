@@ -179,6 +179,7 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 									}
 									placeholder="Name"
 									className="h-7 text-xs flex-1"
+									aria-label={`Attribute ${i + 1} Name`}
 								/>
 								<Input
 									value={attr.value}
@@ -187,12 +188,18 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 									}
 									placeholder="Value"
 									className="h-7 text-xs flex-1"
+									aria-label={`Attribute ${i + 1} Value`}
 								/>
 								<Button
 									variant="ghost"
 									size="icon"
 									className="h-7 w-7 text-muted-foreground hover:text-destructive"
 									onClick={() => handleRemoveAttribute(i)}
+									aria-label={
+										attr.name
+											? `Remove attribute ${attr.name}`
+											: "Remove attribute"
+									}
 								>
 									<X size={12} />
 								</Button>
