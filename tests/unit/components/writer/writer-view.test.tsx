@@ -8,8 +8,18 @@ vi.mock("../../../../components/writer/left-sidebar/scene-navigation", () => ({
   SceneNavigation: () => <div data-testid="scene-navigation">Scene Navigation</div>
 }));
 
-vi.mock("../../../../components/writer/right-sidebar/book-canvas", () => ({
+vi.mock("../../../../components/book-canvas/book-canvas", () => ({
   BookCanvas: () => <div data-testid="book-canvas">Book Canvas</div>
+}));
+
+vi.mock("../../../../components/book-canvas/book-canvas-context", () => ({
+  useBookCanvasActions: () => ({
+    setProjectId: vi.fn(),
+    setActiveSceneId: vi.fn()
+  }),
+  useBookCanvasValue: () => ({
+    activeSceneId: null
+  })
 }));
 
 vi.mock("../../../../components/writer/structure-editor-dialog", () => ({

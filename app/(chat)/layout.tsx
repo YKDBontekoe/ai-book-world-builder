@@ -21,7 +21,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 							<div className="flex flex-1 flex-col transition-all duration-300 ease-in-out">
 								{children}
 							</div>
-							<BookCanvas />
 						</SidebarWrapper>
 					</Suspense>
 				</DataStreamProvider>
