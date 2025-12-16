@@ -10,14 +10,7 @@ import {
 	Play,
 	Square,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
-import { toast } from "sonner";
-import {
-	cancelGeneration,
-	getGenerationStatus,
-	pauseGeneration,
-	resumeGeneration,
-} from "../../app/(chat)/projects/[id]/generate/actions";
+import { useState } from "react";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
@@ -29,6 +22,7 @@ import { SectionHeader } from "../ui/section-header";
 import { StatusBadge } from "../ui/status-badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { cn } from "../../lib/utils";
+import { useGenerationDashboard, type GenerationStep } from "../../hooks/use-generation-dashboard";
 
 interface GenerationDashboardProps {
 	projectId: string;
@@ -36,159 +30,27 @@ interface GenerationDashboardProps {
 	onComplete?: () => void;
 }
 
-type StepStatus = "pending" | "running" | "completed" | "failed" | "paused";
-
-interface GenerationStep {
-	id: string;
-	sequence: number;
-	stepType: string;
-	status: StepStatus;
-	chapterId?: string | null;
-	wordCount?: number | null;
-	agentOutput?: string | null;
-	reviewFeedback?: string | null;
-}
-
-interface GenerationAsset {
-	id: string;
-	assetType: string;
-	content?: string | null;
-}
-
 export function GenerationDashboard({
 	projectId,
 	generationId,
 	onComplete,
 }: GenerationDashboardProps) {
-	const [isLoading, setIsLoading] = useState(true);
-	const [isPaused, setIsPaused] = useState(false);
-	const [generationStatus, setGenerationStatus] = useState<string>("idle");
-	const [steps, setSteps] = useState<GenerationStep[]>([]);
-	const [assets, setAssets] = useState<GenerationAsset[]>([]);
+	const {
+		isLoading,
+		isPaused,
+		generationStatus,
+		steps,
+		assets,
+		error,
+		isExporting,
+		handlePause,
+		handleResume,
+		handleCancel,
+		handleExport,
+	} = useGenerationDashboard(projectId, generationId, onComplete);
+
 	const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
 	const [selectedStepId, setSelectedStepId] = useState<string | null>(null);
-	const [error, setError] = useState<string | null>(null);
-	const [isExporting, setIsExporting] = useState(false);
-
-	// Fetch generation data
-	const fetchData = useCallback(async () => {
-		if (!generationId) return;
-
-		try {
-			const result = await getGenerationStatus(generationId);
-			if (result.error) {
-				setError(result.error);
-				return;
-			}
-
-			if (result.generation) {
-				setGenerationStatus(result.generation.status);
-				setIsPaused(result.generation.status === "paused");
-
-				if (result.generation.status === "completed") {
-					onComplete?.();
-				}
-			}
-
-			if (result.steps) {
-				setSteps(
-					result.steps.map((s) => ({
-						id: s.id,
-						sequence: s.sequence,
-						stepType: s.stepType,
-						status: s.status as StepStatus,
-						chapterId: s.chapterId,
-						wordCount: s.wordCount,
-						agentOutput: s.agentOutput,
-						reviewFeedback: s.reviewFeedback,
-					})),
-				);
-			}
-
-			if (result.assets) {
-				setAssets(
-					result.assets.map((a) => ({
-						id: a.id,
-						assetType: a.assetType,
-						content: a.content,
-					})),
-				);
-			}
-
-			setIsLoading(false);
-		} catch (_err) {
-			setError("Failed to fetch generation status");
-			setIsLoading(false);
-		}
-	}, [generationId, onComplete]);
-
-	// Poll for updates every 2 seconds
-	useEffect(() => {
-		fetchData();
-
-		const interval = setInterval(() => {
-			if (generationStatus !== "completed" && generationStatus !== "failed") {
-				fetchData();
-			}
-		}, 2000);
-
-		return () => clearInterval(interval);
-	}, [fetchData, generationStatus]);
-
-	const handlePause = async () => {
-		if (!generationId) return;
-		const result = await pauseGeneration(generationId);
-		if (result.success) {
-			setIsPaused(true);
-			setGenerationStatus("paused");
-		}
-	};
-
-	const handleResume = async () => {
-		if (!generationId) return;
-		const result = await resumeGeneration(generationId);
-		if (result.success) {
-			setIsPaused(false);
-			setGenerationStatus("running");
-		}
-	};
-
-	const handleCancel = async () => {
-		if (!generationId) return;
-		const result = await cancelGeneration(generationId);
-		if (result.success) {
-			setGenerationStatus("failed");
-			// Refresh data to show updated state
-			await fetchData();
-		}
-	};
-
-	const handleExport = async (format: "pdf" | "epub") => {
-		if (!projectId) return;
-		setIsExporting(true);
-		try {
-			const res = await fetch(`/api/projects/${projectId}/export`, {
-				method: "POST",
-				body: JSON.stringify({ format }),
-				headers: { "Content-Type": "application/json" },
-			});
-
-			if (!res.ok) {
-				throw new Error(await res.text());
-			}
-
-			// Success - show toast
-			toast.success(
-				`Export started! Check the Exports page for your ${format.toUpperCase()}.`,
-			);
-		} catch (err) {
-			toast.error(
-				`Export failed: ${err instanceof Error ? err.message : "Unknown error"}`,
-			);
-		} finally {
-			setIsExporting(false);
-		}
-	};
 
 	const completedSteps = steps.filter((s) => s.status === "completed").length;
 	const totalSteps = steps.length;
@@ -477,7 +339,6 @@ export function GenerationDashboard({
 												{getStepLabel(step.stepType)}
 												{step.sequence > 1 && ` (${step.sequence})`}
 											</span>
-											{/* Removed Badge for cleaner look, or make it subtle */}
 										</div>
 										{step.wordCount && (
 											<p className="text-xs text-muted-foreground">

@@ -44,7 +44,7 @@ export function StructureEditorDialog({
     const result = await saveProjectStructure(project.id, text);
     setIsSaving(false);
 
-    if (result.success) {
+    if ("success" in result && result.success) {
       toast.success("Structure updated successfully");
       setOpen(false);
       onStructureUpdate();

@@ -67,7 +67,7 @@ export function WriterView({ project }: WriterViewProps) {
   const fetchStructure = async () => {
     setLoading(true);
     const result = await getProjectStructure(project.id);
-    if (result.structure) {
+    if ("structure" in result && result.structure) {
       setStructure(result.structure);
       if (result.structureText) {
         setStructureText(result.structureText);
@@ -93,7 +93,7 @@ export function WriterView({ project }: WriterViewProps) {
     setIsSaving(true);
     const result = await updateSceneContent(id, content);
     setIsSaving(false);
-    if (result.success) {
+    if ("success" in result && result.success) {
       setLastSaved(new Date());
       // Update local structure state to reflect content change
       setStructure((prev) =>
@@ -123,7 +123,7 @@ export function WriterView({ project }: WriterViewProps) {
     setIsSnapshotting(true);
     const result = await createChapterSnapshot(activeScene.chapterId);
     setIsSnapshotting(false);
-    if (result.success) {
+    if ("success" in result && result.success) {
       toast.success("Chapter version saved");
     } else {
       toast.error("Failed to create version");

@@ -39,10 +39,10 @@ export function GenerationView({
 				values.suggestions,
 			);
 
-			if (result.success && result.generationId) {
+			if ("success" in result && result.success && result.generationId) {
 				setGenerationId(result.generationId);
 				toast.success("Generation started!");
-			} else {
+			} else if ("error" in result) {
 				toast.error(result.error || "Failed to start generation");
 			}
 		} catch (error) {

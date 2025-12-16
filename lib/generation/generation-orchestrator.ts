@@ -8,18 +8,17 @@ import { db } from "@/lib/db/queries";
 import {
 	type BookGenerationStep,
 	bookGeneration,
-	bookGenerationAsset,
 	bookGenerationStep,
-	chapter,
 	type GenerationSettings,
 	generationNote,
 } from "@/lib/db/schema";
-import { reviewChapter } from "./reviewer-agent";
-import {
-	generateChapter,
-	generateEpilogue,
-	generatePrologue,
-} from "./writer-agent";
+import { updateStepStatus } from "./processors/utils";
+import { PrologueProcessor } from "./processors/prologue";
+import { ChapterWriterProcessor } from "./processors/chapter-writer";
+import { ChapterReviewerProcessor } from "./processors/chapter-reviewer";
+import { EpilogueProcessor } from "./processors/epilogue";
+import { BackCoverProcessor, ConsistencyCheckProcessor } from "./processors/misc";
+import type { StepProcessor, ProcessStepContext } from "./processors/types";
 
 export interface GenerationCallbacks {
 	onStepStart?: (step: BookGenerationStep) => void;
@@ -39,6 +38,19 @@ interface RunGenerationOptions {
 	settings: GenerationSettings;
 	callbacks?: GenerationCallbacks;
 }
+
+const processors: Record<string, StepProcessor> = {
+	prologue: new PrologueProcessor(),
+	chapter_writing: new ChapterWriterProcessor(),
+	chapter_reviewing: new ChapterReviewerProcessor(),
+	epilogue: new EpilogueProcessor(),
+	back_cover: new BackCoverProcessor(),
+	consistency_check: new ConsistencyCheckProcessor(),
+	// Fallback for front_cover or others
+	front_cover: {
+		process: async (s, c) => c.log("Front cover generation not implemented yet", "writer")
+	}
+};
 
 /**
  * Main orchestration function - runs the entire book generation pipeline
@@ -81,7 +93,6 @@ export async function runGeneration({
 		log(`Found ${steps.length} steps to process`);
 
 		let completedSteps = 0;
-		const previousChapterSummary = "";
 		const chapterContents: Map<string, string> = new Map();
 
 		// Get user notes
@@ -91,6 +102,15 @@ export async function runGeneration({
 			.where(eq(generationNote.generationId, generationId));
 
 		const globalNotes = notes.filter((n) => n.isGlobal).map((n) => n.content);
+
+		const context: ProcessStepContext = {
+			projectData,
+			settings,
+			globalNotes,
+			previousChapterSummary: "",
+			chapterContents,
+			log,
+		};
 
 		for (const step of steps) {
 			// Check if generation is paused or cancelled
@@ -102,6 +122,23 @@ export async function runGeneration({
 			if (currentGen.status === "paused") {
 				log("Generation paused, waiting...");
 				// In a real implementation, we'd use a pub/sub or polling mechanism
+				// For now we just stop processing; the resume action will restart the loop (needs logic adjustment)
+				// Actually, runGeneration is "fire and forget" background job.
+				// If we break here, the loop exits. Resume needs to call runGeneration again?
+				// The Resume action in actions.ts just updates DB. It doesn't call runGeneration again.
+				// This implies the background process must be persistent or re-triggered.
+				// The original code had `await new Promise((r) => setTimeout(r, 5000)); continue;` which implies busy waiting?
+				// But that was a bad pattern.
+				// For now, I'll keep the loop behavior to mimic original but with a comment.
+				// Original:
+				/*
+				if (currentGen.status === "paused") {
+					log("Generation paused, waiting...");
+					await new Promise((r) => setTimeout(r, 5000));
+					continue;
+				}
+				*/
+				// I'll keep it for behavior parity.
 				await new Promise((r) => setTimeout(r, 5000));
 				continue;
 			}
@@ -111,20 +148,18 @@ export async function runGeneration({
 				return;
 			}
 
+			if (step.status === "completed") {
+				completedSteps++;
+				continue;
+			}
+
 			// Update step to running
 			await updateStepStatus(step.id, "running");
 			callbacks?.onStepStart?.(step);
 			log(`Starting step ${step.sequence}: ${step.stepType}`);
 
 			try {
-				await processStep(step, {
-					projectData,
-					settings,
-					globalNotes,
-					previousChapterSummary,
-					chapterContents,
-					log,
-				});
+				await processStep(step, context);
 
 				// Update step to completed
 				await updateStepStatus(step.id, "completed");
@@ -187,213 +222,14 @@ export async function runGeneration({
 	}
 }
 
-interface ProcessStepContext {
-	projectData: any;
-	settings: GenerationSettings;
-	globalNotes: string[];
-	previousChapterSummary: string;
-	chapterContents: Map<string, string>;
-	log: (msg: string, type?: "writer" | "reviewer" | "orchestrator") => void;
-}
-
 async function processStep(
 	step: BookGenerationStep,
 	ctx: ProcessStepContext,
 ): Promise<void> {
-	const { projectData, settings, globalNotes, log } = ctx;
-
-	switch (step.stepType) {
-		case "prologue": {
-			log("Generating prologue...", "writer");
-			const result = await generatePrologue(
-				projectData.projectContext,
-				projectData.loreContext,
-				settings,
-			);
-			await saveAsset(step.generationId, "prologue", result.content);
-			await db
-				.update(bookGenerationStep)
-				.set({
-					agentOutput: result.content,
-					wordCount: result.wordCount,
-					tokenCount: result.tokenCount,
-					usage: result.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-			log(`Prologue complete: ${result.wordCount} words`, "writer");
-			break;
-		}
-
-		case "chapter_writing": {
-			const chapterInfo = await getChapterInfo(step.chapterId);
-			log(
-				`Writing ${chapterInfo?.title || `Chapter ${step.sequence}`}...`,
-				"writer",
-			);
-
-			const result = await generateChapter({
-				chapterNumber: step.sequence,
-				chapterTitle: chapterInfo?.title || `Chapter ${step.sequence}`,
-				previousChapterSummary: ctx.previousChapterSummary,
-				projectContext: projectData.projectContext,
-				loreContext: projectData.loreContext,
-				outlineContent: projectData.outlinePrompts.join("\n"),
-				userNotes: globalNotes,
-				settings,
-			});
-
-			// Store content for review
-			if (step.chapterId) {
-				ctx.chapterContents.set(step.chapterId, result.content);
-			}
-
-			// Update step with output
-			await db
-				.update(bookGenerationStep)
-				.set({
-					agentOutput: result.content,
-					wordCount: result.wordCount,
-					tokenCount: result.tokenCount,
-					usage: result.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-
-			log(`Chapter writing complete: ${result.wordCount} words`, "writer");
-			break;
-		}
-
-		case "chapter_reviewing": {
-			const chapterContent = step.chapterId
-				? ctx.chapterContents.get(step.chapterId) || ""
-				: "";
-
-			if (!chapterContent) {
-				log("No content to review, skipping", "reviewer");
-				break;
-			}
-
-			log("Reviewing chapter...", "reviewer");
-
-			const review = await reviewChapter({
-				chapterContent,
-				chapterNumber: step.sequence,
-				chapterTitle: `Chapter ${step.sequence}`,
-				projectContext: projectData.projectContext,
-				loreContext: projectData.loreContext,
-				previousChaptersSummary: ctx.previousChapterSummary,
-				settings,
-			});
-
-			// Update step with review feedback
-			await db
-				.update(bookGenerationStep)
-				.set({
-					reviewFeedback: JSON.stringify(review),
-					usage: review.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-
-			log(
-				`Review complete: ${review.overallScore}/10, ${review.revisionPriority} priority`,
-				"reviewer",
-			);
-
-			// Update chapter summary for next chapters
-			if (chapterContent) {
-				ctx.previousChapterSummary = `Previous chapter (${review.overallScore}/10): ${chapterContent.substring(0, 500)}...`;
-			}
-			break;
-		}
-
-		case "epilogue": {
-			log("Generating epilogue...", "writer");
-			const result = await generateEpilogue(
-				projectData.projectContext,
-				projectData.loreContext,
-				ctx.previousChapterSummary,
-				settings,
-			);
-			await saveAsset(step.generationId, "epilogue", result.content);
-			await db
-				.update(bookGenerationStep)
-				.set({
-					agentOutput: result.content,
-					wordCount: result.wordCount,
-					tokenCount: result.tokenCount,
-					usage: result.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-			log(`Epilogue complete: ${result.wordCount} words`, "writer");
-			break;
-		}
-
-		case "back_cover": {
-			log("Generating back cover blurb...", "writer");
-			// Simplified back cover generation
-			const blurb = await generateBackCoverBlurb(projectData, settings);
-			await saveAsset(step.generationId, "back_cover_blurb", blurb);
-			log("Back cover blurb complete", "writer");
-			break;
-		}
-
-		case "consistency_check": {
-			log("Running consistency check...", "reviewer");
-			// Would run the consistency checker agent here
-			log("Consistency check complete", "reviewer");
-			break;
-		}
-
-		default:
-			log(`Unknown step type: ${step.stepType}`);
+	const processor = processors[step.stepType];
+	if (processor) {
+		await processor.process(step, ctx);
+	} else {
+		ctx.log(`Unknown step type: ${step.stepType} - Skipping`);
 	}
-}
-
-async function updateStepStatus(stepId: string, status: string): Promise<void> {
-	const now = new Date();
-	const updates: any = { status, updatedAt: now };
-
-	if (status === "running") {
-		updates.startedAt = now;
-	} else if (status === "completed" || status === "failed") {
-		updates.completedAt = now;
-	}
-
-	await db
-		.update(bookGenerationStep)
-		.set(updates)
-		.where(eq(bookGenerationStep.id, stepId));
-}
-
-async function saveAsset(
-	generationId: string,
-	assetType: string,
-	content: string,
-	imageUrl?: string,
-): Promise<void> {
-	await db.insert(bookGenerationAsset).values({
-		generationId,
-		assetType,
-		content,
-		imageUrl,
-		createdAt: new Date(),
-		updatedAt: new Date(),
-	});
-}
-
-async function getChapterInfo(chapterId: string | null) {
-	if (!chapterId) return null;
-	const [ch] = await db.select().from(chapter).where(eq(chapter.id, chapterId));
-	return ch;
-}
-
-async function generateBackCoverBlurb(
-	projectData: any,
-	_settings: GenerationSettings,
-): Promise<string> {
-	// Simplified implementation
-	return `An epic tale of ${projectData.project.name}. A journey that will change everything...`;
 }

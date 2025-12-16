@@ -31,10 +31,10 @@ export function AIWriterPanel({
     try {
         const result = await generateSceneContent(sceneId, prompt);
 
-        if (result.success && result.content) {
+        if ("success" in result && result.success && result.content) {
             onContentGenerated(result.content);
             toast.success("Content generated");
-        } else {
+        } else if ("error" in result) {
             toast.error(result.error || "Failed to generate content");
         }
     } catch (error) {
