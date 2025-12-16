@@ -1,7 +1,13 @@
 import { tool } from "ai";
+import { eq } from "drizzle-orm";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { updateScene as updateSceneMutation } from "@/lib/db/queries";
+import { db } from "@/lib/db/drizzle";
+import {
+	getProjectByIdWithAccess,
+	updateScene as updateSceneMutation,
+} from "@/lib/db/queries";
+import { scene } from "@/lib/db/schema";
 
 export const updateScene = ({
 	session,
@@ -25,22 +31,53 @@ export const updateScene = ({
 		execute: async (args: any) => {
 			const { id, title, sequence, content, status } = args;
 
+			if (!session?.user?.id) {
+				return { error: "Unauthorized" };
+			}
+
 			try {
-				const scene = await updateSceneMutation({
+				let targetProjectId = projectId;
+
+				// If project context is missing, we must infer it from the scene
+				// to perform a security check.
+				if (!targetProjectId) {
+					const [existingScene] = await db
+						.select({ projectId: scene.projectId })
+						.from(scene)
+						.where(eq(scene.id, id))
+						.limit(1);
+
+					if (!existingScene) {
+						return { error: "Scene not found" };
+					}
+					targetProjectId = existingScene.projectId;
+				}
+
+				// SECURITY: Verify user owns the project before allowing update
+				const project = await getProjectByIdWithAccess({
+					id: targetProjectId,
+					userId: session.user.id,
+				});
+
+				if (!project) {
+					return { error: "Unauthorized: Project access denied" };
+				}
+
+				const updatedScene = await updateSceneMutation({
 					id,
 					title,
 					sequence,
 					content,
 					status,
-					projectId,
+					projectId: targetProjectId, // Pass verified project ID
 				});
 
 				return {
-					message: `Scene '${scene.title}' updated successfully.`,
+					message: `Scene '${updatedScene.title}' updated successfully.`,
 					scene: {
-						...scene,
-						createdAt: scene.createdAt.toISOString(),
-						updatedAt: scene.updatedAt.toISOString(),
+						...updatedScene,
+						createdAt: updatedScene.createdAt.toISOString(),
+						updatedAt: updatedScene.updatedAt.toISOString(),
 					},
 				};
 			} catch (error) {
