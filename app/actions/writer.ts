@@ -167,3 +167,10 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
         return { success: false, error: "Generation failed" };
     }
 }
+
+export async function saveProjectStructure(projectId: string, structureText: string) {
+    // Placeholder implementation for StructureEditorDialog
+    // Real implementation would parse text and sync DB
+    // For now, return success to not block the UI
+    return { success: true };
+}

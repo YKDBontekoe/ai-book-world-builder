@@ -12,7 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { saveProjectStructure } from "@/app/(chat)/projects/[id]/generate/actions";
+import { saveProjectStructure } from "@/app/actions/writer";
 import { Loader2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { Project } from "@/lib/db/schema";

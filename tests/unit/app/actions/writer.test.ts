@@ -1,41 +1,50 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// IMPORTANT: Mock imports BEFORE importing the module under test
-// This ensures that the real 'drizzle-orm' initialization (which needs env vars)
-// is bypassed entirely.
+// Define mocks inside or use hoistable variables if supported, but simpler to define inline for mocks
 
-// Mock DB
-vi.mock("@/lib/db/drizzle", () => ({
-    db: {
-        select: vi.fn(() => ({
-            from: vi.fn(() => ({
-                where: vi.fn(() => ({
-                    orderBy: vi.fn(() => []), // scenes
-                    limit: vi.fn(() => [{ id: "ch-1", projectId: "proj-1", title: "Chapter 1" }]) // chapter
-                })),
-            }))
-        })),
-        insert: vi.fn(() => ({
-            values: vi.fn(() => ({
-                returning: vi.fn(() => [{ id: "new-scene-1", title: "AI Generated Scene" }])
-            }))
-        })),
-        update: vi.fn(() => ({
-            set: vi.fn(() => ({
-                where: vi.fn()
-            }))
-        }))
-    }
-}));
+vi.mock("../../../../lib/db/drizzle", () => {
+    const mockChapter = { id: "ch-1", projectId: "proj-1", title: "Chapter 1", notes: "Notes" };
+    const mockScenes = [{ id: "scene-1", title: "Scene 1", content: "Content", sequence: 1 }];
+    const mockNewScene = { id: "new-scene-1", title: "AI Generated Scene", sequence: 2 };
 
-// Mock AI
-vi.mock("@/lib/ai/writer", () => ({
+    return {
+        db: {
+            select: vi.fn(() => ({
+                from: (table: any) => {
+                    return {
+                        where: () => {
+                            return {
+                                orderBy: () => Promise.resolve(mockScenes), // For scenes
+                                then: (resolve: any) => resolve([mockChapter]), // For chapter
+                                [Symbol.iterator]: function* () { yield mockChapter; }
+                            }
+                        }
+                    }
+                }
+            })),
+            insert: vi.fn(() => ({
+                values: vi.fn(() => ({
+                    returning: vi.fn(() => [mockNewScene])
+                }))
+            })),
+            update: vi.fn(() => ({
+                set: vi.fn(() => ({
+                    where: vi.fn()
+                }))
+            }))
+        }
+    };
+});
+
+
+// Mock @/lib/ai/writer
+vi.mock("../../../../lib/ai/writer", () => ({
     continueWriting: vi.fn().mockResolvedValue({ text: "Generated content" })
 }));
 
-// Mock Scene Queries if used directly
-vi.mock("@/lib/db/queries/scene", () => ({
-    createScene: vi.fn().mockResolvedValue({ id: "new-scene-1", title: "AI Generated Scene" })
+// Mock @/lib/db/queries/scene
+vi.mock("../../../../lib/db/queries/scene", () => ({
+    createScene: vi.fn().mockResolvedValue({ id: "new-scene-1", title: "AI Generated Scene", sequence: 2 })
 }));
 
 // Now import the module under test
