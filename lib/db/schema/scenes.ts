@@ -33,6 +33,7 @@ export const scene = pgTable(
     sequence: integer("sequence").notNull(),
     content: text("content"),
     status: varchar("status", { length: 32 }).notNull().default("planned"),
+    prevSceneId: uuid("prevSceneId"),
     chapterId: uuid("chapterId")
       .notNull()
       .references(() => chapter.id),
@@ -41,6 +42,7 @@ export const scene = pgTable(
       .references(() => project.id),
   },
   (table) => ({
+    prevSceneIdx: index("scene_prev_scene_idx").on(table.prevSceneId),
     chapterIdx: index("scene_chapter_idx").on(table.chapterId),
     sequenceIdx: uniqueIndex("scene_sequence_chapter_idx").on(
       table.chapterId,

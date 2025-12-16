@@ -1,41 +1,31 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
-import { ProjectOverview } from "@/components/project/project-overview";
-import {
-	getChaptersWithContent,
-	getProjectByIdWithAccess,
-} from "@/lib/db/queries";
+import { WriterView } from "@/components/writer/writer-view";
+import { getProjectByIdWithAccess } from "@/lib/db/queries";
 
 export default async function ProjectPage({
-	params,
+  params,
 }: {
-	params: Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 }) {
-	const session = await auth();
-	const { id } = await params;
+  const session = await auth();
+  const { id } = await params;
 
-	// Use userId if session exists, otherwise undefined (allowed for public projects)
-	const userId = session?.user?.id;
+  const userId = session?.user?.id;
 
-	const project = await getProjectByIdWithAccess({
-		id,
-		userId,
-	});
+  const project = await getProjectByIdWithAccess({
+    id,
+    userId,
+  });
 
-	if (!project) {
-		redirect("/");
-	}
+  if (!project) {
+    redirect("/projects");
+  }
 
-	const chapters = await getChaptersWithContent({ projectId: project.id });
-
-	// Determine ownership
-	const isOwner = !!userId && project.userId === userId;
-
-	return (
-		<ProjectOverview
-			project={project}
-			isOwner={isOwner}
-			chapters={chapters}
-		/>
-	);
+  // The WriterView is now the main interface for a project
+  return (
+    <div className="h-[calc(100vh-theme(spacing.16))] w-full">
+        <WriterView project={project} />
+    </div>
+  );
 }
