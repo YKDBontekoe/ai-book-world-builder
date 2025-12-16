@@ -1,48 +1,26 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { getProjectStructure, updateSceneContent, createChapterSnapshot } from "@/app/(chat)/projects/[id]/generate/actions";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable";
+import { getProjectStructure, updateSceneContent, createChapterSnapshot } from "../../app/actions/writer";
 import { Project } from "@/lib/db/schema";
-import { Loader2, FileText, ChevronRight, Save, History } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Editor } from "@/components/editor/text-editor";
+import { Loader2, Save, History } from "lucide-react";
+import { Button } from "../ui/button";
+import { Editor } from "../editor/text-editor";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
-import { AISidebar } from "@/components/writer/tools/ai-sidebar";
-import { StructureEditorDialog } from "@/components/writer/structure-editor-dialog";
-import { AIWriterPanel } from "@/components/writer/ai-writer-panel";
-import { Wand2 } from "lucide-react";
+import { SceneNavigation, ChapterWithScenes } from "./left-sidebar/scene-navigation";
+import { BookCanvas } from "./right-sidebar/book-canvas";
+import { StructureEditorDialog } from "./structure-editor-dialog";
+import { FloatingAssistant } from "../chat/floating-assistant";
+import { ProjectSettingsModal } from "./project-settings-modal";
 
 interface WriterViewProps {
   project: Project;
 }
 
-type Scene = {
-  id: string;
-  title: string;
-  sequence: number;
-  content: string | null;
-  status: string;
-  chapterId: string;
-};
-
-type Chapter = {
-  id: string;
-  title: string;
-  sequence: number;
-  scenes: Scene[];
-};
-
 export function WriterView({ project }: WriterViewProps) {
-  const [structure, setStructure] = useState<Chapter[] | null>(null);
+  const [structure, setStructure] = useState<ChapterWithScenes[] | null>(null);
   const [structureText, setStructureText] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
@@ -50,7 +28,6 @@ export function WriterView({ project }: WriterViewProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isSnapshotting, setIsSnapshotting] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
-  const [showAIWriter, setShowAIWriter] = useState(false);
 
   // Find the active scene object
   const activeScene = structure
@@ -66,13 +43,15 @@ export function WriterView({ project }: WriterViewProps) {
 
   const fetchStructure = async () => {
     setLoading(true);
+    // Note: getProjectStructure server action needs to be updated to return prevSceneId
+    // But assuming the type is compatible or we cast it for now.
     const result = await getProjectStructure(project.id);
     if (result.structure) {
-      setStructure(result.structure);
+      // Cast the result to our extended type for now
+      setStructure(result.structure as unknown as ChapterWithScenes[]);
       if (result.structureText) {
         setStructureText(result.structureText);
       }
-      // Default to first scene of first chapter if available, only if no active scene selected yet
       if (
         !activeSceneId &&
         result.structure.length > 0 &&
@@ -95,7 +74,6 @@ export function WriterView({ project }: WriterViewProps) {
     setIsSaving(false);
     if (result.success) {
       setLastSaved(new Date());
-      // Update local structure state to reflect content change
       setStructure((prev) =>
         prev
           ? prev.map((c) => ({
@@ -131,144 +109,110 @@ export function WriterView({ project }: WriterViewProps) {
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden">
-      {/* Left Sidebar: Navigation */}
-      <aside className="w-64 shrink-0 border-r bg-muted/20 backdrop-blur-xl flex flex-col">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold mb-1">Outline</h2>
-          <p className="text-xs text-muted-foreground mb-2">Select a scene to edit</p>
-          <StructureEditorDialog
-            project={project}
-            initialStructureText={structureText}
-            onStructureUpdate={fetchStructure}
-          />
-        </div>
-        <ScrollArea className="flex-1">
-          {loading ? (
-            <div className="flex items-center justify-center p-8">
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </div>
-          ) : structure ? (
-            <Accordion type="multiple" defaultValue={structure.map((c) => c.id)} className="w-full">
-              {structure.map((chapter) => (
-                <AccordionItem key={chapter.id} value={chapter.id} className="border-b-0 px-2">
-                  <AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-                    <span className="truncate text-left">{chapter.title}</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="pb-2 pt-0">
-                    <div className="flex flex-col gap-1 pl-2">
-                      {chapter.scenes.map((scene) => (
-                        <Button
-                          key={scene.id}
-                          variant={activeSceneId === scene.id ? "secondary" : "ghost"}
-                          size="sm"
-                          className={cn(
-                            "justify-start h-8 px-2 text-xs font-normal",
-                            activeSceneId === scene.id && "bg-secondary/50 font-medium"
-                          )}
-                          onClick={() => setActiveSceneId(scene.id)}
-                        >
-                          <FileText className="mr-2 h-3 w-3 opacity-70" />
-                          <span className="truncate">{scene.title}</span>
-                        </Button>
-                      ))}
-                      {chapter.scenes.length === 0 && (
-                        <div className="px-2 py-1 text-xs text-muted-foreground italic">
-                          No scenes
-                        </div>
-                      )}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          ) : (
-            <div className="p-4 text-sm text-muted-foreground">
-              Failed to load structure.
-            </div>
-          )}
-        </ScrollArea>
-      </aside>
-
-      {/* Main Area: Editor */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden relative">
-        <div className="flex items-center justify-between border-b px-4 py-2 shrink-0 bg-background/50 backdrop-blur-sm">
-          <div className="text-sm font-medium">
-            {activeScene?.title || "No scene selected"}
-          </div>
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            {activeScene && (
-              <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={() => setShowAIWriter(!showAIWriter)}
-                >
-                  <Wand2 className="mr-1 h-3 w-3" />
-                  AI Assist
-                </Button>
-                <div className="h-4 w-[1px] bg-border mx-1" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-6 px-2 text-xs"
-                  onClick={handleSnapshot}
-                  disabled={isSnapshotting}
-                  title="Save current state as a chapter version"
-                >
-                  {isSnapshotting ? (
-                    <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                  ) : (
-                    <History className="mr-1 h-3 w-3" />
-                  )}
-                  Snapshot
-                </Button>
-              </>
-            )}
-            <div className="h-4 w-[1px] bg-border mx-1" />
-            {isSaving ? (
-              <>
-                <Loader2 className="h-3 w-3 animate-spin" />
-                Saving...
-              </>
-            ) : lastSaved ? (
-              <>
-                <Save className="h-3 w-3" />
-                Saved {lastSaved.toLocaleTimeString()}
-              </>
-            ) : null}
-          </div>
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {activeSceneId ? (
-            <div className="max-w-3xl mx-auto min-h-full py-8 px-8">
-              {showAIWriter && activeScene && (
-                <AIWriterPanel
-                  sceneId={activeSceneId}
-                  projectId={project.id}
-                  onContentGenerated={(content) => handleContentChange(sceneContent ? sceneContent + "\n" + content : content)}
-                  onClose={() => setShowAIWriter(false)}
+    <div className="h-full w-full overflow-hidden flex flex-col">
+       <ResizablePanelGroup direction="horizontal" className="flex-1">
+          {/* Left Panel: Navigation */}
+          <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="bg-muted/10 backdrop-blur-md">
+             <div className="flex flex-col h-full border-r">
+                <div className="p-4 border-b flex items-center justify-between">
+                   <h2 className="font-semibold">Outline</h2>
+                   <div className="flex gap-1">
+                       <StructureEditorDialog
+                          project={project}
+                          initialStructureText={structureText}
+                          onStructureUpdate={fetchStructure}
+                       />
+                       <ProjectSettingsModal project={project} />
+                   </div>
+                </div>
+                <SceneNavigation
+                   project={project}
+                   structure={structure}
+                   activeSceneId={activeSceneId}
+                   onSceneSelect={setActiveSceneId}
+                   loading={loading}
                 />
-              )}
-              <Editor
-                key={activeSceneId}
-                content={sceneContent}
-                onSaveContent={handleContentChange}
-                status="idle"
-                isCurrentVersion={true}
-                currentVersionIndex={0}
-                suggestions={[]}
-              />
-            </div>
-          ) : (
-            <div className="flex h-full items-center justify-center text-muted-foreground">
-              Select a scene to start writing
-            </div>
-          )}
-        </div>
-      </div>
-      {/* AISidebar removed as requested to move away from Chat interface */}
+             </div>
+          </ResizablePanel>
+
+          <ResizableHandle />
+
+          {/* Center Panel: Editor */}
+          <ResizablePanel defaultSize={50} minSize={30}>
+             <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background/50">
+                <div className="flex items-center justify-between border-b px-4 py-2 shrink-0 bg-background/80 backdrop-blur-sm z-10">
+                  <div className="text-sm font-medium truncate max-w-[200px]">
+                    {activeScene?.title || "No scene selected"}
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    {activeScene && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 px-2 text-xs"
+                          onClick={handleSnapshot}
+                          disabled={isSnapshotting}
+                        >
+                          {isSnapshotting ? (
+                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                          ) : (
+                            <History className="mr-1 h-3 w-3" />
+                          )}
+                          Snapshot
+                        </Button>
+                      </>
+                    )}
+                    <div className="h-4 w-[1px] bg-border mx-1" />
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Saving...
+                      </>
+                    ) : lastSaved ? (
+                      <>
+                        <Save className="h-3 w-3" />
+                        Saved
+                      </>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto relative">
+                   {activeSceneId ? (
+                      <div className="max-w-3xl mx-auto min-h-full py-8 px-8">
+                        <Editor
+                          key={activeSceneId} // Force remount on scene change
+                          content={sceneContent}
+                          onSaveContent={handleContentChange}
+                          status="idle"
+                          isCurrentVersion={true}
+                          currentVersionIndex={0}
+                          suggestions={[]}
+                        />
+                      </div>
+                   ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
+                        Select a scene to start writing
+                      </div>
+                   )}
+                </div>
+             </div>
+          </ResizablePanel>
+
+          <ResizableHandle />
+
+          {/* Right Panel: Book Canvas */}
+          <ResizablePanel defaultSize={30} minSize={20} collapsible={true} collapsedSize={0}>
+             <BookCanvas
+               project={project}
+               structure={structure}
+               activeSceneId={activeSceneId}
+               onSceneSelect={setActiveSceneId}
+             />
+          </ResizablePanel>
+       </ResizablePanelGroup>
+       <FloatingAssistant projectId={project.id} />
     </div>
   );
 }
