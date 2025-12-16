@@ -1,5 +1,6 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
+  boolean,
   index,
   integer,
   jsonb,
@@ -9,6 +10,7 @@ import {
   uniqueIndex,
   uuid,
   varchar,
+  AnyPgColumn,
 } from "drizzle-orm/pg-core";
 
 import { chapter } from "./outlines";
@@ -39,6 +41,8 @@ export const scene = pgTable(
     projectId: uuid("projectId")
       .notNull()
       .references(() => project.id),
+    parentId: uuid("parentId").references((): AnyPgColumn => scene.id),
+    isActive: boolean("isActive").notNull().default(true),
   },
   (table) => ({
     chapterIdx: index("scene_chapter_idx").on(table.chapterId),
@@ -46,6 +50,7 @@ export const scene = pgTable(
       table.chapterId,
       table.sequence
     ),
+    parentIdx: index("scene_parent_idx").on(table.parentId),
   })
 );
 

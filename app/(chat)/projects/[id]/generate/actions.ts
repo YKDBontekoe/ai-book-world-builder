@@ -1,6 +1,6 @@
 "use server";
 
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
 import { db, getProjectByIdWithAccess } from "@/lib/db/queries";
@@ -14,6 +14,8 @@ import {
 	generationTemplate,
 	chapter,
 	scene,
+	outline,
+	volume,
 } from "@/lib/db/schema";
 import { runGeneration } from "@/lib/generation";
 import { generateText } from "ai";
@@ -517,20 +519,13 @@ export async function getProjectStructure(projectId: string) {
 			return { error: "Project not found" };
 		}
 
-		// Get all chapters sorted by sequence
-		// We join with the first outline/volume for now, assuming a linear structure
+		// Get all chapters
 		const chapters = await db.query.chapter.findMany({
 			where: (chapter, { eq }) => eq(chapter.projectId, projectId),
 			orderBy: (chapter, { asc }) => [asc(chapter.sequence)],
-			with: {
-				// Get scenes for each chapter
-				// Note: We need to define this relation in the schema relations if not present
-				// If relations aren't defined in Drizzle, we might need a separate query
-			},
 		});
 
-		// Since relations might not be fully set up in Drizzle schema for direct `with` querying across files,
-		// let's fetch scenes separately and map them.
+		// Get all scenes (including inactive/branched ones)
 		const scenes = await db.query.scene.findMany({
 			where: (scene, { eq }) => eq(scene.projectId, projectId),
 			orderBy: (scene, { asc }) => [asc(scene.sequence)],
@@ -542,11 +537,14 @@ export async function getProjectStructure(projectId: string) {
 			scenes: scenes.filter((s) => s.chapterId === ch.id),
 		}));
 
-		// Generate text representation for the editor
+		// Generate text representation for the editor (flat, linear, active scenes only)
+		// For the outline editor, we usually want to edit the "Main Path"
+		// We'll filter for isActive=true or parentId=null for the simple list
 		const structureText = structure
 			.map(
 				(ch) =>
 					`Chapter ${ch.sequence}: ${ch.title}\n${ch.scenes
+						.filter(s => s.isActive !== false) // Default to true if null, though schema says default true
 						.map((s) => `- Scene: ${s.title}`)
 						.join("\n")}`,
 			)
@@ -558,6 +556,52 @@ export async function getProjectStructure(projectId: string) {
 		return { error: "Failed to fetch project structure" };
 	}
 }
+
+/**
+ * Create a new branch from a specific scene
+ */
+export async function createBranch(sceneId: string, name: string) {
+	const session = await auth();
+	if (!session?.user?.id) {
+		return { error: "Authentication required" };
+	}
+
+	try {
+		const [originalScene] = await db.select().from(scene).where(eq(scene.id, sceneId));
+
+		if (!originalScene) return { error: "Scene not found" };
+
+		const project = await getProjectByIdWithAccess({
+			id: originalScene.projectId,
+			userId: session.user.id,
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return { error: "Unauthorized" };
+		}
+
+		// Create a new scene as a child of the original
+		const [newScene] = await db.insert(scene).values({
+			projectId: project.id,
+			chapterId: originalScene.chapterId,
+			title: name || `${originalScene.title} (Branch)`,
+			sequence: originalScene.sequence, // Same sequence, but different branch
+			content: originalScene.content, // Start with copy
+			status: "drafting",
+			parentId: sceneId,
+			isActive: false, // Branches start inactive until switched to
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		}).returning();
+
+		return { success: true, sceneId: newScene.id };
+
+	} catch(error) {
+		console.error("Failed to create branch:", error);
+		return { error: "Failed to create branch" };
+	}
+}
+
 
 /**
  * Update the project structure based on text input
@@ -586,54 +630,47 @@ export async function saveProjectStructure(
 		}
 
 		// Ensure we have a volume and outline
-		// For simplicity, we get the first one or create if missing
-		let [outline] = await db.query.outline.findMany({
+		let [outlineRec] = await db.query.outline.findMany({
 			where: (outline, { eq }) => eq(outline.projectId, projectId),
 			limit: 1,
 		});
 
-		// If no outline exists, we need to create one, but we need minimal data
-		if (!outline) {
-			// This is a fallback, ideally outline exists from creation
+		if (!outlineRec) {
 			const [newOutline] = await db
-				.insert(schema.outline)
+				.insert(outline)
 				.values({
 					projectId,
 					title: "Main Outline",
-					pov: "Third Person", // Defaults
+					pov: "Third Person",
 					tone: "Neutral",
 					pacing: "Moderate",
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				})
 				.returning();
-			outline = newOutline;
+			outlineRec = newOutline;
 		}
 
-		let [volume] = await db.query.volume.findMany({
+		let [volumeRec] = await db.query.volume.findMany({
 			where: (volume, { eq }) => eq(volume.projectId, projectId),
 			limit: 1,
 		});
 
-		if (!volume) {
+		if (!volumeRec) {
 			const [newVolume] = await db
-				.insert(schema.volume)
+				.insert(volume)
 				.values({
 					projectId,
-					outlineId: outline.id,
+					outlineId: outlineRec.id,
 					title: "Volume 1",
 					createdAt: new Date(),
 					updatedAt: new Date(),
 				})
 				.returning();
-			volume = newVolume;
+			volumeRec = newVolume;
 		}
 
 		// Parse the text
-		// Expected format:
-		// Chapter X: Title
-		// - Scene: Title
-		// or just Title
 		const lines = structureText.split("\n");
 		const newStructure: {
 			title: string;
@@ -672,35 +709,22 @@ export async function saveProjectStructure(
 			}
 		}
 
-		// Now sync with DB
-		// Strategy: Delete existing structure and recreate?
-		// Risky for content preservation.
-		// Better: Upsert. But matching is hard if titles change.
-		// For now, to support "Bulk Edit", we will map by SEQUENCE.
-		// This implies reordering in text reorders in DB.
-
+		// Sync with DB (Active Path Only)
+		// We avoid deleting branches that are hidden/inactive from the text editor
 		// 1. Get existing chapters
 		const existingChapters = await db.query.chapter.findMany({
 			where: (c, { eq }) => eq(c.projectId, projectId),
-			with: {
-				// Assuming standard Drizzle relation name, otherwise fetch separately
-			},
 		});
 
-		// 2. Loop through new structure and update/create
-		// Logic: Match by TITLE first to preserve ID (and content).
 		const processedChapterIds = new Set<string>();
 
 		for (const newCh of newStructure) {
 			let chapterId: string;
-
-			// Find existing chapter by title
 			const existingCh = existingChapters.find(
 				(c) => c.title.toLowerCase() === newCh.title.toLowerCase()
 			);
 
 			if (existingCh) {
-				// Update sequence if needed
 				await db
 					.update(chapter)
 					.set({
@@ -711,13 +735,12 @@ export async function saveProjectStructure(
 				chapterId = existingCh.id;
 				processedChapterIds.add(existingCh.id);
 			} else {
-				// Create new chapter
 				const [created] = await db
 					.insert(chapter)
 					.values({
 						projectId,
-						outlineId: outline.id,
-						volumeId: volume.id,
+						outlineId: outlineRec.id,
+						volumeId: volumeRec.id,
 						title: newCh.title,
 						sequence: newCh.sequence,
 						status: "planned",
@@ -728,20 +751,25 @@ export async function saveProjectStructure(
 				chapterId = created.id;
 			}
 
-			// Handle Scenes for this chapter
+			// Handle Scenes
 			const existingScenes = await db.query.scene.findMany({
 				where: (s, { eq }) => eq(s.chapterId, chapterId),
 			});
+
+			// We only modify scenes that are likely the "Main Path" (isActive=true OR parentId=null)
+			// Actually, the structure editor usually defines the "linear" flow.
+			// Any scene NOT in the structure but existing in DB might be a branch or deleted.
+			// For safety, we will only delete scenes that are marked 'active' but missing from text.
+			// Branches (inactive) will be preserved.
 
 			const processedSceneIds = new Set<string>();
 
 			for (const newSc of newCh.scenes) {
 				const existingSc = existingScenes.find(
-					(s) => s.title.toLowerCase() === newSc.title.toLowerCase()
+					(s) => s.title.toLowerCase() === newSc.title.toLowerCase() && s.isActive
 				);
 
 				if (existingSc) {
-					// Update sequence
 					await db
 						.update(scene)
 						.set({
@@ -751,7 +779,7 @@ export async function saveProjectStructure(
 						.where(eq(scene.id, existingSc.id));
 					processedSceneIds.add(existingSc.id);
 				} else {
-					// Create new scene
+					// Create new scene (Active by default)
 					await db
 						.insert(scene)
 						.values({
@@ -760,17 +788,16 @@ export async function saveProjectStructure(
 							title: newSc.title,
 							sequence: newSc.sequence,
 							status: "planned",
+							isActive: true,
 							createdAt: new Date(),
 							updatedAt: new Date(),
 						});
 				}
 			}
 
-			// Delete scenes that are NOT in the new structure for this chapter
-			// (Since this is a "Bulk Editor" that reflects the desired state)
+			// Delete active scenes not in text
 			for (const s of existingScenes) {
-				if (!processedSceneIds.has(s.id)) {
-					// Ideally we might want to archive, but "Editor" implies deletion of removed text.
+				if (!processedSceneIds.has(s.id) && s.isActive) {
 					await db.delete(scene).where(eq(scene.id, s.id));
 				}
 			}
@@ -840,11 +867,6 @@ export async function generateSceneContent(
 	}
 }
 
-import * as schema from "@/lib/db/schema";
-
-/**
- * Update the content of a scene
- */
 /**
  * Create a snapshot (ChapterVersion) from the current scene contents of a chapter
  */
@@ -876,7 +898,7 @@ export async function createChapterSnapshot(chapterId: string) {
 		const scenes = await db
 			.select()
 			.from(scene)
-			.where(eq(scene.chapterId, chapterId))
+			.where(and(eq(scene.chapterId, chapterId), eq(scene.isActive, true)))
 			.orderBy(scene.sequence);
 
 		// Combine content
