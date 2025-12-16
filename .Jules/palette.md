@@ -36,3 +36,7 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 **Observation:** Verifying UI states on pages that require specific database states (like a Project Overview with chapters) is difficult with pure UI automation if the creation flow is complex (e.g., AI-driven).
 **Solution:** Implementing temporary "Test Utility" API endpoints (`app/api/test-utils/`) allows verification scripts to programmatically seed the database with precise states (Empty, Populated, Error), enabling robust visual regression testing without flakiness.
 **Action:** For complex entities, prefer seeding data via API over UI automation for verification.
+
+## 2025-05-26 - Standardizing Empty & Loading States
+**Observation:** The "Exports" page had a manually implemented "Empty" card and lacked a loading state, leading to layout shifts and inconsistent UI.
+**Action:** Implemented `app/(chat)/exports/loading.tsx` using `Skeleton` to mimic the list layout, preventing layout shift. Replaced the manual card with the standardized `EmptyState` component to ensure visual consistency and code maintainability.

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { getExportsForUser } from "@/lib/db/queries/book-export";
 import { DeleteExportButton } from "./delete-export-button";
 
@@ -28,18 +29,16 @@ export default async function ExportsPage() {
 			/>
 
 			{exports.length === 0 ? (
-				<Card>
-					<CardContent className="flex flex-col items-center justify-center py-12">
-						<BookOpen className="size-12 text-muted-foreground mb-4" />
-						<h3 className="text-lg font-medium mb-2">No exports yet</h3>
-						<p className="text-muted-foreground text-sm text-center mb-4">
-							Export your books from the project page to see them here.
-						</p>
+				<EmptyState
+					icon={BookOpen}
+					title="No exports yet"
+					description="Export your books from the project page to see them here."
+					action={
 						<Button asChild>
 							<Link href="/">Go to Projects</Link>
 						</Button>
-					</CardContent>
-				</Card>
+					}
+				/>
 			) : (
 				<div className="grid gap-4">
 					{exports.map((exportItem) => (
