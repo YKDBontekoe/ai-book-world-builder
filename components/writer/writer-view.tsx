@@ -10,7 +10,8 @@ import { Editor } from "../editor/text-editor";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
 import { SceneNavigation, ChapterWithScenes } from "./left-sidebar/scene-navigation";
-import { BookCanvas } from "./right-sidebar/book-canvas";
+import { BookCanvas } from "../book-canvas/book-canvas";
+import { useBookCanvasActions, useBookCanvasValue } from "../book-canvas/book-canvas-context";
 import { StructureEditorDialog } from "./structure-editor-dialog";
 import { FloatingAssistant } from "../chat/floating-assistant";
 import { ProjectSettingsModal } from "./project-settings-modal";
@@ -23,11 +24,20 @@ export function WriterView({ project }: WriterViewProps) {
   const [structure, setStructure] = useState<ChapterWithScenes[] | null>(null);
   const [structureText, setStructureText] = useState("");
   const [loading, setLoading] = useState(true);
-  const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+
+  // Use context for active scene to sync with Book Canvas
+  const { activeSceneId } = useBookCanvasValue();
+  const { setActiveSceneId, setProjectId } = useBookCanvasActions();
+
   const [sceneContent, setSceneContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isSnapshotting, setIsSnapshotting] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+  // Sync project ID to Book Canvas context
+  useEffect(() => {
+    setProjectId(project.id);
+  }, [project.id, setProjectId]);
 
   // Find the active scene object
   const activeScene = structure
@@ -204,12 +214,7 @@ export function WriterView({ project }: WriterViewProps) {
 
           {/* Right Panel: Book Canvas */}
           <ResizablePanel defaultSize={30} minSize={20} collapsible={true} collapsedSize={0}>
-             <BookCanvas
-               project={project}
-               structure={structure}
-               activeSceneId={activeSceneId}
-               onSceneSelect={setActiveSceneId}
-             />
+             <BookCanvas variant="embedded" />
           </ResizablePanel>
        </ResizablePanelGroup>
        <FloatingAssistant projectId={project.id} />

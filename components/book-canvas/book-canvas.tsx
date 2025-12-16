@@ -11,11 +11,12 @@ import {
 	LayoutIcon,
 	LibraryIcon,
 	type LucideIcon,
+	NetworkIcon,
 	SparklesIcon,
 	XIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { Button } from "../ui/button";
+import { cn } from "../../lib/utils";
 import dynamic from "next/dynamic";
 import { LoadingSpinner } from "../ui/loading-spinner";
 import { type CanvasPane, useBookCanvas } from "./book-canvas-context";
@@ -54,8 +55,15 @@ const TimelinePane = dynamic(
 	() => import("./panes/timeline-pane").then((mod) => mod.TimelinePane),
 	{ loading: LoadingPane },
 );
+const GraphPane = dynamic(
+	() => import("./panes/graph-pane").then((mod) => mod.GraphPane),
+	{ loading: LoadingPane },
+);
 
-export function BookCanvas() {
+export function BookCanvas({
+	variant = "sidebar",
+	className,
+}: { variant?: "sidebar" | "embedded"; className?: string }) {
 	const { isOpen, setIsOpen, activePane, setActivePane, overallStatus } =
 		useBookCanvas();
 
@@ -63,6 +71,8 @@ export function BookCanvas() {
 		switch (activePane) {
 			case "outline":
 				return <OutlinePane />;
+			case "graph":
+				return <GraphPane />;
 			case "timeline":
 				return <TimelinePane />;
 			case "scenes":
@@ -82,6 +92,7 @@ export function BookCanvas() {
 
 	const tabs: { id: CanvasPane; label: string; icon: LucideIcon }[] = [
 		{ id: "outline", label: "Outline", icon: LayoutIcon },
+		{ id: "graph", label: "Graph", icon: NetworkIcon },
 		{ id: "timeline", label: "Timeline", icon: CalendarIcon },
 		{ id: "scenes", label: "Scenes", icon: LibraryIcon },
 		{ id: "draft", label: "Draft", icon: FileTextIcon },
@@ -90,8 +101,8 @@ export function BookCanvas() {
 		{ id: "changes", label: "Log", icon: HistoryIcon },
 	];
 
-	// Collapsed state - show expand button
-	if (!isOpen) {
+	// Collapsed state - show expand button (only if not embedded)
+	if (!isOpen && variant !== "embedded") {
 		return (
 			<div className="hidden h-dvh w-12 flex-shrink-0 flex-col items-center border-l border-white/10 bg-glass py-4 md:flex z-50">
 				<Button
@@ -131,10 +142,11 @@ export function BookCanvas() {
 	return (
 		<div
 			className={cn(
-				"fixed inset-0 z-50 flex h-dvh w-full flex-col md:static md:flex flex-shrink-0",
-				"glass border-l border-glass-border shadow-2xl",
-				"transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]", // MacOS curve
-				"md:w-96 lg:w-[28rem]", // Standardized widths
+				"flex flex-col flex-shrink-0 bg-background/50 backdrop-blur-xl",
+				variant === "sidebar"
+					? "fixed inset-0 z-50 h-dvh w-full md:static md:w-96 lg:w-[28rem] glass border-l border-glass-border shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+					: "h-full w-full",
+				className,
 			)}
 		>
 			{/* Header with gradient */}
@@ -159,14 +171,16 @@ export function BookCanvas() {
 						</span>
 					</div>
 				</div>
-				<Button
-					className="h-8 w-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
-					onClick={() => setIsOpen(false)}
-					size="icon"
-					variant="ghost"
-				>
-					<XIcon className="h-4 w-4" />
-				</Button>
+				{variant !== "embedded" && (
+					<Button
+						className="h-8 w-8 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+						onClick={() => setIsOpen(false)}
+						size="icon"
+						variant="ghost"
+					>
+						<XIcon className="h-4 w-4" />
+					</Button>
+				)}
 			</div>
 
 			{/* Tabs with Segmented Control styling */}

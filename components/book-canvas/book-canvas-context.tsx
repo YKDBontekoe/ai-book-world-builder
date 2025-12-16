@@ -12,6 +12,7 @@ import type { GenerationStatus } from "@/lib/db/schema";
 
 export type CanvasPane =
 	| "outline"
+	| "graph"
 	| "timeline"
 	| "scenes"
 	| "draft"
@@ -31,6 +32,7 @@ type BookCanvasState = {
 	projectId: string | null;
 	generationId: string | null;
 	chatAction: ChatAction;
+	activeSceneId: string | null;
 };
 
 type BookCanvasActions = {
@@ -41,6 +43,7 @@ type BookCanvasActions = {
 	setProjectId: (id: string | null) => void;
 	setGenerationId: (id: string | null) => void;
 	triggerChatAction: (action: ChatAction) => void;
+	setActiveSceneId: (id: string | null) => void;
 };
 
 // Kept for backward compatibility
@@ -86,6 +89,7 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 	const [projectId, setProjectId] = useState<string | null>(null);
 	const [generationId, setGenerationId] = useState<string | null>(null);
 	const [chatAction, triggerChatAction] = useState<ChatAction>(null);
+	const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
 
 	const togglePanel = useCallback(() => {
 		setIsOpen((prev) => !prev);
@@ -100,6 +104,7 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 			setProjectId,
 			setGenerationId,
 			triggerChatAction,
+			setActiveSceneId,
 		}),
 		[togglePanel],
 	);
@@ -112,8 +117,17 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 			projectId,
 			generationId,
 			chatAction,
+			activeSceneId,
 		}),
-		[isOpen, activePane, overallStatus, projectId, generationId, chatAction],
+		[
+			isOpen,
+			activePane,
+			overallStatus,
+			projectId,
+			generationId,
+			chatAction,
+			activeSceneId,
+		],
 	);
 
 	return (
