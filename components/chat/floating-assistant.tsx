@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Chat } from "@/components/chat/chat";
-import { useChat } from "ai/react";
-import { useChatVisibility } from "@/app/(chat)/chat/[id]/hooks/use-chat-visibility";
-import { useChatUrl } from "@/app/(chat)/chat/[id]/hooks/use-chat-url";
+import { useChat } from "@ai-sdk/react";
+import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { useChatUrl } from "@/hooks/use-chat-url";
 import { generateUUID } from "@/lib/utils";
-import { DataStreamHandler } from "@/components/chat/data-stream-handler";
+import { DataStreamHandler } from "@/components/messages/data-stream-handler";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { DataStreamProvider } from "@/components/chat/data-stream-provider";
 
@@ -82,10 +82,12 @@ export function FloatingAssistant({ projectId, initialMessages = [] }: FloatingA
              <Chat
                 id={chatId}
                 initialMessages={initialMessages}
-                selectedModelId="gpt-4o" // Default or fetch from settings
-                selectedVisibilityType="private"
+                initialChatModel="gpt-4o"
+                initialVisibilityType="private"
                 isReadonly={false}
-                projectId={projectId} // Pass project context
+                initialProjectId={projectId}
+                autoResume={false}
+                availableModels={[]} // Or fetch/pass available models
              />
           </div>
         </Card>

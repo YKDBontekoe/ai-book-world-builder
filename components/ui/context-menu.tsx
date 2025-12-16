@@ -59,7 +59,6 @@ const ContextMenuContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof ContextMenuPrimitive.Content>
 >(({ className, ...props }, ref) => (
   <ContextMenuPrimitive.Portal>
-    <ContextMenuPrimitive.Overlay />
     <ContextMenuPrimitive.Content
       ref={ref}
       className={cn(

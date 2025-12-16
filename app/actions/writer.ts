@@ -91,14 +91,22 @@ export async function createChapterSnapshot(chapterId: string) {
     const nextVersion = (lastVersion?.version || 0) + 1;
 
     // 4. Save snapshot
+    // Note: chapterVersion table doesn't have projectId column in schema definition
+    // It has chapterId, generationId, content, wordCount, version, createdBy, createdAt
+    // Wait, the error said: 'projectId' does not exist in type
+    // Let's check the schema again.
+    // export const chapterVersion = pgTable("ChapterVersion", { ... id, chapterId, generationId, content, wordCount, version, createdBy, createdAt })
+    // It does NOT have projectId.
+
     await db.insert(chapterVersion).values({
         chapterId,
-        projectId: currentChapter.projectId,
+        // projectId: currentChapter.projectId, // Removing this as it's not in schema
         content: fullContent,
         version: nextVersion,
         createdAt: new Date(),
-        updatedAt: new Date()
+        // updatedAt: new Date() // removing if not in schema (schema has createdAt, but no updatedAt? let me check)
     });
+    // Schema check: createdAt is there. updatedAt is NOT in chapterVersion schema shown in previous `read_file`.
 
     return { success: true };
   } catch (error) {

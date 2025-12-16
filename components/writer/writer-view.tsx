@@ -9,7 +9,7 @@ import { Button } from "../ui/button";
 import { Editor } from "../editor/text-editor";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
-import { SceneNavigation } from "./left-sidebar/scene-navigation";
+import { SceneNavigation, ChapterWithScenes } from "./left-sidebar/scene-navigation";
 import { BookCanvas } from "./right-sidebar/book-canvas";
 import { StructureEditorDialog } from "./structure-editor-dialog";
 import { FloatingAssistant } from "../chat/floating-assistant";
@@ -19,25 +19,8 @@ interface WriterViewProps {
   project: Project;
 }
 
-type Scene = {
-  id: string;
-  title: string;
-  sequence: number;
-  content: string | null;
-  status: string;
-  chapterId: string;
-  prevSceneId: string | null;
-};
-
-type Chapter = {
-  id: string;
-  title: string;
-  sequence: number;
-  scenes: Scene[];
-};
-
 export function WriterView({ project }: WriterViewProps) {
-  const [structure, setStructure] = useState<Chapter[] | null>(null);
+  const [structure, setStructure] = useState<ChapterWithScenes[] | null>(null);
   const [structureText, setStructureText] = useState("");
   const [loading, setLoading] = useState(true);
   const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
@@ -65,7 +48,7 @@ export function WriterView({ project }: WriterViewProps) {
     const result = await getProjectStructure(project.id);
     if (result.structure) {
       // Cast the result to our extended type for now
-      setStructure(result.structure as unknown as Chapter[]);
+      setStructure(result.structure as unknown as ChapterWithScenes[]);
       if (result.structureText) {
         setStructureText(result.structureText);
       }
