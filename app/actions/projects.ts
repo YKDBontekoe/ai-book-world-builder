@@ -3,8 +3,9 @@
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
-import { getProjectByIdWithAccess } from "@/lib/db/queries";
+import { getProjectByIdWithAccess, createProject } from "@/lib/db/queries";
 import { db } from "@/lib/db/drizzle";
+import type { VisibilityType } from "@/components/chat/visibility-selector";
 import {
   project,
   entity,
@@ -17,6 +18,30 @@ import {
   scene,
   sceneCard,
 } from "@/lib/db/schema";
+
+export async function createProjectAction(params: {
+  name: string;
+  description?: string;
+  visibility: VisibilityType;
+}) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+
+  try {
+    const newProject = await createProject({
+      ...params,
+      userId: session.user.id,
+    });
+
+    revalidatePath("/projects");
+    return { success: true, projectId: newProject.id };
+  } catch (error) {
+    console.error("Create project error:", error);
+    return { error: "Failed to create project" };
+  }
+}
 
 export async function forkProject(originalProjectId: string, newName?: string) {
   const session = await auth();
