@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
+import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GlassCard } from "@/components/ui/glass-card";
@@ -70,7 +71,7 @@ export default async function ProjectsPage() {
 	return (
 		<PageContainer className="p-8 md:p-12 max-w-[1800px] mx-auto">
 			<div className="mb-8">
-				<PageHeader title="Projects" />
+				<PageHeader title="Projects" action={<CreateProjectDialog />} />
 			</div>
 
 			<Tabs defaultValue="mine" className="mt-8">
@@ -92,12 +93,14 @@ export default async function ProjectsPage() {
 							description="Create a new story to get started with your first project."
 							icon={FolderIcon}
 							action={
-								<Button asChild>
-									<Link href="/" className="gap-2">
-										<Plus className="h-4 w-4" />
-										Create Story
-									</Link>
-								</Button>
+								<CreateProjectDialog
+									trigger={
+										<Button className="gap-2">
+											<Plus className="h-4 w-4" />
+											Create Story
+										</Button>
+									}
+								/>
 							}
 						/>
 					) : (
