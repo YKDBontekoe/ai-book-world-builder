@@ -212,6 +212,40 @@
 			height: 0;
 		}
 	}
+
+	/* Spring Physics Animations (Stiffness: 400, Damping: 25) */
+	--ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+	--animate-spring-in: spring-in 0.4s var(--ease-spring);
+	--animate-spring-out: spring-out 0.4s var(--ease-spring);
+	--animate-slide-up-spring: slide-up-spring 0.4s var(--ease-spring);
+	--animate-slide-down-spring: slide-down-spring 0.4s var(--ease-spring);
+	--animate-slide-left-spring: slide-left-spring 0.4s var(--ease-spring);
+	--animate-slide-right-spring: slide-right-spring 0.4s var(--ease-spring);
+
+	@keyframes spring-in {
+		from { opacity: 0; transform: scale(0.95); }
+		to { opacity: 1; transform: scale(1); }
+	}
+	@keyframes spring-out {
+		from { opacity: 1; transform: scale(1); }
+		to { opacity: 0; transform: scale(0.95); }
+	}
+	@keyframes slide-up-spring {
+		from { opacity: 0; transform: translateY(20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	@keyframes slide-down-spring {
+		from { opacity: 0; transform: translateY(-20px); }
+		to { opacity: 1; transform: translateY(0); }
+	}
+	@keyframes slide-left-spring {
+		from { opacity: 0; transform: translateX(20px); }
+		to { opacity: 1; transform: translateX(0); }
+	}
+	@keyframes slide-right-spring {
+		from { opacity: 0; transform: translateX(-20px); }
+		to { opacity: 1; transform: translateX(0); }
+	}
 }
 
 /*
