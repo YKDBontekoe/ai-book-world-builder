@@ -1,122 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable";
-import { getProjectStructure, updateSceneContent, createChapterSnapshot } from "../../app/actions/writer";
 import { Project } from "@/lib/db/schema";
 import { Loader2, Save, History } from "lucide-react";
 import { Button } from "../ui/button";
 import { Editor } from "../editor/text-editor";
-import { useDebounceCallback } from "usehooks-ts";
-import { toast } from "sonner";
-import { SceneNavigation, ChapterWithScenes } from "./left-sidebar/scene-navigation";
+import { SceneNavigation } from "./left-sidebar/scene-navigation";
 import { BookCanvas } from "../book-canvas/book-canvas";
-import { useBookCanvasActions, useBookCanvasValue } from "../book-canvas/book-canvas-context";
 import { StructureEditorDialog } from "./structure-editor-dialog";
 import { FloatingAssistant } from "../chat/floating-assistant";
 import { ProjectSettingsModal } from "./project-settings-modal";
+import { useWriterState } from "../../hooks/use-writer-state";
 
 interface WriterViewProps {
   project: Project;
 }
 
 export function WriterView({ project }: WriterViewProps) {
-  const [structure, setStructure] = useState<ChapterWithScenes[] | null>(null);
-  const [structureText, setStructureText] = useState("");
-  const [loading, setLoading] = useState(true);
-
-  // Use context for active scene to sync with Book Canvas
-  const { activeSceneId } = useBookCanvasValue();
-  const { setActiveSceneId, setProjectId } = useBookCanvasActions();
-
-  const [sceneContent, setSceneContent] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
-  const [isSnapshotting, setIsSnapshotting] = useState(false);
-  const [lastSaved, setLastSaved] = useState<Date | null>(null);
-
-  // Sync project ID to Book Canvas context
-  useEffect(() => {
-    setProjectId(project.id);
-  }, [project.id, setProjectId]);
-
-  // Find the active scene object
-  const activeScene = structure
-    ?.flatMap((c) => c.scenes)
-    .find((s) => s.id === activeSceneId);
-
-  // Load content when active scene changes
-  useEffect(() => {
-    if (activeScene) {
-      setSceneContent(activeScene.content || "");
-    }
-  }, [activeSceneId, activeScene]);
-
-  const fetchStructure = async () => {
-    setLoading(true);
-    // Note: getProjectStructure server action needs to be updated to return prevSceneId
-    // But assuming the type is compatible or we cast it for now.
-    const result = await getProjectStructure(project.id);
-    if (result.structure) {
-      // Cast the result to our extended type for now
-      setStructure(result.structure as unknown as ChapterWithScenes[]);
-      if (result.structureText) {
-        setStructureText(result.structureText);
-      }
-      if (
-        !activeSceneId &&
-        result.structure.length > 0 &&
-        result.structure[0].scenes.length > 0
-      ) {
-        setActiveSceneId(result.structure[0].scenes[0].id);
-      }
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchStructure();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [project.id]);
-
-  const debouncedSave = useDebounceCallback(async (content: string, id: string) => {
-    setIsSaving(true);
-    const result = await updateSceneContent(id, content);
-    setIsSaving(false);
-    if (result.success) {
-      setLastSaved(new Date());
-      setStructure((prev) =>
-        prev
-          ? prev.map((c) => ({
-              ...c,
-              scenes: c.scenes.map((s) =>
-                s.id === id ? { ...s, content } : s
-              ),
-            }))
-          : null
-      );
-    } else {
-      toast.error("Failed to save changes");
-    }
-  }, 1000);
-
-  const handleContentChange = (newContent: string) => {
-    setSceneContent(newContent);
-    if (activeSceneId) {
-      debouncedSave(newContent, activeSceneId);
-    }
-  };
-
-  const handleSnapshot = async () => {
-    if (!activeScene?.chapterId) return;
-    setIsSnapshotting(true);
-    const result = await createChapterSnapshot(activeScene.chapterId);
-    setIsSnapshotting(false);
-    if (result.success) {
-      toast.success("Chapter version saved");
-    } else {
-      toast.error("Failed to create version");
-    }
-  };
+  const {
+    structure,
+    structureText,
+    loading,
+    activeSceneId,
+    setActiveSceneId,
+    sceneContent,
+    activeScene,
+    isSaving,
+    lastSaved,
+    isSnapshotting,
+    handleContentChange,
+    handleSnapshot,
+    fetchStructure,
+  } = useWriterState({ projectId: project.id });
 
   return (
     <div className="h-full w-full overflow-hidden flex flex-col">
@@ -141,6 +56,7 @@ export function WriterView({ project }: WriterViewProps) {
                    activeSceneId={activeSceneId}
                    onSceneSelect={setActiveSceneId}
                    loading={loading}
+                   onStructureUpdate={fetchStructure}
                 />
              </div>
           </ResizablePanel>

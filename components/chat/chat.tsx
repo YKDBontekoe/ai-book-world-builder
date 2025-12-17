@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { Artifact } from "@/components/artifact";
-import { useBookCanvasActions } from "@/components/book-canvas";
 import { AgentCapabilities } from "@/components/chat/agent-capabilities";
 import { ChatActionHandler } from "@/components/chat/chat-action-handler";
 import { ChatHeader } from "@/components/chat/chat-header";
@@ -26,6 +25,7 @@ import {
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatController } from "@/hooks/use-chat-controller";
+import { useChatSync } from "@/hooks/use-chat-sync";
 import { useChatToolEffects } from "@/hooks/use-chat-tool-effects";
 import { useChatUrl } from "@/hooks/use-chat-url";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
@@ -77,14 +77,6 @@ export function Chat({
 		initialVisibilityType,
 	});
 
-	const { setOverallStatus, setProjectId, triggerChatAction } =
-		useBookCanvasActions();
-
-	// Sync Project ID with Book Canvas
-	useEffect(() => {
-		setProjectId(selectedProjectId || null);
-	}, [selectedProjectId, setProjectId]);
-
 	const {
 		messages,
 		setMessages,
@@ -109,24 +101,18 @@ export function Chat({
 		visibilityType,
 	});
 
+	const { triggerChatAction } = useChatSync({
+		status,
+		setProcessLogs,
+		selectedProjectId,
+	});
+
 	useChatUrl({
 		id,
 		messages,
 		status,
 		sendMessage,
 	});
-
-	// Sync Chat Status with Book Canvas
-	useEffect(() => {
-		if (status === "streaming" || status === "submitted") {
-			setOverallStatus("running");
-			if (status === "submitted") {
-				setProcessLogs([]);
-			}
-		} else {
-			setOverallStatus("idle");
-		}
-	}, [status, setOverallStatus, setProcessLogs]);
 
 	useChatToolEffects({
 		messages,
