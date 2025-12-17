@@ -64,19 +64,19 @@ export const Greeting = ({ selectedProject }: GreetingProps) => {
 
       {/* Feature Pills */}
       <motion.div
-        className="mt-8 flex flex-wrap justify-center gap-2"
+        className="mt-8 flex flex-wrap justify-center gap-2 px-2"
         animate={{ opacity: 1, y: 0 }}
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.5 }}
       >
-          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-            <UsersIcon className="size-3.5" /> Characters
+          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm shadow-sm whitespace-nowrap">
+            <UsersIcon className="size-3.5 shrink-0" /> Characters
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-            <MapPinIcon className="size-3.5" /> Locations
+          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm shadow-sm whitespace-nowrap">
+            <MapPinIcon className="size-3.5 shrink-0" /> Locations
           </div>
-          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm">
-            <BookOpenIcon className="size-3.5" /> Lore
+          <div className="flex items-center gap-1.5 rounded-full border bg-background/50 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur-sm shadow-sm whitespace-nowrap">
+            <BookOpenIcon className="size-3.5 shrink-0" /> Lore
           </div>
       </motion.div>
     </div>

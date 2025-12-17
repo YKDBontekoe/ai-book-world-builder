@@ -139,7 +139,7 @@ function PureSuggestedActions({
 			</div>
 
 			<div
-				className="grid w-full gap-3 sm:grid-cols-2"
+				className="grid w-full gap-3 grid-cols-[repeat(auto-fit,minmax(260px,1fr))]"
 				data-testid="suggested-actions"
 			>
 				{displaySuggestions.map((action, index) => (
