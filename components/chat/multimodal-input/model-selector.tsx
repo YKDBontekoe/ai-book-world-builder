@@ -187,6 +187,10 @@ function PureModelSelectorCompact({
 		availableModels.find((model) => model.id === optimisticModelId) ??
 		fallbackModel;
 
+	if (!selectedModel) {
+		return null;
+	}
+
 	const getModelItemValue = useCallback(
 		(modelId: string, prefix: string) => `${prefix}__${modelId}`,
 		[],

@@ -13,6 +13,7 @@ import { generateUUID } from "@/lib/utils";
 import { DataStreamHandler } from "@/components/messages/data-stream-handler";
 import { ChatHeader } from "@/components/chat/chat-header";
 import { DataStreamProvider } from "@/components/chat/data-stream-provider";
+import { chatModels } from "@/lib/ai/models";
 
 interface FloatingAssistantProps {
   projectId: string;
@@ -88,7 +89,7 @@ export function FloatingAssistant({ projectId, initialMessages = [] }: FloatingA
                 isReadonly={false}
                 initialProjectId={projectId}
                 autoResume={false}
-                availableModels={[]} // Or fetch/pass available models
+                availableModels={Array.from(chatModels)}
               />
               <DataStreamHandler />
             </DataStreamProvider>
