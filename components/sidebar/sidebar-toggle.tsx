@@ -22,6 +22,7 @@ export function SidebarToggle({
           data-testid="sidebar-toggle-button"
           onClick={toggleSidebar}
           variant="outline"
+          aria-label="Toggle Sidebar"
         >
           <PanelLeftIcon size={16} />
         </Button>

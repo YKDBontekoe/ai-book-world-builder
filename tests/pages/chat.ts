@@ -14,15 +14,15 @@ export class ChatPage {
   }
 
   get sendButton() {
-    return this.page.getByTestId("send-button");
+    return this.page.getByRole("button", { name: "Send message" });
   }
 
   get stopButton() {
-    return this.page.getByTestId("stop-button");
+    return this.page.getByRole("button", { name: "Stop generating" });
   }
 
   get multimodalInput() {
-    return this.page.getByTestId("multimodal-input");
+    return this.page.getByPlaceholder("What would you like to create?");
   }
 
   get scrollContainer() {
@@ -98,7 +98,7 @@ export class ChatPage {
       });
     });
 
-    await this.page.getByTestId("attachments-button").click();
+    await this.page.getByRole("button", { name: "Attach files" }).click();
   }
 
   async getSelectedModel() {
@@ -224,7 +224,9 @@ export class ChatPage {
   }
 
   async openSideBar() {
-    const sidebarToggleButton = this.page.getByTestId("sidebar-toggle-button");
+    const sidebarToggleButton = this.page.getByRole("button", {
+      name: "Toggle Sidebar",
+    });
     await sidebarToggleButton.click();
   }
 
