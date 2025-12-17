@@ -1,22 +1,28 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "../ui/resizable";
 import { Project } from "@/lib/db/schema";
+import { ChapterWithScenes } from "@/lib/types";
 import { Loader2, Save, History } from "lucide-react";
 import { Button } from "../ui/button";
 import { Editor } from "../editor/text-editor";
 import { SceneNavigation } from "./left-sidebar/scene-navigation";
 import { BookCanvas } from "../book-canvas/book-canvas";
-import { StructureEditorDialog } from "./structure-editor-dialog";
-import { FloatingAssistant } from "../chat/floating-assistant";
-import { ProjectSettingsModal } from "./project-settings-modal";
 import { useWriterState } from "../../hooks/use-writer-state";
+
+// Lazy load dialogs and assistant to reduce initial bundle size
+const StructureEditorDialog = dynamic(() => import("./structure-editor-dialog").then(mod => mod.StructureEditorDialog));
+const ProjectSettingsModal = dynamic(() => import("./project-settings-modal").then(mod => mod.ProjectSettingsModal));
+const FloatingAssistant = dynamic(() => import("../chat/floating-assistant").then(mod => mod.FloatingAssistant));
 
 interface WriterViewProps {
   project: Project;
+  initialStructure?: ChapterWithScenes[];
+  initialStructureText?: string;
 }
 
-export function WriterView({ project }: WriterViewProps) {
+export function WriterView({ project, initialStructure, initialStructureText }: WriterViewProps) {
   const {
     structure,
     structureText,
@@ -31,7 +37,11 @@ export function WriterView({ project }: WriterViewProps) {
     handleContentChange,
     handleSnapshot,
     fetchStructure,
-  } = useWriterState({ projectId: project.id });
+  } = useWriterState({
+    projectId: project.id,
+    initialStructure,
+    initialStructureText
+  });
 
   return (
     <div className="h-full w-full overflow-hidden flex flex-col">

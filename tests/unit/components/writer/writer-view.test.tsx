@@ -70,6 +70,6 @@ describe("WriterView", () => {
 
     expect(screen.getByTestId("scene-navigation")).toBeInTheDocument();
     expect(screen.getByTestId("book-canvas")).toBeInTheDocument();
-    expect(screen.getByTestId("floating-assistant")).toBeInTheDocument();
+    expect(await screen.findByTestId("floating-assistant")).toBeInTheDocument();
   });
 });

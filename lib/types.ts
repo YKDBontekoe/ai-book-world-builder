@@ -31,8 +31,11 @@ import type { updateDocument } from "./ai/tools/update-document";
 import type { updateEntity } from "./ai/tools/update-entity";
 import type { updateScene } from "./ai/tools/update-scene";
 import type { updateSceneCards } from "./ai/tools/update-scene-cards";
-import type { Suggestion } from "./db/schema";
+import type { Suggestion, Chapter, Scene } from "./db/schema";
 import type { AppUsage } from "./usage";
+
+export type SceneWithPrev = Scene & { prevSceneId: string | null };
+export type ChapterWithScenes = Chapter & { scenes: SceneWithPrev[] };
 
 export type ProcessLog = {
 	type: "tool-log";

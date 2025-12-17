@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Project } from "@/lib/db/schema";
-import { Scene, Chapter } from "@/lib/db/schema";
-import { Loader2, FileText, ChevronRight, ChevronDown, Plus, Sparkles } from "lucide-react";
+import { Loader2, FileText, Plus, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,6 +22,7 @@ import {
 import { generateScene } from "@/app/actions/writer";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ChapterWithScenes } from "@/lib/types";
 
 interface SceneNavigationProps {
   project: Project;
@@ -32,9 +32,6 @@ interface SceneNavigationProps {
   loading: boolean;
   onStructureUpdate?: () => void;
 }
-
-type SceneWithPrev = Scene & { prevSceneId: string | null };
-export type ChapterWithScenes = Chapter & { scenes: SceneWithPrev[] };
 
 export function SceneNavigation({
   project,

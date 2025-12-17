@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { WriterView } from "@/components/writer/writer-view";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
+import { getProjectStructure } from "@/app/actions/writer";
+import { ChapterWithScenes } from "@/lib/types";
 
 export default async function ProjectPage({
   params,
@@ -22,10 +24,17 @@ export default async function ProjectPage({
     redirect("/projects");
   }
 
+  // Pre-fetch structure for immediate rendering
+  const { structure, structureText } = await getProjectStructure(id);
+
   // The WriterView is now the main interface for a project
   return (
     <div className="h-[calc(100vh-theme(spacing.16))] w-full">
-        <WriterView project={project} />
+        <WriterView
+          project={project}
+          initialStructure={structure as ChapterWithScenes[]}
+          initialStructureText={structureText}
+        />
     </div>
   );
 }
