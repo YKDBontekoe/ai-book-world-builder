@@ -2,6 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
+import tsconfigPaths from "vite-tsconfig-paths";
 import { defineConfig } from "vitest/config";
 
 const dirname =
@@ -9,11 +10,14 @@ const dirname =
 		? __dirname
 		: path.dirname(fileURLToPath(import.meta.url));
 
+console.log("Vitest dirname:", dirname);
+
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
 	test: {
 		projects: [
 			{
+				plugins: [tsconfigPaths()],
 				test: {
 					name: "unit",
 					environment: "jsdom",
@@ -48,9 +52,8 @@ export default defineConfig({
 		],
 	},
 	resolve: {
-		alias: {
-			"@": path.resolve(dirname),
-			"katex/dist/katex.min.css": path.resolve(dirname, "tests/__mocks__/styleMock.js"),
-		},
+		alias: [
+			{ find: "katex/dist/katex.min.css", replacement: path.resolve(dirname, "tests/__mocks__/styleMock.js") },
+		],
 	},
 });
