@@ -79,7 +79,8 @@ export function FloatingAssistant({ projectId, initialMessages = [] }: FloatingA
 
           {/* Chat Content */}
           <div className="flex-1 overflow-hidden relative">
-             <Chat
+            <DataStreamProvider>
+              <Chat
                 id={chatId}
                 initialMessages={initialMessages}
                 initialChatModel="gpt-4o"
@@ -88,7 +89,9 @@ export function FloatingAssistant({ projectId, initialMessages = [] }: FloatingA
                 initialProjectId={projectId}
                 autoResume={false}
                 availableModels={[]} // Or fetch/pass available models
-             />
+              />
+              <DataStreamHandler />
+            </DataStreamProvider>
           </div>
         </Card>
       )}
