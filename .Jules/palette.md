@@ -36,3 +36,8 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 **Observation:** Verifying UI states on pages that require specific database states (like a Project Overview with chapters) is difficult with pure UI automation if the creation flow is complex (e.g., AI-driven).
 **Solution:** Implementing temporary "Test Utility" API endpoints (`app/api/test-utils/`) allows verification scripts to programmatically seed the database with precise states (Empty, Populated, Error), enabling robust visual regression testing without flakiness.
 **Action:** For complex entities, prefer seeding data via API over UI automation for verification.
+
+## 2025-05-26 - Visual Consistency in Utility Pages
+**Observation:** Utility pages like 'Exports' often lag behind main feature pages in design polish, leading to a disjointed experience (e.g., solid Cards vs Glass Cards).
+**Recommendation:** Apply the core design system (Liquid Glass, EmptyStates) rigorously even to secondary pages to maintain perceived quality.
+**Action:** Refactored Exports List to use `GlassCard` and standardized `EmptyState`.
