@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { saveProjectStructure } from "@/app/actions/writer";
+} from "../ui/dialog";
+import { Textarea } from "../ui/textarea";
+import { saveProjectStructure } from "../../app/actions/writer";
 import { Loader2, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { Project } from "@/lib/db/schema";

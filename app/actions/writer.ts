@@ -8,6 +8,7 @@ import { scene, chapter, chapterVersion } from "../../lib/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
 import { continueWriting } from "../../lib/ai/writer";
 import { createScene } from "../../lib/db/queries/scene";
+import { createChapter } from "../../lib/db/queries/chapter";
 
 async function ensureProjectAccess(projectId: string, requireOwner = false) {
   const session = await auth();
@@ -252,5 +253,34 @@ export async function saveProjectStructure(
   } catch (error) {
      console.error("Failed to save project structure", error);
      return { success: false };
+  }
+}
+
+export async function createNewChapter(projectId: string, title: string) {
+  try {
+    // 1. Verify Access (Write)
+    await ensureProjectAccess(projectId, true);
+
+    // 2. Get next sequence
+    const [lastChapter] = await db
+      .select()
+      .from(chapter)
+      .where(eq(chapter.projectId, projectId))
+      .orderBy(desc(chapter.sequence))
+      .limit(1);
+
+    const sequence = (lastChapter?.sequence || 0) + 1;
+
+    // 3. Create Chapter
+    const newChapter = await createChapter({
+      projectId,
+      title,
+      sequence,
+    });
+
+    return { success: true, chapterId: newChapter.id };
+  } catch (error) {
+    console.error("Failed to create new chapter", error);
+    return { success: false };
   }
 }

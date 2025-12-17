@@ -44,6 +44,36 @@ export async function getChaptersWithContent({
 	}
 }
 
+export async function createChapter({
+	projectId,
+	title,
+	sequence,
+}: {
+	projectId: string;
+	title: string;
+	sequence: number;
+}) {
+	try {
+		const [createdChapter] = await db
+			.insert(chapter)
+			.values({
+				projectId,
+				title,
+				sequence,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		return createdChapter;
+	} catch (_error) {
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to create chapter",
+		);
+	}
+}
+
 export async function getChaptersForProject({
 	projectId,
 }: {

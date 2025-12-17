@@ -20,7 +20,7 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator
 } from "@/components/ui/context-menu";
-import { generateScene } from "@/app/actions/writer";
+import { generateScene, createNewChapter } from "@/app/actions/writer";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 
@@ -150,6 +150,31 @@ export function SceneNavigation({
             </AccordionItem>
           ))}
         </Accordion>
+
+        <div className="p-4 mt-auto border-t">
+             <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={async () => {
+                   const toastId = toast.loading("Creating new chapter...");
+                   try {
+                     const result = await createNewChapter(project.id, `Chapter ${structure ? structure.length + 1 : 1}`);
+                     if (result.success) {
+                        toast.success("Chapter created", { id: toastId });
+                        if (onStructureUpdate) onStructureUpdate();
+                     } else {
+                        toast.error("Failed to create chapter", { id: toastId });
+                     }
+                   } catch (e) {
+                      toast.error("Error creating chapter", { id: toastId });
+                   }
+                }}
+             >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Chapter
+             </Button>
+        </div>
     </ScrollArea>
   );
 }

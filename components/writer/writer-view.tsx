@@ -11,6 +11,7 @@ import { StructureEditorDialog } from "./structure-editor-dialog";
 import { FloatingAssistant } from "../chat/floating-assistant";
 import { ProjectSettingsModal } from "./project-settings-modal";
 import { useWriterState } from "../../hooks/use-writer-state";
+import { EmptyProjectState } from "./empty-project-state";
 
 interface WriterViewProps {
   project: Project;
@@ -32,6 +33,8 @@ export function WriterView({ project }: WriterViewProps) {
     handleSnapshot,
     fetchStructure,
   } = useWriterState({ projectId: project.id });
+
+  const isEmpty = !loading && structure && structure.length === 0;
 
   return (
     <div className="h-full w-full overflow-hidden flex flex-col">
@@ -66,46 +69,54 @@ export function WriterView({ project }: WriterViewProps) {
           {/* Center Panel: Editor */}
           <ResizablePanel defaultSize={50} minSize={30}>
              <div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background/50">
-                <div className="flex items-center justify-between border-b px-4 py-2 shrink-0 bg-background/80 backdrop-blur-sm z-10">
-                  <div className="text-sm font-medium truncate max-w-[200px]">
-                    {activeScene?.title || "No scene selected"}
+                {!isEmpty && (
+                  <div className="flex items-center justify-between border-b px-4 py-2 shrink-0 bg-background/80 backdrop-blur-sm z-10">
+                    <div className="text-sm font-medium truncate max-w-[200px]">
+                      {activeScene?.title || "No scene selected"}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      {activeScene && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={handleSnapshot}
+                            disabled={isSnapshotting}
+                          >
+                            {isSnapshotting ? (
+                              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                            ) : (
+                              <History className="mr-1 h-3 w-3" />
+                            )}
+                            Snapshot
+                          </Button>
+                        </>
+                      )}
+                      <div className="h-4 w-[1px] bg-border mx-1" />
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Saving...
+                        </>
+                      ) : lastSaved ? (
+                        <>
+                          <Save className="h-3 w-3" />
+                          Saved
+                        </>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    {activeScene && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 px-2 text-xs"
-                          onClick={handleSnapshot}
-                          disabled={isSnapshotting}
-                        >
-                          {isSnapshotting ? (
-                            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                          ) : (
-                            <History className="mr-1 h-3 w-3" />
-                          )}
-                          Snapshot
-                        </Button>
-                      </>
-                    )}
-                    <div className="h-4 w-[1px] bg-border mx-1" />
-                    {isSaving ? (
-                      <>
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        Saving...
-                      </>
-                    ) : lastSaved ? (
-                      <>
-                        <Save className="h-3 w-3" />
-                        Saved
-                      </>
-                    ) : null}
-                  </div>
-                </div>
+                )}
 
                 <div className="flex-1 overflow-y-auto relative">
-                   {activeSceneId ? (
+                   {isEmpty ? (
+                     <EmptyProjectState
+                        project={project}
+                        structureText={structureText}
+                        onStructureUpdate={fetchStructure}
+                     />
+                   ) : activeSceneId ? (
                       <div className="max-w-3xl mx-auto min-h-full py-8 px-8">
                         <Editor
                           key={activeSceneId} // Force remount on scene change
