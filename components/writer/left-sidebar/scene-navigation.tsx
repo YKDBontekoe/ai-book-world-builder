@@ -30,6 +30,7 @@ interface SceneNavigationProps {
   onSceneSelect: (sceneId: string) => void;
   structure: ChapterWithScenes[] | null;
   loading: boolean;
+  onStructureUpdate?: () => void;
 }
 
 type SceneWithPrev = Scene & { prevSceneId: string | null };
@@ -40,7 +41,8 @@ export function SceneNavigation({
   activeSceneId,
   onSceneSelect,
   structure,
-  loading
+  loading,
+  onStructureUpdate
 }: SceneNavigationProps) {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -53,18 +55,11 @@ export function SceneNavigation({
           const result = await generateScene(chapterId, prevSceneId);
           if (result.success && result.sceneId) {
               toast.success("Scene generated!", { id: toastId });
-              // Refresh data - in a real app we might update local state or revalidate
-              // Since we pass structure as prop, the parent needs to reload.
-              // But we can also force a refresh via router if using RSC.
-              // Ideally the parent component should expose a reload function.
-              // For now, let's assume the parent WriterView handles data fetching and we might need to trigger it.
-              // Triggering a router refresh might re-run the server component if it was one,
-              // but WriterView fetches client-side in useEffect.
-              // We'll trust the user to reload or implement a callback in props later.
-              // Wait, the parent passes `onStructureUpdate` to StructureEditorDialog.
-              // We should probably accept an `onStructureUpdate` prop here too.
-              // For this refactor, I'll just select the new scene if I could, but I can't without reloading structure.
-              window.location.reload(); // Brute force refresh for MVP correctness
+              if (onStructureUpdate) {
+                onStructureUpdate();
+              } else {
+                window.location.reload();
+              }
           } else {
               toast.error("Generation failed", { id: toastId });
           }

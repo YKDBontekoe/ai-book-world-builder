@@ -1,44 +1,67 @@
 "use server";
 
+import { auth } from "../(auth)/auth";
+import { getProjectByIdWithAccess } from "../../lib/db/queries/project";
+import { getScenesForProject } from "../../lib/db/queries/scene";
 import { db } from "../../lib/db/drizzle";
 import { scene, chapter, chapterVersion } from "../../lib/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
 import { continueWriting } from "../../lib/ai/writer";
 import { createScene } from "../../lib/db/queries/scene";
 
+async function ensureProjectAccess(projectId: string, requireOwner = false) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const project = await getProjectByIdWithAccess({
+    id: projectId,
+    userId: session.user.id,
+  });
+
+  if (!project) {
+    throw new Error("Project not found or access denied");
+  }
+
+  if (requireOwner && project.userId !== session.user.id) {
+    throw new Error("Unauthorized: Owner access required");
+  }
+
+  return { project, user: session.user };
+}
+
 export async function getProjectStructure(projectId: string) {
   try {
-    const chapters = await db
-      .select()
-      .from(chapter)
-      .where(eq(chapter.projectId, projectId))
-      .orderBy(asc(chapter.sequence));
+    // 1. Verify Access (Read is sufficient)
+    await ensureProjectAccess(projectId);
 
-    const structure = await Promise.all(
-      chapters.map(async (ch) => {
-        const scenes = await db
-          .select()
-          .from(scene)
-          .where(eq(scene.chapterId, ch.id))
-          .orderBy(asc(scene.sequence));
+    // 2. Fetch all data in parallel
+    const [chapters, allScenes] = await Promise.all([
+      db
+        .select()
+        .from(chapter)
+        .where(eq(chapter.projectId, projectId))
+        .orderBy(asc(chapter.sequence)),
+      getScenesForProject({ projectId }),
+    ]);
 
-        return {
-          ...ch,
-          scenes: scenes,
-        };
-      })
-    );
+    // 3. Map scenes to chapters in memory
+    const scenesByChapter = allScenes.reduce((acc, s) => {
+      if (!acc[s.chapterId]) {
+        acc[s.chapterId] = [];
+      }
+      acc[s.chapterId].push(s);
+      return acc;
+    }, {} as Record<string, typeof allScenes>);
 
-    // Provide a text representation for the "Structure Editor" (formerly bulk edit)
-    const structureText = structure
-      .map((ch) => {
-        const chHeader = `Chapter ${ch.sequence}: ${ch.title}`;
-        const scenesText = ch.scenes
-          .map((s) => `  Scene ${s.sequence}: ${s.title}`)
-          .join("\n");
-        return `${chHeader}\n${scenesText}`;
-      })
-      .join("\n\n");
+    const structure = chapters.map((ch) => ({
+      ...ch,
+      scenes: scenesByChapter[ch.id] || [],
+    }));
+
+    // 4. Generate text representation
+    const structureText = formatStructure(structure);
 
     return { structure, structureText };
   } catch (error) {
@@ -47,8 +70,34 @@ export async function getProjectStructure(projectId: string) {
   }
 }
 
+function formatStructure(structure: any[]) {
+  return structure
+    .map((ch) => {
+      const chHeader = `Chapter ${ch.sequence}: ${ch.title}`;
+      const scenesText = ch.scenes
+        .map((s: any) => `  Scene ${s.sequence}: ${s.title}`)
+        .join("\n");
+      return `${chHeader}\n${scenesText}`;
+    })
+    .join("\n\n");
+}
+
 export async function updateSceneContent(sceneId: string, content: string) {
   try {
+    // 1. Get Scene to find Project ID
+    const [targetScene] = await db
+      .select()
+      .from(scene)
+      .where(eq(scene.id, sceneId))
+      .limit(1);
+
+    if (!targetScene) {
+      throw new Error("Scene not found");
+    }
+
+    // 2. Verify Access (Write requires ownership)
+    await ensureProjectAccess(targetScene.projectId, true);
+
     await db
       .update(scene)
       .set({ content, updatedAt: new Date(), status: "drafting" })
@@ -62,7 +111,7 @@ export async function updateSceneContent(sceneId: string, content: string) {
 
 export async function createChapterSnapshot(chapterId: string) {
   try {
-    // 1. Fetch current chapter and scenes
+    // 1. Fetch current chapter
     const [currentChapter] = await db
       .select()
       .from(chapter)
@@ -71,42 +120,37 @@ export async function createChapterSnapshot(chapterId: string) {
 
     if (!currentChapter) return { success: false };
 
-    // 2. Aggregate content (simplified for now: just concatenation of scenes)
+    // 2. Verify Access (Write requires ownership)
+    await ensureProjectAccess(currentChapter.projectId, true);
+
+    // 3. Aggregate content
     const scenes = await db
       .select()
       .from(scene)
       .where(eq(scene.chapterId, chapterId))
       .orderBy(asc(scene.sequence));
 
-    const fullContent = scenes.map((s) => `## ${s.title}\n\n${s.content || ""}`).join("\n\n");
+    const fullContent = scenes
+      .map((s) => `## ${s.title}\n\n${s.content || ""}`)
+      .join("\n\n");
 
-    // 3. Determine next version number
+    // 4. Determine next version number
     const [lastVersion] = await db
-        .select()
-        .from(chapterVersion)
-        .where(eq(chapterVersion.chapterId, chapterId))
-        .orderBy(desc(chapterVersion.version))
-        .limit(1);
+      .select()
+      .from(chapterVersion)
+      .where(eq(chapterVersion.chapterId, chapterId))
+      .orderBy(desc(chapterVersion.version))
+      .limit(1);
 
     const nextVersion = (lastVersion?.version || 0) + 1;
 
-    // 4. Save snapshot
-    // Note: chapterVersion table doesn't have projectId column in schema definition
-    // It has chapterId, generationId, content, wordCount, version, createdBy, createdAt
-    // Wait, the error said: 'projectId' does not exist in type
-    // Let's check the schema again.
-    // export const chapterVersion = pgTable("ChapterVersion", { ... id, chapterId, generationId, content, wordCount, version, createdBy, createdAt })
-    // It does NOT have projectId.
-
+    // 5. Save snapshot
     await db.insert(chapterVersion).values({
-        chapterId,
-        // projectId: currentChapter.projectId, // Removing this as it's not in schema
-        content: fullContent,
-        version: nextVersion,
-        createdAt: new Date(),
-        // updatedAt: new Date() // removing if not in schema (schema has createdAt, but no updatedAt? let me check)
+      chapterId,
+      content: fullContent,
+      version: nextVersion,
+      createdAt: new Date(),
     });
-    // Schema check: createdAt is there. updatedAt is NOT in chapterVersion schema shown in previous `read_file`.
 
     return { success: true };
   } catch (error) {
@@ -116,69 +160,97 @@ export async function createChapterSnapshot(chapterId: string) {
 }
 
 export async function generateScene(chapterId: string, prevSceneId?: string) {
-    try {
-        // 1. Fetch Context
-        const [currentChapter] = await db.select().from(chapter).where(eq(chapter.id, chapterId));
-        if (!currentChapter) throw new Error("Chapter not found");
+  try {
+    // 1. Fetch Context & Verify Access
+    const [currentChapter] = await db
+      .select()
+      .from(chapter)
+      .where(eq(chapter.id, chapterId));
 
-        // Find previous scenes in this chapter to build context
-        const scenes = await db.select().from(scene).where(eq(scene.chapterId, chapterId)).orderBy(asc(scene.sequence));
+    if (!currentChapter) throw new Error("Chapter not found");
 
-        let context = `Chapter: ${currentChapter.title}\nNotes: ${currentChapter.notes || ""}\n`;
-        let prevContent = "";
-        let newSequence = 1;
+    // Write access required
+    await ensureProjectAccess(currentChapter.projectId, true);
 
-        if (prevSceneId) {
-            const prevScene = scenes.find(s => s.id === prevSceneId);
-            if (prevScene) {
-                prevContent = prevScene.content || "";
-                newSequence = prevScene.sequence + 1;
-                // Add context from earlier scenes if needed
-                context += scenes.filter(s => s.sequence <= prevScene.sequence).map(s => `Scene ${s.title}: ${s.content?.substring(0, 200)}...`).join("\n");
-            }
-        } else if (scenes.length > 0) {
-             // Append to end
-             const lastScene = scenes[scenes.length - 1];
-             prevContent = lastScene.content || "";
-             newSequence = lastScene.sequence + 1;
-        }
+    // Find previous scenes in this chapter to build context
+    const scenes = await db
+      .select()
+      .from(scene)
+      .where(eq(scene.chapterId, chapterId))
+      .orderBy(asc(scene.sequence));
 
-        // 2. Generate Content
-        const generation = await continueWriting(context, prevContent);
+    let context = `Chapter: ${currentChapter.title}\nNotes: ${
+      currentChapter.notes || ""
+    }\n`;
+    let prevContent = "";
+    let newSequence = 1;
 
-        if (generation.error || !generation.text) {
-            throw new Error(generation.error || "No text generated");
-        }
-
-        // 3. Create New Scene
-        // Note: Branching logic would handle prevSceneId linking here.
-        // For now, we linearize it or add it to the list.
-        const newScene = await createScene({
-            projectId: currentChapter.projectId,
-            chapterId,
-            title: "AI Generated Scene", // Could generate title too
-            sequence: newSequence,
-            content: generation.text,
-            status: "drafted"
-        });
-
-        // If branching, we would set prevSceneId on the new scene.
-        // Currently createScene doesn't support prevSceneId arg, need to update it or raw update.
-        if (prevSceneId) {
-            await db.update(scene).set({ prevSceneId }).where(eq(scene.id, newScene.id));
-        }
-
-        return { success: true, sceneId: newScene.id };
-
-    } catch (error) {
-        console.error("Failed to generate scene", error);
-        return { success: false, error: "Generation failed" };
+    if (prevSceneId) {
+      const prevScene = scenes.find((s) => s.id === prevSceneId);
+      if (prevScene) {
+        prevContent = prevScene.content || "";
+        newSequence = prevScene.sequence + 1;
+        // Add context from earlier scenes if needed
+        context += scenes
+          .filter((s) => s.sequence <= prevScene.sequence)
+          .map(
+            (s) =>
+              `Scene ${s.title}: ${s.content?.substring(0, 200)}...`
+          )
+          .join("\n");
+      }
+    } else if (scenes.length > 0) {
+      // Append to end
+      const lastScene = scenes[scenes.length - 1];
+      prevContent = lastScene.content || "";
+      newSequence = lastScene.sequence + 1;
     }
+
+    // 2. Generate Content
+    const generation = await continueWriting(context, prevContent);
+
+    if (generation.error || !generation.text) {
+      throw new Error(generation.error || "No text generated");
+    }
+
+    // 3. Create New Scene
+    const newScene = await createScene({
+      projectId: currentChapter.projectId,
+      chapterId,
+      title: "AI Generated Scene",
+      sequence: newSequence,
+      content: generation.text,
+      status: "drafted",
+    });
+
+    if (prevSceneId) {
+      // Note: This still relies on `scene` having `prevSceneId`.
+      // Assuming it does based on original code.
+      await db
+        .update(scene)
+        .set({ prevSceneId })
+        .where(eq(scene.id, newScene.id));
+    }
+
+    return { success: true, sceneId: newScene.id };
+  } catch (error) {
+    console.error("Failed to generate scene", error);
+    return { success: false, error: "Generation failed" };
+  }
 }
 
-export async function saveProjectStructure(projectId: string, structureText: string) {
-    // Placeholder implementation for StructureEditorDialog
-    // Real implementation would parse text and sync DB
-    // For now, return success to not block the UI
-    return { success: true };
+export async function saveProjectStructure(
+  projectId: string,
+  structureText: string
+) {
+  try {
+     // Verify Access (Write)
+     await ensureProjectAccess(projectId, true);
+
+     // Placeholder implementation for StructureEditorDialog
+     return { success: true };
+  } catch (error) {
+     console.error("Failed to save project structure", error);
+     return { success: false };
+  }
 }

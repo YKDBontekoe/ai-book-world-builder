@@ -4,8 +4,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 vi.mock("../../../../lib/db/drizzle", () => {
     const mockChapter = { id: "ch-1", projectId: "proj-1", title: "Chapter 1", notes: "Notes" };
-    const mockScenes = [{ id: "scene-1", title: "Scene 1", content: "Content", sequence: 1 }];
-    const mockNewScene = { id: "new-scene-1", title: "AI Generated Scene", sequence: 2 };
+    const mockScenes = [{ id: "scene-1", title: "Scene 1", content: "Content", sequence: 1, chapterId: "ch-1" }];
+    const mockNewScene = { id: "new-scene-1", title: "AI Generated Scene", sequence: 2, chapterId: "ch-1" };
 
     return {
         db: {
@@ -16,6 +16,7 @@ vi.mock("../../../../lib/db/drizzle", () => {
                             return {
                                 orderBy: () => Promise.resolve(mockScenes), // For scenes
                                 then: (resolve: any) => resolve([mockChapter]), // For chapter
+                                limit: () => Promise.resolve([mockChapter]), // For limit(1)
                                 [Symbol.iterator]: function* () { yield mockChapter; }
                             }
                         }
@@ -44,7 +45,17 @@ vi.mock("../../../../lib/ai/writer", () => ({
 
 // Mock @/lib/db/queries/scene
 vi.mock("../../../../lib/db/queries/scene", () => ({
-    createScene: vi.fn().mockResolvedValue({ id: "new-scene-1", title: "AI Generated Scene", sequence: 2 })
+    createScene: vi.fn().mockResolvedValue({ id: "new-scene-1", title: "AI Generated Scene", sequence: 2 }),
+    getScenesForProject: vi.fn().mockResolvedValue([])
+}));
+
+// Mock Auth and Project Queries
+vi.mock("../../../../app/(auth)/auth", () => ({
+    auth: vi.fn().mockResolvedValue({ user: { id: "user-1" } })
+}));
+
+vi.mock("../../../../lib/db/queries/project", () => ({
+    getProjectByIdWithAccess: vi.fn().mockResolvedValue({ id: "proj-1", userId: "user-1", visibility: "private" })
 }));
 
 // Now import the module under test
