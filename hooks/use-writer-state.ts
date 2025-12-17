@@ -3,16 +3,18 @@ import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
 import { useBookCanvasActions, useBookCanvasValue } from "../components/book-canvas/book-canvas-context";
 import { getProjectStructure, updateSceneContent, createChapterSnapshot } from "../app/actions/writer";
-import { type ChapterWithScenes } from "../components/writer/left-sidebar/scene-navigation";
+import { type ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterStateProps {
   projectId: string;
+  initialStructure?: ChapterWithScenes[];
+  initialStructureText?: string;
 }
 
-export function useWriterState({ projectId }: UseWriterStateProps) {
-  const [structure, setStructure] = useState<ChapterWithScenes[] | null>(null);
-  const [structureText, setStructureText] = useState("");
-  const [loading, setLoading] = useState(true);
+export function useWriterState({ projectId, initialStructure, initialStructureText }: UseWriterStateProps) {
+  const [structure, setStructure] = useState<ChapterWithScenes[] | null>(initialStructure ?? null);
+  const [structureText, setStructureText] = useState(initialStructureText ?? "");
+  const [loading, setLoading] = useState(!initialStructure);
 
   // Use context for active scene to sync with Book Canvas
   const { activeSceneId } = useBookCanvasValue();
@@ -29,6 +31,15 @@ export function useWriterState({ projectId }: UseWriterStateProps) {
       setProjectId(projectId);
     }
   }, [projectId, setProjectId]);
+
+  // Update state if initial props change (e.g. navigation)
+  useEffect(() => {
+    if (initialStructure) {
+      setStructure(initialStructure);
+      setStructureText(initialStructureText || "");
+      setLoading(false);
+    }
+  }, [initialStructure, initialStructureText]);
 
   // Find the active scene object
   const activeScene = structure
@@ -63,9 +74,14 @@ export function useWriterState({ projectId }: UseWriterStateProps) {
   }, [projectId, activeSceneId, setActiveSceneId]);
 
   useEffect(() => {
-    fetchStructure();
+    // Only fetch if no structure or if we are supposed to (though logic above handles initialStructure updates)
+    // But if we navigate to a new project and initialStructure is NOT provided for some reason, we fetch.
+    if (!initialStructure) {
+        fetchStructure();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, [projectId, fetchStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
+  // Actually, if initialStructure changes, the other useEffect handles it. This one handles missing initialStructure.
 
   const debouncedSave = useDebounceCallback(async (content: string, id: string) => {
     setIsSaving(true);
