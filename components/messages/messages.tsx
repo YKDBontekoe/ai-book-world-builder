@@ -1,15 +1,16 @@
-import type { UseChatHelpers } from "@ai-sdk/react";
+import { useMemo } from "react";
 import { ArrowDownIcon } from "lucide-react";
-import { useRef } from "react";
-import { SuggestedActions } from "@/components/chat/suggested-actions";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
-import { Greeting } from "@/components/messages/greeting";
-import { PreviewMessage, ThinkingMessage } from "@/components/messages/message";
-import { useMessages } from "@/hooks/use-messages";
-import type { ChatModelId } from "@/lib/ai/models";
-import type { Vote } from "@/lib/db/schema";
-import type { ProjectSummary } from "@/lib/project-context";
-import type { ChatMessage } from "@/lib/types";
+import type { UseChatHelpers } from "@ai-sdk/react";
+
+import { SuggestedActions } from "../chat/suggested-actions";
+import type { VisibilityType } from "../chat/visibility-selector";
+import { Greeting } from "./greeting";
+import { PreviewMessage, ThinkingMessage } from "./message";
+import { useMessages } from "../../hooks/use-messages";
+import type { ChatModelId } from "../../lib/ai/models";
+import type { Vote } from "../../lib/db/schema";
+import type { ProjectSummary } from "../../lib/project-context";
+import type { ChatMessage } from "../../lib/types";
 
 type MessagesProps = {
 	chatId: string;
@@ -49,6 +50,12 @@ function PureMessages({
 		status,
 	});
 
+	// Optimization: Create a map for O(1) vote lookups instead of O(N) find
+	const votesMap = useMemo(() => {
+		if (!votes) return new Map<string, Vote>();
+		return new Map(votes.map((vote) => [vote.messageId, vote]));
+	}, [votes]);
+
 	return (
 		<div className="relative flex-1">
 			<div
@@ -87,11 +94,7 @@ function PureMessages({
 								hasSentMessage && index === messages.length - 1
 							}
 							setMessages={setMessages}
-							vote={
-								votes
-									? votes.find((vote) => vote.messageId === message.id)
-									: undefined
-							}
+							vote={votesMap.get(message.id)}
 						/>
 					))}
 

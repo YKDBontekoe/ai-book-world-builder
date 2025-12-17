@@ -9,3 +9,11 @@
 ## 2024-05-24 - Bundle Splitting for Tool Renderers
 **Learning:** `ToolRenderer` used static imports for all tool widgets, causing the initial chat bundle to include all widgets (Generation, Scene, Entity editors). This is inefficient as most chats don't use all tools immediately.
 **Action:** Converted to `next/dynamic` imports with `Skeleton` fallback. This significantly reduces TTI. Also learned that testing `next/dynamic` in `jsdom` requires mocking `next/dynamic` to ensure components load, and verifying loading state works.
+
+## 2024-05-25 - O(N*M) Lookup Optimization
+**Learning:** Using `Array.find()` inside a `map` loop (e.g., matching votes to messages) creates O(N*M) complexity. While N is small, this pattern scales poorly and runs on every render.
+**Action:** Pre-compute a lookup `Map` (O(N)) using `useMemo` so that the inner loop lookup becomes O(1), reducing total complexity to O(N).
+
+## 2024-05-25 - Vitest Alias Resolution
+**Learning:** Vitest environment often fails to resolve aliases (`@/`) in source files if they are not explicitly mapped correctly in the test config or if the environment is complex.
+**Action:** Using relative imports in shared component libraries is a robust workaround to ensure tests pass reliably without complex config debugging.
