@@ -3,6 +3,7 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useQuery } from "@tanstack/react-query";
 import { getDashboardStatsAction } from "@/app/actions/dashboard";
+import { STALE_TIMES } from "@/lib/query-options";
 import { UsageChart } from "./usage-chart";
 import { EntityInsights } from "./entity-insights";
 import { Loader2, LayoutDashboard } from "lucide-react";
@@ -15,7 +16,8 @@ export function DashboardSheet({ projectId, trigger }: { projectId?: string, tri
              const result = await getDashboardStatsAction(projectId);
              if (result.error) throw new Error(result.error);
              return result.stats;
-        }
+        },
+        staleTime: STALE_TIMES.STANDARD,
     });
 
     return (

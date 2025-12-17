@@ -7,7 +7,8 @@ import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useState } from "react";
 import { toast } from "sonner";
-import { DashboardSheet } from "@/components/dashboard/dashboard-sheet";
+import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
 import { SidebarHistory } from "@/components/sidebar/sidebar-history";
 import { SidebarUserNav } from "@/components/sidebar/sidebar-user-nav";
 import {
@@ -20,7 +21,6 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
 import {
 	Sidebar,
 	SidebarContent,
@@ -36,6 +36,20 @@ import {
 } from "@/components/ui/tooltip";
 import { api } from "@/lib/api-client";
 import { QUERY_KEYS } from "@/lib/query-options";
+
+const DashboardSheet = dynamic(
+	() =>
+		import("@/components/dashboard/dashboard-sheet").then(
+			(mod) => mod.DashboardSheet,
+		),
+	{
+		loading: () => (
+			<Button className="w-full justify-start gap-2" variant="ghost">
+				<LayoutDashboard size={16} /> Dashboard
+			</Button>
+		),
+	},
+);
 
 export function AppSidebar({ user }: { user: User | undefined }) {
 	const router = useRouter();

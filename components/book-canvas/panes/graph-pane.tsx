@@ -10,7 +10,7 @@ import "@xyflow/react/dist/style.css";
 import { getProjectStructure } from "@/app/actions/writer";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
-import { QUERY_KEYS } from "@/lib/query-options";
+import { QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import { useBookCanvas } from "../book-canvas-context";
 
 // Custom Node Component
@@ -44,6 +44,7 @@ export function GraphPane() {
 		queryFn: () =>
 			projectId ? getProjectStructure(projectId) : Promise.resolve(null),
 		enabled: !!projectId,
+		staleTime: STALE_TIMES.CONTEXT,
 	});
 
 	const structure = result?.structure;

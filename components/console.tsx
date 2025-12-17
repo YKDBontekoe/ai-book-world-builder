@@ -167,6 +167,8 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
                         {/** biome-ignore lint/nursery/useImageSize: "Generated image without explicit size" */}
                         <img
                           alt="output"
+                          loading="lazy"
+                          decoding="async"
                           className="w-full max-w-(--breakpoint-toast-mobile) rounded-md"
                           src={content.value}
                         />

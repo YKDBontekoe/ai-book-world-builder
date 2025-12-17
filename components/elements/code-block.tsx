@@ -2,14 +2,24 @@
 
 import { CheckIcon, CopyIcon } from "lucide-react";
 import type { ComponentProps, HTMLAttributes, ReactNode } from "react";
-import { createContext, useContext, useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import {
-  oneDark,
-  oneLight,
-} from "react-syntax-highlighter/dist/esm/styles/prism";
+import { createContext, useContext, useEffect, useState } from "react";
+import { useTheme } from "next-themes";
+import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { cn } from "@/lib/utils";
+
+const SyntaxHighlighter = dynamic(
+  () => import("react-syntax-highlighter").then((mod) => mod.Prism),
+  {
+    loading: () => (
+      <div className="flex items-center justify-center p-4">
+        <LoadingSpinner />
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 type CodeBlockContextType = {
   code: string;
@@ -33,77 +43,102 @@ export const CodeBlock = ({
   className,
   children,
   ...props
-}: CodeBlockProps) => (
-  <CodeBlockContext.Provider value={{ code }}>
-    <div
-      className={cn(
-        "relative w-full overflow-hidden rounded-md border bg-background text-foreground",
-        className
-      )}
-      {...props}
-    >
-      <div className="relative">
-        <SyntaxHighlighter
-          className="overflow-hidden dark:hidden"
-          codeTagProps={{
-            className: "font-mono text-sm",
-          }}
-          customStyle={{
-            margin: 0,
-            padding: "1rem",
-            fontSize: "0.875rem",
-            background: "hsl(var(--background))",
-            color: "hsl(var(--foreground))",
-            overflowX: "auto",
-            overflowWrap: "break-word",
-            wordBreak: "break-all",
-          }}
-          language={language}
-          lineNumberStyle={{
-            color: "hsl(var(--muted-foreground))",
-            paddingRight: "1rem",
-            minWidth: "2.5rem",
-          }}
-          showLineNumbers={showLineNumbers}
-          style={oneLight}
-        >
-          {code}
-        </SyntaxHighlighter>
-        <SyntaxHighlighter
-          className="hidden overflow-hidden dark:block"
-          codeTagProps={{
-            className: "font-mono text-sm",
-          }}
-          customStyle={{
-            margin: 0,
-            padding: "1rem",
-            fontSize: "0.875rem",
-            background: "hsl(var(--background))",
-            color: "hsl(var(--foreground))",
-            overflowX: "auto",
-            overflowWrap: "break-word",
-            wordBreak: "break-all",
-          }}
-          language={language}
-          lineNumberStyle={{
-            color: "hsl(var(--muted-foreground))",
-            paddingRight: "1rem",
-            minWidth: "2.5rem",
-          }}
-          showLineNumbers={showLineNumbers}
-          style={oneDark}
-        >
-          {code}
-        </SyntaxHighlighter>
-        {children && (
-          <div className="absolute top-2 right-2 flex items-center gap-2">
-            {children}
-          </div>
+}: CodeBlockProps) => {
+  return (
+    <CodeBlockContext.Provider value={{ code }}>
+      <div
+        className={cn(
+          "relative w-full overflow-hidden rounded-md border bg-background text-foreground",
+          className
         )}
+        {...props}
+      >
+        <div className="relative">
+          <SyntaxHighlighterWrapper
+            code={code}
+            language={language}
+            showLineNumbers={showLineNumbers}
+          />
+          {children && (
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+              {children}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  </CodeBlockContext.Provider>
-);
+    </CodeBlockContext.Provider>
+  );
+};
+
+const SyntaxHighlighterWrapper = ({
+  code,
+  language,
+  showLineNumbers,
+}: {
+  code: string;
+  language: string;
+  showLineNumbers: boolean;
+}) => {
+  const { theme } = useTheme();
+  const [style, setStyle] = useState<any>(undefined);
+
+  useEffect(() => {
+    let mounted = true;
+    const loadStyle = async () => {
+      const s =
+        theme === "dark"
+          ? await import(
+              "react-syntax-highlighter/dist/esm/styles/prism/one-dark"
+            )
+          : await import(
+              "react-syntax-highlighter/dist/esm/styles/prism/one-light"
+            );
+      if (mounted) {
+        setStyle(s.default);
+      }
+    };
+    loadStyle();
+    return () => {
+      mounted = false;
+    };
+  }, [theme]);
+
+  if (!style)
+    return (
+      <div className="flex items-center justify-center p-4">
+        <LoadingSpinner />
+      </div>
+    );
+
+  return (
+    <SyntaxHighlighter
+      className="overflow-hidden"
+      codeTagProps={{
+        className: "font-mono text-sm",
+      }}
+      customStyle={{
+        margin: 0,
+        padding: "1rem",
+        fontSize: "0.875rem",
+        background: "hsl(var(--background))",
+        color: "hsl(var(--foreground))",
+        overflowX: "auto",
+        overflowWrap: "break-word",
+        wordBreak: "break-all",
+      }}
+      language={language}
+      lineNumberStyle={{
+        color: "hsl(var(--muted-foreground))",
+        paddingRight: "1rem",
+        minWidth: "2.5rem",
+      }}
+      showLineNumbers={showLineNumbers}
+      style={style}
+    >
+      {code}
+    </SyntaxHighlighter>
+  );
+};
 
 export type CodeBlockCopyButtonProps = ComponentProps<typeof Button> & {
   onCopy?: () => void;

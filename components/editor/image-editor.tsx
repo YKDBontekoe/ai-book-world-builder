@@ -37,6 +37,8 @@ export function ImageEditor({
           {/** biome-ignore lint/nursery/useImageSize: "Generated image without explicit size" */}
           <img
             alt={title}
+            loading="lazy"
+            decoding="async"
             className={cn("h-fit w-full max-w-[800px]", {
               "p-0 md:p-20": !isInline,
             })}
