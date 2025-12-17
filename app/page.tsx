@@ -1,10 +1,17 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { Suspense } from "react";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 
 export default function Page() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <LoadingSpinner size="lg" />
+        </div>
+      }
+    >
       <AuthRedirect />
     </Suspense>
   );
