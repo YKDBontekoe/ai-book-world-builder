@@ -49,7 +49,7 @@ export function FloatingAssistant({ projectId, initialMessages = [] }: FloatingA
             "absolute bottom-6 right-6 flex flex-col shadow-2xl z-50 overflow-hidden border-border/50 backdrop-blur-xl bg-background/95 transition-all duration-300",
             isExpanded
               ? "w-[800px] h-[80vh] top-20 right-6 bottom-6"
-              : "w-[400px] h-[600px]"
+              : "w-[450px] h-[600px]"
           )}
         >
           {/* Header */}
