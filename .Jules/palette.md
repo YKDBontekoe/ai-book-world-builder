@@ -42,6 +42,10 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 **Recommendation:** Apply the core design system (Liquid Glass, EmptyStates) rigorously even to secondary pages to maintain perceived quality.
 **Action:** Refactored Exports List to use `GlassCard` and standardized `EmptyState`.
 
+## 2025-05-27 - Skeleton Layout Matching
+**Observation:** The Writer View loading state utilized a generic boxed `PageContainer` layout, while the actual view renders a full-screen, 3-pane interface. This discrepancy caused a jarring layout shift upon hydration.
+**Recommendation:** Skeleton loaders must mirror the *layout structure* of the target content (e.g., matching Split Panes vs Grids) to minimize Cumulative Layout Shift (CLS) and improve perceived performance.
+**Action:** Implemented `WriterSkeleton` with a flex-based layout verifying the `ResizablePanelGroup` proportions.
 ## 2025-12-18 - Component Refactoring for Maintainability
 **Refactoring Pattern:** Splitting large "God Components" (like `WriterView` and `PreviewMessage`) into functional sub-components (like `WriterSidebar`/`WriterEditor` and `PartsRenderer`) significantly reduces cognitive load and improves SRP.
 **Server Actions:** Extracting logic from Server Actions into dedicated utility files (e.g., `lib/actions-utils.ts` for auth, `lib/ai/context-builder.ts` for logic) keeps actions focused on orchestration and improves testability of the core logic.
