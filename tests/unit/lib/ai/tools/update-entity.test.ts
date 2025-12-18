@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { updateEntity } from "../../../../../lib/ai/tools/update-entity";
-import * as dbQueries from "../../../../../lib/db/queries";
+import { updateEntity } from "../../../../../src/lib/ai/tools/update-entity";
+import * as dbQueries from "../../../../../src/lib/db/queries";
 
 // Mock dependencies
-vi.mock("../../../../../lib/db/queries", () => ({
+vi.mock("../../../../../src/lib/db/queries", () => ({
 	updateEntity: vi.fn(),
 	getEntityWithDetails: vi.fn(),
 	getProjectByIdWithAccess: vi.fn(),

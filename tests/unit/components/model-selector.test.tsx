@@ -1,15 +1,15 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { ModelSelectorCompact } from "../../../components/chat/multimodal-input/model-selector";
-import { saveChatModelAsCookie } from "../../../app/(chat)/actions";
+import { ModelSelectorCompact } from "../../../src/components/chat/multimodal-input/model-selector";
+import { saveChatModelAsCookie } from "../../../src/app/(chat)/actions";
 import {
         getModelPreferences,
         toggleFavoriteModelAction,
         trackRecentModel,
         updateFavoriteModelsAction,
-} from "../../../app/actions/model-preferences";
-import type { ChatModel } from "../../../lib/ai/models";
+} from "../../../src/app/actions/model-preferences";
+import type { ChatModel } from "../../../src/lib/ai/models";
 
 if (!Element.prototype.hasPointerCapture) {
         Element.prototype.hasPointerCapture = () => false;
@@ -26,14 +26,14 @@ if (!Element.prototype.scrollIntoView) {
 const createUser = () => userEvent.setup({ pointerEventsCheck: 0 });
 
 // Mock using relative paths to match what the component uses (or just to bypass alias issues)
-vi.mock("../../../app/actions/model-preferences", () => ({
+vi.mock("../../../src/app/actions/model-preferences", () => ({
         getModelPreferences: vi.fn(),
         toggleFavoriteModelAction: vi.fn(),
         trackRecentModel: vi.fn(),
         updateFavoriteModelsAction: vi.fn(),
 }));
 
-vi.mock("../../../app/(chat)/actions", () => ({
+vi.mock("../../../src/app/(chat)/actions", () => ({
         saveChatModelAsCookie: vi.fn(),
 }));
 

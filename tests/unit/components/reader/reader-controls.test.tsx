@@ -1,5 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ReaderControls } from '../../../../components/reader/reader-controls';
+import { ReaderControls } from '../../../../src/components/reader/reader-controls';
 import { vi, describe, it, expect, beforeAll } from 'vitest';
 
 // Mock ResizeObserver

@@ -13,7 +13,7 @@ This document serves as the **Single Source of Truth** for all agents and contri
 ## Critical Technical Rules
 
 ### 1. Dynamic Imports for Shared Libraries
-Shared library files (e.g., in `lib/`) that use Node.js modules like `fs` **MUST** use dynamic imports and environment checks (`typeof window === 'undefined'`) to ensure compatibility with Client Components.
+Shared library files (e.g., in `src/lib/`) that use Node.js modules like `fs` **MUST** use dynamic imports and environment checks (`typeof window === 'undefined'`) to ensure compatibility with Client Components.
 - *Why*: Importing Node.js modules directly in files used by Client Components causes build failures.
 
 ### 2. Strict Type Safety

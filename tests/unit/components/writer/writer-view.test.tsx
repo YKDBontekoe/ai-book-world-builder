@@ -1,18 +1,18 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { WriterView } from "../../../../components/writer/writer-view";
-import { Project } from "../../../../lib/db/schema";
+import { WriterView } from "../../../../src/components/writer/writer-view";
+import { Project } from "../../../../src/lib/db/schema";
 
 // Mock child components
-vi.mock("../../../../components/writer/left-sidebar/scene-navigation", () => ({
+vi.mock("../../../../src/components/writer/left-sidebar/scene-navigation", () => ({
   SceneNavigation: () => <div data-testid="scene-navigation">Scene Navigation</div>
 }));
 
-vi.mock("../../../../components/book-canvas/book-canvas", () => ({
+vi.mock("../../../../src/components/book-canvas/book-canvas", () => ({
   BookCanvas: () => <div data-testid="book-canvas">Book Canvas</div>
 }));
 
-vi.mock("../../../../components/book-canvas/book-canvas-context", () => ({
+vi.mock("../../../../src/components/book-canvas/book-canvas-context", () => ({
   useBookCanvasActions: () => ({
     setProjectId: vi.fn(),
     setActiveSceneId: vi.fn()
@@ -22,24 +22,24 @@ vi.mock("../../../../components/book-canvas/book-canvas-context", () => ({
   })
 }));
 
-vi.mock("../../../../components/writer/structure-editor-dialog", () => ({
+vi.mock("../../../../src/components/writer/structure-editor-dialog", () => ({
   StructureEditorDialog: () => <button>Structure Editor</button>
 }));
 
-vi.mock("../../../../components/writer/project-settings-modal", () => ({
+vi.mock("../../../../src/components/writer/project-settings-modal", () => ({
     ProjectSettingsModal: () => <button>Settings</button>
 }));
 
-vi.mock("../../../../components/chat/floating-assistant", () => ({
+vi.mock("../../../../src/components/chat/floating-assistant", () => ({
   FloatingAssistant: () => <div data-testid="floating-assistant">Floating Assistant</div>
 }));
 
-vi.mock("../../../../components/editor/text-editor", () => ({
+vi.mock("../../../../src/components/editor/text-editor", () => ({
   Editor: () => <div data-testid="editor">Editor</div>
 }));
 
 // Mock the server action file itself to prevent it from trying to load DB in test env
-vi.mock("../../../../app/actions/writer", () => ({
+vi.mock("../../../../src/app/actions/writer", () => ({
   getProjectStructure: vi.fn().mockResolvedValue({ structure: [], structureText: "" }),
   updateSceneContent: vi.fn(),
   createChapterSnapshot: vi.fn(),

@@ -1,5 +1,5 @@
 <p align="center">
-  <img alt="AI Book World Builder" src="app/(chat)/opengraph-image.png">
+  <img alt="AI Book World Builder" src="src/app/(chat)/opengraph-image.png">
 </p>
 
 <h1 align="center">AI Book World Builder</h1>

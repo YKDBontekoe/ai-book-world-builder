@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ToolRenderer } from "../../../../components/messages/tool-renderer";
+import { ToolRenderer } from "../../../../src/components/messages/tool-renderer";
 
 vi.mock("next/dynamic", async () => {
 	const React = await import("react");
@@ -32,7 +32,7 @@ vi.mock("next/dynamic", async () => {
 });
 
 // Mock the child components
-vi.mock("../../../../components/ui/skeleton", () => ({
+vi.mock("../../../../src/components/ui/skeleton", () => ({
 	Skeleton: () => <div data-testid="skeleton">Skeleton</div>,
 }));
 

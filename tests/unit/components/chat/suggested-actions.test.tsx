@@ -1,16 +1,16 @@
 import { render, screen } from '@testing-library/react';
-import { SuggestedActions } from '../../../../components/chat/suggested-actions';
+import { SuggestedActions } from '../../../../src/components/chat/suggested-actions';
 import { describe, it, expect, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock dependencies
-vi.mock('../../../../lib/api-client', () => ({
+vi.mock('../../../../src/lib/api-client', () => ({
   api: {
     post: vi.fn(),
   },
 }));
 
-vi.mock('../../../../lib/utils', () => ({
+vi.mock('../../../../src/lib/utils', () => ({
   cn: (...args: any[]) => args.join(' '),
 }));
 

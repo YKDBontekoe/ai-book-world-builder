@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { GlassCard } from "../../../components/ui/glass-card";
+import { GlassCard } from "../../../src/components/ui/glass-card";
 
 describe("GlassCard", () => {
 	it("renders correctly with default props", () => {

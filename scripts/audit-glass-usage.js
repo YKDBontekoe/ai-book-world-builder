@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const COMPONENTS_DIR = path.join(__dirname, '../components');
+const COMPONENTS_DIR = path.join(__dirname, '../src/components');
 const IGNORE_DIRS = ['ui', 'icons'];
 
 function getAllFiles(dirPath, arrayOfFiles) {
