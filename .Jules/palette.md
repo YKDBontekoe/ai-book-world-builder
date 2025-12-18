@@ -41,3 +41,8 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 **Observation:** Utility pages like 'Exports' often lag behind main feature pages in design polish, leading to a disjointed experience (e.g., solid Cards vs Glass Cards).
 **Recommendation:** Apply the core design system (Liquid Glass, EmptyStates) rigorously even to secondary pages to maintain perceived quality.
 **Action:** Refactored Exports List to use `GlassCard` and standardized `EmptyState`.
+
+## 2025-05-27 - Skeleton Layout Matching
+**Observation:** The Writer View loading state utilized a generic boxed `PageContainer` layout, while the actual view renders a full-screen, 3-pane interface. This discrepancy caused a jarring layout shift upon hydration.
+**Recommendation:** Skeleton loaders must mirror the *layout structure* of the target content (e.g., matching Split Panes vs Grids) to minimize Cumulative Layout Shift (CLS) and improve perceived performance.
+**Action:** Implemented `WriterSkeleton` with a flex-based layout verifying the `ResizablePanelGroup` proportions.
