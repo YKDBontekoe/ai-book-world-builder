@@ -7,17 +7,14 @@ import { SparklesIcon } from "lucide-react";
 import { memo, useState } from "react";
 import { Response } from "@/components/elements/response";
 import { MessageActions } from "@/components/messages/message-actions";
-import { MessageEditor } from "@/components/messages/message-editor";
-import { MessageReasoning } from "@/components/messages/message-reasoning";
 import { MessageStreamingSources } from "@/components/messages/message-streaming-sources";
 import { MessageUsage } from "@/components/messages/message-usage";
-import { ToolRenderer } from "@/components/messages/tool-renderer";
-import { isToolPart } from "@/components/messages/tools/types";
 import { springs } from "@/lib/animations";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 import { MessageAttachments, MessageBubble } from "./message-ui";
+import { PartsRenderer } from "./parts/parts-renderer";
 
 const PurePreviewMessage = ({
 	chatId,
@@ -50,7 +47,6 @@ const PurePreviewMessage = ({
 		url: a.url,
 		filename: a.filename,
 		mediaType: a.mediaType,
-		// Removed incorrect contentType access
 	}));
 
 	return (
@@ -97,65 +93,15 @@ const PurePreviewMessage = ({
 							</div>
 						)}
 
-					{message.parts?.map((part, index) => {
-						const { type } = part;
-						const key = `message-${message.id}-part-${index}`;
-
-						if (type === "reasoning" && part.text?.trim().length > 0) {
-							return (
-								<MessageReasoning
-									isLoading={isLoading}
-									key={key}
-									reasoning={part.text}
-								/>
-							);
-						}
-
-						if (type === "text") {
-							if (mode === "view") {
-								return (
-									<div key={key}>
-										<MessageBubble role={message.role}>
-											<Response>{sanitizeText(part.text)}</Response>
-										</MessageBubble>
-									</div>
-								);
-							}
-
-							if (mode === "edit") {
-								return (
-									<div
-										className="flex w-full flex-row items-start gap-3"
-										key={key}
-									>
-										<div className="size-8" />
-										<div className="min-w-0 flex-1">
-											<MessageEditor
-												key={message.id}
-												message={message}
-												regenerate={regenerate}
-												setMessages={setMessages}
-												setMode={setMode}
-											/>
-										</div>
-									</div>
-								);
-							}
-						}
-
-						if (isToolPart(part)) {
-							const toolCallId = part.toolCallId;
-							return (
-								<ToolRenderer
-									key={toolCallId || key}
-									part={part}
-									isReadonly={isReadonly}
-								/>
-							);
-						}
-
-						return null;
-					})}
+					<PartsRenderer
+						message={message}
+						isLoading={isLoading}
+						isReadonly={isReadonly}
+						mode={mode}
+						setMode={setMode}
+						setMessages={setMessages}
+						regenerate={regenerate}
+					/>
 
 					{message.role === "assistant" &&
 						isLoading &&
