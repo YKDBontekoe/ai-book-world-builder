@@ -41,3 +41,8 @@ I redesigned the Projects and Generation interfaces to adhere to a "Premium" Nat
 **Observation:** Utility pages like 'Exports' often lag behind main feature pages in design polish, leading to a disjointed experience (e.g., solid Cards vs Glass Cards).
 **Recommendation:** Apply the core design system (Liquid Glass, EmptyStates) rigorously even to secondary pages to maintain perceived quality.
 **Action:** Refactored Exports List to use `GlassCard` and standardized `EmptyState`.
+
+## 2025-12-18 - Component Refactoring for Maintainability
+**Refactoring Pattern:** Splitting large "God Components" (like `WriterView` and `PreviewMessage`) into functional sub-components (like `WriterSidebar`/`WriterEditor` and `PartsRenderer`) significantly reduces cognitive load and improves SRP.
+**Server Actions:** Extracting logic from Server Actions into dedicated utility files (e.g., `lib/actions-utils.ts` for auth, `lib/ai/context-builder.ts` for logic) keeps actions focused on orchestration and improves testability of the core logic.
+**Validation:** Using `tsc --noEmit` is essential when refactoring to catch type mismatches in props early, especially when splitting components with complex types.

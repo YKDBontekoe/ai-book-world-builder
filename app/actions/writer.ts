@@ -1,35 +1,12 @@
 "use server";
 
-import { auth } from "../(auth)/auth";
-import { getProjectByIdWithAccess } from "../../lib/db/queries/project";
-import { getScenesForProject } from "../../lib/db/queries/scene";
 import { db } from "../../lib/db/drizzle";
 import { scene, chapter, chapterVersion } from "../../lib/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
 import { continueWriting } from "../../lib/ai/writer";
-import { createScene } from "../../lib/db/queries/scene";
-
-async function ensureProjectAccess(projectId: string, requireOwner = false) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
-
-  const project = await getProjectByIdWithAccess({
-    id: projectId,
-    userId: session.user.id,
-  });
-
-  if (!project) {
-    throw new Error("Project not found or access denied");
-  }
-
-  if (requireOwner && project.userId !== session.user.id) {
-    throw new Error("Unauthorized: Owner access required");
-  }
-
-  return { project, user: session.user };
-}
+import { createScene, getScenesForProject } from "../../lib/db/queries/scene";
+import { ensureProjectAccess } from "../../lib/actions-utils";
+import { buildSceneGenerationContext } from "../../lib/ai/context-builder";
 
 export async function getProjectStructure(projectId: string) {
   try {
@@ -165,7 +142,8 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
     const [currentChapter] = await db
       .select()
       .from(chapter)
-      .where(eq(chapter.id, chapterId));
+      .where(eq(chapter.id, chapterId))
+      .limit(1); // Added limit(1) which was implicit in destructuring but safer to be explicit
 
     if (!currentChapter) throw new Error("Chapter not found");
 
@@ -179,32 +157,12 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
       .where(eq(scene.chapterId, chapterId))
       .orderBy(asc(scene.sequence));
 
-    let context = `Chapter: ${currentChapter.title}\nNotes: ${
-      currentChapter.notes || ""
-    }\n`;
-    let prevContent = "";
-    let newSequence = 1;
-
-    if (prevSceneId) {
-      const prevScene = scenes.find((s) => s.id === prevSceneId);
-      if (prevScene) {
-        prevContent = prevScene.content || "";
-        newSequence = prevScene.sequence + 1;
-        // Add context from earlier scenes if needed
-        context += scenes
-          .filter((s) => s.sequence <= prevScene.sequence)
-          .map(
-            (s) =>
-              `Scene ${s.title}: ${s.content?.substring(0, 200)}...`
-          )
-          .join("\n");
-      }
-    } else if (scenes.length > 0) {
-      // Append to end
-      const lastScene = scenes[scenes.length - 1];
-      prevContent = lastScene.content || "";
-      newSequence = lastScene.sequence + 1;
-    }
+    // Use shared context builder
+    const { context, prevContent, newSequence } = buildSceneGenerationContext(
+      currentChapter,
+      scenes,
+      prevSceneId
+    );
 
     // 2. Generate Content
     const generation = await continueWriting(context, prevContent);
