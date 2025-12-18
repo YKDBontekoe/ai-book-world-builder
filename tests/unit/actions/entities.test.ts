@@ -1,10 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/app/(auth)/auth", () => ({
+const authMock = vi.hoisted(() => ({
 	auth: vi.fn(),
 }));
 
-vi.mock("@/lib/db/queries", () => ({
+const queriesMock = vi.hoisted(() => ({
 	deleteEntity: vi.fn(),
 	getEntitiesForProject: vi.fn(),
 	getEntityById: vi.fn(),
@@ -12,25 +12,31 @@ vi.mock("@/lib/db/queries", () => ({
 	updateEntity: vi.fn(),
 }));
 
+vi.mock("@/app/(auth)/auth", () => authMock);
+vi.mock("../../../app/(auth)/auth", () => authMock);
+
+vi.mock("@/lib/db/queries", () => queriesMock);
+vi.mock("../../../lib/db/queries", () => queriesMock);
+
 vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/app/(auth)/auth";
+import { auth } from "../../../app/(auth)/auth";
 import {
 	deleteEntityAction,
 	getEntities,
 	updateEntityAction,
-} from "@/app/actions/entities";
+} from "../../../app/actions/entities";
 import {
 	deleteEntity,
 	getEntitiesForProject,
 	getEntityById,
 	getProjectByIdWithAccess,
 	updateEntity,
-} from "@/lib/db/queries";
-import type { Entity, Project } from "@/lib/db/schema";
+} from "../../../lib/db/queries";
+import type { Entity, Project } from "../../../lib/db/schema";
 
 const mockedAuth = vi.mocked(auth);
 const mockedGetProjectByIdWithAccess = vi.mocked(getProjectByIdWithAccess);
@@ -205,6 +211,70 @@ describe("entities server actions", () => {
 		await expect(deleteEntityAction(entity.id)).rejects.toThrow(
 			"Access denied to entity",
 		);
+		expect(mockedDeleteEntity).not.toHaveBeenCalled();
+	});
+
+	it("VULNERABILITY FIX: rejects update when user does not own the project (even if public)", async () => {
+		const entity = buildEntity();
+		// Attacker session
+		mockedAuth.mockResolvedValue({
+			user: {
+				id: "attacker",
+				email: null,
+				image: null,
+				name: "Attacker",
+				type: "regular",
+			},
+			expires: new Date().toISOString(),
+		});
+
+		mockedGetEntityById.mockResolvedValue(entity);
+
+		// Public project owned by someone else
+		mockedGetProjectByIdWithAccess.mockResolvedValue(
+			buildProject({
+				userId: "victim",
+				visibility: "public",
+			}),
+		);
+
+		await expect(
+			updateEntityAction({
+				id: entity.id,
+				projectId: entity.projectId,
+				name: "Hacked",
+			}),
+		).rejects.toThrow("Unauthorized");
+
+		expect(mockedUpdateEntity).not.toHaveBeenCalled();
+	});
+
+	it("VULNERABILITY FIX: rejects deletion when user does not own the project (even if public)", async () => {
+		const entity = buildEntity();
+		// Attacker session
+		mockedAuth.mockResolvedValue({
+			user: {
+				id: "attacker",
+				email: null,
+				image: null,
+				name: "Attacker",
+				type: "regular",
+			},
+			expires: new Date().toISOString(),
+		});
+
+		mockedGetEntityById.mockResolvedValue(entity);
+
+		// Public project owned by someone else
+		mockedGetProjectByIdWithAccess.mockResolvedValue(
+			buildProject({
+				userId: "victim",
+				visibility: "public",
+			}),
+		);
+
+		await expect(deleteEntityAction(entity.id)).rejects.toThrow("Unauthorized");
+
 		expect(mockedDeleteEntity).not.toHaveBeenCalled();
 	});
 });
