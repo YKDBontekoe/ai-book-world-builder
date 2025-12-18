@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
@@ -23,10 +23,33 @@ export async function getScenesForChapter({
 
 export async function getScenesForProject({
 	projectId,
+	excludeContent = false,
 }: {
 	projectId: string;
+	excludeContent?: boolean;
 }): Promise<Scene[]> {
 	try {
+		if (excludeContent) {
+			// Optimized query: Select only metadata columns, skip heavy content
+			// We select NULL as 'content' to satisfy the Scene type shape
+			return await db
+				.select({
+					id: scene.id,
+					createdAt: scene.createdAt,
+					updatedAt: scene.updatedAt,
+					title: scene.title,
+					sequence: scene.sequence,
+					content: sql<string | null>`NULL`.as("content"),
+					status: scene.status,
+					prevSceneId: scene.prevSceneId,
+					chapterId: scene.chapterId,
+					projectId: scene.projectId,
+				})
+				.from(scene)
+				.where(eq(scene.projectId, projectId))
+				.orderBy(asc(scene.sequence));
+		}
+
 		return await db
 			.select()
 			.from(scene)

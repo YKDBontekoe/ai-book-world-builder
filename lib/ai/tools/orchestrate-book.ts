@@ -97,7 +97,8 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 			const allChapters = volumes.flatMap((v) => v.chapters || []);
 
 			// Fetch scenes directly from database since they're not included in the volumes data
-			const allScenes = await getScenesForProject({ projectId });
+			// Optimization: Exclude content as we only need metadata for stats and readiness score
+			const allScenes = await getScenesForProject({ projectId, excludeContent: true });
 			const draftedScenes = allScenes.filter(
 				(s) => s.status === "drafted" || s.status === "final",
 			);

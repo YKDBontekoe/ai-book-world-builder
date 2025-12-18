@@ -43,7 +43,7 @@ export async function getProjectStructure(projectId: string) {
         .from(chapter)
         .where(eq(chapter.projectId, projectId))
         .orderBy(asc(chapter.sequence)),
-      getScenesForProject({ projectId }),
+      getScenesForProject({ projectId, excludeContent: true }),
     ]);
 
     // 3. Map scenes to chapters in memory
