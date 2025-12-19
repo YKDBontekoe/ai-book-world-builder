@@ -32,6 +32,7 @@ Shared library files (e.g., in `lib/`) that use Node.js modules like `fs` **MUST
 
 ### 1. Functional & CI Verification (TypeScript)
 Run the project's test suite to ensure logic correctness and prevent regressions.
+- **Type Check**: `pnpm type-check`
 - **Unit**: `pnpm exec vitest run`
 - **E2E/Integration**: `pnpm exec playwright test`
 - **Reference**: `docs/testing.md`
@@ -54,6 +55,7 @@ Adhere to the **Native macOS** aesthetic defined in [`docs/design-system.md`](do
 2.  **Implement**: Write code following specific workflows (see below).
 3.  **Verify**:
     *   Run `pnpm lint` and `pnpm format` (using `ultracite`).
+    *   Run `pnpm type-check` (TypeScript Linter).
     *   Run `pnpm test` (Unit/E2E).
     *   Run `pnpm storybook` to visually check components if modifying UI.
     *   Run Python visual verification scripts.
