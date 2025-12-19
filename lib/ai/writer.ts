@@ -1,25 +1,24 @@
 "use server";
 
 import { generateText } from "ai";
-import { createOpenAI } from "@ai-sdk/openai";
+import { myProvider } from "./providers";
+import { DEFAULT_CHAT_MODEL } from "./models";
 
-// Initialize providers
-const openai = createOpenAI({
-	apiKey: process.env.OPENAI_API_KEY,
-});
-
-const WRITER_MODEL = "gpt-4o"; // Or 'claude-3-5-sonnet-20240620'
+// Default fallback if no model is provided or found in cookies
+const DEFAULT_WRITER_MODEL = DEFAULT_CHAT_MODEL;
 
 export async function continueWriting(
 	context: string,
 	previousContent: string,
-	style?: string,
+	options: { modelId?: string; style?: string } = {}
 ) {
 	try {
+		const targetModel = options.modelId || DEFAULT_WRITER_MODEL;
+
 		const { text } = await generateText({
-			model: openai(WRITER_MODEL),
+			model: myProvider.languageModel(targetModel),
 			system: `You are an expert creative writing assistant. Your task is to continue the story seamlessly based on the provided text. Maintain the tone, style, and character voices. ${
-				style ? `Use a ${style} writing style.` : ""
+				options.style ? `Use a ${options.style} writing style.` : ""
 			}`,
 			prompt: `Context (Chapter/Scene info):\n${context}\n\nPrevious Text:\n${previousContent}\n\nContinue the story:`,
 			temperature: 0.7,
@@ -32,10 +31,16 @@ export async function continueWriting(
 	}
 }
 
-export async function generateIdeas(context: string, currentText: string) {
+export async function generateIdeas(
+	context: string,
+	currentText: string,
+	options: { modelId?: string } = {}
+) {
 	try {
+		const targetModel = options.modelId || DEFAULT_WRITER_MODEL;
+
 		const { text } = await generateText({
-			model: openai(WRITER_MODEL),
+			model: myProvider.languageModel(targetModel),
 			system:
 				"You are a creative writing coach. Provide 3 distinct and interesting options for what could happen next in the story.",
 			prompt: `Context:\n${context}\n\nCurrent Text:\n${currentText}\n\nSuggest 3 plot developments:`,
@@ -48,10 +53,16 @@ export async function generateIdeas(context: string, currentText: string) {
 	}
 }
 
-export async function rewriteSelection(selection: string, instruction: string) {
+export async function rewriteSelection(
+	selection: string,
+	instruction: string,
+	options: { modelId?: string } = {}
+) {
 	try {
+		const targetModel = options.modelId || DEFAULT_WRITER_MODEL;
+
 		const { text } = await generateText({
-			model: openai(WRITER_MODEL),
+			model: myProvider.languageModel(targetModel),
 			system:
 				"You are an expert editor. Rewrite the selected text according to the user's instruction. Output ONLY the rewritten text, no explanations.",
 			prompt: `Original Text:\n"${selection}"\n\nInstruction: ${instruction}\n\nRewritten Text:`,
