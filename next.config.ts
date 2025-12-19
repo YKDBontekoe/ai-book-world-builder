@@ -15,6 +15,11 @@ const nextConfig: NextConfig = {
 			},
 		],
 	},
+	typescript: {
+		// specific check is disabled to improve build time
+		// type checking should be done in a separate CI step
+		ignoreBuildErrors: true,
+	},
 };
 
 export default nextConfig;
