@@ -1,0 +1,120 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import { WriterEditor } from "../../../../components/writer/writer-editor";
+import * as writerActions from "../../../../app/actions/writer";
+
+// Mock child components
+vi.mock("../../../../components/editor/text-editor", () => ({
+  Editor: () => <div data-testid="text-editor">Editor Content</div>,
+}));
+
+vi.mock("../../../../components/ui/empty-state", () => ({
+  EmptyState: ({ title, description, action }: any) => (
+    <div data-testid="empty-state">
+      <h1>{title}</h1>
+      <p>{description}</p>
+      {action}
+    </div>
+  ),
+}));
+
+// Mock Server Actions
+vi.mock("../../../../app/actions/writer", () => ({
+  initializeProject: vi.fn(),
+}));
+
+// Mock Icons
+vi.mock("lucide-react", () => ({
+  Loader2: () => <span>Loading...</span>,
+  Save: () => <span>Save</span>,
+  History: () => <span>History</span>,
+  Sparkles: () => <span>Sparkles</span>,
+}));
+
+describe("WriterEditor", () => {
+  const defaultProps = {
+    projectId: "project-123",
+    activeScene: undefined,
+    activeSceneId: null,
+    sceneContent: "",
+    handleContentChange: vi.fn(),
+    handleSnapshot: vi.fn(),
+    isSnapshotting: false,
+    isSaving: false,
+    lastSaved: false,
+    hasScenes: false,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    // Mock window.location.reload
+    Object.defineProperty(window, "location", {
+      writable: true,
+      value: { reload: vi.fn() },
+    });
+  });
+
+  it("renders Empty State when no scene selected and hasScenes is false", () => {
+    render(<WriterEditor {...defaultProps} hasScenes={false} activeSceneId={null} />);
+
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    expect(screen.getByText("Start Your Story")).toBeInTheDocument();
+    expect(screen.getByText("Start Writing")).toBeInTheDocument();
+    expect(screen.queryByTestId("text-editor")).not.toBeInTheDocument();
+  });
+
+  it("renders 'Select a scene' when no scene selected but hasScenes is true", () => {
+    render(<WriterEditor {...defaultProps} hasScenes={true} activeSceneId={null} />);
+
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+    expect(screen.getByText("Select a scene to start writing")).toBeInTheDocument();
+  });
+
+  it("renders Editor when scene is selected", () => {
+    render(
+      <WriterEditor
+        {...defaultProps}
+        activeSceneId="scene-1"
+        activeScene={{ id: "scene-1", title: "Scene 1" } as any}
+      />
+    );
+
+    expect(screen.getByTestId("text-editor")).toBeInTheDocument();
+    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
+  });
+
+  it("calls initializeProject when Start Writing is clicked", async () => {
+    const mockInitialize = vi.mocked(writerActions.initializeProject).mockResolvedValue({
+      success: true,
+      sceneId: "new-scene-1"
+    });
+
+    render(<WriterEditor {...defaultProps} hasScenes={false} />);
+
+    const startButton = screen.getByText("Start Writing");
+    fireEvent.click(startButton);
+
+    await waitFor(() => {
+      expect(mockInitialize).toHaveBeenCalledWith("project-123");
+    });
+
+    expect(window.location.reload).toHaveBeenCalled();
+  });
+
+  it("handles initialization failure gracefully", async () => {
+    const mockInitialize = vi.mocked(writerActions.initializeProject).mockResolvedValue({
+      success: false
+    });
+
+    render(<WriterEditor {...defaultProps} hasScenes={false} />);
+
+    const startButton = screen.getByText("Start Writing");
+    fireEvent.click(startButton);
+
+    await waitFor(() => {
+      expect(mockInitialize).toHaveBeenCalledWith("project-123");
+    });
+
+    expect(window.location.reload).not.toHaveBeenCalled();
+  });
+});

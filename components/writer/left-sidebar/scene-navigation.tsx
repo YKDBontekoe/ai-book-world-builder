@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Project } from "@/lib/db/schema";
-import { Loader2, FileText, Plus, Sparkles } from "lucide-react";
+import { Loader2, FileText, Plus, Sparkles, BookPlus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,7 +19,7 @@ import {
   ContextMenuTrigger,
   ContextMenuSeparator
 } from "@/components/ui/context-menu";
-import { generateScene } from "@/app/actions/writer";
+import { generateScene, createNewChapter } from "@/app/actions/writer";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ChapterWithScenes } from "@/lib/types";
@@ -43,6 +43,7 @@ export function SceneNavigation({
 }: SceneNavigationProps) {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 
   const handleGenerateNextScene = async (chapterId: string, prevSceneId?: string) => {
       setIsGenerating(true);
@@ -67,6 +68,28 @@ export function SceneNavigation({
       }
   };
 
+  const handleCreateChapter = async () => {
+      setIsCreatingChapter(true);
+      const toastId = toast.loading("Creating new chapter...");
+      try {
+          const result = await createNewChapter(project.id);
+          if (result.success) {
+               toast.success("Chapter created!", { id: toastId });
+               if (onStructureUpdate) {
+                   onStructureUpdate();
+               } else {
+                   window.location.reload();
+               }
+          } else {
+               toast.error("Failed to create chapter", { id: toastId });
+          }
+      } catch (e) {
+          toast.error("Error creating chapter", { id: toastId });
+      } finally {
+          setIsCreatingChapter(false);
+      }
+  }
+
   if (loading) {
      return (
         <div className="flex items-center justify-center p-8">
@@ -80,6 +103,18 @@ export function SceneNavigation({
         <div className="p-4 text-sm text-muted-foreground">
           Failed to load structure.
         </div>
+      );
+  }
+
+  if (structure.length === 0) {
+      return (
+          <div className="p-4 flex flex-col items-center justify-center h-full text-center space-y-4">
+              <p className="text-sm text-muted-foreground">No chapters yet.</p>
+              <Button onClick={handleCreateChapter} disabled={isCreatingChapter} variant="outline" size="sm">
+                  {isCreatingChapter ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <BookPlus className="mr-2 h-4 w-4" />}
+                  Add Chapter
+              </Button>
+          </div>
       );
   }
 
@@ -146,6 +181,13 @@ export function SceneNavigation({
               </AccordionContent>
             </AccordionItem>
           ))}
+          {/* Always allow adding a new chapter at the bottom */}
+          <div className="p-2">
+               <Button variant="ghost" size="sm" className="w-full justify-start text-muted-foreground" onClick={handleCreateChapter} disabled={isCreatingChapter}>
+                   {isCreatingChapter ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
+                   Add Chapter
+               </Button>
+          </div>
         </Accordion>
     </ScrollArea>
   );
