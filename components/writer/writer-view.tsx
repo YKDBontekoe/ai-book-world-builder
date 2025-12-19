@@ -60,6 +60,7 @@ export function WriterView({ project, initialStructure, initialStructureText }: 
           {/* Center Panel: Editor */}
           <ResizablePanel defaultSize={50} minSize={30}>
              <WriterEditor
+               projectId={project.id}
                activeScene={activeScene}
                activeSceneId={activeSceneId}
                sceneContent={sceneContent}
@@ -68,6 +69,7 @@ export function WriterView({ project, initialStructure, initialStructureText }: 
                isSnapshotting={isSnapshotting}
                isSaving={isSaving}
                lastSaved={!!lastSaved}
+               hasScenes={structure ? structure.some(c => c.scenes.length > 0) : false}
              />
           </ResizablePanel>
 

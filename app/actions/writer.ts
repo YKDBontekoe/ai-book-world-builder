@@ -1,10 +1,12 @@
 "use server";
 
 import { db } from "../../lib/db/drizzle";
-import { scene, chapter, chapterVersion } from "../../lib/db/schema";
+import { scene, chapter, chapterVersion, outline, volume } from "../../lib/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
 import { continueWriting } from "../../lib/ai/writer";
 import { createScene, getScenesForProject } from "../../lib/db/queries/scene";
+import { createOutline, getOutlinesForProject } from "../../lib/db/queries/outline";
+import { createVolumePlan, getVolumePlansForProject } from "../../lib/db/queries/volume";
 import { ensureProjectAccess } from "../../lib/actions-utils";
 import { buildSceneGenerationContext } from "../../lib/ai/context-builder";
 
@@ -143,7 +145,7 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
       .select()
       .from(chapter)
       .where(eq(chapter.id, chapterId))
-      .limit(1); // Added limit(1) which was implicit in destructuring but safer to be explicit
+      .limit(1);
 
     if (!currentChapter) throw new Error("Chapter not found");
 
@@ -182,8 +184,6 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
     });
 
     if (prevSceneId) {
-      // Note: This still relies on `scene` having `prevSceneId`.
-      // Assuming it does based on original code.
       await db
         .update(scene)
         .set({ prevSceneId })
@@ -211,4 +211,152 @@ export async function saveProjectStructure(
      console.error("Failed to save project structure", error);
      return { success: false };
   }
+}
+
+export async function createNewChapter(projectId: string) {
+  try {
+    await ensureProjectAccess(projectId, true);
+
+    // 1. Get or Create Outline/Volume (Basic Check)
+    const outlines = await getOutlinesForProject({ projectId });
+    let outlineId = outlines[0]?.id;
+    if (!outlineId) {
+       const newOutline = await createOutline({
+          projectId,
+          title: "Project Outline",
+          pov: "Third Person",
+          tone: "Neutral",
+          pacing: "Moderate",
+          beats: [],
+       });
+       outlineId = newOutline.id;
+    }
+
+    const volumes = await getVolumePlansForProject({ projectId });
+    let volumeId = volumes[0]?.id;
+    if (!volumeId) {
+        const newVolume = await createVolumePlan({
+            projectId,
+            outlineId,
+            title: "Volume 1",
+            chapters: [],
+        });
+        volumeId = newVolume.id;
+    }
+
+    // 2. Determine sequence
+    const existingChapters = await db
+       .select()
+       .from(chapter)
+       .where(eq(chapter.volumeId, volumeId))
+       .orderBy(desc(chapter.sequence));
+
+    const nextSequence = (existingChapters[0]?.sequence ?? 0) + 1;
+
+    // 3. Create Chapter
+    const [newChapter] = await db.insert(chapter).values({
+        projectId,
+        volumeId,
+        outlineId,
+        title: `Chapter ${nextSequence}`,
+        sequence: nextSequence,
+        status: "planned",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    }).returning();
+
+    return { success: true, chapterId: newChapter.id };
+  } catch (error) {
+      console.error("Failed to create new chapter", error);
+      return { success: false };
+  }
+}
+
+export async function initializeProject(projectId: string) {
+    try {
+        await ensureProjectAccess(projectId, true);
+
+        // 1. Check/Create Structure
+        const outlines = await getOutlinesForProject({ projectId });
+        let outlineId = outlines[0]?.id;
+        if (!outlineId) {
+            const newOutline = await createOutline({
+                projectId,
+                title: "Project Outline",
+                pov: "Third Person",
+                tone: "Neutral",
+                pacing: "Moderate",
+                beats: [],
+            });
+            outlineId = newOutline.id;
+        }
+
+        const volumes = await getVolumePlansForProject({ projectId });
+        let volumeId = volumes[0]?.id;
+        let chapterId: string | null = null;
+
+        if (!volumeId) {
+            // Create Volume AND Chapter 1
+            const newVolume = await createVolumePlan({
+                projectId,
+                outlineId,
+                title: "Volume 1",
+                chapters: [{ title: "Chapter 1", sequence: 1 }],
+            });
+            volumeId = newVolume.id;
+            chapterId = newVolume.chapters[0]?.id;
+        } else {
+             // Volume exists, check for chapters
+             const chapters = await db
+                .select()
+                .from(chapter)
+                .where(eq(chapter.volumeId, volumeId))
+                .orderBy(asc(chapter.sequence));
+
+             if (chapters.length > 0) {
+                 chapterId = chapters[0].id;
+             } else {
+                 // Create Chapter 1
+                 const [newChapter] = await db.insert(chapter).values({
+                     projectId,
+                     volumeId,
+                     outlineId,
+                     title: "Chapter 1",
+                     sequence: 1,
+                     status: "planned",
+                     createdAt: new Date(),
+                     updatedAt: new Date(),
+                 }).returning();
+                 chapterId = newChapter.id;
+             }
+        }
+
+        if (!chapterId) throw new Error("Failed to resolve chapter");
+
+        // 2. Check/Create Scene 1
+        const scenes = await db
+            .select()
+            .from(scene)
+            .where(eq(scene.chapterId, chapterId));
+
+        let sceneId = scenes[0]?.id;
+
+        if (!sceneId) {
+            const newScene = await createScene({
+                projectId,
+                chapterId,
+                title: "Scene 1",
+                sequence: 1,
+                content: "",
+                status: "drafting",
+            });
+            sceneId = newScene.id;
+        }
+
+        return { success: true, sceneId };
+
+    } catch (error) {
+        console.error("Failed to initialize project", error);
+        return { success: false, error: "Initialization failed" };
+    }
 }
