@@ -8,6 +8,9 @@ import { BookCanvas } from "../book-canvas/book-canvas";
 import { useWriterState } from "../../hooks/use-writer-state";
 import { WriterSidebar } from "./writer-sidebar";
 import { WriterEditor } from "./writer-editor";
+import { useOptimistic, useTransition } from "react";
+import { createNewChapter } from "@/app/actions/writer";
+import { toast } from "sonner";
 
 // Lazy load assistant
 const FloatingAssistant = dynamic(() => import("../chat/floating-assistant").then(mod => mod.FloatingAssistant));
@@ -39,6 +42,45 @@ export function WriterView({ project, initialStructure, initialStructureText }: 
     initialStructureText
   });
 
+  const [optimisticStructure, addOptimisticChapter] = useOptimistic(
+    structure || [],
+    (state, newChapter: ChapterWithScenes) => [...state, newChapter]
+  );
+  const [isPending, startTransition] = useTransition();
+
+  const handleCreateChapter = () => {
+    const nextSequence = (optimisticStructure.length) + 1;
+    const tempChapter: ChapterWithScenes = {
+        id: crypto.randomUUID(),
+        projectId: project.id,
+        volumeId: "temp",
+        outlineId: "temp",
+        title: `Chapter ${nextSequence}`,
+        sequence: nextSequence,
+        status: "planned",
+        notes: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        scenes: []
+    };
+
+    startTransition(async () => {
+        addOptimisticChapter(tempChapter);
+
+        const promise = async () => {
+            const result = await createNewChapter(project.id);
+            if (!result.success) throw new Error("Failed to create chapter");
+            await fetchStructure();
+        };
+
+        toast.promise(promise(), {
+            loading: "Creating new chapter...",
+            success: "Chapter created",
+            error: "Failed to create chapter"
+        });
+    });
+  };
+
   return (
     <div className="h-full w-full overflow-hidden flex flex-col">
        <ResizablePanelGroup direction="horizontal" className="flex-1">
@@ -46,12 +88,13 @@ export function WriterView({ project, initialStructure, initialStructureText }: 
           <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="bg-muted/10 backdrop-blur-md">
              <WriterSidebar
                project={project}
-               structure={structure || []}
+               structure={optimisticStructure}
                structureText={structureText}
                activeSceneId={activeSceneId}
                onSceneSelect={setActiveSceneId}
                loading={loading}
                onStructureUpdate={fetchStructure}
+               onCreateChapter={handleCreateChapter}
              />
           </ResizablePanel>
 

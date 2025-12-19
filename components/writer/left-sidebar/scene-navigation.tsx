@@ -31,6 +31,7 @@ interface SceneNavigationProps {
   structure: ChapterWithScenes[] | null;
   loading: boolean;
   onStructureUpdate?: () => void;
+  onCreateChapter?: () => void;
 }
 
 export function SceneNavigation({
@@ -39,7 +40,8 @@ export function SceneNavigation({
   onSceneSelect,
   structure,
   loading,
-  onStructureUpdate
+  onStructureUpdate,
+  onCreateChapter
 }: SceneNavigationProps) {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -69,6 +71,11 @@ export function SceneNavigation({
   };
 
   const handleCreateChapter = async () => {
+      if (onCreateChapter) {
+          onCreateChapter();
+          return;
+      }
+
       setIsCreatingChapter(true);
       const toastId = toast.loading("Creating new chapter...");
       try {

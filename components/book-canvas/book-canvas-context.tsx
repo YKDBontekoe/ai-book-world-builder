@@ -8,6 +8,7 @@ import {
 	useMemo,
 	useState,
 } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { GenerationStatus } from "@/lib/db/schema";
 
 export type CanvasPane =
@@ -83,17 +84,47 @@ export function useBookCanvasActions() {
 }
 
 export function BookCanvasProvider({ children }: { children: ReactNode }) {
+	const router = useRouter();
+	const pathname = usePathname();
+	const searchParams = useSearchParams();
+
 	const [isOpen, setIsOpen] = useState(true);
-	const [activePane, setActivePane] = useState<CanvasPane>("outline");
+	// activePane derived from URL
+	const activePane = (searchParams.get("canvasPane") as CanvasPane) || "outline";
 	const [overallStatus, setOverallStatus] = useState<GenerationStatus>("idle");
 	const [projectId, setProjectId] = useState<string | null>(null);
 	const [generationId, setGenerationId] = useState<string | null>(null);
 	const [chatAction, triggerChatAction] = useState<ChatAction>(null);
-	const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+	// activeSceneId derived from URL
+	const activeSceneId = searchParams.get("sceneId");
 
 	const togglePanel = useCallback(() => {
 		setIsOpen((prev) => !prev);
 	}, []);
+
+	const setActivePane = useCallback(
+		(pane: CanvasPane) => {
+			const params = new URLSearchParams(searchParams.toString());
+			params.set("canvasPane", pane);
+			// Use replace to avoid filling history with pane switches
+			router.replace(`${pathname}?${params.toString()}`);
+		},
+		[searchParams, pathname, router],
+	);
+
+	const setActiveSceneId = useCallback(
+		(id: string | null) => {
+			const params = new URLSearchParams(searchParams.toString());
+			if (id) {
+				params.set("sceneId", id);
+			} else {
+				params.delete("sceneId");
+			}
+			// Use push for navigation-like changes (selecting a scene)
+			router.push(`${pathname}?${params.toString()}`);
+		},
+		[searchParams, pathname, router],
+	);
 
 	const actions = useMemo(
 		() => ({
@@ -106,7 +137,11 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 			triggerChatAction,
 			setActiveSceneId,
 		}),
-		[togglePanel],
+		[
+			togglePanel,
+			setActivePane,
+			setActiveSceneId,
+		],
 	);
 
 	const state = useMemo(

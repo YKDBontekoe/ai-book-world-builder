@@ -16,6 +16,7 @@ interface WriterSidebarProps {
   onSceneSelect: (id: string) => void;
   loading: boolean;
   onStructureUpdate: () => void;
+  onCreateChapter?: () => void;
 }
 
 export function WriterSidebar({
@@ -26,6 +27,7 @@ export function WriterSidebar({
   onSceneSelect,
   loading,
   onStructureUpdate,
+  onCreateChapter,
 }: WriterSidebarProps) {
   return (
     <div className="flex flex-col h-full border-r">
@@ -47,6 +49,7 @@ export function WriterSidebar({
          onSceneSelect={onSceneSelect}
          loading={loading}
          onStructureUpdate={onStructureUpdate}
+         onCreateChapter={onCreateChapter}
       />
    </div>
   );
