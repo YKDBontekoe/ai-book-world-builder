@@ -61,6 +61,29 @@ function formatStructure(structure: any[]) {
     .join("\n\n");
 }
 
+export async function getSceneContent(sceneId: string) {
+  try {
+    // 1. Get Scene to find Project ID
+    const [targetScene] = await db
+      .select()
+      .from(scene)
+      .where(eq(scene.id, sceneId))
+      .limit(1);
+
+    if (!targetScene) {
+      throw new Error("Scene not found");
+    }
+
+    // 2. Verify Access (Read is sufficient)
+    await ensureProjectAccess(targetScene.projectId);
+
+    return { success: true, content: targetScene.content };
+  } catch (error) {
+    console.error("Failed to fetch scene content", error);
+    return { success: false, error: "Failed to load content" };
+  }
+}
+
 export async function updateSceneContent(sceneId: string, content: string) {
   try {
     // 1. Get Scene to find Project ID
