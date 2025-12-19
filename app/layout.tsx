@@ -1,12 +1,13 @@
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 import "./globals.css";
+import { SessionProvider } from "next-auth/react";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
-import { SessionProvider } from "next-auth/react";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://chat.vercel.ai"),
@@ -87,6 +88,7 @@ export default function RootLayout({
 						<QueryProvider>
 							<ServiceWorkerRegister />
 							{children}
+							<SpeedInsights />
 						</QueryProvider>
 					</SessionProvider>
 				</ThemeProvider>
