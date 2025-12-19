@@ -2,24 +2,25 @@
  * Generation Orchestrator - Coordinates the multi-agent book generation workflow
  */
 
-import { asc, eq } from "drizzle-orm";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
 import { db } from "@/lib/db/queries";
 import {
 	type BookGenerationStep,
 	bookGeneration,
-	bookGenerationAsset,
 	bookGenerationStep,
-	chapter,
 	type GenerationSettings,
 	generationNote,
 } from "@/lib/db/schema";
-import { reviewChapter } from "./reviewer-agent";
-import {
-	generateChapter,
-	generateEpilogue,
-	generatePrologue,
-} from "./writer-agent";
+import { asc, eq } from "drizzle-orm";
+import { updateStepStatus } from "./utils";
+
+import { BackCoverHandler } from "./steps/back-cover";
+import { ChapterReviewingHandler } from "./steps/chapter-reviewing";
+import { ChapterWritingHandler } from "./steps/chapter-writing";
+import { ConsistencyCheckHandler } from "./steps/consistency-check";
+import { EpilogueHandler } from "./steps/epilogue";
+import { PrologueHandler } from "./steps/prologue";
+import type { ProcessStepContext, StepHandler } from "./steps/types";
 
 export interface GenerationCallbacks {
 	onStepStart?: (step: BookGenerationStep) => void;
@@ -39,6 +40,15 @@ interface RunGenerationOptions {
 	settings: GenerationSettings;
 	callbacks?: GenerationCallbacks;
 }
+
+const stepHandlers: Record<string, StepHandler> = {
+	prologue: new PrologueHandler(),
+	chapter_writing: new ChapterWritingHandler(),
+	chapter_reviewing: new ChapterReviewingHandler(),
+	epilogue: new EpilogueHandler(),
+	back_cover: new BackCoverHandler(),
+	consistency_check: new ConsistencyCheckHandler(),
+};
 
 /**
  * Main orchestration function - runs the entire book generation pipeline
@@ -81,8 +91,15 @@ export async function runGeneration({
 		log(`Found ${steps.length} steps to process`);
 
 		let completedSteps = 0;
-		const previousChapterSummary = "";
-		const chapterContents: Map<string, string> = new Map();
+		// Initialize context variables
+		const context: ProcessStepContext = {
+			projectData,
+			settings,
+			globalNotes: [],
+			previousChapterSummary: "",
+			chapterContents: new Map(),
+			log,
+		};
 
 		// Get user notes
 		const notes = await db
@@ -90,7 +107,7 @@ export async function runGeneration({
 			.from(generationNote)
 			.where(eq(generationNote.generationId, generationId));
 
-		const globalNotes = notes.filter((n) => n.isGlobal).map((n) => n.content);
+		context.globalNotes = notes.filter((n) => n.isGlobal).map((n) => n.content);
 
 		for (const step of steps) {
 			// Check if generation is paused or cancelled
@@ -117,14 +134,12 @@ export async function runGeneration({
 			log(`Starting step ${step.sequence}: ${step.stepType}`);
 
 			try {
-				await processStep(step, {
-					projectData,
-					settings,
-					globalNotes,
-					previousChapterSummary,
-					chapterContents,
-					log,
-				});
+				const handler = stepHandlers[step.stepType];
+				if (handler) {
+					await handler.process(step, context);
+				} else {
+					log(`Unknown step type: ${step.stepType}`);
+				}
 
 				// Update step to completed
 				await updateStepStatus(step.id, "completed");
@@ -185,215 +200,4 @@ export async function runGeneration({
 		callbacks?.onError?.(error as Error);
 		throw error;
 	}
-}
-
-interface ProcessStepContext {
-	projectData: any;
-	settings: GenerationSettings;
-	globalNotes: string[];
-	previousChapterSummary: string;
-	chapterContents: Map<string, string>;
-	log: (msg: string, type?: "writer" | "reviewer" | "orchestrator") => void;
-}
-
-async function processStep(
-	step: BookGenerationStep,
-	ctx: ProcessStepContext,
-): Promise<void> {
-	const { projectData, settings, globalNotes, log } = ctx;
-
-	switch (step.stepType) {
-		case "prologue": {
-			log("Generating prologue...", "writer");
-			const result = await generatePrologue(
-				projectData.projectContext,
-				projectData.loreContext,
-				settings,
-			);
-			await saveAsset(step.generationId, "prologue", result.content);
-			await db
-				.update(bookGenerationStep)
-				.set({
-					agentOutput: result.content,
-					wordCount: result.wordCount,
-					tokenCount: result.tokenCount,
-					usage: result.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-			log(`Prologue complete: ${result.wordCount} words`, "writer");
-			break;
-		}
-
-		case "chapter_writing": {
-			const chapterInfo = await getChapterInfo(step.chapterId);
-			log(
-				`Writing ${chapterInfo?.title || `Chapter ${step.sequence}`}...`,
-				"writer",
-			);
-
-			const result = await generateChapter({
-				chapterNumber: step.sequence,
-				chapterTitle: chapterInfo?.title || `Chapter ${step.sequence}`,
-				previousChapterSummary: ctx.previousChapterSummary,
-				projectContext: projectData.projectContext,
-				loreContext: projectData.loreContext,
-				outlineContent: projectData.outlinePrompts.join("\n"),
-				userNotes: globalNotes,
-				settings,
-			});
-
-			// Store content for review
-			if (step.chapterId) {
-				ctx.chapterContents.set(step.chapterId, result.content);
-			}
-
-			// Update step with output
-			await db
-				.update(bookGenerationStep)
-				.set({
-					agentOutput: result.content,
-					wordCount: result.wordCount,
-					tokenCount: result.tokenCount,
-					usage: result.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-
-			log(`Chapter writing complete: ${result.wordCount} words`, "writer");
-			break;
-		}
-
-		case "chapter_reviewing": {
-			const chapterContent = step.chapterId
-				? ctx.chapterContents.get(step.chapterId) || ""
-				: "";
-
-			if (!chapterContent) {
-				log("No content to review, skipping", "reviewer");
-				break;
-			}
-
-			log("Reviewing chapter...", "reviewer");
-
-			const review = await reviewChapter({
-				chapterContent,
-				chapterNumber: step.sequence,
-				chapterTitle: `Chapter ${step.sequence}`,
-				projectContext: projectData.projectContext,
-				loreContext: projectData.loreContext,
-				previousChaptersSummary: ctx.previousChapterSummary,
-				settings,
-			});
-
-			// Update step with review feedback
-			await db
-				.update(bookGenerationStep)
-				.set({
-					reviewFeedback: JSON.stringify(review),
-					usage: review.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-
-			log(
-				`Review complete: ${review.overallScore}/10, ${review.revisionPriority} priority`,
-				"reviewer",
-			);
-
-			// Update chapter summary for next chapters
-			if (chapterContent) {
-				ctx.previousChapterSummary = `Previous chapter (${review.overallScore}/10): ${chapterContent.substring(0, 500)}...`;
-			}
-			break;
-		}
-
-		case "epilogue": {
-			log("Generating epilogue...", "writer");
-			const result = await generateEpilogue(
-				projectData.projectContext,
-				projectData.loreContext,
-				ctx.previousChapterSummary,
-				settings,
-			);
-			await saveAsset(step.generationId, "epilogue", result.content);
-			await db
-				.update(bookGenerationStep)
-				.set({
-					agentOutput: result.content,
-					wordCount: result.wordCount,
-					tokenCount: result.tokenCount,
-					usage: result.usage,
-					updatedAt: new Date(),
-				})
-				.where(eq(bookGenerationStep.id, step.id));
-			log(`Epilogue complete: ${result.wordCount} words`, "writer");
-			break;
-		}
-
-		case "back_cover": {
-			log("Generating back cover blurb...", "writer");
-			// Simplified back cover generation
-			const blurb = await generateBackCoverBlurb(projectData, settings);
-			await saveAsset(step.generationId, "back_cover_blurb", blurb);
-			log("Back cover blurb complete", "writer");
-			break;
-		}
-
-		case "consistency_check": {
-			log("Running consistency check...", "reviewer");
-			// Would run the consistency checker agent here
-			log("Consistency check complete", "reviewer");
-			break;
-		}
-
-		default:
-			log(`Unknown step type: ${step.stepType}`);
-	}
-}
-
-async function updateStepStatus(stepId: string, status: string): Promise<void> {
-	const now = new Date();
-	const updates: any = { status, updatedAt: now };
-
-	if (status === "running") {
-		updates.startedAt = now;
-	} else if (status === "completed" || status === "failed") {
-		updates.completedAt = now;
-	}
-
-	await db
-		.update(bookGenerationStep)
-		.set(updates)
-		.where(eq(bookGenerationStep.id, stepId));
-}
-
-async function saveAsset(
-	generationId: string,
-	assetType: string,
-	content: string,
-	imageUrl?: string,
-): Promise<void> {
-	await db.insert(bookGenerationAsset).values({
-		generationId,
-		assetType,
-		content,
-		imageUrl,
-		createdAt: new Date(),
-		updatedAt: new Date(),
-	});
-}
-
-async function getChapterInfo(chapterId: string | null) {
-	if (!chapterId) return null;
-	const [ch] = await db.select().from(chapter).where(eq(chapter.id, chapterId));
-	return ch;
-}
-
-async function generateBackCoverBlurb(
-	projectData: any,
-	_settings: GenerationSettings,
-): Promise<string> {
-	// Simplified implementation
-	return `An epic tale of ${projectData.project.name}. A journey that will change everything...`;
 }
