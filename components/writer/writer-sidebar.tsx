@@ -1,53 +1,124 @@
 "use client";
 
-import dynamic from "next/dynamic";
-import { SceneNavigation } from "./left-sidebar/scene-navigation";
-import type { Project } from "@/lib/db/schema";
-import type { ChapterWithScenes } from "@/lib/types";
+import { Button } from "../ui/button";
+import { ScrollArea } from "../ui/scroll-area";
+import { cn } from "@/lib/utils";
+import { Plus, ChevronDown, ChevronRight, FileText, Folder } from "lucide-react";
+import { useState } from "react";
+import { createNewChapter } from "@/app/actions/writer";
+import { toast } from "sonner";
+import { StructureEditorDialog } from "./structure-editor-dialog";
+import { useWriterContext } from "./writer-context";
 
-const StructureEditorDialog = dynamic(() => import("./structure-editor-dialog").then(mod => mod.StructureEditorDialog));
-const ProjectSettingsModal = dynamic(() => import("./project-settings-modal").then(mod => mod.ProjectSettingsModal));
+export function WriterSidebar() {
+  const {
+    project,
+    structure,
+    structureText,
+    activeSceneId,
+    setActiveSceneId,
+    loading,
+    fetchStructure
+  } = useWriterContext();
 
-interface WriterSidebarProps {
-  project: Project;
-  structure: ChapterWithScenes[];
-  structureText: string;
-  activeSceneId: string | null;
-  onSceneSelect: (id: string) => void;
-  loading: boolean;
-  onStructureUpdate: () => void;
-}
+  const [expandedChapters, setExpandedChapters] = useState<Record<string, boolean>>({});
 
-export function WriterSidebar({
-  project,
-  structure,
-  structureText,
-  activeSceneId,
-  onSceneSelect,
-  loading,
-  onStructureUpdate,
-}: WriterSidebarProps) {
+  const toggleChapter = (chapterId: string) => {
+    setExpandedChapters(prev => ({
+      ...prev,
+      [chapterId]: !prev[chapterId]
+    }));
+  };
+
+  const handleAddChapter = async () => {
+    const toastId = toast.loading("Creating chapter...");
+    try {
+      await createNewChapter(project.id);
+      toast.success("Chapter created", { id: toastId });
+      fetchStructure();
+    } catch (e) {
+      toast.error("Failed to create chapter", { id: toastId });
+    }
+  };
+
   return (
-    <div className="flex flex-col h-full border-r">
-      <div className="p-4 border-b flex items-center justify-between">
-         <h2 className="font-semibold">Outline</h2>
-         <div className="flex gap-1">
-             <StructureEditorDialog
-                project={project}
-                initialStructureText={structureText}
-                onStructureUpdate={onStructureUpdate}
-             />
-             <ProjectSettingsModal project={project} />
-         </div>
+    <div className="flex flex-col h-full border-r bg-sidebar">
+      <div className="p-4 border-b flex items-center justify-between bg-sidebar-accent/50">
+        <h2 className="font-semibold text-sm text-sidebar-foreground">Book Structure</h2>
+        <div className="flex items-center gap-1">
+           <StructureEditorDialog
+             projectId={project.id}
+             currentStructure={structureText}
+             onSave={() => {
+                fetchStructure();
+             }}
+           >
+             <Button variant="ghost" size="icon" className="h-8 w-8">
+               <FileText className="h-4 w-4" />
+             </Button>
+           </StructureEditorDialog>
+           <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleAddChapter}>
+             <Plus className="h-4 w-4" />
+           </Button>
+        </div>
       </div>
-      <SceneNavigation
-         project={project}
-         structure={structure}
-         activeSceneId={activeSceneId}
-         onSceneSelect={onSceneSelect}
-         loading={loading}
-         onStructureUpdate={onStructureUpdate}
-      />
-   </div>
+
+      <ScrollArea className="flex-1">
+        <div className="p-2 space-y-1">
+           {loading ? (
+             <div className="p-4 text-sm text-muted-foreground text-center">Loading structure...</div>
+           ) : !structure || structure.length === 0 ? (
+             <div className="p-4 text-sm text-muted-foreground text-center">
+                No chapters yet. Click + to add one.
+             </div>
+           ) : (
+             structure.map((chapter) => (
+               <div key={chapter.id} className="space-y-1">
+                 <button
+                   onClick={() => toggleChapter(chapter.id)}
+                   className={cn(
+                     "w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md hover:bg-sidebar-accent/50 transition-colors text-sidebar-foreground",
+                     expandedChapters[chapter.id] && "bg-sidebar-accent"
+                   )}
+                 >
+                   {expandedChapters[chapter.id] ? (
+                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                   ) : (
+                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                   )}
+                   <Folder className="h-4 w-4 text-blue-500/80" />
+                   <span className="truncate">{chapter.title}</span>
+                 </button>
+
+                 {expandedChapters[chapter.id] && (
+                   <div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1">
+                     {chapter.scenes.map((scene) => (
+                       <button
+                         key={scene.id}
+                         onClick={() => setActiveSceneId(scene.id)}
+                         className={cn(
+                           "w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors text-left",
+                           activeSceneId === scene.id
+                             ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+                             : "text-muted-foreground"
+                         )}
+                       >
+                         <div className="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
+                         <span className="truncate">{scene.title}</span>
+                       </button>
+                     ))}
+                     {chapter.scenes.length === 0 && (
+                        <div className="px-2 py-1.5 text-xs text-muted-foreground italic">
+                           No scenes
+                        </div>
+                     )}
+                   </div>
+                 )}
+               </div>
+             ))
+           )}
+        </div>
+      </ScrollArea>
+    </div>
   );
 }

@@ -4,8 +4,8 @@ import { WriterView } from "../../../../components/writer/writer-view";
 import { Project } from "../../../../lib/db/schema";
 
 // Mock child components
-vi.mock("../../../../components/writer/left-sidebar/scene-navigation", () => ({
-  SceneNavigation: () => <div data-testid="scene-navigation">Scene Navigation</div>
+vi.mock("../../../../components/writer/writer-sidebar", () => ({
+  WriterSidebar: () => <div data-testid="writer-sidebar">Writer Sidebar</div>
 }));
 
 vi.mock("../../../../components/book-canvas/book-canvas", () => ({
@@ -38,6 +38,10 @@ vi.mock("../../../../components/editor/text-editor", () => ({
   Editor: () => <div data-testid="editor">Editor</div>
 }));
 
+vi.mock("../../../../components/writer/writer-editor", () => ({
+  WriterEditor: () => <div data-testid="writer-editor">Writer Editor</div>
+}));
+
 // Mock the server action file itself to prevent it from trying to load DB in test env
 vi.mock("../../../../app/actions/writer", () => ({
   getProjectStructure: vi.fn().mockResolvedValue({ structure: [], structureText: "" }),
@@ -68,7 +72,7 @@ describe("WriterView", () => {
   it("renders the 3-pane layout", async () => {
     render(<WriterView project={mockProject} />);
 
-    expect(screen.getByTestId("scene-navigation")).toBeInTheDocument();
+    expect(screen.getByTestId("writer-sidebar")).toBeInTheDocument();
     expect(screen.getByTestId("book-canvas")).toBeInTheDocument();
     expect(await screen.findByTestId("floating-assistant")).toBeInTheDocument();
   });

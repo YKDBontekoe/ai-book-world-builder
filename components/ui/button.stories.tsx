@@ -15,7 +15,7 @@ const meta = {
     },
     size: {
       control: 'select',
-      options: ['default', 'sm', 'lg', 'icon', 'pill'],
+      options: ['default', 'sm', 'lg', 'icon'],
     },
     asChild: {
       control: false,
@@ -87,12 +87,5 @@ export const Large: Story = {
     args: {
         size: 'lg',
         children: 'Large Button',
-    }
-}
-
-export const Pill: Story = {
-    args: {
-        size: 'pill',
-        children: 'Pill Button',
     }
 }
