@@ -15,6 +15,7 @@ import {
 
 import type { AppUsage } from "../../usage";
 import { user } from "./auth";
+import { project } from "./projects";
 
 export const chat = pgTable(
 	"Chat",
@@ -25,6 +26,7 @@ export const chat = pgTable(
 		userId: uuid("userId")
 			.notNull()
 			.references(() => user.id),
+		projectId: uuid("projectId").references(() => project.id),
 		visibility: varchar("visibility", { enum: ["public", "private"] })
 			.notNull()
 			.default("private"),
@@ -35,6 +37,7 @@ export const chat = pgTable(
 			table.userId,
 			table.createdAt,
 		),
+		projectIdIdx: index("chat_project_id_idx").on(table.projectId),
 	}),
 );
 
