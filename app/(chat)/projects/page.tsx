@@ -89,6 +89,7 @@ export default async function ProjectsPage() {
 				<TabsContent value="mine" className="mt-6">
 					{myProjects.length === 0 ? (
 						<EmptyState
+							variant="glass"
 							title="No projects found"
 							description="Create a new story to get started with your first project."
 							icon={FolderIcon}
@@ -115,6 +116,7 @@ export default async function ProjectsPage() {
 				<TabsContent value="shared" className="mt-6">
 					{sharedProjects.length === 0 ? (
 						<EmptyState
+							variant="glass"
 							title="No shared projects"
 							description="Explore projects shared by the community here."
 							icon={Globe}

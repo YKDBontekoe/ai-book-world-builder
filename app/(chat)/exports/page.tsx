@@ -30,6 +30,7 @@ export default async function ExportsPage() {
 
 			{exports.length === 0 ? (
 				<EmptyState
+					variant="glass"
 					title="No exports yet"
 					description="Export your books from the project page to see them here."
 					icon={BookOpen}
