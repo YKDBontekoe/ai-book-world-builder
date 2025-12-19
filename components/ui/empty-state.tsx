@@ -1,5 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import { GlassCard } from "@/components/ui/glass-card";
 
 export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
 	/** Icon component to display */
@@ -14,6 +15,8 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
 	action?: React.ReactNode;
 	/** Optional suggestion chips to display */
 	suggestions?: string[];
+	/** Visual style variant */
+	variant?: "dashed" | "glass";
 }
 
 /**
@@ -30,10 +33,53 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 			iconClassName,
 			action,
 			suggestions,
+			variant = "dashed",
 			...props
 		},
 		ref,
 	) => {
+		if (variant === "glass") {
+			return (
+				<GlassCard
+					ref={ref}
+					variant="liquid"
+					className={cn(
+						"flex flex-col items-center justify-center p-12 text-center",
+						className,
+					)}
+					{...props}
+				>
+					{Icon && (
+						<div className="mb-6 rounded-2xl bg-primary/10 p-5 ring-1 ring-primary/20">
+							<Icon
+								className={cn("h-8 w-8 text-primary", iconClassName)}
+								aria-hidden="true"
+							/>
+						</div>
+					)}
+					<h4 className="font-bold text-lg tracking-tight">{title}</h4>
+					{description && (
+						<p className="mt-2 max-w-sm text-sm text-muted-foreground leading-relaxed">
+							{description}
+						</p>
+					)}
+					{action && <div className="mt-8">{action}</div>}
+					{suggestions && suggestions.length > 0 && (
+						<div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
+							{suggestions.map((suggestion) => (
+								<span
+									key={suggestion}
+									className="rounded-full bg-background/50 border px-3 py-1.5 backdrop-blur-sm"
+								>
+									{suggestion}
+								</span>
+							))}
+						</div>
+					)}
+				</GlassCard>
+			);
+		}
+
 		return (
 			<div
 				ref={ref}
