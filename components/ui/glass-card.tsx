@@ -1,69 +1,62 @@
-import { cva, type VariantProps } from "class-variance-authority";
-import * as React from "react";
-import { cn } from "../../lib/utils";
+import { cn } from "@/lib/utils";
+import { type VariantProps, cva } from "class-variance-authority";
+import type React from "react";
+import { forwardRef } from "react";
 
-const glassCardVariants = cva("border backdrop-blur-[40px] shadow-sm transition-all duration-300 ease-[var(--ease-liquid)]", {
-	variants: {
-		variant: {
-			default: "border-glass-border bg-glass",
-			primary: "border-primary/20 bg-primary/10",
-			success:
-				"border-[var(--status-success)]/20 bg-[var(--status-success-bg)]",
-			warning:
-				"border-[var(--status-warning)]/20 bg-[var(--status-warning-bg)]",
-			error: "border-[var(--status-error)]/20 bg-[var(--status-error-bg)]",
-			info: "border-[var(--status-info)]/20 bg-[var(--status-info-bg)]",
-            ghost: "border-transparent bg-transparent hover:bg-glass/50",
-            liquid: "border-glass-border/40 bg-glass/50 hover:bg-glass/80 hover:shadow-xl hover:scale-[1.01] shadow-sm backdrop-blur-[30px]"
+const glassCardVariants = cva(
+	"relative overflow-hidden rounded-xl glass-panel transition-all duration-300",
+	{
+		variants: {
+			variant: {
+				default: "hover:bg-white/60 dark:hover:bg-black/30",
+				interactive: "cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
+				subtle: "bg-white/5 border-white/10 backdrop-blur-md",
+                liquid: "bg-glass/50 backdrop-blur-[30px] border-white/20 shadow-glass hover:bg-glass/70 transition-all duration-500",
+			},
+			size: {
+				default: "p-6",
+				sm: "p-4",
+				lg: "p-8",
+				none: "p-0",
+			},
 		},
-		padding: {
-			none: "p-0",
-			sm: "p-3",
-			md: "p-5",
-			lg: "p-8",
-		},
-		rounded: {
-			md: "rounded-md",
-			lg: "rounded-lg",
-			xl: "rounded-xl",
-			"2xl": "rounded-2xl",
-            "3xl": "rounded-3xl",
-		},
-		interactive: {
-			true: "cursor-pointer hover:bg-glass-input/80 hover:shadow-md",
-			false: "",
+		defaultVariants: {
+			variant: "default",
+			size: "default",
 		},
 	},
-	defaultVariants: {
-		variant: "default",
-		padding: "md",
-		rounded: "xl",
-		interactive: false,
-	},
-});
+);
 
 export interface GlassCardProps
 	extends React.HTMLAttributes<HTMLDivElement>,
-		VariantProps<typeof glassCardVariants> {}
+		VariantProps<typeof glassCardVariants> {
+	gradient?: boolean;
+    interactive?: boolean;
+}
 
-/**
- * A glassmorphism-styled card component with blur and transparency effects.
- * Uses the "Liquid Glass 2025" design tokens.
- */
-const GlassCard = React.forwardRef<HTMLDivElement, GlassCardProps>(
-	({ className, variant, padding, rounded, interactive, ...props }, ref) => {
+const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
+	({ className, variant, size, gradient, interactive, children, ...props }, ref) => {
 		return (
 			<div
 				ref={ref}
 				className={cn(
-					glassCardVariants({ variant, padding, rounded, interactive }),
-					className,
-				)}
+                    glassCardVariants({ variant, size }),
+                    interactive && "cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
+                    className
+                )}
 				{...props}
-			/>
+			>
+				{gradient && (
+					<div className="pointer-events-none absolute -inset-px opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+						<div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent mask-image-gradient" />
+					</div>
+				)}
+				<div className="relative z-10">{children}</div>
+			</div>
 		);
 	},
 );
+
 GlassCard.displayName = "GlassCard";
 
 export { GlassCard, glassCardVariants };

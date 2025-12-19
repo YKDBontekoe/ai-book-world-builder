@@ -4,22 +4,21 @@ import { GlassCard } from '@/components/ui/glass-card';
 const meta = {
   title: 'UI/GlassCard',
   component: GlassCard,
+  parameters: {
+    layout: 'centered',
+    backgrounds: {
+        default: 'dark',
+    }
+  },
   tags: ['autodocs'],
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'primary', 'success', 'warning', 'error', 'info', 'ghost', 'liquid'],
+      options: ['default', 'interactive', 'subtle', 'liquid'],
     },
-    padding: {
-      control: 'select',
-      options: ['none', 'sm', 'md', 'lg'],
-    },
-    rounded: {
-      control: 'select',
-      options: ['md', 'lg', 'xl', '2xl', '3xl'],
-    },
-    interactive: {
-        control: 'boolean',
+    size: {
+        control: 'select',
+        options: ['default', 'none', 'sm', 'lg']
     }
   },
 } satisfies Meta<typeof GlassCard>;
@@ -29,45 +28,38 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   args: {
-    children: <div className="text-center">Glass Card Content</div>,
-    className: 'w-[300px] h-[150px] flex items-center justify-center',
+    children: (
+        <div className="space-y-2">
+            <h3 className="font-semibold text-lg">Glass Card</h3>
+            <p className="text-sm text-white/60">This is a glass card component.</p>
+        </div>
+    ),
+    className: "w-[300px]",
   },
-  parameters: {
-    backgrounds: { default: 'dark' },
-  }
+};
+
+export const Interactive: Story = {
+  args: {
+    interactive: true,
+    children: (
+        <div className="space-y-2">
+            <h3 className="font-semibold text-lg">Interactive Card</h3>
+            <p className="text-sm text-white/60">Hover me to see the effect.</p>
+        </div>
+    ),
+    className: "w-[300px]",
+  },
 };
 
 export const Liquid: Story = {
-    args: {
-        variant: 'liquid',
-        children: <div className="text-center">Liquid Glass</div>,
-        className: 'w-[300px] h-[150px] flex items-center justify-center',
-    },
-    parameters: {
-        backgrounds: { default: 'dark' },
-    }
-  };
-
-export const Success: Story = {
-    args: {
-        variant: 'success',
-        children: 'Success State',
-        className: 'w-[300px] p-4',
-    }
-};
-
-export const Warning: Story = {
-    args: {
-        variant: 'warning',
-        children: 'Warning State',
-        className: 'w-[300px] p-4',
-    }
-};
-
-export const Error: Story = {
-    args: {
-        variant: 'error',
-        children: 'Error State',
-        className: 'w-[300px] p-4',
-    }
+  args: {
+    variant: 'liquid',
+    children: (
+        <div className="space-y-2">
+            <h3 className="font-semibold text-lg">Liquid Card</h3>
+            <p className="text-sm text-white/60">Advanced glass morphism.</p>
+        </div>
+    ),
+    className: "w-[300px]",
+  },
 };

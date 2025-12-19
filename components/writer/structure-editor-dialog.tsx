@@ -13,41 +13,42 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { saveProjectStructure } from "@/app/actions/writer";
-import { Loader2, Edit } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Project } from "@/lib/db/schema";
 
 interface StructureEditorDialogProps {
-  project: Project;
-  initialStructureText: string;
-  onStructureUpdate: () => void;
+  projectId: string;
+  currentStructure: string;
+  onSave: () => void;
+  children: React.ReactNode;
 }
 
 export function StructureEditorDialog({
-  project,
-  initialStructureText,
-  onStructureUpdate,
+  projectId,
+  currentStructure,
+  onSave,
+  children
 }: StructureEditorDialogProps) {
   const [open, setOpen] = useState(false);
-  const [text, setText] = useState(initialStructureText);
+  const [text, setText] = useState(currentStructure);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Update text when initialStructureText changes (e.g. re-fetched)
+  // Update text when currentStructure changes
   useEffect(() => {
     if (open) {
-      setText(initialStructureText);
+      setText(currentStructure);
     }
-  }, [initialStructureText, open]);
+  }, [currentStructure, open]);
 
   const handleSave = async () => {
     setIsSaving(true);
-    const result = await saveProjectStructure(project.id, text);
+    const result = await saveProjectStructure(projectId, text);
     setIsSaving(false);
 
     if (result.success) {
       toast.success("Structure updated successfully");
       setOpen(false);
-      onStructureUpdate();
+      onSave();
     } else {
       toast.error("Failed to update structure");
     }
@@ -56,10 +57,7 @@ export function StructureEditorDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="w-full justify-start mt-2">
-          <Edit className="mr-2 h-4 w-4" />
-          Edit Structure
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] h-[80vh] flex flex-col">
         <DialogHeader>

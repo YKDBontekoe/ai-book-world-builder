@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { WriterEditor } from "../../../../components/writer/writer-editor";
 import * as writerActions from "../../../../app/actions/writer";
+import * as writerContext from "../../../../components/writer/writer-context";
 
 // Mock child components
 vi.mock("../../../../components/editor/text-editor", () => ({
@@ -18,6 +19,10 @@ vi.mock("../../../../components/ui/empty-state", () => ({
   ),
 }));
 
+vi.mock("../../../../components/writer/writer-header", () => ({
+    WriterHeader: () => <div data-testid="writer-header">Header</div>
+}));
+
 // Mock Server Actions
 vi.mock("../../../../app/actions/writer", () => ({
   initializeProject: vi.fn(),
@@ -31,9 +36,19 @@ vi.mock("lucide-react", () => ({
   Sparkles: () => <span>Sparkles</span>,
 }));
 
+// Mock Context
+const mockUseWriterContext = vi.fn();
+vi.mock("../../../../components/writer/writer-context", async (importOriginal) => {
+    const actual = await importOriginal<typeof writerContext>();
+    return {
+        ...actual,
+        useWriterContext: () => mockUseWriterContext(),
+    };
+});
+
 describe("WriterEditor", () => {
-  const defaultProps = {
-    projectId: "project-123",
+  const defaultContext = {
+    project: { id: "project-123" },
     activeScene: undefined,
     activeSceneId: null,
     sceneContent: "",
@@ -42,12 +57,13 @@ describe("WriterEditor", () => {
     isSnapshotting: false,
     isSaving: false,
     lastSaved: false,
-    hasScenes: false,
+    structure: [],
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock window.location.reload
+    mockUseWriterContext.mockReturnValue(defaultContext);
+
     Object.defineProperty(window, "location", {
       writable: true,
       value: { reload: vi.fn() },
@@ -55,7 +71,11 @@ describe("WriterEditor", () => {
   });
 
   it("renders Empty State when no scene selected and hasScenes is false", () => {
-    render(<WriterEditor {...defaultProps} hasScenes={false} activeSceneId={null} />);
+    mockUseWriterContext.mockReturnValue({
+        ...defaultContext,
+        structure: []
+    });
+    render(<WriterEditor />);
 
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.getByText("Start Your Story")).toBeInTheDocument();
@@ -64,20 +84,24 @@ describe("WriterEditor", () => {
   });
 
   it("renders 'Select a scene' when no scene selected but hasScenes is true", () => {
-    render(<WriterEditor {...defaultProps} hasScenes={true} activeSceneId={null} />);
+    mockUseWriterContext.mockReturnValue({
+        ...defaultContext,
+        structure: [{ scenes: [{ id: 's1' }] }] // hasScenes = true
+    });
+    render(<WriterEditor />);
 
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
     expect(screen.getByText("Select a scene to start writing")).toBeInTheDocument();
   });
 
   it("renders Editor when scene is selected", () => {
-    render(
-      <WriterEditor
-        {...defaultProps}
-        activeSceneId="scene-1"
-        activeScene={{ id: "scene-1", title: "Scene 1" } as any}
-      />
-    );
+    mockUseWriterContext.mockReturnValue({
+        ...defaultContext,
+        activeSceneId: "scene-1",
+        activeScene: { id: "scene-1", title: "Scene 1" },
+        structure: [{ scenes: [{ id: 'scene-1' }] }]
+    });
+    render(<WriterEditor />);
 
     expect(screen.getByTestId("text-editor")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
@@ -89,7 +113,11 @@ describe("WriterEditor", () => {
       sceneId: "new-scene-1"
     });
 
-    render(<WriterEditor {...defaultProps} hasScenes={false} />);
+    mockUseWriterContext.mockReturnValue({
+        ...defaultContext,
+        structure: []
+    });
+    render(<WriterEditor />);
 
     const startButton = screen.getByText("Start Writing");
     fireEvent.click(startButton);
@@ -106,7 +134,11 @@ describe("WriterEditor", () => {
       success: false
     });
 
-    render(<WriterEditor {...defaultProps} hasScenes={false} />);
+    mockUseWriterContext.mockReturnValue({
+        ...defaultContext,
+        structure: []
+    });
+    render(<WriterEditor />);
 
     const startButton = screen.getByText("Start Writing");
     fireEvent.click(startButton);
