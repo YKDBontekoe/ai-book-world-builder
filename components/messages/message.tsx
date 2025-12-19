@@ -43,7 +43,7 @@ const PurePreviewMessage = ({
 		message.parts?.filter((part) => part.type === "file") ?? [];
 
 	// Helper to extract attachments correctly typed
-	const attachments = attachmentsFromMessage.map(a => ({
+	const attachments = attachmentsFromMessage.map((a) => ({
 		url: a.url,
 		filename: a.filename,
 		mediaType: a.mediaType,
@@ -153,16 +153,25 @@ export const PreviewMessage = memo(
 		if (prevProps.isLoading !== nextProps.isLoading) {
 			return false;
 		}
+		if (prevProps.isLast !== nextProps.isLast) {
+			return false;
+		}
 		if (prevProps.message.id !== nextProps.message.id) {
 			return false;
 		}
 		if (prevProps.requiresScrollPadding !== nextProps.requiresScrollPadding) {
 			return false;
 		}
-		if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+		if (!equal(prevProps.vote, nextProps.vote)) {
 			return false;
 		}
-		if (!equal(prevProps.vote, nextProps.vote)) {
+
+		// Optimization: If message object reference is stable, we can skip deep comparison
+		if (prevProps.message === nextProps.message) {
+			return true;
+		}
+
+		if (!equal(prevProps.message.parts, nextProps.message.parts)) {
 			return false;
 		}
 
