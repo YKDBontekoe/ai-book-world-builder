@@ -14,7 +14,7 @@ const glassCardVariants = cva("border backdrop-blur-[40px] shadow-sm transition-
 			error: "border-[var(--status-error)]/20 bg-[var(--status-error-bg)]",
 			info: "border-[var(--status-info)]/20 bg-[var(--status-info-bg)]",
             ghost: "border-transparent bg-transparent hover:bg-glass/50",
-            liquid: "border-glass-border/40 bg-glass/50 hover:bg-glass/80 hover:shadow-xl hover:scale-[1.01] shadow-sm backdrop-blur-[30px]"
+            liquid: "border-glass-border/40 bg-glass/50 hover:bg-glass/80 hover:shadow-xl hover:scale-[1.02] shadow-sm backdrop-blur-[30px] ease-spring"
 		},
 		padding: {
 			none: "p-0",

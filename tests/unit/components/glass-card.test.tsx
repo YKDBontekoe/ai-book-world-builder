@@ -17,7 +17,7 @@ describe("GlassCard", () => {
 		render(<GlassCard variant="liquid">Liquid Content</GlassCard>);
 		const card = screen.getByText("Liquid Content");
 		expect(card.className).toContain("hover:bg-glass/80");
-		expect(card.className).toContain("hover:scale-[1.01]");
+    expect(card.className).toContain("hover:scale-[1.02]");
 	});
 
 	it("renders correctly with interactive prop", () => {

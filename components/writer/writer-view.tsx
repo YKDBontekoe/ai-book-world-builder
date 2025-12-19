@@ -40,7 +40,7 @@ export function WriterView({ project, initialStructure, initialStructureText }: 
   });
 
   return (
-    <div className="h-full w-full overflow-hidden flex flex-col">
+    <div className="h-full w-full overflow-hidden flex flex-col animate-in fade-in duration-700">
        <ResizablePanelGroup direction="horizontal" className="flex-1">
           {/* Left Panel: Navigation */}
           <ResizablePanel defaultSize={20} minSize={15} maxSize={30} className="bg-muted/10 backdrop-blur-md">

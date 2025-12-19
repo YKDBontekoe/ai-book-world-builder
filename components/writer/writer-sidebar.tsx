@@ -28,7 +28,7 @@ export function WriterSidebar({
   onStructureUpdate,
 }: WriterSidebarProps) {
   return (
-    <div className="flex flex-col h-full border-r">
+    <div className="flex flex-col h-full border-r animate-in slide-in-from-left-4 duration-500 ease-spring">
       <div className="p-4 border-b flex items-center justify-between">
          <h2 className="font-semibold">Outline</h2>
          <div className="flex gap-1">

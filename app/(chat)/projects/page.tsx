@@ -69,7 +69,7 @@ export default async function ProjectsPage() {
 	});
 
 	return (
-		<PageContainer className="p-8 md:p-12 max-w-[1800px] mx-auto">
+		<PageContainer className="p-8 md:p-12 max-w-[1800px] mx-auto animate-in fade-in zoom-in-95 duration-500 ease-spring">
 			<div className="mb-8">
 				<PageHeader title="Projects" action={<CreateProjectDialog />} />
 			</div>
