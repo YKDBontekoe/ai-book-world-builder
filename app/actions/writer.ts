@@ -9,6 +9,7 @@ import { createOutline, getOutlinesForProject } from "../../lib/db/queries/outli
 import { createVolumePlan, getVolumePlansForProject } from "../../lib/db/queries/volume";
 import { ensureProjectAccess } from "../../lib/actions-utils";
 import { buildSceneGenerationContext } from "../../lib/ai/context-builder";
+import { cookies } from "next/headers";
 
 export async function getProjectStructure(projectId: string) {
   try {
@@ -189,8 +190,12 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
       prevSceneId
     );
 
+    // Get preferred model from cookie
+    const cookieStore = await cookies();
+    const modelId = cookieStore.get("chat-model")?.value;
+
     // 2. Generate Content
-    const generation = await continueWriting(context, prevContent);
+    const generation = await continueWriting(context, prevContent, { modelId });
 
     if (generation.error || !generation.text) {
       throw new Error(generation.error || "No text generated");
