@@ -17,3 +17,7 @@
 ## 2024-05-25 - Vitest Alias Resolution
 **Learning:** Vitest environment often fails to resolve aliases (`@/`) in source files if they are not explicitly mapped correctly in the test config or if the environment is complex.
 **Action:** Using relative imports in shared component libraries is a robust workaround to ensure tests pass reliably without complex config debugging.
+
+## 2024-05-30 - Deep Equality in Memoization
+**Learning:** `fast-deep-equal` in a `memo` comparison function runs on every parent re-render. For a list of N messages updating frequently (streaming), checking deep equality for all N-1 stable messages is O(N*M) waste. Checking reference equality (`prev.message === next.message`) first avoids this.
+**Action:** In `memo` comparison functions, always check reference equality of large objects before falling back to deep equality. Also ensure all props that affect rendering (like `isLast`) are actually checked.
