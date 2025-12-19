@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
 import { useBookCanvasActions, useBookCanvasValue } from "../components/book-canvas/book-canvas-context";
-import { getProjectStructure, updateSceneContent, createChapterSnapshot } from "../app/actions/writer";
+import { getProjectStructure, updateSceneContent, createChapterSnapshot, getSceneContent } from "../app/actions/writer";
 import { type ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterStateProps {
@@ -48,10 +48,45 @@ export function useWriterState({ projectId, initialStructure, initialStructureTe
 
   // Load content when active scene changes
   useEffect(() => {
+    let isMounted = true;
+
     if (activeScene) {
-      setSceneContent(activeScene.content || "");
+      // If content is already present (e.g. from optimistic update, previous fetch, or cache), use it
+      if (activeScene.content !== undefined && activeScene.content !== null) {
+        setSceneContent(activeScene.content);
+      } else {
+        // Clear content to prevent showing stale data while fetching
+        setSceneContent("");
+
+        // Fetch content on demand
+        getSceneContent(activeScene.id).then((result) => {
+          if (isMounted && result.success && result.content !== undefined) {
+            setSceneContent(result.content || "");
+
+            // Update structure to cache the fetched content
+            setStructure((prev) =>
+              prev
+                ? prev.map((c) => ({
+                    ...c,
+                    scenes: c.scenes.map((s) =>
+                      s.id === activeScene.id
+                        ? { ...s, content: result.content }
+                        : s
+                    ),
+                  }))
+                : null
+            );
+          }
+        });
+      }
+    } else {
+      setSceneContent("");
     }
-  }, [activeSceneId, activeScene]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeSceneId, activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
 
   const fetchStructure = useCallback(async () => {
     setLoading(true);
