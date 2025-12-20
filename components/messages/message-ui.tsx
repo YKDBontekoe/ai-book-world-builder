@@ -1,10 +1,11 @@
 import { cva, type VariantProps } from "class-variance-authority";
+import { type ReactNode, memo } from "react";
 import type React from "react";
-import type { ReactNode } from "react";
 import type { Attachment } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { MessageContent } from "@/components/elements/message";
 import { PreviewAttachment } from "@/components/chat/preview-attachment";
+import equal from "fast-deep-equal";
 
 const messageBubbleVariants = cva(
 	"w-fit break-words rounded-[20px] px-5 py-2.5 text-base leading-relaxed text-left shadow-sm",
@@ -70,24 +71,33 @@ interface MessageAttachmentsProps {
 	}[];
 }
 
-export function MessageAttachments({ attachments }: MessageAttachmentsProps) {
-	if (!attachments || attachments.length === 0) return null;
+// Optimization: Memoize MessageAttachments to prevent unnecessary re-renders
+// during streaming when message.parts updates but attachments are stable.
+// Using deep comparison because parent component regenerates the array on every render.
+export const MessageAttachments = memo(
+	function MessageAttachments({ attachments }: MessageAttachmentsProps) {
+		if (!attachments || attachments.length === 0) return null;
 
-	return (
-		<div
-			className="flex flex-row justify-end gap-2"
-			data-testid="message-attachments"
-		>
-			{attachments.map((attachment) => (
-				<PreviewAttachment
-					attachment={{
-						name: attachment.filename ?? "file",
-						contentType: attachment.mediaType ?? attachment.contentType ?? "application/octet-stream",
-						url: attachment.url,
-					}}
-					key={attachment.url}
-				/>
-			))}
-		</div>
-	);
-}
+		return (
+			<div
+				className="flex flex-row justify-end gap-2"
+				data-testid="message-attachments"
+			>
+				{attachments.map((attachment) => (
+					<PreviewAttachment
+						attachment={{
+							name: attachment.filename ?? "file",
+							contentType:
+								attachment.mediaType ??
+								attachment.contentType ??
+								"application/octet-stream",
+							url: attachment.url,
+						}}
+						key={attachment.url}
+					/>
+				))}
+			</div>
+		);
+	},
+	(prev, next) => equal(prev.attachments, next.attachments),
+);
