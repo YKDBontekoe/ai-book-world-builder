@@ -28,6 +28,12 @@ export const updateDocument = ({ session, dataStream }: UpdateDocumentProps) =>
         };
       }
 
+      if (document.userId !== session.user?.id) {
+        return {
+          error: "Unauthorized",
+        };
+      }
+
       dataStream.write({
         type: "data-clear",
         data: null,

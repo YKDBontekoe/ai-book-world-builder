@@ -7,3 +7,8 @@
 **Vulnerability:** The `createScene` AI tool allowed creating scenes in any project by specifying a `projectId`, without verifying that the authenticated user owned that project. This is an Insecure Direct Object Reference (IDOR) vulnerability.
 **Learning:** While Server Actions consistently used `ensureProjectAccess`, AI tools (which are effectively public API endpoints) were inconsistently implementing these checks, often relying on the caller or assuming implied trust.
 **Prevention:** ALL AI tools that perform write operations must explicitly verify ownership. Do not rely on read-access checks (like `getProjectByIdWithAccess` returning a public project) for write operations; explicitly check `project.userId === session.user.id`.
+
+## 2024-05-22 - [IDOR in Document Updates]
+**Vulnerability:** `updateDocument` tool allowed updating any document by ID without verifying that the `userId` on the document matches the session user.
+**Learning:** `getDocumentById` retrieves documents by ID globally. Even if the tool gets the document, it must explicitly verify `document.userId === session.user.id` before allowing updates. Using `getProjectByIdWithAccess` for write operations is also dangerous if it includes public projects.
+**Prevention:** Always verify `entity.userId === session.user.id` (or `project.userId` for project-child entities) before any write operation.
