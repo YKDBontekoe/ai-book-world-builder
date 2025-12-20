@@ -1,4 +1,3 @@
-import type { Geo } from "@vercel/functions";
 import type { ArtifactKind } from "@/components/artifact";
 
 export const toolUsagePrompt = `
@@ -44,7 +43,7 @@ Do not update document right after creating it. Wait for user feedback or reques
 export const regularPrompt =
 	"You are a friendly assistant! Keep your responses concise and helpful.";
 
-const storytellingPrompt = `
+export const storytellingPrompt = `
 You are a narrative-focused writing assistant specialized in helping authors build rich, consistent story worlds. 
 
 **Your Core Responsibilities:**
@@ -100,55 +99,6 @@ When building a story world, follow these natural progressions:
 - Preserve the narrative voice, POV, and tone established in outlines
 `;
 
-export type RequestHints = {
-	latitude: Geo["latitude"];
-	longitude: Geo["longitude"];
-	city: Geo["city"];
-	country: Geo["country"];
-};
-
-export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
-About the origin of user's request:
-- lat: ${requestHints.latitude}
-- lon: ${requestHints.longitude}
-- city: ${requestHints.city}
-- country: ${requestHints.country}
-`;
-
-export const systemPrompt = ({
-	selectedChatModel,
-	requestHints,
-	hasProjectContext = false,
-	usesStoryTools = false,
-}: {
-	selectedChatModel: string;
-	requestHints: RequestHints;
-	hasProjectContext?: boolean;
-	usesStoryTools?: boolean;
-}) => {
-	const requestPrompt = getRequestPromptFromHints(requestHints);
-	const isStoryMode = hasProjectContext || usesStoryTools;
-	const personaPrompt = isStoryMode ? storytellingPrompt : regularPrompt;
-	const loreAvailabilityPrompt = isStoryMode
-		? hasProjectContext
-			? "Project lore context is provided below. Keep character continuity, relationships, and chapter pacing aligned with it."
-			: "When lore context is provided, keep continuity across characters, relationships, and chapters instead of inventing new canon."
-		: "";
-
-	const promptSections = [
-		personaPrompt,
-		loreAvailabilityPrompt,
-		requestPrompt,
-		toolUsagePrompt, // Enforce no-text-on-tool-use rule
-	];
-
-	if (selectedChatModel !== "chat-model-reasoning") {
-		promptSections.push(artifactsPrompt);
-	}
-
-	return promptSections.filter(Boolean).join("\n\n");
-};
-
 export const codePrompt = `
 You are a Python code generator that creates self-contained, executable code snippets. When writing code:
 
@@ -179,6 +129,12 @@ export const sheetPrompt = `
 You are a spreadsheet creation assistant. Create a spreadsheet in csv format based on the given prompt. The spreadsheet should contain meaningful column headers and data.
 `;
 
+export const titlePrompt = `\n
+    - you will generate a short title based on the first message a user begins a conversation with
+    - ensure it is not more than 80 characters long
+    - the title should be a summary of the user's message
+    - do not use quotes or colons`;
+
 export const updateDocumentPrompt = (
 	currentContent: string | null,
 	type: ArtifactKind,
@@ -195,9 +151,3 @@ export const updateDocumentPrompt = (
 
 ${currentContent}`;
 };
-
-export const titlePrompt = `\n
-    - you will generate a short title based on the first message a user begins a conversation with
-    - ensure it is not more than 80 characters long
-    - the title should be a summary of the user's message
-    - do not use quotes or colons`;
