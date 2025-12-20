@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, MousePointerClick } from "lucide-react";
 import { Button } from "../ui/button";
 import { Editor } from "../editor/text-editor";
 import { EmptyState } from "../ui/empty-state";
@@ -78,8 +78,14 @@ export function WriterEditor() {
               />
             </div>
         ) : (
-          <div className="flex h-full items-center justify-center text-muted-foreground">
-            Select a scene to start writing
+          <div className="flex h-full items-center justify-center p-8">
+             <EmptyState
+                variant="dashed"
+                title="No Scene Selected"
+                description="Select a scene from the sidebar to continue writing."
+                icon={MousePointerClick}
+                className="border-none bg-transparent"
+             />
           </div>
         )}
       </div>

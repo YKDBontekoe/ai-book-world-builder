@@ -34,6 +34,7 @@ vi.mock("lucide-react", () => ({
   Save: () => <span>Save</span>,
   History: () => <span>History</span>,
   Sparkles: () => <span>Sparkles</span>,
+  MousePointerClick: () => <span>MousePointerClick</span>,
 }));
 
 // Mock Context
@@ -83,15 +84,17 @@ describe("WriterEditor", () => {
     expect(screen.queryByTestId("text-editor")).not.toBeInTheDocument();
   });
 
-  it("renders 'Select a scene' when no scene selected but hasScenes is true", () => {
+  it("renders 'Select a scene' empty state when no scene selected but hasScenes is true", () => {
     mockUseWriterContext.mockReturnValue({
         ...defaultContext,
         structure: [{ scenes: [{ id: 's1' }] }] // hasScenes = true
     });
     render(<WriterEditor />);
 
-    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
-    expect(screen.getByText("Select a scene to start writing")).toBeInTheDocument();
+    // We updated the component to use EmptyState for this case too
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    expect(screen.getByText("No Scene Selected")).toBeInTheDocument();
+    expect(screen.getByText("Select a scene from the sidebar to continue writing.")).toBeInTheDocument();
   });
 
   it("renders Editor when scene is selected", () => {
