@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="#features"><strong>Features</strong></a> ·
+  <a href="#documentation"><strong>Documentation</strong></a> ·
   <a href="#getting-started"><strong>Getting Started</strong></a> ·
   <a href="#design-system"><strong>Design System</strong></a> ·
   <a href="#verification"><strong>Verification</strong></a>
@@ -17,6 +18,13 @@
 <br/>
 
 **AI Book World Builder** helps authors craft complex narratives by grounding AI generations in their custom world data. It combines project-aware chat with structured book generation workflows.
+
+## Documentation
+
+- **[User Guide](docs/user-guide.md)**: How to use the Book Generation Wizard, Project-Aware Chat, and World Building tools.
+- **[Generation Architecture](docs/generation-architecture.md)**: Technical deep dive into the Orchestrator, Writer Agent, and Step Handlers.
+- **[AI Services](docs/ai-services.md)**: Explanation of Model Routing, Context Flooding, and RAG strategies.
+- **[Design System](docs/design-system.md)**: Guidelines for the Native macOS aesthetic and component usage.
 
 ## Features
 
