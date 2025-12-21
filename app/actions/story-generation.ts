@@ -6,10 +6,10 @@ import { myProvider } from "@/lib/ai/providers";
 import { db } from "@/lib/db/drizzle";
 import { outline, volume, chapter, scene } from "@/lib/db/schema";
 import { ensureProjectAccess } from "@/lib/actions-utils";
-import { cookies } from "next/headers";
 import { eq, asc, desc } from "drizzle-orm";
 import { continueWriting } from "@/lib/ai/writer";
 import { createScene } from "@/lib/db/queries/scene";
+import { getSelectedModelId } from "@/lib/ai/models";
 
 const bookPlanSchema = z.object({
   title: z.string().describe("The suggested title of the book"),
@@ -27,8 +27,8 @@ export type BookPlan = z.infer<typeof bookPlanSchema>;
 
 export async function generateBookPlan(prompt: string, modelId?: string) {
   try {
-    const cookieStore = await cookies();
-    const targetModel = modelId || cookieStore.get("chat-model")?.value || "gpt-4o";
+    // Use Large model for complex planning
+    const targetModel = modelId || await getSelectedModelId("large");
 
     const { object } = await generateObject({
       model: myProvider.languageModel(targetModel),
@@ -64,6 +64,7 @@ export async function createBookFromPlan(projectId: string, plan: BookPlan) {
         }).returning();
 
         // 2. Create Volume
+        // Removed 'chapters' from insert as it's not in the schema
         const [newVolume] = await tx.insert(volume).values({
           projectId,
           outlineId: newOutline.id,
@@ -127,8 +128,8 @@ export async function planChapterScenes(chapterId: string) {
 
         await ensureProjectAccess(targetChapter.projectId, true);
 
-        const cookieStore = await cookies();
-        const modelId = cookieStore.get("chat-model")?.value || "gpt-4o";
+        // Use Large model for scene planning
+        const modelId = await getSelectedModelId("large");
 
         const scenePlanSchema = z.object({
             scenes: z.array(z.object({
@@ -189,8 +190,8 @@ export async function generateSceneText(sceneId: string) {
         const prevContext = previousScenes.map(s => `Scene ${s.title}: ${s.content?.slice(-500)}`).join("\n");
         const chapterContext = `Chapter: ${targetChapter.title}\nNotes: ${targetChapter.notes}`;
 
-        const cookieStore = await cookies();
-        const modelId = cookieStore.get("chat-model")?.value || "gpt-4o";
+        // Use Large model for prose generation
+        const modelId = await getSelectedModelId("large");
 
         const { text } = await continueWriting(
             `${chapterContext}\n${prevContext}`,

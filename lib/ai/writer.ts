@@ -2,10 +2,7 @@
 
 import { generateText } from "ai";
 import { myProvider } from "./providers";
-import { DEFAULT_CHAT_MODEL } from "./models";
-
-// Default fallback if no model is provided or found in cookies
-const DEFAULT_WRITER_MODEL = DEFAULT_CHAT_MODEL;
+import { getSelectedModelId } from "./models";
 
 export async function continueWriting(
 	context: string,
@@ -13,7 +10,7 @@ export async function continueWriting(
 	options: { modelId?: string; style?: string } = {}
 ) {
 	try {
-		const targetModel = options.modelId || DEFAULT_WRITER_MODEL;
+		const targetModel = options.modelId || await getSelectedModelId("large");
 
 		const { text } = await generateText({
 			model: myProvider.languageModel(targetModel),
@@ -37,7 +34,7 @@ export async function generateIdeas(
 	options: { modelId?: string } = {}
 ) {
 	try {
-		const targetModel = options.modelId || DEFAULT_WRITER_MODEL;
+		const targetModel = options.modelId || await getSelectedModelId("middle");
 
 		const { text } = await generateText({
 			model: myProvider.languageModel(targetModel),
@@ -59,7 +56,7 @@ export async function rewriteSelection(
 	options: { modelId?: string } = {}
 ) {
 	try {
-		const targetModel = options.modelId || DEFAULT_WRITER_MODEL;
+		const targetModel = options.modelId || await getSelectedModelId("middle");
 
 		const { text } = await generateText({
 			model: myProvider.languageModel(targetModel),

@@ -1,3 +1,6 @@
+import { getAvailableModels } from "@/app/actions/settings";
+import { getModelPreferences } from "@/app/actions/settings";
+
 export type ChatModel = {
   id: string;
   name: string;
@@ -13,101 +16,94 @@ export type ChatModel = {
   };
 };
 
-export const chatModels: readonly ChatModel[] = [
-  {
-    id: "anthropic-claude-opus-4-5",
-    name: "Claude Opus 4.5",
-    provider: "Anthropic",
-    gatewayId: "anthropic/claude-opus-4-5-latest",
-    description: "The Brain. Best for long-horizon planning and orchestration.",
-    supportsImages: true,
-    pricing: {
-      input: "15.00",
-      output: "75.00",
-      cachedInputTokens: "1.50",
-    },
-  },
-  {
-    id: "anthropic-claude-sonnet-4-5",
-    name: "Claude Sonnet 4.5",
-    provider: "Anthropic",
-    gatewayId: "anthropic/claude-sonnet-4-5-latest",
-    description: "The Writer. Warm tone, high speed, perfect for drafting.",
-    supportsImages: true,
-    pricing: {
-      input: "3.00",
-      output: "15.00",
-      cachedInputTokens: "0.30",
-    },
-  },
-  {
-    id: "deepseek-reasoner",
-    name: "DeepSeek V3 (Reasoner)",
-    provider: "DeepSeek",
-    gatewayId: "deepseek/deepseek-reasoner",
-    description:
-      "The Logic Check. Chain-of-thought processing for diagnostics.",
-    supportsImages: false,
-    reasoning: true,
-    pricing: {
-      input: "0.14",
-      output: "2.19",
-      cachedInputTokens: "0.014",
-    },
-  },
-  {
-    id: "google-gemini-3-pro",
-    name: "Gemini 3 Pro",
-    provider: "Google",
-    gatewayId: "google/gemini-3-pro-preview",
-    description:
-      "The Context Bank. 2M+ token context window for full retrieval.",
-    supportsImages: true,
-    pricing: {
-      input: "1.25",
-      output: "5.00",
-      cachedInputTokens: "0.31",
-    },
-  },
-  {
-    id: "openai-gpt-4o-mini",
-    name: "GPT-4o mini",
-    provider: "OpenAI",
-    gatewayId: "openai/gpt-4o-mini",
-    description: "Fast, cost-effective multimodal model with image support",
-    supportsImages: true,
-    pricing: {
-      input: "0.15",
-      output: "0.60",
-      cachedInputTokens: "0.075",
-    },
-  },
-  {
-    id: "openai-gpt-5-mini",
-    name: "GPT-5 mini",
-    provider: "OpenAI",
-    gatewayId: "openai/gpt-5-mini",
-    description: "Next-gen mini model with enhanced reasoning capabilities",
-    supportsImages: true,
-    pricing: {
-      input: "1.00",
-      output: "4.00",
-      cachedInputTokens: "0.50",
-    },
-  },
-];
-
 export type ChatModelId = string;
 
-export const DEFAULT_CHAT_MODEL: ChatModelId = "openai-gpt-5-mini";
+// Fallback models in case preferences aren't set or fetch fails
+export const DEFAULT_MODELS = {
+  light: "google/gemini-2.0-flash-lite-preview-02-05:free",
+  middle: "google/gemini-2.0-flash-001",
+  large: "google/gemini-2.0-pro-exp-02-05:free",
+};
 
-export const chatModelIds = chatModels.map((model) => model.id) as string[];
+// Compatibility for existing code that expects a default
+export const DEFAULT_CHAT_MODEL: ChatModelId = DEFAULT_MODELS.middle;
 
+// Helper to check if a model ID is valid (basic check)
 export const isChatModelId = (candidate?: string): candidate is ChatModelId =>
-  chatModelIds.includes(candidate as string);
+  typeof candidate === "string" && candidate.length > 0;
 
-export const getChatModelById = (id?: string): ChatModel | undefined =>
-  chatModels.find((model) => model.id === id);
-
+// Helper to get a valid ID or default
 export const getValidChatModelId = (candidate?: string): ChatModelId =>
   isChatModelId(candidate) ? candidate : DEFAULT_CHAT_MODEL;
+
+// Async function to resolve "light", "middle", "large" to a concrete ID
+export async function getSelectedModelId(
+  type: "light" | "middle" | "large"
+): Promise<string> {
+  const preferences = await getModelPreferences();
+  return preferences[type] || DEFAULT_MODELS[type];
+}
+
+// Function to get model info - needs to be async now
+export async function getChatModelById(id?: string): Promise<ChatModel | undefined> {
+   if (!id) return undefined;
+
+   const models = await getAvailableModels();
+   const model = models.find((m: any) => m.id === id);
+
+   if (model) {
+       return {
+           id: model.id,
+           name: model.name,
+           provider: "OpenRouter",
+           gatewayId: model.id,
+           description: `Context: ${model.context_length}`,
+           supportsImages: true,
+           pricing: {
+               input: model.pricing?.prompt || "0",
+               output: model.pricing?.completion || "0"
+           }
+       };
+   }
+
+   // Fallback for known defaults if not found in fetched list
+   return {
+       id,
+       name: id,
+       provider: "OpenRouter",
+       gatewayId: id,
+       description: "Unknown Model",
+       supportsImages: true
+   };
+}
+
+// For consumers needing a list of models (e.g. ModelSelector)
+// Consumers should prefer fetching via server action.
+export const chatModels: ChatModel[] = [
+    {
+        id: DEFAULT_MODELS.light,
+        name: "Gemini 2.0 Flash Lite (Light Default)",
+        provider: "Google",
+        gatewayId: DEFAULT_MODELS.light,
+        description: "Fast and free",
+        supportsImages: true,
+    },
+    {
+        id: DEFAULT_MODELS.middle,
+        name: "Gemini 2.0 Flash (Middle Default)",
+        provider: "Google",
+        gatewayId: DEFAULT_MODELS.middle,
+        description: "Balanced",
+        supportsImages: true,
+    },
+    {
+        id: DEFAULT_MODELS.large,
+        name: "Gemini 2.0 Pro (Large Default)",
+        provider: "Google",
+        gatewayId: DEFAULT_MODELS.large,
+        description: "Complex reasoning",
+        supportsImages: true,
+    }
+];
+
+export const chatModelIds = chatModels.map(m => m.id);

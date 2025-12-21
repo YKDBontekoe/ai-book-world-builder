@@ -5,7 +5,10 @@ import { signIn } from "next-auth/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { getConnectedAccounts } from "@/app/actions/user";
+import { getAvailableModels, getModelPreferences, saveModelPreferences } from "@/app/actions/settings";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
 
@@ -19,12 +22,22 @@ export function SettingsDialog({
   const [activeTab, setActiveTab] = useState("account");
   const [connectedAccounts, setConnectedAccounts] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSavingModels, setIsSavingModels] = useState(false);
+
+  // Model Settings State
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [modelPreferences, setModelPreferences] = useState({
+      light: "",
+      middle: "",
+      large: ""
+  });
 
   useEffect(() => {
     if (open) {
-      loadAccounts();
+      if (activeTab === "account") loadAccounts();
+      if (activeTab === "models") loadModelSettings();
     }
-  }, [open]);
+  }, [open, activeTab]);
 
   const loadAccounts = async () => {
     setIsLoading(true);
@@ -38,6 +51,42 @@ export function SettingsDialog({
     }
   };
 
+  const loadModelSettings = async () => {
+      setIsLoading(true);
+      try {
+          const [models, prefs] = await Promise.all([
+              getAvailableModels(),
+              getModelPreferences()
+          ]);
+          setAvailableModels(models);
+          setModelPreferences({
+              light: prefs.light || "",
+              middle: prefs.middle || "",
+              large: prefs.large || ""
+          });
+      } catch (error) {
+          toast.error("Failed to load model settings");
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
+  const handleSaveModelPreferences = async () => {
+      setIsSavingModels(true);
+      try {
+          await saveModelPreferences({
+              light: modelPreferences.light || null,
+              middle: modelPreferences.middle || null,
+              large: modelPreferences.large || null
+          });
+          toast.success("Model preferences saved");
+      } catch (error) {
+          toast.error("Failed to save model preferences");
+      } finally {
+          setIsSavingModels(false);
+      }
+  };
+
   const handleConnectGoogle = async () => {
     try {
       await signIn("google", { callbackUrl: "/" });
@@ -48,14 +97,14 @@ export function SettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] gap-0 p-0 overflow-hidden outline-none">
+      <DialogContent className="sm:max-w-[800px] gap-0 p-0 overflow-hidden outline-none h-[600px] flex flex-col">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle>Settings</DialogTitle>
           <DialogDescription>Manage your account and preferences.</DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-row">
-          <div className="w-48 border-r bg-muted/30 py-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-1 flex-row overflow-hidden">
+          <div className="w-48 border-r bg-muted/30 py-4 shrink-0">
              <TabsList className="flex flex-col h-auto bg-transparent p-0 gap-1 px-2">
                 <TabsTrigger
                   value="account"
@@ -63,11 +112,16 @@ export function SettingsDialog({
                 >
                   Account
                 </TabsTrigger>
-                {/* Add more tabs here if needed */}
+                <TabsTrigger
+                  value="models"
+                  className="w-full justify-start data-[state=active]:bg-muted"
+                >
+                  AI Models
+                </TabsTrigger>
              </TabsList>
           </div>
 
-          <div className="flex-1 p-6">
+          <div className="flex-1 p-6 overflow-y-auto">
             <TabsContent value="account" className="mt-0 space-y-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Connected Accounts</h3>
@@ -100,7 +154,7 @@ export function SettingsDialog({
                       </p>
                     </div>
                   </div>
-                  {isLoading ? (
+                  {isLoading && activeTab === 'account' ? (
                       <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   ) : connectedAccounts.includes("google") ? (
                     <Button variant="outline" disabled className="gap-2 text-green-600 border-green-200 bg-green-50 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400">
@@ -114,6 +168,84 @@ export function SettingsDialog({
                   )}
                 </div>
               </div>
+            </TabsContent>
+
+            <TabsContent value="models" className="mt-0 space-y-6">
+                <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                         <h3 className="text-lg font-medium">Model Configuration</h3>
+                         <Button onClick={handleSaveModelPreferences} disabled={isSavingModels}>
+                             {isSavingModels && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                             Save Changes
+                         </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                        Select the AI models you want to use for different complexity levels.
+                        These settings will apply across the application (Chat, Story Generation, etc.).
+                    </p>
+
+                    <div className="grid gap-6 py-4">
+                        <div className="space-y-2">
+                            <Label>Light Model (Fast, low cost)</Label>
+                            <p className="text-xs text-muted-foreground">Used for simple tasks like title generation and quick suggestions.</p>
+                            <Select
+                                value={modelPreferences.light}
+                                onValueChange={(val) => setModelPreferences(prev => ({ ...prev, light: val }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a model" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableModels.map(model => (
+                                        <SelectItem key={model.id} value={model.id}>
+                                            {model.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Middle Model (Balanced)</Label>
+                            <p className="text-xs text-muted-foreground">The default for chat and standard editing tasks.</p>
+                            <Select
+                                value={modelPreferences.middle}
+                                onValueChange={(val) => setModelPreferences(prev => ({ ...prev, middle: val }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a model" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableModels.map(model => (
+                                        <SelectItem key={model.id} value={model.id}>
+                                            {model.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label>Large Model (Complex reasoning)</Label>
+                            <p className="text-xs text-muted-foreground">Used for deep story planning, analysis, and high-quality prose generation.</p>
+                            <Select
+                                value={modelPreferences.large}
+                                onValueChange={(val) => setModelPreferences(prev => ({ ...prev, large: val }))}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a model" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {availableModels.map(model => (
+                                        <SelectItem key={model.id} value={model.id}>
+                                            {model.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    </div>
+                </div>
             </TabsContent>
           </div>
         </Tabs>

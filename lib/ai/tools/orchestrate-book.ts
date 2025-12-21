@@ -160,7 +160,7 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 			await logProgress("Deciding the best next step...");
 
 			// 5. Orchestrator Reasoning
-			const orchestratorModel = getGatewayIdForRole("orchestrator");
+			const orchestratorModel = await getGatewayIdForRole("orchestrator");
 
 			const { object: decision } = await generateObject({
 				model: orchestratorModel as any,

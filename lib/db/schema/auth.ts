@@ -20,6 +20,12 @@ export const user = pgTable("User", {
 
 export type User = InferSelectModel<typeof user>;
 
+export interface ModelPreferences {
+  light: string | null;
+  middle: string | null;
+  large: string | null;
+}
+
 export const userPreferences = pgTable(
   "UserPreferences",
   {
@@ -33,6 +39,9 @@ export const userPreferences = pgTable(
       .notNull()
       .default([]),
     recentModels: jsonb("recentModels").$type<string[]>().notNull().default([]),
+    modelPreferences: jsonb("modelPreferences")
+      .$type<ModelPreferences>()
+      .default({ light: null, middle: null, large: null }),
     createdAt: timestamp("createdAt").notNull(),
     updatedAt: timestamp("updatedAt").notNull(),
   },

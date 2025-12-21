@@ -103,11 +103,11 @@ function estimateTokens(words: number): number {
 /**
  * Calculate comprehensive cost estimate for book generation
  */
-export function estimateGenerationCost(
+export async function estimateGenerationCost(
 	input: CostEstimateInput,
-): GenerationCostEstimate {
-	const writerModel = getChatModelById(input.writerModelId);
-	const reviewerModel = getChatModelById(input.reviewerModelId);
+): Promise<GenerationCostEstimate> {
+	const writerModel = await getChatModelById(input.writerModelId);
+	const reviewerModel = await getChatModelById(input.reviewerModelId);
 	const imageModel = getImageModelById(input.imageModelId);
 
 	// Main content estimation

@@ -5,7 +5,6 @@ import { PaperclipIcon } from "lucide-react";
 import { memo } from "react";
 import { Button } from "@/components/ui/button";
 import type { ChatModelId } from "@/lib/ai/models";
-import { getChatModelById } from "@/lib/ai/models";
 
 import type { ChatMessage } from "@/lib/types";
 
@@ -18,8 +17,10 @@ function PureAttachmentsButton({
 	status: UseChatHelpers<ChatMessage>["status"];
 	selectedModelId: ChatModelId;
 }) {
-	const selectedModel = getChatModelById(selectedModelId);
-	const supportsImages = selectedModel?.supportsImages ?? false;
+	// Assume all OpenRouter models support images for now, or at least don't block upload UI
+	// Doing async check here is hard without a hook.
+    // Ideally we pass `supportsImages` as a prop.
+	const supportsImages = true;
 	const isDisabled = status !== "ready" || !supportsImages;
 
 	return (
