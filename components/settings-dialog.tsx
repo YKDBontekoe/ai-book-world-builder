@@ -5,12 +5,12 @@ import { signIn } from "next-auth/react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { getConnectedAccounts } from "@/app/actions/user";
 import { getAvailableModels, getModelPreferences, saveModelPreferences } from "@/app/actions/settings";
 import { toast } from "sonner";
 import { Loader2, Check } from "lucide-react";
+import { SettingsModelSelector } from "@/components/settings/settings-model-selector";
 
 export function SettingsDialog({
   open,
@@ -188,61 +188,31 @@ export function SettingsDialog({
                         <div className="space-y-2">
                             <Label>Light Model (Fast, low cost)</Label>
                             <p className="text-xs text-muted-foreground">Used for simple tasks like title generation and quick suggestions.</p>
-                            <Select
-                                value={modelPreferences.light}
-                                onValueChange={(val) => setModelPreferences(prev => ({ ...prev, light: val }))}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableModels.map(model => (
-                                        <SelectItem key={model.id} value={model.id}>
-                                            {model.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <SettingsModelSelector
+                                availableModels={availableModels}
+                                selectedModelId={modelPreferences.light}
+                                onModelChange={(val) => setModelPreferences(prev => ({ ...prev, light: val }))}
+                            />
                         </div>
 
                         <div className="space-y-2">
                             <Label>Middle Model (Balanced)</Label>
                             <p className="text-xs text-muted-foreground">The default for chat and standard editing tasks.</p>
-                            <Select
-                                value={modelPreferences.middle}
-                                onValueChange={(val) => setModelPreferences(prev => ({ ...prev, middle: val }))}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableModels.map(model => (
-                                        <SelectItem key={model.id} value={model.id}>
-                                            {model.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <SettingsModelSelector
+                                availableModels={availableModels}
+                                selectedModelId={modelPreferences.middle}
+                                onModelChange={(val) => setModelPreferences(prev => ({ ...prev, middle: val }))}
+                            />
                         </div>
 
                         <div className="space-y-2">
                             <Label>Large Model (Complex reasoning)</Label>
                             <p className="text-xs text-muted-foreground">Used for deep story planning, analysis, and high-quality prose generation.</p>
-                            <Select
-                                value={modelPreferences.large}
-                                onValueChange={(val) => setModelPreferences(prev => ({ ...prev, large: val }))}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a model" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {availableModels.map(model => (
-                                        <SelectItem key={model.id} value={model.id}>
-                                            {model.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <SettingsModelSelector
+                                availableModels={availableModels}
+                                selectedModelId={modelPreferences.large}
+                                onModelChange={(val) => setModelPreferences(prev => ({ ...prev, large: val }))}
+                            />
                         </div>
                     </div>
                 </div>
