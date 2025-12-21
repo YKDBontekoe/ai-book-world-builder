@@ -16,14 +16,6 @@ const CreateDocumentRenderer = dynamic(
 	{ loading: ToolSkeleton },
 );
 
-const CreateRelationRenderer = dynamic(
-	() =>
-		import("./tools/create-relation-renderer").then(
-			(mod) => mod.CreateRelationRenderer,
-		),
-	{ loading: ToolSkeleton },
-);
-
 const EntityRenderer = dynamic(
 	() => import("./tools/entity-renderer").then((mod) => mod.EntityRenderer),
 	{ loading: ToolSkeleton },
@@ -86,7 +78,6 @@ const toolRenderers: Record<string, React.ComponentType<ToolRendererProps>> = {
 	"tool-runDiagnostics": GenerationRenderer,
 	"tool-assessReadiness": GenerationRenderer,
 	"tool-updateSceneCards": GenerationRenderer,
-	"tool-createRelation": CreateRelationRenderer,
 };
 
 export function ToolRenderer({ part, isReadonly }: ToolRendererProps) {

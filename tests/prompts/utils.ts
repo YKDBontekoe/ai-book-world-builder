@@ -251,13 +251,13 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
     ];
   }
 
-  if (compareMessages(recentMessage, TEST_PROMPTS.GET_WEATHER_CALL)) {
+  if (compareMessages(recentMessage, TEST_PROMPTS.CREATE_VOLUME_CALL)) {
     return [
       {
         type: "tool-call",
         toolCallId: "call_456",
-        toolName: "getWeather",
-        input: JSON.stringify({ latitude: 37.7749, longitude: -122.4194 }),
+        toolName: "createVolume",
+        input: JSON.stringify({ title: "Volume 1", description: "The beginning." }),
       },
       {
         type: "finish",
@@ -267,9 +267,9 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
     ];
   }
 
-  if (compareMessages(recentMessage, TEST_PROMPTS.GET_WEATHER_RESULT)) {
+  if (compareMessages(recentMessage, TEST_PROMPTS.CREATE_VOLUME_RESULT)) {
     return [
-      ...textToDeltas("The current temperature in San Francisco is 17°C."),
+      ...textToDeltas("Volume 1 created successfully."),
       {
         type: "finish",
         finishReason: "stop",
