@@ -21,3 +21,7 @@
 ## 2024-05-30 - Deep Equality in Memoization
 **Learning:** `fast-deep-equal` in a `memo` comparison function runs on every parent re-render. For a list of N messages updating frequently (streaming), checking deep equality for all N-1 stable messages is O(N*M) waste. Checking reference equality (`prev.message === next.message`) first avoids this.
 **Action:** In `memo` comparison functions, always check reference equality of large objects before falling back to deep equality. Also ensure all props that affect rendering (like `isLast`) are actually checked.
+
+## 2025-12-21 - Editor Re-initialization
+**Learning:** `useEffect` with `[content]` dependency in `PureEditor` caused the entire Prosemirror instance (`EditorView`) to be destroyed and recreated on every keystroke. This happens because the effect's cleanup function destroys the instance, and the effect runs whenever `content` prop changes.
+**Action:** For complex imperative integrations (like Prosemirror), use `[]` dependency for the initialization effect. Handle updates in a separate effect that synchronizes props to the instance methods (like `setProps` or `dispatch`). Ensure to suppress exhaustive-deps lint rule with a clear explanation.

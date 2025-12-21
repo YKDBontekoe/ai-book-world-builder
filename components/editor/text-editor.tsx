@@ -5,170 +5,169 @@ import { inputRules } from "prosemirror-inputrules";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { memo, useEffect, useRef, useState } from "react";
-
+import { EditorBubbleMenu } from "@/components/writer/tools/editor-bubble-menu";
 import type { Suggestion } from "@/lib/db/schema";
 import {
-  documentSchema,
-  handleTransaction,
-  headingRule,
+	documentSchema,
+	handleTransaction,
+	headingRule,
 } from "@/lib/editor/config";
 import {
-  buildContentFromDocument,
-  buildDocumentFromContent,
-  createDecorations,
+	buildContentFromDocument,
+	buildDocumentFromContent,
+	createDecorations,
 } from "@/lib/editor/functions";
 import {
-  projectWithPositions,
-  suggestionsPlugin,
-  suggestionsPluginKey,
+	projectWithPositions,
+	suggestionsPlugin,
+	suggestionsPluginKey,
 } from "@/lib/editor/suggestions";
-import { EditorBubbleMenu } from "@/components/writer/tools/editor-bubble-menu";
 
 type EditorProps = {
-  content: string;
-  onSaveContent: (updatedContent: string, debounce: boolean) => void;
-  status: "streaming" | "idle";
-  isCurrentVersion: boolean;
-  currentVersionIndex: number;
-  suggestions: Suggestion[];
-  onSelectionChange?: (selectionText: string) => void;
+	content: string;
+	onSaveContent: (updatedContent: string, debounce: boolean) => void;
+	status: "streaming" | "idle";
+	isCurrentVersion: boolean;
+	currentVersionIndex: number;
+	suggestions: Suggestion[];
+	onSelectionChange?: (selectionText: string) => void;
 };
 
 function PureEditor({
-  content,
-  onSaveContent,
-  suggestions,
-  status,
-  onSelectionChange,
+	content,
+	onSaveContent,
+	suggestions,
+	status,
+	onSelectionChange,
 }: EditorProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const editorRef = useRef<EditorView | null>(null);
-  // Force re-render for menu when editor instance changes (though ref mutation doesn't trigger it usually)
-  const [, setMounted] = useState(false);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const editorRef = useRef<EditorView | null>(null);
+	// Force re-render for menu when editor instance changes (though ref mutation doesn't trigger it usually)
+	const [, setMounted] = useState(false);
 
-  useEffect(() => {
-    if (containerRef.current && !editorRef.current) {
-      const state = EditorState.create({
-        doc: buildDocumentFromContent(content),
-        plugins: [
-          ...exampleSetup({ schema: documentSchema, menuBar: false }),
-          inputRules({
-            rules: [
-              headingRule(1),
-              headingRule(2),
-              headingRule(3),
-              headingRule(4),
-              headingRule(5),
-              headingRule(6),
-            ],
-          }),
-          suggestionsPlugin,
-        ],
-      });
+	useEffect(() => {
+		if (containerRef.current && !editorRef.current) {
+			const state = EditorState.create({
+				doc: buildDocumentFromContent(content),
+				plugins: [
+					...exampleSetup({ schema: documentSchema, menuBar: false }),
+					inputRules({
+						rules: [
+							headingRule(1),
+							headingRule(2),
+							headingRule(3),
+							headingRule(4),
+							headingRule(5),
+							headingRule(6),
+						],
+					}),
+					suggestionsPlugin,
+				],
+			});
 
-      editorRef.current = new EditorView(containerRef.current, {
-        state,
-      });
-      setMounted(true);
-    }
+			editorRef.current = new EditorView(containerRef.current, {
+				state,
+			});
+			setMounted(true);
+		}
 
-    return () => {
-      if (editorRef.current) {
-        editorRef.current.destroy();
-        editorRef.current = null;
-      }
-    };
-    // NOTE: we only want to run this effect once
-    // eslint-disable-next-line
-  }, [content]);
+		return () => {
+			if (editorRef.current) {
+				editorRef.current.destroy();
+				editorRef.current = null;
+			}
+		};
+		// NOTE: we only want to run this effect once
+		// biome-ignore lint/correctness/useExhaustiveDependencies: Only initialize editor once
+	}, []);
 
-  useEffect(() => {
-    if (editorRef.current) {
-      editorRef.current.setProps({
-        dispatchTransaction: (transaction) => {
-          handleTransaction({
-            transaction,
-            editorRef,
-            onSaveContent,
-            onSelectionChange,
-          });
-        },
-      });
-    }
-  }, [onSaveContent, onSelectionChange]);
+	useEffect(() => {
+		if (editorRef.current) {
+			editorRef.current.setProps({
+				dispatchTransaction: (transaction) => {
+					handleTransaction({
+						transaction,
+						editorRef,
+						onSaveContent,
+						onSelectionChange,
+					});
+				},
+			});
+		}
+	}, [onSaveContent, onSelectionChange]);
 
-  useEffect(() => {
-    if (editorRef.current && content) {
-      const currentContent = buildContentFromDocument(
-        editorRef.current.state.doc
-      );
+	useEffect(() => {
+		if (editorRef.current && content) {
+			const currentContent = buildContentFromDocument(
+				editorRef.current.state.doc,
+			);
 
-      if (status === "streaming") {
-        const newDocument = buildDocumentFromContent(content);
+			if (status === "streaming") {
+				const newDocument = buildDocumentFromContent(content);
 
-        const transaction = editorRef.current.state.tr.replaceWith(
-          0,
-          editorRef.current.state.doc.content.size,
-          newDocument.content
-        );
+				const transaction = editorRef.current.state.tr.replaceWith(
+					0,
+					editorRef.current.state.doc.content.size,
+					newDocument.content,
+				);
 
-        transaction.setMeta("no-save", true);
-        editorRef.current.dispatch(transaction);
-        return;
-      }
+				transaction.setMeta("no-save", true);
+				editorRef.current.dispatch(transaction);
+				return;
+			}
 
-      if (currentContent !== content) {
-        const newDocument = buildDocumentFromContent(content);
+			if (currentContent !== content) {
+				const newDocument = buildDocumentFromContent(content);
 
-        const transaction = editorRef.current.state.tr.replaceWith(
-          0,
-          editorRef.current.state.doc.content.size,
-          newDocument.content
-        );
+				const transaction = editorRef.current.state.tr.replaceWith(
+					0,
+					editorRef.current.state.doc.content.size,
+					newDocument.content,
+				);
 
-        transaction.setMeta("no-save", true);
-        editorRef.current.dispatch(transaction);
-      }
-    }
-  }, [content, status]);
+				transaction.setMeta("no-save", true);
+				editorRef.current.dispatch(transaction);
+			}
+		}
+	}, [content, status]);
 
-  useEffect(() => {
-    if (editorRef.current?.state.doc && content) {
-      const projectedSuggestions = projectWithPositions(
-        editorRef.current.state.doc,
-        suggestions
-      ).filter(
-        (suggestion) => suggestion.selectionStart && suggestion.selectionEnd
-      );
+	useEffect(() => {
+		if (editorRef.current?.state.doc && content) {
+			const projectedSuggestions = projectWithPositions(
+				editorRef.current.state.doc,
+				suggestions,
+			).filter(
+				(suggestion) => suggestion.selectionStart && suggestion.selectionEnd,
+			);
 
-      const decorations = createDecorations(
-        projectedSuggestions,
-        editorRef.current
-      );
+			const decorations = createDecorations(
+				projectedSuggestions,
+				editorRef.current,
+			);
 
-      const transaction = editorRef.current.state.tr;
-      transaction.setMeta(suggestionsPluginKey, { decorations });
-      editorRef.current.dispatch(transaction);
-    }
-  }, [suggestions, content]);
+			const transaction = editorRef.current.state.tr;
+			transaction.setMeta(suggestionsPluginKey, { decorations });
+			editorRef.current.dispatch(transaction);
+		}
+	}, [suggestions, content]);
 
-  return (
-    <div className="prose dark:prose-invert relative" ref={containerRef}>
-      <EditorBubbleMenu editorView={editorRef.current} />
-    </div>
-  );
+	return (
+		<div className="prose dark:prose-invert relative" ref={containerRef}>
+			<EditorBubbleMenu editorView={editorRef.current} />
+		</div>
+	);
 }
 
 function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
-  return (
-    prevProps.suggestions === nextProps.suggestions &&
-    prevProps.currentVersionIndex === nextProps.currentVersionIndex &&
-    prevProps.isCurrentVersion === nextProps.isCurrentVersion &&
-    !(prevProps.status === "streaming" && nextProps.status === "streaming") &&
-    prevProps.content === nextProps.content &&
-    prevProps.onSaveContent === nextProps.onSaveContent &&
-    prevProps.onSelectionChange === nextProps.onSelectionChange
-  );
+	return (
+		prevProps.suggestions === nextProps.suggestions &&
+		prevProps.currentVersionIndex === nextProps.currentVersionIndex &&
+		prevProps.isCurrentVersion === nextProps.isCurrentVersion &&
+		!(prevProps.status === "streaming" && nextProps.status === "streaming") &&
+		prevProps.content === nextProps.content &&
+		prevProps.onSaveContent === nextProps.onSaveContent &&
+		prevProps.onSelectionChange === nextProps.onSelectionChange
+	);
 }
 
 export const Editor = memo(PureEditor, areEqual);
