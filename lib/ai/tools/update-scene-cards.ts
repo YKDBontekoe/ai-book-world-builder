@@ -53,7 +53,7 @@ export const updateSceneCards = ({ session }: { session: Session | null }) =>
       const currentScenes = await getScenesForChapter({ chapterId });
 
       // Orchestrator Model (Opus 4.5)
-      const orchestratorModel = getGatewayIdForRole("orchestrator");
+      const orchestratorModel = await getGatewayIdForRole("orchestrator");
 
       const { object: plan } = await generateObject({
         model: orchestratorModel as any,

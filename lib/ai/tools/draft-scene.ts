@@ -61,7 +61,7 @@ export const draftScene = ({ session }: { session: Session | null }) =>
         if (!sceneCard) return { error: "Scene card not found." };
 
         // Writer Model (Claude Sonnet 4.5)
-        const writerModel = getGatewayIdForRole("writer");
+        const writerModel = await getGatewayIdForRole("writer");
 
         const { text: prose } = await generateText({
           model: writerModel as any,

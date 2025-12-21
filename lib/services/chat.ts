@@ -1,7 +1,6 @@
 import { geolocation } from "@vercel/functions";
 import type { UserType } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
-import { getAvailableChatModels } from "@/app/actions/models";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type ChatModel, getChatModelById } from "@/lib/ai/models";
@@ -26,6 +25,7 @@ import { ChatSDKError } from "@/lib/errors";
 import { buildProjectContext } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
+import { getAvailableModels } from "@/app/actions/settings";
 
 export async function initializeChatSession({
 	id,
@@ -46,6 +46,8 @@ export async function initializeChatSession({
 }) {
 	// 1. Entitlements Check
 	const userType: UserType = user.type;
+	// entitlement checks might need update if we fully rely on free models,
+    // but preserving message limits is still good practice.
 	const { availableChatModelIds } = entitlementsByUserType[userType];
 
 	const messageCount = await getMessageCountByUserId({
@@ -58,31 +60,52 @@ export async function initializeChatSession({
 	}
 
 	// 2. Model Validation
-	const availableModels = await getAvailableChatModels();
+	const availableModels = await getAvailableModels();
 	const isDynamicModel = availableModels.some(
-		(m: ChatModel) => m.id === selectedChatModel,
+		(m: any) => m.id === selectedChatModel,
 	);
 
-	if (!availableChatModelIds.includes(selectedChatModel) && !isDynamicModel) {
-		throw new ChatSDKError(
-			"forbidden:chat",
-			"This model is not available for your account.",
-		);
-	}
+    // We allow OpenRouter models dynamically
+    // If it's a "virtual" model (light, middle, large), it will be resolved later in route.ts
+    // but here we might need to know capabilities.
 
-	let chatModel = getChatModelById(selectedChatModel);
+	let chatModel = await getChatModelById(selectedChatModel);
 
 	if (!chatModel && isDynamicModel) {
 		const dynamicModel = availableModels.find(
-			(m: ChatModel) => m.id === selectedChatModel,
+			(m: any) => m.id === selectedChatModel,
 		);
 		if (dynamicModel) {
-			chatModel = dynamicModel;
+            // Map dynamic model to ChatModel shape
+			chatModel = {
+                id: dynamicModel.id,
+                name: dynamicModel.name,
+                provider: "OpenRouter",
+                gatewayId: dynamicModel.id,
+                description: `Context: ${dynamicModel.context_length}`,
+                supportsImages: true, // Assume yes for OpenRouter generally or fallback
+            };
 		}
 	}
 
+    // If still not found, check if it is one of our virtual IDs
+    if (!chatModel && ["light", "middle", "large"].includes(selectedChatModel)) {
+        // It's valid, capabilities are assumed standard
+        chatModel = {
+             id: selectedChatModel,
+             name: selectedChatModel,
+             provider: "OpenRouter",
+             gatewayId: selectedChatModel,
+             description: "Virtual Model",
+             supportsImages: true
+        }
+    }
+
 	if (!chatModel) {
-		throw new ChatSDKError("bad_request:api", "Unknown chat model.");
+        // One last fallback: if we can't find it, we might just let it pass
+        // if we trust the ID comes from our system.
+        // But for safety:
+		throw new ChatSDKError("bad_request:api", `Unknown chat model: ${selectedChatModel}`);
 	}
 
 	const containsFileAttachments = message.parts.some(

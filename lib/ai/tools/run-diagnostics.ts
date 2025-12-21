@@ -40,7 +40,7 @@ export const runDiagnostics = ({ session }: { session: Session | null }) =>
         .join("\n\n");
 
       // Checker Model (DeepSeek Reasoner)
-      const checkerModel = getGatewayIdForRole("checker");
+      const checkerModel = await getGatewayIdForRole("checker");
 
       const { object: diagnostics } = await generateObject({
         model: checkerModel as any,

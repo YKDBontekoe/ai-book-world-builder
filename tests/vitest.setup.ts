@@ -29,6 +29,13 @@ vi.mock("server-only", () => {
     return {};
 });
 
+// Mock next/server for next-auth compatibility
+vi.mock("next/server", () => ({
+    NextResponse: {
+        json: (body: any) => ({ body }),
+    },
+}));
+
 afterEach(() => {
   cleanup();
 });

@@ -1,4 +1,3 @@
-import { gateway } from "@ai-sdk/gateway";
 import {
 	convertToModelMessages,
 	createUIMessageStream,
@@ -10,6 +9,7 @@ import {
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/chat/visibility-selector";
 import type { ChatModel } from "@/lib/ai/models";
+import { getSelectedModelId } from "@/lib/ai/models";
 import { myProvider } from "@/lib/ai/providers";
 import { getAgentTools, toolList } from "@/lib/ai/tool-registry";
 import { enrichUsage, persistChat } from "@/lib/ai/usage-tracking";
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
 		let finalMergedUsage: AppUsage | undefined;
 
 		const stream = createUIMessageStream({
-			execute: ({ writer: dataStream }) => {
+			execute: async ({ writer: dataStream }) => {
 				// Stream source citations if we have context metadata
 				if (contextMetadata) {
 					const citations: Array<{
@@ -126,9 +126,21 @@ export async function POST(request: Request) {
 					dataStream.write({ type: "data-sources", data: citations });
 				}
 
-				const model = isDynamicModel
-					? gateway.languageModel(selectedChatModel)
-					: myProvider.languageModel(selectedChatModel);
+                // If selectedChatModel is "middle" (default for chat) or we should map it
+                // Actually the frontend sends a specific ID if known, OR "middle" etc?
+                // Currently it sends a string ID.
+                // We should check if selectedChatModel is one of our mapping keys or a direct ID.
+                let targetModelId = selectedChatModel;
+                if (["light", "middle", "large"].includes(selectedChatModel)) {
+                    targetModelId = await getSelectedModelId(selectedChatModel as "light" | "middle" | "large");
+                }
+
+                // If it's still not resolved, we might want to default to "middle"
+                if (!targetModelId) {
+                     targetModelId = await getSelectedModelId("middle");
+                }
+
+				const model = myProvider.languageModel(targetModelId);
 
 				const result = streamText({
 					model,
@@ -150,7 +162,7 @@ export async function POST(request: Request) {
 					onFinish: async ({ usage }) => {
 						finalMergedUsage = await enrichUsage({
 							usage,
-							selectedChatModel,
+							selectedChatModel: targetModelId,
 							isDynamicModel,
 						});
 						dataStream.write({ type: "data-usage", data: finalMergedUsage });
