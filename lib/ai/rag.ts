@@ -1,4 +1,4 @@
-import { gateway } from "@ai-sdk/gateway";
+import { openrouter } from "./providers";
 import { cosineSimilarity, embed, embedMany } from "ai";
 
 export type RAGChunk = {
@@ -12,7 +12,7 @@ export type RAGChunk = {
  */
 export async function generateEmbeddings(chunks: string[]) {
   const { embeddings } = await embedMany({
-    model: gateway.textEmbeddingModel("openai/text-embedding-3-small"),
+    model: openrouter.embedding("openai/text-embedding-3-small"),
     values: chunks,
   });
   return embeddings;
@@ -36,7 +36,7 @@ export async function retrieveContext({
 }): Promise<RAGChunk[]> {
   // 1. Embed query
   const { embedding: queryEmbedding } = await embed({
-    model: gateway.textEmbeddingModel("openai/text-embedding-3-small"),
+    model: openrouter.embedding("openai/text-embedding-3-small"),
     value: query,
   });
 
@@ -58,7 +58,7 @@ export async function retrieveContext({
   // Fetch missing embeddings in one batch
   if (missValues.length > 0) {
     const { embeddings: newEmbeddings } = await embedMany({
-      model: gateway.textEmbeddingModel("openai/text-embedding-3-small"),
+      model: openrouter.embedding("openai/text-embedding-3-small"),
       values: missValues,
     });
 

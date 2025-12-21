@@ -1,4 +1,4 @@
-import { gateway } from "@ai-sdk/gateway";
+import { openrouter } from "@/lib/ai/providers";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { getChunksForSourceMaterial } from "@/lib/db/queries";
@@ -83,7 +83,7 @@ export class RelationshipInferrer {
 
 			try {
 				const { object } = await generateObject({
-					model: gateway.languageModel(this.modelId),
+					model: openrouter(this.modelId),
 					schema: relationshipInferenceSchema,
 					prompt: `Based on these text excerpts, describe the relationship between "${entity1}" and "${entity2}".
 
