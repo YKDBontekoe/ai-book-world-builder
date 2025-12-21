@@ -2,9 +2,12 @@ import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Editor } from "../../../../components/editor/text-editor";
 
-const { mockDestroy } = vi.hoisted(() => ({
-	mockDestroy: vi.fn(),
+const { mockReplaceWith, mockDispatch } = vi.hoisted(() => ({
+	mockReplaceWith: vi.fn(() => ({ setMeta: vi.fn() })),
+	mockDispatch: vi.fn(),
 }));
+
+let hasFocusMock = false;
 
 vi.mock("prosemirror-view", () => ({
 	EditorView: class {
@@ -17,13 +20,13 @@ vi.mock("prosemirror-view", () => ({
 		setProps(props: any) {
 			if (props.state) this.state = props.state;
 		}
-		dispatch() {}
-		destroy() {
-			mockDestroy();
-		}
+		dispatch(tr: any) {
+            mockDispatch(tr);
+        }
+		destroy() {}
 		focus() {}
 		hasFocus() {
-			return false;
+			return hasFocusMock;
 		}
 	},
 	Decoration: { widget: vi.fn() },
@@ -35,7 +38,7 @@ vi.mock("prosemirror-state", () => ({
 		create: vi.fn(() => ({
 			doc: { content: { size: 0 } },
 			tr: {
-				replaceWith: vi.fn(() => ({ setMeta: vi.fn() })),
+				replaceWith: mockReplaceWith,
 				setMeta: vi.fn(),
 			},
 			apply: vi.fn(),
@@ -69,14 +72,15 @@ vi.mock("../../../../lib/editor/config", () => ({
 	headingRule: vi.fn(),
 }));
 
+// We need to control buildContentFromDocument to simulate the divergence
 vi.mock("@/lib/editor/functions", () => ({
-	buildContentFromDocument: vi.fn(() => ""),
+	buildContentFromDocument: vi.fn(() => "original"), // Editor always thinks it has "original"
 	buildDocumentFromContent: vi.fn(() => ({ content: {} })),
 	createDecorations: vi.fn(() => []),
 }));
 
 vi.mock("../../../../lib/editor/functions", () => ({
-	buildContentFromDocument: vi.fn(() => ""),
+	buildContentFromDocument: vi.fn(() => "original"),
 	buildDocumentFromContent: vi.fn(() => ({ content: {} })),
 	createDecorations: vi.fn(() => []),
 }));
@@ -101,15 +105,17 @@ vi.mock("../../../../components/writer/tools/editor-bubble-menu", () => ({
 	EditorBubbleMenu: () => null,
 }));
 
-describe("Editor Performance", () => {
+describe("Editor Race Condition", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+        hasFocusMock = false;
 	});
 
-	it("does NOT destroy EditorView when content changes", () => {
+	it("overwrites content from props when NOT focused", () => {
+        hasFocusMock = false;
 		const { rerender } = render(
 			<Editor
-				content="initial"
+				content="original"
 				onSaveContent={() => {}}
 				status="idle"
 				isCurrentVersion={true}
@@ -130,7 +136,36 @@ describe("Editor Performance", () => {
 			/>,
 		);
 
-		// Should NOT have called destroy
-		expect(mockDestroy).not.toHaveBeenCalled();
+		// Should overwrite because we are not focused
+		expect(mockReplaceWith).toHaveBeenCalled();
+	});
+
+    it("does NOT overwrite content from props when focused", () => {
+        hasFocusMock = true;
+		const { rerender } = render(
+			<Editor
+				content="original"
+				onSaveContent={() => {}}
+				status="idle"
+				isCurrentVersion={true}
+				currentVersionIndex={0}
+				suggestions={[]}
+			/>,
+		);
+
+		// Rerender with different content
+		rerender(
+			<Editor
+				content="updated"
+				onSaveContent={() => {}}
+				status="idle"
+				isCurrentVersion={true}
+				currentVersionIndex={0}
+				suggestions={[]}
+			/>,
+		);
+
+		// Should NOT overwrite because we are focused
+		expect(mockReplaceWith).not.toHaveBeenCalled();
 	});
 });

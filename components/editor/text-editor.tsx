@@ -116,6 +116,12 @@ function PureEditor({
 				return;
 			}
 
+			// If the editor is focused, we assume the content change is coming from the user's typing
+			// and we should not overwrite it with the prop value (which is just an echo).
+			if (editorRef.current.hasFocus()) {
+				return;
+			}
+
 			if (currentContent !== content) {
 				const newDocument = buildDocumentFromContent(content);
 
