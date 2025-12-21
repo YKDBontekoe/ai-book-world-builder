@@ -1,4 +1,4 @@
-import { gateway } from "@ai-sdk/gateway";
+import { openrouter } from "@/lib/ai/providers";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { retrieveContext } from "@/lib/ai/rag";
@@ -72,7 +72,7 @@ export class DetailExtractor {
 			.join("\n\n---\n\n");
 
 		const { object } = await generateObject({
-			model: gateway.languageModel(this.modelId),
+			model: openrouter(this.modelId),
 			schema: entityDetailsSchema,
 			prompt: `Based on the following text excerpts, extract detailed information about "${entityName}" (a ${entityKind}).
 
