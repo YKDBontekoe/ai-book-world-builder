@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "../ui/button";
 import { EmptyState } from "../ui/empty-state";
 import { ScrollArea } from "../ui/scroll-area";
+import { ChapterActions } from "./chapter-actions";
 import { SidebarSkeleton } from "./sidebar-skeleton";
 import { StructureEditorDialog } from "./structure-editor-dialog";
 import { useWriterContext } from "./writer-context";
@@ -113,22 +114,28 @@ export function WriterSidebar() {
 					) : (
 						structure.map((chapter) => (
 							<div key={chapter.id} className="space-y-1">
-								<button
-                   type="button"
-									onClick={() => toggleChapter(chapter.id)}
-									className={cn(
-										"w-full flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md hover:bg-sidebar-accent/50 transition-colors text-sidebar-foreground",
-										expandedChapters[chapter.id] && "bg-sidebar-accent",
-									)}
-								>
-									{expandedChapters[chapter.id] ? (
-										<ChevronDown className="h-4 w-4 text-muted-foreground" />
-									) : (
-										<ChevronRight className="h-4 w-4 text-muted-foreground" />
-									)}
-									<Folder className="h-4 w-4 text-blue-500/80" />
-									<span className="truncate">{chapter.title}</span>
-								</button>
+								<div className="flex items-center gap-1 group">
+									<button
+										type="button"
+										onClick={() => toggleChapter(chapter.id)}
+										className={cn(
+											"flex-1 flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md hover:bg-sidebar-accent/50 transition-colors text-sidebar-foreground",
+											expandedChapters[chapter.id] && "bg-sidebar-accent",
+										)}
+									>
+										{expandedChapters[chapter.id] ? (
+											<ChevronDown className="h-4 w-4 text-muted-foreground" />
+										) : (
+											<ChevronRight className="h-4 w-4 text-muted-foreground" />
+										)}
+										<Folder className="h-4 w-4 text-blue-500/80" />
+										<span className="truncate">{chapter.title}</span>
+									</button>
+									<ChapterActions
+										chapterId={chapter.id}
+										onUpdate={fetchStructure}
+									/>
+								</div>
 
 								{expandedChapters[chapter.id] && (
 									<div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1">
