@@ -51,10 +51,6 @@ const ScenePane = dynamic(
 	() => import("./panes/scene-pane").then((mod) => mod.ScenePane),
 	{ loading: LoadingPane },
 );
-const TimelinePane = dynamic(
-	() => import("./panes/timeline-pane").then((mod) => mod.TimelinePane),
-	{ loading: LoadingPane },
-);
 const GraphPane = dynamic(
 	() => import("./panes/graph-pane").then((mod) => mod.GraphPane),
 	{ loading: LoadingPane },
@@ -73,8 +69,6 @@ export function BookCanvas({
 				return <OutlinePane />;
 			case "graph":
 				return <GraphPane />;
-			case "timeline":
-				return <TimelinePane />;
 			case "scenes":
 				return <ScenePane />;
 			case "draft":
@@ -93,7 +87,6 @@ export function BookCanvas({
 	const tabs: { id: CanvasPane; label: string; icon: LucideIcon }[] = [
 		{ id: "outline", label: "Outline", icon: LayoutIcon },
 		{ id: "graph", label: "Graph", icon: NetworkIcon },
-		{ id: "timeline", label: "Timeline", icon: CalendarIcon },
 		{ id: "scenes", label: "Scenes", icon: LibraryIcon },
 		{ id: "draft", label: "Draft", icon: FileTextIcon },
 		{ id: "diagnostics", label: "Readiness", icon: ActivityIcon },

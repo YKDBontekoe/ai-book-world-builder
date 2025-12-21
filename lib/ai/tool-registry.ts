@@ -1,5 +1,4 @@
 import { createProject } from "./tools/create-project";
-import { createTimeline } from "./tools/create-timeline";
 import { createVolume } from "./tools/create-volume";
 import { draftScene } from "./tools/draft-scene";
 import { exportBook } from "./tools/export-book";
@@ -44,10 +43,6 @@ export function getAgentTools({
       session,
       projectId: projectId ?? undefined,
     }),
-    createTimeline: createTimeline({
-      session,
-      projectId: projectId ?? undefined,
-    }),
     createVolume: createVolume({
       session,
       projectId: projectId ?? undefined,
@@ -76,7 +71,6 @@ export type AgentToolName = keyof AgentTools;
 export const toolList: AgentToolName[] = [
     "createProject",
     "exportBook",
-    "createTimeline",
     "createVolume",
     "createOutline",
     "analyzeCharacter",

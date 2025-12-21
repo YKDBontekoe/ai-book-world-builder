@@ -51,7 +51,7 @@ export function useChatToolEffects({
 			// 2. Handle Query Invalidation
 			if (selectedProjectId) {
 				// Bible Pane Updates
-				if (toolName === "manageEntities" || toolName === "createRelation") {
+				if (toolName === "manageEntities") {
 					queryClient.invalidateQueries({
 						queryKey: QUERY_KEYS.entities(selectedProjectId),
 					});

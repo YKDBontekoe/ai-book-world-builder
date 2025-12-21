@@ -12,24 +12,15 @@ export interface ToolInvocation {
 }
 
 import type { assessReadiness } from "./ai/tools/assess-readiness";
-import type { createChapter } from "./ai/tools/create-chapter";
 import type { createDocument } from "./ai/tools/create-document";
-import type { createEntity } from "./ai/tools/create-entity";
 import type { createOutline } from "./ai/tools/create-outline";
-import type { createRelation } from "./ai/tools/create-relation";
-import type { createScene } from "./ai/tools/create-scene";
-import type { createTimeline } from "./ai/tools/create-timeline";
 import type { createVolume } from "./ai/tools/create-volume";
 import type { draftScene } from "./ai/tools/draft-scene";
-import type { getWeather } from "./ai/tools/get-weather";
 import type { orchestrateBook } from "./ai/tools/orchestrate-book";
 import type { proposeManageEntities } from "./ai/tools/propose-manage-entities";
 import type { requestSuggestions } from "./ai/tools/request-suggestions";
 import type { runDiagnostics } from "./ai/tools/run-diagnostics";
-import type { suggestPlot } from "./ai/tools/suggest-plot";
 import type { updateDocument } from "./ai/tools/update-document";
-import type { updateEntity } from "./ai/tools/update-entity";
-import type { updateScene } from "./ai/tools/update-scene";
 import type { updateSceneCards } from "./ai/tools/update-scene-cards";
 import type { Suggestion, Chapter, Scene } from "./db/schema";
 import type { AppUsage } from "./usage";
@@ -56,24 +47,15 @@ export const messageMetadataSchema = z.object({
 
 export type MessageMetadata = z.infer<typeof messageMetadataSchema>;
 
-type weatherTool = InferUITool<typeof getWeather>;
 type createDocumentTool = InferUITool<ReturnType<typeof createDocument>>;
 type updateDocumentTool = InferUITool<ReturnType<typeof updateDocument>>;
 type requestSuggestionsTool = InferUITool<
 	ReturnType<typeof requestSuggestions>
 >;
-type createEntityTool = InferUITool<ReturnType<typeof createEntity>>;
-type updateEntityTool = InferUITool<ReturnType<typeof updateEntity>>;
-type createRelationTool = InferUITool<ReturnType<typeof createRelation>>;
-type createChapterTool = InferUITool<ReturnType<typeof createChapter>>;
-type createSceneTool = InferUITool<ReturnType<typeof createScene>>;
-type updateSceneTool = InferUITool<ReturnType<typeof updateScene>>;
 type createOutlineTool = InferUITool<ReturnType<typeof createOutline>>;
-type createTimelineTool = InferUITool<ReturnType<typeof createTimeline>>;
 type createVolumeTool = InferUITool<ReturnType<typeof createVolume>>;
 type analyzeCharacterTool = InferUITool<ReturnType<typeof analyzeCharacter>>;
 
-type suggestPlotTool = InferUITool<ReturnType<typeof suggestPlot>>;
 type orchestrateBookTool = InferUITool<ReturnType<typeof orchestrateBook>>;
 type draftSceneTool = InferUITool<ReturnType<typeof draftScene>>;
 type assessReadinessTool = InferUITool<ReturnType<typeof assessReadiness>>;
@@ -84,22 +66,13 @@ type proposeManageEntitiesTool = InferUITool<
 >;
 
 export type ChatTools = {
-	getWeather: weatherTool;
 	createDocument: createDocumentTool;
 	updateDocument: updateDocumentTool;
 	requestSuggestions: requestSuggestionsTool;
-	createEntity: createEntityTool;
-	updateEntity: updateEntityTool;
-	createRelation: createRelationTool;
-	createChapter: createChapterTool;
-	createScene: createSceneTool;
-	updateScene: updateSceneTool;
 	createOutline: createOutlineTool;
-	createTimeline: createTimelineTool;
 	createVolume: createVolumeTool;
 	analyzeCharacter: analyzeCharacterTool;
 
-	suggestPlot: suggestPlotTool;
 	orchestrateBook: orchestrateBookTool;
 	draftScene: draftSceneTool;
 	assessReadiness: assessReadinessTool;

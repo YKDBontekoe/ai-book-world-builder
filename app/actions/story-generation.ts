@@ -68,7 +68,6 @@ export async function createBookFromPlan(projectId: string, plan: BookPlan) {
           projectId,
           outlineId: newOutline.id,
           title: "Volume 1",
-          chapters: [],
           createdAt: new Date(),
           updatedAt: new Date(),
         }).returning();

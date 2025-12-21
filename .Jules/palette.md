@@ -21,3 +21,14 @@
 ### Learnings
 - **Empty States vs Start States**: `WriterEditor` distinguishes between "No scenes exist" (Start) and "No scene selected" (Navigation). This nuance is critical for guiding user intent.
 - **Accessibility drives Testability**: Adding `aria-label` to icon buttons made them easily testable with `getByRole`, reinforcing the value of semantic HTML.
+
+## 2025-12-21 - [Dead Code Cleanup]
+
+### Findings
+- Removed experimental 'Timeline' feature (components, tools, schema) which was deprecated.
+- Removed unused AI tools (`getWeather`, `suggestPlot`, `createRelation`) and associated types.
+- Cleaned up `lib/types.ts` `ChatTools` to match the actual tool registry, removing ghost tools.
+
+### Learnings
+- **Tool Registry is Truth**: `lib/ai/tool-registry.ts` determines what the AI sees. Types in `lib/types.ts` should mirror this to prevent confusion.
+- **Example Code Rot**: `getWeather` is a classic example that persists in codebases. Periodic audits of `lib/ai/tools` are necessary.
