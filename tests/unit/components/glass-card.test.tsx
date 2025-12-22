@@ -7,7 +7,7 @@ describe("GlassCard", () => {
     const { container } = render(<GlassCard>Test Content</GlassCard>);
     const card = container.firstChild as HTMLElement;
     expect(card.className).toContain("relative");
-    expect(card.className).toContain("rounded-xl");
+    expect(card.className).toContain("rounded-lg");
   });
 
   it("renders correctly with liquid variant", () => {

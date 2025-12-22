@@ -12,8 +12,8 @@ const messageBubbleVariants = cva(
 	{
 		variants: {
 			role: {
-				user: "rounded-br-sm text-white",
-				assistant: "rounded-bl-sm bg-muted text-foreground",
+				user: "rounded-br-sm text-primary-foreground",
+				assistant: "rounded-bl-sm glass-panel text-foreground",
 			},
 		},
 		defaultVariants: {
@@ -45,8 +45,8 @@ export function MessageBubble({
 		role === "user"
 			? {
 					backgroundImage:
-						"linear-gradient(to top left, hsl(212 95% 48%), hsl(220 90% 58%))",
-					boxShadow: "0 4px 12px rgba(37, 99, 235, 0.25)",
+						"linear-gradient(to top left, var(--primary), var(--color-sidebar-primary))",
+					boxShadow: "0 4px 12px rgba(124, 58, 237, 0.25)", // Violet shadow
 				}
 			: undefined;
 

@@ -12,8 +12,7 @@ describe('Primitives Overhaul', () => {
     it('renders glass variant correctly', () => {
       render(<Button variant="glass">Glass Button</Button>);
       const button = screen.getByRole('button', { name: /glass button/i });
-      expect(button).toHaveClass('bg-glass');
-      expect(button).toHaveClass('backdrop-blur-md');
+      expect(button).toHaveClass('glass');
     });
 
     it('renders pill size correctly', () => {

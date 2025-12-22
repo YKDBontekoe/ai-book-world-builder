@@ -28,8 +28,8 @@ export function ProcessLogs({ logs }: { logs: ProcessLog[] }) {
 				layout
 				transition={springs.liquid}
 				className={cn(
-					"flex flex-col rounded-lg border bg-background/50 backdrop-blur-sm transition-all overflow-hidden",
-					isExpanded ? "border-primary/20 shadow-md" : "border-border/50",
+					"flex flex-col rounded-lg glass-panel transition-all overflow-hidden",
+					isExpanded && "shadow-md",
 				)}
 			>
 				<button

@@ -110,8 +110,8 @@ function PureSuggestedActions({
 							});
 						}}
 						className={cn(
-							"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shadow-sm",
-							"bg-background/80 hover:bg-muted backdrop-blur-sm",
+							"flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-all whitespace-nowrap shadow-sm glass-panel",
+							"hover:bg-primary/5",
 						)}
 					>
 						<span className="opacity-70 text-primary">{getIconForType(action.type)}</span>
@@ -152,8 +152,8 @@ function PureSuggestedActions({
 					>
 						<Button
 							className={cn(
-								"group relative h-auto w-full flex-col items-start gap-1 overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 shadow-sm",
-								"bg-card hover:bg-muted/50 hover:border-primary/30 hover:shadow-md",
+								"group relative h-auto w-full flex-col items-start gap-1 overflow-hidden rounded-xl border p-4 text-left transition-all duration-200 shadow-sm glass-panel",
+								"hover:bg-glass/80 hover:border-primary/30 hover:shadow-md",
 							)}
 							onClick={() => {
 								sendMessage({
