@@ -15,6 +15,8 @@ function getPricePerMillion(price: string | number): number {
 	return parsedPrice < 0.01 ? parsedPrice * 1_000_000 : parsedPrice;
 }
 
+export type ContextWindowOption = "all" | "small" | "medium" | "large" | "huge";
+
 export function useModelSelection({
 	availableModels,
 	selectedModelId,
@@ -30,6 +32,10 @@ export function useModelSelection({
 	const [activeTab, setActiveTab] = useState<TabType>("all");
 	const [sortOption, setSortOption] = useState<SortOption>("relevance");
 
+	// New advanced filters
+	const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
+	const [contextWindow, setContextWindow] = useState<ContextWindowOption>("all");
+
 	const {
 		favoriteModels,
 		recentModels,
@@ -42,6 +48,11 @@ export function useModelSelection({
 	useEffect(() => {
 		setOptimisticModelId(selectedModelId);
 	}, [selectedModelId]);
+
+	const availableProviders = useMemo(() => {
+		const providers = new Set(availableModels.map((m) => m.provider));
+		return Array.from(providers).sort();
+	}, [availableModels]);
 
 	const filteredModels = useMemo(() => {
 		const matchesTab = (model: ChatModel) => {
@@ -86,8 +97,30 @@ export function useModelSelection({
 			);
 		};
 
+		const matchesProvider = (model: ChatModel) => {
+			if (selectedProviders.length === 0) return true;
+			return selectedProviders.includes(model.provider);
+		};
+
+		const matchesContext = (model: ChatModel) => {
+			if (contextWindow === "all") return true;
+			const context = model.contextLength || 0;
+			switch (contextWindow) {
+				case "small": // < 16k
+					return context < 16000;
+				case "medium": // 16k - 128k
+					return context >= 16000 && context < 128000;
+				case "large": // 128k - 1M
+					return context >= 128000 && context < 1000000;
+				case "huge": // >= 1M
+					return context >= 1000000;
+				default:
+					return true;
+			}
+		};
+
 		const filtered = availableModels.filter(
-			(model) => matchesTab(model) && matchesSearch(model),
+			(model) => matchesTab(model) && matchesSearch(model) && matchesProvider(model) && matchesContext(model),
 		);
 
 		if (sortOption === "relevance") {
@@ -120,7 +153,7 @@ export function useModelSelection({
 					return 0;
 			}
 		});
-	}, [activeTab, favoriteModels, searchQuery, availableModels, sortOption]);
+	}, [activeTab, favoriteModels, searchQuery, availableModels, sortOption, selectedProviders, contextWindow]);
 
 	const groupedByProvider = useMemo(() => {
 		return filteredModels.reduce(
@@ -160,10 +193,15 @@ export function useModelSelection({
 		setActiveTab,
 		sortOption,
 		setSortOption,
+		selectedProviders,
+		setSelectedProviders,
+		contextWindow,
+		setContextWindow,
 		filteredModels,
 		groupedByProvider,
 		favoriteModels,
 		recentModels,
+		availableProviders,
 		toggleFavorite,
 		moveFavorite,
 		selectModel,
