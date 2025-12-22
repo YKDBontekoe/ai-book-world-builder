@@ -1,17 +1,19 @@
-import { cn } from "@/lib/utils";
-import { type VariantProps, cva } from "class-variance-authority";
+import { cva, type VariantProps } from "class-variance-authority";
 import type React from "react";
 import { forwardRef } from "react";
+import { cn } from "@/lib/utils";
 
 const glassCardVariants = cva(
-	"relative overflow-hidden rounded-xl glass-panel transition-all duration-300",
+	"relative overflow-hidden rounded-lg glass-panel transition-all duration-300",
 	{
 		variants: {
 			variant: {
 				default: "hover:bg-white/60 dark:hover:bg-black/30",
-				interactive: "cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
+				interactive:
+					"cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
 				subtle: "bg-white/5 border-white/10 backdrop-blur-md",
-                liquid: "bg-glass/50 backdrop-blur-[30px] border-white/20 shadow-glass hover:bg-glass/70 transition-all duration-500",
+				liquid:
+					"bg-glass/50 backdrop-blur-[30px] border-white/20 shadow-glass hover:bg-glass/70 transition-all duration-500",
 			},
 			size: {
 				default: "p-6",
@@ -31,19 +33,23 @@ export interface GlassCardProps
 	extends React.HTMLAttributes<HTMLDivElement>,
 		VariantProps<typeof glassCardVariants> {
 	gradient?: boolean;
-    interactive?: boolean;
+	interactive?: boolean;
 }
 
 const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
-	({ className, variant, size, gradient, interactive, children, ...props }, ref) => {
+	(
+		{ className, variant, size, gradient, interactive, children, ...props },
+		ref,
+	) => {
 		return (
 			<div
 				ref={ref}
 				className={cn(
-                    glassCardVariants({ variant, size }),
-                    interactive && "cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
-                    className
-                )}
+					glassCardVariants({ variant, size }),
+					interactive &&
+						"cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
+					className,
+				)}
 				{...props}
 			>
 				{gradient && (
