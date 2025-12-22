@@ -1,16 +1,16 @@
 import { formatDistanceToNow } from "date-fns";
-import { CalendarIcon, FolderIcon, Globe, Plus, User } from "lucide-react";
+import { CalendarIcon, FolderIcon, Globe, Plus } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { PageContainer } from "@/components/page-container";
 import { PageHeader } from "@/components/page-header";
 import { CreateProjectDialog } from "@/components/projects/create-project-dialog";
+import { ProjectTabs } from "@/components/projects/project-tabs";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { GlassCard } from "@/components/ui/glass-card";
 import { GridList } from "@/components/ui/grid-list";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getProjectsVisibleToUser } from "@/lib/db/queries";
 import type { Project } from "@/lib/db/schema";
 
@@ -51,21 +51,23 @@ function ProjectCard({ project }: { project: Project }) {
 	);
 }
 
-export default async function ProjectsPage() {
+export default async function ProjectsPage({
+	searchParams,
+}: {
+	searchParams: Promise<{ tab?: string }>;
+}) {
 	const session = await auth();
 
 	if (!session?.user?.id) {
 		redirect("/");
 	}
 
-	const myProjects = await getProjectsVisibleToUser({
-		userId: session.user.id,
-		filter: "mine",
-	});
+	const { tab } = await searchParams;
+	const currentTab = tab === "shared" ? "shared" : "mine";
 
-	const sharedProjects = await getProjectsVisibleToUser({
+	const projects = await getProjectsVisibleToUser({
 		userId: session.user.id,
-		filter: "shared",
+		filter: currentTab,
 	});
 
 	return (
@@ -74,62 +76,45 @@ export default async function ProjectsPage() {
 				<PageHeader title="Projects" action={<CreateProjectDialog />} />
 			</div>
 
-			<Tabs defaultValue="mine" className="mt-8">
-				<TabsList className="mb-6">
-					<TabsTrigger value="mine" className="gap-2">
-						<User className="h-4 w-4" />
-						My Projects
-					</TabsTrigger>
-					<TabsTrigger value="shared" className="gap-2">
-						<Globe className="h-4 w-4" />
-						Community
-					</TabsTrigger>
-				</TabsList>
+			<div className="mt-8">
+				<ProjectTabs currentTab={currentTab} />
 
-				<TabsContent value="mine" className="mt-6">
-					{myProjects.length === 0 ? (
-						<EmptyState
-							variant="glass"
-							title="No projects found"
-							description="Create a new story to get started with your first project."
-							icon={FolderIcon}
-							action={
-								<CreateProjectDialog
-									trigger={
-										<Button className="gap-2">
-											<Plus className="h-4 w-4" />
-											Create Story
-										</Button>
-									}
-								/>
-							}
-						/>
+				<div className="mt-6">
+					{projects.length === 0 ? (
+						currentTab === "mine" ? (
+							<EmptyState
+								variant="glass"
+								title="No projects found"
+								description="Create a new story to get started with your first project."
+								icon={FolderIcon}
+								action={
+									<CreateProjectDialog
+										trigger={
+											<Button className="gap-2">
+												<Plus className="h-4 w-4" />
+												Create Story
+											</Button>
+										}
+									/>
+								}
+							/>
+						) : (
+							<EmptyState
+								variant="glass"
+								title="No shared projects"
+								description="Explore projects shared by the community here."
+								icon={Globe}
+							/>
+						)
 					) : (
 						<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
-							{myProjects.map((project) => (
+							{projects.map((project) => (
 								<ProjectCard key={project.id} project={project} />
 							))}
 						</GridList>
 					)}
-				</TabsContent>
-
-				<TabsContent value="shared" className="mt-6">
-					{sharedProjects.length === 0 ? (
-						<EmptyState
-							variant="glass"
-							title="No shared projects"
-							description="Explore projects shared by the community here."
-							icon={Globe}
-						/>
-					) : (
-						<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
-							{sharedProjects.map((project) => (
-								<ProjectCard key={project.id} project={project} />
-							))}
-						</GridList>
-					)}
-				</TabsContent>
-			</Tabs>
+				</div>
+			</div>
 		</PageContainer>
 	);
 }
