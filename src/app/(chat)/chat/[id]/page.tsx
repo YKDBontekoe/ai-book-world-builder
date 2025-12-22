@@ -106,7 +106,12 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 		modelIdToUse = chatModelFromCookie.value;
 	}
 
-    // 3. Ensure the selected model is actually in the filtered list.
+	// 3. If still no model, try the "middle" preference explicitly (default for chat)
+	if (!modelIdToUse && userPrefs.modelPreferences?.middle) {
+		modelIdToUse = userPrefs.modelPreferences.middle;
+	}
+
+    // 4. Ensure the selected model is actually in the filtered list.
     // If not, pick the first one from filtered list (which is the user's preference)
     if (modelIdToUse && !filteredAvailableModels.find(m => m.id === modelIdToUse)) {
          if (filteredAvailableModels.length > 0) {
@@ -114,7 +119,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
          }
     }
 
-	// 4. Fallback to default (and ensure it's valid)
+	// 5. Fallback to default (and ensure it's valid)
     // Note: getValidChatModelId might return something not in our filtered list if we are not careful,
     // but filteredAvailableModels[0] should be valid if the list is not empty.
 	const initialChatModel = modelIdToUse || filteredAvailableModels[0]?.id || DEFAULT_CHAT_MODEL;
