@@ -31,6 +31,7 @@ type EditorProps = {
 	currentVersionIndex: number;
 	suggestions: Suggestion[];
 	onSelectionChange?: (selectionText: string) => void;
+    readOnly?: boolean;
 };
 
 function PureEditor({
@@ -39,6 +40,7 @@ function PureEditor({
 	suggestions,
 	status,
 	onSelectionChange,
+    readOnly = false,
 }: EditorProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const editorRef = useRef<EditorView | null>(null);
@@ -67,6 +69,7 @@ function PureEditor({
 
 			editorRef.current = new EditorView(containerRef.current, {
 				state,
+                editable: () => !readOnly,
 			});
 			setMounted(true);
 		}
@@ -80,6 +83,14 @@ function PureEditor({
 		// NOTE: we only want to run this effect once
 		// biome-ignore lint/correctness/useExhaustiveDependencies: Only initialize editor once
 	}, []);
+
+    useEffect(() => {
+        if (editorRef.current) {
+            editorRef.current.setProps({
+                editable: () => !readOnly,
+            });
+        }
+    }, [readOnly]);
 
 	useEffect(() => {
 		if (editorRef.current) {
@@ -159,7 +170,7 @@ function PureEditor({
 
 	return (
 		<div className="prose dark:prose-invert relative" ref={containerRef}>
-			<EditorBubbleMenu editorView={editorRef.current} />
+            {!readOnly && <EditorBubbleMenu editorView={editorRef.current} />}
 		</div>
 	);
 }
@@ -172,7 +183,8 @@ function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
 		!(prevProps.status === "streaming" && nextProps.status === "streaming") &&
 		prevProps.content === nextProps.content &&
 		prevProps.onSaveContent === nextProps.onSaveContent &&
-		prevProps.onSelectionChange === nextProps.onSelectionChange
+		prevProps.onSelectionChange === nextProps.onSelectionChange &&
+        prevProps.readOnly === nextProps.readOnly
 	);
 }
 

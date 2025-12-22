@@ -6,6 +6,7 @@ import {
 	FileText,
 	Folder,
 	Plus,
+    Lock,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ export function WriterSidebar() {
 		setActiveSceneId,
 		loading,
 		fetchStructure,
+        isReadOnly,
 	} = useWriterContext();
 
 	const [expandedChapters, setExpandedChapters] = useState<
@@ -42,6 +44,7 @@ export function WriterSidebar() {
 	};
 
 	const handleAddChapter = async () => {
+        if (isReadOnly) return;
 		const toastId = toast.loading("Creating chapter...");
 		try {
 			await createNewChapter(project.id);
@@ -59,31 +62,40 @@ export function WriterSidebar() {
 					Book Structure
 				</h2>
 				<div className="flex items-center gap-1">
-					<StructureEditorDialog
-						projectId={project.id}
-						currentStructure={structureText}
-						onSave={() => {
-							fetchStructure();
-						}}
-					>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-8 w-8"
-							aria-label="Edit Structure"
-						>
-							<FileText className="h-4 w-4" />
-						</Button>
-					</StructureEditorDialog>
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-8 w-8"
-						onClick={handleAddChapter}
-						aria-label="Add Chapter"
-					>
-						<Plus className="h-4 w-4" />
-					</Button>
+                    {!isReadOnly && (
+                        <>
+					        <StructureEditorDialog
+						        projectId={project.id}
+						        currentStructure={structureText}
+						        onSave={() => {
+							        fetchStructure();
+						        }}
+					        >
+						        <Button
+							        variant="ghost"
+							        size="icon"
+							        className="h-8 w-8"
+							        aria-label="Edit Structure"
+						        >
+							        <FileText className="h-4 w-4" />
+						        </Button>
+					        </StructureEditorDialog>
+					        <Button
+						        variant="ghost"
+						        size="icon"
+						        className="h-8 w-8"
+						        onClick={handleAddChapter}
+						        aria-label="Add Chapter"
+					        >
+						        <Plus className="h-4 w-4" />
+					        </Button>
+                        </>
+                    )}
+                    {isReadOnly && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Lock className="h-3 w-3" /> Read Only
+                        </span>
+                    )}
 				</div>
 			</div>
 
@@ -95,19 +107,21 @@ export function WriterSidebar() {
 						<div className="p-2">
 							<EmptyState
 								variant="dashed"
-								title="No chapters"
-								description="Create a chapter to start."
+								title={isReadOnly ? "No chapters" : "No chapters"}
+								description={isReadOnly ? "This project has no content yet." : "Create a chapter to start."}
 								className="p-4 py-8"
 								action={
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={handleAddChapter}
-										className="w-full mt-2"
-									>
-										<Plus className="mr-2 h-3 w-3" />
-										Add Chapter
-									</Button>
+                                    !isReadOnly ? (
+									    <Button
+										    variant="outline"
+										    size="sm"
+										    onClick={handleAddChapter}
+										    className="w-full mt-2"
+									    >
+										    <Plus className="mr-2 h-3 w-3" />
+										    Add Chapter
+									    </Button>
+                                    ) : undefined
 								}
 							/>
 						</div>
@@ -134,6 +148,7 @@ export function WriterSidebar() {
 									<ChapterActions
 										chapterId={chapter.id}
 										onUpdate={fetchStructure}
+                                        isReadOnly={isReadOnly}
 									/>
 								</div>
 
@@ -141,7 +156,7 @@ export function WriterSidebar() {
 									<div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1">
 										{chapter.scenes.map((scene) => (
 											<button
-                         type="button"
+                                                type="button"
 												key={scene.id}
 												onClick={() => setActiveSceneId(scene.id)}
 												className={cn(

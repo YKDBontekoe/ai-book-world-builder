@@ -10,9 +10,10 @@ import { Button } from "@/components/ui/button";
 interface ChapterActionsProps {
   chapterId: string;
   onUpdate: () => void;
+  isReadOnly?: boolean;
 }
 
-export function ChapterActions({ chapterId, onUpdate }: ChapterActionsProps) {
+export function ChapterActions({ chapterId, onUpdate, isReadOnly }: ChapterActionsProps) {
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState("");
 
@@ -52,6 +53,8 @@ export function ChapterActions({ chapterId, onUpdate }: ChapterActionsProps) {
       setProgress("");
     }
   };
+
+  if (isReadOnly) return null;
 
   return (
     <DropdownMenu>

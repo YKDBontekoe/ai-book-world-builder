@@ -1,6 +1,6 @@
 "use client";
 
-import { MousePointerClick } from "lucide-react";
+import { MousePointerClick, Lock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Editor } from "../editor/text-editor";
 import { EmptyState } from "../ui/empty-state";
@@ -16,6 +16,7 @@ export function WriterEditor() {
 		sceneContent,
 		handleContentChange,
 		structure,
+        isReadOnly,
 	} = useWriterContext();
 
 	const hasStructure = structure && structure.length > 0;
@@ -35,18 +36,30 @@ export function WriterEditor() {
 							isCurrentVersion={true}
 							currentVersionIndex={0}
 							suggestions={[]}
+                            readOnly={isReadOnly}
 						/>
 					</div>
 				) : !hasStructure ? (
-					<StoryWizard
-						projectId={project.id}
-						onComplete={() => router.refresh()}
-					/>
+                    isReadOnly ? (
+                        <div className="flex h-full items-center justify-center p-8">
+                            <EmptyState
+                                title="Empty Project"
+                                description="This project has no content yet."
+                                icon={Lock}
+                                variant="dashed"
+                            />
+                        </div>
+                    ) : (
+					    <StoryWizard
+						    projectId={project.id}
+						    onComplete={() => router.refresh()}
+					    />
+                    )
 				) : (
 					<div className="flex h-full items-center justify-center p-8">
 						<EmptyState
 							title="No Scene Selected"
-							description="Select a scene from the sidebar to continue writing."
+							description="Select a scene from the sidebar to continue reading."
 							icon={MousePointerClick}
 							variant="dashed"
 						/>
