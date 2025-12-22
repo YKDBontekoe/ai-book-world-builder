@@ -1,7 +1,7 @@
 import { render } from "@testing-library/react";
 import equal from "fast-deep-equal";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { PreviewMessage } from "../../../../components/messages/message";
+import { PreviewMessage } from "@/components/organisms/messages/message";
 
 // Mock fast-deep-equal
 vi.mock("fast-deep-equal", () => ({
@@ -9,23 +9,23 @@ vi.mock("fast-deep-equal", () => ({
 }));
 
 // Mock child components
-vi.mock("../../../../components/elements/response", () => ({
+vi.mock("@/components/molecules/response", () => ({
 	Response: ({ children }: { children: any }) => <div>{children}</div>,
 }));
-vi.mock("../../../../components/messages/message-actions", () => ({
+vi.mock("@/components/organisms/messages/message-actions", () => ({
 	MessageActions: () => <div data-testid="message-actions" />,
 }));
-vi.mock("../../../../components/messages/message-streaming-sources", () => ({
+vi.mock("@/components/organisms/messages/message-streaming-sources", () => ({
 	MessageStreamingSources: () => <div />,
 }));
-vi.mock("../../../../components/messages/message-usage", () => ({
+vi.mock("@/components/organisms/messages/message-usage", () => ({
 	MessageUsage: () => <div />,
 }));
-vi.mock("../../../../components/messages/message-ui", () => ({
+vi.mock("@/components/organisms/messages/message-ui", () => ({
 	MessageAttachments: () => <div />,
 	MessageBubble: ({ children }: { children: any }) => <div>{children}</div>,
 }));
-vi.mock("../../../../components/messages/parts/parts-renderer", () => ({
+vi.mock("@/components/organisms/messages/parts/parts-renderer", () => ({
 	PartsRenderer: () => <div />,
 }));
 

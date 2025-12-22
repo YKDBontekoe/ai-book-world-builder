@@ -5,10 +5,10 @@ import {
 	useMemo,
 	useState,
 } from "react";
-import { saveChatModelAsCookie } from "../app/(chat)/actions";
-import type { SortOption, TabType } from "../components/chat/multimodal-input/constants";
-import type { ChatModel, ChatModelId } from "../lib/ai/models";
-import { useModelPreferences } from "./use-model-preferences";
+import { saveChatModelAsCookie } from "@/app/(chat)/actions";
+import type { SortOption, TabType } from "@/components/organisms/chat/multimodal-input/constants";
+import type { ChatModel, ChatModelId } from "@/lib/ai/models";
+import { useModelPreferences } from "@/hooks/use-model-preferences";
 
 function getPricePerMillion(price: string | number): number {
 	const parsedPrice = typeof price === "string" ? parseFloat(price) : price;

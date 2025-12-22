@@ -3,7 +3,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { retrieveContext } from "@/lib/ai/rag";
 import { getChunksForSourceMaterial } from "@/lib/db/queries";
-import type { EntityDetails } from "./types";
+import type { EntityDetails } from "@/lib/services/analysis/types";
 
 const entityDetailsSchema = z.object({
 	summary: z

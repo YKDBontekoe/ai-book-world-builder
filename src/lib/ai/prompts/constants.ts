@@ -1,4 +1,4 @@
-import type { ArtifactKind } from "@/components/artifact";
+import type { ArtifactKind } from "@/components/organisms/artifact";
 
 export const toolUsagePrompt = `
 **CRITICAL - TOOL USAGE RULES:**

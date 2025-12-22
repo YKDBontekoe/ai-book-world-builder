@@ -2,7 +2,7 @@ import {
 	type EntityGroup,
 	type SerializedEntity,
 	entityTypeConfig,
-} from "@/components/book-canvas/panes/bible/types";
+} from "@/components/organisms/book-canvas/panes/bible/types";
 import { BookOpenIcon } from "lucide-react";
 import { useMemo } from "react";
 

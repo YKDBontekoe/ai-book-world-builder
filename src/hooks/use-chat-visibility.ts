@@ -7,8 +7,8 @@ import {
 } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { updateChatVisibility } from "@/app/(chat)/actions";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
-import type { ChatHistory } from "@/components/sidebar/sidebar-history";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import type { ChatHistory } from "@/components/organisms/sidebar/sidebar-history";
 import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 
 export function useChatVisibility({

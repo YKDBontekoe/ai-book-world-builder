@@ -1,18 +1,18 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { WriterView } from "../../../../components/writer/writer-view";
-import { Project } from "../../../../lib/db/schema";
+import { WriterView } from "@/components/organisms/writer/writer-view";
+import { Project } from "@/lib/db/schema";
 
 // Mock child components
-vi.mock("../../../../components/writer/writer-sidebar", () => ({
+vi.mock("@/components/organisms/writer/writer-sidebar", () => ({
   WriterSidebar: () => <div data-testid="writer-sidebar">Writer Sidebar</div>
 }));
 
-vi.mock("../../../../components/book-canvas/book-canvas", () => ({
+vi.mock("@/components/organisms/book-canvas/book-canvas", () => ({
   BookCanvas: () => <div data-testid="book-canvas">Book Canvas</div>
 }));
 
-vi.mock("../../../../components/book-canvas/book-canvas-context", () => ({
+vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
   useBookCanvasActions: () => ({
     setProjectId: vi.fn(),
     setActiveSceneId: vi.fn(),
@@ -23,35 +23,35 @@ vi.mock("../../../../components/book-canvas/book-canvas-context", () => ({
   })
 }));
 
-vi.mock("../../../../components/writer/structure-editor-dialog", () => ({
+vi.mock("@/components/organisms/writer/structure-editor-dialog", () => ({
   StructureEditorDialog: () => <button>Structure Editor</button>
 }));
 
-vi.mock("../../../../components/writer/project-settings-modal", () => ({
+vi.mock("@/components/organisms/writer/project-settings-modal", () => ({
     ProjectSettingsModal: () => <button>Settings</button>
 }));
 
-vi.mock("../../../../components/chat/floating-assistant", () => ({
+vi.mock("@/components/organisms/chat/floating-assistant", () => ({
   FloatingAssistant: () => <div data-testid="floating-assistant">Floating Assistant</div>
 }));
 
-vi.mock("../../../../components/editor/text-editor", () => ({
+vi.mock("@/components/organisms/editor/text-editor", () => ({
   Editor: () => <div data-testid="editor">Editor</div>
 }));
 
-vi.mock("../../../../components/writer/writer-editor", () => ({
+vi.mock("@/components/organisms/writer/writer-editor", () => ({
   WriterEditor: () => <div data-testid="writer-editor">Writer Editor</div>
 }));
 
 // Mock the server action file itself to prevent it from trying to load DB in test env
-vi.mock("../../../../app/actions/writer", () => ({
+vi.mock("@/app/actions/writer", () => ({
   getProjectStructure: vi.fn().mockResolvedValue({ structure: [], structureText: "" }),
   updateSceneContent: vi.fn(),
   createChapterSnapshot: vi.fn(),
 }));
 
 // Mock Resizeable Panels (UI lib) - often needs mocking in jsdom
-vi.mock("@/components/ui/resizable", () => ({
+vi.mock("@/components/atoms/resizable", () => ({
     ResizablePanelGroup: ({ children }: any) => <div>{children}</div>,
     ResizablePanel: ({ children }: any) => <div>{children}</div>,
     ResizableHandle: () => <div>|</div>

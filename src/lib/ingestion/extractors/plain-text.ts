@@ -1,5 +1,5 @@
-import type { ExtractionStrategy } from "../types";
-import { deriveHeadings } from "../text";
+import type { ExtractionStrategy } from "@/lib/ingestion/types";
+import { deriveHeadings } from "@/lib/ingestion/text";
 
 export const plainTextExtractor: ExtractionStrategy = {
   mimeTypes: ["text/plain"],

@@ -24,7 +24,7 @@ import type {
 } from "@/lib/db/schema";
 import { chapter, chapterDraft, volume } from "@/lib/db/schema";
 import { buildLoreContext, outlineToPrompt } from "@/lib/story/lore";
-import { buildProjectContext } from "./project-context";
+import { buildProjectContext } from "@/lib/project-context";
 
 export type FullProjectData = {
   project: Project;

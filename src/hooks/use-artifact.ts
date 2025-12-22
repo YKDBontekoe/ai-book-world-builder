@@ -2,7 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
-import type { UIArtifact } from "@/components/artifact";
+import type { UIArtifact } from "@/components/organisms/artifact";
 import { GC_TIMES, QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 
 export const initialArtifactData: UIArtifact = {

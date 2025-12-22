@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
-import { WriterView } from "@/components/writer/writer-view";
+import { WriterView } from "@/components/organisms/writer/writer-view";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import { getProjectStructure } from "@/app/actions/writer";
 import { ChapterWithScenes } from "@/lib/types";

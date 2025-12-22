@@ -1,9 +1,9 @@
-import { supportedIngestionMimeTypes } from "../mime-types";
-import type { ExtractionStrategy, SourceMaterialExtractor } from "../types";
-import { docxExtractor } from "./docx";
-import { epubExtractor } from "./epub";
-import { pdfExtractor } from "./pdf";
-import { plainTextExtractor } from "./plain-text";
+import { supportedIngestionMimeTypes } from "@/lib/ingestion/mime-types";
+import type { ExtractionStrategy, SourceMaterialExtractor } from "@/lib/ingestion/types";
+import { docxExtractor } from "@/lib/ingestion/extractors/docx";
+import { epubExtractor } from "@/lib/ingestion/extractors/epub";
+import { pdfExtractor } from "@/lib/ingestion/extractors/pdf";
+import { plainTextExtractor } from "@/lib/ingestion/extractors/plain-text";
 
 export class ExtractorRegistry {
   private readonly strategies: Map<string, SourceMaterialExtractor>;

@@ -17,7 +17,7 @@ import {
 	deleteTrailingMessages,
 	updateChatVisibility,
 } from "@/app/(chat)/actions";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import {
 	deleteMessagesByChatIdAfterTimestamp,
 	getChatById,

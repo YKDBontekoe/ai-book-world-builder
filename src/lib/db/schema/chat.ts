@@ -13,9 +13,9 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
-import type { AppUsage } from "../../usage";
-import { user } from "./auth";
-import { project } from "./projects";
+import type { AppUsage } from "@/lib/usage";
+import { user } from "@/lib/db/schema/auth";
+import { project } from "@/lib/db/schema/projects";
 
 export const chat = pgTable(
 	"Chat",

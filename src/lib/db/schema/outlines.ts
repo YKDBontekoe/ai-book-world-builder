@@ -10,7 +10,7 @@ import {
   integer,
 } from "drizzle-orm/pg-core";
 
-import { project } from "./projects";
+import { project } from "@/lib/db/schema/projects";
 
 export const outline = pgTable("Outline", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),

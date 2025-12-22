@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useBookCanvasActions } from "../components/book-canvas";
+import { useBookCanvasActions } from "@/components/organisms/book-canvas";
 
 interface UseChatSyncProps {
   status: string;

@@ -1,6 +1,6 @@
 import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Editor } from "../../../../components/editor/text-editor";
+import { Editor } from "@/components/organisms/editor/text-editor";
 
 const { mockDestroy } = vi.hoisted(() => ({
 	mockDestroy: vi.fn(),
@@ -63,7 +63,7 @@ vi.mock("@/lib/editor/config", () => ({
 	headingRule: vi.fn(),
 }));
 
-vi.mock("../../../../lib/editor/config", () => ({
+vi.mock("@/lib/editor/config", () => ({
 	documentSchema: {},
 	handleTransaction: vi.fn(),
 	headingRule: vi.fn(),
@@ -75,7 +75,7 @@ vi.mock("@/lib/editor/functions", () => ({
 	createDecorations: vi.fn(() => []),
 }));
 
-vi.mock("../../../../lib/editor/functions", () => ({
+vi.mock("@/lib/editor/functions", () => ({
 	buildContentFromDocument: vi.fn(() => ""),
 	buildDocumentFromContent: vi.fn(() => ({ content: {} })),
 	createDecorations: vi.fn(() => []),
@@ -87,17 +87,17 @@ vi.mock("@/lib/editor/suggestions", () => ({
 	suggestionsPluginKey: "suggestions",
 }));
 
-vi.mock("../../../../lib/editor/suggestions", () => ({
+vi.mock("@/lib/editor/suggestions", () => ({
 	projectWithPositions: vi.fn(() => []),
 	suggestionsPlugin: {},
 	suggestionsPluginKey: "suggestions",
 }));
 
-vi.mock("@/components/writer/tools/editor-bubble-menu", () => ({
+vi.mock("@/components/organisms/writer/tools/editor-bubble-menu", () => ({
 	EditorBubbleMenu: () => null,
 }));
 
-vi.mock("../../../../components/writer/tools/editor-bubble-menu", () => ({
+vi.mock("@/components/organisms/writer/tools/editor-bubble-menu", () => ({
 	EditorBubbleMenu: () => null,
 }));
 

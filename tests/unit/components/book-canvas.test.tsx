@@ -2,22 +2,22 @@
 
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { BookCanvas } from "@/components/book-canvas/book-canvas";
-import { useBookCanvas } from "@/components/book-canvas/book-canvas-context";
+import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
+import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 
 // Mock the context hook
-vi.mock("@/components/book-canvas/book-canvas-context", () => ({
+vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
   useBookCanvas: vi.fn(),
 }));
 
 // Mock the panes to avoid complex rendering
-vi.mock("@/components/book-canvas/panes/outline-pane", () => ({ OutlinePane: () => <div>Outline</div> }));
-vi.mock("@/components/book-canvas/panes/timeline-pane", () => ({ TimelinePane: () => <div>Timeline</div> }));
-vi.mock("@/components/book-canvas/panes/scene-pane", () => ({ ScenePane: () => <div>Scenes</div> }));
-vi.mock("@/components/book-canvas/panes/draft-pane", () => ({ DraftPane: () => <div>Draft</div> }));
-vi.mock("@/components/book-canvas/panes/diagnostics-pane", () => ({ DiagnosticsPane: () => <div>Diagnostics</div> }));
-vi.mock("@/components/book-canvas/panes/bible-pane", () => ({ BiblePane: () => <div>Bible</div> }));
-vi.mock("@/components/book-canvas/panes/changelog-pane", () => ({ ChangeLogPane: () => <div>ChangeLog</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/outline-pane", () => ({ OutlinePane: () => <div>Outline</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/timeline-pane", () => ({ TimelinePane: () => <div>Timeline</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/scene-pane", () => ({ ScenePane: () => <div>Scenes</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/draft-pane", () => ({ DraftPane: () => <div>Draft</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/diagnostics-pane", () => ({ DiagnosticsPane: () => <div>Diagnostics</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/bible-pane", () => ({ BiblePane: () => <div>Bible</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/changelog-pane", () => ({ ChangeLogPane: () => <div>ChangeLog</div> }));
 
 describe("BookCanvas", () => {
   it("renders with fixed positioning when open", () => {

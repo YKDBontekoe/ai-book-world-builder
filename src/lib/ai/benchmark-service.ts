@@ -8,7 +8,7 @@
  */
 
 import { z } from "zod";
-import { type ChatModel, chatModels } from "./models";
+import { type ChatModel, chatModels } from "@/lib/ai/models";
 
 // =============================================================================
 // Types

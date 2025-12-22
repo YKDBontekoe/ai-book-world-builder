@@ -6,7 +6,7 @@ import { useEffect, useRef } from "react";
 import {
 	type CanvasPane,
 	useBookCanvasActions,
-} from "@/components/book-canvas/book-canvas-context";
+} from "@/components/organisms/book-canvas/book-canvas-context";
 import { QUERY_KEYS } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
 

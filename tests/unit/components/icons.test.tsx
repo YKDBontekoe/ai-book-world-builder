@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 
-import { BotIcon, LoaderIcon, WarningIcon } from "@/components/icons";
+import { BotIcon, LoaderIcon, WarningIcon } from "@/components/atoms/icons";
 
 describe("icon registry", () => {
   it("renders default attributes", () => {

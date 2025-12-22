@@ -1,8 +1,8 @@
 import type { NewSourceMaterialChapter, NewSourceMaterialChunk } from "@/lib/db/schema";
 import { generateUUID } from "@/lib/utils";
 
-import type { ExtractedContent, NormalizedExtraction } from "./types";
-import { deriveHeadings, normalizeTextContent } from "./text";
+import type { ExtractedContent, NormalizedExtraction } from "@/lib/ingestion/types";
+import { deriveHeadings, normalizeTextContent } from "@/lib/ingestion/text";
 
 export const DEFAULT_CHUNK_SIZE = 1200;
 

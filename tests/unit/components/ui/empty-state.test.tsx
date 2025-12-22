@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { EmptyState } from '../../../../components/ui/empty-state';
+import { EmptyState } from '@/components/molecules/empty-state';
 import { FolderIcon } from 'lucide-react';
 
 describe('EmptyState', () => {

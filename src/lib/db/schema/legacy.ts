@@ -1,7 +1,7 @@
 import type { InferSelectModel } from "drizzle-orm";
 import { boolean, json, pgTable, primaryKey, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-import { chat } from "./chat";
+import { chat } from "@/lib/db/schema/chat";
 
 /**
  * @deprecated Legacy message schema kept for data migration only.

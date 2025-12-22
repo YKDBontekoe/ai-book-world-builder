@@ -1,15 +1,15 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { updateDocument } from '../../../../../lib/ai/tools/update-document';
-import { getDocumentById } from '../../../../../lib/db/queries';
+import { updateDocument } from '@/lib/ai/tools/update-document';
+import { getDocumentById } from '@/lib/db/queries';
 
 // Mock dependencies
-vi.mock('../../../../../lib/db/queries', () => ({
+vi.mock('@/lib/db/queries', () => ({
   getDocumentById: vi.fn(),
 }));
 
-vi.mock('../../../../../lib/artifacts/server', () => ({
+vi.mock('@/lib/artifacts/server', () => ({
   documentHandlersByArtifactKind: [
     {
       kind: 'text',

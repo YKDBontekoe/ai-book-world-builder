@@ -15,9 +15,9 @@ import {
 	SlideIn,
 	StaggerItem,
 	StaggerList,
-} from "@/components/ui/animated";
-import { Button } from "@/components/ui/button";
-import { GlassCard } from "@/components/ui/glass-card";
+} from "@/components/atoms/animated";
+import { Button } from "@/components/atoms/button";
+import { GlassCard } from "@/components/molecules/glass-card";
 
 export default function OnboardingPage() {
 	return (

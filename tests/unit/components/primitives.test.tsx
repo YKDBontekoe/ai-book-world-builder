@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/atoms/button';
+import { Input } from '@/components/atoms/input';
 import { describe, it, expect } from 'vitest';
 import React from 'react';
 

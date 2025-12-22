@@ -4,11 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
-import { GoogleSignInButton } from "@/components/auth/google-button";
-import { AuthForm } from "@/components/auth/auth-form";
-import { SubmitButton } from "@/components/submit-button";
-import { toast } from "@/components/ui/toast";
-import { type RegisterActionState, register } from "../actions";
+import { GoogleSignInButton } from "@/components/organisms/auth/google-button";
+import { AuthForm } from "@/components/organisms/auth/auth-form";
+import { SubmitButton } from "@/components/atoms/submit-button";
+import { toast } from "@/components/atoms/toast";
+import { type RegisterActionState, register } from "@/app/(auth)/actions";
 
 export default function Page() {
   const router = useRouter();

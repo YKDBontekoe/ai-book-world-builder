@@ -8,7 +8,7 @@ import {
   SIDEBAR_COOKIE_NAME,
   SidebarProvider,
   useSidebar,
-} from "@/components/ui/sidebar";
+} from "@/components/atoms/sidebar";
 
 const useIsMobileMock = vi.fn<boolean, []>().mockReturnValue(false);
 

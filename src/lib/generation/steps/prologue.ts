@@ -1,9 +1,9 @@
 import { db } from "@/lib/db/queries";
 import { bookGenerationStep, type BookGenerationStep } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { saveAsset } from "../utils";
-import { generatePrologue } from "../writer-agent";
-import type { ProcessStepContext, StepHandler } from "./types";
+import { saveAsset } from "@/lib/generation/utils";
+import { generatePrologue } from "@/lib/generation/writer-agent";
+import type { ProcessStepContext, StepHandler } from "@/lib/generation/steps/types";
 
 export class PrologueHandler implements StepHandler {
 	async process(

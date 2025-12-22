@@ -2,15 +2,15 @@ import { BookOpen, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
-import { PageContainer } from "@/components/page-container";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
-import { FileIcon } from "@/components/ui/file-icon";
-import { GridList } from "@/components/ui/grid-list";
-import { StatusBadge } from "@/components/ui/status-badge";
+import { PageContainer } from "@/components/organisms/page-container";
+import { PageHeader } from "@/components/molecules/page-header";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
+import { EmptyState } from "@/components/molecules/empty-state";
+import { FileIcon } from "@/components/atoms/file-icon";
+import { GridList } from "@/components/atoms/grid-list";
+import { StatusBadge } from "@/components/atoms/status-badge";
 import { getSourceMaterialsForUser } from "@/lib/db/queries/source-material";
-import { AnalyzeBookButton } from "./analyze-button";
+import { AnalyzeBookButton } from "@/app/(chat)/inspiration/analyze-button";
 
 export default async function InspirationPage() {
 	const session = await auth();

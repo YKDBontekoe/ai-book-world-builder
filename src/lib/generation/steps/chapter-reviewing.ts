@@ -1,8 +1,8 @@
 import { db } from "@/lib/db/queries";
 import { type BookGenerationStep, bookGenerationStep } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { reviewChapter } from "../reviewer-agent";
-import type { ProcessStepContext, StepHandler } from "./types";
+import { reviewChapter } from "@/lib/generation/reviewer-agent";
+import type { ProcessStepContext, StepHandler } from "@/lib/generation/steps/types";
 
 export class ChapterReviewingHandler implements StepHandler {
 	async process(

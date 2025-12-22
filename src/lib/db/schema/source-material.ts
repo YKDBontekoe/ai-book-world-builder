@@ -11,8 +11,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
-import { project } from "./projects";
+import { user } from "@/lib/db/schema/auth";
+import { project } from "@/lib/db/schema/projects";
 
 export const sourceMaterialStatus = [
   "pending",

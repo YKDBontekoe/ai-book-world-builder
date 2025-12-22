@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { Suspense } from "react";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 
 export default function Page() {
   return (

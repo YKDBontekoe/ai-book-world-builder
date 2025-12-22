@@ -7,7 +7,7 @@ import {
   getBookGenerationForProject,
   getScenesForChapter,
 } from "@/lib/db/queries";
-import { getGatewayIdForRole } from "../model-routing";
+import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 
 export const runDiagnostics = ({ session }: { session: Session | null }) =>
   tool({

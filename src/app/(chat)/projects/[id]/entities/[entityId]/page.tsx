@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/atoms/button";
 import { db } from "@/lib/db/queries";
 import { entityAttribute, entity as entityTable } from "@/lib/db/schema";
 

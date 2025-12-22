@@ -1,4 +1,4 @@
-import { ChatSDKError, type ErrorCode } from './errors';
+import { ChatSDKError, type ErrorCode } from '@/lib/errors';
 
 type FetchOptions = RequestInit & {
   params?: Record<string, string | number | boolean | undefined>;

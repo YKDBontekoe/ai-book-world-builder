@@ -4,7 +4,7 @@ import {
   extractReasoningMiddleware,
   wrapLanguageModel,
 } from "ai";
-import { isTestEnvironment } from "../constants";
+import { isTestEnvironment } from "@/lib/constants";
 
 export const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",

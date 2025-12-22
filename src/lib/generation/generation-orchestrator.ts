@@ -12,15 +12,15 @@ import {
 	generationNote,
 } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
-import { updateStepStatus } from "./utils";
+import { updateStepStatus } from "@/lib/generation/utils";
 
-import { BackCoverHandler } from "./steps/back-cover";
-import { ChapterReviewingHandler } from "./steps/chapter-reviewing";
-import { ChapterWritingHandler } from "./steps/chapter-writing";
-import { ConsistencyCheckHandler } from "./steps/consistency-check";
-import { EpilogueHandler } from "./steps/epilogue";
-import { PrologueHandler } from "./steps/prologue";
-import type { ProcessStepContext, StepHandler } from "./steps/types";
+import { BackCoverHandler } from "@/lib/generation/steps/back-cover";
+import { ChapterReviewingHandler } from "@/lib/generation/steps/chapter-reviewing";
+import { ChapterWritingHandler } from "@/lib/generation/steps/chapter-writing";
+import { ConsistencyCheckHandler } from "@/lib/generation/steps/consistency-check";
+import { EpilogueHandler } from "@/lib/generation/steps/epilogue";
+import { PrologueHandler } from "@/lib/generation/steps/prologue";
+import type { ProcessStepContext, StepHandler } from "@/lib/generation/steps/types";
 
 export interface GenerationCallbacks {
 	onStepStart?: (step: BookGenerationStep) => void;

@@ -12,10 +12,10 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
-import type { AppUsage } from "../../usage";
-import { project } from "./projects";
-import { chapter, outline } from "./outlines";
+import { user } from "@/lib/db/schema/auth";
+import type { AppUsage } from "@/lib/usage";
+import { project } from "@/lib/db/schema/projects";
+import { chapter, outline } from "@/lib/db/schema/outlines";
 
 export const generationStatus = [
   "idle",

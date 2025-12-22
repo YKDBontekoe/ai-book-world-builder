@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/atoms/button";
 import { api } from "@/lib/api-client";
 
 type DeleteExportButtonProps = {

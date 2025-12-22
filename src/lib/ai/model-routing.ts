@@ -1,4 +1,4 @@
-import { DEFAULT_MODELS, getChatModelById } from "./models";
+import { DEFAULT_MODELS, getChatModelById } from "@/lib/ai/models";
 
 export type ModelRole = "orchestrator" | "writer" | "checker" | "context";
 
@@ -17,7 +17,7 @@ const ROLE_TYPE_MAP: Record<ModelRole, "light" | "middle" | "large"> = {
  */
 export async function getModelIdForRole(role: ModelRole): Promise<string> {
   const type = ROLE_TYPE_MAP[role];
-  const { getSelectedModelId } = await import("./models");
+  const { getSelectedModelId } = await import("@/lib/ai/models");
   return await getSelectedModelId(type);
 }
 

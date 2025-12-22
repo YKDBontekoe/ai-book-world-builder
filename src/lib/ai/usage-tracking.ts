@@ -2,9 +2,9 @@ import { unstable_cache as cache } from "next/cache";
 import type { ModelCatalog } from "tokenlens/core";
 import { fetchModels } from "tokenlens/fetch";
 import { getUsage } from "tokenlens/helpers";
-import { myProvider } from "./providers";
-import { saveMessages, updateChatLastContextById } from "../db/queries";
-import type { AppUsage } from "../usage";
+import { myProvider } from "@/lib/ai/providers";
+import { saveMessages, updateChatLastContextById } from "@/lib/db/queries";
+import type { AppUsage } from "@/lib/usage";
 
 const getTokenlensCatalog = cache(
 	async (): Promise<ModelCatalog | undefined> => {

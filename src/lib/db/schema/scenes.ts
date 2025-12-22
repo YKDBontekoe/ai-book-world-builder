@@ -11,8 +11,8 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { chapter } from "./outlines";
-import { project } from "./projects";
+import { chapter } from "@/lib/db/schema/outlines";
+import { project } from "@/lib/db/schema/projects";
 
 export const sceneStatus = [
   "planned",

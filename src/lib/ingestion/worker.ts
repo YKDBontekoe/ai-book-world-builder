@@ -1,11 +1,11 @@
 import type { SourceMaterial } from "@/lib/db/schema";
 
-import { calculateBackoff, DEFAULT_BASE_BACKOFF_MS, DEFAULT_MAX_ATTEMPTS } from "./backoff";
-import { DEFAULT_CHUNK_SIZE, normalizeExtraction } from "./chunking";
-import { createDefaultExtractorRegistry, ExtractorRegistry } from "./extractors";
-import type { IngestionRepository, SourceMaterialWithProcessing } from "./repository";
-import type { BlobFetcher, SourceMaterialExtractor } from "./types";
-import { normalizeTextContent } from "./text";
+import { calculateBackoff, DEFAULT_BASE_BACKOFF_MS, DEFAULT_MAX_ATTEMPTS } from "@/lib/ingestion/backoff";
+import { DEFAULT_CHUNK_SIZE, normalizeExtraction } from "@/lib/ingestion/chunking";
+import { createDefaultExtractorRegistry, ExtractorRegistry } from "@/lib/ingestion/extractors";
+import type { IngestionRepository, SourceMaterialWithProcessing } from "@/lib/ingestion/repository";
+import type { BlobFetcher, SourceMaterialExtractor } from "@/lib/ingestion/types";
+import { normalizeTextContent } from "@/lib/ingestion/text";
 
 const DEFAULT_BATCH_SIZE = 5;
 
@@ -57,7 +57,7 @@ export class SourceMaterialWorker {
       return this.repository;
     }
 
-    const { DatabaseIngestionRepository } = await import("./repository-db");
+    const { DatabaseIngestionRepository } = await import("@/lib/ingestion/repository-db");
     this.repository = new DatabaseIngestionRepository();
     return this.repository;
   }
@@ -206,4 +206,4 @@ export function createWorker(options?: {
 
 export { normalizeTextContent };
 export type { IngestionRepository, SourceMaterialWithProcessing };
-export type { SourceMaterialExtractor, ExtractedContent } from "./types";
+export type { SourceMaterialExtractor, ExtractedContent } from "@/lib/ingestion/types";

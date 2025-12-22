@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { ToolRenderer } from "../../../../components/messages/tool-renderer";
+import { ToolRenderer } from "@/components/organisms/messages/tool-renderer";
 
 vi.mock("next/dynamic", async () => {
 	const React = await import("react");
@@ -32,17 +32,17 @@ vi.mock("next/dynamic", async () => {
 });
 
 // Mock the child components
-vi.mock("../../../../components/ui/skeleton", () => ({
+vi.mock("@/components/atoms/skeleton", () => ({
 	Skeleton: () => <div data-testid="skeleton">Skeleton</div>,
 }));
 
-vi.mock("@/components/document/document-preview", () => ({
+vi.mock("@/components/organisms/document/document-preview", () => ({
 	DocumentPreview: ({ result }: any) => (
 		<div data-testid="document-preview">{result.title}</div>
 	),
 }));
 
-vi.mock("@/components/elements/tool", () => ({
+vi.mock("@/components/molecules/tool", () => ({
 	Tool: ({ children }: any) => <div>{children}</div>,
 	ToolHeader: ({ type }: any) => <div>Header: {type}</div>,
 	ToolContent: ({ children }: any) => <div>{children}</div>,
@@ -50,25 +50,25 @@ vi.mock("@/components/elements/tool", () => ({
 	ToolOutput: ({ output }: any) => <div>Output: {output}</div>,
 }));
 
-vi.mock("@/components/chat/generic-tool", () => ({
+vi.mock("@/components/organisms/chat/generic-tool", () => ({
 	GenericTool: ({ toolName }: any) => (
 		<div data-testid="generic-tool">{toolName}</div>
 	),
 }));
 
-vi.mock("@/components/chat/widgets/entity-widget", () => ({
+vi.mock("@/components/organisms/chat/widgets/entity-widget", () => ({
 	EntityWidget: () => <div data-testid="entity-widget">EntityWidget</div>,
 }));
 
-vi.mock("@/components/chat/widgets/entity-proposal", () => ({
+vi.mock("@/components/organisms/chat/widgets/entity-proposal", () => ({
 	EntityProposal: () => <div data-testid="entity-proposal">EntityProposal</div>,
 }));
 
-vi.mock("@/components/chat/widgets/scene-widget", () => ({
+vi.mock("@/components/organisms/chat/widgets/scene-widget", () => ({
 	SceneWidget: () => <div data-testid="scene-widget">SceneWidget</div>,
 }));
 
-vi.mock("@/components/chat/widgets/generation-widget", () => ({
+vi.mock("@/components/organisms/chat/widgets/generation-widget", () => ({
 	GenerationWidget: () => (
 		<div data-testid="generation-widget">GenerationWidget</div>
 	),

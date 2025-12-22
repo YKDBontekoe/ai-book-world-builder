@@ -8,7 +8,7 @@ import {
 	type AnalyzeBookResponse,
 	analyzeBook,
 } from "@/app/actions/book-analysis";
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/atoms/button";
 
 type AnalyzeBookButtonProps = {
 	sourceMaterialId: string;

@@ -2,8 +2,8 @@ import { Buffer } from "node:buffer";
 
 import JSZip from "jszip";
 
-import type { ExtractionStrategy } from "../types";
-import { deriveHeadings, stripHtml } from "../text";
+import type { ExtractionStrategy } from "@/lib/ingestion/types";
+import { deriveHeadings, stripHtml } from "@/lib/ingestion/text";
 
 export const epubExtractor: ExtractionStrategy = {
   mimeTypes: ["application/epub+zip"],

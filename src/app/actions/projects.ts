@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
 import { getProjectByIdWithAccess, createProject } from "@/lib/db/queries";
 import { db } from "@/lib/db/drizzle";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import {
   project,
   entity,

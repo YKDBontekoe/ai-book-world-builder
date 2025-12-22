@@ -1,15 +1,15 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { WriterEditor } from "../../../../components/writer/writer-editor";
-import * as writerActions from "../../../../app/actions/writer";
-import * as writerContext from "../../../../components/writer/writer-context";
+import { WriterEditor } from "@/components/organisms/writer/writer-editor";
+import * as writerActions from "@/app/actions/writer";
+import * as writerContext from "@/components/organisms/writer/writer-context";
 
 // Mock child components
-vi.mock("../../../../components/editor/text-editor", () => ({
+vi.mock("@/components/organisms/editor/text-editor", () => ({
   Editor: () => <div data-testid="text-editor">Editor Content</div>,
 }));
 
-vi.mock("../../../../components/ui/empty-state", () => ({
+vi.mock("@/components/atoms/empty-state", () => ({
   EmptyState: ({ title, description, action }: any) => (
     <div data-testid="empty-state">
       <h1>{title}</h1>
@@ -19,11 +19,11 @@ vi.mock("../../../../components/ui/empty-state", () => ({
   ),
 }));
 
-vi.mock("../../../../components/writer/writer-header", () => ({
+vi.mock("@/components/organisms/writer/writer-header", () => ({
     WriterHeader: () => <div data-testid="writer-header">Header</div>
 }));
 
-vi.mock("../../../../components/writer/story-wizard", () => ({
+vi.mock("@/components/organisms/writer/story-wizard", () => ({
   StoryWizard: ({ onComplete }: any) => (
     <div data-testid="story-wizard">
         Story Wizard
@@ -33,12 +33,12 @@ vi.mock("../../../../components/writer/story-wizard", () => ({
 }));
 
 // Mock Server Actions
-vi.mock("../../../../app/actions/writer", () => ({
+vi.mock("@/app/actions/writer", () => ({
   initializeProject: vi.fn(),
 }));
 
 // Mock app/actions/story-generation to prevent DB connection
-vi.mock("../../../../app/actions/story-generation", () => ({
+vi.mock("@/app/actions/story-generation", () => ({
     planChapterScenes: vi.fn(),
     generateSceneText: vi.fn(),
 }));
@@ -65,7 +65,7 @@ vi.mock("next/navigation", () => ({
 
 // Mock Context
 const mockUseWriterContext = vi.fn();
-vi.mock("../../../../components/writer/writer-context", async (importOriginal) => {
+vi.mock("@/components/organisms/writer/writer-context", async (importOriginal) => {
     const actual = await importOriginal<typeof writerContext>();
     return {
         ...actual,

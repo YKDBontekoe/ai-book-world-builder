@@ -1,6 +1,6 @@
 import "server-only";
 import { and, desc, eq, gt, inArray, lt, type SQL } from "drizzle-orm";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { type DbTransaction, db } from "@/lib/db/drizzle";
 import { type Chat, chat, message, stream, vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";

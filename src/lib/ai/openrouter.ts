@@ -1,5 +1,5 @@
 import { unstable_cache } from "next/cache";
-import type { ChatModel } from "./models";
+import type { ChatModel } from "@/lib/ai/models";
 
 export const getOpenRouterModels = unstable_cache(
   async (): Promise<ChatModel[]> => {

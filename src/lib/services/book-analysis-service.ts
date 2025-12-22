@@ -9,10 +9,10 @@ import {
 	getSourceMaterialById,
 } from "@/lib/db/queries";
 import type { Entity } from "@/lib/db/schema";
-import { DetailExtractor } from "./analysis/detail-extractor";
-import { EntityDetector } from "./analysis/entity-detector";
-import { RelationshipInferrer } from "./analysis/relationship-inferrer";
-import type { AnalysisResult } from "./analysis/types";
+import { DetailExtractor } from "@/lib/services/analysis/detail-extractor";
+import { EntityDetector } from "@/lib/services/analysis/entity-detector";
+import { RelationshipInferrer } from "@/lib/services/analysis/relationship-inferrer";
+import type { AnalysisResult } from "@/lib/services/analysis/types";
 
 export type { AnalysisResult };
 

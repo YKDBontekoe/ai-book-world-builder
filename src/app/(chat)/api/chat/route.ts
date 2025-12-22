@@ -7,7 +7,7 @@ import {
 	streamText,
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import type { ChatModel } from "@/lib/ai/models";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { myProvider } from "@/lib/ai/providers";
@@ -19,7 +19,7 @@ import { initializeChatSession } from "@/lib/services/chat";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { generateUUID } from "@/lib/utils";
-import { type PostRequestBody, postRequestBodySchema } from "./schema";
+import { type PostRequestBody, postRequestBodySchema } from "@/app/(chat)/api/chat/schema";
 
 export const maxDuration = 60;
 

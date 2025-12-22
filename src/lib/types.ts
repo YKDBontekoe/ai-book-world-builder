@@ -1,7 +1,7 @@
 import type { DataUIPart, InferUITool, UIMessage } from "ai";
 import { z } from "zod";
-import type { ArtifactKind } from "@/components/artifact/types";
-import type { analyzeCharacter } from "./ai/tools/analyze-character";
+import type { ArtifactKind } from "@/components/organisms/artifact/types";
+import type { analyzeCharacter } from "@/lib/ai/tools/analyze-character";
 
 export interface ToolInvocation {
 	toolCallId: string;
@@ -11,19 +11,19 @@ export interface ToolInvocation {
 	result?: unknown;
 }
 
-import type { assessReadiness } from "./ai/tools/assess-readiness";
-import type { createDocument } from "./ai/tools/create-document";
-import type { createOutline } from "./ai/tools/create-outline";
-import type { createVolume } from "./ai/tools/create-volume";
-import type { draftScene } from "./ai/tools/draft-scene";
-import type { orchestrateBook } from "./ai/tools/orchestrate-book";
-import type { proposeManageEntities } from "./ai/tools/propose-manage-entities";
-import type { requestSuggestions } from "./ai/tools/request-suggestions";
-import type { runDiagnostics } from "./ai/tools/run-diagnostics";
-import type { updateDocument } from "./ai/tools/update-document";
-import type { updateSceneCards } from "./ai/tools/update-scene-cards";
-import type { Suggestion, Chapter, Scene } from "./db/schema";
-import type { AppUsage } from "./usage";
+import type { assessReadiness } from "@/lib/ai/tools/assess-readiness";
+import type { createDocument } from "@/lib/ai/tools/create-document";
+import type { createOutline } from "@/lib/ai/tools/create-outline";
+import type { createVolume } from "@/lib/ai/tools/create-volume";
+import type { draftScene } from "@/lib/ai/tools/draft-scene";
+import type { orchestrateBook } from "@/lib/ai/tools/orchestrate-book";
+import type { proposeManageEntities } from "@/lib/ai/tools/propose-manage-entities";
+import type { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
+import type { runDiagnostics } from "@/lib/ai/tools/run-diagnostics";
+import type { updateDocument } from "@/lib/ai/tools/update-document";
+import type { updateSceneCards } from "@/lib/ai/tools/update-scene-cards";
+import type { Suggestion, Chapter, Scene } from "@/lib/db/schema";
+import type { AppUsage } from "@/lib/usage";
 
 export type SceneWithPrev = Scene & { prevSceneId: string | null };
 export type ChapterWithScenes = Chapter & { scenes: SceneWithPrev[] };

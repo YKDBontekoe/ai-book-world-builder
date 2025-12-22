@@ -10,7 +10,7 @@ import {
   getScenesForChapter,
   updateSceneContent,
 } from "@/lib/db/queries";
-import { getGatewayIdForRole } from "../model-routing";
+import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 
 const sceneUpdateSchema = z.object({
   id: z

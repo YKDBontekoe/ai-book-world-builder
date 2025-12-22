@@ -2,14 +2,14 @@ import { BookOpen, Download, FileText } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
-import { PageContainer } from "@/components/page-container";
-import { PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/empty-state";
-import { GlassCard } from "@/components/ui/glass-card";
+import { PageContainer } from "@/components/organisms/page-container";
+import { PageHeader } from "@/components/molecules/page-header";
+import { Badge } from "@/components/atoms/badge";
+import { Button } from "@/components/atoms/button";
+import { EmptyState } from "@/components/molecules/empty-state";
+import { GlassCard } from "@/components/molecules/glass-card";
 import { getExportsForUser } from "@/lib/db/queries/book-export";
-import { DeleteExportButton } from "./delete-export-button";
+import { DeleteExportButton } from "@/app/(chat)/exports/delete-export-button";
 
 export default async function ExportsPage() {
 	const session = await auth();

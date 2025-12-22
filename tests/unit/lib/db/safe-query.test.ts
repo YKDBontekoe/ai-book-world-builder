@@ -1,7 +1,7 @@
 
 import { describe, it, expect, vi } from "vitest";
-import { safeQuery } from "../../../../lib/db/safe-query";
-import { ChatSDKError } from "../../../../lib/errors";
+import { safeQuery } from "@/lib/db/safe-query";
+import { ChatSDKError } from "@/lib/errors";
 
 describe("safeQuery", () => {
   it("should return the result of the query function", async () => {

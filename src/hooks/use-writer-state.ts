@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
-import { useBookCanvasActions, useBookCanvasValue } from "../components/book-canvas/book-canvas-context";
-import { getProjectStructure, updateSceneContent, createChapterSnapshot, getSceneContent } from "../app/actions/writer";
+import { useBookCanvasActions, useBookCanvasValue } from "@/components/organisms/book-canvas/book-canvas-context";
+import { getProjectStructure, updateSceneContent, createChapterSnapshot, getSceneContent } from "@/app/actions/writer";
 import { type ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterStateProps {

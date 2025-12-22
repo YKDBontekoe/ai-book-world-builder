@@ -15,7 +15,7 @@ import type {
 import type {
   IngestionRepository,
   SourceMaterialWithProcessing,
-} from "./repository";
+} from "@/lib/ingestion/repository";
 
 export class DatabaseIngestionRepository implements IngestionRepository {
   async getReadyMaterials(

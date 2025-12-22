@@ -3,7 +3,7 @@ import { generateObject } from "ai";
 import { z } from "zod";
 import { getChunksForSourceMaterial } from "@/lib/db/queries";
 import type { SourceMaterialChunk } from "@/lib/db/schema";
-import type { DetectedEntity, InferredRelationship } from "./types";
+import type { DetectedEntity, InferredRelationship } from "@/lib/services/analysis/types";
 
 const relationshipInferenceSchema = z.object({
 	relationships: z.array(

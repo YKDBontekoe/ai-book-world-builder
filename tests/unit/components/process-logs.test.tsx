@@ -9,7 +9,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import {
 	type ProcessLog,
 	ProcessLogs,
-} from "../../../components/chat/process-logs";
+} from "@/components/organisms/chat/process-logs";
 
 describe("ProcessLogs", () => {
 	afterEach(() => {

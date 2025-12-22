@@ -3,8 +3,8 @@ import {
 	artifactsPrompt,
 	regularPrompt,
 	storytellingPrompt,
-} from "./constants";
-import type { RequestHints } from "./types";
+} from "@/lib/ai/prompts/constants";
+import type { RequestHints } from "@/lib/ai/prompts/types";
 
 export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
 About the origin of user's request:

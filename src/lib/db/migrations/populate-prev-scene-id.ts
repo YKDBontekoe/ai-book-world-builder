@@ -1,5 +1,5 @@
-import { db } from "../drizzle";
-import { scene } from "../schema";
+import { db } from "@/lib/db/drizzle";
+import { scene } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
 async function main() {

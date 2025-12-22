@@ -1,7 +1,7 @@
-import { generateBookPlan, createBookFromPlan, planChapterScenes, generateSceneText } from '../../../app/actions/story-generation';
+import { generateBookPlan, createBookFromPlan, planChapterScenes, generateSceneText } from '@/app/actions/story-generation';
 import { generateObject, generateText } from 'ai';
-import { db } from '../../../lib/db/drizzle';
-import { ensureProjectAccess } from '../../../lib/actions-utils';
+import { db } from '@/lib/db/drizzle';
+import { ensureProjectAccess } from '@/lib/actions-utils';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mocks
@@ -63,7 +63,7 @@ const createMockQuery = (resolveValue: any) => {
 
 const mockQuery = createMockQuery([]);
 
-vi.mock('../../../lib/db/drizzle', () => ({
+vi.mock('@/lib/db/drizzle', () => ({
   db: {
     transaction: vi.fn(async (cb) => {
         return await cb({
@@ -78,11 +78,11 @@ vi.mock('../../../lib/db/drizzle', () => ({
   },
 }));
 
-vi.mock('../../../lib/db/queries/scene', () => ({
+vi.mock('@/lib/db/queries/scene', () => ({
   createScene: vi.fn(() => Promise.resolve({ id: 'scene-1' })),
 }));
 
-vi.mock('../../../lib/actions-utils', () => ({
+vi.mock('@/lib/actions-utils', () => ({
   ensureProjectAccess: vi.fn(),
 }));
 
@@ -92,13 +92,13 @@ vi.mock('next/headers', () => ({
   }),
 }));
 
-vi.mock('../../../lib/ai/providers', () => ({
+vi.mock('@/lib/ai/providers', () => ({
     myProvider: {
         languageModel: vi.fn()
     }
 }));
 
-vi.mock('../../../lib/ai/writer', () => ({
+vi.mock('@/lib/ai/writer', () => ({
     continueWriting: vi.fn(() => Promise.resolve({ text: "Generated scene content" })),
 }));
 

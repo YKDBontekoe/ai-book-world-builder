@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { systemPrompt, RequestHints } from "../../../../lib/ai/prompts";
+import { systemPrompt, RequestHints } from "@/lib/ai/prompts";
 
 describe("systemPrompt", () => {
   const mockHints: RequestHints = {

@@ -3,7 +3,7 @@
  * Uses pricing data from the AI SDK models
  */
 
-import { type ChatModel, getChatModelById } from "./models";
+import { type ChatModel, getChatModelById } from "@/lib/ai/models";
 
 // Image generation model pricing (per image)
 export const imageModels = [

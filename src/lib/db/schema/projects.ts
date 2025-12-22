@@ -12,7 +12,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-import { user } from "./auth";
+import { user } from "@/lib/db/schema/auth";
 
 export type ProjectFolder = {
   id: string;

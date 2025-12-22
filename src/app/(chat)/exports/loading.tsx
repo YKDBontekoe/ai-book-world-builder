@@ -1,6 +1,6 @@
-import { PageContainer } from "@/components/page-container";
-import { GlassCard } from "@/components/ui/glass-card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/components/organisms/page-container";
+import { GlassCard } from "@/components/molecules/glass-card";
+import { Skeleton } from "@/components/atoms/skeleton";
 
 export default function ExportsLoading() {
   return (

@@ -1,11 +1,11 @@
 import { cookies } from "next/headers";
 import Script from "next/script";
 import { Suspense } from "react";
-import { BookCanvas, BookCanvasProvider } from "@/components/book-canvas";
-import { DataStreamProvider } from "@/components/chat/data-stream-provider";
-import { AppSidebar } from "@/components/sidebar/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { auth } from "../(auth)/auth";
+import { BookCanvas, BookCanvasProvider } from "@/components/organisms/book-canvas";
+import { DataStreamProvider } from "@/components/organisms/chat/data-stream-provider";
+import { AppSidebar } from "@/components/organisms/sidebar/app-sidebar";
+import { SidebarInset, SidebarProvider } from "@/components/atoms/sidebar";
+import { auth } from "@/app/(auth)/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return (

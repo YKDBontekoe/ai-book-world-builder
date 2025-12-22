@@ -1,8 +1,8 @@
 "use server";
 
 import { generateText } from "ai";
-import { myProvider } from "./providers";
-import { getSelectedModelId } from "./models";
+import { myProvider } from "@/lib/ai/providers";
+import { getSelectedModelId } from "@/lib/ai/models";
 
 export async function continueWriting(
 	context: string,

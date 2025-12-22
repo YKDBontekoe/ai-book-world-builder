@@ -5,14 +5,14 @@
 export {
 	type GenerationCallbacks,
 	runGeneration,
-} from "./generation-orchestrator";
+} from "@/lib/generation/generation-orchestrator";
 export {
 	generateRevisionGuidance,
 	quickCheck,
 	type ReviewerAgentInput,
 	type ReviewResult,
 	reviewChapter,
-} from "./reviewer-agent";
+} from "@/lib/generation/reviewer-agent";
 export {
 	generateChapter,
 	generateEpilogue,
@@ -20,4 +20,4 @@ export {
 	streamChapter,
 	type WriterAgentInput,
 	type WriterAgentOutput,
-} from "./writer-agent";
+} from "@/lib/generation/writer-agent";

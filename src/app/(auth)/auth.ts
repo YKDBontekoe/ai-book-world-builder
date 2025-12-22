@@ -8,7 +8,7 @@ import { DUMMY_PASSWORD } from "@/lib/constants";
 import { getUser } from "@/lib/db/queries/user";
 import { db } from "@/lib/db/drizzle";
 import { account, user as userTable } from "@/lib/db/schema";
-import { authConfig } from "./auth.config";
+import { authConfig } from "@/app/(auth)/auth.config";
 
 export type UserType = "regular";
 

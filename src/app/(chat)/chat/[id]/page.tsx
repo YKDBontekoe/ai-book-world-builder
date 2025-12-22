@@ -4,7 +4,7 @@ import { Suspense } from "react";
 
 import { auth } from "@/app/(auth)/auth";
 import { getAvailableChatModels } from "@/app/actions/models";
-import { ChatPageContent } from "@/components/chat-page-content";
+import { ChatPageContent } from "@/components/organisms/chat-page-content";
 import { DEFAULT_CHAT_MODEL, getValidChatModelId } from "@/lib/ai/models";
 import {
 	getChatById,

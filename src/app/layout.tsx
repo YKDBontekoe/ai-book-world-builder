@@ -2,12 +2,12 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "@/components/providers/theme-provider";
+import { ThemeProvider } from "@/components/organisms/providers/theme-provider";
 
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
-import { QueryProvider } from "@/components/providers/query-provider";
-import { ServiceWorkerRegister } from "@/components/providers/service-worker-register";
+import { QueryProvider } from "@/components/organisms/providers/query-provider";
+import { ServiceWorkerRegister } from "@/components/organisms/providers/service-worker-register";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://chat.vercel.ai"),

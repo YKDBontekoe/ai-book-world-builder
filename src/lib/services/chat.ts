@@ -1,7 +1,7 @@
 import { geolocation } from "@vercel/functions";
 import type { UserType } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type ChatModel, getChatModelById } from "@/lib/ai/models";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";

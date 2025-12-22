@@ -1,11 +1,11 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { Messages } from "../../../../components/messages/messages";
-import type { ChatMessage } from "../../../../lib/types";
-import type { Vote } from "../../../../lib/db/schema";
+import { Messages } from "@/components/organisms/messages/messages";
+import type { ChatMessage } from "@/lib/types";
+import type { Vote } from "@/lib/db/schema";
 
 // Mock dependencies with relative paths matching the component imports
-vi.mock("../../../../hooks/use-messages", () => ({
+vi.mock("@/hooks/use-messages", () => ({
   useMessages: vi.fn(() => ({
     containerRef: { current: null },
     endRef: { current: null },
@@ -15,7 +15,7 @@ vi.mock("../../../../hooks/use-messages", () => ({
   })),
 }));
 
-vi.mock("../../../../components/messages/message", () => ({
+vi.mock("@/components/organisms/messages/message", () => ({
   PreviewMessage: ({ vote }: { vote: Vote | undefined }) => (
     <div data-testid="preview-message" data-vote-id={vote?.id}>
       Message
@@ -24,11 +24,11 @@ vi.mock("../../../../components/messages/message", () => ({
   ThinkingMessage: () => <div>Thinking</div>,
 }));
 
-vi.mock("../../../../components/messages/greeting", () => ({
+vi.mock("@/components/organisms/messages/greeting", () => ({
   Greeting: () => <div>Greeting</div>,
 }));
 
-vi.mock("../../../../components/chat/suggested-actions", () => ({
+vi.mock("@/components/organisms/chat/suggested-actions", () => ({
   SuggestedActions: () => <div>SuggestedActions</div>,
 }));
 

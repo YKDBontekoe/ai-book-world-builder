@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 
-import type { ExtractionStrategy } from "../types";
-import { deriveHeadings } from "../text";
+import type { ExtractionStrategy } from "@/lib/ingestion/types";
+import { deriveHeadings } from "@/lib/ingestion/text";
 
 export const pdfExtractor: ExtractionStrategy = {
   mimeTypes: ["application/pdf"],

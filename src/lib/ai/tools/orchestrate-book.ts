@@ -3,8 +3,8 @@ import { z } from "zod";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
 import { addTaskLogEntry, updateCanvasState } from "@/lib/db/queries";
 import { getScenesForProject } from "@/lib/db/queries/scene";
-import { getGatewayIdForRole } from "../model-routing";
-import { retrieveContext } from "../rag";
+import { getGatewayIdForRole } from "@/lib/ai/model-routing";
+import { retrieveContext } from "@/lib/ai/rag";
 
 // Human-readable action descriptions
 const ACTION_TITLES: Record<string, string> = {

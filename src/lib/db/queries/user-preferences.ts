@@ -1,8 +1,8 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { db } from "../drizzle";
-import { type UserPreferences, userPreferences } from "../schema";
+import { db } from "@/lib/db/drizzle";
+import { type UserPreferences, userPreferences } from "@/lib/db/schema";
 
 const MAX_RECENT_MODELS = 5;
 

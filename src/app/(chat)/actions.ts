@@ -3,7 +3,7 @@
 import { generateText, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 import { auth } from "@/app/(auth)/auth";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { type ChatModelId, getValidChatModelId } from "@/lib/ai/models";
 import { titlePrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";

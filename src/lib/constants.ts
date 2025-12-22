@@ -1,5 +1,5 @@
-import type { ProjectFolder } from "./db/schema";
-import { generateDummyPassword } from "./db/utils";
+import type { ProjectFolder } from "@/lib/db/schema";
+import { generateDummyPassword } from "@/lib/db/utils";
 
 export const isProductionEnvironment = process.env.NODE_ENV === "production";
 export const isDevelopmentEnvironment = process.env.NODE_ENV === "development";

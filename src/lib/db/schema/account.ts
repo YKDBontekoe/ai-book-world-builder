@@ -5,7 +5,7 @@ import {
   text,
   uuid,
 } from "drizzle-orm/pg-core";
-import { user } from "./auth";
+import { user } from "@/lib/db/schema/auth";
 
 export const account = pgTable(
   "Account",

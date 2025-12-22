@@ -13,30 +13,30 @@ const queriesMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@/app/(auth)/auth", () => authMock);
-vi.mock("../../../app/(auth)/auth", () => authMock);
+vi.mock("@/app/(auth)/auth", () => authMock);
 
 vi.mock("@/lib/db/queries", () => queriesMock);
-vi.mock("../../../lib/db/queries", () => queriesMock);
+vi.mock("@/lib/db/queries", () => queriesMock);
 
 vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
 
 import { revalidatePath } from "next/cache";
-import { auth } from "../../../app/(auth)/auth";
+import { auth } from "@/app/(auth)/auth";
 import {
 	deleteEntityAction,
 	getEntities,
 	updateEntityAction,
-} from "../../../app/actions/entities";
+} from "@/app/actions/entities";
 import {
 	deleteEntity,
 	getEntitiesForProject,
 	getEntityById,
 	getProjectByIdWithAccess,
 	updateEntity,
-} from "../../../lib/db/queries";
-import type { Entity, Project } from "../../../lib/db/schema";
+} from "@/lib/db/queries";
+import type { Entity, Project } from "@/lib/db/schema";
 
 const mockedAuth = vi.mocked(auth);
 const mockedGetProjectByIdWithAccess = vi.mocked(getProjectByIdWithAccess);

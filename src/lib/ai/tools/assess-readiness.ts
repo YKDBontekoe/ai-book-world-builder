@@ -2,7 +2,7 @@ import { generateObject, tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
-import { getGatewayIdForRole } from "../model-routing";
+import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 
 export const assessReadiness = ({
   session,

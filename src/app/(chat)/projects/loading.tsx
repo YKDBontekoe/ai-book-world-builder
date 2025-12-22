@@ -1,7 +1,7 @@
-import { PageContainer } from "@/components/page-container";
-import { GlassCard } from "@/components/ui/glass-card";
-import { GridList } from "@/components/ui/grid-list";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageContainer } from "@/components/organisms/page-container";
+import { GlassCard } from "@/components/molecules/glass-card";
+import { GridList } from "@/components/atoms/grid-list";
+import { Skeleton } from "@/components/atoms/skeleton";
 
 export default function ProjectsLoading() {
   return (

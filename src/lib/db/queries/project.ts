@@ -1,6 +1,6 @@
 import "server-only";
 import { and, desc, eq, ne, or } from "drizzle-orm";
-import type { VisibilityType } from "@/components/chat/visibility-selector";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { DEFAULT_PROJECT_FOLDERS } from "@/lib/constants";
 import { db } from "@/lib/db/drizzle";
 import { type Project, project } from "@/lib/db/schema";

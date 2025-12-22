@@ -9,7 +9,7 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-import { project } from "./projects";
+import { project } from "@/lib/db/schema/projects";
 
 export const entity = pgTable(
   "Entity",

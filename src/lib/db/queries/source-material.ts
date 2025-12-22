@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, count, eq, inArray, isNull, lte, or } from "drizzle-orm";
-import { db } from "../drizzle";
+import { db } from "@/lib/db/drizzle";
 import {
 	type NewSourceMaterialChapter,
 	type NewSourceMaterialChunk,
@@ -14,9 +14,9 @@ import {
 	sourceMaterialChapter,
 	sourceMaterialChunk,
 	sourceMaterialProcessing,
-} from "../schema";
-import { ChatSDKError } from "../../errors";
-import { safeQuery } from "../safe-query";
+} from "@/lib/db/schema";
+import { ChatSDKError } from "@/lib/errors";
+import { safeQuery } from "@/lib/db/safe-query";
 
 export async function createSourceMaterial({
 	blobUrl,

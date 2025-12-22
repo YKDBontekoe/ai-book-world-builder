@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
-import { fetchExternalBenchmarks } from "./benchmark-service";
+import { fetchExternalBenchmarks } from "@/lib/ai/benchmark-service";
 
 // Mock fetch
 const fetchMock = vi.fn();

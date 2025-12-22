@@ -1,14 +1,14 @@
 "use server";
 
-import { db } from "../../lib/db/drizzle";
-import { scene, chapter, chapterVersion, outline, volume } from "../../lib/db/schema";
+import { db } from "@/lib/db/drizzle";
+import { scene, chapter, chapterVersion, outline, volume } from "@/lib/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
-import { continueWriting } from "../../lib/ai/writer";
-import { createScene, getScenesForProject } from "../../lib/db/queries/scene";
-import { createOutline, getOutlinesForProject } from "../../lib/db/queries/outline";
-import { createVolumePlan, getVolumePlansForProject } from "../../lib/db/queries/volume";
-import { ensureProjectAccess } from "../../lib/actions-utils";
-import { buildSceneGenerationContext } from "../../lib/ai/context-builder";
+import { continueWriting } from "@/lib/ai/writer";
+import { createScene, getScenesForProject } from "@/lib/db/queries/scene";
+import { createOutline, getOutlinesForProject } from "@/lib/db/queries/outline";
+import { createVolumePlan, getVolumePlansForProject } from "@/lib/db/queries/volume";
+import { ensureProjectAccess } from "@/lib/actions-utils";
+import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { cookies } from "next/headers";
 
 export async function getProjectStructure(projectId: string) {

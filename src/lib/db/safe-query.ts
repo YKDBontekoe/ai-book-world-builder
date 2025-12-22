@@ -1,4 +1,4 @@
-import { ChatSDKError, type ErrorCode } from "../errors";
+import { ChatSDKError, type ErrorCode } from "@/lib/errors";
 
 /**
  * Executes a database query safely, handling errors uniformly.

@@ -4,7 +4,7 @@ import {
   getChaptersWithContent,
   getProjectByIdWithAccess,
 } from "@/lib/db/queries";
-import { ReaderView } from "@/components/reader/reader-view";
+import { ReaderView } from "@/components/organisms/reader/reader-view";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
 

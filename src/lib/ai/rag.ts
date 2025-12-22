@@ -1,4 +1,4 @@
-import { openrouter } from "./providers";
+import { openrouter } from "@/lib/ai/providers";
 import { cosineSimilarity, embed, embedMany } from "ai";
 
 export type RAGChunk = {

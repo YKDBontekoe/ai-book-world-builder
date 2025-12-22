@@ -1,7 +1,7 @@
 import { act, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 // Use relative import for the component under test to ensure it loads
-import { GenerationWidget } from "../../../../../components/chat/widgets/generation-widget";
+import { GenerationWidget } from "@/components/organisms/chat/widgets/generation-widget";
 
 // Define the mock function using vi.hoisted
 const { mockUseDataStream } = vi.hoisted(() => ({
@@ -11,7 +11,7 @@ const { mockUseDataStream } = vi.hoisted(() => ({
 // Mock dependencies using relative paths from the TEST FILE.
 // Test: tests/unit/components/chat/widgets/generation-widget.test.tsx
 // Target: components/chat/data-stream-provider.tsx
-vi.mock("../../../../../components/chat/data-stream-provider", () => ({
+vi.mock("@/components/organisms/chat/data-stream-provider", () => ({
 	useDataStream: () => ({
 		dataStream: mockUseDataStream(),
 	}),
@@ -19,7 +19,7 @@ vi.mock("../../../../../components/chat/data-stream-provider", () => ({
 
 // Mock InteractiveWidget
 // Target: components/chat/widgets/interactive-widget.tsx
-vi.mock("../../../../../components/chat/widgets/interactive-widget", () => ({
+vi.mock("@/components/organisms/chat/widgets/interactive-widget", () => ({
 	InteractiveWidget: ({ children, headerTitle, isError, headerEnd }: any) => (
 		<div
 			data-testid="interactive-widget"
@@ -33,7 +33,7 @@ vi.mock("../../../../../components/chat/widgets/interactive-widget", () => ({
 }));
 
 // Mock Button
-vi.mock("@/components/ui/button", () => ({
+vi.mock("@/components/atoms/button", () => ({
 	Button: ({ children, onClick, className }: any) => (
 		<button onClick={onClick} className={className} data-testid="mock-button">
 			{children}

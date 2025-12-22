@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import type { ArtifactKind } from "@/components/artifact/types";
+import type { ArtifactKind } from "@/components/organisms/artifact/types";
 import {
   deleteDocumentsByIdAfterTimestamp,
   getDocumentsById,

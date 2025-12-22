@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, count, desc, eq, or } from "drizzle-orm";
-import { db } from "../drizzle";
+import { db } from "@/lib/db/drizzle";
 import {
 	type Entity,
 	type EntityAttribute,
@@ -8,9 +8,9 @@ import {
 	entityAttribute,
 	type Relationship,
 	relationship,
-} from "../schema";
-import { ChatSDKError } from "../../errors";
-import { safeQuery } from "../safe-query";
+} from "@/lib/db/schema";
+import { ChatSDKError } from "@/lib/errors";
+import { safeQuery } from "@/lib/db/safe-query";
 
 function toDateOrUndefined(value: string | undefined | null) {
 	if (!value) {
