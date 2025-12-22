@@ -1,7 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
 import { Artifact } from "@/components/organisms/artifact";
 import { AgentCapabilities } from "@/components/organisms/chat/agent-capabilities";
 import { ChatActionHandler } from "@/components/organisms/chat/chat-action-handler";
@@ -11,7 +10,6 @@ import { ProcessLogs } from "@/components/organisms/chat/process-logs";
 import { SuggestedActions } from "@/components/organisms/chat/suggested-actions";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { Messages } from "@/components/organisms/messages/messages";
-import { ProjectContextBar } from "@/components/organisms/sidebar/project-context-bar";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -28,8 +26,6 @@ import { useChatController } from "@/hooks/use-chat-controller";
 import { useChatSync } from "@/hooks/use-chat-sync";
 import { useChatToolEffects } from "@/hooks/use-chat-tool-effects";
 import { useChatUrl } from "@/hooks/use-chat-url";
-import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import { useProjectSelection } from "@/hooks/use-project-selection";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import { api } from "@/lib/api-client";
 import type { Vote } from "@/lib/db/schema";
@@ -37,13 +33,13 @@ import type { ProjectSummary } from "@/lib/project-context";
 import { QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
+import { ChatProvider, useChatContext } from "@/components/organisms/chat/chat-context";
+import { ChatLayout } from "@/components/organisms/chat/chat-layout";
 
-export function Chat({
+function ChatContent({
 	id,
 	initialMessages,
 	initialChatModel,
-	initialProjectId,
-	initialProjects = [],
 	initialVisibilityType,
 	isReadonly,
 	autoResume,
@@ -53,29 +49,18 @@ export function Chat({
 	id: string;
 	initialMessages: ChatMessage[];
 	initialChatModel: ChatModelId;
-	initialProjectId?: string | null;
-	initialProjects?: ProjectSummary[];
 	initialVisibilityType: VisibilityType;
 	isReadonly: boolean;
 	autoResume: boolean;
 	initialLastContext?: AppUsage;
 	availableModels: ChatModel[];
 }) {
-	const projects = initialProjects ?? [];
 	const {
-		applyProjectSelection,
 		selectedProject,
 		selectedProjectId,
 		selectedProjectIdRef,
-	} = useProjectSelection({
-		initialProjectId,
-		projects,
-	});
-
-	const { visibilityType } = useChatVisibility({
-		chatId: id,
-		initialVisibilityType,
-	});
+		visibilityType,
+	} = useChatContext();
 
 	const {
 		messages,
@@ -141,80 +126,73 @@ export function Chat({
 				sendMessage={sendMessage}
 				triggerChatAction={triggerChatAction}
 			/>
-			<div className="flex h-dvh min-w-0 flex-col bg-background">
-				{/* Compact Project Context Bar - only show for new chats */}
-				{messages.length === 0 && (
-					<ProjectContextBar
-						onProjectSelect={applyProjectSelection}
-						projects={projects}
-						selectedProject={selectedProject}
-						selectedProjectId={selectedProjectId}
-					/>
-				)}
 
-				<div className="overscroll-behavior-contain flex min-w-0 flex-1 touch-pan-y flex-col">
+			<ChatLayout
+				chatId={id}
+				isReadonly={isReadonly}
+				initialVisibilityType={initialVisibilityType}
+				messagesLength={messages.length}
+				header={
 					<ChatHeader
 						chatId={id}
 						isReadonly={isReadonly}
 						projectLabel={selectedProject?.name}
 						selectedVisibilityType={initialVisibilityType}
 					/>
+				}
+			>
+				<Messages
+					chatId={id}
+					isArtifactVisible={isArtifactVisible}
+					isReadonly={isReadonly}
+					messages={messages}
+					regenerate={regenerate}
+					selectedModelId={initialChatModel}
+					selectedProject={selectedProject}
+					selectedVisibilityType={visibilityType}
+					sendMessage={sendMessage}
+					setMessages={setMessages}
+					status={status}
+					votes={votes}
+				/>
 
-					<div className="relative flex-1 overflow-hidden flex flex-col">
-						<Messages
-							chatId={id}
-							isArtifactVisible={isArtifactVisible}
-							isReadonly={isReadonly}
-							messages={messages}
-							regenerate={regenerate}
-							selectedModelId={initialChatModel}
-							selectedProject={selectedProject}
-							selectedVisibilityType={visibilityType}
-							sendMessage={sendMessage}
-							setMessages={setMessages}
-							status={status}
-							votes={votes}
-						/>
-
-						<div className="absolute bottom-0 z-10 w-full bg-gradient-to-t from-background via-background/90 to-transparent pb-6 pt-16">
-							<div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 md:px-6">
-								<ProcessLogs logs={processLogs} />
-								{!isReadonly && (
-									<>
-										{messages.length > 0 && (
-											<div className="mb-2">
-												<SuggestedActions
-													chatId={id}
-													selectedProject={selectedProject}
-													selectedVisibilityType={visibilityType}
-													sendMessage={sendMessage}
-													isCompact={true}
-													messages={messages}
-													selectedModelId={currentModelId}
-												/>
-											</div>
-										)}
-										<AgentCapabilities className="mb-2" />
-										<MultimodalInput
-											availableModels={availableModels}
+				<div className="absolute bottom-0 z-10 w-full bg-gradient-to-t from-background via-background/90 to-transparent pb-6 pt-16">
+					<div className="mx-auto flex w-full max-w-4xl flex-col gap-4 px-4 md:px-6">
+						<ProcessLogs logs={processLogs} />
+						{!isReadonly && (
+							<>
+								{messages.length > 0 && (
+									<div className="mb-2">
+										<SuggestedActions
 											chatId={id}
-											onModelChange={setCurrentModelId}
-											projectId={selectedProjectId}
-											selectedModelId={currentModelId}
+											selectedProject={selectedProject}
 											selectedVisibilityType={visibilityType}
 											sendMessage={sendMessage}
-											setMessages={setMessages}
-											status={status}
-											stop={stop}
-											usage={usage}
+											isCompact={true}
+											messages={messages}
+											selectedModelId={currentModelId}
 										/>
-									</>
+									</div>
 								)}
-							</div>
-						</div>
+								<AgentCapabilities className="mb-2" />
+								<MultimodalInput
+									availableModels={availableModels}
+									chatId={id}
+									onModelChange={setCurrentModelId}
+									projectId={selectedProjectId}
+									selectedModelId={currentModelId}
+									selectedVisibilityType={visibilityType}
+									sendMessage={sendMessage}
+									setMessages={setMessages}
+									status={status}
+									stop={stop}
+									usage={usage}
+								/>
+							</>
+						)}
 					</div>
 				</div>
-			</div>
+			</ChatLayout>
 
 			<Artifact />
 
@@ -248,5 +226,49 @@ export function Chat({
 				</AlertDialogContent>
 			</AlertDialog>
 		</>
+	);
+}
+
+export function Chat({
+	id,
+	initialMessages,
+	initialChatModel,
+	initialProjectId,
+	initialProjects = [],
+	initialVisibilityType,
+	isReadonly,
+	autoResume,
+	initialLastContext,
+	availableModels,
+}: {
+	id: string;
+	initialMessages: ChatMessage[];
+	initialChatModel: ChatModelId;
+	initialProjectId?: string | null;
+	initialProjects?: ProjectSummary[];
+	initialVisibilityType: VisibilityType;
+	isReadonly: boolean;
+	autoResume: boolean;
+	initialLastContext?: AppUsage;
+	availableModels: ChatModel[];
+}) {
+	return (
+		<ChatProvider
+			chatId={id}
+			initialProjectId={initialProjectId}
+			initialProjects={initialProjects}
+			initialVisibilityType={initialVisibilityType}
+		>
+			<ChatContent
+				id={id}
+				initialMessages={initialMessages}
+				initialChatModel={initialChatModel}
+				initialVisibilityType={initialVisibilityType}
+				isReadonly={isReadonly}
+				autoResume={autoResume}
+				initialLastContext={initialLastContext}
+				availableModels={availableModels}
+			/>
+		</ChatProvider>
 	);
 }

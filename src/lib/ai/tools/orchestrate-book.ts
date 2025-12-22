@@ -2,9 +2,9 @@ import { generateObject, tool } from "ai";
 import { z } from "zod";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
 import { addTaskLogEntry, updateCanvasState } from "@/lib/db/queries";
-import { getScenesForProject } from "@/lib/db/queries/scene";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 import { retrieveContext } from "@/lib/ai/rag";
+import { projectAnalytics } from "@/lib/services/project-analytics";
 
 // Human-readable action descriptions
 const ACTION_TITLES: Record<string, string> = {
@@ -84,56 +84,14 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 			// Capture ID for subsequent logs
 			generationId = projectData.generation?.id;
 
-			// 2. Compute Project Statistics
-			const entities = projectData.entities || [];
-			const characters = entities.filter((e) => e.kind === "character");
-			const locations = entities.filter((e) => e.kind === "location");
-			const items = entities.filter((e) => e.kind === "item");
-			const events = entities.filter((e) => e.kind === "event");
-			const organizations = entities.filter((e) => e.kind === "organization");
+			// 2. Compute Project Statistics (delegated to service)
+            const projectStats = await projectAnalytics.getProjectStats(projectId, projectData);
 
-			// Count volumes, chapters, scenes
-			const volumes = projectData.volumes || [];
-			const allChapters = volumes.flatMap((v) => v.chapters || []);
-
-			// Fetch scenes directly from database since they're not included in the volumes data
-			// Optimization: Exclude content as we only need metadata for stats and readiness score
-			const allScenes = await getScenesForProject({ projectId, excludeContent: true });
-			const draftedScenes = allScenes.filter(
-				(s) => s.status === "drafted" || s.status === "final",
-			);
-			const plannedScenes = allScenes.filter((s) => s.status === "planned");
-
-			const projectStats = {
-				characters: characters.length,
-				locations: locations.length,
-				items: items.length,
-				events: events.length,
-				organizations: organizations.length,
-				outlines: projectData.outlines?.length || 0,
-				volumes: volumes.length,
-				chapters: allChapters.length,
-				scenes: allScenes.length,
-				draftedScenes: draftedScenes.length,
-				plannedScenes: plannedScenes.length,
-			};
-
-			// 3. Calculate Readiness Score
-			// Weight: characters 30%, locations 20%, outline 30%, chapters 20%
-			const characterScore = Math.min(characters.length * 20, 100);
-			const locationScore = Math.min(locations.length * 25, 100);
-			const outlineScore = projectData.outlines?.length > 0 ? 100 : 0;
-			const chapterScore = Math.min(allChapters.length * 10, 100);
-
-			const readinessScore = Math.round(
-				characterScore * 0.3 +
-					locationScore * 0.2 +
-					outlineScore * 0.3 +
-					chapterScore * 0.2,
-			);
+			// 3. Calculate Readiness Score (delegated to service)
+            const readinessScore = projectAnalytics.calculateReadinessScore(projectStats);
 
 			await logProgress(
-				`Found ${characters.length} characters, ${allChapters.length} chapters...`,
+				`Found ${projectStats.characters} characters, ${projectStats.chapters} chapters...`,
 			);
 
 			// 4. RAG Retrieval (Context Bank)
@@ -142,6 +100,8 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 			const query =
 				userRequest ||
 				`Current state of ${currentCanvasState?.activePane || "story"}`;
+
+            const entities = projectData.entities || [];
 			const ragContext = await retrieveContext({
 				query,
 				candidates: [
@@ -212,11 +172,11 @@ Summary: ${projectData.project.description || "No summary"}
 Current Pane: ${currentCanvasState?.activePane || "none"}
 
 Project Stats:
-- Characters: ${characters.length}
-- Locations: ${locations.length}
-- Outlines: ${projectData.outlines?.length || 0}
-- Chapters: ${allChapters.length}
-- Scenes: ${allScenes.length} (${draftedScenes.length} drafted, ${plannedScenes.length} planned)
+- Characters: ${projectStats.characters}
+- Locations: ${projectStats.locations}
+- Outlines: ${projectStats.outlines}
+- Chapters: ${projectStats.chapters}
+- Scenes: ${projectStats.scenes} (${projectStats.draftedScenes} drafted, ${projectStats.plannedScenes} planned)
 - Readiness: ${readinessScore}%
 
 Relevant Context:
