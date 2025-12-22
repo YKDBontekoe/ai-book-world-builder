@@ -71,7 +71,8 @@ export function useModelSelection({
 				case "reasoning":
 					return Boolean(model.reasoning);
 				case "free":
-					return !model.pricing || !model.pricing.input;
+					// Fix: handle "0" price string correctly
+					return !model.pricing || model.pricing.input === "0" || parseFloat(model.pricing.input) === 0;
 				case "budget":
 					return model.pricing?.input
 						? getPricePerMillion(model.pricing.input) > 0 &&
