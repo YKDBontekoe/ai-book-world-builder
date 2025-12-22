@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { ReaderControls, type ReaderSettings } from "@/components/organisms/reader/reader-controls";
 import type { Project } from "@/lib/db/schema";
 import { useQuery } from "@tanstack/react-query";
+import { saveReadingProgress } from "@/app/actions/reader";
+import { useDebounceCallback } from "usehooks-ts";
 
 interface ChapterWithContent {
   id: string;
@@ -16,20 +18,26 @@ interface ReaderViewProps {
   project: Project;
   chapters: ChapterWithContent[];
   userId?: string;
+  initialProgress?: { chapterId: string; progress: number } | null;
 }
 
-export function ReaderView({ project, chapters, userId }: ReaderViewProps) {
+export function ReaderView({ project, chapters, userId, initialProgress }: ReaderViewProps) {
   // --- Data Persistence ---
-  // We use useQuery to cache the chapters. Even though we have initialData,
-  // this ensures that the data is added to the persisted cache for offline use.
   const { data: cachedChapters } = useQuery({
     queryKey: ['project-chapters', project.id],
-    queryFn: async () => chapters, // We already have them, this is just to seed cache
+    queryFn: async () => chapters,
     initialData: chapters,
     staleTime: Infinity,
   });
 
-  const [currentChapterIndex, setCurrentChapterIndex] = useState(0);
+  // Determine initial chapter index
+  const getInitialIndex = () => {
+      if (!initialProgress) return 0;
+      const idx = chapters.findIndex(c => c.id === initialProgress.chapterId);
+      return idx >= 0 ? idx : 0;
+  };
+
+  const [currentChapterIndex, setCurrentChapterIndex] = useState(getInitialIndex);
   const [settings, setSettings] = useState<ReaderSettings>({
     fontSize: 18,
     fontFamily: 'font-serif',
@@ -37,20 +45,6 @@ export function ReaderView({ project, chapters, userId }: ReaderViewProps) {
     lineHeight: 1.6
   });
   const [showControls, setShowControls] = useState(false);
-
-  // Pagination State
-  // We simulate pages by calculating how far to scroll horizontally
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(1);
-  const contentRef = useRef<HTMLDivElement>(null); // We need to access the inner div of ReaderContent... which is tricky across components.
-  // Let's integrate the content rendering here or pass ref.
-
-  // Actually, ReaderContent needs to handle the layout.
-  // Let's rethink: The best way to do paginated text on web is:
-  // Container: overflow: hidden; width: 100vw; height: 100vh;
-  // Inner: columns: 100vw; height: 100vh; transform: translateX(-100vw * page);
-
-  // We need to measure the scrollWidth of the inner container to know total pages.
 
   const activeChapter = cachedChapters?.[currentChapterIndex];
 
@@ -69,19 +63,37 @@ export function ReaderView({ project, chapters, userId }: ReaderViewProps) {
     localStorage.setItem('reader-settings', JSON.stringify(settings));
   }, [settings]);
 
+  // Save Progress Debounced
+  const debouncedSave = useDebounceCallback(async (chapterId: string, progress: number) => {
+      if (!userId) return; // Don't save for guests
+      await saveReadingProgress(project.id, chapterId, progress);
+  }, 1000);
+
+  const handleProgressUpdate = (progress: number) => {
+      if (activeChapter) {
+          debouncedSave(activeChapter.id, progress);
+      }
+  };
+
+  // When chapter changes, we might want to reset the progress to 0 for the new chapter
+  // UNLESS it matches the initialProgress chapter (handled by passing explicit initialProgress to PaginatedContent)
+  // But PaginatedContent is keyed by chapterId, so it remounts.
+  // We need to pass the initialProgress ONLY if the current chapter matches the initial one.
+
+  const chapterInitialProgress = (activeChapter?.id === initialProgress?.chapterId)
+      ? initialProgress.progress
+      : 0;
+
   const handleNextChapter = () => {
     if (currentChapterIndex < (cachedChapters?.length || 0) - 1) {
       setCurrentChapterIndex(prev => prev + 1);
-      setCurrentPage(0);
-      window.scrollTo(0,0);
+      // Window scroll reset handled by PaginatedContent mount
     }
   };
 
   const handlePrevChapter = () => {
     if (currentChapterIndex > 0) {
       setCurrentChapterIndex(prev => prev - 1);
-      setCurrentPage(0);
-       window.scrollTo(0,0);
     }
   };
 
@@ -92,14 +104,16 @@ export function ReaderView({ project, chapters, userId }: ReaderViewProps) {
   return (
     <>
       <div className="relative h-screen w-screen overflow-hidden">
-        {/* We pass a key to force re-render on chapter change to reset scroll/layout */}
         <PaginatedContent
            key={activeChapter.id}
+           chapterId={activeChapter.id}
            content={activeChapter.content || "No content."}
            settings={settings}
+           initialProgress={chapterInitialProgress}
            onTap={() => setShowControls(!showControls)}
            onNextChapter={handleNextChapter}
            onPrevChapter={handlePrevChapter}
+           onProgressChange={handleProgressUpdate}
            hasNextChapter={currentChapterIndex < (cachedChapters?.length || 0) - 1}
            hasPrevChapter={currentChapterIndex > 0}
         />
@@ -122,47 +136,67 @@ export function ReaderView({ project, chapters, userId }: ReaderViewProps) {
 
 // Inner component to handle the complex CSS column pagination logic
 function PaginatedContent({
+    chapterId,
     content,
     settings,
+    initialProgress,
     onTap,
     onNextChapter,
     onPrevChapter,
+    onProgressChange,
     hasNextChapter,
     hasPrevChapter
 }: {
+    chapterId: string,
     content: string,
     settings: ReaderSettings,
+    initialProgress: number,
     onTap: () => void,
     onNextChapter: () => void,
     onPrevChapter: () => void,
+    onProgressChange: (p: number) => void,
     hasNextChapter: boolean,
     hasPrevChapter: boolean
 }) {
     const [page, setPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
+    const [totalPages, setTotalPages] = useState(1);
     const containerRef = useRef<HTMLDivElement>(null);
+    const hasRestoredRef = useRef(false);
 
     // Measure pages
     useEffect(() => {
         if (!containerRef.current) return;
 
-        // Wait for layout
         const measure = () => {
             const scrollW = containerRef.current?.scrollWidth || 0;
             const clientW = containerRef.current?.clientWidth || window.innerWidth;
-            // The logic: scrollWidth will be multiple of clientWidth (approx) if columns are working
-            const pages = Math.ceil(scrollW / clientW);
+            const pages = Math.ceil(scrollW / clientW) || 1;
             setTotalPages(pages);
+
+            // Restore position if first measurement
+            if (!hasRestoredRef.current && initialProgress > 0) {
+                const target = Math.floor(pages * initialProgress);
+                setPage(Math.min(target, pages - 1));
+                hasRestoredRef.current = true;
+            }
         };
 
-        // Small timeout to allow font rendering/layout
         const timer = setTimeout(measure, 100);
         window.addEventListener('resize', measure);
         return () => {
             window.removeEventListener('resize', measure);
             clearTimeout(timer);
         };
-    }, [content, settings]); // Re-measure when content or settings change
+    }, [content, settings, initialProgress]);
+
+    // Report progress whenever page changes
+    useEffect(() => {
+        if (totalPages > 0) {
+            // Calculate progress (0.0 to 1.0)
+            const p = page / totalPages;
+            onProgressChange(p);
+        }
+    }, [page, totalPages, onProgressChange]);
 
     const handlePageTurn = (direction: 'next' | 'prev') => {
         if (direction === 'next') {
@@ -175,8 +209,6 @@ function PaginatedContent({
             if (page > 0) {
                 setPage(p => p - 1);
             } else if (hasPrevChapter) {
-                 // We don't jump to end of previous chapter automatically as that's complex state,
-                 // we just go to start of previous chapter for now.
                 onPrevChapter();
             }
         }
@@ -190,7 +222,6 @@ function PaginatedContent({
         }
     };
 
-    // Interaction Zones
     const handleClick = (e: React.MouseEvent) => {
         const width = window.innerWidth;
         const x = e.clientX;
@@ -209,41 +240,31 @@ function PaginatedContent({
           className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
           onClick={handleClick}
         >
-             {/* The Sliding Container */}
             <div
                ref={containerRef}
                className={`h-full ${settings.fontFamily}`}
                style={{
-                   // The Magic of CSS Columns for Pagination
                    columnWidth: '100vw',
-                   columnGap: '40px', // Gap between pages
+                   columnGap: '40px',
                    height: '100vh',
                    width: '100vw',
-
-                   // Typography
                    fontSize: `${settings.fontSize}px`,
                    lineHeight: settings.lineHeight,
                    textAlign: 'justify',
-
-                   // Layout
-                   padding: '40px 20px 60px 20px', // Top/Bottom padding for UI space
+                   padding: '40px 20px 60px 20px',
                    boxSizing: 'border-box',
-
-                   // The sliding mechanism
-                   transform: `translateX(calc(-${page} * (100vw + 40px)))`, // +40px for the gap
+                   transform: `translateX(calc(-${page} * (100vw + 40px)))`,
                    transition: 'transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)',
                }}
             >
                {content.split('\n').map((para, i) => (
                  para.trim() ? <p key={i} className="mb-4 indent-6">{para}</p> : <br key={i} />
                ))}
-                {/* End of Chapter Marker */}
                 <div className="break-before-column h-[50vh] flex items-center justify-center text-muted-foreground opacity-50">
                     <span className="text-sm">End of Chapter</span>
                 </div>
             </div>
 
-            {/* Page Number Indicator */}
             <div className={`fixed bottom-4 right-6 text-xs font-mono opacity-50 pointer-events-none ${settings.theme === 'dark' ? 'text-white' : 'text-black'}`}>
                 Page {page + 1} of {totalPages}
             </div>

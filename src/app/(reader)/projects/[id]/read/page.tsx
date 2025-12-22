@@ -4,6 +4,7 @@ import {
   getChaptersWithContent,
   getProjectByIdWithAccess,
 } from "@/lib/db/queries";
+import { getReadingProgress } from "@/lib/db/queries/reader";
 import { ReaderView } from "@/components/organisms/reader/reader-view";
 import { Suspense } from "react";
 import { Loader2 } from "lucide-react";
@@ -28,11 +29,17 @@ async function ReaderContent({
 
   const chapters = await getChaptersWithContent({ projectId: project.id });
 
+  let initialProgress = null;
+  if (userId) {
+      initialProgress = await getReadingProgress({ projectId: project.id, userId });
+  }
+
   return (
     <ReaderView
       project={project}
       chapters={chapters}
       userId={userId}
+      initialProgress={initialProgress}
     />
   );
 }

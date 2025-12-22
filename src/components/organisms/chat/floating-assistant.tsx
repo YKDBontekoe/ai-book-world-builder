@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { generateUUID } from "@/lib/utils";
 import { DataStreamHandler } from "@/components/organisms/messages/data-stream-handler";
 import { DataStreamProvider } from "@/components/organisms/chat/data-stream-provider";
-import { chatModels } from "@/lib/ai/models";
+import { chatModels, type ChatModelId } from "@/lib/ai/models";
 
 const MotionButton = motion(Button);
 const MotionGlassCard = motion(GlassCard);
@@ -18,11 +18,13 @@ const MotionGlassCard = motion(GlassCard);
 interface FloatingAssistantProps {
 	projectId: string;
 	initialMessages?: any[];
+	defaultModelId?: string;
 }
 
 export function FloatingAssistant({
 	projectId,
 	initialMessages = [],
+	defaultModelId = "gpt-4o",
 }: FloatingAssistantProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
@@ -97,7 +99,7 @@ export function FloatingAssistant({
               <Chat
                 id={chatId}
                 initialMessages={initialMessages}
-                initialChatModel="gpt-4o"
+                initialChatModel={defaultModelId as ChatModelId}
                 initialVisibilityType="private"
                 isReadonly={false}
                 initialProjectId={projectId}
