@@ -89,3 +89,13 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 - **Cascading Deletions**: Lacking database-level `ON DELETE CASCADE`, I implemented a robust manual deletion transaction in `deleteProject`. This highlights the importance of keeping the schema dependency graph in mind when performing deletions. The order must be leaf-to-root: `ChapterVersion` -> `Generation` -> `Scene` -> `Chapter` -> `Volume` -> `Outline` -> `Entity` -> `Project`.
 - **UI Layering**: Overlaying interactive elements (actions menu) on top of a clickable card (Link) requires careful handling of `z-index` and event propagation (`e.stopPropagation()` and `e.preventDefault()`).
 - **Type Narrowing**: Server Actions returning union types (success/error) require explicit checks (e.g., `'error' in result`) in the client to satisfy TypeScript's strict narrowing, especially when properties are not shared.
+
+## 2025-05-20 - Database Migration Recovery
+
+### Findings
+- When `drizzle-kit` detects tables in the snapshot that were deleted from the codebase without a migration, it gets stuck in a loop of prompting for renames.
+- The fix involves manually cleaning the `meta/_journal.json` and snapshot files to align Drizzle's history with the actual codebase state.
+
+### Learnings
+- **Snapshot Drift**: Always run a `DROP TABLE` migration (by deleting the schema and running `db:generate`) *before* removing the code entirely. If you delete the code first, Drizzle assumes it's still there or was renamed.
+- **Consistency vs Graph**: Implemented both `ConsistencyService` (Analysis) and `GraphPane` (Visualization) to solve the user's "depth" request holistically.

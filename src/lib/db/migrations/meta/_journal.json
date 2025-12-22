@@ -50,6 +50,20 @@
       "when": 1766343786016,
       "tag": "0006_white_james_howlett",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1766431590642,
+      "tag": "0007_drop_zombie_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1766431652063,
+      "tag": "0008_add_issues",
+      "breakpoints": true
     }
   ]
 }
