@@ -32,3 +32,15 @@
 ### Learnings
 - **Tool Registry is Truth**: `lib/ai/tool-registry.ts` determines what the AI sees. Types in `lib/types.ts` should mirror this to prevent confusion.
 - **Example Code Rot**: `getWeather` is a classic example that persists in codebases. Periodic audits of `lib/ai/tools` are necessary.
+
+## 2025-12-22 - [Liquid Glass UI Polish]
+
+### Findings
+- Enhanced `ResizableHandle` with invisible touch targets and liquid hover effects to mimic native macOS interaction.
+- Upgraded `FloatingAssistant` to use `GlassCard` with `liquid` variant, ensuring visual consistency with the system.
+- Implemented visual verification script `verify_ui_polish.py` to capture UI states.
+
+### Learnings
+- **Invisible Touch Targets**: Expanding hit areas via `after` pseudo-elements is essential for thin resize handles, improving usability without compromising the 1px visual aesthetic.
+- **Glass Card Composition**: `GlassCard` encapsulates complex blur/border logic, making it easy to upgrade standard `Card` components, but local overrides (like `rounded-2xl`) may be needed for specific contexts.
+- **Verification Overlays**: Playwright tests interacting with dialogs must account for `GlassOverlay` intercepting clicks on background elements.
