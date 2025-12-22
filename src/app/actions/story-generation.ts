@@ -1,12 +1,12 @@
 "use server";
 
-import { storyService, BookPlan } from "@/lib/services/story-service";
+import { storyService, BookPlan, StoryStyle } from "@/lib/services/story-service";
 
-export type { BookPlan };
+export type { BookPlan, StoryStyle };
 
-export async function generateBookPlan(prompt: string, modelId?: string) {
+export async function generateBookPlan(prompt: string, style?: StoryStyle, modelId?: string) {
   try {
-    const plan = await storyService.generateBookPlan(prompt, modelId);
+    const plan = await storyService.generateBookPlan(prompt, style, modelId);
     return { success: true, plan };
   } catch (error) {
     console.error("Failed to generate book plan", error);
@@ -14,9 +14,9 @@ export async function generateBookPlan(prompt: string, modelId?: string) {
   }
 }
 
-export async function createBookFromPlan(projectId: string, plan: BookPlan) {
+export async function createBookFromPlan(projectId: string, plan: BookPlan, style?: StoryStyle) {
   try {
-    await storyService.createBookFromPlan(projectId, plan);
+    await storyService.createBookFromPlan(projectId, plan, style);
     return { success: true };
   } catch (error) {
     console.error("Failed to create book from plan", error);

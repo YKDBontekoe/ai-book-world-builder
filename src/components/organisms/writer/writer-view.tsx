@@ -23,6 +23,7 @@ interface WriterViewProps {
   initialStructure?: ChapterWithScenes[];
   initialStructureText?: string;
   isReadOnly?: boolean;
+  defaultModelId?: string;
 }
 
 function WriterViewContent() {
@@ -120,14 +121,14 @@ function CanvasSync({ projectId, isReadOnly }: { projectId: string, isReadOnly: 
 }
 
 export function WriterView(props: WriterViewProps) {
-  const { project, isReadOnly = false } = props;
+  const { project, isReadOnly = false, defaultModelId } = props;
 
   return (
     <div className="h-full w-full overflow-hidden flex flex-col">
        <WriterProvider {...props}>
            <CanvasSync projectId={project.id} isReadOnly={isReadOnly} />
            <WriterViewContent />
-           <FloatingAssistant projectId={project.id} />
+           <FloatingAssistant projectId={project.id} defaultModelId={defaultModelId} />
        </WriterProvider>
     </div>
   );
