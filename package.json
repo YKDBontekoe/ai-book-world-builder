@@ -22,7 +22,7 @@
 		"build-storybook": "storybook build",
 		"test:unit": "vitest run",
 		"test:e2e": "export PLAYWRIGHT=True && playwright test",
-		"test:visual": "python3 verification/runner.py"
+		"test:visual": "python3 tests/verification/runner.py"
 	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^2.0.56",

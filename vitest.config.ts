@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 import tsconfigPaths from "vite-tsconfig-paths";
+
 import { defineConfig } from "vitest/config";
 
 const dirname =
@@ -53,6 +54,7 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: [
+			{ find: "@", replacement: path.resolve(dirname, "./src") },
 			{ find: "katex/dist/katex.min.css", replacement: path.resolve(dirname, "tests/__mocks__/styleMock.js") },
 		],
 	},

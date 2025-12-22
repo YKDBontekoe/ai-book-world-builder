@@ -32,7 +32,10 @@ vi.mock("server-only", () => {
 // Mock next/server for next-auth compatibility
 vi.mock("next/server", () => ({
     NextResponse: {
-        json: (body: any) => ({ body }),
+        json: (body: any, init?: { status?: number }) => ({
+            status: init?.status ?? 200,
+            json: async () => body,
+        }),
     },
 }));
 
