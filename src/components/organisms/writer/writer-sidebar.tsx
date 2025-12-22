@@ -7,6 +7,7 @@ import {
 	FileText,
 	Folder,
 	Lock,
+	PanelLeftClose,
 	Plus,
 } from "lucide-react";
 import { useState } from "react";
@@ -19,9 +20,11 @@ import { ChapterActions } from "@/components/organisms/writer/chapter-actions";
 import { SidebarSkeleton } from "@/components/organisms/writer/sidebar-skeleton";
 import { StructureEditorDialog } from "@/components/organisms/writer/structure-editor-dialog";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
+import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { cn } from "@/lib/utils";
 
 export function WriterSidebar() {
+	const { toggleSidebar } = useWriterLayoutContext();
 	const {
 		project,
 		structure,
@@ -59,9 +62,20 @@ export function WriterSidebar() {
 	return (
 		<div className="flex flex-col h-full border-r bg-sidebar">
 			<div className="p-4 border-b flex items-center justify-between bg-sidebar-accent/50">
-				<h2 className="font-semibold text-sm text-sidebar-foreground">
-					Book Structure
-				</h2>
+				<div className="flex items-center gap-2">
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-6 w-6 -ml-2 text-muted-foreground lg:hidden"
+						onClick={toggleSidebar}
+						aria-label="Close Sidebar"
+					>
+						<PanelLeftClose className="h-4 w-4" />
+					</Button>
+					<h2 className="font-semibold text-sm text-sidebar-foreground">
+						Book Structure
+					</h2>
+				</div>
 				<div className="flex items-center gap-1">
                     {!isReadOnly && (
                         <>

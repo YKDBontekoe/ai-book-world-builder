@@ -105,9 +105,9 @@ function PureMultimodalInput({
 					<PromptInputTextarea
 						aria-label="Message input"
 						autoFocus
-						className="grow resize-none border-0! border-none! bg-transparent p-2 text-[15px] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-y border-0! border-none! bg-transparent p-2 text-[15px] outline-none ring-0 placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
 						data-testid="multimodal-input"
-						maxHeight={200}
+						maxHeight={600}
 						minHeight={44}
 						onChange={handleInput}
 						placeholder="What would you like to create?"
