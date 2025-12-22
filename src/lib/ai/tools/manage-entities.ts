@@ -5,6 +5,8 @@ import {
 	createEntity,
 	createEntityAttribute,
 	updateEntity,
+	getProjectByIdWithAccess,
+	getEntityById,
 } from "@/lib/db/queries";
 
 export const manageEntities = ({
@@ -76,12 +78,29 @@ export const manageEntities = ({
 			const { projectId: projectIdInput, action, entities } = args;
 			const finalProjectId = projectIdInput || projectId;
 
-			if (!session?.user) {
+			if (!session?.user?.id) {
 				return { error: "Authentication required to manage entities." };
 			}
 
-			if (!finalProjectId) {
-				return { error: "Project ID is required." };
+			// Validate Project ID availability for create
+			if (action === "create" && !finalProjectId) {
+				return { error: "Project ID is required for creation." };
+			}
+
+			// Security Check for CREATE: Verify project ownership globally for the batch
+			if (action === "create") {
+				const project = await getProjectByIdWithAccess({
+					id: finalProjectId,
+					userId: session.user.id,
+				});
+
+				if (!project) {
+					return { error: "Project not found or access denied." };
+				}
+
+				if (project.userId !== session.user.id) {
+					return { error: "Unauthorized: You do not own this project." };
+				}
 			}
 
 			const results = [];
@@ -134,6 +153,34 @@ export const manageEntities = ({
 								name: entityData.name,
 								success: false,
 								error: "ID is required for update.",
+							});
+							continue;
+						}
+
+						// Security Check for UPDATE: Verify ownership of the specific entity
+						const existingEntity = await getEntityById({ id: entityData.id });
+
+						if (!existingEntity) {
+							results.push({
+								name: entityData.name,
+								id: entityData.id,
+								success: false,
+								error: "Entity not found.",
+							});
+							continue;
+						}
+
+						const project = await getProjectByIdWithAccess({
+							id: existingEntity.projectId,
+							userId: session.user.id,
+						});
+
+						if (!project || project.userId !== session.user.id) {
+							results.push({
+								name: entityData.name,
+								id: entityData.id,
+								success: false,
+								error: "Unauthorized: You do not own this entity.",
 							});
 							continue;
 						}
