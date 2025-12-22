@@ -8,7 +8,7 @@ import type { ChatModel } from "@/lib/ai/models";
 type OpenRouterModel = {
   id: string;
   name: string;
-  context_length: number;
+  contextLength?: number;
   pricing: any;
 };
 
@@ -17,23 +17,25 @@ export const getAvailableChatModels = unstable_cache(
     try {
       const models = await getOpenRouterModels();
 
-      return models.map((model: OpenRouterModel) => {
+      return models.map((model: ChatModel) => { // use ChatModel directly as it is returned by getOpenRouterModels
         // Simple heuristic for provider
-        const provider = model.id.split("/")[0] || "unknown";
+        const provider = model.provider || model.id.split("/")[0] || "unknown";
 
         return {
           id: model.id,
           name: model.name || model.id,
-          description: `Context: ${Math.round(model.context_length / 1000)}k`,
+          description: model.description || `Context: ${Math.round((model.contextLength || 0) / 1000)}k`,
           gatewayId: model.id,
           provider,
+          contextLength: model.contextLength,
           supportsImages:
+            model.supportsImages ||
             model.id.includes("vision") ||
             model.id.includes("4o") ||
             model.id.includes("claude-3"), // Heuristic
-          pricing: {
-             input: model.pricing?.prompt || "0",
-             output: model.pricing?.completion || "0",
+          pricing: model.pricing || {
+             input: "0",
+             output: "0",
              cachedInputTokens: "0"
           },
         };

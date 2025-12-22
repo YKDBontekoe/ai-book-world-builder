@@ -77,13 +77,17 @@ export async function initializeChatSession({
 		);
 		if (dynamicModel) {
             // Map dynamic model to ChatModel shape
+			// Safely access properties that might be snake_case in raw response
+			const contextLength = dynamicModel.contextLength ?? (dynamicModel as any).context_length ?? 0;
+
 			chatModel = {
                 id: dynamicModel.id,
                 name: dynamicModel.name,
                 provider: "OpenRouter",
                 gatewayId: dynamicModel.id,
-                description: `Context: ${dynamicModel.context_length}`,
+                description: `Context: ${contextLength}`,
                 supportsImages: true, // Assume yes for OpenRouter generally or fallback
+                contextLength: contextLength
             };
 		}
 	}
@@ -97,7 +101,8 @@ export async function initializeChatSession({
              provider: "OpenRouter",
              gatewayId: selectedChatModel,
              description: "Virtual Model",
-             supportsImages: true
+             supportsImages: true,
+             contextLength: 32000 // default fallback
         }
     }
 

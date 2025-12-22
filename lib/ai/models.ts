@@ -8,6 +8,7 @@ export type ChatModel = {
   gatewayId: string;
   description: string;
   supportsImages: boolean;
+  contextLength?: number;
   reasoning?: boolean;
   pricing?: {
     input: string;
@@ -49,19 +50,27 @@ export async function getChatModelById(id?: string): Promise<ChatModel | undefin
    if (!id) return undefined;
 
    const models = await getAvailableModels();
+   // The models returned by getAvailableModels are of type ChatModel, but here we are treating them as raw data
+   // to be safe, let's cast or check
    const model = models.find((m: any) => m.id === id);
 
    if (model) {
+       // Check if model properties are snake_case (raw API) or camelCase (ChatModel)
+       const contextLength = model.contextLength ?? (model as any).context_length;
+       const pricingInput = model.pricing?.input ?? (model.pricing as any)?.prompt ?? "0";
+       const pricingOutput = model.pricing?.output ?? (model.pricing as any)?.completion ?? "0";
+
        return {
            id: model.id,
            name: model.name,
            provider: "OpenRouter",
            gatewayId: model.id,
-           description: `Context: ${model.context_length}`,
+           description: `Context: ${contextLength}`,
            supportsImages: true,
+           contextLength: contextLength,
            pricing: {
-               input: model.pricing?.prompt || "0",
-               output: model.pricing?.completion || "0"
+               input: pricingInput,
+               output: pricingOutput
            }
        };
    }
@@ -73,7 +82,8 @@ export async function getChatModelById(id?: string): Promise<ChatModel | undefin
        provider: "OpenRouter",
        gatewayId: id,
        description: "Unknown Model",
-       supportsImages: true
+       supportsImages: true,
+       contextLength: 4096 // Conservative default
    };
 }
 
@@ -87,6 +97,7 @@ export const chatModels: ChatModel[] = [
         gatewayId: DEFAULT_MODELS.light,
         description: "Fast and free",
         supportsImages: true,
+        contextLength: 1000000
     },
     {
         id: DEFAULT_MODELS.middle,
@@ -95,6 +106,7 @@ export const chatModels: ChatModel[] = [
         gatewayId: DEFAULT_MODELS.middle,
         description: "Balanced",
         supportsImages: true,
+        contextLength: 1000000
     },
     {
         id: DEFAULT_MODELS.large,
@@ -103,6 +115,7 @@ export const chatModels: ChatModel[] = [
         gatewayId: DEFAULT_MODELS.large,
         description: "Complex reasoning",
         supportsImages: true,
+        contextLength: 2000000
     }
 ];
 
