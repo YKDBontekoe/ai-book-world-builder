@@ -5,6 +5,7 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 - **Visuals**: Maintained "Native macOS" aesthetic with pill-shaped links matching `Tabs` style.
 - **Learnings**: Server Components + `searchParams` is often superior to Client Components + `nuqs` for simple navigation state.
 - **Fixes**: Corrected `GlassCard` border radius to `rounded-lg` (16px) to strictly align with Design System.
+
 ## 2025-05-24 - [Composition and Context Refactor]
 
 ### Findings
@@ -51,3 +52,16 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 - **Invisible Touch Targets**: Expanding hit areas via `after` pseudo-elements is essential for thin resize handles, improving usability without compromising the 1px visual aesthetic.
 - **Glass Card Composition**: `GlassCard` encapsulates complex blur/border logic, making it easy to upgrade standard `Card` components, but local overrides (like `rounded-2xl`) may be needed for specific contexts.
 - **Verification Overlays**: Playwright tests interacting with dialogs must account for `GlassOverlay` intercepting clicks on background elements.
+
+## 2025-12-22 - [Motion & Continuity Polish]
+
+### Findings
+- Implemented `AnimatePresence` and `layout` animations in `WriterSidebar` and `FloatingAssistant` to eliminate visual snapping.
+- Used `autoSaveId` in `react-resizable-panels` to persist user workspace layout (Desktop/Mobile split) without backend state.
+- Adapted `WriterView` for mobile by toggling `direction="vertical"` via `useMediaQuery`, solving the cramped 3-pane issue.
+- Standardized `Dashboard` project list with staggered entry animations using `framer-motion` variants.
+
+### Learnings
+- **Animation Coexistence**: `framer-motion`'s `layout` prop works seamlessly with CSS-transitioned components (like `GlassCard`) if `transition-none` is applied to the container to prevent fighting.
+- **Responsive Layouts in Client Components**: `useMediaQuery` requires a hydration check (`mounted` state) to avoid server/client mismatch errors, especially when changing layout direction.
+- **Persistence Strategy**: `autoSaveId` in `react-resizable-panels` is powerful but requires distinct IDs for different layout directions (`-vertical` vs `-horizontal`) to avoid restoring invalid dimensions (e.g. restoring a 20% width as height).
