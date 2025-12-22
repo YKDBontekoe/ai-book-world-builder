@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
 import { useBookCanvasActions, useBookCanvasValue } from "@/components/organisms/book-canvas/book-canvas-context";
@@ -42,9 +42,11 @@ export function useWriterState({ projectId, initialStructure, initialStructureTe
   }, [initialStructure, initialStructureText]);
 
   // Find the active scene object
-  const activeScene = structure
+  const activeScene = useMemo(() => structure
     ?.flatMap((c) => c.scenes)
-    .find((s) => s.id === activeSceneId);
+    .find((s) => s.id === activeSceneId),
+    [structure, activeSceneId]
+  );
 
   // Load content when active scene changes
   useEffect(() => {
@@ -139,14 +141,14 @@ export function useWriterState({ projectId, initialStructure, initialStructureTe
     }
   }, 1000);
 
-  const handleContentChange = (newContent: string) => {
+  const handleContentChange = useCallback((newContent: string) => {
     setSceneContent(newContent);
     if (activeSceneId) {
       debouncedSave(newContent, activeSceneId);
     }
-  };
+  }, [activeSceneId, debouncedSave]);
 
-  const handleSnapshot = async () => {
+  const handleSnapshot = useCallback(async () => {
     if (!activeScene?.chapterId) return;
     setIsSnapshotting(true);
     const result = await createChapterSnapshot(activeScene.chapterId);
@@ -156,9 +158,9 @@ export function useWriterState({ projectId, initialStructure, initialStructureTe
     } else {
       toast.error("Failed to create version");
     }
-  };
+  }, [activeScene]);
 
-  return {
+  return useMemo(() => ({
     structure,
     structureText,
     loading,
@@ -172,5 +174,19 @@ export function useWriterState({ projectId, initialStructure, initialStructureTe
     handleContentChange,
     handleSnapshot,
     fetchStructure,
-  };
+  }), [
+    structure,
+    structureText,
+    loading,
+    activeSceneId,
+    setActiveSceneId,
+    sceneContent,
+    activeScene,
+    isSaving,
+    lastSaved,
+    isSnapshotting,
+    handleContentChange,
+    handleSnapshot,
+    fetchStructure,
+  ]);
 }
