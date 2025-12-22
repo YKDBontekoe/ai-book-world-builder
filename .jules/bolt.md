@@ -25,3 +25,7 @@
 ## 2025-12-21 - Editor Re-initialization
 **Learning:** `useEffect` with `[content]` dependency in `PureEditor` caused the entire Prosemirror instance (`EditorView`) to be destroyed and recreated on every keystroke. This happens because the effect's cleanup function destroys the instance, and the effect runs whenever `content` prop changes.
 **Action:** For complex imperative integrations (like Prosemirror), use `[]` dependency for the initialization effect. Handle updates in a separate effect that synchronizes props to the instance methods (like `setProps` or `dispatch`). Ensure to suppress exhaustive-deps lint rule with a clear explanation.
+
+## 2025-02-18 - Unstable Custom Hook Returns
+**Learning:** Custom hooks that return new object literals on every render cause all consumers (like Context Providers) to trigger re-renders, even if the internal state hasn't changed. This nullifies `useMemo` in parent components and cascades re-renders to all context consumers.
+**Action:** Always memoize the return object of custom hooks using `useMemo` if the hook is meant to provide stable values to contexts or memoized children.

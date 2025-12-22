@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext } from "react";
+import React, { createContext, useContext, useMemo } from "react";
 import { useWriterState } from "@/hooks/use-writer-state";
 import type { ChapterWithScenes } from "@/lib/types";
 import type { Project } from "@/lib/db/schema";
@@ -35,11 +35,11 @@ export function WriterProvider({
     initialStructureText,
   });
 
-  const value = {
+  const value = useMemo(() => ({
     ...writerState,
     project,
     isReadOnly,
-  };
+  }), [writerState, project, isReadOnly]);
 
   return (
     <WriterContext.Provider value={value}>
