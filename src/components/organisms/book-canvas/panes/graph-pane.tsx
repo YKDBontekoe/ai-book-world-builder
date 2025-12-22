@@ -1,13 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Network } from "lucide-react";
+import { Network, AlertTriangle } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useCallback, useMemo } from "react";
-import { ReactFlow, Background, Controls, useNodesState, useEdgesState, Position, Handle, type Node, type Edge } from "@xyflow/react";
+import { ReactFlow, Background, Controls, useNodesState, useEdgesState, Position, Handle, type Node, type Edge, MarkerType } from "@xyflow/react";
+import dagre from "dagre";
 import "@xyflow/react/dist/style.css";
 
 import { getProjectStructure } from "@/app/actions/writer";
+import { getProjectIssuesAction } from "@/app/actions/analysis";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { QUERY_KEYS } from "@/lib/query-options";
@@ -15,12 +17,19 @@ import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-co
 
 // Custom Node Component
 const CustomSceneNode = ({ data, selected }: any) => {
+    const hasIssues = data.issueCount > 0;
+
 	return (
 		<div
-			className={`px-4 py-2 rounded-md shadow-md border bg-card text-card-foreground min-w-[150px]
-      ${selected ? "ring-2 ring-primary border-primary" : "border-border"}
+			className={`px-4 py-2 rounded-md shadow-md border bg-card text-card-foreground min-w-[150px] relative
+      ${selected ? "ring-2 ring-primary border-primary" : hasIssues ? "border-amber-500 ring-1 ring-amber-500" : "border-border"}
     `}
 		>
+            {hasIssues && (
+                <div className="absolute -top-2 -right-2 bg-amber-500 text-white rounded-full p-0.5 shadow-sm">
+                    <AlertTriangle className="w-3 h-3" />
+                </div>
+            )}
 			<Handle type="target" position={Position.Left} className="w-2 h-2" />
 			<div className="text-xs font-bold truncate">{data.label}</div>
 			<div className="text-[10px] text-muted-foreground truncate">
@@ -35,6 +44,33 @@ const nodeTypes = {
 	scene: CustomSceneNode,
 };
 
+const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
+    const dagreGraph = new dagre.graphlib.Graph();
+    dagreGraph.setDefaultEdgeLabel(() => ({}));
+
+    dagreGraph.setGraph({ rankdir: 'LR' });
+
+    nodes.forEach((node) => {
+        dagreGraph.setNode(node.id, { width: 180, height: 60 });
+    });
+
+    edges.forEach((edge) => {
+        dagreGraph.setEdge(edge.source, edge.target);
+    });
+
+    dagre.layout(dagreGraph);
+
+    nodes.forEach((node) => {
+        const nodeWithPosition = dagreGraph.node(node.id);
+        node.position = {
+            x: nodeWithPosition.x - 90, // center offset
+            y: nodeWithPosition.y - 30,
+        };
+    });
+
+    return { initialNodes: nodes, initialEdges: edges };
+};
+
 export function GraphPane() {
 	const { projectId, activeSceneId, setActiveSceneId } = useBookCanvas();
 	const { theme } = useTheme();
@@ -46,26 +82,36 @@ export function GraphPane() {
 		enabled: !!projectId,
 	});
 
+    const { data: issuesData } = useQuery({
+        queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
+        queryFn: () => projectId ? getProjectIssuesAction(projectId) : Promise.resolve({ success: false, issues: [] }),
+        enabled: !!projectId
+    });
+
 	const structure = result?.structure;
+    const issues = (issuesData?.success && Array.isArray(issuesData.issues)) ? issuesData.issues : [];
 
 	// Transform structure into nodes and edges
 	const { initialNodes, initialEdges } = useMemo(() => {
-		const nodes: Node[] = [];
-		const edges: Edge[] = [];
+		let nodes: Node[] = [];
+		let edges: Edge[] = [];
 
 		if (!structure) return { initialNodes: [], initialEdges: [] };
 
-		structure.forEach((chapter: any, cIdx: number) => {
-			chapter.scenes.forEach((scene: any, sIdx: number) => {
-				// Simple grid layout
-				const nodeX = cIdx * 300 + sIdx * 50;
-				const nodeY = sIdx * 100;
+        // Flatten structure
+		structure.forEach((chapter: any) => {
+			chapter.scenes.forEach((scene: any) => {
+                const sceneIssues = issues.filter((i: any) => i.sceneId === scene.id && i.status === "open");
 
 				nodes.push({
 					id: scene.id,
 					type: "scene",
-					position: { x: nodeX, y: nodeY },
-					data: { label: scene.title, chapter: chapter.title },
+					position: { x: 0, y: 0 }, // Calculated by dagre
+					data: {
+                        label: scene.title,
+                        chapter: chapter.title,
+                        issueCount: sceneIssues.length
+                    },
 					selected: scene.id === activeSceneId,
 				});
 
@@ -75,27 +121,27 @@ export function GraphPane() {
 						source: scene.prevSceneId,
 						target: scene.id,
 						type: "smoothstep",
+                        markerEnd: {
+                            type: MarkerType.ArrowClosed,
+                        },
 						animated: true,
 					});
 				}
 			});
 		});
 
-		return { initialNodes: nodes, initialEdges: edges };
-	}, [structure, activeSceneId]);
+        return getLayoutedElements(nodes, edges);
+
+	}, [structure, activeSceneId, issues]);
 
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-	// Sync selection
-	useMemo(() => {
-		setNodes((nds) =>
-			nds.map((node) => ({
-				...node,
-				selected: node.id === activeSceneId,
-			})),
-		);
-	}, [activeSceneId, setNodes]);
+    // Update nodes when initialNodes change (due to layout or data updates)
+    useMemo(() => {
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+    }, [initialNodes, initialEdges, setNodes, setEdges]);
 
 	const handleNodeClick = useCallback(
 		(event: any, node: Node) => {
@@ -137,6 +183,7 @@ export function GraphPane() {
 				fitView
 				minZoom={0.1}
 				maxZoom={1.5}
+                attributionPosition="bottom-right"
 			>
 				<Background color={theme === "dark" ? "#333" : "#eee"} gap={16} />
 				<Controls />

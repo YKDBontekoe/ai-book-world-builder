@@ -18,6 +18,7 @@ export const QUERY_KEYS = {
 	versions: (chapterId: string) => ["versions", chapterId],
 	votes: (chatId: string) => ["votes", chatId],
 	suggestions: (chatId: string) => ["suggestions", chatId],
+	issues: (projectId: string) => ["issues", projectId],
 };
 
 export const STALE_TIMES = {

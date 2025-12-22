@@ -7,4 +7,5 @@ export * from "@/lib/db/schema/entities";
 export * from "@/lib/db/schema/outlines";
 export * from "@/lib/db/schema/scenes";
 export * from "@/lib/db/schema/generation";
+export * from "@/lib/db/schema/issues";
 export * as legacySchema from "@/lib/db/schema/legacy";
