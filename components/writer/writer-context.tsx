@@ -9,6 +9,7 @@ type UseWriterStateReturnType = ReturnType<typeof useWriterState>;
 
 type WriterContextType = UseWriterStateReturnType & {
   project: Project;
+  isReadOnly: boolean;
 };
 
 const WriterContext = createContext<WriterContextType | null>(null);
@@ -18,13 +19,15 @@ interface WriterProviderProps {
   project: Project;
   initialStructure?: ChapterWithScenes[];
   initialStructureText?: string;
+  isReadOnly?: boolean;
 }
 
 export function WriterProvider({
   children,
   project,
   initialStructure,
-  initialStructureText
+  initialStructureText,
+  isReadOnly = false,
 }: WriterProviderProps) {
   const writerState = useWriterState({
     projectId: project.id,
@@ -35,6 +38,7 @@ export function WriterProvider({
   const value = {
     ...writerState,
     project,
+    isReadOnly,
   };
 
   return (

@@ -33,6 +33,7 @@ type BookCanvasState = {
 	generationId: string | null;
 	chatAction: ChatAction;
 	activeSceneId: string | null;
+	isReadOnly: boolean;
 };
 
 type BookCanvasActions = {
@@ -44,6 +45,7 @@ type BookCanvasActions = {
 	setGenerationId: (id: string | null) => void;
 	triggerChatAction: (action: ChatAction) => void;
 	setActiveSceneId: (id: string | null) => void;
+	setIsReadOnly: (readOnly: boolean) => void;
 };
 
 // Kept for backward compatibility
@@ -90,6 +92,7 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 	const [generationId, setGenerationId] = useState<string | null>(null);
 	const [chatAction, triggerChatAction] = useState<ChatAction>(null);
 	const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
+	const [isReadOnly, setIsReadOnly] = useState(false);
 
 	const togglePanel = useCallback(() => {
 		setIsOpen((prev) => !prev);
@@ -105,6 +108,7 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 			setGenerationId,
 			triggerChatAction,
 			setActiveSceneId,
+			setIsReadOnly,
 		}),
 		[togglePanel],
 	);
@@ -118,6 +122,7 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 			generationId,
 			chatAction,
 			activeSceneId,
+			isReadOnly,
 		}),
 		[
 			isOpen,
@@ -127,6 +132,7 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 			generationId,
 			chatAction,
 			activeSceneId,
+			isReadOnly,
 		],
 	);
 

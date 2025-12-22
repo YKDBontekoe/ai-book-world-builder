@@ -23,9 +23,24 @@ vi.mock("../../../../components/writer/writer-header", () => ({
     WriterHeader: () => <div data-testid="writer-header">Header</div>
 }));
 
+vi.mock("../../../../components/writer/story-wizard", () => ({
+  StoryWizard: ({ onComplete }: any) => (
+    <div data-testid="story-wizard">
+        Story Wizard
+        <button onClick={onComplete}>Complete</button>
+    </div>
+  )
+}));
+
 // Mock Server Actions
 vi.mock("../../../../app/actions/writer", () => ({
   initializeProject: vi.fn(),
+}));
+
+// Mock app/actions/story-generation to prevent DB connection
+vi.mock("../../../../app/actions/story-generation", () => ({
+    planChapterScenes: vi.fn(),
+    generateSceneText: vi.fn(),
 }));
 
 // Mock Icons
@@ -34,6 +49,18 @@ vi.mock("lucide-react", () => ({
   Save: () => <span>Save</span>,
   History: () => <span>History</span>,
   Sparkles: () => <span>Sparkles</span>,
+  MousePointerClick: () => <span>Click</span>,
+  Lock: () => <span>Lock</span>,
+}));
+
+// Mock useRouter
+const mockPush = vi.fn();
+const mockRefresh = vi.fn();
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: mockPush,
+    refresh: mockRefresh,
+  }),
 }));
 
 // Mock Context
@@ -58,40 +85,47 @@ describe("WriterEditor", () => {
     isSaving: false,
     lastSaved: false,
     structure: [],
+    isReadOnly: false,
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseWriterContext.mockReturnValue(defaultContext);
-
-    Object.defineProperty(window, "location", {
-      writable: true,
-      value: { reload: vi.fn() },
-    });
   });
 
-  it("renders Empty State when no scene selected and hasScenes is false", () => {
+  it("renders StoryWizard when no scene selected and hasScenes is false (and not read-only)", () => {
     mockUseWriterContext.mockReturnValue({
         ...defaultContext,
         structure: []
     });
     render(<WriterEditor />);
 
-    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
-    expect(screen.getByText("Start Your Story")).toBeInTheDocument();
-    expect(screen.getByText("Start Writing")).toBeInTheDocument();
-    expect(screen.queryByTestId("text-editor")).not.toBeInTheDocument();
+    expect(screen.getByTestId("story-wizard")).toBeInTheDocument();
   });
 
-  it("renders 'Select a scene' when no scene selected but hasScenes is true", () => {
+  it("renders Empty State (Read Only) when no scene selected, hasScenes is false, and isReadOnly is true", () => {
+    mockUseWriterContext.mockReturnValue({
+        ...defaultContext,
+        structure: [],
+        isReadOnly: true
+    });
+    render(<WriterEditor />);
+
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    expect(screen.getByText("Empty Project")).toBeInTheDocument();
+    expect(screen.queryByTestId("story-wizard")).not.toBeInTheDocument();
+  });
+
+  it("renders 'No Scene Selected' when no scene selected but hasScenes is true", () => {
     mockUseWriterContext.mockReturnValue({
         ...defaultContext,
         structure: [{ scenes: [{ id: 's1' }] }] // hasScenes = true
     });
     render(<WriterEditor />);
 
-    expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
-    expect(screen.getByText("Select a scene to start writing")).toBeInTheDocument();
+    // In this case, empty state is rendered but with different content
+    expect(screen.getByTestId("empty-state")).toBeInTheDocument();
+    expect(screen.getByText("No Scene Selected")).toBeInTheDocument();
   });
 
   it("renders Editor when scene is selected", () => {
@@ -107,46 +141,16 @@ describe("WriterEditor", () => {
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
   });
 
-  it("calls initializeProject when Start Writing is clicked", async () => {
-    const mockInitialize = vi.mocked(writerActions.initializeProject).mockResolvedValue({
-      success: true,
-      sceneId: "new-scene-1"
-    });
-
+  it("calls refresh when wizard completes", async () => {
     mockUseWriterContext.mockReturnValue({
         ...defaultContext,
         structure: []
     });
     render(<WriterEditor />);
 
-    const startButton = screen.getByText("Start Writing");
-    fireEvent.click(startButton);
+    const completeButton = screen.getByText("Complete");
+    fireEvent.click(completeButton);
 
-    await waitFor(() => {
-      expect(mockInitialize).toHaveBeenCalledWith("project-123");
-    });
-
-    expect(window.location.reload).toHaveBeenCalled();
-  });
-
-  it("handles initialization failure gracefully", async () => {
-    const mockInitialize = vi.mocked(writerActions.initializeProject).mockResolvedValue({
-      success: false
-    });
-
-    mockUseWriterContext.mockReturnValue({
-        ...defaultContext,
-        structure: []
-    });
-    render(<WriterEditor />);
-
-    const startButton = screen.getByText("Start Writing");
-    fireEvent.click(startButton);
-
-    await waitFor(() => {
-      expect(mockInitialize).toHaveBeenCalledWith("project-123");
-    });
-
-    expect(window.location.reload).not.toHaveBeenCalled();
+    expect(mockRefresh).toHaveBeenCalled();
   });
 });

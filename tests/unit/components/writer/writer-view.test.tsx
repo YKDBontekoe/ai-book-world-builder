@@ -15,7 +15,8 @@ vi.mock("../../../../components/book-canvas/book-canvas", () => ({
 vi.mock("../../../../components/book-canvas/book-canvas-context", () => ({
   useBookCanvasActions: () => ({
     setProjectId: vi.fn(),
-    setActiveSceneId: vi.fn()
+    setActiveSceneId: vi.fn(),
+    setIsReadOnly: vi.fn(),
   }),
   useBookCanvasValue: () => ({
     activeSceneId: null
