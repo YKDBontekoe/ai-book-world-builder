@@ -4,6 +4,7 @@ import { WriterView } from "@/components/organisms/writer/writer-view";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import { getProjectStructure } from "@/app/actions/writer";
 import { ChapterWithScenes } from "@/lib/types";
+import { getSelectedModelId } from "@/lib/ai/models";
 
 export default async function ProjectPage({
   params,
@@ -29,6 +30,9 @@ export default async function ProjectPage({
 
   const isReadOnly = project.userId !== userId;
 
+  // Fetch preferred model for the assistant (using "middle" or "large" as default)
+  const defaultModelId = await getSelectedModelId("middle");
+
   // The WriterView is now the main interface for a project
   return (
     <div className="h-[calc(100vh-theme(spacing.16))] w-full">
@@ -37,6 +41,7 @@ export default async function ProjectPage({
           initialStructure={structure as ChapterWithScenes[]}
           initialStructureText={structureText}
           isReadOnly={isReadOnly}
+          defaultModelId={defaultModelId}
         />
     </div>
   );
