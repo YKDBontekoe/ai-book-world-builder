@@ -76,3 +76,16 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 ### Learnings
 - **CSS Utility Abstraction**: When using `@apply` in classes like `.glass`, unit tests checking `toHaveClass` must check for the semantic class name (`glass`) rather than the underlying utilities (`bg-glass`), as JSDOM doesn't resolve CSS.
 - **Test Rot**: Visual components often evolve (e.g., radius changes) without tests being updated if they aren't strictly coupled. Periodic audits of UI tests are valuable.
+
+## 2025-12-24 - [Project Management Workflow Enhancements]
+
+### Findings
+- Implemented advanced filtering (Search/Sort) and direct project manipulation (Rename, Duplicate, Delete) on the Projects page.
+- Created `ProjectBrowser` to handle client-side filtering and sorting of project lists.
+- Integrated `ProjectActionsMenu` with `ProjectCard` using absolute positioning and hover states.
+
+### Learnings
+- **Shallow to Deep**: Transforming a static grid into a searchable, sortable browser significantly improves the "Power User" feel without massive backend changes. Client-side filtering is sufficient for initial scaling.
+- **Cascading Deletions**: Lacking database-level `ON DELETE CASCADE`, I implemented a robust manual deletion transaction in `deleteProject`. This highlights the importance of keeping the schema dependency graph in mind when performing deletions. The order must be leaf-to-root: `ChapterVersion` -> `Generation` -> `Scene` -> `Chapter` -> `Volume` -> `Outline` -> `Entity` -> `Project`.
+- **UI Layering**: Overlaying interactive elements (actions menu) on top of a clickable card (Link) requires careful handling of `z-index` and event propagation (`e.stopPropagation()` and `e.preventDefault()`).
+- **Type Narrowing**: Server Actions returning union types (success/error) require explicit checks (e.g., `'error' in result`) in the client to satisfy TypeScript's strict narrowing, especially when properties are not shared.

@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/molecules/empty-state";
 import { PageHeader } from "@/components/molecules/page-header";
 import { PageContainer } from "@/components/organisms/page-container";
 import { CreateProjectDialog } from "@/components/organisms/projects/create-project-dialog";
-import { ProjectGrid } from "@/components/organisms/projects/project-grid";
+import { ProjectBrowser } from "@/components/organisms/projects/project-browser";
 import { ProjectTabs } from "@/components/organisms/projects/project-tabs";
 import { getProjectsVisibleToUser } from "@/lib/db/queries";
 
@@ -66,7 +66,7 @@ export default async function ProjectsPage({
 							/>
 						)
 					) : (
-						<ProjectGrid projects={projects} />
+						<ProjectBrowser projects={projects} />
 					)}
 				</div>
 			</div>
