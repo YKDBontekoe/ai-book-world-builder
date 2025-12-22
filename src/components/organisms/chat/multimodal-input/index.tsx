@@ -82,7 +82,7 @@ function PureMultimodalInput({
 
 			<PromptInput
 				className={cn(
-					"rounded-3xl glass-input p-4 transition-all duration-300 ease-[var(--ease-liquid)]",
+					"rounded-2xl glass-input p-4 transition-all duration-300 ease-[var(--ease-liquid)]",
 					"hover:shadow-xl hover:border-primary/5 dark:hover:border-white/10 hover:bg-glass-input/90",
 					"focus-within:shadow-2xl focus-within:ring-1 focus-within:ring-primary/10 dark:focus-within:ring-white/10 focus-within:bg-glass-input/100",
 				)}

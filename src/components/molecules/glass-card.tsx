@@ -11,7 +11,7 @@ const glassCardVariants = cva(
 				default: "hover:bg-white/60 dark:hover:bg-black/30",
 				interactive:
 					"cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
-				subtle: "bg-white/5 border-white/10 backdrop-blur-md",
+				subtle: "bg-glass/20 border-glass-border/50 backdrop-blur-md",
 				liquid:
 					"bg-glass/50 backdrop-blur-[30px] border-white/20 shadow-glass hover:bg-glass/70 transition-all duration-500",
 			},

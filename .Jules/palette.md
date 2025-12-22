@@ -65,3 +65,14 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 - **Animation Coexistence**: `framer-motion`'s `layout` prop works seamlessly with CSS-transitioned components (like `GlassCard`) if `transition-none` is applied to the container to prevent fighting.
 - **Responsive Layouts in Client Components**: `useMediaQuery` requires a hydration check (`mounted` state) to avoid server/client mismatch errors, especially when changing layout direction.
 - **Persistence Strategy**: `autoSaveId` in `react-resizable-panels` is powerful but requires distinct IDs for different layout directions (`-vertical` vs `-horizontal`) to avoid restoring invalid dimensions (e.g. restoring a 20% width as height).
+
+## 2025-12-23 - [Glass UI Polish]
+
+### Findings
+- Refactored `GlassCard` 'subtle' variant to be theme-aware (`bg-glass/20`) instead of hardcoded white.
+- Updated `MultimodalInput` to use `rounded-2xl` matching the floating panel aesthetic.
+- Fixed stale unit tests for `GlassCard` (expecting `rounded-xl` when component used `rounded-lg`) and `Button` (expecting `bg-glass` utility class instead of semantic `glass` class).
+
+### Learnings
+- **CSS Utility Abstraction**: When using `@apply` in classes like `.glass`, unit tests checking `toHaveClass` must check for the semantic class name (`glass`) rather than the underlying utilities (`bg-glass`), as JSDOM doesn't resolve CSS.
+- **Test Rot**: Visual components often evolve (e.g., radius changes) without tests being updated if they aren't strictly coupled. Periodic audits of UI tests are valuable.
