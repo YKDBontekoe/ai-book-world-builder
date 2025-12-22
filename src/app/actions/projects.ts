@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
 import { getProjectByIdWithAccess, createProject } from "@/lib/db/queries";
@@ -17,6 +17,13 @@ import {
   chapterDraft,
   scene,
   sceneCard,
+  bookGeneration,
+  bookExport,
+  storyState,
+  bookGenerationStep,
+  bookGenerationAsset,
+  generationNote,
+  chapterVersion,
 } from "@/lib/db/schema";
 
 export async function createProjectAction(params: {
@@ -40,6 +47,111 @@ export async function createProjectAction(params: {
   } catch (error) {
     console.error("Create project error:", error);
     return { error: "Failed to create project" };
+  }
+}
+
+export async function renameProject(projectId: string, name: string, description?: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+  const userId = session.user.id;
+
+  const existingProject = await getProjectByIdWithAccess({
+    id: projectId,
+    userId,
+  });
+
+  if (!existingProject) {
+    return { error: "Project not found or access denied" };
+  }
+
+  if (existingProject.userId !== userId) {
+    return { error: "Only the project owner can rename it." };
+  }
+
+  try {
+    await db
+      .update(project)
+      .set({ name, description })
+      .where(eq(project.id, projectId));
+
+    revalidatePath("/projects");
+    revalidatePath(`/projects/${projectId}`);
+    return { success: true };
+  } catch (error) {
+    console.error("Rename project error:", error);
+    return { error: "Failed to rename project" };
+  }
+}
+
+export async function deleteProject(projectId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    return { error: "Unauthorized" };
+  }
+  const userId = session.user.id;
+
+  const existingProject = await getProjectByIdWithAccess({
+    id: projectId,
+    userId,
+  });
+
+  if (!existingProject) {
+    return { error: "Project not found or access denied" };
+  }
+
+  if (existingProject.userId !== userId) {
+    return { error: "Only the project owner can delete it." };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      // 1. Generation related tables (Leaf first)
+      // Find generations to get IDs
+      const generations = await tx
+        .select({ id: bookGeneration.id })
+        .from(bookGeneration)
+        .where(eq(bookGeneration.projectId, projectId));
+
+      const generationIds = generations.map(g => g.id);
+
+      if (generationIds.length > 0) {
+        await tx.delete(generationNote).where(inArray(generationNote.generationId, generationIds));
+        await tx.delete(bookGenerationAsset).where(inArray(bookGenerationAsset.generationId, generationIds));
+        await tx.delete(bookGenerationStep).where(inArray(bookGenerationStep.generationId, generationIds));
+        await tx.delete(storyState).where(inArray(storyState.generationId, generationIds));
+        await tx.delete(chapterVersion).where(inArray(chapterVersion.generationId, generationIds));
+      }
+
+      // Delete generations
+      await tx.delete(bookGeneration).where(eq(bookGeneration.projectId, projectId));
+
+      // 2. Book Exports
+      await tx.delete(bookExport).where(eq(bookExport.projectId, projectId));
+
+      // 3. Structure (Scenes, Chapters, etc.)
+      await tx.delete(sceneCard).where(eq(sceneCard.projectId, projectId));
+      await tx.delete(scene).where(eq(scene.projectId, projectId));
+      await tx.delete(chapterDraft).where(eq(chapterDraft.projectId, projectId));
+      await tx.delete(chapter).where(eq(chapter.projectId, projectId));
+      await tx.delete(volume).where(eq(volume.projectId, projectId));
+      await tx.delete(outline).where(eq(outline.projectId, projectId));
+
+      // 4. Entities & Relationships
+      await tx.delete(relationship).where(eq(relationship.projectId, projectId));
+      await tx.delete(entityAttribute).where(eq(entityAttribute.projectId, projectId));
+      await tx.delete(entity).where(eq(entity.projectId, projectId));
+
+      // 5. Project itself
+      await tx.delete(project).where(eq(project.id, projectId));
+    });
+
+    revalidatePath("/projects");
+    return { success: true };
+  } catch (error) {
+    console.error("Delete project error:", error);
+    return { error: "Failed to delete project" };
   }
 }
 
