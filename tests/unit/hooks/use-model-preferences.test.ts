@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { useModelPreferences } from "@/hooks/use-model-preferences";
 import {
         getModelPreferences,
@@ -28,10 +28,10 @@ function createDeferred<T>() {
 }
 
 describe("useModelPreferences", () => {
-        const mockGetPreferences = getModelPreferences as unknown as vi.Mock;
-        const mockToggleFavorite = toggleFavoriteModelAction as unknown as vi.Mock;
-        const mockTrackRecent = trackRecentModel as unknown as vi.Mock;
-        const mockUpdateFavorites = updateFavoriteModelsAction as unknown as vi.Mock;
+        const mockGetPreferences = getModelPreferences as unknown as Mock;
+        const mockToggleFavorite = toggleFavoriteModelAction as unknown as Mock;
+        const mockTrackRecent = trackRecentModel as unknown as Mock;
+        const mockUpdateFavorites = updateFavoriteModelsAction as unknown as Mock;
 
         beforeEach(() => {
                 vi.resetAllMocks();

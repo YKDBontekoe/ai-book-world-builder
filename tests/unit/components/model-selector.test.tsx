@@ -1,6 +1,6 @@
 import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { ModelSelectorCompact } from "@/components/organisms/chat/multimodal-input/model-selector";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
 import {
@@ -88,10 +88,10 @@ const models: ChatModel[] = [
 ];
 
 describe("ModelSelectorCompact", () => {
-        const mockGetPreferences = getModelPreferences as unknown as vi.Mock;
-        const mockToggleFavorite = toggleFavoriteModelAction as unknown as vi.Mock;
-        const mockTrackRecent = trackRecentModel as unknown as vi.Mock;
-        const mockUpdateFavorites = updateFavoriteModelsAction as unknown as vi.Mock;
+        const mockGetPreferences = getModelPreferences as unknown as Mock;
+        const mockToggleFavorite = toggleFavoriteModelAction as unknown as Mock;
+        const mockTrackRecent = trackRecentModel as unknown as Mock;
+        const mockUpdateFavorites = updateFavoriteModelsAction as unknown as Mock;
 
         beforeEach(() => {
                 vi.resetAllMocks();
@@ -99,7 +99,7 @@ describe("ModelSelectorCompact", () => {
                 mockToggleFavorite.mockResolvedValue({ favoriteModels: [], isFavorite: true });
                 mockTrackRecent.mockResolvedValue(undefined);
                 mockUpdateFavorites.mockResolvedValue([]);
-                (saveChatModelAsCookie as unknown as vi.Mock).mockResolvedValue(undefined);
+                (saveChatModelAsCookie as unknown as Mock).mockResolvedValue(undefined);
         });
 
         it("filters models by tab selection", async () => {

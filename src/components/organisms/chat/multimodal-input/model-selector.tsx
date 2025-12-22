@@ -40,9 +40,8 @@ function PureModelSelectorCompact({
 		availableModels.find((model) => model.id === optimisticModelId) ??
 		fallbackModel;
 
-	if (!selectedModel) {
-		return null;
-	}
+	// Removed early return to comply with hook rules
+	// if (!selectedModel) { return null; }
 
 	const getModelItemValue = useCallback(
 		(modelId: string) => `model__${modelId}`,
@@ -87,11 +86,17 @@ function PureModelSelectorCompact({
 			value={currentSelectValue}
 		>
 			<Trigger asChild>
-				<Button className="h-8 gap-1.5 px-2" variant="ghost">
-					<ProviderIcon provider={selectedModel.provider} size="sm" />
-					<span className="hidden max-w-[120px] truncate font-medium text-xs sm:block">
-						{selectedModel?.name}
-					</span>
+				<Button className="h-8 gap-1.5 px-2" variant="ghost" disabled={!selectedModel}>
+					{selectedModel ? (
+						<>
+							<ProviderIcon provider={selectedModel.provider} size="sm" />
+							<span className="hidden max-w-[120px] truncate font-medium text-xs sm:block">
+								{selectedModel?.name}
+							</span>
+						</>
+					) : (
+						<span className="text-muted-foreground text-xs">No model</span>
+					)}
 					<ChevronDownIcon className="h-3.5 w-3.5 text-muted-foreground" />
 				</Button>
 			</Trigger>
@@ -116,7 +121,6 @@ function PureModelSelectorCompact({
 							onToggleFavorite={(id) => toggleFavorite(id)}
 							value={getModelItemValue(model.id)}
 							showProvider={true}
-							showFavoriteToggle={false}
 						/>
 					))}
 					{displayModels.length === 0 && (

@@ -4,7 +4,7 @@
  * Verifies that the retrieveContext function correctly identifies relevant entities
  */
 
-import { retrieveContext } from "../lib/ai/rag";
+import { retrieveContext } from "../src/lib/ai/rag";
 
 async function testRAGEntitySelection() {
   console.log("🧪 Testing RAG Entity Selection...\n");
