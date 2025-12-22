@@ -11,6 +11,21 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
     Element.prototype.hasPointerCapture ||= () => false;
     Element.prototype.releasePointerCapture ||= () => {};
   }
+
+  // Mock matchMedia for usehooks-ts useMediaQuery
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: () => {}, // deprecated
+      removeListener: () => {}, // deprecated
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => {},
+    }),
+  });
 }
 
 import { vi } from 'vitest';

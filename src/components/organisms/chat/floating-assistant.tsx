@@ -1,50 +1,69 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
+import { Maximize2, MessageSquare, Minimize2, X } from "lucide-react";
 import { useState } from "react";
-import { MessageSquare, X, Minimize2, Maximize2 } from "lucide-react";
 import { Button } from "@/components/atoms/button";
+import { Chat } from "@/components/organisms/chat/chat";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { cn } from "@/lib/utils";
-import { Chat } from "@/components/organisms/chat/chat";
 import { generateUUID } from "@/lib/utils";
 import { DataStreamHandler } from "@/components/organisms/messages/data-stream-handler";
 import { DataStreamProvider } from "@/components/organisms/chat/data-stream-provider";
 import { chatModels } from "@/lib/ai/models";
 
+const MotionButton = motion(Button);
+const MotionGlassCard = motion(GlassCard);
+
 interface FloatingAssistantProps {
-  projectId: string;
-  initialMessages?: any[];
+	projectId: string;
+	initialMessages?: any[];
 }
 
-export function FloatingAssistant({ projectId, initialMessages = [] }: FloatingAssistantProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [chatId] = useState(() => generateUUID());
+export function FloatingAssistant({
+	projectId,
+	initialMessages = [],
+}: FloatingAssistantProps) {
+	const [isOpen, setIsOpen] = useState(false);
+	const [isExpanded, setIsExpanded] = useState(false);
+	const [chatId] = useState(() => generateUUID());
 
-  return (
-    <>
-      {/* Floating Trigger Button */}
-      {!isOpen && (
-        <Button
-          onClick={() => setIsOpen(true)}
-          className="absolute bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90 transition-all duration-300 ease-spring"
-        >
-          <MessageSquare className="h-6 w-6 text-primary-foreground" />
-        </Button>
-      )}
+	return (
+		<>
+			{/* Floating Trigger Button */}
+			<AnimatePresence>
+				{!isOpen && (
+					<MotionButton
+						initial={{ scale: 0, opacity: 0 }}
+						animate={{ scale: 1, opacity: 1 }}
+						exit={{ scale: 0, opacity: 0 }}
+						transition={{ type: "spring", stiffness: 400, damping: 25 }}
+						onClick={() => setIsOpen(true)}
+						className="absolute bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
+					>
+						<MessageSquare className="h-6 w-6 text-primary-foreground" />
+					</MotionButton>
+				)}
+			</AnimatePresence>
 
-      {/* Floating Chat Window */}
-      {isOpen && (
-        <GlassCard
-          variant="liquid"
-          className={cn(
-            "absolute bottom-6 right-6 flex flex-col z-50 overflow-hidden transition-all duration-500 ease-spring rounded-2xl",
-            isExpanded
-              ? "w-[800px] h-[80vh] top-20 right-6 bottom-6"
-              : "w-[450px] h-[600px]"
-          )}
-        >
-          {/* Header */}
+			{/* Floating Chat Window */}
+			<AnimatePresence>
+				{isOpen && (
+					<MotionGlassCard
+						initial={{ opacity: 0, scale: 0.9, y: 20 }}
+						animate={{ opacity: 1, scale: 1, y: 0 }}
+						exit={{ opacity: 0, scale: 0.9, y: 20 }}
+						transition={{ type: "spring", stiffness: 400, damping: 25 }}
+						layout
+						variant="liquid"
+						className={cn(
+							"absolute bottom-6 right-6 flex flex-col z-50 overflow-hidden rounded-2xl transition-none", // transition-none to let framer handle layout
+							isExpanded
+								? "w-[800px] h-[80vh] top-20 right-6 bottom-6"
+								: "w-[450px] h-[600px]",
+						)}
+					>
+						{/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-white/10 bg-white/5 shrink-0">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-md bg-primary/10">
@@ -88,8 +107,9 @@ export function FloatingAssistant({ projectId, initialMessages = [] }: FloatingA
               <DataStreamHandler />
             </DataStreamProvider>
           </div>
-        </GlassCard>
-      )}
-    </>
-  );
+					</MotionGlassCard>
+				)}
+			</AnimatePresence>
+		</>
+	);
 }

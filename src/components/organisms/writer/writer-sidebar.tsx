@@ -1,24 +1,25 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	ChevronDown,
 	ChevronRight,
 	FileText,
 	Folder,
+	Lock,
 	Plus,
-    Lock,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { createNewChapter } from "@/app/actions/writer";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/button";
-import { EmptyState } from "@/components/molecules/empty-state";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { ChapterActions } from "@/components/organisms/writer/chapter-actions";
 import { SidebarSkeleton } from "@/components/organisms/writer/sidebar-skeleton";
 import { StructureEditorDialog } from "@/components/organisms/writer/structure-editor-dialog";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
+import { cn } from "@/lib/utils";
 
 export function WriterSidebar() {
 	const {
@@ -29,7 +30,7 @@ export function WriterSidebar() {
 		setActiveSceneId,
 		loading,
 		fetchStructure,
-        isReadOnly,
+		isReadOnly,
 	} = useWriterContext();
 
 	const [expandedChapters, setExpandedChapters] = useState<
@@ -106,22 +107,26 @@ export function WriterSidebar() {
 					) : !structure || structure.length === 0 ? (
 						<div className="p-2">
 							<EmptyState
-								variant="dashed"
+								variant="glass"
 								title={isReadOnly ? "No chapters" : "No chapters"}
-								description={isReadOnly ? "This project has no content yet." : "Create a chapter to start."}
+								description={
+									isReadOnly
+										? "This project has no content yet."
+										: "Create a chapter to start."
+								}
 								className="p-4 py-8"
 								action={
-                                    !isReadOnly ? (
-									    <Button
-										    variant="outline"
-										    size="sm"
-										    onClick={handleAddChapter}
-										    className="w-full mt-2"
-									    >
-										    <Plus className="mr-2 h-3 w-3" />
-										    Add Chapter
-									    </Button>
-                                    ) : undefined
+									!isReadOnly ? (
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={handleAddChapter}
+											className="w-full mt-2"
+										>
+											<Plus className="mr-2 h-3 w-3" />
+											Add Chapter
+										</Button>
+									) : undefined
 								}
 							/>
 						</div>
@@ -148,35 +153,45 @@ export function WriterSidebar() {
 									<ChapterActions
 										chapterId={chapter.id}
 										onUpdate={fetchStructure}
-                                        isReadOnly={isReadOnly}
+										isReadOnly={isReadOnly}
 									/>
 								</div>
 
-								{expandedChapters[chapter.id] && (
-									<div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1">
-										{chapter.scenes.map((scene) => (
-											<button
-                                                type="button"
-												key={scene.id}
-												onClick={() => setActiveSceneId(scene.id)}
-												className={cn(
-													"w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors text-left",
-													activeSceneId === scene.id
-														? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
-														: "text-muted-foreground",
+								<AnimatePresence>
+									{expandedChapters[chapter.id] && (
+										<motion.div
+											initial={{ height: 0, opacity: 0 }}
+											animate={{ height: "auto", opacity: 1 }}
+											exit={{ height: 0, opacity: 0 }}
+											transition={{ type: "spring", stiffness: 400, damping: 25 }}
+											className="overflow-hidden"
+										>
+											<div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1 pb-1">
+												{chapter.scenes.map((scene) => (
+													<button
+														type="button"
+														key={scene.id}
+														onClick={() => setActiveSceneId(scene.id)}
+														className={cn(
+															"w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors text-left",
+															activeSceneId === scene.id
+																? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
+																: "text-muted-foreground",
+														)}
+													>
+														<div className="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
+														<span className="truncate">{scene.title}</span>
+													</button>
+												))}
+												{chapter.scenes.length === 0 && (
+													<div className="px-2 py-1.5 text-xs text-muted-foreground italic">
+														No scenes
+													</div>
 												)}
-											>
-												<div className="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
-												<span className="truncate">{scene.title}</span>
-											</button>
-										))}
-										{chapter.scenes.length === 0 && (
-											<div className="px-2 py-1.5 text-xs text-muted-foreground italic">
-												No scenes
 											</div>
-										)}
-									</div>
-								)}
+										</motion.div>
+									)}
+								</AnimatePresence>
 							</div>
 						))
 					)}
