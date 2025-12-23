@@ -5,10 +5,12 @@ import {
         trackRecentModel,
         updateFavoriteModelsAction,
 } from "@/app/actions/model-preferences";
+import type { ModelPreferences } from "@/lib/db/schema/auth";
 
 export type ModelPreferencesState = {
         favoriteModels: string[];
         recentModels: string[];
+        modelPreferences: ModelPreferences;
 };
 
 export type UseModelPreferencesOptions = {
@@ -34,6 +36,7 @@ export type UseModelPreferencesReturn = ModelPreferencesState & {
 const DEFAULT_PREFERENCES: ModelPreferencesState = {
         favoriteModels: [],
         recentModels: [],
+        modelPreferences: { light: null, middle: null, large: null },
 };
 
 /**
@@ -185,6 +188,7 @@ export function useModelPreferences(
                 () => ({
                         favoriteModels: preferences.favoriteModels,
                         recentModels: preferences.recentModels,
+                        modelPreferences: preferences.modelPreferences,
                         isLoading,
                         isUpdating,
                         error,

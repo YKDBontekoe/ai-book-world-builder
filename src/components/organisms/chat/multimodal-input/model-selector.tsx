@@ -30,6 +30,7 @@ function PureModelSelectorCompact({
 	const {
 		optimisticModelId,
 		favoriteModels,
+		modelPreferences,
 		toggleFavorite,
 		moveFavorite,
 		selectModel,
@@ -59,6 +60,7 @@ function PureModelSelectorCompact({
 
 	// Determine which models to show:
 	// If favorites exist, show top 3 favorites.
+	// Else if user preferences exist, show those.
 	// Otherwise, show default Light/Middle/Large models.
 	const displayModels = useMemo(() => {
 		let targetIds: string[] = [];
@@ -66,14 +68,23 @@ function PureModelSelectorCompact({
 		if (favoriteModels.length > 0) {
 			targetIds = favoriteModels.slice(0, 3);
 		} else {
-			targetIds = Object.values(DEFAULT_MODELS);
+			const { light, middle, large } = modelPreferences;
+			const preferred = [light, middle, large].filter(
+				(id): id is string => !!id,
+			);
+
+			if (preferred.length > 0) {
+				targetIds = preferred;
+			} else {
+				targetIds = Object.values(DEFAULT_MODELS);
+			}
 		}
 
 		// Filter availableModels to find the targets, preserving order of targetIds
 		return targetIds
 			.map((id) => availableModels.find((m) => m.id === id))
 			.filter((m): m is ChatModel => !!m);
-	}, [favoriteModels, availableModels]);
+	}, [favoriteModels, availableModels, modelPreferences]);
 
 	const currentSelectValue = useMemo(
 		() => getModelItemValue(optimisticModelId),
