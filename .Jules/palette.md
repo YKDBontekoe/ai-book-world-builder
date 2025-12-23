@@ -99,3 +99,15 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 ### Learnings
 - **Snapshot Drift**: Always run a `DROP TABLE` migration (by deleting the schema and running `db:generate`) *before* removing the code entirely. If you delete the code first, Drizzle assumes it's still there or was renamed.
 - **Consistency vs Graph**: Implemented both `ConsistencyService` (Analysis) and `GraphPane` (Visualization) to solve the user's "depth" request holistically.
+
+## 2025-12-23 - [Feedback and Crash Reporting]
+
+### Findings
+- Implemented a dual-pipeline reporting system: immediate Jules sessions for crashes (using `GlobalErrorBoundary`) and daily batched processing for feature feedback (via Cron).
+- Integrated `drizzle-orm`'s `InferSelectModel` to robustly type schema exports, ensuring compatibility with newer library versions.
+- Standardized error UI using a `GlobalError` root replacement that preserves global styles by importing `app/globals.css`.
+
+### Learnings
+- **Type Safety in ORM**: Explicitly exporting inferred types (e.g., `export type Feedback = InferSelectModel<typeof feedback>`) prevents circular dependency issues and ensures consistency across service layers compared to relying on `typeof table.$inferSelect`.
+- **Atomic Design Imports**: The codebase follows a strict Atomic Design structure. Imports must target specific directories (`@/components/atoms/*`) rather than generic UI buckets (`@/components/ui/*`), which caused build failures during integration.
+- **Playwright Verification**: Verifying responsive sidebars requires explicit viewport configuration and cookie management (e.g., forcing `sidebar_state=true`) to ensure interactive elements are visible and reachable in headless environments.

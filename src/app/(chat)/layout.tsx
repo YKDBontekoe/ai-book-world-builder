@@ -9,6 +9,7 @@ import { auth } from "@/app/(auth)/auth";
 import { FloatingAssistant } from "@/components/organisms/chat/floating-assistant";
 import { getAvailableModels } from "@/app/actions/settings";
 import { getSelectedModelId } from "@/lib/ai/models";
+import { GlobalErrorBoundary } from "@/components/feedback/global-error-boundary";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return (
@@ -43,14 +44,16 @@ async function SidebarWrapper({ children }: { children: React.ReactNode }) {
 
 	return (
 		<SidebarProvider defaultOpen={!isCollapsed}>
-			<AppSidebar user={session?.user} />
-			<SidebarInset className="flex flex-row overflow-hidden relative">
-				{children}
-				<FloatingAssistant
-					defaultModelId={defaultModelId}
-					availableModels={availableModels}
-				/>
-			</SidebarInset>
+			<GlobalErrorBoundary>
+				<AppSidebar user={session?.user} />
+				<SidebarInset className="flex flex-row overflow-hidden relative">
+					{children}
+					<FloatingAssistant
+						defaultModelId={defaultModelId}
+						availableModels={availableModels}
+					/>
+				</SidebarInset>
+			</GlobalErrorBoundary>
 		</SidebarProvider>
 	);
 }

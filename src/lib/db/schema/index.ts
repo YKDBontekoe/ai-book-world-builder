@@ -9,4 +9,5 @@ export * from "@/lib/db/schema/scenes";
 export * from "@/lib/db/schema/generation";
 export * from "@/lib/db/schema/issues";
 export * from "@/lib/db/schema/reader";
+export * from "@/lib/db/schema/feedback";
 export * as legacySchema from "@/lib/db/schema/legacy";
