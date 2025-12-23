@@ -84,7 +84,7 @@ export function CommandPalette({
 	isOpen,
 	onClose,
 	commands = defaultCommands,
-}: CommandPaletteProps) {
+}: CommandPaletteProps): JSX.Element {
 	const [search, setSearch] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);
