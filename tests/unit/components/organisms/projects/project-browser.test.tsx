@@ -38,6 +38,7 @@ const mockProjects: Project[] = [
     visibility: "private",
     folders: [],
     forkedFromId: null,
+    lastViewedSceneId: null,
   },
   {
     id: "2",
@@ -48,6 +49,7 @@ const mockProjects: Project[] = [
     visibility: "private",
     folders: [],
     forkedFromId: null,
+    lastViewedSceneId: null,
   },
   {
     id: "3",
@@ -58,6 +60,7 @@ const mockProjects: Project[] = [
     visibility: "private",
     folders: [],
     forkedFromId: null,
+    lastViewedSceneId: null,
   },
 ];
 

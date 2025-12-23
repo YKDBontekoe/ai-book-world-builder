@@ -34,6 +34,7 @@ export const project = pgTable("Project", {
     .notNull()
     .references(() => user.id),
   forkedFromId: uuid("forkedFromId"),
+  lastViewedSceneId: uuid("lastViewedSceneId"),
 }, (table) => ({
   forkedFromFk: foreignKey({
     columns: [table.forkedFromId],
