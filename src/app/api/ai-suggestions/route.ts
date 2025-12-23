@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
-import { isChatModelId } from "@/lib/ai/models";
+import { DEFAULT_MODELS, isChatModelId } from "@/lib/ai/models";
 import { myProvider } from "@/lib/ai/providers";
 import {
 	getChaptersForProject,
@@ -74,7 +74,7 @@ ${recentChapters || "None"}
 
 		const effectiveModelId = isChatModelId(modelId)
 			? modelId
-			: "openai-gpt-4o-mini";
+			: DEFAULT_MODELS.light;
 
 		const { object } = await generateObject({
 			model: myProvider.languageModel(effectiveModelId),
