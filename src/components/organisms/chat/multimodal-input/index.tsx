@@ -1,6 +1,7 @@
 "use client";
 
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpIcon, XIcon } from "lucide-react";
 import { memo, useMemo } from "react";
 import { toast } from "sonner";
@@ -117,16 +118,24 @@ function PureMultimodalInput({
 						value={input}
 					/>
 					
-					{(input.length > 0 || attachments.length > 0) && (
-						<button
-							onClick={clearInput}
-							className="absolute right-12 top-2 p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors"
-							title="Clear input"
-							type="button"
-						>
-							<XIcon size={14} />
-						</button>
-					)}
+					<AnimatePresence>
+						{(input.length > 0 || attachments.length > 0) && (
+							<motion.button
+								initial={{ opacity: 0, scale: 0.8 }}
+								animate={{ opacity: 1, scale: 1 }}
+								exit={{ opacity: 0, scale: 0.8 }}
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+								transition={{ type: "spring", stiffness: 400, damping: 25 }}
+								onClick={clearInput}
+								className="absolute right-12 top-2 p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+								title="Clear input"
+								type="button"
+							>
+								<XIcon size={14} />
+							</motion.button>
+						)}
+					</AnimatePresence>
 					
 					<Context {...contextProps} />
 				</div>

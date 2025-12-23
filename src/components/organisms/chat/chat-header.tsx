@@ -100,32 +100,32 @@ function PureChatHeader({
             </TooltipTrigger>
             <TooltipContent>Keyboard Shortcuts</TooltipContent>
           </Tooltip>
-          <DialogContent className="sm:max-w-[425px] glass-panel">
+          <DialogContent className="sm:max-w-[425px] rounded-2xl glass-panel">
             <DialogHeader>
               <DialogTitle>Keyboard Shortcuts</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Send Message</span>
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-lg border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                   <span className="text-xs">⌘</span>Enter
                 </kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">New Line</span>
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-lg border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                   <span className="text-xs">⇧</span>Enter
                 </kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">Toggle Sidebar</span>
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-lg border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                   <span className="text-xs">⌘</span>B
                 </kbd>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium">New Chat</span>
-                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded-lg border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
                   <span className="text-xs">⌘</span>N
                 </kbd>
               </div>

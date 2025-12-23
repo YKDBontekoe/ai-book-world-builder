@@ -27,7 +27,7 @@ const item = {
 	},
 };
 
-function ProjectRow({ project }: { project: Project }) {
+function ProjectRow({ project }: { project: Project }): JSX.Element {
 	return (
 		<div className="relative group">
 			<Link href={`/projects/${project.id}`} className="block">
@@ -79,7 +79,7 @@ function ProjectRow({ project }: { project: Project }) {
 	);
 }
 
-export function ProjectList({ projects }: { projects: Project[] }) {
+export function ProjectList({ projects }: { projects: Project[] }): JSX.Element {
 	return (
 		<motion.div 
 			variants={container} 

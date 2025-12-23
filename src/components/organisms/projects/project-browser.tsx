@@ -75,7 +75,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-7 w-7 rounded-md transition-all",
+                "h-7 w-7 rounded-lg transition-all",
                 viewMode === "grid" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
               )}
               onClick={() => setViewMode("grid")}
@@ -87,7 +87,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
               variant="ghost"
               size="icon"
               className={cn(
-                "h-7 w-7 rounded-md transition-all",
+                "h-7 w-7 rounded-lg transition-all",
                 viewMode === "list" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
               )}
               onClick={() => setViewMode("list")}
@@ -142,7 +142,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
                 initial={{ opacity: 0, scale: 0.98 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.98 }}
-                transition={{ duration: 0.2 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
               >
                 {viewMode === "grid" ? (
                   <ProjectGrid projects={filteredProjects} />
