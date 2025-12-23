@@ -1,8 +1,8 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { WriterEditor } from "@/components/organisms/writer/writer-editor";
-import * as writerActions from "@/app/actions/writer";
 import * as writerContext from "@/components/organisms/writer/writer-context";
+
 
 // Mock child components
 vi.mock("@/components/organisms/editor/text-editor", () => ({
@@ -19,7 +19,12 @@ vi.mock("@/components/atoms/empty-state", () => ({
   ),
 }));
 
+vi.mock("@/hooks/use-project-entities", () => ({
+    useProjectEntities: vi.fn(() => ({ data: [] })),
+}));
+
 vi.mock("@/components/organisms/writer/writer-header", () => ({
+
     WriterHeader: () => <div data-testid="writer-header">Header</div>
 }));
 
@@ -27,8 +32,9 @@ vi.mock("@/components/organisms/writer/story-wizard", () => ({
   StoryWizard: ({ onComplete }: any) => (
     <div data-testid="story-wizard">
         Story Wizard
-        <button onClick={onComplete}>Complete</button>
+        <button type="button" onClick={onComplete}>Complete</button>
     </div>
+
   )
 }));
 
@@ -73,6 +79,17 @@ vi.mock("@/components/organisms/writer/writer-context", async (importOriginal) =
     };
 });
 
+// Mock Layout Context
+const mockUseWriterLayoutContext = vi.fn();
+vi.mock("@/components/organisms/writer/writer-layout-context", async (importOriginal) => {
+    const actual = await importOriginal<any>();
+    return {
+        ...actual,
+        useWriterLayoutContext: () => mockUseWriterLayoutContext(),
+    };
+});
+
+
 describe("WriterEditor", () => {
   const defaultContext = {
     project: { id: "project-123" },
@@ -91,7 +108,16 @@ describe("WriterEditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockUseWriterContext.mockReturnValue(defaultContext);
+    mockUseWriterLayoutContext.mockReturnValue({
+        isSidebarOpen: true,
+        toggleSidebar: vi.fn(),
+        viewMode: "standard",
+        toggleZenMode: vi.fn(),
+        isTypewriterMode: false,
+        toggleTypewriterMode: vi.fn(),
+    });
   });
+
 
   it("renders StoryWizard when no scene selected and hasScenes is false (and not read-only)", () => {
     mockUseWriterContext.mockReturnValue({
