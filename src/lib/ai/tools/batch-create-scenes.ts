@@ -43,6 +43,10 @@ export const batchCreateScenes = ({
 			const { chapterId, scenes, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
+			if (!session?.user) {
+				return { error: "Authentication required." };
+			}
+
 			if (!finalProjectId) {
 				return { error: "Project ID is required to create scenes." };
 			}

@@ -26,10 +26,7 @@ const manageStorySchema = z.object({
 					.string()
 					.optional()
 					.describe("ID of the item (required for update)."),
-				title: z
-					.string()
-					.optional()
-					.describe("Title of the chapter or scene."),
+				title: z.string().optional().describe("Title of the chapter or scene."),
 				sequence: z.number().optional().describe("Order sequence."),
 				// For Chapters
 				volumeId: z

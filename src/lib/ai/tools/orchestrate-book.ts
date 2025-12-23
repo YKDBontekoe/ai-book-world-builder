@@ -1,9 +1,9 @@
 import { generateObject, tool } from "ai";
 import { z } from "zod";
-import { getFullProjectDataForGeneration } from "@/lib/book-generation";
-import { addTaskLogEntry, updateCanvasState } from "@/lib/db/queries";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 import { retrieveContext } from "@/lib/ai/rag";
+import { getFullProjectDataForGeneration } from "@/lib/book-generation";
+import { addTaskLogEntry, updateCanvasState } from "@/lib/db/queries";
 import { projectAnalytics } from "@/lib/services/project-analytics";
 
 // Human-readable action descriptions
@@ -87,10 +87,14 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 			generationId = projectData.generation?.id;
 
 			// 2. Compute Project Statistics (delegated to service)
-            const projectStats = await projectAnalytics.getProjectStats(projectId, projectData);
+			const projectStats = await projectAnalytics.getProjectStats(
+				projectId,
+				projectData,
+			);
 
 			// 3. Calculate Readiness Score (delegated to service)
-            const readinessScore = projectAnalytics.calculateReadinessScore(projectStats);
+			const readinessScore =
+				projectAnalytics.calculateReadinessScore(projectStats);
 
 			await logProgress(
 				`Found ${projectStats.characters} characters, ${projectStats.chapters} chapters...`,
@@ -103,7 +107,7 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 				userRequest ||
 				`Current state of ${currentCanvasState?.activePane || "story"}`;
 
-            const entities = projectData.entities || [];
+			const entities = projectData.entities || [];
 			const ragContext = await retrieveContext({
 				query,
 				candidates: [
