@@ -39,6 +39,7 @@ export function useModelSelection({
 	const {
 		favoriteModels,
 		recentModels,
+		modelPreferences,
 		toggleFavorite,
 		moveFavorite,
 		recordRecentModel,
@@ -202,6 +203,7 @@ export function useModelSelection({
 		groupedByProvider,
 		favoriteModels,
 		recentModels,
+		modelPreferences,
 		availableProviders,
 		toggleFavorite,
 		moveFavorite,

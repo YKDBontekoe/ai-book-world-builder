@@ -95,7 +95,11 @@ describe("ModelSelectorCompact", () => {
 
         beforeEach(() => {
                 vi.resetAllMocks();
-                mockGetPreferences.mockResolvedValue({ favoriteModels: [], recentModels: [] });
+                mockGetPreferences.mockResolvedValue({
+                        favoriteModels: [],
+                        recentModels: [],
+                        modelPreferences: { light: null, middle: null, large: null },
+                });
                 mockToggleFavorite.mockResolvedValue({ favoriteModels: [], isFavorite: true });
                 mockTrackRecent.mockResolvedValue(undefined);
                 mockUpdateFavorites.mockResolvedValue([]);
@@ -153,5 +157,22 @@ describe("ModelSelectorCompact", () => {
                         toggleDeferred.resolve({ favoriteModels: ["fast-model"], isFavorite: true });
                         await toggleDeferred.promise;
                 });
+        });
+
+        it("uses configured model preferences when available", async () => {
+                const user = createUser();
+                // Mock preferences with specific models
+                mockGetPreferences.mockResolvedValue({
+                        favoriteModels: [],
+                        recentModels: [],
+                        modelPreferences: { light: "vision-model", middle: null, large: null },
+                });
+
+                render(<ModelSelectorCompact availableModels={models} selectedModelId={models[0].id} />);
+
+                await openSelector(user);
+
+                // Should see vision-model because it is in modelPreferences
+                expect(screen.getByTestId("model-card-vision-model")).toBeTruthy();
         });
 });

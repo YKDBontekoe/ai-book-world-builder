@@ -8,6 +8,7 @@ import {
 	toggleFavoriteModel,
 	updateFavoriteModels,
 } from "@/lib/db/queries/user-preferences";
+import type { ModelPreferences } from "@/lib/db/schema/auth";
 
 /**
  * Get the current user's model preferences (favorites and recent)
@@ -15,16 +16,26 @@ import {
 export async function getModelPreferences(): Promise<{
 	favoriteModels: string[];
 	recentModels: string[];
+	modelPreferences: ModelPreferences;
 }> {
 	const session = await auth();
 	if (!session?.user?.id) {
-		return { favoriteModels: [], recentModels: [] };
+		return {
+			favoriteModels: [],
+			recentModels: [],
+			modelPreferences: { light: null, middle: null, large: null },
+		};
 	}
 
 	const prefs = await getUserPreferences(session.user.id);
 	return {
 		favoriteModels: prefs.favoriteModels || [],
 		recentModels: prefs.recentModels || [],
+		modelPreferences: prefs.modelPreferences || {
+			light: null,
+			middle: null,
+			large: null,
+		},
 	};
 }
 
