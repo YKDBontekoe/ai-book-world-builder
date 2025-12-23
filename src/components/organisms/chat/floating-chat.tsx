@@ -175,7 +175,7 @@ export function FloatingChat({
                     {/* Context Chip */}
                     {activeSceneId && (
                         <div className="flex items-center gap-2 px-2 self-start">
-                             <GlassCard variant="mini" className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border-primary/20">
+                             <GlassCard variant="subtle" size="none" className="flex items-center gap-1.5 px-2 py-1 bg-primary/10 border-primary/20">
                                 <FileText className="h-3 w-3 text-primary" />
                                 <span className="text-[10px] font-medium text-primary">
                                     Linked: {displaySceneName}

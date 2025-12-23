@@ -78,7 +78,6 @@ ${recentChapters || "None"}
 
 		const { object } = await generateObject({
 			model: myProvider.languageModel(effectiveModelId),
-			mode: "json",
 			schema: z.object({
 				suggestions: z
 					.array(
