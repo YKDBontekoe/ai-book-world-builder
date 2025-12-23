@@ -35,12 +35,14 @@ interface ProjectActionsMenuProps {
   projectId: string;
   projectName: string;
   projectDescription?: string | null;
+  onDelete?: () => void;
 }
 
 export function ProjectActionsMenu({
   projectId,
   projectName,
   projectDescription,
+  onDelete,
 }: ProjectActionsMenuProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showRenameDialog, setShowRenameDialog] = useState(false);
@@ -58,6 +60,14 @@ export function ProjectActionsMenu({
   }, [showRenameDialog, projectName, projectDescription]);
 
   const handleDelete = async () => {
+    if (onDelete) {
+      // Use optimistic delete provided by parent
+      onDelete();
+      // Optimistic delete handles UI updates/undo, so we just close the dropdown/dialog logic
+      return;
+    }
+
+    // Fallback to traditional delete if no optimistic handler provided
     setIsDeleting(true);
     try {
       const result = await deleteProject(projectId);
@@ -147,7 +157,11 @@ export function ProjectActionsMenu({
               className="text-destructive focus:text-destructive"
               onClick={(e) => {
                 e.stopPropagation();
-                setShowDeleteDialog(true);
+                if (onDelete) {
+                  handleDelete();
+                } else {
+                  setShowDeleteDialog(true);
+                }
               }}
             >
               <Trash className="mr-2 h-4 w-4" />
@@ -157,31 +171,34 @@ export function ProjectActionsMenu({
         </DropdownMenu>
       </div>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              project "{projectName}" and remove all its data.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting} onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleDelete();
-              }}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Only render Alert Dialog if we don't have an optimistic handler */}
+      {!onDelete && (
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                project "{projectName}" and remove all its data.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting} onClick={(e) => e.stopPropagation()}>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDelete();
+                }}
+                disabled={isDeleting}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
 
       <Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
         <DialogContent onClick={(e) => e.stopPropagation()}>
