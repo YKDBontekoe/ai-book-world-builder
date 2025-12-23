@@ -21,7 +21,7 @@ import {
 	saveMessages,
     getSceneById
 } from "@/lib/db/queries";
-import { chapters, scenes } from "@/lib/db/schema";
+import { chapter as chapters, scene as scenes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
