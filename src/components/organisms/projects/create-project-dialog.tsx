@@ -122,6 +122,7 @@ export function CreateProjectDialog({ trigger, open: controlledOpen, onOpenChang
               onChange={(e) => setDescription(e.target.value)}
               className="glass-input resize-none"
               rows={3}
+              submitOnCtrlEnter
             />
           </div>
           <div className="space-y-2">
