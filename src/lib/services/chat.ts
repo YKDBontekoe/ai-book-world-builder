@@ -19,7 +19,6 @@ import {
 	getRelationshipsForProject,
 	saveChat,
 	saveMessages,
-    getSceneById
 } from "@/lib/db/queries";
 import { chapter as chapters, scene as scenes } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";

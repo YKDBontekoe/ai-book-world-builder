@@ -24,6 +24,11 @@
 		"test:e2e": "export PLAYWRIGHT=True && playwright test",
 		"test:visual": "python3 tests/verification/runner.py"
 	},
+	"lint-staged": {
+		"**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+			"ultracite fix"
+		]
+	},
 	"dependencies": {
 		"@ai-sdk/anthropic": "^2.0.56",
 		"@ai-sdk/openai": "^2.0.86",
@@ -149,6 +154,7 @@
 		"@vitest/coverage-v8": "^4.0.16",
 		"drizzle-kit": "^0.31.8",
 		"jsdom": "^27.3.0",
+		"lint-staged": "^16.2.7",
 		"playwright": "^1.57.0",
 		"postcss": "^8",
 		"storybook": "^10.1.8",

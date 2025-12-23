@@ -2,9 +2,15 @@
 
 import { createContext, useContext } from "react";
 
+export type ViewMode = "standard" | "zen";
+
 interface WriterLayoutContextType {
 	isSidebarOpen: boolean;
 	toggleSidebar: () => void;
+    viewMode: ViewMode;
+    toggleZenMode: () => void;
+    isTypewriterMode: boolean;
+    toggleTypewriterMode: () => void;
 }
 
 export const WriterLayoutContext = createContext<WriterLayoutContextType | null>(
