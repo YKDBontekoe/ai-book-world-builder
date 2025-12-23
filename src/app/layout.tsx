@@ -53,6 +53,8 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
+import { CommandPaletteProvider } from "@/components/providers/command-palette-provider";
+
 export default function RootLayout({
 	children,
 }: Readonly<{
@@ -86,9 +88,11 @@ export default function RootLayout({
 					<Toaster position="top-center" />
 					<SessionProvider>
 						<QueryProvider>
-							<ServiceWorkerRegister />
-							{children}
-							<SpeedInsights />
+							<CommandPaletteProvider>
+								<ServiceWorkerRegister />
+								{children}
+								<SpeedInsights />
+							</CommandPaletteProvider>
 						</QueryProvider>
 					</SessionProvider>
 				</ThemeProvider>
