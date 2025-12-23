@@ -1,0 +1,7 @@
+
+> ai-book-world-builder@3.1.0 dev /app
+> next dev --turbo
+
+sh: 1: next: not found
+ ELIFECYCLE  Command failed.
+ WARN   Local package.json exists, but node_modules missing, did you mean to install?
