@@ -12,9 +12,10 @@ import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { WriterSidebar } from "@/components/organisms/writer/writer-sidebar";
 import { WriterEditor } from "@/components/organisms/writer/writer-editor";
-import { WriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
+import { WriterLayoutContext, ViewMode } from "@/components/organisms/writer/writer-layout-context";
 import { WriterSkeleton } from "@/components/organisms/writer/writer-skeleton";
 import { WriterProvider } from "@/components/organisms/writer/writer-context";
+import { AnimatePresence, motion } from "framer-motion";
 
 // Lazy load assistant
 const FloatingAssistant = dynamic(() => import("@/components/organisms/chat/floating-assistant").then(mod => mod.FloatingAssistant));
@@ -32,6 +33,9 @@ function WriterViewContent() {
 	const isMobile = useMediaQuery("(max-width: 768px)");
 	const [mounted, setMounted] = useState(false);
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [viewMode, setViewMode] = useState<ViewMode>("standard");
+    const [isTypewriterMode, setIsTypewriterMode] = useState(false);
+
 	const sidebarRef = useRef<ImperativePanelHandle>(null);
 
 	useEffect(() => {
@@ -49,12 +53,29 @@ function WriterViewContent() {
 		}
 	};
 
+    const toggleZenMode = () => {
+        setViewMode(prev => prev === "standard" ? "zen" : "standard");
+    };
+
+    const toggleTypewriterMode = () => {
+        setIsTypewriterMode(prev => !prev);
+    };
+
 	if (!mounted) {
 		return <WriterSkeleton />;
 	}
 
+    const isZen = viewMode === "zen";
+
 	return (
-		<WriterLayoutContext.Provider value={{ isSidebarOpen, toggleSidebar }}>
+		<WriterLayoutContext.Provider value={{
+            isSidebarOpen,
+            toggleSidebar,
+            viewMode,
+            toggleZenMode,
+            isTypewriterMode,
+            toggleTypewriterMode
+        }}>
 			<ResizablePanelGroup
 				direction={isMobile ? "vertical" : "horizontal"}
 				autoSaveId={
@@ -64,41 +85,48 @@ function WriterViewContent() {
 				}
 				className="flex-1"
 			>
-				{/* Left Panel: Navigation */}
-				<ResizablePanel
-					ref={sidebarRef}
-					defaultSize={20}
-					minSize={15}
-					maxSize={30}
-					collapsible={true}
-					collapsedSize={0}
-					onCollapse={() => setIsSidebarOpen(false)}
-					onExpand={() => setIsSidebarOpen(true)}
-					className="bg-muted/10 backdrop-blur-md"
-					order={1}
-				>
-					<WriterSidebar />
-				</ResizablePanel>
-
-				<ResizableHandle />
+                {/* Zen Mode: Animate panels out */}
+                {!isZen && (
+                    <>
+                        {/* Left Panel: Navigation */}
+                        <ResizablePanel
+                            ref={sidebarRef}
+                            defaultSize={20}
+                            minSize={15}
+                            maxSize={30}
+                            collapsible={true}
+                            collapsedSize={0}
+                            onCollapse={() => setIsSidebarOpen(false)}
+                            onExpand={() => setIsSidebarOpen(true)}
+                            className="bg-muted/10 backdrop-blur-md"
+                            order={1}
+                        >
+                            <WriterSidebar />
+                        </ResizablePanel>
+                        <ResizableHandle />
+                    </>
+                )}
 
 				{/* Center Panel: Editor */}
-				<ResizablePanel defaultSize={50} minSize={30} order={2}>
+				<ResizablePanel defaultSize={50} minSize={30} order={2} className="relative z-10">
 					<WriterEditor />
 				</ResizablePanel>
 
-				<ResizableHandle />
-
-				{/* Right Panel: Book Canvas */}
-				<ResizablePanel
-					defaultSize={30}
-					minSize={20}
-					collapsible={true}
-					collapsedSize={0}
-					order={3}
-				>
-					<BookCanvas variant="embedded" />
-				</ResizablePanel>
+                {!isZen && (
+                    <>
+                        <ResizableHandle />
+                        {/* Right Panel: Book Canvas */}
+                        <ResizablePanel
+                            defaultSize={30}
+                            minSize={20}
+                            collapsible={true}
+                            collapsedSize={0}
+                            order={3}
+                        >
+                            <BookCanvas variant="embedded" />
+                        </ResizablePanel>
+                    </>
+                )}
 			</ResizablePanelGroup>
 		</WriterLayoutContext.Provider>
 	);
