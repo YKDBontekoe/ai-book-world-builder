@@ -1,0 +1,35 @@
+# CodeRabbit Configuration File
+# Documentation: https://coderabbit.ai/docs/configure-coderabbit
+
+language: "en-US"
+early_access: true
+
+# Instructions derived from AGENTS.md
+tone_instructions: "Adhere strictly to the project's 'Native macOS' design system and 'Strict TypeScript' rules (no 'any' type). Ensure performance and security best practices, especially for Server Actions."
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+    ignore_usernames: []
+
+  tools:
+    biome:
+      enabled: true
+    eslint:
+      enabled: true
+    github-checks:
+      enabled: true
+    markdownlint:
+      enabled: true
+    actionlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+
+chat:
+  auto_reply: true
