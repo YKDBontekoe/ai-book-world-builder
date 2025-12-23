@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	ActivityIcon,
 	BookOpenIcon,
-	CalendarIcon,
 	ChevronRightIcon,
 	FileTextIcon,
 	HistoryIcon,
@@ -15,11 +14,14 @@ import {
 	SparklesIcon,
 	XIcon,
 } from "lucide-react";
-import { Button } from "@/components/atoms/button";
-import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import { Button } from "@/components/atoms/button";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
-import { type CanvasPane, useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	type CanvasPane,
+	useBookCanvas,
+} from "@/components/organisms/book-canvas/book-canvas-context";
+import { cn } from "@/lib/utils";
 
 const LoadingPane = () => (
 	<div className="flex h-full items-center justify-center">
@@ -28,38 +30,62 @@ const LoadingPane = () => (
 );
 
 const BiblePane = dynamic(
-	() => import("@/components/organisms/book-canvas/panes/bible-pane").then((mod) => mod.BiblePane),
+	() =>
+		import("@/components/organisms/book-canvas/panes/bible-pane").then(
+			(mod) => mod.BiblePane,
+		),
 	{ loading: LoadingPane },
 );
 const ChangeLogPane = dynamic(
-	() => import("@/components/organisms/book-canvas/panes/changelog-pane").then((mod) => mod.ChangeLogPane),
+	() =>
+		import("@/components/organisms/book-canvas/panes/changelog-pane").then(
+			(mod) => mod.ChangeLogPane,
+		),
 	{ loading: LoadingPane },
 );
 const DiagnosticsPane = dynamic(
-	() => import("@/components/organisms/book-canvas/panes/diagnostics-pane").then((mod) => mod.DiagnosticsPane),
+	() =>
+		import("@/components/organisms/book-canvas/panes/diagnostics-pane").then(
+			(mod) => mod.DiagnosticsPane,
+		),
 	{ loading: LoadingPane },
 );
 const DraftPane = dynamic(
-	() => import("@/components/organisms/book-canvas/panes/draft-pane").then((mod) => mod.DraftPane),
+	() =>
+		import("@/components/organisms/book-canvas/panes/draft-pane").then(
+			(mod) => mod.DraftPane,
+		),
 	{ loading: LoadingPane },
 );
 const OutlinePane = dynamic(
-	() => import("@/components/organisms/book-canvas/panes/outline-pane").then((mod) => mod.OutlinePane),
+	() =>
+		import("@/components/organisms/book-canvas/panes/outline-pane").then(
+			(mod) => mod.OutlinePane,
+		),
 	{ loading: LoadingPane },
 );
 const ScenePane = dynamic(
-	() => import("@/components/organisms/book-canvas/panes/scene-pane").then((mod) => mod.ScenePane),
+	() =>
+		import("@/components/organisms/book-canvas/panes/scene-pane").then(
+			(mod) => mod.ScenePane,
+		),
 	{ loading: LoadingPane },
 );
 const GraphPane = dynamic(
-	() => import("@/components/organisms/book-canvas/panes/graph-pane").then((mod) => mod.GraphPane),
+	() =>
+		import("@/components/organisms/book-canvas/panes/graph-pane").then(
+			(mod) => mod.GraphPane,
+		),
 	{ loading: LoadingPane },
 );
 
 export function BookCanvas({
 	variant = "sidebar",
 	className,
-}: { variant?: "sidebar" | "embedded"; className?: string }) {
+}: {
+	variant?: "sidebar" | "embedded";
+	className?: string;
+}) {
 	const { isOpen, setIsOpen, activePane, setActivePane, overallStatus } =
 		useBookCanvas();
 
@@ -137,7 +163,7 @@ export function BookCanvas({
 			className={cn(
 				"flex flex-col flex-shrink-0 bg-background/50 backdrop-blur-xl",
 				variant === "sidebar"
-					? "fixed inset-0 z-50 h-dvh w-full md:static md:w-96 lg:w-[28rem] glass border-l border-glass-border shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)]"
+					? "fixed inset-0 z-50 h-dvh w-full md:static md:w-96 lg:w-[28rem] glass border-l border-glass-border shadow-2xl transition-all duration-300 ease-[cubic-bezier(0.25,1,0.5,1)] md:flex"
 					: "h-full w-full",
 				className,
 			)}
