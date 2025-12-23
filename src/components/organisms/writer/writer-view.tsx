@@ -7,6 +7,7 @@ import { useMediaQuery } from "usehooks-ts";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/atoms/resizable";
 import { Project } from "@/lib/db/schema";
 import { ChapterWithScenes } from "@/lib/types";
+import { ChatModel } from "@/lib/ai/models";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { WriterSidebar } from "@/components/organisms/writer/writer-sidebar";
@@ -24,6 +25,7 @@ interface WriterViewProps {
   initialStructureText?: string;
   isReadOnly?: boolean;
   defaultModelId?: string;
+  availableModels?: ChatModel[];
 }
 
 function WriterViewContent() {
@@ -121,14 +123,18 @@ function CanvasSync({ projectId, isReadOnly }: { projectId: string, isReadOnly: 
 }
 
 export function WriterView(props: WriterViewProps) {
-  const { project, isReadOnly = false, defaultModelId } = props;
+  const { project, isReadOnly = false, defaultModelId, availableModels } = props;
 
   return (
     <div className="h-full w-full overflow-hidden flex flex-col">
        <WriterProvider {...props}>
            <CanvasSync projectId={project.id} isReadOnly={isReadOnly} />
            <WriterViewContent />
-           <FloatingAssistant projectId={project.id} defaultModelId={defaultModelId} />
+           <FloatingAssistant
+             projectId={project.id}
+             defaultModelId={defaultModelId}
+             availableModels={availableModels}
+           />
        </WriterProvider>
     </div>
   );

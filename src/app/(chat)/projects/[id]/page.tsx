@@ -5,6 +5,7 @@ import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import { getProjectStructure } from "@/app/actions/writer";
 import { ChapterWithScenes } from "@/lib/types";
 import { getSelectedModelId } from "@/lib/ai/models";
+import { getAvailableModels } from "@/app/actions/settings";
 
 export default async function ProjectPage({
   params,
@@ -32,6 +33,7 @@ export default async function ProjectPage({
 
   // Fetch preferred model for the assistant (using "middle" or "large" as default)
   const defaultModelId = await getSelectedModelId("middle");
+  const availableModels = await getAvailableModels();
 
   // The WriterView is now the main interface for a project
   return (
@@ -42,6 +44,7 @@ export default async function ProjectPage({
           initialStructureText={structureText}
           isReadOnly={isReadOnly}
           defaultModelId={defaultModelId}
+          availableModels={availableModels}
         />
     </div>
   );
