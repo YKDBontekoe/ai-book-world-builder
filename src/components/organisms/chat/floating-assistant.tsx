@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { generateUUID } from "@/lib/utils";
 import { DataStreamHandler } from "@/components/organisms/messages/data-stream-handler";
 import { DataStreamProvider } from "@/components/organisms/chat/data-stream-provider";
+import { ChatProvider } from "@/components/organisms/chat/chat-context";
 import { chatModels, type ChatModelId, DEFAULT_CHAT_MODEL, type ChatModel } from "@/lib/ai/models";
 import { useParams } from "next/navigation";
 import { useLocalStorage } from "usehooks-ts";
@@ -193,16 +194,20 @@ export function FloatingAssistant({
                         {/* Chat Content */}
                         <div className="flex-1 overflow-hidden relative bg-background/30">
                             <DataStreamProvider>
-                                <FloatingChat
-                                    id={chatId}
-                                    initialMessages={initialMessages}
-                                    initialChatModel={defaultModelId as ChatModelId}
+                                <ChatProvider
+                                    chatId={chatId}
+                                    initialProjectId={currentProjectId}
                                     initialVisibilityType="private"
-                                    isReadonly={false}
-                                    // projectId comes from context usually, but we pass it anyway if needed
-                                    // initialProjectId={currentProjectId} // FloatingChat doesn't need this explicit prop if it uses context, but let's check
-                                    availableModels={availableModels || Array.from(chatModels)}
-                                />
+                                >
+                                    <FloatingChat
+                                        id={chatId}
+                                        initialMessages={initialMessages}
+                                        initialChatModel={defaultModelId as ChatModelId}
+                                        initialVisibilityType="private"
+                                        isReadonly={false}
+                                        availableModels={availableModels || Array.from(chatModels)}
+                                    />
+                                </ChatProvider>
                                 <DataStreamHandler />
                             </DataStreamProvider>
                         </div>
