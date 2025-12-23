@@ -78,6 +78,7 @@ ${recentChapters || "None"}
 
 		const { object } = await generateObject({
 			model: myProvider.languageModel(effectiveModelId),
+			mode: "json",
 			schema: z.object({
 				suggestions: z
 					.array(
@@ -111,7 +112,10 @@ ${projectContext}
 RECENT CONVERSATION:
 ${conversationContext}
 
-CRITICAL: The "type" field MUST be EXACTLY one of these values (no variations):
+CRITICAL: Return a JSON object with a "suggestions" key containing an array of suggestion objects.
+Each suggestion object MUST have: "label", "prompt", "type", and "reasoning".
+
+The "type" field MUST be EXACTLY one of these values (no variations):
 - "story" - for plot, chapters, drafting, scenes, narrative flow
 - "character" - for characters, backstories, relationships between characters
 - "world" - for worldbuilding, lore, settings, locations, magic systems
@@ -120,6 +124,7 @@ CRITICAL: The "type" field MUST be EXACTLY one of these values (no variations):
 - "brainstorm" - for brainstorming, ideation, exploring options
 
 DO NOT use any other type values like "scene", "relationship", "draft", etc. Map those concepts to the above categories.
+DO NOT use Markdown code blocks (like \`\`\`json). Return RAW JSON only.
 
 GUIDELINES:
 - If no project, suggest brainstorming or world creation
