@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { generateUUID } from "@/lib/utils";
 import { DataStreamHandler } from "@/components/organisms/messages/data-stream-handler";
 import { DataStreamProvider } from "@/components/organisms/chat/data-stream-provider";
-import { chatModels, type ChatModelId, DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { chatModels, type ChatModelId, DEFAULT_CHAT_MODEL, type ChatModel } from "@/lib/ai/models";
 
 const MotionButton = motion(Button);
 const MotionGlassCard = motion(GlassCard);
@@ -19,12 +19,14 @@ interface FloatingAssistantProps {
 	projectId: string;
 	initialMessages?: any[];
 	defaultModelId?: string;
+	availableModels?: ChatModel[];
 }
 
 export function FloatingAssistant({
 	projectId,
 	initialMessages = [],
 	defaultModelId = DEFAULT_CHAT_MODEL,
+	availableModels,
 }: FloatingAssistantProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isExpanded, setIsExpanded] = useState(false);
@@ -104,7 +106,7 @@ export function FloatingAssistant({
                 isReadonly={false}
                 initialProjectId={projectId}
                 autoResume={false}
-                availableModels={Array.from(chatModels)}
+                availableModels={availableModels || Array.from(chatModels)}
               />
               <DataStreamHandler />
             </DataStreamProvider>
