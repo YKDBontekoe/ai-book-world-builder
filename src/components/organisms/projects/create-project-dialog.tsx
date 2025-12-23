@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Plus, Lock, Globe } from "lucide-react";
@@ -45,6 +45,14 @@ export function CreateProjectDialog({ trigger, open: controlledOpen, onOpenChang
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [visibility, setVisibility] = useState<VisibilityType>("private");
+
+  useEffect(() => {
+    if (open) {
+      setName("");
+      setDescription("");
+      setVisibility("private");
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,6 +110,7 @@ export function CreateProjectDialog({ trigger, open: controlledOpen, onOpenChang
               onChange={(e) => setName(e.target.value)}
               required
               className="glass-input"
+              autoFocus
             />
           </div>
           <div className="space-y-2">
