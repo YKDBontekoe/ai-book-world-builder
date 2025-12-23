@@ -4,11 +4,38 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
 import {
 	deleteEntity,
-	getEntitiesForProject,
+	getEntitiesForProject as getEntitiesQuery,
 	getEntityById,
 	getProjectByIdWithAccess,
 	updateEntity,
 } from "@/lib/db/queries";
+import { Entity } from "@/lib/db/schema";
+
+export async function getEntitiesForProject(projectId: string): Promise<{ success: Entity[] } | { error: string }> {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return { error: "Unauthorized" };
+        }
+
+        const project = await getProjectByIdWithAccess({
+            id: projectId,
+            userId: session.user.id
+        });
+
+        if (!project) {
+            return { error: "Project not found or access denied" };
+        }
+
+        const entities = await getEntitiesQuery({ projectId });
+        return { success: entities };
+    } catch (e) {
+        console.error(e);
+        return { error: "Failed to fetch entities" };
+    }
+}
+
+// RESTORED FUNCTIONS
 
 export async function getEntities(projectId: string) {
 	const session = await auth();
@@ -19,14 +46,14 @@ export async function getEntities(projectId: string) {
 
 	const project = await getProjectByIdWithAccess({
 		id: projectId,
-		userId: session.user.id,
+        userId: session.user.id,
 	});
 
 	if (!project) {
 		throw new Error("Project not found or access denied");
 	}
 
-	const entities = await getEntitiesForProject({ projectId });
+	const entities = await getEntitiesQuery({ projectId });
 
 	// Serialize dates
 	return entities.map((entity) => ({
