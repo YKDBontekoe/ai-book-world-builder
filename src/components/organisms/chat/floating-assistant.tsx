@@ -16,7 +16,7 @@ const MotionButton = motion(Button);
 const MotionGlassCard = motion(GlassCard);
 
 interface FloatingAssistantProps {
-	projectId: string;
+	projectId?: string;
 	initialMessages?: any[];
 	defaultModelId?: string;
 	availableModels?: ChatModel[];

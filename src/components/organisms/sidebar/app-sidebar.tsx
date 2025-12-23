@@ -1,25 +1,11 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { DownloadIcon, FolderIcon, PlusIcon, TrashIcon, LayoutDashboard } from "lucide-react";
+import { DownloadIcon, FolderIcon, PlusIcon, LayoutDashboard } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
-import { useState } from "react";
-import { toast } from "sonner";
 import { DashboardSheet } from "@/components/organisms/dashboard/dashboard-sheet";
-import { SidebarHistory } from "@/components/organisms/sidebar/sidebar-history";
 import { SidebarUserNav } from "@/components/organisms/sidebar/sidebar-user-nav";
-import {
-	AlertDialog,
-	AlertDialogAction,
-	AlertDialogCancel,
-	AlertDialogContent,
-	AlertDialogDescription,
-	AlertDialogFooter,
-	AlertDialogHeader,
-	AlertDialogTitle,
-} from "@/components/atoms/alert-dialog";
 import { Button } from "@/components/atoms/button";
 import {
 	Sidebar,
@@ -34,34 +20,10 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
-import { api } from "@/lib/api-client";
-import { QUERY_KEYS } from "@/lib/query-options";
 
 export function AppSidebar({ user }: { user: User | undefined }) {
 	const router = useRouter();
 	const { setOpenMobile } = useSidebar();
-	const queryClient = useQueryClient();
-	const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
-
-	const { mutate: handleDeleteAll } = useMutation({
-		mutationFn: async () => {
-			return api.delete("/api/history");
-		},
-		onMutate: () => {
-			toast.loading("Deleting all chats...", { id: "delete-all-chats" });
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.chatHistory() });
-			router.push("/");
-			setShowDeleteAllDialog(false);
-			toast.success("All chats deleted successfully", {
-				id: "delete-all-chats",
-			});
-		},
-		onError: () => {
-			toast.error("Failed to delete all chats", { id: "delete-all-chats" });
-		},
-	});
 
 	return (
 		<>
@@ -83,23 +45,6 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 								</Link>
 							</div>
 							<div className="flex flex-row gap-1">
-								{user && (
-									<Tooltip>
-										<TooltipTrigger asChild>
-											<Button
-												className="h-8 p-1 md:h-fit md:p-2"
-												onClick={() => setShowDeleteAllDialog(true)}
-												type="button"
-												variant="ghost"
-											>
-												<TrashIcon size={16} />
-											</Button>
-										</TooltipTrigger>
-										<TooltipContent align="end" className="hidden md:block">
-											Delete All Chats
-										</TooltipContent>
-									</Tooltip>
-								)}
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<Button
@@ -148,31 +93,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 							</Button>
 						</Link>
 					</div>
-					<SidebarHistory user={user} />
 				</SidebarContent>
 				<SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
 			</Sidebar>
-
-			<AlertDialog
-				onOpenChange={setShowDeleteAllDialog}
-				open={showDeleteAllDialog}
-			>
-				<AlertDialogContent>
-					<AlertDialogHeader>
-						<AlertDialogTitle>Delete all chats?</AlertDialogTitle>
-						<AlertDialogDescription>
-							This action cannot be undone. This will permanently delete all
-							your chats and remove them from our servers.
-						</AlertDialogDescription>
-					</AlertDialogHeader>
-					<AlertDialogFooter>
-						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={() => handleDeleteAll()}>
-							Delete All
-						</AlertDialogAction>
-					</AlertDialogFooter>
-				</AlertDialogContent>
-			</AlertDialog>
 		</>
 	);
 }
