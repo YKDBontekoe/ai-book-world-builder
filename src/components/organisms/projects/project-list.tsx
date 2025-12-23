@@ -33,16 +33,19 @@ interface ProjectListProps {
 	projects: Project[];
 	selectedIds?: Set<string>;
 	onSelect?: (id: string) => void;
+	onDeleteProject?: (id: string) => void;
 }
 
 function ProjectRow({
 	project,
 	selected,
-	onSelect
+	onSelect,
+	onDelete
 }: {
 	project: Project;
 	selected?: boolean;
 	onSelect?: (id: string) => void;
+	onDelete?: (id: string) => void;
 }): JSX.Element {
 	return (
 		<div className="relative group flex items-center gap-4">
@@ -109,6 +112,7 @@ function ProjectRow({
 						projectId={project.id}
 						projectName={project.name}
 						projectDescription={project.description}
+						onDelete={() => onDelete?.(project.id)}
 					/>
 				</div>
 			</div>
@@ -116,7 +120,7 @@ function ProjectRow({
 	);
 }
 
-export function ProjectList({ projects, selectedIds, onSelect }: ProjectListProps): JSX.Element {
+export function ProjectList({ projects, selectedIds, onSelect, onDeleteProject }: ProjectListProps): JSX.Element {
 	return (
 		<motion.div 
 			variants={container} 
@@ -130,6 +134,7 @@ export function ProjectList({ projects, selectedIds, onSelect }: ProjectListProp
 						project={project}
 						selected={selectedIds?.has(project.id)}
 						onSelect={onSelect}
+						onDelete={onDeleteProject}
 					/>
 				</motion.div>
 			))}

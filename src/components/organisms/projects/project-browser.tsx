@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect } from "react";
+import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Search, ArrowDownAZ, ArrowUpAZ, Clock, LayoutGrid, List, Trash2, X, Undo2 } from "lucide-react";
 import { Input } from "@/components/atoms/input";
 import {
@@ -106,15 +106,20 @@ export function ProjectBrowser({ projects }: { projects: Project[] }): JSX.Eleme
     };
   }, []);
 
-  const handleBulkDelete = () => {
-    const idsToDelete = Array.from(selectedIds);
+  const handleDelete = useCallback((idsToDelete: string[]) => {
     if (idsToDelete.length === 0) return;
 
     // 1. Optimistic Update
     const newOptimisticDeleted = new Set(optimisticDeletedIds);
     idsToDelete.forEach(id => newOptimisticDeleted.add(id));
     setOptimisticDeletedIds(newOptimisticDeleted);
-    setSelectedIds(new Set()); // Clear selection
+
+    // Clear selection if any deleted items were selected
+    setSelectedIds(prev => {
+        const next = new Set(prev);
+        idsToDelete.forEach(id => next.delete(id));
+        return next;
+    });
 
     // Track pending deletion
     pendingDeletionRef.current = new Set(idsToDelete);
@@ -175,6 +180,10 @@ export function ProjectBrowser({ projects }: { projects: Project[] }): JSX.Eleme
           });
       }
     }, 4500); // Slightly less than toast duration
+  }, [optimisticDeletedIds]);
+
+  const handleBulkDelete = () => {
+      handleDelete(Array.from(selectedIds));
   };
 
   return (
@@ -269,12 +278,14 @@ export function ProjectBrowser({ projects }: { projects: Project[] }): JSX.Eleme
                     projects={filteredProjects}
                     selectedIds={selectedIds}
                     onSelect={handleSelect}
+                    onDeleteProject={(id) => handleDelete([id])}
                   />
                 ) : (
                   <ProjectList
                     projects={filteredProjects}
                     selectedIds={selectedIds}
                     onSelect={handleSelect}
+                    onDeleteProject={(id) => handleDelete([id])}
                   />
                 )}
               </motion.div>

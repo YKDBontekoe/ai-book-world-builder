@@ -34,16 +34,19 @@ interface ProjectGridProps {
 	projects: Project[];
 	selectedIds?: Set<string>;
 	onSelect?: (id: string) => void;
+	onDeleteProject?: (id: string) => void;
 }
 
 function ProjectCard({
 	project,
 	selected,
-	onSelect
+	onSelect,
+	onDelete
 }: {
 	project: Project;
 	selected?: boolean;
 	onSelect?: (id: string) => void;
+	onDelete?: (id: string) => void;
 }) {
 	return (
 		<div className="relative h-full group">
@@ -75,11 +78,6 @@ function ProjectCard({
 				>
 					<div className="space-y-4">
 						<div className="flex items-center gap-3 pr-8 pl-6">
-							{/* Added pl-6 to avoid overlap with checkbox if persistent, but since it hides, maybe not needed?
-							    Actually, when selected, it is visible. Let's keep the layout clean.
-								The checkbox is top-left (absolute). The content starts top-left.
-								I should push the content slightly or rely on the fact the checkbox is small.
-							*/}
 							<div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
 								<FolderIcon className="h-6 w-6" />
 							</div>
@@ -114,13 +112,14 @@ function ProjectCard({
 					projectId={project.id}
 					projectName={project.name}
 					projectDescription={project.description}
+					onDelete={() => onDelete?.(project.id)}
 				/>
 			</div>
 		</div>
 	);
 }
 
-export function ProjectGrid({ projects, selectedIds, onSelect }: ProjectGridProps) {
+export function ProjectGrid({ projects, selectedIds, onSelect, onDeleteProject }: ProjectGridProps) {
 	return (
 		<motion.div variants={container} initial="hidden" animate="show">
 			<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
@@ -130,6 +129,7 @@ export function ProjectGrid({ projects, selectedIds, onSelect }: ProjectGridProp
 							project={project}
 							selected={selectedIds?.has(project.id)}
 							onSelect={onSelect}
+							onDelete={onDeleteProject}
 						/>
 					</motion.div>
 				))}
