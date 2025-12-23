@@ -51,3 +51,19 @@ export const File: Story = {
 		type: "file",
 	},
 };
+
+export const Clearable: Story = {
+    render: (args) => {
+        const [value, setValue] = React.useState("Initial value");
+        return (
+            <div className="max-w-sm p-10 bg-background">
+                <Input
+                    {...args}
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    onClear={() => setValue("")}
+                />
+            </div>
+        );
+    }
+};
