@@ -73,6 +73,8 @@ function buildProject(projectId: string, userId: string): Project {
     name: "Test Project",
     userId,
     visibility: "private",
+    forkedFromId: null,
+    lastViewedSceneId: null,
   };
 }
 

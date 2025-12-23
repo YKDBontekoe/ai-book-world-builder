@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db/drizzle";
-import { scene, chapter, chapterVersion, outline, volume } from "@/lib/db/schema";
+import { scene, chapter, chapterVersion, outline, volume, project } from "@/lib/db/schema";
 import { eq, asc, desc } from "drizzle-orm";
 import { continueWriting } from "@/lib/ai/writer";
 import { createScene, getScenesForProject } from "@/lib/db/queries/scene";
@@ -387,4 +387,20 @@ export async function initializeProject(projectId: string) {
         console.error("Failed to initialize project", error);
         return { success: false, error: "Initialization failed" };
     }
+}
+
+export async function updateLastViewedScene(projectId: string, sceneId: string) {
+  try {
+    await ensureProjectAccess(projectId, true);
+
+    await db
+      .update(project)
+      .set({ lastViewedSceneId: sceneId })
+      .where(eq(project.id, projectId));
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update last viewed scene", error);
+    return { success: false };
+  }
 }

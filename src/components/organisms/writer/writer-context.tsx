@@ -33,6 +33,7 @@ export function WriterProvider({
     projectId: project.id,
     initialStructure,
     initialStructureText,
+    lastViewedSceneId: project.lastViewedSceneId,
   });
 
   const value = useMemo(() => ({

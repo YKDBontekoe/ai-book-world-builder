@@ -2,16 +2,17 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { toast } from "sonner";
 import { useBookCanvasActions, useBookCanvasValue } from "@/components/organisms/book-canvas/book-canvas-context";
-import { getProjectStructure, updateSceneContent, createChapterSnapshot, getSceneContent } from "@/app/actions/writer";
+import { getProjectStructure, updateSceneContent, createChapterSnapshot, getSceneContent, updateLastViewedScene } from "@/app/actions/writer";
 import { type ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterStateProps {
   projectId: string;
   initialStructure?: ChapterWithScenes[];
   initialStructureText?: string;
+  lastViewedSceneId?: string | null;
 }
 
-export function useWriterState({ projectId, initialStructure, initialStructureText }: UseWriterStateProps) {
+export function useWriterState({ projectId, initialStructure, initialStructureText, lastViewedSceneId }: UseWriterStateProps) {
   const [structure, setStructure] = useState<ChapterWithScenes[] | null>(initialStructure ?? null);
   const [structureText, setStructureText] = useState(initialStructureText ?? "");
   const [loading, setLoading] = useState(!initialStructure);
@@ -104,7 +105,13 @@ export function useWriterState({ projectId, initialStructure, initialStructureTe
         result.structure.length > 0 &&
         result.structure[0].scenes.length > 0
       ) {
-        setActiveSceneId(result.structure[0].scenes[0].id);
+        // Check for last viewed scene match
+        const hasLastViewed = lastViewedSceneId && result.structure.some((c: any) => c.scenes.some((s: any) => s.id === lastViewedSceneId));
+        if (hasLastViewed && lastViewedSceneId) {
+          setActiveSceneId(lastViewedSceneId);
+        } else {
+          setActiveSceneId(result.structure[0].scenes[0].id);
+        }
       }
     }
     setLoading(false);
@@ -159,6 +166,31 @@ export function useWriterState({ projectId, initialStructure, initialStructureTe
       toast.error("Failed to create version");
     }
   }, [activeScene]);
+
+  // Persist last viewed scene
+  useEffect(() => {
+    if (activeSceneId && projectId) {
+      const timer = setTimeout(() => {
+        updateLastViewedScene(projectId, activeSceneId);
+      }, 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [activeSceneId, projectId]);
+
+  // Initialize selection from lastViewedSceneId if needed (when structure loaded via props)
+  useEffect(() => {
+    if (loading || !structure) return;
+
+    const isValid = activeSceneId && structure.some(ch => ch.scenes.some(s => s.id === activeSceneId));
+
+    if (!isValid) {
+      if (lastViewedSceneId && structure.some(ch => ch.scenes.some(s => s.id === lastViewedSceneId))) {
+        setActiveSceneId(lastViewedSceneId);
+      } else if (structure.length > 0 && structure[0].scenes.length > 0) {
+        setActiveSceneId(structure[0].scenes[0].id);
+      }
+    }
+  }, [structure, activeSceneId, lastViewedSceneId, loading, setActiveSceneId]);
 
   return useMemo(() => ({
     structure,

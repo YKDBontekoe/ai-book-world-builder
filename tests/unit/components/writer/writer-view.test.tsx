@@ -60,13 +60,13 @@ vi.mock("@/components/atoms/resizable", () => ({
 const mockProject: Project = {
   id: "proj-1",
   userId: "user-1",
-  title: "Test Project",
+  name: "Test Project",
   createdAt: new Date(),
-  updatedAt: new Date(),
   visibility: "private",
   forkedFromId: null,
   description: null,
-  bookCover: null
+  folders: [],
+  lastViewedSceneId: null,
 };
 
 describe("WriterView", () => {
