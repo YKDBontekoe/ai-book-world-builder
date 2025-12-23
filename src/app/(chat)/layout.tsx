@@ -7,7 +7,8 @@ import { AppSidebar } from "@/components/organisms/sidebar/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/atoms/sidebar";
 import { auth } from "@/app/(auth)/auth";
 import { FloatingAssistant } from "@/components/organisms/chat/floating-assistant";
-import { getAvailableModels, getSelectedModelId } from "@/app/actions/settings";
+import { getAvailableModels } from "@/app/actions/settings";
+import { getSelectedModelId } from "@/lib/ai/models";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return (
