@@ -105,6 +105,12 @@ export function useProjectSelection({
   }, []);
 
   useEffect(() => {
+    if (initialProjectId && initialProjectId !== selectedProjectId) {
+      applyProjectSelection(initialProjectId);
+    }
+  }, [applyProjectSelection, initialProjectId, selectedProjectId]);
+
+  useEffect(() => {
     if (selectedProjectId === null && projectFromSearch) {
       return;
     }

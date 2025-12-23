@@ -111,3 +111,13 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 - **Type Safety in ORM**: Explicitly exporting inferred types (e.g., `export type Feedback = InferSelectModel<typeof feedback>`) prevents circular dependency issues and ensures consistency across service layers compared to relying on `typeof table.$inferSelect`.
 - **Atomic Design Imports**: The codebase follows a strict Atomic Design structure. Imports must target specific directories (`@/components/atoms/*`) rather than generic UI buckets (`@/components/ui/*`), which caused build failures during integration.
 - **Playwright Verification**: Verifying responsive sidebars requires explicit viewport configuration and cookie management (e.g., forcing `sidebar_state=true`) to ensure interactive elements are visible and reachable in headless environments.
+## 2025-05-21 - [Inspiration UI Polish]
+
+### Findings
+- Refactored `InspirationPage` to use `GlassCard` (liquid variant) and `EmptyState` (glass variant) to align with the "Native macOS" aesthetic.
+- Created `InspirationLoading` component with detailed skeleton states matching the data grid layout.
+- Suppressed `noArrayIndexKey` lint rule in skeleton loops where stable IDs are inherently unavailable.
+
+### Learnings
+- **Skeleton Fidelity**: Creating a skeleton that exactly mimics the `GridList` and `GlassCard` layout prevents layout shifts and feels much more "native" than a generic spinner.
+- **Visual Consistency**: Standardizing the `EmptyState` usage (specifically the `glass` variant) across features like Projects and Inspiration unifies the user experience and reduces cognitive load.
