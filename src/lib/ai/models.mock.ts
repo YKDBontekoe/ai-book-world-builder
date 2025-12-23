@@ -2,35 +2,31 @@ import type { LanguageModel } from "ai";
 
 const createMockModel = (): LanguageModel => {
   return {
-    specificationVersion: "v1", // Updated to v1 for simpler compat, or keep v2 but ensure types align
+    specificationVersion: "v1",
     provider: "mock",
     modelId: "mock-model",
     defaultObjectGenerationMode: "json",
-    doGenerate: async (options: any) => { // Added explicit any to suppress TS7006
-      // Basic prompt inspection to return JSON for planning
+    doGenerate: async (options: any) => {
       const promptString = JSON.stringify(options.inputFormat === "messages" ? options.input : options.prompt);
-
       let text = "Hello, world!";
 
       if (promptString.includes("Break this chapter into")) {
-          // Return Scene Plan JSON
-          text = JSON.stringify({
-              scenes: [
-                  { title: "Scene 1", beat: "Something happens" },
-                  { title: "Scene 2", beat: "Something else happens" }
-              ]
-          });
+        text = JSON.stringify({
+          scenes: [
+            { title: "Scene 1", beat: "Something happens" },
+            { title: "Scene 2", beat: "Something else happens" }
+          ]
+        });
       } else if (promptString.includes("Create a book outline")) {
-          // Return Book Plan JSON
-          text = JSON.stringify({
-              title: "Mock Book",
-              logline: "A mock story.",
-              summary: "Full summary.",
-              chapters: [
-                  { title: "Chapter 1", summary: "Summary 1" },
-                  { title: "Chapter 2", summary: "Summary 2" }
-              ]
-          });
+        text = JSON.stringify({
+          title: "Mock Book",
+          logline: "A mock story.",
+          summary: "Full summary.",
+          chapters: [
+            { title: "Chapter 1", summary: "Summary 1" },
+            { title: "Chapter 2", summary: "Summary 2" }
+          ]
+        });
       }
 
       return {
@@ -46,7 +42,7 @@ const createMockModel = (): LanguageModel => {
         start(controller) {
           controller.enqueue({
             type: "text-delta",
-            textDelta: "Mock response", // v1 spec usually uses textDelta
+            textDelta: "Mock response",
           });
           controller.close();
         },
@@ -55,7 +51,7 @@ const createMockModel = (): LanguageModel => {
       usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
       warnings: [],
     }),
-  } as unknown as LanguageModel;
+  } as any as LanguageModel;
 };
 
 export const chatModel = createMockModel();

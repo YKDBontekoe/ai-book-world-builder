@@ -117,6 +117,7 @@ function PureModelSelectorCompact({
 					"bg-background/80 shadow-xl backdrop-blur-xl",
 					"dark:bg-background/90",
 				)}
+				data-testid="model-list"
 			>
 				<div className="space-y-0.5 p-2">
 					{displayModels.map((model) => (
@@ -124,7 +125,7 @@ function PureModelSelectorCompact({
 							key={model.id}
 							model={model}
 							isSelected={model.id === optimisticModelId}
-							isFavorite={false}
+							isFavorite={favoriteModels.includes(model.id)}
 							canSort={false}
 							isFirst={false}
 							isLast={false}

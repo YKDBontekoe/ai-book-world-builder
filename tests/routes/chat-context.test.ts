@@ -13,6 +13,8 @@ const project = {
   visibility: "private" as const,
   folders: DEFAULT_PROJECT_FOLDERS,
   userId: "user-id",
+  forkedFromId: null,
+  lastViewedSceneId: null,
 };
 
 const guardian = {

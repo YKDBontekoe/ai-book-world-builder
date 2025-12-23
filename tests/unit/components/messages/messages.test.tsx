@@ -16,8 +16,8 @@ vi.mock("@/hooks/use-messages", () => ({
 }));
 
 vi.mock("@/components/organisms/messages/message", () => ({
-  PreviewMessage: ({ vote }: { vote: Vote | undefined }) => (
-    <div data-testid="preview-message" data-vote-id={vote?.id}>
+  PreviewMessage: ({ vote }: { vote: any }) => (
+    <div data-testid="preview-message" data-vote-id={vote?.messageId}>
       Message
     </div>
   ),
@@ -49,14 +49,14 @@ describe("Messages", () => {
 
   it("renders messages with correct votes", () => {
     const messages: ChatMessage[] = [
-      { id: "msg-1", role: "user", content: "Hello", createdAt: new Date() },
-      { id: "msg-2", role: "assistant", content: "Hi", createdAt: new Date() },
+      { id: "msg-1", role: "user", content: "Hello", createdAt: new Date(), parts: [] },
+      { id: "msg-2", role: "assistant", content: "Hi", createdAt: new Date(), parts: [] },
     ];
-    const votes: Vote[] = [
-      { id: "vote-1", messageId: "msg-2", isUpvoted: true, chatId: "chat-1", createdAt: new Date(), updatedAt: new Date() },
+    const votes: any[] = [
+      { messageId: "msg-2", isUpvoted: true, chatId: "chat-1" },
     ];
 
-    render(<Messages {...mockProps} messages={messages} votes={votes} />);
+    render(<Messages {...mockProps} messages={messages} votes={votes as any} />);
 
     const messageElements = screen.getAllByTestId("preview-message");
     expect(messageElements).toHaveLength(2);
@@ -65,12 +65,12 @@ describe("Messages", () => {
     expect(messageElements[0]).not.toHaveAttribute("data-vote-id");
 
     // msg-2 has vote-1
-    expect(messageElements[1]).toHaveAttribute("data-vote-id", "vote-1");
+    expect(messageElements[1]).toHaveAttribute("data-vote-id", "msg-2");
   });
 
   it("handles undefined votes gracefully", () => {
     const messages: ChatMessage[] = [
-      { id: "msg-1", role: "user", content: "Hello", createdAt: new Date() },
+      { id: "msg-1", role: "user", content: "Hello", createdAt: new Date(), parts: [] },
     ];
 
     render(<Messages {...mockProps} messages={messages} votes={undefined} />);

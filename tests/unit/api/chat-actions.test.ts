@@ -26,7 +26,7 @@ import {
 } from "@/lib/db/queries";
 import type { Chat, DBMessage } from "@/lib/db/schema";
 
-const mockedAuth = vi.mocked(auth);
+const mockedAuth = vi.mocked(auth) as any;
 const mockedGetMessageById = vi.mocked(getMessageById);
 const mockedGetChatById = vi.mocked(getChatById);
 const mockedDeleteMessagesByChatIdAfterTimestamp = vi.mocked(
@@ -55,6 +55,7 @@ function buildChat({ userId, id }: { userId: string; id: string }): Chat {
 		title: "Test Chat",
 		userId,
 		visibility: "private",
+		projectId: null,
 	};
 }
 
@@ -82,7 +83,7 @@ describe("deleteTrailingMessages", () => {
 	});
 
 	it("throws when no session is available", async () => {
-		mockedAuth.mockResolvedValue(null);
+		(mockedAuth as any).mockResolvedValue(null);
 
 		await expect(deleteTrailingMessages({ id: "message-1" })).rejects.toThrow(
 			"Unauthorized",
@@ -92,7 +93,7 @@ describe("deleteTrailingMessages", () => {
 	});
 
 	it("throws when the chat does not belong to the session user", async () => {
-		mockedAuth.mockResolvedValue(buildSession("user-1"));
+		(mockedAuth as any).mockResolvedValue(buildSession("user-1"));
 		mockedGetMessageById.mockResolvedValue([
 			buildMessage({ chatId: "chat-1", id: "message-1" }),
 		]);
@@ -108,7 +109,7 @@ describe("deleteTrailingMessages", () => {
 	});
 
 	it("deletes trailing messages for the chat owner", async () => {
-		mockedAuth.mockResolvedValue(buildSession("user-1"));
+		(mockedAuth as any).mockResolvedValue(buildSession("user-1"));
 		mockedGetMessageById.mockResolvedValue([
 			buildMessage({ chatId: "chat-1", id: "message-1" }),
 		]);
@@ -131,7 +132,7 @@ describe("updateChatVisibility", () => {
 	});
 
 	it("throws when the session is missing", async () => {
-		mockedAuth.mockResolvedValue(null);
+		(mockedAuth as any).mockResolvedValue(null);
 
 		const visibility: VisibilityType = "public";
 
@@ -143,7 +144,7 @@ describe("updateChatVisibility", () => {
 	});
 
 	it("rejects visibility updates from non-owners", async () => {
-		mockedAuth.mockResolvedValue(buildSession("user-1"));
+		(mockedAuth as any).mockResolvedValue(buildSession("user-1"));
 		mockedGetChatById.mockResolvedValue(
 			buildChat({ id: "chat-1", userId: "user-2" }),
 		);
@@ -158,7 +159,7 @@ describe("updateChatVisibility", () => {
 	});
 
 	it("updates visibility for the owning user", async () => {
-		mockedAuth.mockResolvedValue(buildSession("user-1"));
+		(mockedAuth as any).mockResolvedValue(buildSession("user-1"));
 		mockedGetChatById.mockResolvedValue(
 			buildChat({ id: "chat-1", userId: "user-1" }),
 		);

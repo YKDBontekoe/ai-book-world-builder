@@ -26,6 +26,9 @@ vi.mock("lucide-react", () => ({
   ChevronDown: () => <svg data-testid="icon-chevron-down" />,
   ChevronUp: () => <svg data-testid="icon-chevron-up" />,
   Check: () => <svg data-testid="icon-check" />,
+  LayoutGrid: () => <svg data-testid="icon-grid" />,
+  List: () => <svg data-testid="icon-list" />,
+  X: () => <svg data-testid="icon-x" />,
 }));
 
 const mockProjects: Project[] = [

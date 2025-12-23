@@ -33,7 +33,7 @@ vi.mock("../../../../../../src/lib/query-options", () => ({
 vi.mock("@tanstack/react-query", async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
-		...actual,
+		...(actual as any),
 		useQuery: vi.fn(),
 	};
 });
@@ -60,7 +60,7 @@ vi.mock("dagre", () => ({
 vi.mock("@xyflow/react", async (importOriginal) => {
 	const actual = await importOriginal();
 	return {
-		...actual,
+		...(actual as any),
 		ReactFlow: ({ nodes, edges, children }: any) => (
 			<div data-testid="react-flow">
 				Nodes: {nodes?.length}, Edges: {edges?.length}

@@ -5,22 +5,23 @@ import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Sidebar, SidebarProvider, useSidebar } from "@/components/atoms/sidebar";
-
-const useIsMobileMock = vi.fn<boolean, []>().mockReturnValue(false);
+import { useIsMobile } from "@/hooks/use-mobile";
 
 vi.mock("@/hooks/use-mobile", () => ({
-  useIsMobile: () => useIsMobileMock(),
+  useIsMobile: vi.fn().mockReturnValue(false),
 }));
+
+const mockedUseIsMobile = useIsMobile as any;
 
 describe("Sidebar components", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
-    useIsMobileMock.mockReturnValue(false);
+    mockedUseIsMobile.mockReturnValue(false);
   });
 
   it("renders the mobile sheet variant when on a mobile viewport", () => {
-    useIsMobileMock.mockReturnValue(true);
+    mockedUseIsMobile.mockReturnValue(true);
 
     const OpenMobileSidebar = () => {
       const { toggleSidebar } = useSidebar();

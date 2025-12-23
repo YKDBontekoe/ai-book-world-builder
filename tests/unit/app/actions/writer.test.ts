@@ -58,6 +58,12 @@ vi.mock("@/lib/db/queries/project", () => ({
     getProjectByIdWithAccess: vi.fn().mockResolvedValue({ id: "proj-1", userId: "user-1", visibility: "private" })
 }));
 
+vi.mock("next/headers", () => ({
+    cookies: vi.fn().mockReturnValue({
+        get: vi.fn().mockReturnValue({ value: "gpt-4o" }),
+    }),
+}));
+
 // Now import the module under test
 import { generateScene } from "@/app/actions/writer";
 

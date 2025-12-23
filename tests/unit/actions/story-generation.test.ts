@@ -1,4 +1,4 @@
-import { generateObject, generateText } from "ai";
+import { generateObject } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createBookFromPlan,
@@ -8,7 +8,7 @@ import {
 } from "@/app/actions/story-generation";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { db } from "@/lib/db/drizzle";
-import { generationService } from "@/lib/ai/writer";
+import { generationService } from "@/lib/ai/writer-service";
 
 // Mocks
 vi.mock("@/app/(auth)/auth", () => ({
@@ -49,7 +49,6 @@ const mockDbChain = () => {
 	return chain;
 };
 
-const chainInstance = mockDbChain();
 
 // Override orderBy for the scenes.filter case where it needs to return an array promise directly
 // IF it's not chained with limit.
@@ -149,7 +148,7 @@ vi.mock("@/lib/ai/providers", () => ({
 
 // Use importOriginal to include non-mocked exports like GenerationService if needed,
 // but for `generationService` instance, we want to mock its methods.
-vi.mock("@/lib/ai/writer", async (importOriginal) => {
+vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
     // We can't import the actual class if we are mocking the module that exports it
     // unless we use importOriginal, but here we just want to mock the singleton instance.
     return {
