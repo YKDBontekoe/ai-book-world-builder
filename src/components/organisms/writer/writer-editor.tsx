@@ -1,9 +1,9 @@
 "use client";
 
-import { MousePointerClick, Lock } from "lucide-react";
+import { Lock, MousePointerClick } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Editor } from "@/components/organisms/editor/text-editor";
 import { EmptyState } from "@/components/molecules/empty-state";
+import { Editor } from "@/components/organisms/editor/text-editor";
 import { StoryWizard } from "@/components/organisms/writer/story-wizard";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
@@ -16,7 +16,7 @@ export function WriterEditor() {
 		sceneContent,
 		handleContentChange,
 		structure,
-        isReadOnly,
+		isReadOnly,
 	} = useWriterContext();
 
 	const hasStructure = structure && structure.length > 0;
@@ -36,28 +36,30 @@ export function WriterEditor() {
 							isCurrentVersion={true}
 							currentVersionIndex={0}
 							suggestions={[]}
-                            readOnly={isReadOnly}
+							readOnly={isReadOnly}
 						/>
 					</div>
 				) : !hasStructure ? (
-                    isReadOnly ? (
-                        <div className="flex h-full items-center justify-center p-8">
-                            <EmptyState
-                                title="Empty Project"
-                                description="This project has no content yet."
-                                icon={Lock}
-                                variant="dashed"
-                            />
-                        </div>
-                    ) : (
-					    <StoryWizard
-						    projectId={project.id}
-						    onComplete={() => router.refresh()}
-					    />
-                    )
+					isReadOnly ? (
+						<div className="flex h-full items-center justify-center p-8">
+							<EmptyState
+								data-testid="empty-state"
+								title="Empty Project"
+								description="This project has no content yet."
+								icon={Lock}
+								variant="dashed"
+							/>
+						</div>
+					) : (
+						<StoryWizard
+							projectId={project.id}
+							onComplete={() => router.refresh()}
+						/>
+					)
 				) : (
 					<div className="flex h-full items-center justify-center p-8">
 						<EmptyState
+							data-testid="empty-state"
 							title="No Scene Selected"
 							description="Select a scene from the sidebar to continue reading."
 							icon={MousePointerClick}
