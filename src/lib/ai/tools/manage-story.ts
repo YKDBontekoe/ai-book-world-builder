@@ -73,9 +73,7 @@ export const manageStory = ({
 			// Helper to check ownership quickly within the loop
 			// We can't reuse ensureProjectAccess easily because we might not have projectId upfront
 			// So we'll check 'project.userId === session.user.id' manually after fetching parent/item.
-			const checkOwnership = async (pid: string) => {
-				// We can re-use ensureProjectAccess here
-				// But we need to handle the throw.
+			const checkOwnership = async (pid: string): Promise<boolean> => {
 				try {
 					await ensureProjectAccess(pid, true); // Require owner = true
 					return true;
