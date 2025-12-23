@@ -72,7 +72,13 @@ export function StructureEditorDialog({
           <Textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            className="h-full resize-none font-mono text-sm"
+            onKeyDown={(e) => {
+              if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+                e.preventDefault();
+                handleSave();
+              }
+            }}
+            className="h-full resize-none font-mono text-sm glass-input"
             placeholder={`Chapter 1: The Beginning
 - Scene: Waking up
 - Scene: The Call

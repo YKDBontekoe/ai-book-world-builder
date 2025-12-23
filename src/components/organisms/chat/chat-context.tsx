@@ -10,7 +10,7 @@ interface ChatContextValue {
   selectedProject: ProjectSummary | null;
   selectedProjectId: string | null;
   selectedProjectIdRef: RefObject<string | null>;
-  applyProjectSelection: (project: ProjectSummary) => void;
+  applyProjectSelection: (projectId: string) => void;
   visibilityType: VisibilityType;
   projects: ProjectSummary[];
 }

@@ -59,7 +59,12 @@ export function ChapterActions({ chapterId, onUpdate, isReadOnly }: ChapterActio
   return (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                aria-label="Chapter Actions"
+            >
                  {loading ? <Loader2 className="h-3 w-3 animate-spin"/> : <Sparkles className="h-3 w-3 text-purple-500" />}
             </Button>
         </DropdownMenuTrigger>

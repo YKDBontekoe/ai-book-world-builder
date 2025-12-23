@@ -174,6 +174,7 @@ export function StoryWizard({ projectId, onComplete }: StoryWizardProps) {
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="e.g. A cyberpunk detective story set on Mars where water is more valuable than gold..."
                 className="min-h-[160px] text-lg p-4 resize-none glass-input"
+                autoFocus
               />
               <Button
                 className="absolute bottom-4 right-4"

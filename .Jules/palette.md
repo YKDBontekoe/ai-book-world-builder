@@ -1,4 +1,4 @@
-## 2024-05-23 - [Projects Tabs UX]
+## 2025-05-23 - [Projects Tabs UX]
 Refactored the Projects List to use URL-based state (`?tab=`) instead of client-side `Tabs`.
 - **Improved Friction**: Users can now share links to "Community" tab. Refreshes persist state.
 - **Performance**: Data fetching is now server-side filtered, reducing load for default "My Projects" view.
@@ -121,3 +121,15 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 ### Learnings
 - **Skeleton Fidelity**: Creating a skeleton that exactly mimics the `GridList` and `GlassCard` layout prevents layout shifts and feels much more "native" than a generic spinner.
 - **Visual Consistency**: Standardizing the `EmptyState` usage (specifically the `glass` variant) across features like Projects and Inspiration unifies the user experience and reduces cognitive load.
+
+## 2025-05-21 - [Quality of Life Improvements]
+
+### Findings
+- Improved "Create Project" and "Rename Project" workflows by auto-focusing inputs and resetting form state on dialog open.
+- Enhanced `ChapterActions` accessibility by making trigger buttons visible on focus (`focus-visible:opacity-100`) and adding `aria-label`.
+- Added `Ctrl+Enter` keyboard shortcut to `StructureEditorDialog` for faster saving.
+
+### Learnings
+- **Focus Management**: Simple props like `autoFocus` significantly improve the perceived speed and polish of dialog interactions.
+- **Accessibility vs Minimalism**: UI elements hidden until hover (like action buttons) must explicitly handle focus states to remain accessible to keyboard users. Using `focus-visible` preserves the clean aesthetic for mouse users while supporting accessibility.
+- **State Reset**: Dialogs that reuse state (like `CreateProjectDialog`) must strictly reset their internal state when opened to prevent "ghost" data from previous cancelled actions.

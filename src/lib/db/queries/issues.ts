@@ -16,7 +16,7 @@ export async function getIssuesForProject(projectId: string) {
 				.from(consistencyIssue)
 				.where(eq(consistencyIssue.projectId, projectId))
 				.orderBy(desc(consistencyIssue.createdAt)),
-		"getIssuesForProject",
+		{ errorMessage: "getIssuesForProject" },
 	);
 }
 
@@ -36,7 +36,7 @@ export async function getOpenIssuesForProject(projectId: string) {
 					desc(consistencyIssue.severity),
 					desc(consistencyIssue.createdAt),
 				),
-		"getOpenIssuesForProject",
+		{ errorMessage: "getOpenIssuesForProject" },
 	);
 }
 
@@ -49,7 +49,7 @@ export async function createIssues(issues: Partial<ConsistencyIssue>[]) {
 				.insert(consistencyIssue)
 				.values(issues as any)
 				.returning(),
-		"createIssues",
+		{ errorMessage: "createIssues" },
 	);
 }
 
@@ -66,7 +66,7 @@ export async function resolveIssue(projectId: string, issueId: string) {
 					),
 				)
 				.returning(),
-		"resolveIssue",
+		{ errorMessage: "resolveIssue" },
 	);
 }
 
@@ -76,6 +76,6 @@ export async function clearIssuesForProject(projectId: string) {
 			db
 				.delete(consistencyIssue)
 				.where(eq(consistencyIssue.projectId, projectId)),
-		"clearIssuesForProject",
+		{ errorMessage: "clearIssuesForProject" },
 	);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -49,6 +49,13 @@ export function ProjectActionsMenu({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isForking, setIsForking] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
+
+  useEffect(() => {
+    if (showRenameDialog) {
+      setNewName(projectName);
+      setNewDescription(projectDescription || "");
+    }
+  }, [showRenameDialog, projectName, projectDescription]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -191,6 +198,7 @@ export function ProjectActionsMenu({
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="Project Name"
+                autoFocus
               />
             </div>
             <div className="grid gap-2">

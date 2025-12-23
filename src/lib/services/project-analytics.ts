@@ -1,4 +1,4 @@
-import { ProjectData } from "@/lib/book-generation";
+import { FullProjectData } from "@/lib/book-generation";
 import { Scene } from "@/lib/db/schema";
 import { getScenesForProject } from "@/lib/db/queries/scene";
 
@@ -17,7 +17,7 @@ export interface ProjectStats {
 }
 
 export class ProjectAnalyticsService {
-    async getProjectStats(projectId: string, projectData: ProjectData): Promise<ProjectStats> {
+    async getProjectStats(projectId: string, projectData: FullProjectData): Promise<ProjectStats> {
         const entities = projectData.entities || [];
         const characters = entities.filter((e) => e.kind === "character");
         const locations = entities.filter((e) => e.kind === "location");
