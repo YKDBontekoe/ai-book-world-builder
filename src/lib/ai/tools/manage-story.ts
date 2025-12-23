@@ -2,13 +2,14 @@ import { tool } from "ai";
 import { eq } from "drizzle-orm"; // Needed for chapter updates if we inline logic
 import type { Session } from "next-auth";
 import { z } from "zod";
+import { ensureProjectAccess } from "@/lib/actions-utils";
 import {
 	createScene,
 	db,
 	getVolumePlanById,
 	updateScene,
 } from "@/lib/db/queries";
-import { chapter } from "@/lib/db/schema";
+import { chapter, scene } from "@/lib/db/schema";
 
 const manageStorySchema = z.object({
 	projectId: z
@@ -65,14 +66,23 @@ export const manageStory = ({
 			const { projectId: projectIdInput, target, action, data } = args;
 			const finalProjectId = projectIdInput || projectId;
 
-			if (!session?.user) {
+			if (!session?.user?.id) {
 				return { error: "Authentication required to manage story." };
 			}
 
-			if (!finalProjectId) {
-				// Some updates might not strictly need projectId if we have IDs, but good practice.
-				// Let's rely on data item checks mostly if we can, but consistency is key.
-			}
+			// Helper to check ownership quickly within the loop
+			// We can't reuse ensureProjectAccess easily because we might not have projectId upfront
+			// So we'll check 'project.userId === session.user.id' manually after fetching parent/item.
+			const checkOwnership = async (pid: string) => {
+				// We can re-use ensureProjectAccess here
+				// But we need to handle the throw.
+				try {
+					await ensureProjectAccess(pid, true); // Require owner = true
+					return true;
+				} catch {
+					return false;
+				}
+			};
 
 			const results = [];
 
@@ -105,6 +115,16 @@ export const manageStory = ({
 								continue;
 							}
 
+							// SECURITY: Check ownership of the project this volume belongs to
+							if (!(await checkOwnership(volumePlan.projectId))) {
+								results.push({
+									title: item.title,
+									success: false,
+									error: "Unauthorized: You do not own this project.",
+								});
+								continue;
+							}
+
 							const [created] = await db
 								.insert(chapter)
 								.values({
@@ -133,6 +153,31 @@ export const manageStory = ({
 									title: item.title,
 									success: false,
 									error: "ID required for update.",
+								});
+								continue;
+							}
+
+							// SECURITY: Fetch chapter first to check projectId
+							const [targetChapter] = await db
+								.select({ projectId: chapter.projectId })
+								.from(chapter)
+								.where(eq(chapter.id, item.id))
+								.limit(1);
+
+							if (!targetChapter) {
+								results.push({
+									title: item.title,
+									success: false,
+									error: "Chapter not found.",
+								});
+								continue;
+							}
+
+							if (!(await checkOwnership(targetChapter.projectId))) {
+								results.push({
+									title: item.title,
+									success: false,
+									error: "Unauthorized: You do not own this project.",
 								});
 								continue;
 							}
@@ -206,6 +251,16 @@ export const manageStory = ({
 								}
 							}
 
+							// SECURITY: Verify ownership of the target project
+							if (!(await checkOwnership(effectiveProjectId))) {
+								results.push({
+									title: item.title,
+									success: false,
+									error: "Unauthorized: You do not own this project.",
+								});
+								continue;
+							}
+
 							const created = await createScene({
 								projectId: effectiveProjectId,
 								chapterId: item.chapterId,
@@ -228,6 +283,31 @@ export const manageStory = ({
 									title: item.title,
 									success: false,
 									error: "ID required for update.",
+								});
+								continue;
+							}
+
+							// SECURITY: Fetch scene first to check projectId
+							const [targetScene] = await db
+								.select({ projectId: scene.projectId })
+								.from(scene)
+								.where(eq(scene.id, item.id))
+								.limit(1);
+
+							if (!targetScene) {
+								results.push({
+									title: item.title,
+									success: false,
+									error: "Scene not found.",
+								});
+								continue;
+							}
+
+							if (!(await checkOwnership(targetScene.projectId))) {
+								results.push({
+									title: item.title,
+									success: false,
+									error: "Unauthorized: You do not own this project.",
 								});
 								continue;
 							}

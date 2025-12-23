@@ -12,3 +12,8 @@
 **Vulnerability:** `updateDocument` tool allowed updating any document by ID without verifying that the `userId` on the document matches the session user.
 **Learning:** `getDocumentById` retrieves documents by ID globally. Even if the tool gets the document, it must explicitly verify `document.userId === session.user.id` before allowing updates. Using `getProjectByIdWithAccess` for write operations is also dangerous if it includes public projects.
 **Prevention:** Always verify `entity.userId === session.user.id` (or `project.userId` for project-child entities) before any write operation.
+
+## 2025-05-23 - [Nested IDOR in Bulk Updates]
+**Vulnerability:** The `manageStory` tool (bulk create/update) accepted a list of items to modify but only optionally checked a top-level `projectId`. An attacker could supply valid scene IDs from *other* projects in the payload, bypassing project-level checks if the tool didn't re-verify ownership for *each* item's inferred project.
+**Learning:** When a tool accepts a batch of items, checking permissions once for the "container" is insufficient if the items (by ID) can belong to different containers.
+**Prevention:** For batch operations, either enforce that all items belong to the authorized container (and fail if not), or resolve and verify ownership for *every single item* independently.
