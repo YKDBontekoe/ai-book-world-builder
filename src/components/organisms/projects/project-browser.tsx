@@ -10,6 +10,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/atoms/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider
+} from "@/components/atoms/tooltip";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { ProjectGrid } from "@/components/organisms/projects/project-grid";
 import { ProjectList } from "@/components/organisms/projects/project-list";
 import type { Project } from "@/lib/db/schema";
@@ -66,35 +73,47 @@ export function ProjectBrowser({ projects }: { projects: Project[] }): JSX.Eleme
             placeholder="Search projects..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onClear={() => setSearchQuery("")}
             className="pl-9 bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50 transition-colors"
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <div className="flex items-center bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg p-1 mr-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-7 w-7 rounded-lg transition-all",
-                viewMode === "grid" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => setViewMode("grid")}
-              title="Grid view"
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-7 w-7 rounded-lg transition-all",
-                viewMode === "list" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
-              )}
-              onClick={() => setViewMode("list")}
-              title="List view"
-            >
-              <List className="h-4 w-4" />
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-7 w-7 rounded-lg transition-all",
+                      viewMode === "grid" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => setViewMode("grid")}
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Grid view</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className={cn(
+                      "h-7 w-7 rounded-lg transition-all",
+                      viewMode === "list" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+                    )}
+                    onClick={() => setViewMode("list")}
+                  >
+                    <List className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>List view</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
 
           <Select
@@ -119,22 +138,21 @@ export function ProjectBrowser({ projects }: { projects: Project[] }): JSX.Eleme
 
       <div className="relative min-h-[200px]">
          {filteredProjects.length === 0 && searchQuery ? (
-             <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground"
-             >
-                <Search className="h-12 w-12 mb-4 opacity-20" />
-                <p className="text-lg font-medium">No projects found</p>
-                <p className="text-sm">Try adjusting your search query</p>
-                <Button
+             <EmptyState
+                title="No projects found"
+                description="Try adjusting your search query to find what you're looking for."
+                icon={Search}
+                variant="glass"
+                action={
+                  <Button
                     variant="link"
                     onClick={() => setSearchQuery("")}
-                    className="mt-2 text-primary"
-                >
+                    className="text-primary"
+                  >
                     Clear search
-                </Button>
-             </motion.div>
+                  </Button>
+                }
+             />
          ) : (
             <AnimatePresence mode="wait">
               <motion.div
