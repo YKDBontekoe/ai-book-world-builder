@@ -41,7 +41,7 @@ interface UseKeyboardShortcutsOptions {
 export function useKeyboardShortcuts({
 	shortcuts,
 	enabled = true,
-}: UseKeyboardShortcutsOptions) {
+}: UseKeyboardShortcutsOptions): void {
 	const shortcutsRef = useRef(shortcuts);
 
 	// Update ref when shortcuts change
