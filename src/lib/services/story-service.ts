@@ -1,5 +1,5 @@
 import { ensureProjectAccess } from "@/lib/actions-utils";
-import { generationService } from "@/lib/ai/writer"; // Use new service
+import { generationService } from "@/lib/ai/writer-service"; // Use new service
 import { getSelectedModelId } from "@/lib/ai/models";
 import { type BookPlan, type StoryStyle } from "@/lib/services/schemas/story-schemas";
 import { storyRepository } from "@/lib/db/repositories/story-repository";

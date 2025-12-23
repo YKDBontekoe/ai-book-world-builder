@@ -9,7 +9,7 @@ import {
   getScenesForChapter,
   updateSceneContent,
 } from "@/lib/db/queries";
-import { generationService } from "@/lib/ai/writer";
+import { generationService } from "@/lib/ai/writer-service";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 
 export const draftScene = ({ session }: { session: Session | null }) =>
