@@ -24,6 +24,11 @@ export default defineConfig({
 					environment: "jsdom",
 					include: ["tests/unit/**/*.{test,spec}.{ts,tsx}"],
 					setupFiles: ["./tests/vitest.setup.ts"],
+					server: {
+						deps: {
+							inline: ["next-auth"],
+						},
+					},
 				},
 			},
 			{
@@ -56,6 +61,8 @@ export default defineConfig({
 		alias: [
 			{ find: "@", replacement: path.resolve(dirname, "./src") },
 			{ find: "katex/dist/katex.min.css", replacement: path.resolve(dirname, "tests/__mocks__/styleMock.js") },
+			{ find: "next/server", replacement: path.resolve(dirname, "node_modules/next/server.js") },
+			{ find: "next/headers", replacement: path.resolve(dirname, "node_modules/next/headers.js") },
 		],
 	},
 });

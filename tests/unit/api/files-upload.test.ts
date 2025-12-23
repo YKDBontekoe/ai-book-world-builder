@@ -80,12 +80,33 @@ function buildProject(projectId: string, userId: string): Project {
 function buildRequest({ file, projectId }: { file: File; projectId: string }) {
   const formData = new FormData();
   formData.append("file", file);
+  // Polyfill arrayBuffer for JSDOM/Node environment in tests
+  if (typeof (file as any).arrayBuffer !== "function") {
+    (file as any).arrayBuffer = async () => {
+      const buf = Buffer.from(await (file as any).text());
+      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    };
+  }
   formData.append("projectId", projectId);
 
-  return new Request("http://localhost/api/files/upload", {
+  const req = new Request("http://localhost/api/files/upload", {
     method: "POST",
     body: formData,
   });
+
+  // Mock formData to avoid hanging in JSDOM/Node environment
+  req.formData = async () => formData;
+
+  return req;
+}
+
+function createMockFile(content: string, name: string, type: string) {
+  const file = new File([content], name, { type }) as any;
+  file.arrayBuffer = async () => {
+    const buffer = Buffer.from(content);
+    return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  };
+  return file;
 }
 
 describe("POST /api/files/upload", () => {
@@ -94,7 +115,7 @@ describe("POST /api/files/upload", () => {
   });
 
   it("persists a supported file type and returns the uploaded material", async () => {
-    const file = new File(["hello"], "story.pdf", { type: "application/pdf" });
+    const file = createMockFile("hello", "story.pdf", "application/pdf");
     const pendingMaterial: SourceMaterial = {
       id: "mat-1",
       createdAt: new Date("2024-01-01T00:00:00Z"),
@@ -147,7 +168,7 @@ describe("POST /api/files/upload", () => {
   });
 
   it("rejects unsupported MIME types", async () => {
-    const file = new File(["bad"], "image.gif", { type: "image/gif" });
+    const file = createMockFile("bad", "image.gif", "image/gif");
 
     mockedAuth.mockResolvedValue(buildSession("user-1") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(
@@ -165,9 +186,7 @@ describe("POST /api/files/upload", () => {
 
   it("enforces per-role size caps", async () => {
     const sizeLimit = sourceMaterialSizeLimits.regular;
-    const file = new File([new Uint8Array(sizeLimit + 1)], "oversize.pdf", {
-      type: "application/pdf",
-    });
+    const file = createMockFile("a".repeat(sizeLimit + 1), "oversize.pdf", "application/pdf");
 
     mockedAuth.mockResolvedValue(buildSession("regular-1") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(
@@ -184,7 +203,7 @@ describe("POST /api/files/upload", () => {
   });
 
   it("requires an authenticated session", async () => {
-    const file = new File(["hello"], "story.pdf", { type: "application/pdf" });
+    const file = createMockFile("hello", "story.pdf", "application/pdf");
 
     mockedAuth.mockResolvedValue(null as any);
 
@@ -197,7 +216,7 @@ describe("POST /api/files/upload", () => {
   });
 
   it("returns an error when the project cannot be found", async () => {
-    const file = new File(["hello"], "story.pdf", { type: "application/pdf" });
+    const file = createMockFile("hello", "story.pdf", "application/pdf");
 
     mockedAuth.mockResolvedValue(buildSession("user-1") as any);
     mockedGetProjectByIdWithAccess.mockResolvedValue(null);
@@ -211,7 +230,7 @@ describe("POST /api/files/upload", () => {
   });
 
   it("marks a pending material as failed when blob persistence errors", async () => {
-    const file = new File(["hello"], "story.pdf", { type: "application/pdf" });
+    const file = createMockFile("hello", "story.pdf", "application/pdf");
     const pendingMaterial: SourceMaterial = {
       id: "mat-err",
       createdAt: new Date("2024-01-01T00:00:00Z"),

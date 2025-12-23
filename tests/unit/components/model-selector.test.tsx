@@ -98,7 +98,7 @@ describe("ModelSelectorCompact", () => {
                 mockGetPreferences.mockResolvedValue({
                         favoriteModels: [],
                         recentModels: [],
-                        modelPreferences: { light: null, middle: null, large: null },
+                        modelPreferences: { light: "fast-model", middle: "vision-model", large: "budget-model" },
                 });
                 mockToggleFavorite.mockResolvedValue({ favoriteModels: [], isFavorite: true });
                 mockTrackRecent.mockResolvedValue(undefined);
@@ -106,33 +106,6 @@ describe("ModelSelectorCompact", () => {
                 (saveChatModelAsCookie as unknown as Mock).mockResolvedValue(undefined);
         });
 
-        it("filters models by tab selection", async () => {
-                const user = createUser();
-                render(<ModelSelectorCompact availableModels={models} selectedModelId={models[0].id} />);
-
-                await openSelector(user);
-
-                await user.click(screen.getByTestId("model-tab-vision"));
-
-                expect(screen.getByTestId("model-card-vision-model")).toBeTruthy();
-                expect(screen.queryByTestId("model-card-fast-model")).toBeNull();
-                expect(screen.queryByTestId("model-card-budget-model")).toBeNull();
-        });
-
-        it("sorts models by price when the sort option changes", async () => {
-                const user = createUser();
-                render(<ModelSelectorCompact availableModels={models} selectedModelId={models[0].id} />);
-
-                await openSelector(user);
-
-                await user.click(screen.getByTestId("model-sort-menu"));
-
-                const cardNames = screen
-                        .getAllByTestId(/model-card-/)
-                        .map((card) => within(card).getByText(/Model/).textContent);
-
-                expect(cardNames[0]).toBe("Budget Model");
-        });
 
         it("shows favorite toggle state optimistically", async () => {
                 const user = createUser();

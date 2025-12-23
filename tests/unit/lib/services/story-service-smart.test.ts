@@ -17,11 +17,17 @@ const mocks = vi.hoisted(() => {
 
     return {
         generateObject: vi.fn(),
+        generateText: vi.fn().mockResolvedValue({ text: "Generated content" }),
+        generateBookPlan: vi.fn(),
+        planChapterScenes: vi.fn(),
+        createBookFromPlan: vi.fn(),
+        getSceneContextData: vi.fn(),
+        updateSceneContent: vi.fn(),
         continueWriting: vi.fn().mockResolvedValue({ text: "Generated content" }),
         createScene: vi.fn().mockResolvedValue({ id: "new-scene-id" }),
         ensureProjectAccess: vi.fn().mockResolvedValue(true),
         getSelectedModelId: vi.fn().mockResolvedValue("mock-model-id"),
-        // DB Mocks
+        // DB Mocks (no longer needed for some tests if using repository)
         insert: vi.fn().mockReturnThis(),
         values: vi.fn().mockReturnThis(),
         returning: vi.fn().mockResolvedValue([{ id: "mock-id" }]),
@@ -35,6 +41,7 @@ const mocks = vi.hoisted(() => {
 // Mock modules
 vi.mock("ai", () => ({
     generateObject: mocks.generateObject,
+    generateText: mocks.generateText,
 }));
 
 vi.mock("@/lib/ai/providers", () => ({
@@ -45,8 +52,25 @@ vi.mock("@/lib/actions-utils", () => ({
     ensureProjectAccess: mocks.ensureProjectAccess,
 }));
 
-vi.mock("@/lib/ai/writer", () => ({
-    continueWriting: mocks.continueWriting,
+vi.mock("@/lib/ai/services/planning-service", () => ({
+    planningService: {
+        generateBookPlan: mocks.generateBookPlan,
+        planChapterScenes: mocks.planChapterScenes,
+    }
+}));
+
+vi.mock("@/lib/ai/writer-service", () => ({
+    generationService: {
+        continueWriting: mocks.continueWriting,
+    },
+}));
+
+vi.mock("@/lib/db/repositories/story-repository", () => ({
+    storyRepository: {
+        createBookFromPlan: mocks.createBookFromPlan,
+        getSceneContextData: mocks.getSceneContextData,
+        updateSceneContent: mocks.updateSceneContent,
+    },
 }));
 
 vi.mock("@/lib/ai/models", () => ({
@@ -117,7 +141,7 @@ describe("StoryService Smart Features", () => {
 
     describe("generateBookPlan", () => {
         it("should include style parameters in the prompt", async () => {
-            mocks.generateObject.mockResolvedValueOnce({
+            mocks.generateBookPlan.mockResolvedValueOnce({
                 object: { title: "T", summary: "S", chapters: [] }
             });
 
@@ -129,10 +153,7 @@ describe("StoryService Smart Features", () => {
 
             await storyService.generateBookPlan("test prompt", style);
 
-            const call = mocks.generateObject.mock.calls[0][0];
-            expect(call.prompt).toContain("Genre: Cyberpunk");
-            expect(call.prompt).toContain("POV: First Person");
-            expect(call.prompt).toContain("Tone: Gritty");
+            expect(mocks.generateBookPlan).toHaveBeenCalledWith("test prompt", style, undefined);
         });
     });
 
@@ -152,13 +173,7 @@ describe("StoryService Smart Features", () => {
 
             await storyService.createBookFromPlan("pid", plan, style);
 
-            expect(mocks.insert).toHaveBeenCalled();
-            // Check the values passed to insert for Outline (first call)
-            const valuesCalls = mocks.values.mock.calls;
-            // The first insert is Outline
-            const outlineArgs = valuesCalls[0][0];
-            expect(outlineArgs.pov).toBe("Second Person");
-            expect(outlineArgs.tone).toBe("Dark");
+            expect(mocks.createBookFromPlan).toHaveBeenCalledWith("pid", plan, style);
         });
     });
 
@@ -178,12 +193,12 @@ describe("StoryService Smart Features", () => {
                 { id: "s2", sequence: 2, title: "Target Scene", content: "" }
             ];
 
-            mockDbState.queryResults = [
-                [targetScene],
-                [targetChapter],
-                [targetOutline],
-                scenesList
-            ];
+            mocks.getSceneContextData.mockResolvedValue({
+                targetScene,
+                targetChapter,
+                targetOutline,
+                scenesInChapter: scenesList
+            });
 
             await storyService.generateSceneText("s2");
 

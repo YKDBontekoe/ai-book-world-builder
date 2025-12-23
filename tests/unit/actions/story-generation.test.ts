@@ -148,7 +148,7 @@ vi.mock("@/lib/ai/providers", () => ({
 
 // Use importOriginal to include non-mocked exports like GenerationService if needed,
 // but for `generationService` instance, we want to mock its methods.
-vi.mock("@/lib/ai/writer", async (importOriginal) => {
+vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
     // We can't import the actual class if we are mocking the module that exports it
     // unless we use importOriginal, but here we just want to mock the singleton instance.
     return {

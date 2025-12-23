@@ -83,9 +83,6 @@ export async function POST(request: Request) {
     return errorResponse("unauthorized:upload");
   }
 
-  if (!request.body) {
-    return errorResponse("invalid_payload:upload", "Request body is empty.");
-  }
 
   const formData = await request.formData().catch(() => null);
 
@@ -195,7 +192,7 @@ export async function POST(request: Request) {
     ).catch(() => null);
 
     const message =
-      error instanceof Error ? error.message : uploadErrorResponses["server_error:upload"].message;
+      error instanceof Error ? error.message : "Upload failed. Please try again.";
 
     return errorResponse("server_error:upload", message);
   }
