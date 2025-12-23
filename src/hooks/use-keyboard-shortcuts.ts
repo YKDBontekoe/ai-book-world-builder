@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 export interface KeyboardShortcut {
 	key: string;
@@ -22,7 +22,7 @@ interface UseKeyboardShortcutsOptions {
 
 /**
  * Hook to register global keyboard shortcuts
- * 
+ *
  * @example
  * ```tsx
  * useKeyboardShortcuts({
@@ -62,20 +62,23 @@ export function useKeyboardShortcuts({
 			if (shortcut.enabled === false) continue;
 
 			// Check if the key matches
-			const keyMatches =
-				event.key.toLowerCase() === shortcut.key.toLowerCase();
+			const keyMatches = event.key.toLowerCase() === shortcut.key.toLowerCase();
 			if (!keyMatches) continue;
 
 			// Check modifiers
-			const ctrlMatches = shortcut.ctrl ? event.ctrlKey : !event.ctrlKey;
-			const shiftMatches = shortcut.shift ? event.shiftKey : !event.shiftKey;
-			const altMatches = shortcut.alt ? event.altKey : !event.altKey;
-			const metaMatches = shortcut.meta ? event.metaKey : !event.metaKey;
+			const ctrlMatches =
+				shortcut.ctrl === undefined || shortcut.ctrl === event.ctrlKey;
+			const shiftMatches =
+				shortcut.shift === undefined || shortcut.shift === event.shiftKey;
+			const altMatches =
+				shortcut.alt === undefined || shortcut.alt === event.altKey;
+			const metaMatches =
+				shortcut.meta === undefined || shortcut.meta === event.metaKey;
 
 			if (ctrlMatches && shiftMatches && altMatches && metaMatches) {
 				// Special case: Allow Cmd+K even when typing
 				const isCommandPalette = shortcut.key === "k" && shortcut.meta;
-				
+
 				if (!isTyping || isCommandPalette) {
 					if (shortcut.preventDefault !== false) {
 						event.preventDefault();

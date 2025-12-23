@@ -1,26 +1,36 @@
 "use client";
 
-import { useState, createContext, useContext, type ReactNode } from "react";
-import { CommandPalette, type Command } from "@/components/organisms/command-palette";
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useState,
+} from "react";
+import {
+	type Command,
+	CommandPalette,
+} from "@/components/organisms/command-palette";
 import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 
-interface CommandPaletteContextValue {
+export interface CommandPaletteContextType {
 	isOpen: boolean;
 	openPalette: () => void;
 	closePalette: () => void;
 	togglePalette: () => void;
 	registerCommands: (commands: Command[]) => void;
+	unregisterCommands: (commandIds: string[]) => void;
 }
 
-const CommandPaletteContext = createContext<CommandPaletteContextValue | null>(
-	null
+const CommandPaletteContext = createContext<CommandPaletteContextType | null>(
+	null,
 );
 
-export function useCommandPalette() {
+export function useCommandPalette(): CommandPaletteContextType {
 	const context = useContext(CommandPaletteContext);
 	if (!context) {
 		throw new Error(
-			"useCommandPalette must be used within CommandPaletteProvider"
+			"useCommandPalette must be used within CommandPaletteProvider",
 		);
 	}
 	return context;
@@ -40,9 +50,21 @@ export function CommandPaletteProvider({
 	const closePalette = () => setIsOpen(false);
 	const togglePalette = () => setIsOpen((prev) => !prev);
 
-	const registerCommands = (commands: Command[]) => {
-		setCustomCommands((prev) => [...prev, ...commands]);
-	};
+	const registerCommands = useCallback((commands: Command[]) => {
+		setCustomCommands((prev) => {
+			const map = new Map(prev.map((cmd) => [cmd.id, cmd]));
+			commands.forEach((cmd) => {
+				map.set(cmd.id, cmd);
+			});
+			return Array.from(map.values());
+		});
+	}, []);
+
+	const unregisterCommands = useCallback((commandIds: string[]) => {
+		setCustomCommands((prev) =>
+			prev.filter((cmd) => !commandIds.includes(cmd.id)),
+		);
+	}, []);
 
 	// Register global Cmd+K shortcut
 	useKeyboardShortcuts({
@@ -65,6 +87,7 @@ export function CommandPaletteProvider({
 				closePalette,
 				togglePalette,
 				registerCommands,
+				unregisterCommands,
 			}}
 		>
 			{children}

@@ -2,16 +2,17 @@
 
 import { motion } from "framer-motion";
 import {
-	SearchIcon,
 	FolderIcon,
+	KeyboardIcon,
 	MessageSquareIcon,
 	PlusIcon,
-	KeyboardIcon,
+	SearchIcon,
 } from "lucide-react";
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/atoms/dialog";
-import { cn } from "@/lib/utils";
 import { springs } from "@/lib/animations";
+import { cn } from "@/lib/utils";
 
 export interface Command {
 	id: string;
@@ -30,64 +31,70 @@ interface CommandPaletteProps {
 	commands?: Command[];
 }
 
-const defaultCommands: Command[] = [
-	{
-		id: "new-project",
-		label: "New Project",
-		description: "Create a new book project",
-		icon: <PlusIcon size={16} />,
-		category: "Projects",
-		keywords: ["create", "add", "project"],
-		action: () => {
-			window.location.href = "/projects?new=true";
-		},
-		shortcut: "⌘N",
-	},
-	{
-		id: "view-projects",
-		label: "View All Projects",
-		description: "Navigate to projects page",
-		icon: <FolderIcon size={16} />,
-		category: "Navigation",
-		keywords: ["projects", "list", "browse"],
-		action: () => {
-			window.location.href = "/projects";
-		},
-	},
-	{
-		id: "new-chat",
-		label: "New Chat",
-		description: "Start a new conversation",
-		icon: <MessageSquareIcon size={16} />,
-		category: "Chat",
-		keywords: ["conversation", "message"],
-		action: () => {
-			window.location.href = "/";
-		},
-	},
-	{
-		id: "keyboard-shortcuts",
-		label: "Keyboard Shortcuts",
-		description: "View all keyboard shortcuts",
-		icon: <KeyboardIcon size={16} />,
-		category: "Settings",
-		keywords: ["help", "keys", "hotkeys"],
-		action: () => {
-			// Will be implemented with shortcuts dialog
-			console.log("Show shortcuts dialog");
-		},
-		shortcut: "⌘/",
-	},
-];
-
 export function CommandPalette({
 	isOpen,
 	onClose,
-	commands = defaultCommands,
+	commands: propCommands,
 }: CommandPaletteProps): JSX.Element {
+	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const inputRef = useRef<HTMLInputElement>(null);
+
+	const defaultCommands: Command[] = useMemo(
+		() => [
+			{
+				id: "new-project",
+				label: "New Project",
+				description: "Create a new book project",
+				icon: <PlusIcon size={16} />,
+				category: "Projects",
+				keywords: ["create", "add", "project"],
+				action: () => {
+					router.push("/projects?new=true");
+				},
+				shortcut: "⌘N",
+			},
+			{
+				id: "view-projects",
+				label: "View All Projects",
+				description: "Navigate to projects page",
+				icon: <FolderIcon size={16} />,
+				category: "Navigation",
+				keywords: ["projects", "list", "browse"],
+				action: () => {
+					router.push("/projects");
+				},
+			},
+			{
+				id: "new-chat",
+				label: "New Chat",
+				description: "Start a new conversation",
+				icon: <MessageSquareIcon size={16} />,
+				category: "Chat",
+				keywords: ["conversation", "message"],
+				action: () => {
+					router.push("/");
+				},
+			},
+			{
+				id: "keyboard-shortcuts",
+				label: "Keyboard Shortcuts",
+				description: "View all keyboard shortcuts",
+				icon: <KeyboardIcon size={16} />,
+				category: "Settings",
+				keywords: ["help", "keys", "hotkeys"],
+				action: () => {
+					// Will be implemented with shortcuts dialog
+					console.log("Show shortcuts dialog");
+				},
+				shortcut: "⌘/",
+			},
+		],
+		[router],
+	);
+
+	const commands = propCommands ?? defaultCommands;
 
 	// Filter commands based on search
 	const filteredCommands = useMemo(() => {
@@ -98,7 +105,7 @@ export function CommandPalette({
 			const labelMatch = cmd.label.toLowerCase().includes(searchLower);
 			const descMatch = cmd.description?.toLowerCase().includes(searchLower);
 			const keywordMatch = cmd.keywords?.some((kw) =>
-				kw.toLowerCase().includes(searchLower)
+				kw.toLowerCase().includes(searchLower),
 			);
 			return labelMatch || descMatch || keywordMatch;
 		});
@@ -117,6 +124,7 @@ export function CommandPalette({
 	}, [filteredCommands]);
 
 	// Reset selection when search changes
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Reset selection when results change
 	useEffect(() => {
 		setSelectedIndex(0);
 	}, [filteredCommands]);
@@ -138,7 +146,7 @@ export function CommandPalette({
 			if (e.key === "ArrowDown") {
 				e.preventDefault();
 				setSelectedIndex((prev) =>
-					prev < filteredCommands.length - 1 ? prev + 1 : prev
+					prev < filteredCommands.length - 1 ? prev + 1 : prev,
 				);
 			} else if (e.key === "ArrowUp") {
 				e.preventDefault();
@@ -193,7 +201,10 @@ export function CommandPalette({
 					<div className="max-h-[400px] overflow-y-auto p-2">
 						{Object.keys(groupedCommands).length === 0 ? (
 							<div className="flex flex-col items-center justify-center py-12 text-center">
-								<SearchIcon size={32} className="text-muted-foreground/50 mb-3" />
+								<SearchIcon
+									size={32}
+									className="text-muted-foreground/50 mb-3"
+								/>
 								<p className="text-sm text-muted-foreground">
 									No commands found for "{search}"
 								</p>
@@ -221,7 +232,7 @@ export function CommandPalette({
 														"w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition-all duration-200",
 														isSelected
 															? "bg-primary/10 text-primary"
-															: "hover:bg-muted/50"
+															: "hover:bg-muted/50",
 													)}
 													whileHover={{ scale: 1.01 }}
 													whileTap={{ scale: 0.99 }}
@@ -232,7 +243,7 @@ export function CommandPalette({
 															"flex items-center justify-center w-8 h-8 rounded-lg shrink-0",
 															isSelected
 																? "bg-primary/20 text-primary"
-																: "bg-muted text-muted-foreground"
+																: "bg-muted text-muted-foreground",
 														)}
 													>
 														{cmd.icon}
