@@ -1,10 +1,12 @@
 "use client";
 
-import { DownloadIcon, FolderIcon, PlusIcon, LayoutDashboard } from "lucide-react";
+import { DownloadIcon, FolderIcon, PlusIcon, LayoutDashboard, MessageSquarePlus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import type { User } from "next-auth";
 import { DashboardSheet } from "@/components/organisms/dashboard/dashboard-sheet";
+import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
 import { SidebarUserNav } from "@/components/organisms/sidebar/sidebar-user-nav";
 import { Button } from "@/components/atoms/button";
 import {
@@ -24,9 +26,11 @@ import {
 export function AppSidebar({ user }: { user: User | undefined }) {
 	const router = useRouter();
 	const { setOpenMobile } = useSidebar();
+	const [showFeedback, setShowFeedback] = useState(false);
 
 	return (
 		<>
+			<FeedbackDialog open={showFeedback} onOpenChange={setShowFeedback} />
 			<Sidebar className="group-data-[side=left]:border-r-0">
 				<SidebarHeader>
 					<SidebarMenu>
@@ -92,6 +96,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 								<DownloadIcon size={16} /> My Exports
 							</Button>
 						</Link>
+						<Button
+							className="w-full justify-start gap-2"
+							variant="ghost"
+							onClick={() => setShowFeedback(true)}
+						>
+							<MessageSquarePlus size={16} /> Feedback
+						</Button>
 					</div>
 				</SidebarContent>
 				<SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
