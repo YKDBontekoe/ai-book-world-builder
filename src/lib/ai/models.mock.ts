@@ -2,14 +2,11 @@ import type { LanguageModel } from "ai";
 
 const createMockModel = (): LanguageModel => {
   return {
-    specificationVersion: "v2",
+    specificationVersion: "v1", // Updated to v1 for simpler compat, or keep v2 but ensure types align
     provider: "mock",
     modelId: "mock-model",
     defaultObjectGenerationMode: "json",
-    supportedUrls: [],
-    supportsImageUrls: false,
-    supportsStructuredOutputs: true,
-    doGenerate: async (options) => {
+    doGenerate: async (options: any) => { // Added explicit any to suppress TS7006
       // Basic prompt inspection to return JSON for planning
       const promptString = JSON.stringify(options.inputFormat === "messages" ? options.input : options.prompt);
 
@@ -37,10 +34,10 @@ const createMockModel = (): LanguageModel => {
       }
 
       return {
-        rawCall: { rawPrompt: null, rawSettings: {} },
+        text,
         finishReason: "stop",
-        usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-        content: [{ type: "text", text }],
+        usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
+        rawCall: { rawPrompt: null, rawSettings: {} },
         warnings: [],
       };
     },
@@ -49,13 +46,14 @@ const createMockModel = (): LanguageModel => {
         start(controller) {
           controller.enqueue({
             type: "text-delta",
-            id: "mock-id",
-            delta: "Mock response",
+            textDelta: "Mock response", // v1 spec usually uses textDelta
           });
           controller.close();
         },
       }),
       rawCall: { rawPrompt: null, rawSettings: {} },
+      usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
+      warnings: [],
     }),
   } as unknown as LanguageModel;
 };
