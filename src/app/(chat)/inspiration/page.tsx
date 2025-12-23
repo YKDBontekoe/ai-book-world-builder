@@ -2,15 +2,15 @@ import { BookOpen, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
-import { PageContainer } from "@/components/organisms/page-container";
-import { PageHeader } from "@/components/molecules/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
-import { EmptyState } from "@/components/molecules/empty-state";
+import { AnalyzeBookButton } from "@/app/(chat)/inspiration/analyze-button";
 import { FileIcon } from "@/components/atoms/file-icon";
 import { GridList } from "@/components/atoms/grid-list";
 import { StatusBadge } from "@/components/atoms/status-badge";
+import { EmptyState } from "@/components/molecules/empty-state";
+import { GlassCard } from "@/components/molecules/glass-card";
+import { PageHeader } from "@/components/molecules/page-header";
+import { PageContainer } from "@/components/organisms/page-container";
 import { getSourceMaterialsForUser } from "@/lib/db/queries/source-material";
-import { AnalyzeBookButton } from "@/app/(chat)/inspiration/analyze-button";
 
 export default async function InspirationPage() {
 	const session = await auth();
@@ -38,11 +38,15 @@ export default async function InspirationPage() {
 
 			{materials.length === 0 ? (
 				<EmptyState
+					variant="glass"
 					title="No books uploaded yet"
 					description="Upload a PDF, EPUB, DOCX, or TXT file to any project to analyze it for characters, locations, and story elements."
 					icon={BookOpen}
 					action={
-						<Link href="/" className="text-primary hover:underline text-sm">
+						<Link
+							href="/"
+							className="text-primary hover:underline text-sm font-medium"
+						>
 							Go to Projects →
 						</Link>
 					}
@@ -58,40 +62,41 @@ export default async function InspirationPage() {
 							</h2>
 							<GridList columns={{ md: 2 }}>
 								{processedMaterials.map((material) => (
-									<Card
+									<GlassCard
 										key={material.id}
-										className="relative overflow-hidden glass-surface border-border/50"
+										variant="liquid"
+										className="flex flex-col gap-4 p-6"
 									>
-										<div className="absolute inset-0 pointer-events-none" />
-										<CardHeader className="flex flex-row items-start justify-between gap-4">
-											<div className="flex items-start gap-3">
-												<FileIcon mimeType={material.mimeType} size={32} />
+										<div className="flex items-start justify-between gap-4">
+											<div className="flex items-start gap-4">
+												<div className="p-2.5 rounded-xl bg-primary/5 ring-1 ring-primary/10">
+													<FileIcon mimeType={material.mimeType} size={28} />
+												</div>
 												<div>
-													<CardTitle className="text-base">
+													<h3 className="font-semibold text-base leading-tight">
 														{material.filename}
-													</CardTitle>
-													<p className="text-muted-foreground text-xs mt-1">
+													</h3>
+													<p className="text-muted-foreground text-xs mt-1.5">
 														Project: {material.projectName}
 													</p>
-													<div className="flex items-center gap-2 mt-2">
-														<StatusBadge
-															status="success"
-															className="bg-green-500/10 text-green-600"
-														>
-															Ready
-														</StatusBadge>
-													</div>
 												</div>
 											</div>
-										</CardHeader>
-										<CardContent>
+											<StatusBadge
+												status="success"
+												className="bg-green-500/10 text-green-600 shadow-none shrink-0"
+											>
+												Ready
+											</StatusBadge>
+										</div>
+
+										<div className="pt-2">
 											<AnalyzeBookButton
 												sourceMaterialId={material.id}
 												projectId={material.projectId}
 												filename={material.filename}
 											/>
-										</CardContent>
-									</Card>
+										</div>
+									</GlassCard>
 								))}
 							</GridList>
 						</section>
@@ -105,20 +110,23 @@ export default async function InspirationPage() {
 							</h2>
 							<GridList columns={{ md: 2 }}>
 								{pendingMaterials.map((material) => (
-									<Card
+									<GlassCard
 										key={material.id}
-										className="opacity-60 glass-surface border-border/40"
+										variant="liquid"
+										className="flex items-center justify-between p-6 opacity-75"
 									>
-										<CardHeader className="flex flex-row items-center gap-4">
-											<FileIcon
-												mimeType={material.mimeType}
-												className="opacity-50"
-												size={32}
-											/>
+										<div className="flex items-center gap-4">
+											<div className="p-2 rounded-xl bg-muted/20">
+												<FileIcon
+													mimeType={material.mimeType}
+													className="opacity-50"
+													size={24}
+												/>
+											</div>
 											<div>
-												<CardTitle className="text-base">
+												<h3 className="font-semibold text-base">
 													{material.filename}
-												</CardTitle>
+												</h3>
 												<div className="flex items-center gap-2 mt-1">
 													<StatusBadge
 														status={
@@ -133,8 +141,8 @@ export default async function InspirationPage() {
 													</StatusBadge>
 												</div>
 											</div>
-										</CardHeader>
-									</Card>
+										</div>
+									</GlassCard>
 								))}
 							</GridList>
 						</section>

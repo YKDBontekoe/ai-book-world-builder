@@ -99,3 +99,14 @@ Refactored the Projects List to use URL-based state (`?tab=`) instead of client-
 ### Learnings
 - **Snapshot Drift**: Always run a `DROP TABLE` migration (by deleting the schema and running `db:generate`) *before* removing the code entirely. If you delete the code first, Drizzle assumes it's still there or was renamed.
 - **Consistency vs Graph**: Implemented both `ConsistencyService` (Analysis) and `GraphPane` (Visualization) to solve the user's "depth" request holistically.
+
+## 2025-05-21 - [Inspiration UI Polish]
+
+### Findings
+- Refactored `InspirationPage` to use `GlassCard` (liquid variant) and `EmptyState` (glass variant) to align with the "Native macOS" aesthetic.
+- Created `InspirationLoading` component with detailed skeleton states matching the data grid layout.
+- Suppressed `noArrayIndexKey` lint rule in skeleton loops where stable IDs are inherently unavailable.
+
+### Learnings
+- **Skeleton Fidelity**: Creating a skeleton that exactly mimics the `GridList` and `GlassCard` layout prevents layout shifts and feels much more "native" than a generic spinner.
+- **Visual Consistency**: Standardizing the `EmptyState` usage (specifically the `glass` variant) across features like Projects and Inspiration unifies the user experience and reduces cognitive load.
