@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Prevent commits when linting or type checks fail
-pnpm lint
-pnpm exec tsc --noEmit
+# Run lint-staged to lint only staged files
+pnpm exec lint-staged
