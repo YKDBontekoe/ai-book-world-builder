@@ -4,7 +4,11 @@ import { generateText, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
-import { type ChatModelId, getValidChatModelId } from "@/lib/ai/models";
+import {
+	type ChatModelId,
+	DEFAULT_MODELS,
+	getValidChatModelId,
+} from "@/lib/ai/models";
 import { titlePrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
@@ -50,7 +54,7 @@ export async function generateTitleFromUserMessage({
 	message: UIMessage;
 }) {
 	const { text: title } = await generateText({
-		model: myProvider.languageModel("title-model"),
+		model: myProvider.languageModel(DEFAULT_MODELS.light),
 		system: titlePrompt,
 		prompt: getTextFromMessage(message),
 	});
