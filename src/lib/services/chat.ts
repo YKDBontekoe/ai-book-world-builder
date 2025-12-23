@@ -19,7 +19,10 @@ import {
 	getRelationshipsForProject,
 	saveChat,
 	saveMessages,
+    getSceneById
 } from "@/lib/db/queries";
+import { chapter as chapters, scene as scenes } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import { buildProjectContext } from "@/lib/project-context";
@@ -35,6 +38,7 @@ export async function initializeChatSession({
 	selectedVisibilityType,
 	user,
 	request,
+    activeSceneId,
 }: {
 	id: string;
 	message: ChatMessage;
@@ -43,13 +47,10 @@ export async function initializeChatSession({
 	selectedVisibilityType: VisibilityType;
 	user: { id: string; type: UserType };
 	request: Request;
+    activeSceneId?: string;
 }) {
 	// 1. Entitlements Check
 	const userType: UserType = user.type;
-	// entitlement checks might need update if we fully rely on free models,
-    // but preserving message limits is still good practice.
-	const { availableChatModelIds } = entitlementsByUserType[userType];
-
 	const messageCount = await getMessageCountByUserId({
 		id: user.id,
 		differenceInHours: 24,
@@ -65,10 +66,6 @@ export async function initializeChatSession({
 		(m: any) => m.id === selectedChatModel,
 	);
 
-    // We allow OpenRouter models dynamically
-    // If it's a "virtual" model (light, middle, large), it will be resolved later in route.ts
-    // but here we might need to know capabilities.
-
 	let chatModel = await getChatModelById(selectedChatModel);
 
 	if (!chatModel && isDynamicModel) {
@@ -76,25 +73,20 @@ export async function initializeChatSession({
 			(m: any) => m.id === selectedChatModel,
 		);
 		if (dynamicModel) {
-            // Map dynamic model to ChatModel shape
-			// Safely access properties that might be snake_case in raw response
 			const contextLength = dynamicModel.contextLength ?? (dynamicModel as any).context_length ?? 0;
-
 			chatModel = {
                 id: dynamicModel.id,
                 name: dynamicModel.name,
                 provider: "OpenRouter",
                 gatewayId: dynamicModel.id,
                 description: `Context: ${contextLength}`,
-                supportsImages: true, // Assume yes for OpenRouter generally or fallback
+                supportsImages: true,
                 contextLength: contextLength
             };
 		}
 	}
 
-    // If still not found, check if it is one of our virtual IDs
     if (!chatModel && ["light", "middle", "large"].includes(selectedChatModel)) {
-        // It's valid, capabilities are assumed standard
         chatModel = {
              id: selectedChatModel,
              name: selectedChatModel,
@@ -102,14 +94,11 @@ export async function initializeChatSession({
              gatewayId: selectedChatModel,
              description: "Virtual Model",
              supportsImages: true,
-             contextLength: 32000 // default fallback
+             contextLength: 32000
         }
     }
 
 	if (!chatModel) {
-        // One last fallback: if we can't find it, we might just let it pass
-        // if we trust the ID comes from our system.
-        // But for safety:
 		throw new ChatSDKError("bad_request:api", `Unknown chat model: ${selectedChatModel}`);
 	}
 
@@ -124,14 +113,17 @@ export async function initializeChatSession({
 		);
 	}
 
-	// 3. Project Context Building
+	// 3. Project & Scene Context Building
 	let projectContext: string | undefined;
+    let sceneContext: string | undefined;
+
 	let contextMetadata:
 		| {
 				entities: Awaited<ReturnType<typeof getEntitiesForProject>>;
 				outline: Awaited<ReturnType<typeof getOutlineForProject>> | undefined;
 				chapters: Awaited<ReturnType<typeof getChaptersForProject>> | undefined;
 				relationships: Awaited<ReturnType<typeof getRelationshipsForProject>>;
+                activeSceneId?: string;
 		  }
 		| undefined;
 
@@ -145,7 +137,7 @@ export async function initializeChatSession({
 			throw new ChatSDKError("forbidden:chat", "Project unavailable");
 		}
 
-		const [allEntities, attributes, relationships, outline, chapters] =
+		const [allEntities, attributes, relationships, outline, chaptersData] =
 			await Promise.all([
 				getEntitiesForProject({ projectId }),
 				getAttributesForProject({ projectId }),
@@ -154,20 +146,15 @@ export async function initializeChatSession({
 				getChaptersForProject({ projectId }),
 			]);
 
-		// RAG-based entity selection: if we have many entities, select the most relevant ones
 		let selectedEntities = allEntities;
 
 		if (allEntities.length > 20) {
-			// Import RAG utility
 			const { retrieveContext } = await import("@/lib/ai/rag");
-
-			// Extract text from user message
 			const userMessageText = message.parts
 				.filter((part) => part.type === "text")
 				.map((part) => ("text" in part ? part.text : ""))
 				.join(" ");
 
-			// Build candidates from entities
 			const entityCandidates = allEntities.map(
 				(entity: (typeof allEntities)[number]) => ({
 					content: `${entity.name} (${entity.kind}): ${entity.summary ?? ""}`,
@@ -175,14 +162,12 @@ export async function initializeChatSession({
 				}),
 			);
 
-			// Retrieve top 20 most relevant entities
 			const relevantChunks = await retrieveContext({
 				query: userMessageText,
 				candidates: entityCandidates,
 				topK: 20,
 			});
 
-			// Map back to entities
 			const relevantEntityIds = new Set(
 				relevantChunks.map((chunk) => chunk.metadata.entityId as string),
 			);
@@ -192,6 +177,40 @@ export async function initializeChatSession({
 			);
 		}
 
+        // --- Active Scene Context with Strict Authorization ---
+        if (activeSceneId) {
+            try {
+                // Verify scene belongs to the project
+                // We do this by checking if the scene's chapter belongs to the project
+                // This prevents IDOR where a user requests a scene from another project
+                const sceneCheck = await db
+                    .select({
+                        sceneId: scenes.id,
+                        content: scenes.content,
+                        title: scenes.title,
+                        projectId: chapters.projectId
+                    })
+                    .from(scenes)
+                    .innerJoin(chapters, eq(scenes.chapterId, chapters.id))
+                    .where(eq(scenes.id, activeSceneId))
+                    .limit(1);
+
+                if (sceneCheck.length > 0) {
+                    const scene = sceneCheck[0];
+                    if (scene.projectId === projectId) {
+                         if (scene.content) {
+                            sceneContext = `\n\nActive Scene Context:\nTitle: ${scene.title}\nContent:\n${scene.content}`;
+                        }
+                    } else {
+                        console.warn(`IDOR prevention: activeSceneId ${activeSceneId} does not belong to projectId ${projectId}`);
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to fetch active scene context", e);
+            }
+        }
+        // -----------------------------
+
 		projectContext = buildProjectContext({
 			project,
 			entities: selectedEntities,
@@ -200,19 +219,19 @@ export async function initializeChatSession({
 			outline: outline
 				? { title: outline.title, summary: outline.summary }
 				: undefined,
-			chapters: chapters?.map((ch: (typeof chapters)[number]) => ({
+			chapters: chaptersData?.map((ch: (typeof chaptersData)[number]) => ({
 				sequence: ch.sequence,
 				title: ch.title,
 				notes: ch.notes,
 			})),
 		});
 
-		// Store context metadata for citation streaming
 		contextMetadata = {
 			entities: selectedEntities,
 			outline,
-			chapters,
+			chapters: chaptersData,
 			relationships,
+            activeSceneId
 		};
 	}
 
@@ -220,7 +239,6 @@ export async function initializeChatSession({
 	let messagesFromDb: DBMessage[] = [];
 	const streamId = generateUUID();
 
-	// Fetch existing chat outside transaction to avoid unnecessary locking if just reading
 	const existingChat = await getChatById({ id });
 
 	await db.transaction(async (tx) => {
@@ -228,8 +246,6 @@ export async function initializeChatSession({
 			if (existingChat.userId !== user.id) {
 				throw new ChatSDKError("forbidden:chat");
 			}
-			// If chat exists, we get previous messages
-			// We will fetch them afterward to ensure consistency or just reading is fine
 		} else {
 			const title = await generateTitleFromUserMessage({
 				message,
@@ -262,8 +278,6 @@ export async function initializeChatSession({
 		await createStreamId({ streamId, chatId: id, tx });
 	});
 
-	// Fetch messages again if existing (or use what we have).
-	// Optimization: If existingChat is true, we need messages.
 	if (existingChat) {
 		messagesFromDb = await getMessagesByChatId({ id });
 	}
@@ -287,15 +301,22 @@ export async function initializeChatSession({
 		usesStoryTools: Boolean(projectId),
 	});
 
-	const groundedSystemPrompt = projectContext
-		? `${baseSystemPrompt}\n\nProject context:\n${projectContext}`
-		: baseSystemPrompt;
+    // Merge Project Context AND Scene Context
+	let groundedSystemPrompt = baseSystemPrompt;
+
+    if (projectContext) {
+        groundedSystemPrompt += `\n\nProject context:\n${projectContext}`;
+    }
+
+    if (sceneContext) {
+        groundedSystemPrompt += sceneContext;
+    }
 
 	return {
 		uiMessages,
 		groundedSystemPrompt,
 		isDynamicModel,
 		streamId,
-		contextMetadata, // Citation data for streaming to UI
+		contextMetadata,
 	};
 }

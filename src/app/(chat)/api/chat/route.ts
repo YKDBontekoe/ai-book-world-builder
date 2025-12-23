@@ -40,12 +40,14 @@ export async function POST(request: Request) {
 			projectId,
 			selectedChatModel,
 			selectedVisibilityType,
+            activeSceneId
 		}: {
 			id: string;
 			message: ChatMessage;
 			projectId?: string | null;
 			selectedChatModel: ChatModel["id"];
 			selectedVisibilityType: VisibilityType;
+            activeSceneId?: string;
 		} = requestBody;
 
 		const session = await auth();
@@ -68,6 +70,7 @@ export async function POST(request: Request) {
 			selectedVisibilityType,
 			user: session.user,
 			request,
+            activeSceneId,
 		});
 
 		let finalMergedUsage: AppUsage | undefined;
@@ -77,7 +80,7 @@ export async function POST(request: Request) {
 				// Stream source citations if we have context metadata
 				if (contextMetadata) {
 					const citations: Array<{
-						type: "entity" | "outline" | "chapter" | "relationship";
+						type: "entity" | "outline" | "chapter" | "relationship" | "scene";
 						id: string;
 						name: string;
 						kind?: string;
@@ -122,20 +125,24 @@ export async function POST(request: Request) {
 						});
 					}
 
+                    // Add Active Scene
+                    if (contextMetadata.activeSceneId) {
+                        citations.push({
+                            type: "scene",
+                            id: contextMetadata.activeSceneId,
+                            name: "Active Scene Context"
+                        });
+                    }
+
 					// Stream citations to UI
 					dataStream.write({ type: "data-sources", data: citations });
 				}
 
-                // If selectedChatModel is "middle" (default for chat) or we should map it
-                // Actually the frontend sends a specific ID if known, OR "middle" etc?
-                // Currently it sends a string ID.
-                // We should check if selectedChatModel is one of our mapping keys or a direct ID.
                 let targetModelId = selectedChatModel;
                 if (["light", "middle", "large"].includes(selectedChatModel)) {
                     targetModelId = await getSelectedModelId(selectedChatModel as "light" | "middle" | "large");
                 }
 
-                // If it's still not resolved, we might want to default to "middle"
                 if (!targetModelId) {
                      targetModelId = await getSelectedModelId("middle");
                 }
@@ -198,7 +205,6 @@ export async function POST(request: Request) {
 			return error.toResponse();
 		}
 
-		// Check for Vercel AI Gateway credit card error
 		if (
 			error instanceof Error &&
 			error.message?.includes(
