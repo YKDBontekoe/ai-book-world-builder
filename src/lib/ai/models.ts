@@ -23,9 +23,9 @@ export type ChatModelId = string;
 
 // Fallback models in case preferences aren't set or fetch fails
 export const DEFAULT_MODELS = {
-	light: "google/gemini-2.0-flash-lite-preview-02-05",
-	middle: "google/gemini-2.0-flash-001",
-	large: "google/gemini-2.0-pro-exp-02-05:free",
+	light: "openrouter/auto",
+	middle: "openrouter/auto",
+	large: "openrouter/auto",
 };
 
 // Compatibility for existing code that expects a default
@@ -98,30 +98,30 @@ export async function getChatModelById(
 export const chatModels: ChatModel[] = [
 	{
 		id: DEFAULT_MODELS.light,
-		name: "Gemini 2.0 Flash Lite (Light Default)",
-		provider: "Google",
+		name: "OpenRouter Auto (Light)",
+		provider: "OpenRouter",
 		gatewayId: DEFAULT_MODELS.light,
-		description: "Fast and free",
+		description: "Auto-selected light model",
 		supportsImages: true,
-		contextLength: 1000000,
+		contextLength: 128000,
 	},
 	{
 		id: DEFAULT_MODELS.middle,
-		name: "Gemini 2.0 Flash (Middle Default)",
-		provider: "Google",
+		name: "OpenRouter Auto (Middle)",
+		provider: "OpenRouter",
 		gatewayId: DEFAULT_MODELS.middle,
-		description: "Balanced",
+		description: "Auto-selected balanced model",
 		supportsImages: true,
-		contextLength: 1000000,
+		contextLength: 128000,
 	},
 	{
 		id: DEFAULT_MODELS.large,
-		name: "Gemini 2.0 Pro (Large Default)",
-		provider: "Google",
+		name: "OpenRouter Auto (Large)",
+		provider: "OpenRouter",
 		gatewayId: DEFAULT_MODELS.large,
-		description: "Complex reasoning",
+		description: "Auto-selected reasoning model",
 		supportsImages: true,
-		contextLength: 2000000,
+		contextLength: 128000,
 	},
 ];
 

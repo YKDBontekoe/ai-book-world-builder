@@ -46,6 +46,21 @@ export interface BenchmarkCache {
 // =============================================================================
 
 const STATIC_BENCHMARKS: Record<string, Omit<ModelBenchmark, "modelId">> = {
+	"openrouter/auto": {
+		writingScore: 4,
+		reviewingScore: 4,
+		contextWindow: "128K",
+		supportsVision: true,
+		supportsReasoning: false,
+		costTier: "standard",
+		recommendedFor: ["writing", "reviewing"],
+		writingDescription:
+			"Automatically selects the best model for the task to ensure high quality results.",
+		reviewingDescription:
+			"Automatically selects the best model for reviewing to balance speed and accuracy.",
+		lastUpdated: "2024-12",
+		source: "OpenRouter Auto",
+	},
 	"anthropic-claude-opus-4-5": {
 		writingScore: 5,
 		reviewingScore: 4,
@@ -74,21 +89,6 @@ const STATIC_BENCHMARKS: Record<string, Omit<ModelBenchmark, "modelId">> = {
 		reviewingDescription: "Good balance of quality and speed for reviews.",
 		lastUpdated: "2024-12",
 		source: "EQ-Bench Creative Writing v3",
-	},
-	"google-gemini-3-pro": {
-		writingScore: 4,
-		reviewingScore: 5,
-		contextWindow: "2M",
-		supportsVision: true,
-		supportsReasoning: false,
-		costTier: "standard",
-		recommendedFor: ["reviewing"],
-		writingDescription:
-			"Strong narratives with logical coherence. Best for research-heavy projects.",
-		reviewingDescription:
-			"Massive context window ideal for reviewing entire manuscripts at once.",
-		lastUpdated: "2024-12",
-		source: "Chatbot Arena",
 	},
 	"openai-gpt-4o-mini": {
 		writingScore: 3,

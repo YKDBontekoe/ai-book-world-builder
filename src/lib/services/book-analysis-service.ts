@@ -13,6 +13,7 @@ import { DetailExtractor } from "@/lib/services/analysis/detail-extractor";
 import { EntityDetector } from "@/lib/services/analysis/entity-detector";
 import { RelationshipInferrer } from "@/lib/services/analysis/relationship-inferrer";
 import type { AnalysisResult } from "@/lib/services/analysis/types";
+import { getSelectedModelId } from "@/lib/ai/models";
 
 export type { AnalysisResult };
 
@@ -20,17 +21,6 @@ export type { AnalysisResult };
  * BookAnalysisService - Analyzes uploaded books using RAG to extract story elements
  */
 export class BookAnalysisService {
-	private modelId = "google/gemini-2.0-flash-001";
-	private entityDetector: EntityDetector;
-	private detailExtractor: DetailExtractor;
-	private relationshipInferrer: RelationshipInferrer;
-
-	constructor() {
-		this.entityDetector = new EntityDetector(this.modelId);
-		this.detailExtractor = new DetailExtractor(this.modelId);
-		this.relationshipInferrer = new RelationshipInferrer(this.modelId);
-	}
-
 	/**
 	 * Full analysis pipeline: detect entities, extract details, infer relationships
 	 */
@@ -41,6 +31,14 @@ export class BookAnalysisService {
 		extractRelationships?: boolean;
 	}): Promise<AnalysisResult> {
 		const { sourceMaterialId, projectId, extractRelationships = true } = params;
+
+		// Resolve model ID: user preference 'middle' or default 'openrouter/auto'
+		const modelId = await getSelectedModelId("middle");
+
+		// Instantiate services with the resolved model ID
+		const entityDetector = new EntityDetector(modelId);
+		const detailExtractor = new DetailExtractor(modelId);
+		const relationshipInferrer = new RelationshipInferrer(modelId);
 
 		// Verify source material exists and is processed
 		const material = await getSourceMaterialById({ id: sourceMaterialId });
@@ -62,7 +60,7 @@ export class BookAnalysisService {
 
 		// Pass 1: Detect entities
 		console.log("[BookAnalysis] Pass 1: Detecting entities...");
-		const detectedEntities = await this.entityDetector.detect(sourceMaterialId);
+		const detectedEntities = await entityDetector.detect(sourceMaterialId);
 		console.log(`[BookAnalysis] Detected ${detectedEntities.length} entities`);
 
 		// Filter out low confidence and duplicates
@@ -77,7 +75,7 @@ export class BookAnalysisService {
 		for (const detected of highConfidenceEntities.slice(0, 20)) {
 			// Limit to 20 entities
 			try {
-				const details = await this.detailExtractor.extract(
+				const details = await detailExtractor.extract(
 					detected.name,
 					detected.kind,
 					sourceMaterialId,
@@ -131,7 +129,7 @@ export class BookAnalysisService {
 
 		if (extractRelationships && createdEntities.length >= 2) {
 			console.log("[BookAnalysis] Pass 3: Inferring relationships...");
-			const inferredRelationships = await this.relationshipInferrer.infer(
+			const inferredRelationships = await relationshipInferrer.infer(
 				highConfidenceEntities,
 				sourceMaterialId,
 			);
