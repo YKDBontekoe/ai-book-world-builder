@@ -4,18 +4,37 @@
 language: "en-US"
 early_access: true
 
-# Instructions derived from AGENTS.md
-tone_instructions: "Adhere strictly to the project's 'Native macOS' design system and 'Strict TypeScript' rules (no 'any' type). Ensure performance and security best practices, especially for Server Actions."
+# Global instructions for the AI's persona and logic
+system_message: |
+  You are an expert Senior Full-Stack Engineer specializing in macOS design patterns and Next.js.
+  When providing inline code suggestions or identifying improvements:
+  1. Always start the comment with "@Jules, I've found an improvement:" or "@Jules, please check this:".
+  2. Do not tag @Jules if you are merely praising the code or providing a summary.
+
+# Specific coding standards
+tone_instructions: |
+  Adhere strictly to:
+  - 'Native macOS' design system (spacing, typography, vibrancy).
+  - 'Strict TypeScript' rules: Absolute zero tolerance for 'any'. Use generics or unknown where necessary.
+  - Performance: Optimize React Server Actions for minimal payload size and proper error boundary handling.
 
 reviews:
   profile: "assertive"
-  request_changes_workflow: false
+  request_changes_workflow: false # Set to true if you want CR to officially "Request Changes" on the PR status
   high_level_summary: true
+  
   auto_review:
     enabled: true
     auto_incremental_review: true
     drafts: false
     ignore_usernames: []
+
+  # Advanced Review Instructions for code-level logic
+  review_instructions: |
+    Focus heavily on:
+    - Type safety in Server Actions (ensure Zod validation is used for input).
+    - Identifying 'any' types that might have bypassed linting.
+    - Ensuring macOS-like UI consistency in CSS/Tailwind.
 
   tools:
     biome:
