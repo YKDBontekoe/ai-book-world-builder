@@ -60,7 +60,10 @@ export function WriterSidebar() {
 	};
 
 	return (
-		<div className="flex flex-col h-full border-r bg-sidebar">
+		<div
+			className="flex flex-col h-full border-r bg-sidebar"
+			data-testid="writer-sidebar"
+		>
 			<div className="p-4 border-b flex items-center justify-between bg-sidebar-accent/50">
 				<div className="flex items-center gap-2">
 					<Button
