@@ -106,6 +106,15 @@ export function useMultimodalInput({
 		return () => textarea.removeEventListener("paste", handlePaste);
 	}, [handlePaste]);
 
+	const clearInput = useCallback(() => {
+		setInput("");
+		setLocalStorageInput("");
+		setAttachments([]);
+		if (textareaRef.current) {
+			textareaRef.current.focus();
+		}
+	}, [setLocalStorageInput, setAttachments]);
+
 	return {
 		input,
 		setInput,
@@ -114,6 +123,7 @@ export function useMultimodalInput({
 		uploadQueue,
 		handleFileChange,
 		submitForm,
+		clearInput,
 		textareaRef,
 		fileInputRef,
 		onRemoveAttachment,

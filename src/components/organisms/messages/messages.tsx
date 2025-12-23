@@ -11,6 +11,7 @@ import type { ChatModelId } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
 import type { ProjectSummary } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 type MessagesProps = {
 	chatId: string;
@@ -109,15 +110,17 @@ function PureMessages({
 
 			<button
 				aria-label="Scroll to bottom"
-				className={`-translate-x-1/2 absolute bottom-4 left-1/2 z-10 rounded-full border bg-background p-2 shadow-lg transition-all hover:bg-muted ${
+				className={cn(
+					"-translate-x-1/2 absolute bottom-4 left-1/2 z-10 flex items-center gap-2 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-primary shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary/10 hover:shadow-primary/20 hover:scale-105",
 					isAtBottom
-						? "pointer-events-none scale-0 opacity-0"
-						: "pointer-events-auto scale-100 opacity-100"
-				}`}
+						? "pointer-events-none translate-y-4 opacity-0"
+						: "pointer-events-auto translate-y-0 opacity-100"
+				)}
 				onClick={() => scrollToBottom("smooth")}
 				type="button"
 			>
-				<ArrowDownIcon size={16} />
+				<ArrowDownIcon size={14} strokeWidth={3} />
+				<span className="text-xs font-bold uppercase tracking-wider">Scroll Down</span>
 			</button>
 		</div>
 	);
