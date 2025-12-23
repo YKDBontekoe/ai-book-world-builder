@@ -267,7 +267,7 @@ export function exportConversation(
 	messages: ChatMessage[],
 	format: keyof typeof EXPORT_FORMATS,
 	filename = "conversation"
-) {
+): void {
 	const formatConfig = EXPORT_FORMATS[format];
 	let content: string;
 
