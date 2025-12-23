@@ -1,10 +1,11 @@
 "use client";
 
 import { exampleSetup } from "prosemirror-example-setup";
+import { undo, redo } from "prosemirror-history";
 import { inputRules } from "prosemirror-inputrules";
 import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
-import { memo, useEffect, useRef, useState } from "react";
+import { forwardRef, memo, useEffect, useImperativeHandle, useRef, useState, useCallback } from "react";
 import { EditorBubbleMenu } from "@/components/organisms/writer/tools/editor-bubble-menu";
 import type { Suggestion, Entity } from "@/lib/db/schema";
 import {
@@ -27,6 +28,11 @@ import { GlassCard } from "@/components/molecules/glass-card";
 import { cn } from "@/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
+export interface EditorHandle {
+    undo: () => void;
+    redo: () => void;
+}
+
 type EditorProps = {
 	content: string;
 	onSaveContent: (updatedContent: string, debounce: boolean) => void;
@@ -47,7 +53,7 @@ interface MentionState {
     index: number;
 }
 
-function PureEditor({
+const PureEditor = forwardRef<EditorHandle, EditorProps>(({
 	content,
 	onSaveContent,
 	suggestions,
@@ -56,10 +62,25 @@ function PureEditor({
     readOnly = false,
     typewriterMode = false,
     mentionables = [],
-}: EditorProps) {
+}, ref) => {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const editorRef = useRef<EditorView | null>(null);
 	const [, setMounted] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+        undo: () => {
+            if (editorRef.current) {
+                undo(editorRef.current.state, editorRef.current.dispatch);
+                editorRef.current.focus();
+            }
+        },
+        redo: () => {
+             if (editorRef.current) {
+                redo(editorRef.current.state, editorRef.current.dispatch);
+                editorRef.current.focus();
+            }
+        }
+    }));
 
     // Mention State
     const [mentionState, setMentionState] = useState<MentionState | null>(null);
@@ -71,7 +92,7 @@ function PureEditor({
     ).slice(0, 5);
 
     // Handle Mention Selection
-    const insertMention = (entity: Entity) => {
+    const insertMention = useCallback((entity: Entity) => {
         if (!editorRef.current || !mentionState || !mentionState.range) return;
 
         const { range } = mentionState;
@@ -84,7 +105,7 @@ function PureEditor({
         editorRef.current.dispatch(tr);
         editorRef.current.focus();
         setMentionState(null);
-    };
+    }, [mentionState]);
 
 	useEffect(() => {
 		if (containerRef.current && !editorRef.current) {
@@ -128,6 +149,7 @@ function PureEditor({
 				editorRef.current = null;
 			}
 		};
+        // biome-ignore lint/correctness/useExhaustiveDependencies: Init effect
 	}, []);
 
     // Update Editor Props (Handlers) to close over latest state
@@ -178,7 +200,7 @@ function PureEditor({
 				},
             });
         }
-    }, [readOnly, typewriterMode, onSaveContent, onSelectionChange, mentionState, filteredEntities]);
+    }, [readOnly, typewriterMode, onSaveContent, onSelectionChange, mentionState, filteredEntities, insertMention]);
 
 	useEffect(() => {
 		if (editorRef.current && content) {
@@ -258,6 +280,7 @@ function PureEditor({
                         <GlassCard variant="liquid" className="p-1 flex flex-col gap-1 max-h-48 overflow-y-auto">
                             {filteredEntities.map((entity, i) => (
                                 <button
+                                    type="button"
                                     key={entity.id}
                                     className={cn(
                                         "flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors text-left",
@@ -275,7 +298,7 @@ function PureEditor({
             </AnimatePresence>
 		</div>
 	);
-}
+});
 
 function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
 	return (
