@@ -83,22 +83,53 @@ export function useScrollToBottom() {
       }
     };
 
-    // Watch for DOM changes
-    const mutationObserver = new MutationObserver(scrollIfNeeded);
-    mutationObserver.observe(container, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
-
-    // Watch for size changes
+    // Use ResizeObserver for efficient size change detection
     const resizeObserver = new ResizeObserver(scrollIfNeeded);
+
+    // Observe the container itself (in case viewport changes)
     resizeObserver.observe(container);
 
-    // Also observe children for size changes
+    // Observe all current direct children (where the content lives)
     for (const child of container.children) {
       resizeObserver.observe(child);
     }
+
+    // Use MutationObserver only to detect structure changes (added/removed children)
+    // We avoid 'subtree: true' and 'characterData: true' to prevent layout thrashing on every text update
+    const mutationObserver = new MutationObserver((mutations) => {
+      let shouldScroll = false;
+
+      for (const mutation of mutations) {
+        if (mutation.type === "childList") {
+          // Attach ResizeObserver to new children
+          mutation.addedNodes.forEach((node) => {
+            if (node instanceof Element) {
+              resizeObserver.observe(node);
+            }
+          });
+
+          // Detach ResizeObserver from removed children
+          mutation.removedNodes.forEach((node) => {
+            if (node instanceof Element) {
+              resizeObserver.unobserve(node);
+            }
+          });
+
+          shouldScroll = true;
+        }
+      }
+
+      // Check scroll once after processing all mutations to avoid layout thrashing in loop
+      if (shouldScroll) {
+        scrollIfNeeded();
+      }
+    });
+
+    mutationObserver.observe(container, {
+      childList: true,
+      subtree: false, // PERFORMANCE: Do not observe deep tree changes
+      characterData: false, // PERFORMANCE: Do not observe text changes directly
+    });
 
     return () => {
       mutationObserver.disconnect();
