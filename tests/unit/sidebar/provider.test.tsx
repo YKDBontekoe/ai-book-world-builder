@@ -48,13 +48,13 @@ describe("SidebarProvider", () => {
   });
 
   it("persists sidebar state to a cookie when the open state changes", () => {
-    const { getByText } = render(
+    render(
       <SidebarProvider defaultOpen>
         <SidebarConsumer />
       </SidebarProvider>
     );
 
-    getByText("set-open").click();
+    screen.getByText("set-open").click();
 
     expect(document.cookie).toContain(`${SIDEBAR_COOKIE_NAME}=false`);
   });

@@ -45,8 +45,8 @@ describe('updateDocument tool', () => {
 
     (getDocumentById as any).mockResolvedValue(mockDocument);
 
-    const tool = updateDocument({ session: mockSession as any, dataStream: mockDataStream as any });
-    const result = await tool.execute({ id: documentId, description: 'update it' });
+    const tool = updateDocument({ session: mockSession as any, dataStream: mockDataStream as any }) as any;
+    const result = await tool.execute({ id: documentId, description: 'update it' }, {} as any);
 
     expect(getDocumentById).toHaveBeenCalledWith({ id: documentId });
     expect(result).toHaveProperty('content', 'The document has been updated successfully.');
@@ -63,11 +63,11 @@ describe('updateDocument tool', () => {
 
     (getDocumentById as any).mockResolvedValue(mockDocument);
 
-    const tool = updateDocument({ session: mockSession as any, dataStream: mockDataStream as any });
+    const tool = updateDocument({ session: mockSession as any, dataStream: mockDataStream as any }) as any;
 
     // In the vulnerable version, this will resolve successfully (fail security test)
     // In the fixed version, this should return an error
-    const result = await tool.execute({ id: documentId, description: 'hack it' });
+    const result = await tool.execute({ id: documentId, description: 'hack it' }, {} as any);
 
     // EXPECTATION: The fixed tool should return an error
     expect(result).toHaveProperty('error', 'Unauthorized');

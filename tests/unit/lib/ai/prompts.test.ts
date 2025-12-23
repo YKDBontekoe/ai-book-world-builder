@@ -3,8 +3,8 @@ import { systemPrompt, RequestHints } from "@/lib/ai/prompts";
 
 describe("systemPrompt", () => {
   const mockHints: RequestHints = {
-    latitude: 0,
-    longitude: 0,
+    latitude: "0",
+    longitude: "0",
     city: "Test City",
     country: "Test Country",
   };

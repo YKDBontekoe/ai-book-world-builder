@@ -16,7 +16,7 @@ export const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
   open: boolean;
-  setOpen: (open: boolean) => void;
+  setOpen: (open: boolean | ((open: boolean) => boolean)) => void;
   openMobile: boolean;
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;

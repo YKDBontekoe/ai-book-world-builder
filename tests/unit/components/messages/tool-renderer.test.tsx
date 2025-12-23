@@ -110,7 +110,6 @@ describe("ToolRenderer", () => {
 	});
 
 	it("returns null for non-tool parts", () => {
-		// @ts-expect-error
 		const { container } = render(
 			<ToolRenderer part={{ type: "text", text: "hi" }} isReadonly={false} />,
 		);

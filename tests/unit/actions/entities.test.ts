@@ -15,7 +15,6 @@ const queriesMock = vi.hoisted(() => ({
 vi.mock("@/app/(auth)/auth", () => authMock);
 
 vi.mock("@/lib/db/queries", () => queriesMock);
-vi.mock("@/lib/db/queries", () => queriesMock);
 
 vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
@@ -216,7 +215,7 @@ describe("entities server actions", () => {
 	it("VULNERABILITY FIX: rejects update when user does not own the project (even if public)", async () => {
 		const entity = buildEntity();
 		// Attacker session
-		mockedAuth.mockResolvedValue({
+		(mockedAuth as any).mockResolvedValue({
 			user: {
 				id: "attacker",
 				email: null,
@@ -251,7 +250,7 @@ describe("entities server actions", () => {
 	it("VULNERABILITY FIX: rejects deletion when user does not own the project (even if public)", async () => {
 		const entity = buildEntity();
 		// Attacker session
-		mockedAuth.mockResolvedValue({
+		(mockedAuth as any).mockResolvedValue({
 			user: {
 				id: "attacker",
 				email: null,
