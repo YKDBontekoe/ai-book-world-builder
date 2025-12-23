@@ -29,7 +29,7 @@ export async function getProjectIssuesAction(projectId: string) {
 export async function resolveIssueAction(projectId: string, issueId: string) {
     try {
         await ensureProjectAccess(projectId, true);
-        await resolveIssue(issueId);
+        await resolveIssue(projectId, issueId);
         return { success: true };
     } catch (error) {
         console.error("Failed to resolve issue:", error);

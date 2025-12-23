@@ -43,13 +43,18 @@ export async function createIssues(issues: Partial<ConsistencyIssue>[]) {
   );
 }
 
-export async function resolveIssue(issueId: string) {
+export async function resolveIssue(projectId: string, issueId: string) {
   return safeQuery(
     () =>
       db
         .update(consistencyIssue)
         .set({ status: "resolved", updatedAt: new Date() })
-        .where(eq(consistencyIssue.id, issueId))
+        .where(
+          and(
+            eq(consistencyIssue.id, issueId),
+            eq(consistencyIssue.projectId, projectId)
+          )
+        )
         .returning(),
     "resolveIssue"
   );

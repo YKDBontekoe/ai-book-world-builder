@@ -1,11 +1,16 @@
 "use server";
 
+import { auth } from "@/app/(auth)/auth";
 import { storyService, BookPlan, StoryStyle } from "@/lib/services/story-service";
 
 export type { BookPlan, StoryStyle };
 
 export async function generateBookPlan(prompt: string, style?: StoryStyle, modelId?: string) {
   try {
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
     const plan = await storyService.generateBookPlan(prompt, style, modelId);
     return { success: true, plan };
   } catch (error) {

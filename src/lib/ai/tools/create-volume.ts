@@ -3,6 +3,38 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { createVolumePlan } from "@/lib/db/queries";
 
+const createVolumeSchema = z.object({
+  title: z.string().describe("The title of the volume/book."),
+  summary: z
+    .string()
+    .optional()
+    .describe("A brief summary of what this volume covers."),
+  outlineId: z
+    .string()
+    .describe("The ID of the outline this volume is based on."),
+  projectId: z.string().describe("The ID of the project/world."),
+  chapters: z
+    .array(
+      z.object({
+        title: z.string().describe("The chapter title."),
+        notes: z
+          .string()
+          .optional()
+          .describe("Optional notes about the chapter."),
+        sequence: z
+          .number()
+          .int()
+          .positive()
+          .describe("The order of this chapter in the volume."),
+        status: z
+          .enum(["planned", "drafted", "revised", "final"])
+          .optional()
+          .describe("The status of the chapter. Defaults to 'planned'."),
+      })
+    )
+    .describe("An array of chapters to create in this volume."),
+});
+
 export const createVolume = ({
   session,
   projectId,
@@ -13,38 +45,8 @@ export const createVolume = ({
   tool({
     description:
       "Create a volume (book) with chapters based on an outline. Volumes organize chapters into a structured book format.",
-    inputSchema: z.object({
-      title: z.string().describe("The title of the volume/book."),
-      summary: z
-        .string()
-        .optional()
-        .describe("A brief summary of what this volume covers."),
-      outlineId: z
-        .string()
-        .describe("The ID of the outline this volume is based on."),
-      projectId: z.string().describe("The ID of the project/world."),
-      chapters: z
-        .array(
-          z.object({
-            title: z.string().describe("The chapter title."),
-            notes: z
-              .string()
-              .optional()
-              .describe("Optional notes about the chapter."),
-            sequence: z
-              .number()
-              .int()
-              .positive()
-              .describe("The order of this chapter in the volume."),
-            status: z
-              .enum(["planned", "drafted", "revised", "final"])
-              .optional()
-              .describe("The status of the chapter. Defaults to 'planned'."),
-          })
-        )
-        .describe("An array of chapters to create in this volume."),
-    }),
-    execute: async (args: any) => {
+    inputSchema: createVolumeSchema,
+    execute: async (args: z.infer<typeof createVolumeSchema>) => {
       const {
         title,
         summary,

@@ -5,6 +5,14 @@ import { ensureProjectAccess } from '@/lib/actions-utils';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
 // Mocks
+vi.mock('@/app/(auth)/auth', () => ({
+  auth: vi.fn(() => Promise.resolve({ user: { id: 'user-1' } })),
+}));
+
+vi.mock('@/lib/ai/models', () => ({
+  getSelectedModelId: vi.fn(() => Promise.resolve('mock-model')),
+}));
+
 vi.mock('ai', () => ({
   generateObject: vi.fn(),
   generateText: vi.fn(() => Promise.resolve({ text: "Generated content" })),

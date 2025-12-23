@@ -9,15 +9,17 @@ import {
 } from "@/lib/db/queries";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 
+const runDiagnosticsSchema = z.object({
+  projectId: z.string().describe("The ID of the project"),
+  chapterId: z.string().describe("The ID of the chapter to diagnose"),
+});
+
 export const runDiagnostics = ({ session }: { session: Session | null }) =>
   tool({
     description:
       "The Checker. Runs logic checks and continuity diagnostics on a chapter.",
-    inputSchema: z.object({
-      projectId: z.string().describe("The ID of the project"),
-      chapterId: z.string().describe("The ID of the chapter to diagnose"),
-    }),
-    execute: async (args: any) => {
+    inputSchema: runDiagnosticsSchema,
+    execute: async (args: z.infer<typeof runDiagnosticsSchema>) => {
       const { projectId, chapterId } = args;
       if (!session?.user) return { error: "Authentication required." };
 

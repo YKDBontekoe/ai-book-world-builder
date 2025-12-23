@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
+import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSourceMaterialsForUser } from "@/lib/db/queries/source-material";
 import {
 	type AnalysisResult,
@@ -46,6 +47,8 @@ export async function analyzeBook(
 	}
 
 	try {
+		await ensureProjectAccess(params.projectId, true);
+
 		const result = await bookAnalysisService.analyzeBook({
 			sourceMaterialId: params.sourceMaterialId,
 			projectId: params.projectId,

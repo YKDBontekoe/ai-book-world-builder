@@ -10,6 +10,48 @@ import {
 } from "@/lib/db/queries";
 import { chapter } from "@/lib/db/schema";
 
+const manageStorySchema = z.object({
+	projectId: z
+		.string()
+		.optional()
+		.describe("Project ID (optional if context is clear)."),
+	target: z
+		.enum(["chapter", "scene"])
+		.describe("What story element to manage."),
+	action: z.enum(["create", "update"]).describe("The action to perform."),
+	data: z
+		.array(
+			z.object({
+				id: z
+					.string()
+					.optional()
+					.describe("ID of the item (required for update)."),
+				title: z
+					.string()
+					.optional()
+					.describe("Title of the chapter or scene."),
+				sequence: z.number().optional().describe("Order sequence."),
+				// For Chapters
+				volumeId: z
+					.string()
+					.optional()
+					.describe("Volume ID (required for creating chapters)."),
+				// For Scenes
+				chapterId: z
+					.string()
+					.optional()
+					.describe("Chapter ID (required for creating scenes)."),
+				content: z.string().optional().describe("Content/draft for scenes."),
+				status: z
+					.string()
+					.optional()
+					.describe("Status (planned, drafted, etc)."),
+				notes: z.string().optional().describe("Notes for chapters."),
+			}),
+		)
+		.describe("List of items to process."),
+});
+
 export const manageStory = ({
 	session,
 	projectId,
@@ -21,51 +63,8 @@ export const manageStory = ({
 		description:
 			"Manage the structure of the story (Chapters and Scenes). " +
 			"Can create or update multiple chapters or scenes in one go.",
-		inputSchema: z.object({
-			projectId: z
-				.string()
-				.optional()
-				.describe("Project ID (optional if context is clear)."),
-			target: z
-				.enum(["chapter", "scene"])
-				.describe("What story element to manage."),
-			action: z.enum(["create", "update"]).describe("The action to perform."),
-			data: z
-				.array(
-					z.object({
-						id: z
-							.string()
-							.optional()
-							.describe("ID of the item (required for update)."),
-						title: z
-							.string()
-							.optional()
-							.describe("Title of the chapter or scene."),
-						sequence: z.number().optional().describe("Order sequence."),
-						// For Chapters
-						volumeId: z
-							.string()
-							.optional()
-							.describe("Volume ID (required for creating chapters)."),
-						// For Scenes
-						chapterId: z
-							.string()
-							.optional()
-							.describe("Chapter ID (required for creating scenes)."),
-						content: z
-							.string()
-							.optional()
-							.describe("Content/draft for scenes."),
-						status: z
-							.string()
-							.optional()
-							.describe("Status (planned, drafted, etc)."),
-						notes: z.string().optional().describe("Notes for chapters."),
-					}),
-				)
-				.describe("List of items to process."),
-		}),
-		execute: async (args: any) => {
+		inputSchema: manageStorySchema,
+		execute: async (args: z.infer<typeof manageStorySchema>) => {
 			const { projectId: projectIdInput, target, action, data } = args;
 			const finalProjectId = projectIdInput || projectId;
 

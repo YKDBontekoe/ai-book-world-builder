@@ -3,6 +3,32 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { createScene as createSceneMutation } from "@/lib/db/queries";
 
+const batchCreateScenesSchema = z.object({
+	chapterId: z
+		.string()
+		.describe("The ID of the chapter these scenes belong to."),
+	scenes: z.array(
+		z.object({
+			title: z.string().describe("The title of the scene."),
+			sequence: z
+				.number()
+				.describe("The order/sequence of the scene in the chapter."),
+			content: z
+				.string()
+				.optional()
+				.describe("Initial content/draft of the scene."),
+			status: z
+				.enum(["planned", "drafted", "completed", "revised"])
+				.optional()
+				.describe("Status of the scene."),
+		}),
+	),
+	projectId: z
+		.string()
+		.optional()
+		.describe("Project ID (optional if context is clear)."),
+});
+
 export const batchCreateScenes = ({
 	session,
 	projectId,
@@ -12,32 +38,8 @@ export const batchCreateScenes = ({
 }) =>
 	tool({
 		description: "Create multiple new scenes in a chapter.",
-		inputSchema: z.object({
-			chapterId: z
-				.string()
-				.describe("The ID of the chapter these scenes belong to."),
-			scenes: z.array(
-				z.object({
-					title: z.string().describe("The title of the scene."),
-					sequence: z
-						.number()
-						.describe("The order/sequence of the scene in the chapter."),
-					content: z
-						.string()
-						.optional()
-						.describe("Initial content/draft of the scene."),
-					status: z
-						.enum(["planned", "drafted", "completed", "revised"])
-						.optional()
-						.describe("Status of the scene."),
-				}),
-			),
-			projectId: z
-				.string()
-				.optional()
-				.describe("Project ID (optional if context is clear)."),
-		}),
-		execute: async (args: any) => {
+		inputSchema: batchCreateScenesSchema,
+		execute: async (args: z.infer<typeof batchCreateScenesSchema>) => {
 			const { chapterId, scenes, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 

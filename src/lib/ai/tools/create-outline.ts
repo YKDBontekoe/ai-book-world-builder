@@ -3,6 +3,32 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { createOutline as createOutlineMutation } from "@/lib/db/queries";
 
+const createOutlineSchema = z.object({
+  title: z.string().describe("The title of the outline/story."),
+  summary: z.string().optional().describe("A brief summary of the story."),
+  pov: z
+    .string()
+    .describe(
+      "Point of view (e.g., 'first-person', 'third-person limited', 'third-person omniscient')."
+    ),
+  tone: z
+    .string()
+    .describe(
+      "The tone of the story (e.g., 'dark', 'humorous', 'dramatic', 'lighthearted')."
+    ),
+  pacing: z
+    .string()
+    .describe(
+      "The pacing of the story (e.g., 'fast', 'slow', 'moderate', 'varied')."
+    ),
+  beats: z
+    .array(z.string())
+    .describe(
+      "An array of key story beats or plot points (e.g., ['Opening hook', 'Inciting incident', 'Midpoint twist', 'Climax', 'Resolution'])."
+    ),
+  projectId: z.string().describe("The ID of the project/world."),
+});
+
 export const createOutline = ({
   session,
   projectId,
@@ -13,32 +39,8 @@ export const createOutline = ({
   tool({
     description:
       "Create a story outline with narrative structure. Use this to help users plan their book's structure, including POV, tone, pacing, and key story beats.",
-    inputSchema: z.object({
-      title: z.string().describe("The title of the outline/story."),
-      summary: z.string().optional().describe("A brief summary of the story."),
-      pov: z
-        .string()
-        .describe(
-          "Point of view (e.g., 'first-person', 'third-person limited', 'third-person omniscient')."
-        ),
-      tone: z
-        .string()
-        .describe(
-          "The tone of the story (e.g., 'dark', 'humorous', 'dramatic', 'lighthearted')."
-        ),
-      pacing: z
-        .string()
-        .describe(
-          "The pacing of the story (e.g., 'fast', 'slow', 'moderate', 'varied')."
-        ),
-      beats: z
-        .array(z.string())
-        .describe(
-          "An array of key story beats or plot points (e.g., ['Opening hook', 'Inciting incident', 'Midpoint twist', 'Climax', 'Resolution'])."
-        ),
-      projectId: z.string().describe("The ID of the project/world."),
-    }),
-    execute: async (args: any) => {
+    inputSchema: createOutlineSchema,
+    execute: async (args: z.infer<typeof createOutlineSchema>) => {
       const {
         title,
         summary,

@@ -25,22 +25,24 @@ const ACTION_ICONS: Record<string, string> = {
 	none: "✅",
 };
 
+const orchestrateBookSchema = z.object({
+	projectId: z.string().describe("The ID of the project"),
+	userRequest: z
+		.string()
+		.optional()
+		.describe("Specific user instruction (e.g., 'Make chapter 3 scarier')"),
+	currentCanvasState: z
+		.any()
+		.optional()
+		.describe("Current state of the UI canvas"),
+});
+
 export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 	tool({
 		description:
 			"The Brain. Analyzes project state and decides the next step in the book generation pipeline. Use this tool when the user asks to generate the book, write chapters, or continue the story.",
-		inputSchema: z.object({
-			projectId: z.string().describe("The ID of the project"),
-			userRequest: z
-				.string()
-				.optional()
-				.describe("Specific user instruction (e.g., 'Make chapter 3 scarier')"),
-			currentCanvasState: z
-				.any()
-				.optional()
-				.describe("Current state of the UI canvas"),
-		}),
-		execute: async (args: any) => {
+		inputSchema: orchestrateBookSchema,
+		execute: async (args: z.infer<typeof orchestrateBookSchema>) => {
 			const { projectId, userRequest, currentCanvasState } = args;
 			let generationId: string | undefined;
 

@@ -3,17 +3,19 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { getEntitiesForProject, getEntityWithDetails } from "@/lib/db/queries";
 
+const analyzeCharacterSchema = z.object({
+  entityName: z
+    .string()
+    .describe("The name of the character entity to analyze."),
+  projectId: z.string().describe("The ID of the project/world."),
+});
+
 export const analyzeCharacter = ({ session }: { session: Session | null }) =>
   tool({
     description:
       "Analyze a character entity to provide insights about their relationships, attributes, and story potential. Returns detailed analysis and suggestions for character development.",
-    inputSchema: z.object({
-      entityName: z
-        .string()
-        .describe("The name of the character entity to analyze."),
-      projectId: z.string().describe("The ID of the project/world."),
-    }),
-    execute: async (args: any) => {
+    inputSchema: analyzeCharacterSchema,
+    execute: async (args: z.infer<typeof analyzeCharacterSchema>) => {
       const { entityName, projectId } = args;
 
       if (!session?.user) {
