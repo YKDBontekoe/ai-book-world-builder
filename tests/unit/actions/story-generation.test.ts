@@ -8,6 +8,7 @@ import {
 } from "@/app/actions/story-generation";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { db } from "@/lib/db/drizzle";
+import { generationService } from "@/lib/ai/writer";
 
 // Mocks
 vi.mock("@/app/(auth)/auth", () => ({
@@ -146,11 +147,25 @@ vi.mock("@/lib/ai/providers", () => ({
 	},
 }));
 
-vi.mock("@/lib/ai/writer", () => ({
-	continueWriting: vi.fn(() =>
-		Promise.resolve({ text: "Generated scene content" }),
-	),
-}));
+// Use importOriginal to include non-mocked exports like GenerationService if needed,
+// but for `generationService` instance, we want to mock its methods.
+vi.mock("@/lib/ai/writer", async (importOriginal) => {
+    // We can't import the actual class if we are mocking the module that exports it
+    // unless we use importOriginal, but here we just want to mock the singleton instance.
+    return {
+        // Mock standard functions if they are still used (backward compat)
+        continueWriting: vi.fn(() => Promise.resolve({ text: "Generated scene content" })),
+
+        // Mock the service instance
+        generationService: {
+            continueWriting: vi.fn(() => Promise.resolve({ text: "Generated scene content" })),
+            generateIdeas: vi.fn(),
+            rewriteSelection: vi.fn(),
+            draftScene: vi.fn(),
+        }
+    };
+});
+
 
 // Test Suite
 describe("Story Generation Actions", () => {
@@ -210,6 +225,8 @@ describe("Story Generation Actions", () => {
 		it("should update scene content", async () => {
 			const result = await generateSceneText("scene-1");
 			expect(result.success).toBe(true);
+			// Check if generationService.continueWriting was called
+            expect(generationService.continueWriting).toHaveBeenCalled();
 			expect(db.update).toHaveBeenCalled();
 		});
 	});

@@ -1,4 +1,4 @@
-import { generateText, tool } from "ai";
+import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import {
@@ -9,6 +9,7 @@ import {
   getScenesForChapter,
   updateSceneContent,
 } from "@/lib/db/queries";
+import { generationService } from "@/lib/ai/writer";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 
 export const draftScene = ({ session }: { session: Session | null }) =>
@@ -42,43 +43,36 @@ export const draftScene = ({ session }: { session: Session | null }) =>
           return { error: "Unauthorized access to project." };
         }
 
+        // We check for generation but do not require it for manual drafting
         const generation = await getBookGenerationForProject({ projectId });
-
-        if (!generation) return { error: "Book generation not initialized." };
 
         const scenes = await getScenesForChapter({ chapterId });
         const currentScene = scenes.find((s) => s.id === sceneId);
 
         if (!currentScene) return { error: "Scene not found in chapter." };
 
-        // Verify Scene belongs to Project
         if (currentScene.projectId !== projectId) {
           return { error: "Scene validation failed." };
         }
 
-        // Get Scene Card Data
         const sceneCard = await getSceneCardForScene({ sceneId });
         if (!sceneCard) return { error: "Scene card not found." };
 
-        // Writer Model (Claude Sonnet 4.5)
+        // Use standard writer role model
         const writerModel = await getGatewayIdForRole("writer");
 
-        const { text: prose } = await generateText({
-          model: writerModel as any,
-          system: `You are The Writer. Your goal is to write compelling, high-quality prose.
-        
-        Write the scene based on the scene card and instructions.
-        Output ONLY the story prose.
-        `,
-          prompt: `
-        Scene Title: ${currentScene.title}
-        Purpose: ${sceneCard.purpose}
-        Setting: ${sceneCard.setting}
-        Emotional Beats: ${sceneCard.emotionalBeats}
-        
-        Instructions: ${instructions || "Draft the scene."}
-        `,
-        });
+        const { text: prose, error } = await generationService.draftScene(
+            currentScene.title,
+            {
+                purpose: sceneCard.purpose,
+                setting: sceneCard.setting ?? undefined,
+                emotionalBeats: sceneCard.emotionalBeats ?? undefined
+            },
+            instructions,
+            { modelId: writerModel }
+        );
+
+        if (error || !prose) return { error: error || "No text generated" };
 
         // Update Database
         await updateSceneContent({
@@ -87,18 +81,20 @@ export const draftScene = ({ session }: { session: Session | null }) =>
           status: "drafted",
         });
 
-        // Log Task
-        await addTaskLogEntry({
-          generationId: generation.id,
-          entry: {
-            id: crypto.randomUUID(),
-            timestamp: new Date().toISOString(),
-            type: "tool_result",
-            modelId: writerModel,
-            content: `Drafted scene: ${currentScene.title}`,
-            metadata: { sceneId, wordCount: prose.split(" ").length },
-          },
-        });
+        // Log Task (only if generation exists)
+        if (generation) {
+             await addTaskLogEntry({
+                generationId: generation.id,
+                entry: {
+                    id: crypto.randomUUID(),
+                    timestamp: new Date().toISOString(),
+                    type: "tool_result",
+                    modelId: writerModel,
+                    content: `Drafted scene: ${currentScene.title}`,
+                    metadata: { sceneId, wordCount: prose.split(" ").length },
+                },
+            });
+        }
 
         return {
           success: true,

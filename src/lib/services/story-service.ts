@@ -1,200 +1,68 @@
-import { generateObject } from "ai";
-import { z } from "zod";
-import { myProvider } from "@/lib/ai/providers";
-import { db } from "@/lib/db/drizzle";
-import { outline, volume, chapter, scene } from "@/lib/db/schema";
 import { ensureProjectAccess } from "@/lib/actions-utils";
-import { eq, asc, desc } from "drizzle-orm";
-import { continueWriting } from "@/lib/ai/writer";
-import { createScene } from "@/lib/db/queries/scene";
+import { generationService } from "@/lib/ai/writer"; // Use new service
 import { getSelectedModelId } from "@/lib/ai/models";
+import { type BookPlan, type StoryStyle } from "@/lib/services/schemas/story-schemas";
+import { storyRepository } from "@/lib/db/repositories/story-repository";
+import { planningService } from "@/lib/ai/services/planning-service";
 
-export const bookPlanSchema = z.object({
-  title: z.string().describe("The suggested title of the book"),
-  logline: z.string().describe("A one-sentence summary of the story"),
-  summary: z.string().describe("A paragraph summary of the plot"),
-  chapters: z.array(
-    z.object({
-      title: z.string(),
-      summary: z.string().describe("What happens in this chapter"),
-    })
-  ).describe("The list of chapters for the book"),
-});
-
-export type BookPlan = z.infer<typeof bookPlanSchema>;
-
-export interface StoryStyle {
-  pov: string;
-  tone: string;
-  genre: string;
-}
+// Re-export types for backward compatibility
+export type { BookPlan, StoryStyle } from "@/lib/services/schemas/story-schemas";
+export { bookPlanSchema } from "@/lib/services/schemas/story-schemas";
 
 export class StoryService {
   async generateBookPlan(prompt: string, style?: StoryStyle, modelId?: string) {
-    // Use Large model for complex planning
-    const targetModel = modelId || await getSelectedModelId("large");
-
-    let promptText = `Create a book outline based on this prompt: "${prompt}".`;
-    if (style) {
-      promptText += `\nGenre: ${style.genre}\nPOV: ${style.pov}\nTone: ${style.tone}`;
-    }
-    promptText += `\nStructure it into a logical sequence of chapters (approx 10-20 depending on the scope). Provide a title, logline, and detailed summary.`;
-
-    const { object } = await generateObject({
-      model: myProvider.languageModel(targetModel),
-      schema: bookPlanSchema,
-      prompt: promptText,
-    });
-
-    return object;
+    return await planningService.generateBookPlan(prompt, style, modelId);
   }
 
   async createBookFromPlan(projectId: string, plan: BookPlan, style?: StoryStyle) {
     await ensureProjectAccess(projectId, true);
-
-    await db.transaction(async (tx) => {
-        // 1. Create Outline
-        const [newOutline] = await tx.insert(outline).values({
-          projectId,
-          title: plan.title,
-          summary: plan.summary,
-          pov: style?.pov || "Third Person",
-          tone: style?.tone || "Neutral",
-          pacing: "Moderate",
-          beats: [],
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).returning();
-
-        // 2. Create Volume
-        const [newVolume] = await tx.insert(volume).values({
-          projectId,
-          outlineId: newOutline.id,
-          title: "Volume 1",
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).returning();
-
-        // 3. Create Chapters
-        for (let i = 0; i < plan.chapters.length; i++) {
-            const ch = plan.chapters[i];
-            await tx.insert(chapter).values({
-                projectId,
-                volumeId: newVolume.id,
-                outlineId: newOutline.id,
-                title: ch.title,
-                notes: ch.summary,
-                sequence: i + 1,
-                status: "planned",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-        }
-
-        // 4. Create Initial Scene for Chapter 1
-        const [chapter1] = await tx.select().from(chapter)
-            .where(eq(chapter.volumeId, newVolume.id))
-            .orderBy(asc(chapter.sequence))
-            .limit(1);
-
-        if (chapter1) {
-            await tx.insert(scene).values({
-                projectId,
-                chapterId: chapter1.id,
-                title: "Scene 1",
-                sequence: 1,
-                content: "",
-                status: "drafting",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            });
-        }
-    });
+    return await storyRepository.createBookFromPlan(projectId, plan, style);
   }
 
   async planChapterScenes(chapterId: string) {
-    const [targetChapter] = await db
-        .select()
-        .from(chapter)
-        .where(eq(chapter.id, chapterId))
-        .limit(1);
-
-    if (!targetChapter) throw new Error("Chapter not found");
+    const targetChapter = await storyRepository.getChapterWithScenes(chapterId);
 
     await ensureProjectAccess(targetChapter.projectId, true);
 
-    // Use Large model for scene planning
-    const modelId = await getSelectedModelId("large");
+    const scenePlan = await planningService.planChapterScenes(targetChapter.title, targetChapter.notes || "");
 
-    const scenePlanSchema = z.object({
-        scenes: z.array(z.object({
-            title: z.string(),
-            beat: z.string().describe("What happens in this scene"),
-        }))
-    });
-
-    const { object: scenePlan } = await generateObject({
-        model: myProvider.languageModel(modelId),
-        schema: scenePlanSchema,
-        prompt: `Break this chapter into 3-5 scenes based on its summary.\n\nChapter Title: ${targetChapter.title}\nSummary: ${targetChapter.notes}`,
-    });
-
-    const [lastScene] = await db
-        .select()
-        .from(scene)
-        .where(eq(scene.chapterId, chapterId))
-        .orderBy(desc(scene.sequence))
-        .limit(1);
+    const lastScene = await storyRepository.getLastSceneInChapter(chapterId);
 
     let startSequence = lastScene ? lastScene.sequence + 1 : 1;
-    const createdIds: string[] = [];
 
-    for (const plan of scenePlan.scenes) {
-            const newScene = await createScene({
-            projectId: targetChapter.projectId,
-            chapterId,
-            title: plan.title,
-            sequence: startSequence++,
-            content: "", // Start empty
-            status: "planned" // Or drafting
-        });
-        createdIds.push(newScene.id);
-    }
+    const scenesToCreate = scenePlan.scenes.map(plan => ({
+        title: plan.title,
+        sequence: startSequence++
+    }));
 
-    return createdIds;
+    return await storyRepository.createScenesBatch(targetChapter.projectId, chapterId, scenesToCreate);
   }
 
   async generateSceneText(sceneId: string) {
-    const [targetScene] = await db.select().from(scene).where(eq(scene.id, sceneId)).limit(1);
-    if (!targetScene) throw new Error("Scene not found");
+    // 1. Fetch Data
+    const { targetScene, targetChapter, targetOutline, scenesInChapter } = await storyRepository.getSceneContextData(sceneId);
 
     await ensureProjectAccess(targetScene.projectId, true);
 
-    // Build context
-    const [targetChapter] = await db.select().from(chapter).where(eq(chapter.id, targetScene.chapterId)).limit(1);
-    const [targetOutline] = await db.select().from(outline).where(eq(outline.id, targetChapter.outlineId)).limit(1);
+    // 2. Build Context
+    const previousScenes = scenesInChapter.filter(s => s.sequence < targetScene.sequence);
 
-    // Get all scenes in chapter
-    const scenes = await db.select().from(scene).where(eq(scene.chapterId, targetScene.chapterId)).orderBy(asc(scene.sequence));
-
-    // Smart Context Construction
-    const previousScenes = scenes.filter(s => s.sequence < targetScene.sequence);
-
-    // 1. Get full text of immediate predecessor (for continuity)
+    // Get full text of immediate predecessor (for continuity)
     const lastScene = previousScenes[previousScenes.length - 1];
     const lastSceneText = lastScene?.content ? `[IMMEDIATELY PREVIOUS SCENE - ${lastScene.title}]\n${lastScene.content.slice(-2000)}` : "";
 
-    // 2. Get summaries of earlier scenes (for arc memory)
+    // Get summaries of earlier scenes (for arc memory)
     const otherScenesSummary = previousScenes.slice(0, -1).map(s => `[SCENE ${s.title}]: ${s.content ? "Completed" : "Planned"}`).join("\n");
 
     const chapterContext = `Chapter Title: ${targetChapter.title}\nChapter Summary: ${targetChapter.notes}`;
     const fullContext = `${chapterContext}\n\nPrevious Scenes Summary:\n${otherScenesSummary}\n\n${lastSceneText}`;
 
-    // Use Large model for prose generation
+    // 3. AI Generation
     const modelId = await getSelectedModelId("large");
     const styleInstruction = targetOutline ? `${targetOutline.pov}, ${targetOutline.tone}` : undefined;
 
-    const { text } = await continueWriting(
+    // Use generationService instead of raw continueWriting
+    const { text } = await generationService.continueWriting(
         fullContext,
         `Scene Title: ${targetScene.title}\n\n`,
         {
@@ -203,12 +71,9 @@ export class StoryService {
         }
     );
 
+    // 4. Update DB
     if (text) {
-            await db.update(scene).set({
-                content: text,
-                status: "drafting",
-                updatedAt: new Date()
-            }).where(eq(scene.id, sceneId));
+        await storyRepository.updateSceneContent(sceneId, text);
     }
   }
 }
