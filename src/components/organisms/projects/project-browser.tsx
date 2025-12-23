@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, ArrowDownAZ, ArrowUpAZ, Clock } from "lucide-react";
+import { Search, ArrowDownAZ, ArrowUpAZ, Clock, LayoutGrid, List } from "lucide-react";
 import { Input } from "@/components/atoms/input";
 import {
   Select,
@@ -11,15 +11,19 @@ import {
   SelectValue,
 } from "@/components/atoms/select";
 import { ProjectGrid } from "@/components/organisms/projects/project-grid";
+import { ProjectList } from "@/components/organisms/projects/project-list";
 import type { Project } from "@/lib/db/schema";
 import { Button } from "@/components/atoms/button";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useLocalStorage } from "usehooks-ts";
+import { cn } from "@/lib/utils";
 
 type SortOption = "newest" | "oldest" | "a-z" | "z-a";
 
-export function ProjectBrowser({ projects }: { projects: Project[] }) {
+export function ProjectBrowser({ projects }: { projects: Project[] }): JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("newest");
+  const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">("project-view-mode", "grid");
 
   const filteredProjects = useMemo(() => {
     let result = [...projects];
@@ -30,7 +34,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
-          (p.description && p.description.toLowerCase().includes(query))
+          p.description?.toLowerCase().includes(query)
       );
     }
 
@@ -66,6 +70,33 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
           />
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex items-center bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg p-1 mr-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-7 w-7 rounded-lg transition-all",
+                viewMode === "grid" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setViewMode("grid")}
+              title="Grid view"
+            >
+              <LayoutGrid className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "h-7 w-7 rounded-lg transition-all",
+                viewMode === "list" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"
+              )}
+              onClick={() => setViewMode("list")}
+              title="List view"
+            >
+              <List className="h-4 w-4" />
+            </Button>
+          </div>
+
           <Select
             value={sortOption}
             onValueChange={(value) => setSortOption(value as SortOption)}
@@ -105,7 +136,21 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
                 </Button>
              </motion.div>
          ) : (
-             <ProjectGrid projects={filteredProjects} />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={viewMode}
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              >
+                {viewMode === "grid" ? (
+                  <ProjectGrid projects={filteredProjects} />
+                ) : (
+                  <ProjectList projects={filteredProjects} />
+                )}
+              </motion.div>
+            </AnimatePresence>
          )}
       </div>
     </div>

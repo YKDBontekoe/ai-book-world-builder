@@ -1,7 +1,8 @@
 "use client";
 
 import type { UseChatHelpers } from "@ai-sdk/react";
-import { ArrowUpIcon } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowUpIcon, XIcon } from "lucide-react";
 import { memo, useMemo } from "react";
 import { toast } from "sonner";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
@@ -57,6 +58,7 @@ function PureMultimodalInput({
 		uploadQueue,
 		handleFileChange,
 		submitForm,
+		clearInput,
 		textareaRef,
 		fileInputRef,
 		onRemoveAttachment,
@@ -101,11 +103,11 @@ function PureMultimodalInput({
 					onRemoveAttachment={onRemoveAttachment}
 				/>
 
-				<div className="flex flex-row items-start gap-3 px-1">
+				<div className="flex flex-row items-start gap-3 px-1 relative">
 					<PromptInputTextarea
 						aria-label="Message input"
 						autoFocus
-						className="grow resize-y border-0! border-none! bg-transparent p-2 text-[15px] outline-none ring-0 placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
+						className="grow resize-y border-0! border-none! bg-transparent p-2 pr-10 text-[15px] outline-none ring-0 placeholder:text-muted-foreground/60 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0"
 						data-testid="multimodal-input"
 						maxHeight={600}
 						minHeight={44}
@@ -114,7 +116,27 @@ function PureMultimodalInput({
 						ref={textareaRef}
 						rows={1}
 						value={input}
-					/>{" "}
+					/>
+					
+					<AnimatePresence>
+						{(input.length > 0 || attachments.length > 0) && (
+							<motion.button
+								initial={{ opacity: 0, scale: 0.8 }}
+								animate={{ opacity: 1, scale: 1 }}
+								exit={{ opacity: 0, scale: 0.8 }}
+								whileHover={{ scale: 1.05 }}
+								whileTap={{ scale: 0.95 }}
+								transition={{ type: "spring", stiffness: 400, damping: 25 }}
+								onClick={clearInput}
+								className="absolute right-12 top-2 p-1.5 rounded-lg hover:bg-muted text-muted-foreground transition-colors"
+								title="Clear input"
+								type="button"
+							>
+								<XIcon size={14} />
+							</motion.button>
+						)}
+					</AnimatePresence>
+					
 					<Context {...contextProps} />
 				</div>
 				<PromptInputToolbar className="!border-top-0 border-t-0! px-1 pb-1 shadow-none dark:border-0 dark:border-transparent!">
