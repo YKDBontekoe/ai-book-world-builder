@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run full type check before pushing
+echo "Running type check before push..."
+pnpm exec tsc --noEmit
