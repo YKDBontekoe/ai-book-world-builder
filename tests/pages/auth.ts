@@ -10,12 +10,12 @@ export class AuthPage {
 
   async gotoLogin() {
     await this.page.goto("/login");
-    await expect(this.page.getByRole("heading")).toContainText("Sign In");
+    await expect(this.page.getByRole("heading", { name: "Welcome Back" })).toBeVisible();
   }
 
   async gotoRegister() {
     await this.page.goto("/register");
-    await expect(this.page.getByRole("heading")).toContainText("Sign Up");
+    await expect(this.page.getByRole("heading", { name: "Create Account" })).toBeVisible();
   }
 
   async register(email: string, password: string) {
@@ -24,7 +24,8 @@ export class AuthPage {
     await this.page.getByPlaceholder("user@acme.com").fill(email);
     await this.page.getByLabel("Password").click();
     await this.page.getByLabel("Password").fill(password);
-    await this.page.getByRole("button", { name: "Sign Up" }).click();
+    // Use exact match to avoid "Sign up with Google"
+    await this.page.getByRole("button", { name: "Sign Up", exact: true }).click();
   }
 
   async login(email: string, password: string) {
@@ -33,7 +34,8 @@ export class AuthPage {
     await this.page.getByPlaceholder("user@acme.com").fill(email);
     await this.page.getByLabel("Password").click();
     await this.page.getByLabel("Password").fill(password);
-    await this.page.getByRole("button", { name: "Sign In" }).click();
+    // Use exact match to avoid "Sign in with Google" if applicable
+    await this.page.getByRole("button", { name: "Sign In", exact: true }).click();
   }
 
   async logout(email: string, password: string) {

@@ -5,6 +5,7 @@ import {
   wrapLanguageModel,
 } from "ai";
 import { isTestEnvironment } from "@/lib/constants";
+import { DEFAULT_MODELS } from "@/lib/ai/models";
 
 export const openrouter = createOpenAI({
   baseURL: "https://openrouter.ai/api/v1",
@@ -25,6 +26,11 @@ export const myProvider = isTestEnvironment
            "chat-model": chatModel,
            "chat-model-lite": liteModel,
            "chat-model-reasoning": reasoningModel,
+
+           // Map specific default models to mocks
+           [DEFAULT_MODELS.light]: liteModel,
+           [DEFAULT_MODELS.middle]: chatModel,
+           [DEFAULT_MODELS.large]: reasoningModel, // Using reasoning mock for large/complex tasks
         },
       });
     })()

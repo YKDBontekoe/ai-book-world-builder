@@ -1,7 +1,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { expect, type Page } from "@playwright/test";
-import { chatModels } from "@/lib/ai/models";
+
+// Define Mock Models for testing context
+export const TEST_CHAT_MODELS = [
+  { id: "chat-model-reasoning", name: "Reasoning model" },
+  { id: "chat-model-lite", name: "Lite model" },
+  { id: "chat-model", name: "Standard model" },
+];
 
 const CHAT_ID_REGEX =
   /^http:\/\/localhost:3000\/chat\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
@@ -107,12 +113,15 @@ export class ChatPage {
   }
 
   async chooseModelFromSelector(chatModelId: string) {
-    const chatModel = chatModels.find(
+    // Use local test models instead of importing from app
+    const chatModel = TEST_CHAT_MODELS.find(
       (currentChatModel) => currentChatModel.id === chatModelId
     );
 
+    // If not found in test models, allow generic ID usage but warn or handle if needed
+    // For now we assume tests only use known mock models
     if (!chatModel) {
-      throw new Error(`Model with id ${chatModelId} not found`);
+      throw new Error(`Model with id ${chatModelId} not found in TEST_CHAT_MODELS`);
     }
 
     await this.page.getByTestId("model-selector").click();
