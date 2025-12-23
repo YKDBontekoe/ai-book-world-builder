@@ -10,11 +10,17 @@ import {
   useSidebar,
 } from "@/components/atoms/sidebar";
 
-const useIsMobileMock = vi.fn<boolean, []>().mockReturnValue(false);
+// Cast to any to avoid generic inference issues in tests
+import { useIsMobile } from "@/hooks/use-mobile";
+const useIsMobileMock = vi.mocked(useIsMobile) as any;
 
 vi.mock("@/hooks/use-mobile", () => ({
-  useIsMobile: () => useIsMobileMock(),
+  useIsMobile: vi.fn().mockReturnValue(false),
 }));
+
+// We need to re-mock it using the outer mock if we want to change it
+import { useIsMobile as useIsMobileActual } from "@/hooks/use-mobile";
+const mockedUseIsMobile = useIsMobileActual as any;
 
 function SidebarConsumer() {
   const { open, openMobile, setOpen, toggleSidebar } = useSidebar();
@@ -23,7 +29,7 @@ function SidebarConsumer() {
     <div>
       <span data-testid="open-state">{open ? "open" : "closed"}</span>
       <span data-testid="mobile-state">{openMobile ? "open" : "closed"}</span>
-      <button onClick={() => setOpen((current) => !current)} type="button">
+      <button onClick={() => setOpen((current: any) => !current)} type="button">
         set-open
       </button>
       <button onClick={toggleSidebar} type="button">
@@ -38,7 +44,7 @@ describe("SidebarProvider", () => {
     cleanup();
     document.cookie = "";
     vi.restoreAllMocks();
-    useIsMobileMock.mockReturnValue(false);
+    mockedUseIsMobile.mockReturnValue(false);
   });
 
   it("persists sidebar state to a cookie when the open state changes", () => {
@@ -69,7 +75,7 @@ describe("SidebarProvider", () => {
   });
 
   it("toggles the mobile sheet without altering the desktop state", () => {
-    useIsMobileMock.mockReturnValue(true);
+    mockedUseIsMobile.mockReturnValue(true);
 
     render(
       <SidebarProvider defaultOpen>

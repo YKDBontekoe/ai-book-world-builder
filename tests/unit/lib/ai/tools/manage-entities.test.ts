@@ -39,13 +39,13 @@ describe('manageEntities tool', () => {
       name: 'Malicious Entity',
     });
 
-    const tool = manageEntities({ session: mockOtherUserSession as any, projectId });
+    const tool = manageEntities({ session: mockOtherUserSession as any, projectId }) as any;
 
-    const result = await tool.execute({
+    const result = await (tool.execute as any)({
       projectId, // explicit project ID override
       action: 'create',
       entities: [{ name: 'Malicious Entity', kind: 'character' }],
-    });
+    }, {} as any);
 
     // Create check is global, so it returns a top-level error
     if (result.error) {
@@ -85,10 +85,10 @@ describe('manageEntities tool', () => {
 
     const tool = manageEntities({ session: mockOtherUserSession as any });
 
-    const result = await tool.execute({
+    const result = await (tool.execute as any)({
       action: 'update',
       entities: [{ id: entityId, name: 'Hacked Name' }],
-    });
+    }, {} as any);
 
     // Update check is per-entity, so it returns error in results
     const firstResult = result.results?.[0];

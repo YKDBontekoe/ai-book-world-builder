@@ -13,7 +13,6 @@ const queriesMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@/app/(auth)/auth", () => authMock);
-vi.mock("@/app/(auth)/auth", () => authMock);
 
 vi.mock("@/lib/db/queries", () => queriesMock);
 vi.mock("@/lib/db/queries", () => queriesMock);

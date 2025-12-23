@@ -109,9 +109,11 @@ export type ChatMessage = UIMessage<
 	CustomUIDataTypes,
 	ChatTools
 > & {
+	id?: string;
 	content?: string;
 	toolInvocations?: ToolInvocation[];
 	usage?: AppUsage;
+	createdAt?: string | Date;
 };
 
 export type Attachment = {
