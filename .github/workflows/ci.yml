@@ -82,6 +82,8 @@ jobs:
       - name: Install Playwright Browsers
         run: pnpm exec playwright install --with-deps
       - run: pnpm test:e2e
+        env:
+          AUTH_SECRET: dummy_secret_for_e2e_tests
 
 
   notify-failure:
