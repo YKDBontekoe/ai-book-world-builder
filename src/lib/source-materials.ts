@@ -6,7 +6,7 @@ import type { SourceMaterial } from "@/lib/db/schema";
 import {
 	isSupportedIngestionMimeType,
 	supportedIngestionMimeTypes,
-} from "@/lib/ingestion/mime-types";
+} from "@/lib/mime-types";
 
 export const supportedSourceMaterialMimeTypes = supportedIngestionMimeTypes;
 

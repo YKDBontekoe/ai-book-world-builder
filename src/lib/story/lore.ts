@@ -5,19 +5,6 @@ import type {
 	Relationship,
 } from "@/lib/db/schema";
 
-const LEADING_MARKER_REGEX = /^[-*()\d.\s]+/;
-
-function cleanLine(line: string): string {
-	return line.replace(LEADING_MARKER_REGEX, "").trim();
-}
-
-export function extractBeatsFromText(text: string): string[] {
-	return text
-		.split("\n")
-		.map((line) => cleanLine(line))
-		.filter((line) => line.length > 0);
-}
-
 export function buildLoreContext({
 	entities,
 	attributes,
