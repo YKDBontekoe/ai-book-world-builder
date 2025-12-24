@@ -37,7 +37,7 @@ export function DirectorDashboard({
 	metrics,
 	isVisible,
 	onClose,
-}: DirectorDashboardProps) {
+}: DirectorDashboardProps): JSX.Element | null {
 	if (!isVisible) return null;
 
 	const {
