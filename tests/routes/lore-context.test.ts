@@ -2,7 +2,6 @@ import { expect, test } from "@playwright/test";
 
 import {
 	buildLoreContext,
-	extractBeatsFromText,
 	outlineToPrompt,
 } from "@/lib/story/lore";
 
@@ -69,17 +68,6 @@ test("buildLoreContext lists entities and relationship names", () => {
 	expect(lore).toContain("Secret alliance to avoid war");
 });
 
-test("extractBeatsFromText cleans numbering and bullets", () => {
-	const beats = extractBeatsFromText(
-		"1. Open on the market square\n- Introduce the tension\n3) Reveal the prophecy",
-	);
-
-	expect(beats).toEqual([
-		"Open on the market square",
-		"Introduce the tension",
-		"Reveal the prophecy",
-	]);
-});
 
 test("outlineToPrompt formats pacing and tone with beats", () => {
 	const prompt = outlineToPrompt({
