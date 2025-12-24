@@ -9,7 +9,7 @@ import {
 	X,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
@@ -33,6 +33,9 @@ interface FloatingAssistantProps {
 	initialMessages?: any[];
 	defaultModelId?: string;
 	availableModels?: ChatModel[];
+	isOpen?: boolean;
+	onOpenChange?: (open: boolean) => void;
+	hideTrigger?: boolean;
 }
 
 export function FloatingAssistant({
@@ -40,6 +43,9 @@ export function FloatingAssistant({
 	initialMessages = [],
 	defaultModelId = DEFAULT_CHAT_MODEL,
 	availableModels,
+	isOpen: controlledIsOpen,
+	onOpenChange,
+	hideTrigger = false,
 }: FloatingAssistantProps) {
 	// Persistence for Chat ID
 	const [chatId, _setChatId] = useLocalStorage<string>(
@@ -48,7 +54,18 @@ export function FloatingAssistant({
 	);
 
 	// Visibility State
-	const [isOpen, setIsOpen] = useState(false);
+	const [internalIsOpen, setInternalIsOpen] = useState(false);
+	const isControlled = controlledIsOpen !== undefined;
+	const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
+
+	const handleOpenChange = useCallback((open: boolean) => {
+		if (onOpenChange) {
+			onOpenChange(open);
+		}
+		if (!isControlled) {
+			setInternalIsOpen(open);
+		}
+	}, [onOpenChange, isControlled]);
 
 	// Mode: 'floating' | 'sidebar'
 	const [mode, setMode] = useState<"floating" | "sidebar">("floating");
@@ -65,12 +82,12 @@ export function FloatingAssistant({
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if ((e.metaKey || e.ctrlKey) && e.key === "j") {
 				e.preventDefault();
-				setIsOpen((prev) => !prev);
+				handleOpenChange(!isOpen);
 			}
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, []);
+	}, [isOpen, handleOpenChange]);
 
 	// Resize Logic
 	const isResizingRef = useRef(false);
@@ -150,20 +167,22 @@ export function FloatingAssistant({
 	return (
 		<>
 			{/* Floating Trigger Button */}
-			<AnimatePresence>
-				{!isOpen && (
-					<MotionButton
-						initial={{ scale: 0, opacity: 0 }}
-						animate={{ scale: 1, opacity: 1 }}
-						exit={{ scale: 0, opacity: 0 }}
-						transition={{ type: "spring", stiffness: 400, damping: 25 }}
-						onClick={() => setIsOpen(true)}
-						className="absolute bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
-					>
-						<MessageSquare className="h-6 w-6 text-primary-foreground" />
-					</MotionButton>
-				)}
-			</AnimatePresence>
+			{!hideTrigger && (
+				<AnimatePresence>
+					{!isOpen && (
+						<MotionButton
+							initial={{ scale: 0, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							exit={{ scale: 0, opacity: 0 }}
+							transition={{ type: "spring", stiffness: 400, damping: 25 }}
+							onClick={() => handleOpenChange(true)}
+							className="absolute bottom-6 right-6 h-14 w-14 rounded-full shadow-lg z-50 bg-primary hover:bg-primary/90"
+						>
+							<MessageSquare className="h-6 w-6 text-primary-foreground" />
+						</MotionButton>
+					)}
+				</AnimatePresence>
+			)}
 
 			{/* Chat Window */}
 			<AnimatePresence mode="wait">
@@ -211,7 +230,7 @@ export function FloatingAssistant({
 									variant="ghost"
 									size="icon"
 									className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
-									onClick={() => setIsOpen(false)}
+									onClick={() => handleOpenChange(false)}
 								>
 									<X className="h-3.5 w-3.5" />
 								</Button>
