@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ValidationError } from "@/lib/errors";
 import { entityRepository } from "@/lib/db/repositories/entity-repository";
 
 const mocks = vi.hoisted(() => {

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NotFoundError } from "@/lib/errors";
 import { sceneRepository } from "@/lib/db/repositories/scene-repository";
 
 const mocks = vi.hoisted(() => {
