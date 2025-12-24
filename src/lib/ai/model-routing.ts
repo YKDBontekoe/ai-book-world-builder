@@ -38,7 +38,7 @@ import { getSelectedModelId } from "@/lib/ai/models";
  * - `checker`      - Reviewing, consistency checking
  * - `context`      - Large context processing, analysis
  */
-export type ModelRole = "orchestrator" | "writer" | "checker" | "context";
+export type { ModelRole } from "@/lib/ai/services/types";
 
 // =============================================================================
 // Mappings
