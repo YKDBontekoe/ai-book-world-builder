@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/atoms/skeleton";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { PageContainer } from "@/components/organisms/page-container";
 
-export default function ProjectsLoading() {
+export default function ProjectsLoading(): React.JSX.Element {
 	return (
 		<PageContainer className="p-8 md:p-12 max-w-[1800px] mx-auto">
 			{/* PageHeader Skeleton */}
