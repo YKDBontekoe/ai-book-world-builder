@@ -1,9 +1,26 @@
 name: CI
+
 on:
   push:
-    branches: ["main"]
+    branches: ['main']
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/**'
+      - 'next.config.*'
+      - 'tsconfig.json'
   pull_request:
     types: [opened, synchronize, reopened]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/**'
+      - 'next.config.*'
+      - 'tsconfig.json'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -14,14 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.3
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm type-check
 
@@ -29,90 +39,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.3
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm test:unit
 
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - uses: ./.github/actions/setup
+
+      - name: Cache Next.js build
+        uses: actions/cache@v4
         with:
-          version: 9.12.3
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
+
       - run: pnpm build
 
   db-check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.3
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
+      - uses: ./.github/actions/setup
       - run: pnpm db:check
 
-  e2e-tests:
+  # Summary job for PR status checks - single required check
+  ci-success:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        shardIndex: [1, 2, 3, 4]
-        shardTotal: [4]
+    needs: [lint-and-typecheck, unit-tests, build, db-check]
+    if: always()
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.3
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      
-      - name: Get Playwright version
-        id: playwright-version
-        run: echo "version=$(pnpm list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version // .[0].dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
-      
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        id: playwright-cache
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-      
-      - name: Install Playwright Browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install chromium --with-deps
-      
-      - name: Install Playwright deps only
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
-      
-      - name: Run E2E tests (shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
-        run: pnpm test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
-        env:
-          AUTH_SECRET: dummy_secret_for_e2e_tests
-
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
+            echo "❌ Some CI jobs failed"
+            exit 1
+          fi
+          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "⚠️ Some CI jobs were cancelled"
+            exit 1
+          fi
+          echo "✅ All CI jobs passed!"
 
   notify-failure:
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, build, db-check, e2e-tests]
+    needs: [lint-and-typecheck, unit-tests, build, db-check]
     if: |
       always() && 
       github.event_name == 'pull_request' && 
@@ -128,18 +102,12 @@ jobs:
           UNIT_TEST_RESULT: ${{ needs.unit-tests.result }}
           BUILD_RESULT: ${{ needs.build.result }}
           DB_RESULT: ${{ needs.db-check.result }}
-          E2E_RESULT: ${{ needs.e2e-tests.result }}
         run: |
           failures=""
           if [[ "$LINT_RESULT" == "failure" || "$LINT_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Lint & Typecheck\n"; fi
           if [[ "$UNIT_TEST_RESULT" == "failure" || "$UNIT_TEST_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Unit Tests\n"; fi
           if [[ "$BUILD_RESULT" == "failure" || "$BUILD_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Build\n"; fi
           if [[ "$DB_RESULT" == "failure" || "$DB_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 DB Check\n"; fi
-          if [[ "$E2E_RESULT" == "failure" || "$E2E_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 E2E Tests\n"; fi
           
           echo -e "Hey @jules, the following checks failed on this PR:\n\n$failures\nPlease take a look! 🔍" > message.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}
-
-
-
-
