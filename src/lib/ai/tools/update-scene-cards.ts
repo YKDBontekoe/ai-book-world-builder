@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
+import { projectRepository } from "@/lib/db/repositories";
 import {
 	addTaskLogEntry,
 	createScene,
@@ -43,7 +44,15 @@ export const updateSceneCards = ({ session }: { session: Session | null }) =>
 		inputSchema,
 		execute: async (args: z.infer<typeof inputSchema>) => {
 			const { projectId, chapterId, instructions } = args;
-			if (!session?.user) return { error: "Authentication required." };
+			if (!session?.user?.id) return { error: "Authentication required." };
+
+			const project = await projectRepository.findByIdWithAccess(
+				projectId,
+				session.user.id,
+			);
+			if (!project || project.userId !== session.user.id) {
+				return { error: "Unauthorized access to project." };
+			}
 
 			const projectData = await getFullProjectDataForGeneration({ projectId });
 			const generation = await getBookGenerationForProject({ projectId });

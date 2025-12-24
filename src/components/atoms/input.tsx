@@ -43,9 +43,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
 					<button
 						type="button"
 						onClick={onClear}
-						className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1"
+						className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
 						aria-label="Clear input"
-						tabIndex={-1}
 					>
 						<X className="h-4 w-4" />
 					</button>

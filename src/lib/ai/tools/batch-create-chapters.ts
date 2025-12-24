@@ -3,6 +3,7 @@ import { inArray } from "drizzle-orm"; // Might need this if we do bulk fetching
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { db, getVolumePlanById } from "@/lib/db/queries";
+import { projectRepository } from "@/lib/db/repositories";
 import { chapter } from "@/lib/db/schema";
 
 export const batchCreateChapters = ({
@@ -38,7 +39,7 @@ export const batchCreateChapters = ({
 			const { volumeId, chapters, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
-			if (!session?.user) {
+			if (!session?.user?.id) {
 				return { error: "Authentication required to create chapters." };
 			}
 
@@ -56,8 +57,16 @@ export const batchCreateChapters = ({
 				const projectMatches =
 					!finalProjectId || volumePlan.projectId === finalProjectId;
 				if (!projectMatches) {
-					// Warning or soft error? Strict for now.
-					// actually getVolumePlanById might not check projectId, so good to check.
+					return { error: "Project ID mismatch." };
+				}
+
+				const project = await projectRepository.findByIdWithAccess(
+					volumePlan.projectId,
+					session.user.id,
+				);
+
+				if (!project || project.userId !== session.user.id) {
+					return { error: "Unauthorized access to project." };
 				}
 
 				const results: Array<{
@@ -68,17 +77,15 @@ export const batchCreateChapters = ({
 					error?: string;
 				}> = [];
 
+				const usedSequences = new Set<number>(
+					volumePlan.chapters.map((c) => c.sequence),
+				);
+
 				for (const chapterData of chapters) {
 					try {
 						// Check for duplicates in existing volumePlan chapters?
 						// Ideally we should refetch or check against a local set we build up.
-						const isDuplicate =
-							volumePlan.chapters.some(
-								(c) => c.sequence === chapterData.sequence,
-							) ||
-							results.some(
-								(r) => r.sequence === chapterData.sequence && r.success,
-							);
+						const isDuplicate = usedSequences.has(chapterData.sequence);
 
 						if (isDuplicate) {
 							results.push({
@@ -103,6 +110,8 @@ export const batchCreateChapters = ({
 								updatedAt: new Date(),
 							})
 							.returning();
+
+						usedSequences.add(chapterData.sequence);
 
 						results.push({
 							title: createdChapter.title,

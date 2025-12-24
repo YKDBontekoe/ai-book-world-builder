@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { sceneRepository } from "@/lib/db/repositories";
+import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 
 const batchCreateScenesSchema = z.object({
 	chapterId: z
@@ -43,12 +43,20 @@ export const batchCreateScenes = ({
 			const { chapterId, scenes, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
-			if (!session?.user) {
+			if (!session?.user?.id) {
 				return { error: "Authentication required." };
 			}
 
 			if (!finalProjectId) {
 				return { error: "Project ID is required to create scenes." };
+			}
+
+			const project = await projectRepository.findByIdWithAccess(
+				finalProjectId,
+				session.user.id,
+			);
+			if (!project || project.userId !== session.user.id) {
+				return { error: "Unauthorized access to project." };
 			}
 
 			try {

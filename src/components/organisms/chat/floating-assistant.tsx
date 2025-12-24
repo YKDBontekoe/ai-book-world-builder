@@ -48,8 +48,17 @@ export function FloatingAssistant({
 	hideTrigger = false,
 }: FloatingAssistantProps) {
 	// Persistence for Chat ID
+	// We namespace the key by projectId to prevent session collisions between projects
+	const params = useParams();
+	const currentProjectId =
+		projectId ?? (typeof params.id === "string" ? params.id : undefined);
+
+	const storageKey = currentProjectId
+		? `floating-chat-session-${currentProjectId}`
+		: "floating-chat-session-global";
+
 	const [chatId, _setChatId] = useLocalStorage<string>(
-		"floating-chat-session-id",
+		storageKey,
 		generateUUID(),
 	);
 
@@ -75,10 +84,6 @@ export function FloatingAssistant({
 
 	// Dimensions for Floating Mode
 	const [size, setSize] = useState({ width: 450, height: 600 });
-
-	const params = useParams();
-	const currentProjectId =
-		projectId ?? (typeof params.id === "string" ? params.id : undefined);
 
 	// Keyboard Shortcut: Cmd+J / Ctrl+J
 	useEffect(() => {
@@ -254,7 +259,7 @@ export function FloatingAssistant({
 										initialChatModel={defaultModelId as ChatModelId}
 										initialVisibilityType="private"
 										isReadonly={false}
-										availableModels={availableModels || Array.from(chatModels)}
+										availableModels={availableModels || []}
 									/>
 								</ChatProvider>
 								<DataStreamHandler />
@@ -265,24 +270,12 @@ export function FloatingAssistant({
 						{mode === "floating" && (
 							// biome-ignore lint/a11y/noStaticElementInteractions: Resize handle
 							<div
-								className="absolute top-0 left-0 p-1 cursor-nw-resize opacity-0 hover:opacity-100 transition-opacity z-50"
+								className="absolute top-0 left-0 w-6 h-6 z-50 cursor-nw-resize flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
 								onMouseDown={handleMouseDown}
 							>
-								<div className="w-4 h-4 rounded-br bg-white/20" />{" "}
-								{/* Visual hint if needed, or invisible */}
-								{/* Actually, standard resize is usually bottom-right.
-                                    Since we are fixed bottom-right, we need to resize from TOP-LEFT.
-                                    So the handle should be at top-left.
-                                */}
-							</div>
-						)}
-						{mode === "floating" && (
-							// biome-ignore lint/a11y/noStaticElementInteractions: Resize handle
-							<div
-								className="absolute top-0 left-0 w-6 h-6 z-50 cursor-nwse-resize flex items-center justify-center opacity-0 hover:opacity-50"
-								onMouseDown={handleMouseDown}
-							>
-								<GripHorizontal className="h-4 w-4 -rotate-45" />
+								<div className="w-4 h-4 rounded-br bg-white/20">
+									<GripHorizontal className="h-4 w-4 -rotate-45 text-white/50" />
+								</div>
 							</div>
 						)}
 					</MotionGlassCard>

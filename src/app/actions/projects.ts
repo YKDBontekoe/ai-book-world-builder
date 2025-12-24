@@ -386,28 +386,68 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 			}
 
 			// 6. Copy Scenes (Linked to Chapters)
+			// Sort by sequence to increase chance of resolving prevSceneId in one pass
 			const oldScenes = await tx
 				.select()
 				.from(scene)
-				.where(eq(scene.projectId, originalProjectId));
+				.where(eq(scene.projectId, originalProjectId))
+				.orderBy(scene.sequence);
 
 			const sceneIdMap = new Map<string, string>();
+			const pendingPrevSceneUpdates: { newSceneId: string; oldPrevId: string }[] =
+				[];
 
 			for (const oldScene of oldScenes) {
 				const { id: _, ...sceneData } = oldScene;
 				const newChapterId = chapterIdMap.get(oldScene.chapterId);
+
 				if (newChapterId) {
+					// Attempt to resolve prevSceneId immediately
+					let newPrevSceneId: string | null | undefined = null;
+
+					if (sceneData.prevSceneId) {
+						const mapped = sceneIdMap.get(sceneData.prevSceneId);
+						if (mapped) {
+							newPrevSceneId = mapped;
+						} else {
+							// If not found yet (out of order), keep it null for now and update later
+							// We cannot use old ID because it might violate constraints or point to wrong project
+							newPrevSceneId = null;
+						}
+					}
+
 					const [newScene] = await tx
 						.insert(scene)
 						.values({
 							...sceneData,
+							prevSceneId: newPrevSceneId, // Use resolved ID or null
 							chapterId: newChapterId,
 							projectId: newProject.id,
 							createdAt: new Date(),
 							updatedAt: new Date(),
 						})
 						.returning();
+
 					sceneIdMap.set(oldScene.id, newScene.id);
+
+					// If we couldn't resolve prevSceneId but it existed, add to pending
+					if (sceneData.prevSceneId && !newPrevSceneId) {
+						pendingPrevSceneUpdates.push({
+							newSceneId: newScene.id,
+							oldPrevId: sceneData.prevSceneId,
+						});
+					}
+				}
+			}
+
+			// Apply pending prevSceneId updates
+			for (const update of pendingPrevSceneUpdates) {
+				const newPrevId = sceneIdMap.get(update.oldPrevId);
+				if (newPrevId) {
+					await tx
+						.update(scene)
+						.set({ prevSceneId: newPrevId })
+						.where(eq(scene.id, update.newSceneId));
 				}
 			}
 
