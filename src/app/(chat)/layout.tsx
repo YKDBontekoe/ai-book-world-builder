@@ -31,7 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 }
 
 async function SidebarWrapper({ children }: { children: React.ReactNode }) {
-	const [session, cookieStore]: [Awaited<ReturnType<typeof auth>>, Awaited<ReturnType<typeof cookies>>] = await Promise.all([auth(), cookies()]);
+	const [session, cookieStore] = await Promise.all([auth(), cookies()]);
 	const isCollapsed = cookieStore.get("sidebar_state")?.value !== "true";
 
 	return (
