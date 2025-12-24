@@ -5,14 +5,14 @@ Welcome to the AI Book World Builder! This guide will help you navigate the feat
 ## Getting Started
 
 1.  **Create a Project**: On the dashboard, click **"New Project"**. Give it a title and a genre. This creates your workspace.
-2.  **Add Entities**: Go to the **"World"** tab. Here you can add Characters, Locations, and Lore. The more you add here, the smarter the AI becomes about your world.
+2.  **Add Entities**: Go to the **"World"** tab (inside the Writer View). Here you can add Characters, Locations, and Lore. The more you add here, the smarter the AI becomes about your world.
 3.  **Create an Outline**: In the **"Story"** tab, start planning your chapters. You don't need to write the prose yet—just the high-level beats.
 
-## Writer Interface
+## Writer View Interface
 
 The Project View is divided into three main panels to help you organize and write your story:
 
-1.  **Navigation (Left)**: This sidebar lists your Chapters and Scenes. Use it to jump between different parts of your book.
+1.  **Navigation (Left)**: This sidebar lists your Chapters and Scenes. Use it to jump between different parts of your book. It also contains the "Create Story" wizard when your project is empty.
 2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
 3.  **Canvas (Right)**: A visual board for your world. You can view your entities and their relationships here.
 
@@ -41,7 +41,7 @@ By default, the system selects the best available models (e.g., "OpenRouter Auto
 
 ## Project-Aware Chat
 
-The chat bar on the right (or "Floating Assistant") isn't just a standard chatbot. It knows your project.
+The chat interface is now integrated into the **Floating Assistant** (Writer View) and global dashboard.
 
 -   **Ask about your world**: "Who is the king of the Western Lands?" (It looks up your "Western Lands" entity).
 -   **Brainstorm**: "Give me 5 plot twists involving [Character Name]."

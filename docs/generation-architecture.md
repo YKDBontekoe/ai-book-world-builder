@@ -27,13 +27,14 @@ interface StepHandler {
 - **Chapter Reviewing**: Uses a separate "Reviewer" model to critique the generated chapter and suggest improvements (or auto-fix).
 - **Epilogue**: Generates the concluding scene.
 - **Consistency Check**: Analyzes the generated content against the project's entity database to find contradictions.
+- **Back Cover**: Generates a blurb or marketing copy for the book.
 
 ### 3. Writer Agent
 The `WriterAgent` (`lib/generation/writer-agent.ts`) is responsible for the actual prose generation. It operates on a "Context Flooding" principle.
 
 - **Inputs**: It receives the *entire* relevant context (Project Context, Lore, Outline, Previous Chapter Summary).
 - **Prompt Engineering**: It constructs a massive system prompt that enforces the selected "Writing Style" (e.g., Hemingway, Tolkien) and specific author instructions.
-- **Output**: Returns raw text, word count, and token usage.
+- **Output**: Returns raw text, word count, token usage, and model metadata.
 
 ## Data Flow Diagram
 
@@ -76,3 +77,9 @@ This ensures the model has "random access" to all necessary facts without retrie
 
 ### Optimistic Concurrency
 The orchestrator checks for `paused` or `cancelled` status before starting each step, allowing users to intervene in the middle of a long generation process.
+
+### Model Routing
+The system allows configuring different models for different roles:
+- **Writer Model**: Optimized for prose and creativity (e.g., Claude 3.5 Sonnet).
+- **Reviewer Model**: Optimized for reasoning and critique (e.g., GPT-4o or DeepSeek R1).
+- **Orchestrator Model**: Optimized for speed and structure (e.g., Gemini Flash).

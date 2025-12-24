@@ -22,6 +22,7 @@
 ## Documentation
 
 - **[User Guide](docs/user-guide.md)**: How to use the Book Generation Wizard, Project-Aware Chat, and World Building tools.
+- **[Developer Guide](docs/developer-guide.md)**: Technical guide for contributors, covering codebase structure and patterns.
 - **[Generation Architecture](docs/generation-architecture.md)**: Technical deep dive into the Orchestrator, Writer Agent, and Step Handlers.
 - **[AI Services](docs/ai-services.md)**: Explanation of Model Routing, Context Flooding, and RAG strategies.
 - **[Design System](docs/design-system.md)**: Guidelines for the Native macOS aesthetic and component usage.
@@ -40,10 +41,10 @@ A step-by-step wizard to go from concept to draft:
 - **Persistent Context**: Project selection is preserved across sessions via URL and cookies.
 - **Quick Prompts**: Launch context-specific prompts directly from the project dashboard.
 
-### 📝 Story Workspace
-- **Outlining**: Create and manage outlines with controls for POV, tone, and pacing.
-- **Drafting**: Write side-by-side with AI suggestions.
-- **Versioning**: Auto-save drafts, diff versions, and restore previous states.
+### 📝 Writer View
+- **3-Pane Layout**: Seamlessly navigate between Outline, Editor, and World Canvas.
+- **Drafting**: Write side-by-side with AI suggestions in a professional editor.
+- **World Canvas**: Visualize your entities and their relationships.
 - **Entity Management**: Organize your world's lore in a structured database.
 
 ## Design System

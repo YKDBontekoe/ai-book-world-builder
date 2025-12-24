@@ -1,82 +1,80 @@
 # Developer Guide
 
-This document provides technical details on key architectural components of the AI Book World Builder, intended for engineers working on the codebase.
+This guide provides technical details for developers contributing to the AI Book World Builder. It covers codebase structure, key patterns, and the verification strategy.
 
-## Model Preferences Architecture
+## Codebase Structure
 
-The application abstracts specific AI models into three capability tiers: `light`, `middle`, and `large`. This allows the application to adapt to new models without hardcoding specific IDs throughout the codebase.
+The project uses a standard Next.js 14 App Router structure with some specific conventions:
 
-### Core Concepts
+```
+src/
+├── app/                 # Next.js App Router pages and API routes
+│   ├── (auth)/          # Authentication routes (login, register)
+│   ├── (chat)/          # Main application (Projects, Writer View)
+│   ├── actions/         # Server Actions (mutations)
+│   └── api/             # API Routes (webhooks, streaming)
+├── components/          # React components
+│   ├── atoms/           # Low-level UI primitives (Button, Input)
+│   ├── molecules/       # Composition of atoms (GlassCard, StatCard)
+│   ├── messages/        # Chat message components
+│   └── writer/          # Writer View components (Sidebar, Editor)
+├── lib/                 # Shared logic
+│   ├── ai/              # AI Service wrappers (models, tools, providers)
+│   ├── db/              # Database schema (Drizzle) and queries
+│   ├── generation/      # Book generation pipeline
+│   └── services/        # Business logic services (StoryService, Analysis)
+└── tests/               # Test suites
+    ├── e2e/             # Playwright E2E tests
+    └── unit/            # Vitest unit tests
+```
 
-- **Light**: Fast, cheap models suitable for quick chat interactions and simple tasks.
-- **Middle**: Balanced models for standard generation and analysis (e.g., `BookAnalysisService`).
-- **Large**: High-reasoning models for complex story planning and orchestration.
+## Key Architectural Patterns
 
-### Implementation Details
+### 1. Writer View State
+The Writer View (`app/(chat)/projects/[id]/page.tsx`) uses a complex state management strategy:
+-   **Server-Side**: Fetches initial structure (Chapters/Scenes) and Project data.
+-   **Client-Side**: `WriterProvider` hydrates `WriterContext` and `WriterLayoutContext`.
+-   **Hook**: `useWriterState` manages the active chapter/scene and syncs with the URL/History.
 
-- **Definition**: Defaults are defined in `src/lib/ai/models.ts` via `DEFAULT_MODELS`.
-- **Resolution**: The `getSelectedModelId(type)` function resolves the actual model ID to use.
-  1.  It checks the user's persisted preferences (stored in the `UserPreferences` table).
-  2.  If no preference is set, it falls back to the `DEFAULT_MODELS` configuration.
-- **Usage**:
-  ```typescript
-  // Example: Getting the model for analysis
-  import { getSelectedModelId } from "@/lib/ai/models";
+### 2. Server Actions & Services
+We separate controller logic (Server Actions) from business logic (Services):
+-   **Server Actions** (`app/actions/`): Handle auth checks, input validation, and calling services. They must check `ensureProjectAccess`.
+-   **Services** (`lib/services/`): Pure business logic, database transactions, and AI orchestration.
 
-  const modelId = await getSelectedModelId("middle");
-  ```
+### 3. AI Pipeline
+-   **Providers**: `lib/ai/providers.ts` manages connections to OpenRouter/Verel AI SDK.
+-   **Tools**: `lib/ai/tools/` contains Zod-validated tools used by the AI Agent.
+-   **Generation**: `lib/generation/` implements the state-driven generation pipeline (see `generation-architecture.md`).
 
-## Book Analysis Service (RAG)
+### 4. Data Fetching
+-   **Read**: We use `@tanstack/react-query` for client-side data fetching and caching.
+-   **Write**: Server Actions are used for mutations. We invalidate React Query keys after successful mutations.
 
-The `BookAnalysisService` (`src/lib/services/book-analysis-service.ts`) implements a Retrieval-Augmented Generation (RAG) pipeline to analyze uploaded texts (EPUB, PDF, etc.) and extract structured world data.
+## Design System
 
-### Pipeline Steps
+The project adheres to a **Native macOS Aesthetic** ("Liquid Glass"):
+-   **GlassCard**: The primary container. Use `variant='liquid'` for the signature frosted effect.
+-   **Motion**: All animations use `ease-spring` (stiffness 400, damping 25).
+-   **Tailwind v4**: Defined in `app/globals.css` using the `@theme` directive.
 
-The analysis is performed in three sequential passes to maximize accuracy:
+## Verification Strategy
 
-1.  **Entity Detection (Pass 1)**
-    *   **Goal**: Identify potential entities (Characters, Locations, Lore) in the text.
-    *   **Process**: Scans the text using the `EntityDetector` service.
-    *   **Filtering**: Entities are filtered by confidence score (>= 50) and checked against existing project entities to prevent duplicates.
+We employ a **Dual Verification Strategy** (`AGENTS.md`) to ensure quality:
 
-2.  **Detail Extraction (Pass 2)**
-    *   **Goal**: enrich identified entities with descriptions and attributes.
-    *   **Process**: For the top 20 high-confidence entities, the `DetailExtractor` retrieves relevant text chunks and summarizes the entity's role and traits.
-    *   **Output**: Creates `Entity` records and `EntityAttribute` records (e.g., `_inspirationSource`).
+### 1. Functional Verification (Vitest)
+-   Located in `tests/unit/`.
+-   Run: `pnpm test:unit`
+-   Mocking: We use `vi.mock` heavily. Note that `server-only` imports must be mocked.
 
-3.  **Relationship Inference (Pass 3)**
-    *   **Goal**: Map how entities interact.
-    *   **Process**: The `RelationshipInferrer` analyzes the text for interactions between the created entities.
-    *   **Output**: Creates `EntityRelationship` records (e.g., "Family", "Enemy") if confidence is >= 60.
+### 2. End-to-End Verification (Playwright)
+-   Located in `tests/e2e/`.
+-   Run: `pnpm exec playwright test`
+-   Strategy: We mock the AI responses to test the *application logic* deterministically.
 
-### Configuration
+## Contribution Workflow
 
-*   **Model**: Uses the `middle` tier model by default.
-*   **Concurrency**: Entity extraction is sequential for the top 20 to manage rate limits and costs.
-
-## Writer Architecture
-
-The "Writer View" (`src/app/(chat)/projects/[id]/page.tsx`) is the primary interface for book creation. It utilizes a "Fetch-Then-Hydrate" pattern to ensure fast initial loads while supporting rich client-side interactivity.
-
-### Component Structure
-
-The UI (`WriterView`) is built using a 3-pane layout via `react-resizable-panels`:
-
-1.  **Sidebar (Left)**: `WriterSidebar`
-    *   Managed by `WriterLayoutContext`.
-    *   Handles navigation between Chapters and Scenes.
-    *   Displays the "Story Wizard" when the project is empty.
-
-2.  **Editor (Center)**: `WriterEditor`
-    *   Contains the `TextEditor` (ProseMirror-based).
-    *   Synchronizes content updates via `useWriterState`.
-
-3.  **Canvas (Right)**: `BookCanvas` (Embedded Variant)
-    *   Visualizes entity relationships.
-    *   Synchronized via `CanvasSync` component to match the current project.
-
-### Data Flow
-
-1.  **Server Load**: `page.tsx` pre-fetches the project structure (Chapters/Scenes hierarchy) and available models.
-2.  **Hydration**: These initial props initialize the `WriterProvider` context.
-3.  **Lazy Loading**: Scene content (the actual text) is *not* loaded initially. It is fetched on-demand via `getSceneContent` when a user selects a scene, optimizing performance for large books.
+1.  **Plan**: Analyze the task and explore the codebase.
+2.  **Edit**: Make changes, favoring small, testable units.
+3.  **Verify**: Run `pnpm test:unit` and `pnpm exec playwright test` locally.
+4.  **Pre-Commit**: Follow the `pre_commit_instructions` tool output.
+5.  **Submit**: Commit with a clear message.
