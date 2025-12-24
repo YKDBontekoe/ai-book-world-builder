@@ -383,7 +383,7 @@ importers:
         version: 0.31.8
       jsdom:
         specifier: ^27.3.0
-        version: 27.3.0(bufferutil@4.0.9)(postcss@8.5.3)
+        version: 27.3.0(bufferutil@4.0.9)(postcss@8.5.6)
       lint-staged:
         specifier: ^16.2.7
         version: 16.2.7
@@ -392,7 +392,7 @@ importers:
         version: 1.57.0
       postcss:
         specifier: ^8
-        version: 8.5.3
+        version: 8.5.6
       storybook:
         specifier: ^10.1.8
         version: 10.1.8(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.0.1(react@19.0.1))(react@19.0.1)
@@ -407,7 +407,7 @@ importers:
         version: 5.8.2
       ultracite:
         specifier: 5.3.9
-        version: 5.3.9(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.8.2)
+        version: 5.3.9(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.8.2)
       vite:
         specifier: ^7.2.7
         version: 7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
@@ -416,7 +416,7 @@ importers:
         version: 6.0.2(typescript@5.8.2)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))
       vitest:
         specifier: ^4.0.16
-        version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
+        version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
 
 packages:
 
@@ -5015,10 +5015,6 @@ packages:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
     engines: {node: ^10 || ^12 || >=14}
 
-  postcss@8.5.3:
-    resolution: {integrity: sha512-dle9A3yYxlBSrt8Fu+IpjGT8SY8hN0mlaA6GY8t0P5PjIOZemULz/E2Bnm/2dcUOena75OTNkHI76uZBNUUq3A==}
-    engines: {node: ^10 || ^12 || >=14}
-
   postcss@8.5.6:
     resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
@@ -6486,9 +6482,9 @@ snapshots:
     dependencies:
       '@csstools/css-tokenizer': 3.0.4
 
-  '@csstools/css-syntax-patches-for-csstree@1.0.14(postcss@8.5.3)':
+  '@csstools/css-syntax-patches-for-csstree@1.0.14(postcss@8.5.6)':
     dependencies:
-      postcss: 8.5.3
+      postcss: 8.5.6
 
   '@csstools/css-tokenizer@3.0.4': {}
 
@@ -8017,7 +8013,7 @@ snapshots:
       '@vitest/browser': 4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16)
       '@vitest/browser-playwright': 4.0.16(bufferutil@4.0.9)(playwright@1.57.0)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16)
       '@vitest/runner': 4.0.16
-      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
+      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
     transitivePeerDependencies:
       - react
       - react-dom
@@ -8186,7 +8182,7 @@ snapshots:
       '@alloc/quick-lru': 5.2.0
       '@tailwindcss/node': 4.1.16
       '@tailwindcss/oxide': 4.1.16
-      postcss: 8.5.3
+      postcss: 8.5.6
       tailwindcss: 4.1.16
 
   '@tailwindcss/typography@0.5.19(tailwindcss@4.1.16)':
@@ -8576,7 +8572,7 @@ snapshots:
       '@vitest/mocker': 4.0.16(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))
       playwright: 1.57.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
+      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
     transitivePeerDependencies:
       - bufferutil
       - msw
@@ -8592,7 +8588,7 @@ snapshots:
       pngjs: 7.0.0
       sirv: 3.0.2
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
+      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
       ws: 8.18.3(bufferutil@4.0.9)
     transitivePeerDependencies:
       - bufferutil
@@ -8613,7 +8609,7 @@ snapshots:
       obug: 2.1.1
       std-env: 3.10.0
       tinyrainbow: 3.0.3
-      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
+      vitest: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
     optionalDependencies:
       '@vitest/browser': 4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16)
     transitivePeerDependencies:
@@ -9011,10 +9007,10 @@ snapshots:
 
   cssesc@3.0.0: {}
 
-  cssstyle@5.3.4(postcss@8.5.3):
+  cssstyle@5.3.4(postcss@8.5.6):
     dependencies:
       '@asamuzakjp/css-color': 4.1.0
-      '@csstools/css-syntax-patches-for-csstree': 1.0.14(postcss@8.5.3)
+      '@csstools/css-syntax-patches-for-csstree': 1.0.14(postcss@8.5.6)
       css-tree: 3.1.0
     transitivePeerDependencies:
       - postcss
@@ -9892,11 +9888,11 @@ snapshots:
 
   js-tokens@9.0.1: {}
 
-  jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3):
+  jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6):
     dependencies:
       '@acemir/cssom': 0.9.29
       '@asamuzakjp/dom-selector': 6.7.6
-      cssstyle: 5.3.4(postcss@8.5.3)
+      cssstyle: 5.3.4(postcss@8.5.6)
       data-urls: 6.0.0
       decimal.js: 10.6.0
       html-encoding-sniffer: 4.0.0
@@ -10817,12 +10813,6 @@ snapshots:
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
-  postcss@8.5.3:
-    dependencies:
-      nanoid: 3.3.11
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
   postcss@8.5.6:
     dependencies:
       nanoid: 3.3.11
@@ -11703,14 +11693,14 @@ snapshots:
 
   ufo@1.6.1: {}
 
-  ultracite@5.3.9(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.8.2):
+  ultracite@5.3.9(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(typescript@5.8.2)(yaml@2.8.2):
     dependencies:
       '@clack/prompts': 0.11.0
       deepmerge: 4.3.1
       jsonc-parser: 3.3.1
       nypm: 0.6.2
       trpc-cli: 0.10.2(typescript@5.8.2)
-      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
+      vitest: 3.2.4(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2)
       zod: 4.1.12
     transitivePeerDependencies:
       - '@edge-runtime/vm'
@@ -11955,7 +11945,7 @@ snapshots:
       tsx: 4.19.3
       yaml: 2.8.2
 
-  vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2):
+  vitest@3.2.4(@types/debug@4.1.12)(@types/node@22.13.10)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16))(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2):
     dependencies:
       '@types/chai': 5.2.3
       '@vitest/expect': 3.2.4
@@ -11984,7 +11974,7 @@ snapshots:
       '@types/debug': 4.1.12
       '@types/node': 22.13.10
       '@vitest/browser': 4.0.16(bufferutil@4.0.9)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16)
-      jsdom: 27.3.0(bufferutil@4.0.9)(postcss@8.5.3)
+      jsdom: 27.3.0(bufferutil@4.0.9)(postcss@8.5.6)
     transitivePeerDependencies:
       - jiti
       - less
@@ -11999,7 +11989,7 @@ snapshots:
       - tsx
       - yaml
 
-  vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.3))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2):
+  vitest@4.0.16(@opentelemetry/api@1.9.0)(@types/node@22.13.10)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.3.0(bufferutil@4.0.9)(postcss@8.5.6))(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2):
     dependencies:
       '@vitest/expect': 4.0.16
       '@vitest/mocker': 4.0.16(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))
@@ -12025,7 +12015,7 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       '@types/node': 22.13.10
       '@vitest/browser-playwright': 4.0.16(bufferutil@4.0.9)(playwright@1.57.0)(vite@7.2.7(@types/node@22.13.10)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.19.3)(yaml@2.8.2))(vitest@4.0.16)
-      jsdom: 27.3.0(bufferutil@4.0.9)(postcss@8.5.3)
+      jsdom: 27.3.0(bufferutil@4.0.9)(postcss@8.5.6)
     transitivePeerDependencies:
       - jiti
       - less
