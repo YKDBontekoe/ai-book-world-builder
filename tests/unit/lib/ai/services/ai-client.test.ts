@@ -30,9 +30,9 @@ vi.mock("@/lib/ai/providers", () => ({
 	myProvider: mocks.myProvider,
 }));
 
+import { z } from "zod";
 // Import after mocks
 import { aiClient } from "@/lib/ai/services/ai-client";
-import { z } from "zod";
 
 describe("AI Client", () => {
 	beforeEach(() => {
@@ -133,7 +133,9 @@ describe("AI Client", () => {
 		});
 
 		it("should return error on failure", async () => {
-			mocks.generateObject.mockRejectedValue(new Error("Schema validation failed"));
+			mocks.generateObject.mockRejectedValue(
+				new Error("Schema validation failed"),
+			);
 
 			const result = await aiClient.generateObject({
 				prompt: "Test",

@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+	type AIError,
+	type AISuccess,
 	aiError,
 	aiSuccess,
 	MODEL_TIER_DESCRIPTIONS,
-	ROLE_TO_TIER,
-	type AIError,
-	type AISuccess,
 	type ModelRole,
 	type ModelTier,
+	ROLE_TO_TIER,
 } from "@/lib/ai/services/types";
 
 describe("AI Services Types", () => {

@@ -4,19 +4,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowRight,
 	BookOpen,
-	BookPlus,
 	FileText,
 	MessageSquare,
 	SearchIcon,
 	Sparkles,
 	Target,
 	User,
-	UserPlus,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useDebounceValue } from "usehooks-ts";
-import { createNewChapter } from "@/app/actions/writer";
 import { Dialog, DialogContent } from "@/components/atoms/dialog";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
@@ -25,7 +21,7 @@ import { useWriterLayoutContext } from "@/components/organisms/writer/writer-lay
 import { useProjectEntities } from "@/hooks/use-project-entities";
 import { cn } from "@/lib/utils";
 
-type Category = "all" | "actions" | "entities" | "scenes" | "create";
+type Category = "all" | "actions" | "entities" | "scenes";
 
 interface SpotlightItem {
 	id: string;
@@ -89,53 +85,6 @@ export function WriterSpotlight() {
 	// Build Items
 	const items = useMemo<SpotlightItem[]>(() => {
 		const list: SpotlightItem[] = [];
-
-		// 0. Creation (Power User Features)
-		list.push(
-			{
-				id: "create-chapter",
-				label: "Create New Chapter",
-				subLabel: "Append a new chapter to the end of the book",
-				icon: BookPlus,
-				type: "create",
-				category: "create",
-				keywords: ["new", "add", "chapter"],
-				onSelect: async () => {
-					const toastId = toast.loading("Creating chapter...");
-					try {
-						await createNewChapter(project.id);
-						toast.success("Chapter created", { id: toastId });
-						// We need to trigger a structure refresh here if possible,
-						// but WriterContext handles it via optimistic updates or we might need to force it.
-						// Currently relying on the user seeing the update or manual refresh if context doesn't auto-update.
-						// The context doesn't expose a 'refresh' method directly in the hook return type used here,
-						// but we can assume the server action + revalidatePath will handle it or the user will see it.
-						window.location.reload(); // Force reload to see changes as context doesn't expose refresh
-					} catch (_e) {
-						toast.error("Failed to create chapter", { id: toastId });
-					}
-					toggleSpotlight();
-				},
-			},
-			{
-				id: "create-entity",
-				label: "Create New Character",
-				subLabel: "Quickly add a new character to the database",
-				icon: UserPlus,
-				type: "create",
-				category: "create",
-				keywords: ["new", "add", "character", "entity", "person"],
-				onSelect: () => {
-					// Open the chat with a specific intent or navigate to entity creator
-					// For now, let's open chat with a prompt
-					setChatOpen(true);
-					// Ideally we would pre-fill the chat input, but we can't easily do that yet.
-					// So we'll just open chat.
-					toast.info("Ask the AI to create a new character for you.");
-					toggleSpotlight();
-				},
-			},
-		);
 
 		// 1. Actions
 		list.push(
@@ -227,7 +176,6 @@ export function WriterSpotlight() {
 	}, [
 		entities,
 		structure,
-		project.id,
 		setChatOpen,
 		toggleSpotlight,
 		toggleZenMode,
@@ -318,24 +266,24 @@ export function WriterSpotlight() {
 						</div>
 
 						{/* Categories */}
-						<div className="flex items-center gap-1 px-4 pb-2 overflow-x-auto scrollbar-hide">
-							{(
-								["all", "create", "actions", "entities", "scenes"] as const
-							).map((cat) => (
-								<button
-									key={cat}
-									type="button"
-									onClick={() => setActiveCategory(cat)}
-									className={cn(
-										"px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 capitalize whitespace-nowrap",
-										activeCategory === cat
-											? "bg-primary/20 text-primary shadow-[0_0_10px_rgba(124,58,237,0.3)]"
-											: "text-muted-foreground hover:bg-white/5 hover:text-foreground",
-									)}
-								>
-									{cat}
-								</button>
-							))}
+						<div className="flex items-center gap-1 px-4 pb-2">
+							{(["all", "actions", "entities", "scenes"] as const).map(
+								(cat) => (
+									<button
+										key={cat}
+										type="button"
+										onClick={() => setActiveCategory(cat)}
+										className={cn(
+											"px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 capitalize",
+											activeCategory === cat
+												? "bg-primary/20 text-primary shadow-[0_0_10px_rgba(124,58,237,0.3)]"
+												: "text-muted-foreground hover:bg-white/5 hover:text-foreground",
+										)}
+									>
+										{cat}
+									</button>
+								),
+							)}
 						</div>
 					</div>
 
