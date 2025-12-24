@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
 import { WriterView } from "@/components/organisms/writer/writer-view";
 import type { Project } from "@/lib/db/schema";
 
@@ -24,11 +24,11 @@ vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
 }));
 
 vi.mock("@/components/organisms/writer/structure-editor-dialog", () => ({
-	StructureEditorDialog: () => <button>Structure Editor</button>,
+	StructureEditorDialog: () => <button type="button">Structure Editor</button>,
 }));
 
 vi.mock("@/components/organisms/writer/project-settings-modal", () => ({
-	ProjectSettingsModal: () => <button>Settings</button>,
+	ProjectSettingsModal: () => <button type="button">Settings</button>,
 }));
 
 vi.mock("@/components/organisms/chat/floating-assistant", () => ({
