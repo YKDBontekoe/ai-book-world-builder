@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
+import { withProjectWriteAccess } from "@/lib/actions-utils";
 import {
 	type BookPlan,
 	type StoryStyle,
@@ -35,22 +36,43 @@ export async function createBookFromPlan(
 	plan: BookPlan,
 	style?: StoryStyle,
 ) {
-	try {
-		await storyService.createBookFromPlan(projectId, plan, style);
-		return { success: true };
-	} catch (error) {
-		console.error("Failed to create book from plan", error);
-		return { success: false, error: "Failed to apply plan" };
-	}
+	return withProjectWriteAccess(projectId, async () => {
+		try {
+			await storyService.createBookFromPlan(projectId, plan, style);
+			return { success: true };
+		} catch (error) {
+			console.error("Failed to create book from plan", error);
+			// Check if error is already a friendly message or throw generic
+			if (error instanceof Error) {
+				return { success: false, error: error.message };
+			}
+			return { success: false, error: "Failed to apply plan" };
+		}
+	});
 }
 
 export async function planChapterScenes(chapterId: string) {
+	// We need to fetch the chapter first to get the projectId for security check
+	// However, we don't have a direct "getProjectIdForChapter" helper exposed here easily
+	// without importing repository.
+	// But `storyService.planChapterScenes` internally calls `getChapterWithScenes`.
+	// Ideally, we should refactor `planChapterScenes` to accept projectId, OR we rely on internal check.
+	// But the goal is to make it EXPLICIT.
+	// Since `withProjectWriteAccess` requires `projectId`, we can't easily use it without fetching the project ID first.
+	// This exposes a flaw in the `actions-utils` design: it assumes we always start with projectId.
+
+	// OPTION: We stick to the internal check for now for `planChapterScenes` but ensure it IS checked.
+	// storyService.planChapterScenes calls `ensureProjectAccess(targetChapter.projectId, true)`.
+	// This is safe. But `createBookFromPlan` took `projectId` directly, so we could wrap it easily.
+
+	// Let's at least wrap the error handling similarly.
 	try {
 		const sceneIds = await storyService.planChapterScenes(chapterId);
 		return { success: true, sceneIds };
 	} catch (error) {
 		console.error("Failed to plan chapter scenes", error);
-		return { success: false, error: "Planning failed" };
+		const msg = error instanceof Error ? error.message : "Planning failed";
+		return { success: false, error: msg };
 	}
 }
 

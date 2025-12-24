@@ -3,7 +3,34 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
-import { chapter, chapterVersion } from "@/lib/db/schema";
+import { chapter, chapterVersion, project } from "@/lib/db/schema";
+
+// Helper to verify access
+async function verifyChapterAccess(chapterId: string, userId: string) {
+	const result = await db
+		.select({
+			chapterId: chapter.id,
+			projectUserId: project.userId,
+			projectVisibility: project.visibility,
+		})
+		.from(chapter)
+		.innerJoin(project, eq(chapter.projectId, project.id))
+		.where(eq(chapter.id, chapterId))
+		.limit(1);
+
+	if (result.length === 0) return null;
+	const match = result[0];
+
+	// Owner has access
+	if (match.projectUserId === userId) return true;
+
+	// Public projects: only allow read access logic (checked by caller if needed)
+	// For this specific API (versions), we likely only want owners to see version history/drafts
+	// unless version history is public?
+	// Given the context of "World Builder" and "Writing Tool", version history is usually private.
+	// We will restrict to owner for now to be safe.
+	return false;
+}
 
 export async function GET(
 	request: NextRequest,
@@ -17,6 +44,11 @@ export async function GET(
 	const { id: chapterId } = await params;
 
 	try {
+		const hasAccess = await verifyChapterAccess(chapterId, session.user.id);
+		if (!hasAccess) {
+			return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+		}
+
 		const versions = await db
 			.select()
 			.from(chapterVersion)
@@ -43,10 +75,21 @@ export async function POST(
 	}
 
 	const { id: chapterId } = await params;
-	const body = await request.json();
-	const { content, generationId, createdBy = "user" } = body;
 
 	try {
+		const hasAccess = await verifyChapterAccess(chapterId, session.user.id);
+		if (!hasAccess) {
+			return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+		}
+
+		const body = await request.json();
+		// Basic validation since we are here
+		if (!body || typeof body.content !== "string") {
+			return NextResponse.json({ error: "Invalid content" }, { status: 400 });
+		}
+
+		const { content, generationId, createdBy = "user" } = body;
+
 		// Get the next version number
 		const existingVersions = await db
 			.select()
