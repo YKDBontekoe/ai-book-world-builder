@@ -137,7 +137,7 @@
 		"@storybook/addon-onboarding": "^10.1.8",
 		"@storybook/addon-vitest": "^10.1.8",
 		"@storybook/nextjs-vite": "^10.1.8",
-		"@storybook/react": "10.1.8",
+		"@storybook/react": "10.1.10",
 		"@tailwindcss/postcss": "^4.1.13",
 		"@tailwindcss/typography": "^0.5.15",
 		"@testing-library/jest-dom": "^6.6.3",
