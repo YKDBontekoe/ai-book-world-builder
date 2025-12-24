@@ -12,6 +12,7 @@ export default function ExportsLoading() {
 
 			<div className="grid gap-4">
 				{Array.from({ length: 5 }).map((_, i) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: Skeleton loading has no stable ID
 					<GlassCard
 						key={i}
 						variant="liquid"
