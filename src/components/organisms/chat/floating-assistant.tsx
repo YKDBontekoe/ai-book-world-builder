@@ -75,6 +75,8 @@ export function FloatingAssistant({
 
 	// Dimensions for Floating Mode
 	const [size, setSize] = useState({ width: 450, height: 600 });
+	// Track resizing state for performance optimization (disable spring during drag)
+	const [isResizing, setIsResizing] = useState(false);
 
 	const params = useParams();
 	const currentProjectId =
@@ -103,6 +105,7 @@ export function FloatingAssistant({
 
 	const handleMouseDown = (e: React.MouseEvent) => {
 		isResizingRef.current = true;
+		setIsResizing(true);
 		startResizeRef.current = {
 			x: e.clientX,
 			y: e.clientY,
@@ -131,6 +134,7 @@ export function FloatingAssistant({
 
 	const handleMouseUp = () => {
 		isResizingRef.current = false;
+		setIsResizing(false);
 		document.removeEventListener("mousemove", handleMouseMove);
 		document.removeEventListener("mouseup", handleMouseUp);
 	};
@@ -151,7 +155,6 @@ export function FloatingAssistant({
 			height: size.height,
 			right: 24, // 1.5rem
 			bottom: 24,
-			top: "auto",
 			borderRadius: 16, // rounded-2xl
 		},
 		sidebar: {
@@ -162,7 +165,6 @@ export function FloatingAssistant({
 			height: "calc(100vh - 32px)",
 			right: 16,
 			bottom: 16,
-			top: 16,
 			borderRadius: 12, // rounded-xl
 		},
 	};
@@ -195,11 +197,14 @@ export function FloatingAssistant({
 						animate={mode}
 						exit="hidden"
 						variants={variants}
-						transition={{ type: "spring", stiffness: 400, damping: 25 }}
-						layout
+						transition={
+							isResizing
+								? { duration: 0 }
+								: { type: "spring", stiffness: 400, damping: 25 }
+						}
 						variant="liquid"
 						className={cn(
-							"absolute flex flex-col z-50 overflow-hidden shadow-2xl backdrop-blur-xl border-white/20",
+							"absolute flex flex-col z-50 overflow-hidden shadow-2xl backdrop-blur-xl border-white/20 transition-none",
 							// In sidebar mode, we want to align it properly
 						)}
 					>
