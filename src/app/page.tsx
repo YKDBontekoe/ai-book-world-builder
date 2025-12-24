@@ -268,7 +268,7 @@ export default async function LandingPage(): Promise<React.JSX.Element> {
 							</span>
 						</div>
 						<p className="text-sm text-zinc-500 dark:text-zinc-400">
-							© 2024 AI Book World Builder. All rights reserved.
+							© {new Date().getFullYear()} AI Book World Builder. All rights reserved.
 						</p>
 					</div>
 				</div>
