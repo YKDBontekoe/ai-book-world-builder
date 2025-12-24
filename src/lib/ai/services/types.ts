@@ -60,7 +60,10 @@ export const MODEL_TIER_DESCRIPTIONS: Record<ModelTier, string> = {
 export type ModelRole = "orchestrator" | "writer" | "checker" | "context";
 
 /**
- * Mapping from semantic roles to model tiers.
+ * Maps semantic roles to model tiers.
+ *
+ * This allows us to use meaningful role names in code (e.g., "writer") while
+ * allowing the user's tier preferences to control which actual model is used.
  */
 export const ROLE_TO_TIER: Record<ModelRole, ModelTier> = {
 	orchestrator: "large", // Complex planning requires highest capability

@@ -22,40 +22,16 @@
  */
 
 import { getSelectedModelId } from "@/lib/ai/models";
+import {
+	type ModelRole,
+	type ModelTier,
+	ROLE_TO_TIER,
+} from "@/lib/ai/services/types";
 
-// =============================================================================
-// Types
-// =============================================================================
+// Re-export for backward compatibility
+export type { ModelRole, ModelTier };
+export { ROLE_TO_TIER };
 
-import type { ModelTier } from "@/lib/ai/services/types";
-import { getSelectedModelId } from "@/lib/ai/models";
-
-/**
- * Model Role - Semantic role in the AI pipeline.
- *
- * - `orchestrator` - Planning, outlining, complex logic
- * - `writer`       - Prose generation, creative writing
- * - `checker`      - Reviewing, consistency checking
- * - `context`      - Large context processing, analysis
- */
-export type { ModelRole } from "@/lib/ai/services/types";
-
-// =============================================================================
-// Mappings
-// =============================================================================
-
-/**
- * Maps semantic roles to model tiers.
- *
- * This allows us to use meaningful role names in code while
- * the user's tier preferences control which actual model is used.
- */
-export const ROLE_TO_TIER: Record<ModelRole, ModelTier> = {
-	orchestrator: "large", // Complex planning requires highest capability
-	writer: "large", // Creative writing benefits from best models
-	checker: "large", // Reasoning and consistency needs smart models
-	context: "middle", // Large context but speed matters
-};
 
 // =============================================================================
 // Functions
