@@ -15,8 +15,6 @@ import {
 	getModelIdForRole,
 	getModelIdForTier,
 	ROLE_TO_TIER,
-	type ModelRole,
-	type ModelTier,
 } from "@/lib/ai/model-routing";
 
 describe("Model Routing", () => {
