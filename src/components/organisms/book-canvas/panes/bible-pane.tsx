@@ -4,14 +4,14 @@ import { useQuery } from "@tanstack/react-query";
 import { BookOpenIcon, LinkIcon, SparklesIcon } from "lucide-react";
 import { getEntities } from "@/app/actions/entities";
 import { getRelationships } from "@/app/actions/project-stats";
-import { EmptyState } from "@/components/molecules/empty-state";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
-import { useEntityGrouping } from "@/hooks/use-entity-grouping";
-import { QUERY_KEYS } from "@/lib/query-options";
 import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 import { EntityGroupSection } from "@/components/organisms/book-canvas/panes/bible/entity-group-section";
 import { SourceMaterialsSection } from "@/components/organisms/book-canvas/panes/bible/source-materials-section";
+import { useEntityGrouping } from "@/hooks/use-entity-grouping";
+import { QUERY_KEYS } from "@/lib/query-options";
 
 export function BiblePane() {
 	const { projectId } = useBookCanvas();
@@ -27,7 +27,8 @@ export function BiblePane() {
 		queryKey: projectId
 			? QUERY_KEYS.relationships(projectId)
 			: ["relationships", "null"],
-		queryFn: () => (projectId ? getRelationships(projectId) : Promise.resolve([])),
+		queryFn: () =>
+			projectId ? getRelationships(projectId) : Promise.resolve([]),
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});

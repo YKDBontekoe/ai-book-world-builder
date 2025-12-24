@@ -22,7 +22,7 @@ import type { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import type { runDiagnostics } from "@/lib/ai/tools/run-diagnostics";
 import type { updateDocument } from "@/lib/ai/tools/update-document";
 import type { updateSceneCards } from "@/lib/ai/tools/update-scene-cards";
-import type { Suggestion, Chapter, Scene } from "@/lib/db/schema";
+import type { Chapter, Scene, Suggestion } from "@/lib/db/schema";
 import type { AppUsage } from "@/lib/usage";
 
 export type SceneWithPrev = Scene & { prevSceneId: string | null };
@@ -37,9 +37,9 @@ export type ProcessLog = {
 
 // DataPart includes standard DataUIParts (derived from CustomUIDataTypes) and custom parts
 export type DataPart =
-  | DataUIPart<CustomUIDataTypes>
-  | { type: "append-message"; message: string }
-  | ProcessLog;
+	| DataUIPart<CustomUIDataTypes>
+	| { type: "append-message"; message: string }
+	| ProcessLog;
 
 export const messageMetadataSchema = z.object({
 	createdAt: z.string(),

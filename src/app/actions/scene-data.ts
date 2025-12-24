@@ -1,17 +1,16 @@
 "use server";
 
 import { asc, eq } from "drizzle-orm";
+import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/drizzle";
+import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import {
 	type Chapter,
 	chapter,
 	type Scene,
 	type SceneCard,
-	scene,
 	sceneCard,
 } from "@/lib/db/schema";
-import { auth } from "@/app/(auth)/auth";
-import { getProjectByIdWithAccess } from "@/lib/db/queries";
 
 export type SerializedScene = Scene & {
 	card: SceneCard | null;
@@ -28,10 +27,10 @@ export async function getScenesData(
 		const session = await auth();
 		const userId = session?.user?.id;
 
-		const project = await getProjectByIdWithAccess({
-			id: projectId,
+		const project = await projectRepository.findByIdWithAccess(
+			projectId,
 			userId,
-		});
+		);
 
 		if (!project) {
 			console.error("Access denied to project:", projectId);
@@ -49,13 +48,8 @@ export async function getScenesData(
 			return [];
 		}
 
-		// 2. Fetch all scenes for the project
-		// Note: We could filter by chapterIds if needed, but project scope is fine for now
-		const scenes = await db
-			.select()
-			.from(scene)
-			.where(eq(scene.projectId, projectId))
-			.orderBy(asc(scene.sequence));
+		// 2. Fetch all scenes for the project using repository
+		const scenes = await sceneRepository.findByProject(projectId);
 
 		// 3. Fetch all scene cards
 		const cards = await db
@@ -64,7 +58,6 @@ export async function getScenesData(
 			.where(eq(sceneCard.projectId, projectId));
 
 		// 4. Map data together
-		// Create a map of sceneId -> SceneCard
 		const cardMap = new Map<string, SceneCard>();
 		for (const card of cards) {
 			cardMap.set(card.sceneId, card);

@@ -19,7 +19,9 @@ interface RunGenerationOptions {
 /**
  * Main orchestration function - runs the entire book generation pipeline
  */
-export async function runGeneration(options: RunGenerationOptions): Promise<void> {
-    const pipeline = new GenerationPipeline(options);
-    await pipeline.execute();
+export async function runGeneration(
+	options: RunGenerationOptions,
+): Promise<void> {
+	const pipeline = new GenerationPipeline(options);
+	await pipeline.execute();
 }

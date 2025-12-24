@@ -3,7 +3,12 @@
 import { ChevronDown } from "lucide-react";
 import type * as React from "react";
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@/components/atoms/card";
 import {
 	Collapsible,
 	CollapsibleContent,

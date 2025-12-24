@@ -8,8 +8,8 @@ import {
 	TrendingUpIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useDataStream } from "@/components/organisms/chat/data-stream-provider";
 import { Button } from "@/components/atoms/button";
+import { useDataStream } from "@/components/organisms/chat/data-stream-provider";
 import { DiagnosticsContent } from "@/components/organisms/chat/widgets/generation/diagnostics-content";
 import { OrchestratorContent } from "@/components/organisms/chat/widgets/generation/orchestrator-content";
 import type { GenerationWidgetProps } from "@/components/organisms/chat/widgets/generation/types";

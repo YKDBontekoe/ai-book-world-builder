@@ -1,10 +1,10 @@
-import {
-	type EntityGroup,
-	type SerializedEntity,
-	entityTypeConfig,
-} from "@/components/organisms/book-canvas/panes/bible/types";
 import { BookOpenIcon } from "lucide-react";
 import { useMemo } from "react";
+import {
+	type EntityGroup,
+	entityTypeConfig,
+	type SerializedEntity,
+} from "@/components/organisms/book-canvas/panes/bible/types";
 
 export function useEntityGrouping(entities: SerializedEntity[] | undefined) {
 	return useMemo(() => {

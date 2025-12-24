@@ -1,7 +1,10 @@
 "use client";
 
 import { EntityProposal } from "@/components/organisms/chat/widgets/entity-proposal";
-import type { ToolMessagePart, ToolRendererProps } from "@/components/organisms/messages/tools/types";
+import type {
+	ToolMessagePart,
+	ToolRendererProps,
+} from "@/components/organisms/messages/tools/types";
 
 export const ProposeManageEntitiesRenderer = ({ part }: ToolRendererProps) => {
 	const toolPart = part as unknown as ToolMessagePart;

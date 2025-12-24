@@ -4,19 +4,25 @@ vi.mock("@/app/(auth)/auth", () => ({
 	auth: vi.fn(),
 }));
 
-vi.mock("@/lib/db/queries", () => ({
-	updateScene: vi.fn(),
-	getProjectByIdWithAccess: vi.fn(),
+vi.mock("@/lib/db/repositories", () => ({
+	projectRepository: {
+		findByIdWithAccess: vi.fn(),
+	},
+	sceneRepository: {
+		update: vi.fn(),
+	},
 }));
 
 import { auth } from "@/app/(auth)/auth";
 import { updateSceneAction } from "@/app/actions/scenes";
-import { getProjectByIdWithAccess, updateScene } from "@/lib/db/queries";
+import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import type { Project, Scene } from "@/lib/db/schema";
 
 const mockedAuth = vi.mocked(auth);
-const mockedGetProjectByIdWithAccess = vi.mocked(getProjectByIdWithAccess);
-const mockedUpdateScene = vi.mocked(updateScene);
+const mockedFindByIdWithAccess = vi.mocked(
+	projectRepository.findByIdWithAccess,
+);
+const mockedUpdateScene = vi.mocked(sceneRepository.update);
 
 const userId = "user-123";
 const projectId = "project-123";
@@ -69,11 +75,10 @@ describe("scenes server actions", () => {
 	});
 
 	it("updates a scene when the user owns the project", async () => {
-		const scene = buildScene();
 		const updatedScene = buildScene({ title: "Updated Title" });
 
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetProjectByIdWithAccess.mockResolvedValue(buildProject());
+		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdateScene.mockResolvedValue(updatedScene);
 
 		const result = await updateSceneAction({
@@ -82,24 +87,18 @@ describe("scenes server actions", () => {
 			projectId,
 		});
 
-		expect(mockedGetProjectByIdWithAccess).toHaveBeenCalledWith({
-			id: projectId,
-			userId,
-		});
-		// We expect projectId to be passed to updateScene as part of the fix
-		expect(mockedUpdateScene).toHaveBeenCalledWith({
-			id: sceneId,
+		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
+		expect(mockedUpdateScene).toHaveBeenCalledWith(sceneId, {
 			title: "Updated Title",
 			status: undefined,
 			content: undefined,
-			projectId,
 		});
 		expect(result.title).toBe("Updated Title");
 	});
 
 	it("throws when the project is inaccessible", async () => {
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetProjectByIdWithAccess.mockResolvedValue(null);
+		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(updateSceneAction({ id: sceneId, projectId })).rejects.toThrow(
 			"Unauthorized",
@@ -111,7 +110,7 @@ describe("scenes server actions", () => {
 	it("throws when the project is public but owned by someone else", async () => {
 		mockedAuth.mockResolvedValue(buildSession());
 		// Public project owned by someone else
-		mockedGetProjectByIdWithAccess.mockResolvedValue(
+		mockedFindByIdWithAccess.mockResolvedValue(
 			buildProject({ userId: "other-user", visibility: "public" }),
 		);
 

@@ -4,10 +4,10 @@ import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { CalendarIcon, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
+import { Checkbox } from "@/components/atoms/checkbox";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { ProjectActionsMenu } from "@/components/organisms/projects/project-actions-menu";
 import type { Project } from "@/lib/db/schema";
-import { Checkbox } from "@/components/atoms/checkbox";
 import { cn } from "@/lib/utils";
 
 const container = {
@@ -40,7 +40,7 @@ function ProjectRow({
 	project,
 	selected,
 	onSelect,
-	onDelete
+	onDelete,
 }: {
 	project: Project;
 	selected?: boolean;
@@ -54,7 +54,9 @@ function ProjectRow({
 				<div
 					className={cn(
 						"transition-all duration-200 shrink-0",
-						selected ? "w-6 opacity-100" : "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100 overflow-hidden"
+						selected
+							? "w-6 opacity-100"
+							: "w-0 opacity-0 group-hover:w-6 group-hover:opacity-100 overflow-hidden",
 					)}
 				>
 					<Checkbox
@@ -72,7 +74,7 @@ function ProjectRow({
 						interactive
 						className={cn(
 							"flex flex-row items-center justify-between gap-4 p-4 transition-all duration-300",
-							selected && "ring-2 ring-primary bg-primary/5 scale-[0.99]"
+							selected && "ring-2 ring-primary bg-primary/5 scale-[0.99]",
 						)}
 					>
 						<div className="flex items-center gap-4 min-w-0">
@@ -120,11 +122,16 @@ function ProjectRow({
 	);
 }
 
-export function ProjectList({ projects, selectedIds, onSelect, onDeleteProject }: ProjectListProps): JSX.Element {
+export function ProjectList({
+	projects,
+	selectedIds,
+	onSelect,
+	onDeleteProject,
+}: ProjectListProps): JSX.Element {
 	return (
-		<motion.div 
-			variants={container} 
-			initial="hidden" 
+		<motion.div
+			variants={container}
+			initial="hidden"
 			animate="show"
 			className="flex flex-col gap-3"
 		>

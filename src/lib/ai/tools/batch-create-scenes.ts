@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { createScene as createSceneMutation } from "@/lib/db/queries";
+import { sceneRepository } from "@/lib/db/repositories";
 
 const batchCreateScenesSchema = z.object({
 	chapterId: z
@@ -56,11 +56,7 @@ export const batchCreateScenes = ({
 
 				for (const sceneData of scenes) {
 					try {
-						// Basic validation for existing scenes could be added here,
-						// but `createSceneMutation` typically handles basic inserts.
-						// We won't re-sequence everything here to save complexity, assuming the LLM provides reasonable sequences.
-
-						const scene = await createSceneMutation({
+						const scene = await sceneRepository.create({
 							projectId: finalProjectId,
 							chapterId,
 							title: sceneData.title,

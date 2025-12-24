@@ -1,6 +1,6 @@
 import type { SerializedRelationship } from "@/app/actions/project-stats";
-import { EntityCard } from "@/components/molecules/entity-card";
 import { Badge } from "@/components/atoms/badge";
+import { EntityCard } from "@/components/molecules/entity-card";
 import { SectionHeader } from "@/components/molecules/section-header";
 import type { EntityGroup } from "@/components/organisms/book-canvas/panes/bible/types";
 

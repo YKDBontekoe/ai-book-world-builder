@@ -3,9 +3,9 @@
 import { useChat } from "@ai-sdk/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "@/components/atoms/toast";
 import { useSetDataStream } from "@/components/organisms/chat/data-stream-provider";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
-import { toast } from "@/components/atoms/toast";
 import { createChatTransport } from "@/lib/ai/chat-transport";
 import type { ChatModelId } from "@/lib/ai/models";
 import { ChatSDKError } from "@/lib/errors";

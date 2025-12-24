@@ -1,7 +1,7 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import { CheckIcon, CopyIcon } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
@@ -30,7 +30,7 @@ export function CopyButton({
 		try {
 			await navigator.clipboard.writeText(content);
 			setCopied(true);
-			
+
 			if (showToast) {
 				toast.success(toastMessage);
 			}
@@ -52,7 +52,7 @@ export function CopyButton({
 			className={cn(
 				"relative transition-all duration-200",
 				size === "sm" && "h-7 w-7",
-				className
+				className,
 			)}
 			title="Copy to clipboard"
 			type="button"

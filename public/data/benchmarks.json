@@ -1,32 +1,32 @@
 [
-  {
-    "modelId": "anthropic-claude-opus-4-5",
-    "eloScore": 1250,
-    "writingElo": 1280
-  },
-  {
-    "modelId": "anthropic-claude-sonnet-4-5",
-    "eloScore": 1240,
-    "writingElo": 1270
-  },
-  {
-    "modelId": "google-gemini-3-pro",
-    "eloScore": 1230,
-    "writingElo": 1260
-  },
-  {
-    "modelId": "openai-gpt-4o-mini",
-    "eloScore": 1180,
-    "writingElo": 1200
-  },
-  {
-    "modelId": "openai-gpt-5-mini",
-    "eloScore": 1220,
-    "writingElo": 1240
-  },
-  {
-    "modelId": "deepseek-reasoner",
-    "eloScore": 1210,
-    "writingElo": 1190
-  }
+	{
+		"modelId": "anthropic-claude-opus-4-5",
+		"eloScore": 1250,
+		"writingElo": 1280
+	},
+	{
+		"modelId": "anthropic-claude-sonnet-4-5",
+		"eloScore": 1240,
+		"writingElo": 1270
+	},
+	{
+		"modelId": "google-gemini-3-pro",
+		"eloScore": 1230,
+		"writingElo": 1260
+	},
+	{
+		"modelId": "openai-gpt-4o-mini",
+		"eloScore": 1180,
+		"writingElo": 1200
+	},
+	{
+		"modelId": "openai-gpt-5-mini",
+		"eloScore": 1220,
+		"writingElo": 1240
+	},
+	{
+		"modelId": "deepseek-reasoner",
+		"eloScore": 1210,
+		"writingElo": 1190
+	}
 ]

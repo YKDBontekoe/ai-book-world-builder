@@ -4,8 +4,8 @@ import { sheetArtifact } from "@/components/organisms/artifacts/sheet/client";
 import { textArtifact } from "@/components/organisms/artifacts/text/client";
 
 export const artifactDefinitions = [
-  textArtifact,
-  codeArtifact,
-  sheetArtifact,
-  imageArtifact,
+	textArtifact,
+	codeArtifact,
+	sheetArtifact,
+	imageArtifact,
 ];

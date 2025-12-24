@@ -1,11 +1,14 @@
-import { useMemo } from "react";
-import { ArrowDownIcon } from "lucide-react";
 import type { UseChatHelpers } from "@ai-sdk/react";
+import { ArrowDownIcon } from "lucide-react";
+import { useMemo } from "react";
 
 import { SuggestedActions } from "@/components/organisms/chat/suggested-actions";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { Greeting } from "@/components/organisms/messages/greeting";
-import { PreviewMessage, ThinkingMessage } from "@/components/organisms/messages/message";
+import {
+	PreviewMessage,
+	ThinkingMessage,
+} from "@/components/organisms/messages/message";
 import { useMessages } from "@/hooks/use-messages";
 import type { ChatModelId } from "@/lib/ai/models";
 import type { Vote } from "@/lib/db/schema";
@@ -114,13 +117,15 @@ function PureMessages({
 					"-translate-x-1/2 absolute bottom-4 left-1/2 z-10 flex items-center gap-2 rounded-full border border-primary/20 bg-background/80 px-4 py-2 text-primary shadow-xl backdrop-blur-md transition-all duration-300 hover:bg-primary/10 hover:shadow-primary/20 hover:scale-105",
 					isAtBottom
 						? "pointer-events-none translate-y-4 opacity-0"
-						: "pointer-events-auto translate-y-0 opacity-100"
+						: "pointer-events-auto translate-y-0 opacity-100",
 				)}
 				onClick={() => scrollToBottom("smooth")}
 				type="button"
 			>
 				<ArrowDownIcon size={14} strokeWidth={3} />
-				<span className="text-xs font-bold uppercase tracking-wider">Scroll Down</span>
+				<span className="text-xs font-bold uppercase tracking-wider">
+					Scroll Down
+				</span>
 			</button>
 		</div>
 	);

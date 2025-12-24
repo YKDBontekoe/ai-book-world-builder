@@ -8,13 +8,16 @@ import { memo, useState } from "react";
 import { Response } from "@/components/molecules/response";
 import { MessageActions } from "@/components/organisms/messages/message-actions";
 import { MessageStreamingSources } from "@/components/organisms/messages/message-streaming-sources";
+import {
+	MessageAttachments,
+	MessageBubble,
+} from "@/components/organisms/messages/message-ui";
 import { MessageUsage } from "@/components/organisms/messages/message-usage";
+import { PartsRenderer } from "@/components/organisms/messages/parts/parts-renderer";
 import { springs } from "@/lib/animations";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
-import { MessageAttachments, MessageBubble } from "@/components/organisms/messages/message-ui";
-import { PartsRenderer } from "@/components/organisms/messages/parts/parts-renderer";
 
 const PurePreviewMessage = ({
 	chatId,

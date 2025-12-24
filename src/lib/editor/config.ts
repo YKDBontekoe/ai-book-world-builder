@@ -9,54 +9,54 @@ import type { MutableRefObject } from "react";
 import { buildContentFromDocument } from "@/lib/editor/functions";
 
 export const documentSchema = new Schema({
-  nodes: addListNodes(schema.spec.nodes, "paragraph block*", "block"),
-  marks: schema.spec.marks,
+	nodes: addListNodes(schema.spec.nodes, "paragraph block*", "block"),
+	marks: schema.spec.marks,
 });
 
 export function headingRule(level: number) {
-  return textblockTypeInputRule(
-    new RegExp(`^(#{1,${level}})\\s$`),
-    documentSchema.nodes.heading,
-    () => ({ level })
-  );
+	return textblockTypeInputRule(
+		new RegExp(`^(#{1,${level}})\\s$`),
+		documentSchema.nodes.heading,
+		() => ({ level }),
+	);
 }
 
 export const handleTransaction = ({
-  transaction,
-  editorRef,
-  onSaveContent,
-  onSelectionChange,
+	transaction,
+	editorRef,
+	onSaveContent,
+	onSelectionChange,
 }: {
-  transaction: Transaction;
-  editorRef: MutableRefObject<EditorView | null>;
-  onSaveContent: (updatedContent: string, debounce: boolean) => void;
-  onSelectionChange?: (selectionText: string) => void;
+	transaction: Transaction;
+	editorRef: MutableRefObject<EditorView | null>;
+	onSaveContent: (updatedContent: string, debounce: boolean) => void;
+	onSelectionChange?: (selectionText: string) => void;
 }) => {
-  if (!editorRef || !editorRef.current) {
-    return;
-  }
+	if (!editorRef || !editorRef.current) {
+		return;
+	}
 
-  const newState = editorRef.current.state.apply(transaction);
-  editorRef.current.updateState(newState);
+	const newState = editorRef.current.state.apply(transaction);
+	editorRef.current.updateState(newState);
 
-  if (transaction.docChanged && !transaction.getMeta("no-save")) {
-    const updatedContent = buildContentFromDocument(newState.doc);
+	if (transaction.docChanged && !transaction.getMeta("no-save")) {
+		const updatedContent = buildContentFromDocument(newState.doc);
 
-    if (transaction.getMeta("no-debounce")) {
-      onSaveContent(updatedContent, false);
-    } else {
-      onSaveContent(updatedContent, true);
-    }
-  }
+		if (transaction.getMeta("no-debounce")) {
+			onSaveContent(updatedContent, false);
+		} else {
+			onSaveContent(updatedContent, true);
+		}
+	}
 
-  if (transaction.selectionSet && onSelectionChange) {
-    const { selection } = newState;
-    const selectedText = newState.doc.textBetween(
-      selection.from,
-      selection.to,
-      " "
-    );
+	if (transaction.selectionSet && onSelectionChange) {
+		const { selection } = newState;
+		const selectedText = newState.doc.textBetween(
+			selection.from,
+			selection.to,
+			" ",
+		);
 
-    onSelectionChange(selectedText.trim());
-  }
+		onSelectionChange(selectedText.trim());
+	}
 };

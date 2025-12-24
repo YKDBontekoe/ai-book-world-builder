@@ -1,7 +1,7 @@
 // Modified from https://github.com/hamflx/prosemirror-diff/blob/master/src/diff.js
 
 import { diff_match_patch } from "diff-match-patch";
-import { Fragment, Node, Schema, Mark } from "prosemirror-model";
+import { Fragment, Mark, Node, type Schema } from "prosemirror-model";
 
 export enum DiffType {
 	Unchanged = 0,
@@ -260,7 +260,7 @@ export const patchTextNodes = (
 	);
 
 	// Perform the diff
-	let diffs = dmp.diff_main(chars1, chars2, false);
+	const diffs = dmp.diff_main(chars1, chars2, false);
 
 	// Convert back to sentences
 	const sentenceDiffs: [number, string[]][] = diffs.map(([type, text]) => {
@@ -334,7 +334,9 @@ export const computeChildEqualityFactor = (
 
 export const assertNodeTypeEqual = (node1: Node, node2: Node) => {
 	if (getNodeProperty(node1, "type") !== getNodeProperty(node2, "type")) {
-		throw new Error(`node type not equal: ${node1.type.name} !== ${node2.type.name}`);
+		throw new Error(
+			`node type not equal: ${node1.type.name} !== ${node2.type.name}`,
+		);
 	}
 };
 
@@ -358,7 +360,12 @@ export const isNodeEqual = (
 		);
 	}
 
-	if (!isNode1Array && !isNode2Array && node1 instanceof Node && node2 instanceof Node) {
+	if (
+		!isNode1Array &&
+		!isNode2Array &&
+		node1 instanceof Node &&
+		node2 instanceof Node
+	) {
 		const type1 = getNodeProperty(node1, "type");
 		const type2 = getNodeProperty(node2, "type");
 		if (type1 !== type2) {

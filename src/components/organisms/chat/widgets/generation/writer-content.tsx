@@ -1,5 +1,8 @@
 import { CheckCircle2, Loader2 } from "lucide-react";
-import type { WidgetInput, WidgetOutput } from "@/components/organisms/chat/widgets/generation/types";
+import type {
+	WidgetInput,
+	WidgetOutput,
+} from "@/components/organisms/chat/widgets/generation/types";
 
 export function WriterContent({
 	isLoading,

@@ -1,5 +1,8 @@
 import type { BookGenerationStep } from "@/lib/db/schema";
-import type { ProcessStepContext, StepHandler } from "@/lib/generation/steps/types";
+import type {
+	ProcessStepContext,
+	StepHandler,
+} from "@/lib/generation/steps/types";
 
 export class ConsistencyCheckHandler implements StepHandler {
 	async process(

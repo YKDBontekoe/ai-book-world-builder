@@ -67,7 +67,9 @@ export const VersionFooter = ({
 						currentVersionIndex,
 					);
 					// Filter out documents created after the target date (effectively restoring state)
-					return old.filter((doc) => !isAfter(new Date(doc.createdAt), targetDate));
+					return old.filter(
+						(doc) => !isAfter(new Date(doc.createdAt), targetDate),
+					);
 				},
 			);
 
@@ -112,9 +114,13 @@ export const VersionFooter = ({
 						{currentDocument?.createdAt ? (
 							<div className="text-muted-foreground text-sm">
 								Saved{" "}
-								{formatDistance(new Date(currentDocument.createdAt), new Date(), {
-									addSuffix: true,
-								})}
+								{formatDistance(
+									new Date(currentDocument.createdAt),
+									new Date(),
+									{
+										addSuffix: true,
+									},
+								)}
 							</div>
 						) : null}
 					</div>
@@ -133,10 +139,7 @@ export const VersionFooter = ({
 				>
 					{mode === "diff" ? "Exit diff" : "View diff"}
 				</Button>
-				<Button
-					disabled={isMutating}
-					onClick={() => restoreVersion()}
-				>
+				<Button disabled={isMutating} onClick={() => restoreVersion()}>
 					<div>Restore this version</div>
 					{isMutating && (
 						<div className="animate-spin">

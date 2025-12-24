@@ -1,12 +1,15 @@
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/queries";
 import {
 	type BookGenerationStep,
 	bookGenerationStep,
 	chapter,
 } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import type {
+	ProcessStepContext,
+	StepHandler,
+} from "@/lib/generation/steps/types";
 import { generateChapter } from "@/lib/generation/writer-agent";
-import type { ProcessStepContext, StepHandler } from "@/lib/generation/steps/types";
 
 async function getChapterInfo(chapterId: string | null) {
 	if (!chapterId) return null;

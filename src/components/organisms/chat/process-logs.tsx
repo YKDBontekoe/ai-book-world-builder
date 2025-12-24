@@ -8,8 +8,8 @@ import {
 	TerminalIcon,
 } from "lucide-react";
 import { useState } from "react";
-import type { ProcessLog } from "@/lib/types";
 import { springs } from "@/lib/animations";
+import type { ProcessLog } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export type { ProcessLog };

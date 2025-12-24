@@ -1,7 +1,10 @@
 "use client";
 
 import { GenerationWidget } from "@/components/organisms/chat/widgets/generation-widget";
-import type { ToolMessagePart, ToolRendererProps } from "@/components/organisms/messages/tools/types";
+import type {
+	ToolMessagePart,
+	ToolRendererProps,
+} from "@/components/organisms/messages/tools/types";
 
 export const GenerationRenderer = ({ part }: ToolRendererProps) => {
 	const toolPart = part as unknown as ToolMessagePart;

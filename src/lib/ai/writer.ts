@@ -1,6 +1,6 @@
 "use server";
 
-import { generationService, type GenerationOptions } from "./writer-service";
+import { type GenerationOptions, generationService } from "./writer-service";
 
 export type { GenerationOptions };
 
@@ -9,11 +9,11 @@ export type { GenerationOptions };
  * (Server Action)
  */
 export async function continueWriting(
-    context: string,
-    previousContent: string,
-    options: GenerationOptions = {}
+	context: string,
+	previousContent: string,
+	options: GenerationOptions = {},
 ) {
-    return generationService.continueWriting(context, previousContent, options);
+	return generationService.continueWriting(context, previousContent, options);
 }
 
 /**
@@ -21,12 +21,21 @@ export async function continueWriting(
  * (Server Action)
  */
 export async function draftScene(
-    sceneTitle: string,
-    cardData: { purpose: string; setting?: string; emotionalBeats?: string[] | string },
-    instructions?: string,
-    options: GenerationOptions = {}
+	sceneTitle: string,
+	cardData: {
+		purpose: string;
+		setting?: string;
+		emotionalBeats?: string[] | string;
+	},
+	instructions?: string,
+	options: GenerationOptions = {},
 ) {
-    return generationService.draftScene(sceneTitle, cardData, instructions, options);
+	return generationService.draftScene(
+		sceneTitle,
+		cardData,
+		instructions,
+		options,
+	);
 }
 
 /**
@@ -34,11 +43,11 @@ export async function draftScene(
  * (Server Action)
  */
 export async function generateIdeas(
-    context: string,
-    currentText: string,
-    options: GenerationOptions = {}
+	context: string,
+	currentText: string,
+	options: GenerationOptions = {},
 ) {
-    return generationService.generateIdeas(context, currentText, options);
+	return generationService.generateIdeas(context, currentText, options);
 }
 
 /**
@@ -46,16 +55,16 @@ export async function generateIdeas(
  * (Server Action)
  */
 export async function rewriteSelection(
-    selection: string,
-    instruction: string,
-    options: GenerationOptions = {}
+	selection: string,
+	instruction: string,
+	options: GenerationOptions = {},
 ) {
-    return generationService.rewriteSelection(selection, instruction, options);
+	return generationService.rewriteSelection(selection, instruction, options);
 }
 
 // Re-export generationService for server-side usage if needed
 // Actually, we should probably NOT export it from a "use server" file if it's a class instance.
-// But Next.js allows exporting it if it's imported by another server-side file? 
+// But Next.js allows exporting it if it's imported by another server-side file?
 // No, "use server" files should ONLY export async functions if they are to be consumed by Client Components.
 // If it's only consumed by other server modules, it doesn't need "use server".
 // But since Client Components DO import this file, we must strictly adhere to the async function rule.

@@ -69,32 +69,32 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 	const cookieStore = await cookies();
 	const chatModelFromCookie = cookieStore.get("chat-model");
 
-    // Filter available models based on user preferences (Light, Middle, Large)
-    const selectedModelIds = [
-        userPrefs.modelPreferences?.light,
-        userPrefs.modelPreferences?.middle,
-        userPrefs.modelPreferences?.large
-    ].filter(Boolean) as string[];
+	// Filter available models based on user preferences (Light, Middle, Large)
+	const selectedModelIds = [
+		userPrefs.modelPreferences?.light,
+		userPrefs.modelPreferences?.middle,
+		userPrefs.modelPreferences?.large,
+	].filter(Boolean) as string[];
 
-    // If user has selected models in settings, only show those
-    // Otherwise fallback to all available models
-    let filteredAvailableModels = availableModels;
+	// If user has selected models in settings, only show those
+	// Otherwise fallback to all available models
+	let filteredAvailableModels = availableModels;
 
-    if (selectedModelIds.length > 0) {
-        filteredAvailableModels = availableModels.filter(model =>
-            selectedModelIds.includes(model.id)
-        );
-    }
+	if (selectedModelIds.length > 0) {
+		filteredAvailableModels = availableModels.filter((model) =>
+			selectedModelIds.includes(model.id),
+		);
+	}
 
-    // Ensure we don't end up with empty list if IDs don't match available models for some reason
-    if (filteredAvailableModels.length === 0) {
-        filteredAvailableModels = availableModels;
-    }
+	// Ensure we don't end up with empty list if IDs don't match available models for some reason
+	if (filteredAvailableModels.length === 0) {
+		filteredAvailableModels = availableModels;
+	}
 
 	let modelIdToUse: string | undefined;
 
-    // 0. Try to use one of the filtered models if current preference/cookie is not in the list
-    // This logic ensures we default to one of the "selected" models if possible
+	// 0. Try to use one of the filtered models if current preference/cookie is not in the list
+	// This logic ensures we default to one of the "selected" models if possible
 
 	// 1. Try first favorite
 	if (userPrefs.favoriteModels.length > 0) {
@@ -111,27 +111,31 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 		modelIdToUse = userPrefs.modelPreferences.middle;
 	}
 
-    // 4. Ensure the selected model is actually in the filtered list.
-    // If not, pick the first one from filtered list (which is the user's preference)
-    if (modelIdToUse && !filteredAvailableModels.find(m => m.id === modelIdToUse)) {
-         if (filteredAvailableModels.length > 0) {
-             modelIdToUse = filteredAvailableModels[0].id;
-         }
-    }
+	// 4. Ensure the selected model is actually in the filtered list.
+	// If not, pick the first one from filtered list (which is the user's preference)
+	if (
+		modelIdToUse &&
+		!filteredAvailableModels.find((m) => m.id === modelIdToUse)
+	) {
+		if (filteredAvailableModels.length > 0) {
+			modelIdToUse = filteredAvailableModels[0].id;
+		}
+	}
 
 	// 5. Fallback to default (and ensure it's valid)
-    // Note: getValidChatModelId might return something not in our filtered list if we are not careful,
-    // but filteredAvailableModels[0] should be valid if the list is not empty.
-	const initialChatModel = modelIdToUse || filteredAvailableModels[0]?.id || DEFAULT_CHAT_MODEL;
+	// Note: getValidChatModelId might return something not in our filtered list if we are not careful,
+	// but filteredAvailableModels[0] should be valid if the list is not empty.
+	const initialChatModel =
+		modelIdToUse || filteredAvailableModels[0]?.id || DEFAULT_CHAT_MODEL;
 
 	console.log("[ChatPage] Model Selection Debug:", {
 		userId: session.user.id,
 		favorites: userPrefs.favoriteModels,
-        selectedModelPreferences: selectedModelIds,
+		selectedModelPreferences: selectedModelIds,
 		cookie: chatModelFromCookie?.value,
 		resolvedModel: modelIdToUse,
 		finalModel: initialChatModel,
-        filteredCount: filteredAvailableModels.length
+		filteredCount: filteredAvailableModels.length,
 	});
 
 	const serializedProjects = projects.map(serializeProject);

@@ -1,83 +1,83 @@
 {
-  "version": "7",
-  "dialect": "postgresql",
-  "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1765613231321,
-      "tag": "0000_slim_anthem",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1765623590093,
-      "tag": "0001_parallel_molten_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1765641840937,
-      "tag": "0002_mixed_longshot",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1765824883627,
-      "tag": "0003_noisy_chronomancer",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1765826118923,
-      "tag": "0004_skinny_bullseye",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1765909010423,
-      "tag": "0005_acoustic_young_avengers",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1766343786016,
-      "tag": "0006_white_james_howlett",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1766431590642,
-      "tag": "0007_drop_zombie_tables",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1766431652063,
-      "tag": "0008_add_issues",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1766478676600,
-      "tag": "0009_third_lilandra",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1766491227072,
-      "tag": "0010_little_chat",
-      "breakpoints": true
-    }
-  ]
+	"version": "7",
+	"dialect": "postgresql",
+	"entries": [
+		{
+			"idx": 0,
+			"version": "7",
+			"when": 1765613231321,
+			"tag": "0000_slim_anthem",
+			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1765623590093,
+			"tag": "0001_parallel_molten_man",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1765641840937,
+			"tag": "0002_mixed_longshot",
+			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1765824883627,
+			"tag": "0003_noisy_chronomancer",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1765826118923,
+			"tag": "0004_skinny_bullseye",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "7",
+			"when": 1765909010423,
+			"tag": "0005_acoustic_young_avengers",
+			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "7",
+			"when": 1766343786016,
+			"tag": "0006_white_james_howlett",
+			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "7",
+			"when": 1766431590642,
+			"tag": "0007_drop_zombie_tables",
+			"breakpoints": true
+		},
+		{
+			"idx": 8,
+			"version": "7",
+			"when": 1766431652063,
+			"tag": "0008_add_issues",
+			"breakpoints": true
+		},
+		{
+			"idx": 9,
+			"version": "7",
+			"when": 1766478676600,
+			"tag": "0009_third_lilandra",
+			"breakpoints": true
+		},
+		{
+			"idx": 10,
+			"version": "7",
+			"when": 1766491227072,
+			"tag": "0010_little_chat",
+			"breakpoints": true
+		}
+	]
 }

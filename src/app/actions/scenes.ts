@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
-import { getProjectByIdWithAccess, updateScene } from "@/lib/db/queries";
+import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 
 export async function updateSceneAction({
 	id,
@@ -18,25 +18,23 @@ export async function updateSceneAction({
 }) {
 	const session = await auth();
 
-	if (!session) {
+	if (!session?.user?.id) {
 		throw new Error("Unauthorized");
 	}
 
-	const project = await getProjectByIdWithAccess({
-		id: projectId,
-		userId: session.user.id,
-	});
+	const project = await projectRepository.findByIdWithAccess(
+		projectId,
+		session.user.id,
+	);
 
-	if (!project || project.userId !== session.user?.id) {
+	if (!project || project.userId !== session.user.id) {
 		throw new Error("Unauthorized");
 	}
 
-	const updatedScene = await updateScene({
-		id,
+	const updatedScene = await sceneRepository.update(id, {
 		title,
 		status,
 		content,
-		projectId,
 	});
 
 	return {

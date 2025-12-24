@@ -16,8 +16,8 @@ import {
 	CollapsibleContent,
 	CollapsibleTrigger,
 } from "@/components/atoms/collapsible";
-import { cn } from "@/lib/utils";
 import { KeyValueTable } from "@/components/molecules/key-value-table";
+import { cn } from "@/lib/utils";
 
 export type ToolProps = ComponentProps<typeof Collapsible>;
 

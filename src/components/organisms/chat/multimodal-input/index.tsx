@@ -1,11 +1,10 @@
 "use client";
 
 import type { UseChatHelpers } from "@ai-sdk/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowUpIcon, XIcon } from "lucide-react";
 import { memo, useMemo } from "react";
 import { toast } from "sonner";
-import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { Context } from "@/components/molecules/context";
 import {
 	PromptInput,
@@ -14,15 +13,16 @@ import {
 	PromptInputToolbar,
 	PromptInputTools,
 } from "@/components/molecules/prompt-input";
+import { AttachmentPreviewList } from "@/components/organisms/chat/multimodal-input/attachment-preview-list";
+import { AttachmentsButton } from "@/components/organisms/chat/multimodal-input/attachments-button";
+import { ModelSelectorCompact } from "@/components/organisms/chat/multimodal-input/model-selector";
+import { StopButton } from "@/components/organisms/chat/multimodal-input/stop-button";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { useMultimodalInput } from "@/hooks/use-multimodal-input";
 import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { cn } from "@/lib/utils";
-import { AttachmentPreviewList } from "@/components/organisms/chat/multimodal-input/attachment-preview-list";
-import { AttachmentsButton } from "@/components/organisms/chat/multimodal-input/attachments-button";
-import { ModelSelectorCompact } from "@/components/organisms/chat/multimodal-input/model-selector";
-import { StopButton } from "@/components/organisms/chat/multimodal-input/stop-button";
 
 function PureMultimodalInput({
 	chatId: _chatId,
@@ -117,7 +117,7 @@ function PureMultimodalInput({
 						rows={1}
 						value={input}
 					/>
-					
+
 					<AnimatePresence>
 						{(input.length > 0 || attachments.length > 0) && (
 							<motion.button
@@ -136,7 +136,7 @@ function PureMultimodalInput({
 							</motion.button>
 						)}
 					</AnimatePresence>
-					
+
 					<Context {...contextProps} />
 				</div>
 				<PromptInputToolbar className="!border-top-0 border-t-0! px-1 pb-1 shadow-none dark:border-0 dark:border-transparent!">

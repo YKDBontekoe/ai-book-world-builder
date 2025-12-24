@@ -1,15 +1,6 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Artifact } from "@/components/organisms/artifact";
-import { AgentCapabilities } from "@/components/organisms/chat/agent-capabilities";
-import { ChatActionHandler } from "@/components/organisms/chat/chat-action-handler";
-import { ChatHeader } from "@/components/organisms/chat/chat-header";
-import { MultimodalInput } from "@/components/organisms/chat/multimodal-input";
-import { ProcessLogs } from "@/components/organisms/chat/process-logs";
-import { SuggestedActions } from "@/components/organisms/chat/suggested-actions";
-import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
-import { Messages } from "@/components/organisms/messages/messages";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -20,6 +11,20 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/atoms/alert-dialog";
+import { Artifact } from "@/components/organisms/artifact";
+import { AgentCapabilities } from "@/components/organisms/chat/agent-capabilities";
+import { ChatActionHandler } from "@/components/organisms/chat/chat-action-handler";
+import {
+	ChatProvider,
+	useChatContext,
+} from "@/components/organisms/chat/chat-context";
+import { ChatHeader } from "@/components/organisms/chat/chat-header";
+import { ChatLayout } from "@/components/organisms/chat/chat-layout";
+import { MultimodalInput } from "@/components/organisms/chat/multimodal-input";
+import { ProcessLogs } from "@/components/organisms/chat/process-logs";
+import { SuggestedActions } from "@/components/organisms/chat/suggested-actions";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import { Messages } from "@/components/organisms/messages/messages";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatController } from "@/hooks/use-chat-controller";
@@ -33,8 +38,6 @@ import type { ProjectSummary } from "@/lib/project-context";
 import { QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
-import { ChatProvider, useChatContext } from "@/components/organisms/chat/chat-context";
-import { ChatLayout } from "@/components/organisms/chat/chat-layout";
 
 function ChatContent({
 	id,

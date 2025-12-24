@@ -9,46 +9,46 @@ import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 
 type ChatPageContentProps = {
-  id: string;
-  initialMessages: ChatMessage[];
-  initialChatModel: ChatModelId;
-  initialProjectId?: string;
-  initialProjects?: ProjectSummary[];
-  initialVisibilityType: VisibilityType;
-  isReadonly: boolean;
-  autoResume: boolean;
-  initialLastContext?: AppUsage;
-  availableModels: ChatModel[];
+	id: string;
+	initialMessages: ChatMessage[];
+	initialChatModel: ChatModelId;
+	initialProjectId?: string;
+	initialProjects?: ProjectSummary[];
+	initialVisibilityType: VisibilityType;
+	isReadonly: boolean;
+	autoResume: boolean;
+	initialLastContext?: AppUsage;
+	availableModels: ChatModel[];
 };
 
 export function ChatPageContent({
-  id,
-  initialMessages,
-  initialChatModel,
-  initialProjectId,
-  initialProjects,
-  initialVisibilityType,
-  isReadonly,
-  autoResume,
-  initialLastContext,
-  availableModels,
+	id,
+	initialMessages,
+	initialChatModel,
+	initialProjectId,
+	initialProjects,
+	initialVisibilityType,
+	isReadonly,
+	autoResume,
+	initialLastContext,
+	availableModels,
 }: ChatPageContentProps) {
-  return (
-    <>
-      <Chat
-        autoResume={autoResume}
-        availableModels={availableModels}
-        id={id}
-        initialChatModel={initialChatModel}
-        initialLastContext={initialLastContext}
-        initialMessages={initialMessages}
-        initialProjectId={initialProjectId}
-        initialProjects={initialProjects}
-        initialVisibilityType={initialVisibilityType}
-        isReadonly={isReadonly}
-        key={id}
-      />
-      <DataStreamHandler />
-    </>
-  );
+	return (
+		<>
+			<Chat
+				autoResume={autoResume}
+				availableModels={availableModels}
+				id={id}
+				initialChatModel={initialChatModel}
+				initialLastContext={initialLastContext}
+				initialMessages={initialMessages}
+				initialProjectId={initialProjectId}
+				initialProjects={initialProjects}
+				initialVisibilityType={initialVisibilityType}
+				isReadonly={isReadonly}
+				key={id}
+			/>
+			<DataStreamHandler />
+		</>
+	);
 }

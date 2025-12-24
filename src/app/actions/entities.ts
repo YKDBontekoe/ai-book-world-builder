@@ -2,40 +2,34 @@
 
 import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
-import {
-	deleteEntity,
-	getEntitiesForProject as getEntitiesQuery,
-	getEntityById,
-	getProjectByIdWithAccess,
-	updateEntity,
-} from "@/lib/db/queries";
-import { Entity } from "@/lib/db/schema";
+import { entityRepository, projectRepository } from "@/lib/db/repositories";
+import type { Entity } from "@/lib/db/schema";
 
-export async function getEntitiesForProject(projectId: string): Promise<{ success: Entity[] } | { error: string }> {
-    try {
-        const session = await auth();
-        if (!session?.user?.id) {
-            return { error: "Unauthorized" };
-        }
+export async function getEntitiesForProject(
+	projectId: string,
+): Promise<{ success: Entity[] } | { error: string }> {
+	try {
+		const session = await auth();
+		if (!session?.user?.id) {
+			return { error: "Unauthorized" };
+		}
 
-        const project = await getProjectByIdWithAccess({
-            id: projectId,
-            userId: session.user.id
-        });
+		const project = await projectRepository.findByIdWithAccess(
+			projectId,
+			session.user.id,
+		);
 
-        if (!project) {
-            return { error: "Project not found or access denied" };
-        }
+		if (!project) {
+			return { error: "Project not found or access denied" };
+		}
 
-        const entities = await getEntitiesQuery({ projectId });
-        return { success: entities };
-    } catch (e) {
-        console.error(e);
-        return { error: "Failed to fetch entities" };
-    }
+		const entities = await entityRepository.findByProject(projectId);
+		return { success: entities };
+	} catch (e) {
+		console.error(e);
+		return { error: "Failed to fetch entities" };
+	}
 }
-
-// RESTORED FUNCTIONS
 
 export async function getEntities(projectId: string) {
 	const session = await auth();
@@ -44,16 +38,16 @@ export async function getEntities(projectId: string) {
 		throw new Error("Unauthorized");
 	}
 
-	const project = await getProjectByIdWithAccess({
-		id: projectId,
-        userId: session.user.id,
-	});
+	const project = await projectRepository.findByIdWithAccess(
+		projectId,
+		session.user.id,
+	);
 
 	if (!project) {
 		throw new Error("Project not found or access denied");
 	}
 
-	const entities = await getEntitiesQuery({ projectId });
+	const entities = await entityRepository.findByProject(projectId);
 
 	// Serialize dates
 	return entities.map((entity) => ({
@@ -86,16 +80,16 @@ export async function updateEntityAction({
 		throw new Error("Unauthorized");
 	}
 
-	const entity = await getEntityById({ id });
+	const entity = await entityRepository.findById(id);
 
 	if (!entity) {
 		throw new Error("Entity not found");
 	}
 
-	const project = await getProjectByIdWithAccess({
-		id: entity.projectId,
-		userId: session.user.id,
-	});
+	const project = await projectRepository.findByIdWithAccess(
+		entity.projectId,
+		session.user.id,
+	);
 
 	if (!project) {
 		throw new Error("Access denied to entity");
@@ -109,8 +103,7 @@ export async function updateEntityAction({
 		throw new Error("Entity does not belong to the provided project");
 	}
 
-	const updatedEntity = await updateEntity({
-		id,
+	const updatedEntity = await entityRepository.update(id, {
 		name,
 		kind,
 		summary,
@@ -133,16 +126,16 @@ export async function deleteEntityAction(id: string) {
 		throw new Error("Unauthorized");
 	}
 
-	const entity = await getEntityById({ id });
+	const entity = await entityRepository.findById(id);
 
 	if (!entity) {
 		throw new Error("Entity not found");
 	}
 
-	const project = await getProjectByIdWithAccess({
-		id: entity.projectId,
-		userId: session.user.id,
-	});
+	const project = await projectRepository.findByIdWithAccess(
+		entity.projectId,
+		session.user.id,
+	);
 
 	if (!project) {
 		throw new Error("Access denied to entity");
@@ -152,6 +145,6 @@ export async function deleteEntityAction(id: string) {
 		throw new Error("Unauthorized: Only project owner can delete entities");
 	}
 
-	await deleteEntity({ id });
-	revalidatePath("/(chat)", "page"); // Revalidate broadly to ensure lists update
+	await entityRepository.delete(id);
+	revalidatePath("/(chat)", "page");
 }

@@ -16,10 +16,16 @@ import {
 	useMemo,
 	useRef,
 } from "react";
-import type { ArtifactKind, UIArtifact } from "@/components/organisms/artifact/types";
-import { CodeEditor } from "@/components/organisms/editor/code-editor";
-import { DocumentToolCall, DocumentToolResult } from "@/components/organisms/document/document";
+import type {
+	ArtifactKind,
+	UIArtifact,
+} from "@/components/organisms/artifact/types";
+import {
+	DocumentToolCall,
+	DocumentToolResult,
+} from "@/components/organisms/document/document";
 import { InlineDocumentSkeleton } from "@/components/organisms/document/document-skeleton";
+import { CodeEditor } from "@/components/organisms/editor/code-editor";
 import { ImageEditor } from "@/components/organisms/editor/image-editor";
 import { SpreadsheetEditor } from "@/components/organisms/editor/sheet-editor";
 import { Editor } from "@/components/organisms/editor/text-editor";

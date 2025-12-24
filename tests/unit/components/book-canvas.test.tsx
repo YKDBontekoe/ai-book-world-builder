@@ -7,52 +7,66 @@ import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-co
 
 // Mock the context hook
 vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
-  useBookCanvas: vi.fn(),
+	useBookCanvas: vi.fn(),
 }));
 
 // Mock the panes to avoid complex rendering
-vi.mock("@/components/organisms/book-canvas/panes/outline-pane", () => ({ OutlinePane: () => <div>Outline</div> }));
-vi.mock("@/components/organisms/book-canvas/panes/timeline-pane", () => ({ TimelinePane: () => <div>Timeline</div> }));
-vi.mock("@/components/organisms/book-canvas/panes/scene-pane", () => ({ ScenePane: () => <div>Scenes</div> }));
-vi.mock("@/components/organisms/book-canvas/panes/draft-pane", () => ({ DraftPane: () => <div>Draft</div> }));
-vi.mock("@/components/organisms/book-canvas/panes/diagnostics-pane", () => ({ DiagnosticsPane: () => <div>Diagnostics</div> }));
-vi.mock("@/components/organisms/book-canvas/panes/bible-pane", () => ({ BiblePane: () => <div>Bible</div> }));
-vi.mock("@/components/organisms/book-canvas/panes/changelog-pane", () => ({ ChangeLogPane: () => <div>ChangeLog</div> }));
+vi.mock("@/components/organisms/book-canvas/panes/outline-pane", () => ({
+	OutlinePane: () => <div>Outline</div>,
+}));
+vi.mock("@/components/organisms/book-canvas/panes/timeline-pane", () => ({
+	TimelinePane: () => <div>Timeline</div>,
+}));
+vi.mock("@/components/organisms/book-canvas/panes/scene-pane", () => ({
+	ScenePane: () => <div>Scenes</div>,
+}));
+vi.mock("@/components/organisms/book-canvas/panes/draft-pane", () => ({
+	DraftPane: () => <div>Draft</div>,
+}));
+vi.mock("@/components/organisms/book-canvas/panes/diagnostics-pane", () => ({
+	DiagnosticsPane: () => <div>Diagnostics</div>,
+}));
+vi.mock("@/components/organisms/book-canvas/panes/bible-pane", () => ({
+	BiblePane: () => <div>Bible</div>,
+}));
+vi.mock("@/components/organisms/book-canvas/panes/changelog-pane", () => ({
+	ChangeLogPane: () => <div>ChangeLog</div>,
+}));
 
 describe("BookCanvas", () => {
-  it("renders with fixed positioning when open", () => {
-    (useBookCanvas as any).mockReturnValue({
-      isOpen: true,
-      activePane: "outline",
-      setIsOpen: vi.fn(),
-      setActivePane: vi.fn(),
-      overallStatus: "idle",
-    });
+	it("renders with fixed positioning when open", () => {
+		(useBookCanvas as any).mockReturnValue({
+			isOpen: true,
+			activePane: "outline",
+			setIsOpen: vi.fn(),
+			setActivePane: vi.fn(),
+			overallStatus: "idle",
+		});
 
-    const { container } = render(<BookCanvas />);
-    const canvasDiv = container.firstChild as HTMLElement;
+		const { container } = render(<BookCanvas />);
+		const canvasDiv = container.firstChild as HTMLElement;
 
-    // Check for fixed positioning class
-    expect(canvasDiv.className).toContain("fixed");
-    expect(canvasDiv.className).toContain("inset-0");
-    // Check for desktop overrides
-    expect(canvasDiv.className).toContain("md:static");
-    expect(canvasDiv.className).toContain("md:flex");
-  });
+		// Check for fixed positioning class
+		expect(canvasDiv.className).toContain("fixed");
+		expect(canvasDiv.className).toContain("inset-0");
+		// Check for desktop overrides
+		expect(canvasDiv.className).toContain("md:static");
+		expect(canvasDiv.className).toContain("md:flex");
+	});
 
-  it("renders collapsed state correctly", () => {
-    (useBookCanvas as any).mockReturnValue({
-      isOpen: false,
-      activePane: "outline",
-      setIsOpen: vi.fn(),
-      setActivePane: vi.fn(),
-      overallStatus: "idle",
-    });
+	it("renders collapsed state correctly", () => {
+		(useBookCanvas as any).mockReturnValue({
+			isOpen: false,
+			activePane: "outline",
+			setIsOpen: vi.fn(),
+			setActivePane: vi.fn(),
+			overallStatus: "idle",
+		});
 
-    const { container } = render(<BookCanvas />);
-    const collapsedDiv = container.firstChild as HTMLElement;
+		const { container } = render(<BookCanvas />);
+		const collapsedDiv = container.firstChild as HTMLElement;
 
-    expect(collapsedDiv.className).toContain("hidden");
-    expect(collapsedDiv.className).toContain("md:flex");
-  });
+		expect(collapsedDiv.className).toContain("hidden");
+		expect(collapsedDiv.className).toContain("md:flex");
+	});
 });

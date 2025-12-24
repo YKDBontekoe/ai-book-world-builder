@@ -59,7 +59,9 @@ function EntityActions({
 		},
 		onSuccess: () => {
 			// Invalidate queries to refresh the list
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entities(projectId) });
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.entities(projectId),
+			});
 			queryClient.invalidateQueries({
 				queryKey: QUERY_KEYS.relationships(projectId),
 			});

@@ -1,23 +1,31 @@
-import { db } from "../src/lib/db/drizzle";
 import { sql } from "drizzle-orm";
+import { db } from "../src/lib/db/drizzle";
 
 async function main() {
-  console.log("Migrating...");
+	console.log("Migrating...");
 
-  // Update User
-  await db.execute(sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "name" text`);
-  await db.execute(sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "image" text`);
-  await db.execute(sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" timestamp`);
+	// Update User
+	await db.execute(
+		sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "name" text`,
+	);
+	await db.execute(
+		sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "image" text`,
+	);
+	await db.execute(
+		sql`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emailVerified" timestamp`,
+	);
 
-  // Add unique constraint safely
-  try {
-      await db.execute(sql`ALTER TABLE "User" ADD CONSTRAINT "User_email_unique" UNIQUE ("email")`);
-  } catch (e: any) {
-      console.log("Unique constraint might already exist or failed:", e.message);
-  }
+	// Add unique constraint safely
+	try {
+		await db.execute(
+			sql`ALTER TABLE "User" ADD CONSTRAINT "User_email_unique" UNIQUE ("email")`,
+		);
+	} catch (e: any) {
+		console.log("Unique constraint might already exist or failed:", e.message);
+	}
 
-  // Create Account
-  await db.execute(sql`
+	// Create Account
+	await db.execute(sql`
     CREATE TABLE IF NOT EXISTS "Account" (
         "userId" uuid NOT NULL REFERENCES "User"("id") ON DELETE CASCADE,
         "type" text NOT NULL,
@@ -34,8 +42,8 @@ async function main() {
     )
   `);
 
-  console.log("Done.");
-  process.exit(0);
+	console.log("Done.");
+	process.exit(0);
 }
 
 main().catch(console.error);

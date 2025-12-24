@@ -6,9 +6,12 @@ import {
 	useState,
 } from "react";
 import { saveChatModelAsCookie } from "@/app/(chat)/actions";
-import type { SortOption, TabType } from "@/components/organisms/chat/multimodal-input/constants";
-import type { ChatModel, ChatModelId } from "@/lib/ai/models";
+import type {
+	SortOption,
+	TabType,
+} from "@/components/organisms/chat/multimodal-input/constants";
 import { useModelPreferences } from "@/hooks/use-model-preferences";
+import type { ChatModel, ChatModelId } from "@/lib/ai/models";
 
 function getPricePerMillion(price: string | number): number {
 	const parsedPrice = typeof price === "string" ? parseFloat(price) : price;
@@ -34,7 +37,8 @@ export function useModelSelection({
 
 	// New advanced filters
 	const [selectedProviders, setSelectedProviders] = useState<string[]>([]);
-	const [contextWindow, setContextWindow] = useState<ContextWindowOption>("all");
+	const [contextWindow, setContextWindow] =
+		useState<ContextWindowOption>("all");
 
 	const {
 		favoriteModels,
@@ -73,7 +77,11 @@ export function useModelSelection({
 					return Boolean(model.reasoning);
 				case "free":
 					// Fix: handle "0" price string correctly
-					return !model.pricing || model.pricing.input === "0" || parseFloat(model.pricing.input) === 0;
+					return (
+						!model.pricing ||
+						model.pricing.input === "0" ||
+						parseFloat(model.pricing.input) === 0
+					);
 				case "budget":
 					return model.pricing?.input
 						? getPricePerMillion(model.pricing.input) > 0 &&
@@ -122,7 +130,11 @@ export function useModelSelection({
 		};
 
 		const filtered = availableModels.filter(
-			(model) => matchesTab(model) && matchesSearch(model) && matchesProvider(model) && matchesContext(model),
+			(model) =>
+				matchesTab(model) &&
+				matchesSearch(model) &&
+				matchesProvider(model) &&
+				matchesContext(model),
 		);
 
 		if (sortOption === "relevance") {
@@ -155,7 +167,15 @@ export function useModelSelection({
 					return 0;
 			}
 		});
-	}, [activeTab, favoriteModels, searchQuery, availableModels, sortOption, selectedProviders, contextWindow]);
+	}, [
+		activeTab,
+		favoriteModels,
+		searchQuery,
+		availableModels,
+		sortOption,
+		selectedProviders,
+		contextWindow,
+	]);
 
 	const groupedByProvider = useMemo(() => {
 		return filteredModels.reduce(

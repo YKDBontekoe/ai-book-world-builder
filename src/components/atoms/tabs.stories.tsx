@@ -11,7 +11,12 @@ import {
 } from "@/components/atoms/card";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/atoms/tabs";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@/components/atoms/tabs";
 
 const meta = {
 	title: "UI/Tabs",

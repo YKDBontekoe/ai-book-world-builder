@@ -1,7 +1,10 @@
 "use client";
 
 import { DocumentPreview } from "@/components/organisms/document/document-preview";
-import type { ToolMessagePart, ToolRendererProps } from "@/components/organisms/messages/tools/types";
+import type {
+	ToolMessagePart,
+	ToolRendererProps,
+} from "@/components/organisms/messages/tools/types";
 
 export const CreateDocumentRenderer = ({
 	part,

@@ -1,6 +1,6 @@
 "use client";
 
-import { motion, type HTMLMotionProps, type Variants } from "framer-motion";
+import { type HTMLMotionProps, motion, type Variants } from "framer-motion";
 import * as React from "react";
 import {
 	fadeIn,

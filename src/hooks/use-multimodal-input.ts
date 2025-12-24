@@ -1,5 +1,11 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
-import { type ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import {
+	type ChangeEvent,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import { useFileAttachments } from "@/hooks/use-file-attachments";
 import type { ChatMessage } from "@/lib/types";

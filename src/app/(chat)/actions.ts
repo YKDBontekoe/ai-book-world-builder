@@ -13,10 +13,10 @@ import { titlePrompt } from "@/lib/ai/prompts";
 import { myProvider } from "@/lib/ai/providers";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
 import {
-        deleteMessagesByChatIdAfterTimestamp,
-        getChatById,
-        getMessageById,
-        updateChatVisibilityById,
+	deleteMessagesByChatIdAfterTimestamp,
+	getChatById,
+	getMessageById,
+	updateChatVisibilityById,
 } from "@/lib/db/queries";
 import { getTextFromMessage } from "@/lib/utils";
 
@@ -67,54 +67,54 @@ export async function generateTitleFromUserMessage({
  * authenticated user owns.
  */
 export async function deleteTrailingMessages({ id }: { id: string }) {
-        const session = await auth();
-        if (!session?.user) {
-                throw new Error("Unauthorized");
-        }
+	const session = await auth();
+	if (!session?.user) {
+		throw new Error("Unauthorized");
+	}
 
-        const [message] = await getMessageById({ id });
-        if (!message) {
-                throw new Error("Message not found");
-        }
+	const [message] = await getMessageById({ id });
+	if (!message) {
+		throw new Error("Message not found");
+	}
 
-        const chat = await getChatById({ id: message.chatId });
-        if (!chat) {
-                throw new Error("Chat not found");
-        }
+	const chat = await getChatById({ id: message.chatId });
+	if (!chat) {
+		throw new Error("Chat not found");
+	}
 
-        if (chat.userId !== session.user.id) {
-                throw new Error("Forbidden");
-        }
+	if (chat.userId !== session.user.id) {
+		throw new Error("Forbidden");
+	}
 
-        await deleteMessagesByChatIdAfterTimestamp({
-                chatId: message.chatId,
-                timestamp: message.createdAt,
-        });
+	await deleteMessagesByChatIdAfterTimestamp({
+		chatId: message.chatId,
+		timestamp: message.createdAt,
+	});
 }
 
 /**
  * Updates the visibility for a chat owned by the authenticated user.
  */
 export async function updateChatVisibility({
-        chatId,
-        visibility,
+	chatId,
+	visibility,
 }: {
-        chatId: string;
-        visibility: VisibilityType;
+	chatId: string;
+	visibility: VisibilityType;
 }) {
-        const session = await auth();
-        if (!session?.user) {
-                throw new Error("Unauthorized");
-        }
+	const session = await auth();
+	if (!session?.user) {
+		throw new Error("Unauthorized");
+	}
 
-        const chat = await getChatById({ id: chatId });
-        if (!chat) {
-                throw new Error("Chat not found");
-        }
+	const chat = await getChatById({ id: chatId });
+	if (!chat) {
+		throw new Error("Chat not found");
+	}
 
-        if (chat.userId !== session.user.id) {
-                throw new Error("Forbidden");
-        }
+	if (chat.userId !== session.user.id) {
+		throw new Error("Forbidden");
+	}
 
-        await updateChatVisibilityById({ chatId, visibility });
+	await updateChatVisibilityById({ chatId, visibility });
 }

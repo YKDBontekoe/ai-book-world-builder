@@ -54,7 +54,9 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 			toast.success("Changes applied successfully.");
 
 			// Refresh entity lists
-			queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entities(projectId) });
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.entities(projectId),
+			});
 			queryClient.invalidateQueries({
 				queryKey: QUERY_KEYS.relationships(projectId),
 			});
@@ -148,7 +150,10 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 							)}
 							{op.payload?.attributes && op.payload.attributes.length > 0 && (
 								<div className="text-[10px] text-muted-foreground pt-1">
-									<span className="font-medium">{op.payload.attributes.length}</span> attribute(s) modified
+									<span className="font-medium">
+										{op.payload.attributes.length}
+									</span>{" "}
+									attribute(s) modified
 								</div>
 							)}
 						</div>
@@ -171,9 +176,7 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 					disabled={isExecuting}
 					className="h-7 text-xs"
 				>
-					{isExecuting && (
-						<Loader2Icon className="mr-2 h-3 w-3 animate-spin" />
-					)}
+					{isExecuting && <Loader2Icon className="mr-2 h-3 w-3 animate-spin" />}
 					Confirm Changes
 				</Button>
 			</CardFooter>

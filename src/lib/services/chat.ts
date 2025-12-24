@@ -1,6 +1,8 @@
 import { geolocation } from "@vercel/functions";
+import { eq } from "drizzle-orm";
 import type { UserType } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
+import { getAvailableModels } from "@/app/actions/settings";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type ChatModel, getChatModelById } from "@/lib/ai/models";
@@ -20,14 +22,12 @@ import {
 	saveChat,
 	saveMessages,
 } from "@/lib/db/queries";
-import { chapter as chapters, scene as scenes } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import type { DBMessage } from "@/lib/db/schema";
+import { chapter as chapters, scene as scenes } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import { buildProjectContext } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
-import { getAvailableModels } from "@/app/actions/settings";
 
 export async function initializeChatSession({
 	id,
@@ -37,7 +37,7 @@ export async function initializeChatSession({
 	selectedVisibilityType,
 	user,
 	request,
-    activeSceneId,
+	activeSceneId,
 }: {
 	id: string;
 	message: ChatMessage;
@@ -46,7 +46,7 @@ export async function initializeChatSession({
 	selectedVisibilityType: VisibilityType;
 	user: { id: string; type: UserType };
 	request: Request;
-    activeSceneId?: string;
+	activeSceneId?: string;
 }) {
 	// 1. Entitlements Check
 	const userType: UserType = user.type;
@@ -72,33 +72,37 @@ export async function initializeChatSession({
 			(m: any) => m.id === selectedChatModel,
 		);
 		if (dynamicModel) {
-			const contextLength = dynamicModel.contextLength ?? (dynamicModel as any).context_length ?? 0;
+			const contextLength =
+				dynamicModel.contextLength ?? (dynamicModel as any).context_length ?? 0;
 			chatModel = {
-                id: dynamicModel.id,
-                name: dynamicModel.name,
-                provider: "OpenRouter",
-                gatewayId: dynamicModel.id,
-                description: `Context: ${contextLength}`,
-                supportsImages: true,
-                contextLength: contextLength
-            };
+				id: dynamicModel.id,
+				name: dynamicModel.name,
+				provider: "OpenRouter",
+				gatewayId: dynamicModel.id,
+				description: `Context: ${contextLength}`,
+				supportsImages: true,
+				contextLength: contextLength,
+			};
 		}
 	}
 
-    if (!chatModel && ["light", "middle", "large"].includes(selectedChatModel)) {
-        chatModel = {
-             id: selectedChatModel,
-             name: selectedChatModel,
-             provider: "OpenRouter",
-             gatewayId: selectedChatModel,
-             description: "Virtual Model",
-             supportsImages: true,
-             contextLength: 32000
-        }
-    }
+	if (!chatModel && ["light", "middle", "large"].includes(selectedChatModel)) {
+		chatModel = {
+			id: selectedChatModel,
+			name: selectedChatModel,
+			provider: "OpenRouter",
+			gatewayId: selectedChatModel,
+			description: "Virtual Model",
+			supportsImages: true,
+			contextLength: 32000,
+		};
+	}
 
 	if (!chatModel) {
-		throw new ChatSDKError("bad_request:api", `Unknown chat model: ${selectedChatModel}`);
+		throw new ChatSDKError(
+			"bad_request:api",
+			`Unknown chat model: ${selectedChatModel}`,
+		);
 	}
 
 	const containsFileAttachments = message.parts.some(
@@ -114,7 +118,7 @@ export async function initializeChatSession({
 
 	// 3. Project & Scene Context Building
 	let projectContext: string | undefined;
-    let sceneContext: string | undefined;
+	let sceneContext: string | undefined;
 
 	let contextMetadata:
 		| {
@@ -122,7 +126,7 @@ export async function initializeChatSession({
 				outline: Awaited<ReturnType<typeof getOutlineForProject>> | undefined;
 				chapters: Awaited<ReturnType<typeof getChaptersForProject>> | undefined;
 				relationships: Awaited<ReturnType<typeof getRelationshipsForProject>>;
-                activeSceneId?: string;
+				activeSceneId?: string;
 		  }
 		| undefined;
 
@@ -176,39 +180,41 @@ export async function initializeChatSession({
 			);
 		}
 
-        // --- Active Scene Context with Strict Authorization ---
-        if (activeSceneId) {
-            try {
-                // Verify scene belongs to the project
-                // We do this by checking if the scene's chapter belongs to the project
-                // This prevents IDOR where a user requests a scene from another project
-                const sceneCheck = await db
-                    .select({
-                        sceneId: scenes.id,
-                        content: scenes.content,
-                        title: scenes.title,
-                        projectId: chapters.projectId
-                    })
-                    .from(scenes)
-                    .innerJoin(chapters, eq(scenes.chapterId, chapters.id))
-                    .where(eq(scenes.id, activeSceneId))
-                    .limit(1);
+		// --- Active Scene Context with Strict Authorization ---
+		if (activeSceneId) {
+			try {
+				// Verify scene belongs to the project
+				// We do this by checking if the scene's chapter belongs to the project
+				// This prevents IDOR where a user requests a scene from another project
+				const sceneCheck = await db
+					.select({
+						sceneId: scenes.id,
+						content: scenes.content,
+						title: scenes.title,
+						projectId: chapters.projectId,
+					})
+					.from(scenes)
+					.innerJoin(chapters, eq(scenes.chapterId, chapters.id))
+					.where(eq(scenes.id, activeSceneId))
+					.limit(1);
 
-                if (sceneCheck.length > 0) {
-                    const scene = sceneCheck[0];
-                    if (scene.projectId === projectId) {
-                         if (scene.content) {
-                            sceneContext = `\n\nActive Scene Context:\nTitle: ${scene.title}\nContent:\n${scene.content}`;
-                        }
-                    } else {
-                        console.warn(`IDOR prevention: activeSceneId ${activeSceneId} does not belong to projectId ${projectId}`);
-                    }
-                }
-            } catch (e) {
-                console.warn("Failed to fetch active scene context", e);
-            }
-        }
-        // -----------------------------
+				if (sceneCheck.length > 0) {
+					const scene = sceneCheck[0];
+					if (scene.projectId === projectId) {
+						if (scene.content) {
+							sceneContext = `\n\nActive Scene Context:\nTitle: ${scene.title}\nContent:\n${scene.content}`;
+						}
+					} else {
+						console.warn(
+							`IDOR prevention: activeSceneId ${activeSceneId} does not belong to projectId ${projectId}`,
+						);
+					}
+				}
+			} catch (e) {
+				console.warn("Failed to fetch active scene context", e);
+			}
+		}
+		// -----------------------------
 
 		projectContext = buildProjectContext({
 			project,
@@ -230,7 +236,7 @@ export async function initializeChatSession({
 			outline,
 			chapters: chaptersData,
 			relationships,
-            activeSceneId
+			activeSceneId,
 		};
 	}
 
@@ -300,16 +306,16 @@ export async function initializeChatSession({
 		usesStoryTools: Boolean(projectId),
 	});
 
-    // Merge Project Context AND Scene Context
+	// Merge Project Context AND Scene Context
 	let groundedSystemPrompt = baseSystemPrompt;
 
-    if (projectContext) {
-        groundedSystemPrompt += `\n\nProject context:\n${projectContext}`;
-    }
+	if (projectContext) {
+		groundedSystemPrompt += `\n\nProject context:\n${projectContext}`;
+	}
 
-    if (sceneContext) {
-        groundedSystemPrompt += sceneContext;
-    }
+	if (sceneContext) {
+		groundedSystemPrompt += sceneContext;
+	}
 
 	return {
 		uiMessages,

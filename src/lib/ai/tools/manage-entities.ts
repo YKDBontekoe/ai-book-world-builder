@@ -4,9 +4,9 @@ import { z } from "zod";
 import {
 	createEntity,
 	createEntityAttribute,
-	updateEntity,
-	getProjectByIdWithAccess,
 	getEntityById,
+	getProjectByIdWithAccess,
+	updateEntity,
 } from "@/lib/db/queries";
 
 export const manageEntities = ({

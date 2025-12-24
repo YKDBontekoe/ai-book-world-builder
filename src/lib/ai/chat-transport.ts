@@ -1,7 +1,7 @@
 import { DefaultChatTransport } from "ai";
-import { fetchWithErrorHandlers } from "@/lib/utils";
-import type { ChatModelId } from "@/lib/ai/models";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import type { ChatModelId } from "@/lib/ai/models";
+import { fetchWithErrorHandlers } from "@/lib/utils";
 
 interface CreateChatTransportOptions {
 	getProjectId: () => string | null;

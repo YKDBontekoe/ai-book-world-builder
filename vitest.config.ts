@@ -60,9 +60,18 @@ export default defineConfig({
 	resolve: {
 		alias: [
 			{ find: "@", replacement: path.resolve(dirname, "./src") },
-			{ find: "katex/dist/katex.min.css", replacement: path.resolve(dirname, "tests/__mocks__/styleMock.js") },
-			{ find: "next/server", replacement: path.resolve(dirname, "node_modules/next/server.js") },
-			{ find: "next/headers", replacement: path.resolve(dirname, "node_modules/next/headers.js") },
+			{
+				find: "katex/dist/katex.min.css",
+				replacement: path.resolve(dirname, "tests/__mocks__/styleMock.js"),
+			},
+			{
+				find: "next/server",
+				replacement: path.resolve(dirname, "node_modules/next/server.js"),
+			},
+			{
+				find: "next/headers",
+				replacement: path.resolve(dirname, "node_modules/next/headers.js"),
+			},
 		],
 	},
 });

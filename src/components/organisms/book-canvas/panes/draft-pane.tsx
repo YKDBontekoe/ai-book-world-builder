@@ -16,7 +16,6 @@ import {
 	type SerializedChapter,
 } from "@/app/actions/project-stats";
 import { Button } from "@/components/atoms/button";
-import { EmptyState } from "@/components/molecules/empty-state";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import {
 	Select,
@@ -25,9 +24,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/atoms/select";
+import { EmptyState } from "@/components/molecules/empty-state";
+import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 import { api } from "@/lib/api-client";
 import { QUERY_KEYS } from "@/lib/query-options";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 
 export function DraftPane() {
 	const { projectId } = useBookCanvas();
@@ -39,7 +39,8 @@ export function DraftPane() {
 	// Fetch chapters
 	const { data: outline } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],
-		queryFn: () => (projectId ? getOutlineData(projectId) : Promise.resolve(null)),
+		queryFn: () =>
+			projectId ? getOutlineData(projectId) : Promise.resolve(null),
 		enabled: !!projectId,
 	});
 

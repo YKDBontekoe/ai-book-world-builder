@@ -5,8 +5,8 @@ import Image from "next/image";
 import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { toast } from "sonner";
 import { useState } from "react";
+import { toast } from "sonner";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -24,7 +24,7 @@ import { SettingsDialog } from "@/components/organisms/settings-dialog";
 export function SidebarUserNav({ user }: { user: User }) {
 	const { status } = useSession();
 	const { setTheme, resolvedTheme } = useTheme();
-    const [showSettings, setShowSettings] = useState(false);
+	const [showSettings, setShowSettings] = useState(false);
 
 	return (
 		<SidebarMenu>
@@ -67,13 +67,13 @@ export function SidebarUserNav({ user }: { user: User }) {
 						data-testid="user-nav-menu"
 						side="top"
 					>
-                        <DropdownMenuItem
-                            className="cursor-pointer gap-2"
-                            onSelect={() => setShowSettings(true)}
-                        >
-                            <Settings className="h-4 w-4" />
-                            Settings
-                        </DropdownMenuItem>
+						<DropdownMenuItem
+							className="cursor-pointer gap-2"
+							onSelect={() => setShowSettings(true)}
+						>
+							<Settings className="h-4 w-4" />
+							Settings
+						</DropdownMenuItem>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							className="cursor-pointer"
@@ -110,7 +110,7 @@ export function SidebarUserNav({ user }: { user: User }) {
 				</DropdownMenu>
 			</SidebarMenuItem>
 
-            <SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
+			<SettingsDialog open={showSettings} onOpenChange={setShowSettings} />
 		</SidebarMenu>
 	);
 }

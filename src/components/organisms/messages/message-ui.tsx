@@ -1,11 +1,11 @@
 import { cva, type VariantProps } from "class-variance-authority";
-import { type ReactNode, memo } from "react";
+import equal from "fast-deep-equal";
 import type React from "react";
-import type { Attachment } from "@/lib/types";
-import { cn } from "@/lib/utils";
+import { memo, type ReactNode } from "react";
 import { MessageContent } from "@/components/molecules/message";
 import { PreviewAttachment } from "@/components/organisms/chat/preview-attachment";
-import equal from "fast-deep-equal";
+import type { Attachment } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 const messageBubbleVariants = cva(
 	"w-fit break-words rounded-[20px] px-5 py-2.5 text-base leading-relaxed text-left shadow-sm",

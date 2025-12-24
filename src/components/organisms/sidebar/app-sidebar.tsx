@@ -1,13 +1,16 @@
 "use client";
 
-import { DownloadIcon, FolderIcon, PlusIcon, LayoutDashboard, MessageSquarePlus } from "lucide-react";
+import {
+	DownloadIcon,
+	FolderIcon,
+	LayoutDashboard,
+	MessageSquarePlus,
+	PlusIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import type { User } from "next-auth";
-import { DashboardSheet } from "@/components/organisms/dashboard/dashboard-sheet";
-import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
-import { SidebarUserNav } from "@/components/organisms/sidebar/sidebar-user-nav";
+import { useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
 	Sidebar,
@@ -22,6 +25,9 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
+import { DashboardSheet } from "@/components/organisms/dashboard/dashboard-sheet";
+import { SidebarUserNav } from "@/components/organisms/sidebar/sidebar-user-nav";
 
 export function AppSidebar({ user }: { user: User | undefined }) {
 	const router = useRouter();

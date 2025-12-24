@@ -1,53 +1,53 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { Badge } from '@/components/atoms/badge';
+import type { Meta, StoryObj } from "@storybook/react";
+import { Badge } from "@/components/atoms/badge";
 
 const meta = {
-  title: 'UI/Badge',
-  component: Badge,
-  tags: ['autodocs'],
-  argTypes: {
-    variant: {
-        control: 'select',
-        options: ['default', 'secondary', 'destructive', 'outline', 'glass']
-    }
-  },
-  args: {
-      children: 'Badge'
-  }
+	title: "UI/Badge",
+	component: Badge,
+	tags: ["autodocs"],
+	argTypes: {
+		variant: {
+			control: "select",
+			options: ["default", "secondary", "destructive", "outline", "glass"],
+		},
+	},
+	args: {
+		children: "Badge",
+	},
 } satisfies Meta<typeof Badge>;
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: {
-    variant: 'default',
-  },
+	args: {
+		variant: "default",
+	},
 };
 
 export const Secondary: Story = {
-  args: {
-    variant: 'secondary',
-  },
+	args: {
+		variant: "secondary",
+	},
 };
 
 export const Destructive: Story = {
-  args: {
-    variant: 'destructive',
-  },
+	args: {
+		variant: "destructive",
+	},
 };
 
 export const Outline: Story = {
-  args: {
-    variant: 'outline',
-  },
+	args: {
+		variant: "outline",
+	},
 };
 
 export const Glass: Story = {
-    args: {
-        variant: 'glass'
-    },
-    parameters: {
-        backgrounds: { default: 'dark' }
-    }
+	args: {
+		variant: "glass",
+	},
+	parameters: {
+		backgrounds: { default: "dark" },
+	},
 };
