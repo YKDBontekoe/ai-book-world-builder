@@ -21,7 +21,7 @@ import {
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-export default async function LandingPage() {
+export default async function LandingPage(): Promise<React.JSX.Element> {
 	const session = await auth();
 
 	if (session) {
