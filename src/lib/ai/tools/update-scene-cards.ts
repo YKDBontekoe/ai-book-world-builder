@@ -9,7 +9,6 @@ import {
 	createSceneCard,
 	getBookGenerationForProject,
 	getScenesForChapter,
-	updateSceneContent,
 } from "@/lib/db/queries";
 
 const sceneUpdateSchema = z.object({
@@ -43,12 +42,20 @@ export const updateSceneCards = ({ session }: { session: Session | null }) =>
 		inputSchema,
 		execute: async (args: z.infer<typeof inputSchema>) => {
 			const { projectId, chapterId, instructions } = args;
-			if (!session?.user) return { error: "Authentication required." };
+			if (!session?.user?.id) return { error: "Authentication required." };
 
 			const projectData = await getFullProjectDataForGeneration({ projectId });
 			const generation = await getBookGenerationForProject({ projectId });
 			if (!generation || !projectData)
 				return { error: "Generation or project data not found." };
+
+			// SECURITY: Verify ownership before modification
+			// getFullProjectDataForGeneration allows public read access, but we are writing here.
+			if (projectData.project.userId !== session.user.id) {
+				return {
+					error: "Unauthorized: You can only modify your own projects.",
+				};
+			}
 
 			const currentScenes = await getScenesForChapter({ chapterId });
 
