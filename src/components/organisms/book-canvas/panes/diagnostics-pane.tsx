@@ -5,17 +5,14 @@ import {
 	AlertOctagonIcon,
 	AlertTriangleIcon,
 	BookIcon,
-	CheckCircleIcon,
 	CheckIcon,
 	GlobeIcon,
 	InfoIcon,
 	Loader2,
 	RefreshCwIcon,
 	Sparkles,
-	SparklesIcon,
 	TrendingUpIcon,
 	UsersIcon,
-	XCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -139,10 +136,10 @@ function IssueCard({
 }
 
 export function DiagnosticsPane() {
-	const { projectId, triggerChatAction } = useBookCanvas();
+	const { projectId } = useBookCanvas();
 	const queryClient = useQueryClient();
 
-	const { data: stats, isLoading: isLoadingStats } = useQuery({
+	const { data: stats } = useQuery({
 		queryKey: projectId
 			? QUERY_KEYS.diagnostics(projectId)
 			: ["diagnostics", "null"],
@@ -152,7 +149,7 @@ export function DiagnosticsPane() {
 		refetchInterval: 5000,
 	});
 
-	const { data: issuesData, isLoading: isLoadingIssues } = useQuery({
+	const { data: issuesData } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
 		queryFn: () =>
 			projectId
@@ -169,9 +166,11 @@ export function DiagnosticsPane() {
 			return res;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: QUERY_KEYS.issues(projectId!),
-			});
+			if (projectId) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.issues(projectId),
+				});
+			}
 			toast.success("Analysis complete");
 		},
 		onError: () => {
@@ -185,9 +184,11 @@ export function DiagnosticsPane() {
 			await resolveIssueAction(projectId, issueId);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: QUERY_KEYS.issues(projectId!),
-			});
+			if (projectId) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.issues(projectId),
+				});
+			}
 		},
 	});
 

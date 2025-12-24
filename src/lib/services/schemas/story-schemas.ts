@@ -30,5 +30,3 @@ export const scenePlanSchema = z.object({
 		}),
 	),
 });
-
-export type ScenePlan = z.infer<typeof scenePlanSchema>;

@@ -1,13 +1,6 @@
-/**
- * Book Analysis Service
- *
- * Orchestrates the full analysis pipeline for uploaded books.
- * Uses the consolidated AnalysisService for AI operations.
- */
-
 import "server-only";
 
-import { analysisService } from "@/lib/ai/services";
+import { getSelectedModelId } from "@/lib/ai/models";
 import {
 	createEntity,
 	createEntityAttribute,
@@ -17,31 +10,12 @@ import {
 	getSourceMaterialById,
 } from "@/lib/db/queries";
 import type { Entity } from "@/lib/db/schema";
+import { DetailExtractor } from "@/lib/services/analysis/detail-extractor";
+import { EntityDetector } from "@/lib/services/analysis/entity-detector";
+import { RelationshipInferrer } from "@/lib/services/analysis/relationship-inferrer";
+import type { AnalysisResult } from "@/lib/services/analysis/types";
 
-// =============================================================================
-// Types
-// =============================================================================
-
-export interface AnalysisResult {
-	sourceMaterialId: string;
-	projectId: string;
-	entities: Entity[];
-	relationships: Array<{
-		sourceId: string;
-		targetId: string;
-		type: string;
-	}>;
-	stats: {
-		chunksAnalyzed: number;
-		entitiesDetected: number;
-		entitiesCreated: number;
-		relationshipsCreated: number;
-	};
-}
-
-// =============================================================================
-// Service
-// =============================================================================
+export type { AnalysisResult };
 
 /**
  * BookAnalysisService - Analyzes uploaded books using RAG to extract story elements
@@ -57,6 +31,14 @@ export class BookAnalysisService {
 		extractRelationships?: boolean;
 	}): Promise<AnalysisResult> {
 		const { sourceMaterialId, projectId, extractRelationships = true } = params;
+
+		// Resolve model ID: user preference 'middle' or default 'openrouter/auto'
+		const modelId = await getSelectedModelId("middle");
+
+		// Instantiate services with the resolved model ID
+		const entityDetector = new EntityDetector(modelId);
+		const detailExtractor = new DetailExtractor(modelId);
+		const relationshipInferrer = new RelationshipInferrer(modelId);
 
 		// Verify source material exists and is processed
 		const material = await getSourceMaterialById({ id: sourceMaterialId });
@@ -76,10 +58,9 @@ export class BookAnalysisService {
 			existingEntities.map((e) => e.name.toLowerCase()),
 		);
 
-		// Pass 1: Detect entities using AnalysisService
+		// Pass 1: Detect entities
 		console.log("[BookAnalysis] Pass 1: Detecting entities...");
-		const detectedEntities =
-			await analysisService.detectEntities(sourceMaterialId);
+		const detectedEntities = await entityDetector.detect(sourceMaterialId);
 		console.log(`[BookAnalysis] Detected ${detectedEntities.length} entities`);
 
 		// Filter out low confidence and duplicates
@@ -94,7 +75,7 @@ export class BookAnalysisService {
 		for (const detected of highConfidenceEntities.slice(0, 20)) {
 			// Limit to 20 entities
 			try {
-				const details = await analysisService.extractDetails(
+				const details = await detailExtractor.extract(
 					detected.name,
 					detected.kind,
 					sourceMaterialId,
@@ -148,7 +129,7 @@ export class BookAnalysisService {
 
 		if (extractRelationships && createdEntities.length >= 2) {
 			console.log("[BookAnalysis] Pass 3: Inferring relationships...");
-			const inferredRelationships = await analysisService.inferRelationships(
+			const inferredRelationships = await relationshipInferrer.infer(
 				highConfidenceEntities,
 				sourceMaterialId,
 			);

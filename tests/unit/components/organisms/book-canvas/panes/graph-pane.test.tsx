@@ -1,6 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import * as ReactFlow from "@xyflow/react";
-import React from "react";
+import { render } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getProjectIssuesAction } from "../../../../../../src/app/actions/analysis";
 import { getProjectStructure } from "../../../../../../src/app/actions/writer";

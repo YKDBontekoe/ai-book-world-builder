@@ -26,20 +26,26 @@ export const Default: Story = {
 		title: "General Settings",
 		icon: <Settings className="h-4 w-4" />,
 	},
-	render: (args) => (
-		<CollapsibleSection {...args}>
-			<div className="grid gap-4">
-				<div className="grid gap-2">
-					<Label htmlFor="name">Name</Label>
-					<Input id="name" defaultValue="My Project" />
+	render: (args) => {
+		// biome-ignore lint/correctness/useHookAtTopLevel: Storybook render function
+		const nameId = "name-default";
+		// biome-ignore lint/correctness/useHookAtTopLevel: Storybook render function
+		const descId = "desc-default";
+		return (
+			<CollapsibleSection {...args}>
+				<div className="grid gap-4">
+					<div className="grid gap-2">
+						<Label htmlFor={nameId}>Name</Label>
+						<Input id={nameId} defaultValue="My Project" />
+					</div>
+					<div className="grid gap-2">
+						<Label htmlFor={descId}>Description</Label>
+						<Input id={descId} placeholder="Enter description" />
+					</div>
 				</div>
-				<div className="grid gap-2">
-					<Label htmlFor="desc">Description</Label>
-					<Input id="desc" placeholder="Enter description" />
-				</div>
-			</div>
-		</CollapsibleSection>
-	),
+			</CollapsibleSection>
+		);
+	},
 };
 
 export const OpenByDefault: Story = {

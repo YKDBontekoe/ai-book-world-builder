@@ -140,7 +140,7 @@ export function EntityPreview({ result, projectId }: EntityPreviewProps) {
 						))}
 						{(result.entity.attributes?.length || 0) > 4 && (
 							<div className="text-[10px] text-muted-foreground self-center">
-								+{result.entity.attributes!.length - 4} more
+								+{result.entity.attributes?.length || 0 - 4} more
 							</div>
 						)}
 					</div>

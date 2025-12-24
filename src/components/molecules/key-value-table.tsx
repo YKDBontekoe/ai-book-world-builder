@@ -47,6 +47,7 @@ export function KeyValueTable({
 		return (
 			<div className="flex flex-col gap-1">
 				{data.map((item, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: List order is stable for display
 					<div key={index} className="flex items-start gap-2 text-xs">
 						<span className="text-muted-foreground shrink-0">{index + 1}.</span>
 						{typeof item === "object" ? (

@@ -16,7 +16,7 @@ export function PreviewSuggestion({
 	suggestion,
 	onApply,
 	onReject,
-	artifactKind,
+	artifactKind: _artifactKind,
 }: PreviewSuggestionProps) {
 	return (
 		<div className="absolute z-50 min-w-[300px] max-w-[500px] rounded-md border bg-popover p-3 shadow-lg animate-in fade-in zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 slide-in-from-bottom-2">

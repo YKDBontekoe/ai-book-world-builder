@@ -24,7 +24,11 @@ function createDeferred<T>() {
 		reject = rej;
 	});
 
-	return { promise, resolve: resolve!, reject: reject! };
+	if (!resolve || !reject) {
+		throw new Error("Failed to initialize promise capability");
+	}
+
+	return { promise, resolve, reject };
 }
 
 describe("useModelPreferences", () => {

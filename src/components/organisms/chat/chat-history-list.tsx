@@ -162,6 +162,7 @@ export function ChatHistoryList({
 			<div className="flex flex-col gap-2 p-4">
 				{[...Array(5)].map((_, i) => (
 					<div
+							// biome-ignore lint/suspicious/noArrayIndexKey: Skeleton loader
 						key={i}
 						className="h-10 w-full animate-pulse rounded-md bg-muted/50"
 					/>
@@ -217,6 +218,13 @@ export function ChatHistoryList({
 								{chats.map((chat) => (
 									<div
 										key={chat.id}
+										role="button"
+										tabIndex={0}
+										onKeyDown={(e) => {
+											if (e.key === "Enter" || e.key === " ") {
+												onSelectChat(chat.id);
+											}
+										}}
 										className={cn(
 											"group relative flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/50",
 											chat.id === currentChatId && "bg-muted font-medium",

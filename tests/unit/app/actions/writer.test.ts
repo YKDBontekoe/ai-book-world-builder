@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Define mocks inside or use hoistable variables if supported, but simpler to define inline for mocks
 
@@ -28,11 +28,12 @@ vi.mock("@/lib/db/drizzle", () => {
 	return {
 		db: {
 			select: vi.fn(() => ({
-				from: (table: any) => {
+				from: (_table: any) => {
 					return {
 						where: () => {
 							return {
 								orderBy: () => Promise.resolve(mockScenes), // For scenes
+								// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for testing
 								then: (resolve: any) => resolve([mockChapter]), // For chapter
 								limit: () => Promise.resolve([mockChapter]), // For limit(1)
 								[Symbol.iterator]: function* () {

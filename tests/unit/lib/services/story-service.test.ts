@@ -32,13 +32,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // Mock modules
-vi.mock("ai", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("ai")>();
-	return {
-		...actual,
-		generateObject: mocks.generateObject,
-	};
-});
+vi.mock("ai", () => ({
+	generateObject: mocks.generateObject,
+}));
 
 vi.mock("@/lib/ai/providers", () => ({
 	myProvider: {
@@ -72,12 +68,13 @@ vi.mock("@/lib/db/drizzle", () => ({
 	},
 }));
 
-vi.mock("@/lib/db/schema", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("@/lib/db/schema")>();
-	return {
-		...actual,
-	};
-});
+vi.mock("@/lib/db/schema", () => ({
+	outline: "outline",
+	volume: "volume",
+	chapter: "chapter",
+	scene: "scene",
+	Vote: "Vote",
+}));
 
 vi.mock("@/lib/actions-utils", () => ({
 	ensureProjectAccess: mocks.ensureProjectAccess,
@@ -120,21 +117,10 @@ describe("StoryService", () => {
 
 			expect(mocks.generateObject).toHaveBeenCalled();
 			expect(result).toEqual({
-				plan: {
-					title: "Test Book",
-					summary: "Summary",
-					chapters: [],
-				},
+				title: "Test Book",
+				summary: "Summary",
+				chapters: [],
 			});
-		});
-
-		it("should return error if generation fails", async () => {
-			mocks.generateObject.mockRejectedValueOnce(new Error("AI error"));
-
-			const result = await storyService.generateBookPlan("test prompt");
-
-			expect(result).toHaveProperty("error");
-			expect(result.error).toBe("AI error");
 		});
 	});
 

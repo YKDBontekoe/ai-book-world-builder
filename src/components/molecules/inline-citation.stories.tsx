@@ -12,7 +12,6 @@ import {
 	InlineCitationCarouselNext,
 	InlineCitationCarouselPrev,
 	InlineCitationSource,
-	InlineCitationText,
 } from "@/components/molecules/inline-citation";
 
 const meta: Meta<typeof InlineCitation> = {
