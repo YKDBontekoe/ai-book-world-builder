@@ -2,7 +2,6 @@ import "server-only";
 
 import {
 	ensureProjectAccess,
-	verifyToolAccess,
 } from "@/lib/actions-utils";
 import { openrouter } from "@/lib/ai/providers";
 import { generationService } from "@/lib/ai/writer-service";
@@ -73,6 +72,27 @@ const loreSchema = z.object({
  */
 export class AIService {
 	/**
+	 * Helper to verify scene access
+	 */
+	private async verifySceneAccess(sceneId: string) {
+		const sceneItem = await db.query.scene.findFirst({
+			where: eq(scene.id, sceneId),
+			columns: { projectId: true },
+		});
+		if (!sceneItem) throw new Error("Scene not found");
+		await ensureProjectAccess(sceneItem.projectId, true);
+	}
+
+	/**
+	 * Helper to verify chapter access (via first scene or direct lookup if needed)
+	 * For now, we assume chapter operations fetch scenes first.
+	 */
+	private async verifyProjectAccessViaScenes(scenes: { projectId: string }[]) {
+		if (scenes.length === 0) return;
+		await ensureProjectAccess(scenes[0].projectId, true);
+	}
+
+	/**
 	 * Batch writes all scenes in a chapter.
 	 * Iterates sequentially to maintain context.
 	 */
@@ -85,8 +105,9 @@ export class AIService {
 			throw new Error("No scenes found in chapter.");
 		}
 
-		// Verify access (check first scene)
-		await verifyToolAccess(scenes[0].id, "scene");
+		// Verify access using the first scene's project ID
+		// Note: getScenesForChapter returns objects with projectId
+		await this.verifyProjectAccessViaScenes(scenes);
 
 		let writtenCount = 0;
 		// Sort by sequence to ensure logical flow
@@ -132,7 +153,7 @@ export class AIService {
 		sceneId: string,
 		instructions: string,
 	): Promise<{ text: string }> {
-		await verifyToolAccess(sceneId, "scene");
+		await this.verifySceneAccess(sceneId);
 
 		const sceneItem = await db.query.scene.findFirst({
 			where: eq(scene.id, sceneId),
@@ -149,13 +170,14 @@ export class AIService {
       ${sceneItem.content || "(No content yet)"}
     `;
 
-		const { text } = await generationService.generateText(prompt, {
-			modelId: "large", // Use large model for high quality rewrite
-		});
+		const { text } = await generationService.continueWriting(
+			"", // No previous context needed for a strict rewrite
+			prompt,
+			{ modelId: "large" }
+		);
 
 		if (!text) throw new Error("Failed to generate rewrite.");
 
-		// We do NOT auto-save. We return the text for the UI to diff/preview.
 		return { text };
 	}
 
@@ -166,14 +188,13 @@ export class AIService {
 		sceneId: string,
 		notes: string,
 	): Promise<{ text: string }> {
-		await verifyToolAccess(sceneId, "scene");
+		await this.verifySceneAccess(sceneId);
 
 		const sceneItem = await db.query.scene.findFirst({
 			where: eq(scene.id, sceneId),
 		});
 		if (!sceneItem) throw new Error("Scene not found");
 
-		// Logic is similar to draftScene but emphasizes "Expansion" prompt
 		const prompt = `
       You are an expert fiction writer.
       Expand the following rough notes/skeleton into a full, vivid scene.
@@ -184,9 +205,11 @@ export class AIService {
       ${notes || sceneItem.content || ""}
     `;
 
-		const { text } = await generationService.generateText(prompt, {
-			modelId: "large",
-		});
+		const { text } = await generationService.continueWriting(
+			"",
+			prompt,
+			{ modelId: "large" }
+		);
 
 		if (!text) throw new Error("Failed to generate text.");
 
@@ -201,7 +224,7 @@ export class AIService {
 		const scenes = await getScenesForChapter({ chapterId });
 		if (!scenes.length) throw new Error("Chapter is empty");
 
-		await verifyToolAccess(scenes[0].id, "scene"); // Check access via scene
+		await this.verifyProjectAccessViaScenes(scenes);
 
 		const fullText = scenes
 			.sort((a, b) => a.sequence - b.sequence)
@@ -234,7 +257,7 @@ export class AIService {
 		const scenes = await getScenesForChapter({ chapterId });
 		if (!scenes.length) throw new Error("Chapter is empty");
 
-		await verifyToolAccess(scenes[0].id, "scene");
+		await this.verifyProjectAccessViaScenes(scenes);
 
 		const firstScene = scenes[0];
 		const entities = await getEntitiesForProject({
@@ -329,7 +352,6 @@ export class AIService {
 			.join("\n");
 
 		// 2. Ask LLM to answer based on context
-		// Note: true RAG would be better here, but "Context Flooding" is our current strategy
 		const prompt = `
       You are a helper for a fiction writer.
       Answer the user's question based *only* on the provided project context.
@@ -341,9 +363,11 @@ export class AIService {
       User Question: "${query}"
     `;
 
-		const { text } = await generationService.generateText(prompt, {
-			modelId: "light", // Fast model
-		});
+		const { text } = await generationService.continueWriting(
+			"",
+			prompt,
+			{ modelId: "light" }
+		);
 
 		return text || "No results found.";
 	}

@@ -11,6 +11,7 @@ type UseWriterStateReturnType = ReturnType<typeof useWriterState>;
 type WriterContextType = UseWriterStateReturnType & {
 	project: Project;
 	isReadOnly: boolean;
+	activeChapterId?: string; // Derived from activeScene
 };
 
 const WriterContext = createContext<WriterContextType | null>(null);
@@ -37,13 +38,25 @@ export function WriterProvider({
 		lastViewedSceneId: project.lastViewedSceneId,
 	});
 
+	// Derive activeChapterId
+	const activeChapterId = useMemo(() => {
+		if (!writerState.activeSceneId || !writerState.structure) return undefined;
+		for (const chapter of writerState.structure) {
+			if (chapter.scenes.some((s) => s.id === writerState.activeSceneId)) {
+				return chapter.id;
+			}
+		}
+		return undefined;
+	}, [writerState.activeSceneId, writerState.structure]);
+
 	const value = useMemo(
 		() => ({
 			...writerState,
 			project,
 			isReadOnly,
+			activeChapterId,
 		}),
-		[writerState, project, isReadOnly],
+		[writerState, project, isReadOnly, activeChapterId],
 	);
 
 	return (

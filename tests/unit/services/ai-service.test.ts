@@ -95,9 +95,9 @@ describe('AIService', () => {
     it('should iterate scenes and draft content', async () => {
       // Setup
       mocks.getScenesForChapter.mockResolvedValue([
-        { id: 's1', title: 'Scene 1', sequence: 1, content: '' },
+        { id: 's1', title: 'Scene 1', sequence: 1, content: '', projectId: 'p1' },
         // Create a long content string to trigger the >500 char skip
-        { id: 's2', title: 'Scene 2', sequence: 2, content: 'a'.repeat(501) },
+        { id: 's2', title: 'Scene 2', sequence: 2, content: 'a'.repeat(501), projectId: 'p1' },
       ]);
       mocks.generationService.draftScene.mockResolvedValue({ text: 'Drafted content' });
 
@@ -106,7 +106,7 @@ describe('AIService', () => {
 
       // Verify
       expect(result.success).toBe(true);
-      expect(mocks.verifyToolAccess).toHaveBeenCalledWith('s1', 'scene');
+      expect(mocks.ensureProjectAccess).toHaveBeenCalledWith('p1', true);
       expect(mocks.generationService.draftScene).toHaveBeenCalledTimes(1); // Only for s1
       expect(mocks.updateSceneContent).toHaveBeenCalledWith({
           sceneId: 's1',
@@ -119,23 +119,23 @@ describe('AIService', () => {
   describe('rewriteScene', () => {
     it('should generate rewrite text', async () => {
         // Setup
-        mocks.db.query.scene.findFirst.mockResolvedValue({ id: 's1', title: 'Scene 1', content: 'Old' });
-        mocks.generationService.generateText.mockResolvedValue({ text: 'New content' });
+        mocks.db.query.scene.findFirst.mockResolvedValue({ id: 's1', title: 'Scene 1', content: 'Old', projectId: 'p1' });
+        mocks.generationService.continueWriting.mockResolvedValue({ text: 'New content' });
 
         // Execute
         const result = await aiService.rewriteScene('s1', 'Make it better');
 
         // Verify
         expect(result.text).toBe('New content');
-        expect(mocks.verifyToolAccess).toHaveBeenCalledWith('s1', 'scene');
+        expect(mocks.ensureProjectAccess).toHaveBeenCalledWith('p1', true);
     });
   });
 
     describe('expandScene', () => {
     it('should expand notes', async () => {
         // Setup
-        mocks.db.query.scene.findFirst.mockResolvedValue({ id: 's1', title: 'Scene 1', content: 'Notes' });
-        mocks.generationService.generateText.mockResolvedValue({ text: 'Expanded content' });
+        mocks.db.query.scene.findFirst.mockResolvedValue({ id: 's1', title: 'Scene 1', content: 'Notes', projectId: 'p1' });
+        mocks.generationService.continueWriting.mockResolvedValue({ text: 'Expanded content' });
 
         // Execute
         const result = await aiService.expandScene('s1', 'Some notes');

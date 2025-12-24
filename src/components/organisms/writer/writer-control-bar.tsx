@@ -60,30 +60,36 @@ export function WriterControlBar() {
 			>
 				<GlassCard
 					variant="liquid"
-					className="p-2 rounded-2xl shadow-2xl border-white/20 backdrop-blur-xl"
+					className="flex items-center gap-1 p-2 rounded-2xl shadow-2xl border-white/20 backdrop-blur-xl"
 				>
-					<div className="flex items-center gap-1">
-						{/* Editor Actions */}
-						<ControlGroup>
-							<ControlButton
-								label="Undo"
-								icon={Undo}
-								onClick={() => editorActions?.undo()}
-								disabled={!editorActions}
-								shortcut="⌘Z"
-							/>
-							<ControlButton
-								label="Redo"
-								icon={Redo}
-								onClick={() => editorActions?.redo()}
-								disabled={!editorActions}
-								shortcut="⌘⇧Z"
-							/>
-						</ControlGroup>
+					{/* Editor Actions */}
+					<ControlGroup>
+						<ControlButton
+							label="Undo"
+							icon={Undo}
+							onClick={() => editorActions?.undo()}
+							disabled={!editorActions}
+							shortcut="⌘Z"
+						/>
+						<ControlButton
+							label="Redo"
+							icon={Redo}
+							onClick={() => editorActions?.redo()}
+							disabled={!editorActions}
+							shortcut="⌘⇧Z"
+						/>
+					</ControlGroup>
 
-						<Separator
-							orientation="vertical"
-							className="h-6 mx-1 bg-white/10"
+					<Separator orientation="vertical" className="h-6 mx-1 bg-white/10" />
+
+					{/* Quick Tools */}
+					<ControlGroup>
+						<ControlButton
+							label="Spotlight"
+							icon={Search}
+							onClick={toggleSpotlight}
+							active={isSpotlightOpen}
+							shortcut="⌘K"
 						/>
 						<ControlButton
 							label="AI Tools"
@@ -93,38 +99,18 @@ export function WriterControlBar() {
 						/>
 					</ControlGroup>
 
-						{/* Quick Tools */}
-						<ControlGroup>
-							<ControlButton
-								label="Spotlight"
-								icon={Search}
-								onClick={toggleSpotlight}
-								active={isSpotlightOpen}
-								shortcut="⌘K"
-							/>
-							<ControlButton
-								label="AI Tools"
-								icon={Sparkles}
-								onClick={() => {}} // To implement: Open tools menu
-							/>
-						</ControlGroup>
+					<Separator orientation="vertical" className="h-6 mx-1 bg-white/10" />
 
-						<Separator
-							orientation="vertical"
-							className="h-6 mx-1 bg-white/10"
+					{/* Assistant */}
+					<ControlGroup>
+						<ControlButton
+							label="Assistant"
+							icon={MessageSquare}
+							onClick={toggleChat}
+							active={isChatOpen}
+							shortcut="⌘J"
 						/>
-
-						{/* Assistant */}
-						<ControlGroup>
-							<ControlButton
-								label="Assistant"
-								icon={MessageSquare}
-								onClick={toggleChat}
-								active={isChatOpen}
-								shortcut="⌘J"
-							/>
-						</ControlGroup>
-					</div>
+					</ControlGroup>
 				</GlassCard>
 			</motion.div>
 

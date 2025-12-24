@@ -23,13 +23,6 @@ import {
 	searchProjectAction,
 } from "@/app/actions/ai-operations";
 import { Dialog, DialogContent } from "@/components/atoms/dialog";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
@@ -78,10 +71,14 @@ export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 				}
 				const res = await batchWriteChapterAction(activeChapterId, input);
 				if (res.success) {
-					toast.success(`Generated content for ${res.writtenCount} scenes.`);
+					// We must cast or check properties, but Server Actions return union types often.
+					// Assuming generic Result structure: { success: true, writtenCount: number }
+					if ('writtenCount' in res) {
+						toast.success(`Generated content for ${res.writtenCount} scenes.`);
+					}
 					onClose();
 				} else {
-					toast.error(res.error);
+					if ('error' in res) toast.error(res.error);
 				}
 			} else if (selectedTool === "rewrite") {
 				if (!activeSceneId) {
@@ -89,10 +86,11 @@ export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 					return;
 				}
 				const res = await rewriteSceneAction(activeSceneId, input);
-				if (res.text) {
+				// Check for 'text' in result
+				if ('text' in res) {
 					setResult(res.text); // Show preview
 				} else {
-					toast.error(res.error);
+					if ('error' in res) toast.error(res.error);
 				}
 			} else if (selectedTool === "expand") {
 				if (!activeSceneId) {
@@ -100,10 +98,10 @@ export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 					return;
 				}
 				const res = await expandSceneAction(activeSceneId, input);
-				if (res.text) {
+				if ('text' in res) {
 					setResult(res.text); // Show preview
 				} else {
-					toast.error(res.error);
+					if ('error' in res) toast.error(res.error);
 				}
 			} else if (selectedTool === "critique") {
 				if (!activeChapterId) {
@@ -111,10 +109,10 @@ export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 					return;
 				}
 				const res = await critiqueChapterAction(activeChapterId);
-				if (res.success && res.data) {
+				if (res.success && 'data' in res) {
 					setResult(JSON.stringify(res.data, null, 2));
 				} else {
-					toast.error(res.error);
+					if ('error' in res) toast.error(res.error);
 				}
 			} else if (selectedTool === "consistency") {
 				if (!activeChapterId) {
@@ -122,28 +120,28 @@ export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 					return;
 				}
 				const res = await analyzeConsistencyAction(activeChapterId);
-				if (res.success && res.data) {
+				if (res.success && 'data' in res) {
 					setResult(JSON.stringify(res.data, null, 2));
 				} else {
-					toast.error(res.error);
+					if ('error' in res) toast.error(res.error);
 				}
 			} else if (selectedTool === "lore") {
 				const res = await generateLoreAction(project.id, input, "lore");
-				if (res.success && res.entity) {
+				if (res.success && 'entity' in res && res.entity) {
 					toast.success(`Created entity: ${res.entity.name}`);
 					onClose();
 				} else {
-					toast.error(res.error);
+					if ('error' in res) toast.error(res.error);
 				}
 			} else if (selectedTool === "search") {
 				const res = await searchProjectAction(project.id, input);
-				if (res.success && res.answer) {
-					setResult(res.answer);
+				if (res.success && 'answer' in res) {
+					setResult(res.answer || null);
 				} else {
-					toast.error(res.error);
+					if ('error' in res) toast.error(res.error);
 				}
 			}
-		} catch (e) {
+		} catch (_e) {
 			toast.error("Operation failed.");
 		} finally {
 			setLoading(false);
@@ -153,14 +151,16 @@ export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 	// Helper to get active context name
 	const getActiveContextName = () => {
 		if (activeChapterId) {
-			const chap = structure.find((c) => c.id === activeChapterId);
+			const chap = structure?.find((c) => c.id === activeChapterId);
 			if (chap) return `Chapter: ${chap.title}`;
 		}
 		if (activeSceneId) {
 			// Find scene in structure
-			for (const chap of structure) {
-				const scn = chap.scenes.find((s) => s.id === activeSceneId);
-				if (scn) return `Scene: ${scn.title}`;
+			if (structure) {
+				for (const chap of structure) {
+					const scn = chap.scenes.find((s) => s.id === activeSceneId);
+					if (scn) return `Scene: ${scn.title}`;
+				}
 			}
 		}
 		return "No Context Selected";
