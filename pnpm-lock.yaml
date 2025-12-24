@@ -271,7 +271,7 @@ importers:
         version: 5.9.0
       resumable-stream:
         specifier: ^2.0.0
-        version: 2.2.8
+        version: 2.2.9
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
@@ -5327,8 +5327,8 @@ packages:
   restructure@3.0.2:
     resolution: {integrity: sha512-gSfoiOEA0VPE6Tukkrr7I0RBdE0s7H1eFCDBk05l1KIQT1UIKNc5JZy6jdyW6eYH3aR3g5b3PuL77rq0hvwtAw==}
 
-  resumable-stream@2.2.8:
-    resolution: {integrity: sha512-F9+SLKw/a/p7hRjy2CNwzT66UIlY7aY4D3Sg9xwuZMA7nxVQrVPXCWU27qIGcO4jlauL0T3XkCN2218qi6ugTw==}
+  resumable-stream@2.2.9:
+    resolution: {integrity: sha512-/fx2Mfx2h5sOOn+FTmNMHXoem6HUUATGGKAbM+eoI1L/Mkt+HXtcGTfL2U4Zfr3IbJoAh049sWThvFR6uq9AIg==}
 
   retry@0.13.1:
     resolution: {integrity: sha512-XQBQ3I8W1Cge0Seh+6gjj03LbmRFWuoszgK9ooCpwYIrhhoO80pfq4cUkU5DkknwfOfFteRwlZ56PYOGYyFWdg==}
@@ -11294,7 +11294,7 @@ snapshots:
 
   restructure@3.0.2: {}
 
-  resumable-stream@2.2.8: {}
+  resumable-stream@2.2.9: {}
 
   retry@0.13.1: {}
 
