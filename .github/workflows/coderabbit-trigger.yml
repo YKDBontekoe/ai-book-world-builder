@@ -14,6 +14,6 @@ jobs:
     steps:
       - name: Trigger CodeRabbit Review
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
         run: |
           gh pr comment ${{ github.event.pull_request.number }} --body "@coderabbitai review" --repo ${{ github.repository }}

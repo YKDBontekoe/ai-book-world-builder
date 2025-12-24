@@ -102,7 +102,7 @@ jobs:
     steps:
       - name: Notify @jules
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           LINT_RESULT: ${{ needs.lint-and-typecheck.result }}
           UNIT_TEST_RESULT: ${{ needs.unit-tests.result }}
           BUILD_RESULT: ${{ needs.build.result }}
