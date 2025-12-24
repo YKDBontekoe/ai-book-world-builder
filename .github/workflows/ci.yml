@@ -97,11 +97,24 @@ jobs:
     permissions:
       pull-requests: write
     steps:
-      - name: Notify @Jules
+      - name: Notify @jules
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          LINT_RESULT: ${{ needs.lint-and-typecheck.result }}
+          UNIT_TEST_RESULT: ${{ needs.unit-tests.result }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          DB_RESULT: ${{ needs.db-check.result }}
+          E2E_RESULT: ${{ needs.e2e-tests.result }}
         run: |
-          gh pr comment ${{ github.event.pull_request.number }} --body "Hey @Jules, some checks failed on this PR. Please take a look! 🔍" --repo ${{ github.repository }}
+          failures=""
+          if [[ "$LINT_RESULT" == "failure" || "$LINT_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Lint & Typecheck\n"; fi
+          if [[ "$UNIT_TEST_RESULT" == "failure" || "$UNIT_TEST_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Unit Tests\n"; fi
+          if [[ "$BUILD_RESULT" == "failure" || "$BUILD_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Build\n"; fi
+          if [[ "$DB_RESULT" == "failure" || "$DB_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 DB Check\n"; fi
+          if [[ "$E2E_RESULT" == "failure" || "$E2E_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 E2E Tests\n"; fi
+          
+          echo -e "Hey @jules, the following checks failed on this PR:\n\n$failures\nPlease take a look! 🔍" > message.txt
+          gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}
 
 
 
