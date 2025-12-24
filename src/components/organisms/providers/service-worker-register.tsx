@@ -4,18 +4,21 @@ import { useEffect } from "react";
 
 export function ServiceWorkerRegister() {
 	useEffect(() => {
-		if ("serviceWorker" in navigator && window.location.protocol === "https:") {
-			navigator.serviceWorker
-				.register("/sw.js")
-				.then((registration) => {
-					console.log(
-						"Service Worker registered with scope:",
-						registration.scope,
-					);
-				})
-				.catch((error) => {
-					console.error("Service Worker registration failed:", error);
-				});
+		// Unregister any existing service workers to fix loading issues
+		// Service Workers are only available in secure contexts (HTTPS) or localhost
+		if (
+			"serviceWorker" in navigator &&
+			window.location.protocol === "https:"
+		) {
+			navigator.serviceWorker.getRegistrations().then((registrations) => {
+				for (const registration of registrations) {
+					registration.unregister().then((success) => {
+						if (success) {
+							console.log("Service Worker successfully unregistered");
+						}
+					});
+				}
+			});
 		}
 	}, []);
 

@@ -19,10 +19,14 @@ vi.mock("@/lib/ai/models", () => ({
 	getSelectedModelId: vi.fn(() => Promise.resolve("mock-model")),
 }));
 
-vi.mock("ai", () => ({
-	generateObject: vi.fn(),
-	generateText: vi.fn(() => Promise.resolve({ text: "Generated content" })),
-}));
+vi.mock("ai", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("ai")>();
+	return {
+		...actual,
+		generateObject: vi.fn(),
+		generateText: vi.fn(() => Promise.resolve({ text: "Generated content" })),
+	};
+});
 
 // Mock DB chain helper
 const mockDbChain = () => {

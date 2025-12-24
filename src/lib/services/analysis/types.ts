@@ -1,40 +1,18 @@
-import type { Entity } from "@/lib/db/schema";
+/**
+ * Analysis Types (DEPRECATED)
+ *
+ * This file is maintained for backward compatibility.
+ * Please import from "@/lib/ai/services" instead.
+ *
+ * @deprecated Use `import { DetectedEntity, EntityDetails, InferredRelationship } from "@/lib/ai/services"` instead
+ */
 
-export type DetectedEntity = {
-	name: string;
-	kind: "character" | "location" | "organization" | "item" | "event";
-	confidence: number;
-};
+export type {
+	DetectedEntity,
+	EntityDetails,
+	EntityKind,
+	InferredRelationship,
+} from "@/lib/ai/services";
 
-export type EntityDetails = {
-	name: string;
-	kind: string;
-	summary: string;
-	attributes: Array<{ name: string; value: string }>;
-	sourceQuotes: string[];
-};
-
-export type InferredRelationship = {
-	sourceEntityName: string;
-	targetEntityName: string;
-	type: string;
-	description: string;
-	confidence: number;
-};
-
-export type AnalysisResult = {
-	sourceMaterialId: string;
-	projectId: string;
-	entities: Entity[];
-	relationships: Array<{
-		sourceId: string;
-		targetId: string;
-		type: string;
-	}>;
-	stats: {
-		chunksAnalyzed: number;
-		entitiesDetected: number;
-		entitiesCreated: number;
-		relationshipsCreated: number;
-	};
-};
+// Re-export AnalysisResult from book-analysis-service for backward compatibility
+export type { AnalysisResult } from "@/lib/services/book-analysis-service";

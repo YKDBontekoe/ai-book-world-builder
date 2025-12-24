@@ -96,14 +96,13 @@ jobs:
     if: |
       always() && 
       github.event_name == 'pull_request' && 
-      github.actor == 'google-labs-jules' && 
       (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     permissions:
       pull-requests: write
     steps:
       - name: Notify @jules
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           LINT_RESULT: ${{ needs.lint-and-typecheck.result }}
           UNIT_TEST_RESULT: ${{ needs.unit-tests.result }}
           BUILD_RESULT: ${{ needs.build.result }}
@@ -117,5 +116,5 @@ jobs:
           if [[ "$DB_RESULT" == "failure" || "$DB_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 DB Check\n"; fi
           if [[ "$CONFLICT_RESULT" == "failure" || "$CONFLICT_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Merge Conflict (fix with target branch)\n"; fi
           
-          echo -e "Jules, the following checks failed on this PR:\n\n$failures\nPlease take a look! 🔍" > message.txt
+          echo -e "Jules, the following checks failed on this PR:\n\n$failures\n**Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease take a look! 🔍" > message.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}

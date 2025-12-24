@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { History, Lock, MousePointerClick, RotateCcw } from "lucide-react";
+import { Lock, MousePointerClick, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
@@ -13,11 +13,13 @@ import {
 	Editor,
 	type EditorHandle,
 } from "@/components/organisms/editor/text-editor";
+import { DirectorDashboard } from "@/components/organisms/writer/dashboard/director-dashboard";
 import { StoryWizard } from "@/components/organisms/writer/story-wizard";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
+import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 
 interface HistorySnapshot {
@@ -36,7 +38,8 @@ export function WriterEditor() {
 		isReadOnly,
 	} = useWriterContext();
 
-	const { isTypewriterMode } = useWriterLayoutContext();
+	const { isTypewriterMode, isDirectorMode, toggleDirectorMode } =
+		useWriterLayoutContext();
 	const { registerEditorActions } = useWriterControl();
 	const { data: entities } = useProjectEntities(project.id);
 	const editorRef = useRef<EditorHandle>(null);
@@ -57,14 +60,14 @@ export function WriterEditor() {
 				redo: () => editorRef.current?.redo(),
 			});
 		}
-	}, [registerEditorActions, activeSceneId]); // Re-register when scene changes
+	}, [registerEditorActions]); // Re-register when scene changes
 
 	// Initialize history with initial content
 	useEffect(() => {
 		if (sceneContent && historyStack.length === 0) {
 			setHistoryStack([{ content: sceneContent, timestamp: Date.now() }]);
 		}
-	}, [sceneContent]);
+	}, [sceneContent, historyStack.length]);
 
 	// Debounced history pusher
 	const pushHistory = useDebounceCallback((content: string) => {
@@ -78,7 +81,7 @@ export function WriterEditor() {
 	}, 2000);
 
 	const onEditorContentChange = useCallback(
-		(content: string, debounce: boolean) => {
+		(content: string, _debounce: boolean) => {
 			// Standard save
 			handleContentChange(content);
 			// History push
@@ -110,6 +113,12 @@ export function WriterEditor() {
 		}
 		setSliderValue(val);
 	};
+
+	// Narrative Intelligence Hook
+	const narrativeMetrics = useNarrativeIntelligence({
+		content: previewContent ?? sceneContent,
+		entities: entities || [],
+	});
 
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background/50">
@@ -161,6 +170,17 @@ export function WriterEditor() {
 					</div>
 				)}
 			</div>
+
+			{/* Director Dashboard Overlay */}
+			<AnimatePresence>
+				{isDirectorMode && (
+					<DirectorDashboard
+						metrics={narrativeMetrics}
+						isVisible={true}
+						onClose={toggleDirectorMode}
+					/>
+				)}
+			</AnimatePresence>
 
 			{/* Time Travel Controls */}
 			{activeSceneId && historyStack.length > 1 && (
@@ -217,12 +237,6 @@ export function WriterEditor() {
 								</GlassCard>
 							</motion.div>
 						) : (
-							// Existing Time Travel Button - Hiding it to replace with Task Bar later?
-							// User asked for task bar. Time Travel is a cool feature but maybe better in the tools menu?
-							// I'll leave it here for now but hide the trigger button if I move it to tools.
-							// Actually, the user asked for "Power Action Task Bar".
-							// I will KEEP this UI logic but maybe move the trigger to the new bar later.
-							// For now, I'll keep it as is.
 							<motion.div
 								initial={{ opacity: 0 }}
 								animate={{ opacity: 1 }}

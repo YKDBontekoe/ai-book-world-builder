@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	Activity,
 	AlignVerticalJustifyCenter,
 	History,
 	Loader2,
@@ -38,6 +39,8 @@ export function WriterHeader() {
 		toggleZenMode,
 		isTypewriterMode,
 		toggleTypewriterMode,
+		isDirectorMode,
+		toggleDirectorMode,
 	} = useWriterLayoutContext();
 
 	const hasScenes = structure
@@ -75,6 +78,23 @@ export function WriterHeader() {
 			</div>
 			<div className="flex items-center gap-2 text-xs text-muted-foreground">
 				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className={cn(
+									"h-8 w-8",
+									isDirectorMode && "text-primary bg-primary/10",
+								)}
+								onClick={toggleDirectorMode}
+							>
+								<Activity className="h-4 w-4" />
+							</Button>
+						</TooltipTrigger>
+						<TooltipContent>Director Mode (Live Analysis)</TooltipContent>
+					</Tooltip>
+
 					<Tooltip>
 						<TooltipTrigger asChild>
 							<Button

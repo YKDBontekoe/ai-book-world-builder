@@ -11,6 +11,8 @@ interface WriterLayoutContextType {
 	toggleZenMode: () => void;
 	isTypewriterMode: boolean;
 	toggleTypewriterMode: () => void;
+	isDirectorMode: boolean;
+	toggleDirectorMode: () => void;
 }
 
 export const WriterLayoutContext =

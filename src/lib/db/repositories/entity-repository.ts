@@ -151,25 +151,28 @@ export class EntityRepository extends BaseRepository<
 
 			if (entities.length === 0) return [];
 
-			// Fetch all attributes for the project in one go
-			const allAttributes = await db
-				.select()
-				.from(entityAttribute)
-				.where(eq(entityAttribute.projectId, projectId));
-
-			// Fetch all relationships for the project in one go
-			const allRelationships = await db
-				.select()
-				.from(relationship)
-				.where(eq(relationship.projectId, projectId));
+			// Fetch all attributes and relationships in parallel
+			const [allAttributes, allRelationships] = await Promise.all([
+				db
+					.select()
+					.from(entityAttribute)
+					.where(eq(entityAttribute.projectId, projectId)),
+				db
+					.select()
+					.from(relationship)
+					.where(eq(relationship.projectId, projectId)),
+			]);
 
 			// Map details to entities
 			return entities.map((ent) => ({
 				...ent,
-				attributes: allAttributes.filter((attr) => attr.entityId === ent.id),
+				attributes: allAttributes
+					.filter((attr) => attr.entityId === ent.id)
+					.sort((a, b) => a.name.localeCompare(b.name)),
 				relationships: allRelationships.filter(
 					(rel) => rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
-				),
+				)
+					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
 			}));
 		} catch (error) {
 			console.error("EntityRepository.findByProjectWithDetails error:", error);

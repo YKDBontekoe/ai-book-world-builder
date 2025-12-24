@@ -52,6 +52,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 	const [viewMode, setViewMode] = useState<ViewMode>("standard");
 	const [isTypewriterMode, setIsTypewriterMode] = useState(false);
+	const [isDirectorMode, setIsDirectorMode] = useState(false);
 
 	// Control Context
 	const { isChatOpen, setChatOpen } = useWriterControl();
@@ -81,6 +82,10 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 		setIsTypewriterMode((prev) => !prev);
 	};
 
+	const toggleDirectorMode = () => {
+		setIsDirectorMode((prev) => !prev);
+	};
+
 	if (!mounted) {
 		return <WriterSkeleton />;
 	}
@@ -96,6 +101,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				toggleZenMode,
 				isTypewriterMode,
 				toggleTypewriterMode,
+				isDirectorMode,
+				toggleDirectorMode,
 			}}
 		>
 			<ResizablePanelGroup
