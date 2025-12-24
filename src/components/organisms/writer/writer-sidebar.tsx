@@ -17,6 +17,7 @@ import { Button } from "@/components/atoms/button";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { ChapterActions } from "@/components/organisms/writer/chapter-actions";
+import { SceneItem } from "@/components/organisms/writer/left-sidebar/scene-item";
 import { SidebarSkeleton } from "@/components/organisms/writer/sidebar-skeleton";
 import { StructureEditorDialog } from "@/components/organisms/writer/structure-editor-dialog";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
@@ -54,7 +55,7 @@ export function WriterSidebar() {
 			await createNewChapter(project.id);
 			toast.success("Chapter created", { id: toastId });
 			fetchStructure();
-		} catch (e) {
+		} catch (_e) {
 			toast.error("Failed to create chapter", { id: toastId });
 		}
 	};
@@ -189,20 +190,14 @@ export function WriterSidebar() {
 										>
 											<div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1 pb-1">
 												{chapter.scenes.map((scene) => (
-													<button
-														type="button"
+													<SceneItem
 														key={scene.id}
-														onClick={() => setActiveSceneId(scene.id)}
-														className={cn(
-															"w-full flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors text-left",
-															activeSceneId === scene.id
-																? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
-																: "text-muted-foreground",
-														)}
-													>
-														<div className="h-1.5 w-1.5 rounded-full bg-current opacity-50" />
-														<span className="truncate">{scene.title}</span>
-													</button>
+														scene={scene}
+														chapterId={chapter.id}
+														isActive={activeSceneId === scene.id}
+														onSelect={() => setActiveSceneId(scene.id)}
+														onUpdate={fetchStructure}
+													/>
 												))}
 												{chapter.scenes.length === 0 && (
 													<div className="px-2 py-1.5 text-xs text-muted-foreground italic">
