@@ -1,47 +1,61 @@
-import { generateObject } from "ai";
-import { getSelectedModelId } from "@/lib/ai/models";
-import { myProvider } from "@/lib/ai/providers";
+import "server-only";
+
+import { BaseAIService } from "@/lib/ai/services/base-ai-service";
 import {
 	bookPlanSchema,
-	type StoryStyle,
+	type BookPlan,
 	scenePlanSchema,
+	type ScenePlan,
+	type StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
 
-export class PlanningService {
-	async generateBookPlan(prompt: string, style?: StoryStyle, modelId?: string) {
-		// Use Large model for complex planning
-		const targetModel = modelId || (await getSelectedModelId("large"));
-
+export class PlanningService extends BaseAIService {
+	/**
+	 * Generate a complete book plan from a prompt.
+	 */
+	async generateBookPlan(
+		prompt: string,
+		style?: StoryStyle,
+		modelId?: string,
+	): Promise<BookPlan> {
 		let promptText = `Create a book outline based on this prompt: "${prompt}".`;
 		if (style) {
 			promptText += `\nGenre: ${style.genre}\nPOV: ${style.pov}\nTone: ${style.tone}`;
 		}
 		promptText += `\nStructure it into a logical sequence of chapters (approx 10-20 depending on the scope). Provide a title, logline, and detailed summary.`;
 
-		const { object } = await generateObject({
-			model: myProvider.languageModel(targetModel),
-			schema: bookPlanSchema,
-			prompt: promptText,
+		const result = await this.generateObject(promptText, bookPlanSchema, {
+			modelId,
+			modelRole: "orchestrator",
 		});
 
-		return object;
+		if (!result.success) {
+			throw new Error(result.error);
+		}
+
+		return result.data.object;
 	}
 
+	/**
+	 * Plan scenes for a chapter.
+	 */
 	async planChapterScenes(
 		chapterTitle: string,
 		chapterSummary: string,
 		modelId?: string,
-	) {
-		// Use Large model for scene planning
-		const targetModel = modelId || (await getSelectedModelId("large"));
+	): Promise<ScenePlan> {
+		const prompt = `Break this chapter into 3-5 scenes based on its summary.\n\nChapter Title: ${chapterTitle}\nSummary: ${chapterSummary}`;
 
-		const { object: scenePlan } = await generateObject({
-			model: myProvider.languageModel(targetModel),
-			schema: scenePlanSchema,
-			prompt: `Break this chapter into 3-5 scenes based on its summary.\n\nChapter Title: ${chapterTitle}\nSummary: ${chapterSummary}`,
+		const result = await this.generateObject(prompt, scenePlanSchema, {
+			modelId,
+			modelRole: "orchestrator",
 		});
 
-		return scenePlan;
+		if (!result.success) {
+			throw new Error(result.error);
+		}
+
+		return result.data.object;
 	}
 }
 
