@@ -19,8 +19,11 @@ export async function generateBookPlan(
 		if (!session?.user) {
 			return { success: false, error: "Unauthorized" };
 		}
-		const plan = await storyService.generateBookPlan(prompt, style, modelId);
-		return { success: true, plan };
+		const result = await storyService.generateBookPlan(prompt, style, modelId);
+		if (result.error || !result.plan) {
+			return { success: false, error: result.error || "Failed to generate plan" };
+		}
+		return { success: true, plan: result.plan };
 	} catch (error) {
 		console.error("Failed to generate book plan", error);
 		return { success: false, error: "Failed to generate plan" };

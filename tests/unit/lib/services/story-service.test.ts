@@ -122,10 +122,21 @@ describe("StoryService", () => {
 
 			expect(mocks.generateObject).toHaveBeenCalled();
 			expect(result).toEqual({
-				title: "Test Book",
-				summary: "Summary",
-				chapters: [],
+				plan: {
+					title: "Test Book",
+					summary: "Summary",
+					chapters: [],
+				},
 			});
+		});
+
+		it("should return error if generation fails", async () => {
+			mocks.generateObject.mockRejectedValueOnce(new Error("AI error"));
+
+			const result = await storyService.generateBookPlan("test prompt");
+
+			expect(result).toHaveProperty("error");
+			expect(result.error).toBe("AI error");
 		});
 	});
 

@@ -17,7 +17,7 @@ export class PlanningService extends BaseAIService {
 		prompt: string,
 		style?: StoryStyle,
 		modelId?: string,
-	): Promise<BookPlan> {
+	): Promise<{ plan?: BookPlan; error?: string }> {
 		let promptText = `Create a book outline based on this prompt: "${prompt}".`;
 		if (style) {
 			promptText += `\nGenre: ${style.genre}\nPOV: ${style.pov}\nTone: ${style.tone}`;
@@ -30,10 +30,10 @@ export class PlanningService extends BaseAIService {
 		});
 
 		if (!result.success) {
-			throw new Error(result.error);
+			return { error: result.error };
 		}
 
-		return result.data.object;
+		return { plan: result.data.object };
 	}
 
 	/**
@@ -43,7 +43,7 @@ export class PlanningService extends BaseAIService {
 		chapterTitle: string,
 		chapterSummary: string,
 		modelId?: string,
-	): Promise<ScenePlan> {
+	): Promise<{ plan?: ScenePlan; error?: string }> {
 		const prompt = `Break this chapter into 3-5 scenes based on its summary.\n\nChapter Title: ${chapterTitle}\nSummary: ${chapterSummary}`;
 
 		const result = await this.generateObject(prompt, scenePlanSchema, {
@@ -52,10 +52,10 @@ export class PlanningService extends BaseAIService {
 		});
 
 		if (!result.success) {
-			throw new Error(result.error);
+			return { error: result.error };
 		}
 
-		return result.data.object;
+		return { plan: result.data.object };
 	}
 }
 

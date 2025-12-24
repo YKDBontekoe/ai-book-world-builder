@@ -12,18 +12,15 @@
 import "server-only";
 
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
+import type { AIGenerationOptions } from "@/lib/ai/services/types";
 
 // =============================================================================
 // Types
 // =============================================================================
 
-export interface GenerationOptions {
-	/** Specific model ID to use */
-	modelId?: string;
+export interface GenerationOptions extends AIGenerationOptions {
 	/** Writing style guidance */
 	style?: string;
-	/** Temperature for generation (0-2) */
-	temperature?: number;
 }
 
 export interface SceneCardData {
@@ -120,6 +117,7 @@ Instructions: ${instructions || "Draft the scene."}
 		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
 			modelId: options.modelId,
 			modelRole: "writer",
+			temperature: options.temperature ?? 0.7,
 		});
 
 		if (!result.success) {
@@ -145,6 +143,7 @@ Instructions: ${instructions || "Draft the scene."}
 		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
 			modelId: options.modelId,
 			modelRole: "writer",
+			temperature: options.temperature ?? 0.5,
 		});
 
 		if (!result.success) {
