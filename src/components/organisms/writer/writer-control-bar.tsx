@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { MessageSquare, Redo, Search, Sparkles, Undo } from "lucide-react";
+import { useState } from "react";
 import { Separator } from "@/components/atoms/separator";
 import {
 	Tooltip,
@@ -10,6 +11,7 @@ import {
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { AIToolsMenu } from "@/components/organisms/writer/tools/ai-tools-menu";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,7 @@ export function WriterControlBar() {
 
 	const { viewMode } = useWriterLayoutContext();
 	const isZen = viewMode === "zen";
+	const [isToolsOpen, setIsToolsOpen] = useState(false);
 
 	// Animation variants
 	const containerVariants = {
@@ -57,66 +60,61 @@ export function WriterControlBar() {
 			>
 				<GlassCard
 					variant="liquid"
-					className="p-2 rounded-2xl shadow-2xl border-white/20 backdrop-blur-xl"
+					className="flex items-center gap-1 p-2 rounded-2xl shadow-2xl border-white/20 backdrop-blur-xl"
 				>
-					<div className="flex items-center gap-1">
-						{/* Editor Actions */}
-						<ControlGroup>
-							<ControlButton
-								label="Undo"
-								icon={Undo}
-								onClick={() => editorActions?.undo()}
-								disabled={!editorActions}
-								shortcut="⌘Z"
-							/>
-							<ControlButton
-								label="Redo"
-								icon={Redo}
-								onClick={() => editorActions?.redo()}
-								disabled={!editorActions}
-								shortcut="⌘⇧Z"
-							/>
-						</ControlGroup>
-
-						<Separator
-							orientation="vertical"
-							className="h-6 mx-1 bg-white/10"
+					{/* Editor Actions */}
+					<ControlGroup>
+						<ControlButton
+							label="Undo"
+							icon={Undo}
+							onClick={() => editorActions?.undo()}
+							disabled={!editorActions}
+							shortcut="⌘Z"
 						/>
-
-						{/* Quick Tools */}
-						<ControlGroup>
-							<ControlButton
-								label="Spotlight"
-								icon={Search}
-								onClick={toggleSpotlight}
-								active={isSpotlightOpen}
-								shortcut="⌘K"
-							/>
-							<ControlButton
-								label="AI Tools"
-								icon={Sparkles}
-								onClick={() => {}} // To implement: Open tools menu
-							/>
-						</ControlGroup>
-
-						<Separator
-							orientation="vertical"
-							className="h-6 mx-1 bg-white/10"
+						<ControlButton
+							label="Redo"
+							icon={Redo}
+							onClick={() => editorActions?.redo()}
+							disabled={!editorActions}
+							shortcut="⌘⇧Z"
 						/>
+					</ControlGroup>
 
-						{/* Assistant */}
-						<ControlGroup>
-							<ControlButton
-								label="Assistant"
-								icon={MessageSquare}
-								onClick={toggleChat}
-								active={isChatOpen}
-								shortcut="⌘J"
-							/>
-						</ControlGroup>
-					</div>
+					<Separator orientation="vertical" className="h-6 mx-1 bg-white/10" />
+
+					{/* Quick Tools */}
+					<ControlGroup>
+						<ControlButton
+							label="Spotlight"
+							icon={Search}
+							onClick={toggleSpotlight}
+							active={isSpotlightOpen}
+							shortcut="⌘K"
+						/>
+						<ControlButton
+							label="AI Tools"
+							icon={Sparkles}
+							onClick={() => setIsToolsOpen(true)}
+							active={isToolsOpen}
+						/>
+					</ControlGroup>
+
+					<Separator orientation="vertical" className="h-6 mx-1 bg-white/10" />
+
+					{/* Assistant */}
+					<ControlGroup>
+						<ControlButton
+							label="Assistant"
+							icon={MessageSquare}
+							onClick={toggleChat}
+							active={isChatOpen}
+							shortcut="⌘J"
+						/>
+					</ControlGroup>
 				</GlassCard>
 			</motion.div>
+
+			<AIToolsMenu isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
 		</TooltipProvider>
 	);
 }
