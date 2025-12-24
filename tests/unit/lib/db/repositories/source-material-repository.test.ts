@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sourceMaterialRepository } from "@/lib/db/repositories/source-material-repository";
-import { DatabaseError, NotFoundError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
 	const mockChain: any = {
@@ -20,6 +19,7 @@ const mocks = vi.hoisted(() => {
 		innerJoin: vi.fn(),
 		execute: vi.fn(),
 		transaction: vi.fn((cb) => cb(mockChain)),
+		// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for testing
 		then(onFulfilled: any, onRejected: any) {
 			const currentResult =
 				mockChain.results && mockChain.results.length > 0

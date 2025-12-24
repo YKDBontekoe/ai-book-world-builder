@@ -1,12 +1,3 @@
-import { auth } from "@/app/(auth)/auth";
-import {
-	FadeIn,
-	SlideIn,
-	StaggerItem,
-	StaggerList,
-} from "@/components/atoms/animated";
-import { Button } from "@/components/atoms/button";
-import { GlassCard } from "@/components/molecules/glass-card";
 import {
 	ArrowRight,
 	BookOpen,
@@ -20,7 +11,16 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useId } from "react";
+import { auth } from "@/app/(auth)/auth";
+import {
+	FadeIn,
+	SlideIn,
+	StaggerItem,
+	StaggerList,
+} from "@/components/atoms/animated";
+import { Button } from "@/components/atoms/button";
+import { GlassCard } from "@/components/molecules/glass-card";
 
 export default function Page() {
 	return (
@@ -44,6 +44,7 @@ async function AuthRedirect() {
 }
 
 function LandingPageContent() {
+	const featuresId = useId();
 	return (
 		<div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-violet-50/50 via-white to-indigo-50/50 dark:from-zinc-950 dark:via-zinc-900 dark:to-violet-950/30">
 			{/* Animated background elements - slightly refined for subtlety */}
@@ -216,7 +217,7 @@ function LandingPageContent() {
 
 					{/* Feature Grid */}
 					<StaggerList
-						id="features"
+						id={featuresId}
 						className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"
 					>
 						<StaggerItem>

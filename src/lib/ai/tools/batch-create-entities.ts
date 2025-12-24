@@ -4,7 +4,7 @@ import { z } from "zod";
 import { entityRepository, projectRepository } from "@/lib/db/repositories";
 
 export const batchCreateEntities = ({
-	session: _session,
+	session,
 	projectId,
 }: {
 	session: Session | null;
