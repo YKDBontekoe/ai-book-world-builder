@@ -85,7 +85,7 @@ export async function getModelIdForRole(role: ModelRole): Promise<string> {
  * ```
  */
 export async function getModelIdForTier(tier: ModelTier): Promise<string> {
-	return await getSelectedModelId(tier);
+	return getSelectedModelId(tier);
 }
 
 /**
