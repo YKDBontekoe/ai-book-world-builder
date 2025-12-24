@@ -248,6 +248,7 @@ export function WriterSpotlight() {
 							<SearchIcon className="w-5 h-5 text-primary animate-pulse" />
 							<input
 								ref={inputRef}
+								aria-label="Search commands"
 								className="flex-1 bg-transparent border-none outline-none text-xl placeholder:text-muted-foreground/50 text-foreground font-light tracking-wide"
 								placeholder="What do you need?"
 								value={query}
