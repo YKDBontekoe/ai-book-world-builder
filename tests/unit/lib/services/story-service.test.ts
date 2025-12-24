@@ -15,19 +15,17 @@ const mocks = vi.hoisted(() => ({
 	from: vi.fn().mockReturnThis(),
 	where: vi.fn().mockReturnThis(),
 	orderBy: vi.fn().mockReturnThis(),
-	limit: vi
-		.fn()
-		.mockResolvedValue([
-			{
-				id: "mock-id",
-				sequence: 1,
-				content: "mock content",
-				chapterId: "mock-chapter-id",
-				projectId: "mock-project-id",
-				notes: "mock notes",
-				title: "mock title",
-			},
-		]),
+	limit: vi.fn().mockResolvedValue([
+		{
+			id: "mock-id",
+			sequence: 1,
+			content: "mock content",
+			chapterId: "mock-chapter-id",
+			projectId: "mock-project-id",
+			notes: "mock notes",
+			title: "mock title",
+		},
+	]),
 	update: vi.fn().mockReturnThis(),
 	set: vi.fn().mockReturnThis(),
 	transaction: vi.fn(),

@@ -3,10 +3,9 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
-import { chapter, chapterVersion } from "@/lib/db/schema";
 
 export async function GET(
-	request: NextRequest,
+	_request: NextRequest,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	const session = await auth();

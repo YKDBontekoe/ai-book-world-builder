@@ -64,13 +64,11 @@ vi.mock("@/lib/ai/writer", () => ({
 
 // Mock @/lib/db/queries/scene
 vi.mock("@/lib/db/queries/scene", () => ({
-	createScene: vi
-		.fn()
-		.mockResolvedValue({
-			id: "new-scene-1",
-			title: "AI Generated Scene",
-			sequence: 2,
-		}),
+	createScene: vi.fn().mockResolvedValue({
+		id: "new-scene-1",
+		title: "AI Generated Scene",
+		sequence: 2,
+	}),
 	getScenesForProject: vi.fn().mockResolvedValue([]),
 }));
 
@@ -80,25 +78,21 @@ vi.mock("@/app/(auth)/auth", () => ({
 }));
 
 vi.mock("@/lib/db/queries/project", () => ({
-	getProjectByIdWithAccess: vi
-		.fn()
-		.mockResolvedValue({
-			id: "proj-1",
-			userId: "user-1",
-			visibility: "private",
-		}),
+	getProjectByIdWithAccess: vi.fn().mockResolvedValue({
+		id: "proj-1",
+		userId: "user-1",
+		visibility: "private",
+	}),
 }));
 
 // Mock the project repository (used by actions-utils)
 vi.mock("@/lib/db/repositories/project-repository", () => ({
 	projectRepository: {
-		findByIdWithAccess: vi
-			.fn()
-			.mockResolvedValue({
-				id: "proj-1",
-				userId: "user-1",
-				visibility: "private",
-			}),
+		findByIdWithAccess: vi.fn().mockResolvedValue({
+			id: "proj-1",
+			userId: "user-1",
+			visibility: "private",
+		}),
 	},
 }));
 

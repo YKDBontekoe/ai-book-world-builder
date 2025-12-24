@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { submitFeedbackAction } from "@/app/actions/feedback";
 import { Button } from "@/components/atoms/button";
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: Standard Next.js error page pattern
 export default function Error({
 	error,
 	reset,

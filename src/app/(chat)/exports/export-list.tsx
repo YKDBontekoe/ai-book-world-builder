@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { BookOpen, Download, FileText, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { toast } from "sonner";
 import { DeleteExportButton } from "@/app/(chat)/exports/delete-export-button";
 import { deleteBulkExports } from "@/app/actions/exports";
@@ -28,6 +28,7 @@ interface ExportListProps {
 export function ExportList({ exports }: ExportListProps) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 	const router = useRouter();
+	const selectAllId = useId();
 
 	const toggleSelection = (id: string) => {
 		const newSelection = new Set(selectedIds);
@@ -86,10 +87,10 @@ export function ExportList({ exports }: ExportListProps) {
 					<Checkbox
 						checked={selectedIds.size === exports.length && exports.length > 0}
 						onCheckedChange={toggleAll}
-						id="select-all"
+						id={selectAllId}
 					/>
 					<label
-						htmlFor="select-all"
+						htmlFor={selectAllId}
 						className="text-sm text-muted-foreground cursor-pointer select-none"
 					>
 						Select All

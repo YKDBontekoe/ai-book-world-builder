@@ -3,7 +3,6 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
-import { projectRepository } from "@/lib/db/repositories";
 import {
 	addTaskLogEntry,
 	createScene,
@@ -12,6 +11,7 @@ import {
 	getScenesForChapter,
 	updateSceneContent,
 } from "@/lib/db/queries";
+import { projectRepository } from "@/lib/db/repositories";
 
 const sceneUpdateSchema = z.object({
 	id: z

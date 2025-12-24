@@ -394,8 +394,10 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 				.orderBy(scene.sequence);
 
 			const sceneIdMap = new Map<string, string>();
-			const pendingPrevSceneUpdates: { newSceneId: string; oldPrevId: string }[] =
-				[];
+			const pendingPrevSceneUpdates: {
+				newSceneId: string;
+				oldPrevId: string;
+			}[] = [];
 
 			for (const oldScene of oldScenes) {
 				const { id: _, ...sceneData } = oldScene;

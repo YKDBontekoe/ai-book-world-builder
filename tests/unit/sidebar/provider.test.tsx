@@ -7,7 +7,6 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
-import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -19,7 +18,7 @@ import {
 // Cast to any to avoid generic inference issues in tests
 import { useIsMobile } from "@/hooks/use-mobile";
 
-const useIsMobileMock = vi.mocked(useIsMobile) as any;
+const _useIsMobileMock = vi.mocked(useIsMobile) as any;
 
 vi.mock("@/hooks/use-mobile", () => ({
 	useIsMobile: vi.fn().mockReturnValue(false),
@@ -50,6 +49,7 @@ function SidebarConsumer() {
 describe("SidebarProvider", () => {
 	afterEach(() => {
 		cleanup();
+		// biome-ignore lint/suspicious/noDocumentCookie: Test environment cleanup
 		document.cookie = "";
 		vi.restoreAllMocks();
 		mockedUseIsMobile.mockReturnValue(false);

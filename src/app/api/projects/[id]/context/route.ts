@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import {
@@ -10,7 +10,7 @@ import {
 import { chapter, chapterDraft, scene, sourceMaterial } from "@/lib/db/schema";
 
 export async function GET(
-	request: Request,
+	_request: Request,
 	{ params }: { params: Promise<{ id: string }> },
 ) {
 	try {

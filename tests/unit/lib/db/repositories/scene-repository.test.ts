@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sceneRepository } from "@/lib/db/repositories/scene-repository";
-import { DatabaseError, NotFoundError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
 	const mockChain: any = {
@@ -16,6 +15,7 @@ const mocks = vi.hoisted(() => {
 		update: vi.fn(),
 		set: vi.fn(),
 		delete: vi.fn(),
+		// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for testing
 		then: vi.fn((resolve, reject) => {
 			if (mockChain.error) {
 				return Promise.reject(mockChain.error).catch(reject);
