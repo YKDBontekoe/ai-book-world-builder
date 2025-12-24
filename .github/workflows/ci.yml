@@ -1,16 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: ['main']
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/**'
-      - 'next.config.*'
-      - 'tsconfig.json'
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
