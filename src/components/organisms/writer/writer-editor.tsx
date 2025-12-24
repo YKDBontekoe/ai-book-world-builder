@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { History, Lock, MousePointerClick, RotateCcw } from "lucide-react";
+import { Lock, MousePointerClick, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
@@ -60,14 +60,14 @@ export function WriterEditor() {
 				redo: () => editorRef.current?.redo(),
 			});
 		}
-	}, [registerEditorActions, activeSceneId]); // Re-register when scene changes
+	}, [registerEditorActions]); // Re-register when scene changes
 
 	// Initialize history with initial content
 	useEffect(() => {
 		if (sceneContent && historyStack.length === 0) {
 			setHistoryStack([{ content: sceneContent, timestamp: Date.now() }]);
 		}
-	}, [sceneContent]);
+	}, [sceneContent, historyStack.length]);
 
 	// Debounced history pusher
 	const pushHistory = useDebounceCallback((content: string) => {
@@ -81,7 +81,7 @@ export function WriterEditor() {
 	}, 2000);
 
 	const onEditorContentChange = useCallback(
-		(content: string, debounce: boolean) => {
+		(content: string, _debounce: boolean) => {
 			// Standard save
 			handleContentChange(content);
 			// History push

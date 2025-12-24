@@ -92,7 +92,7 @@ export function useNarrativeIntelligence({
 				if (matches) {
 					characterMentions[char.name] = matches.length;
 				}
-			} catch (e) {
+			} catch (_e) {
 				// Fallback for names with special regex characters
 				if (debouncedContent.toLowerCase().includes(char.name.toLowerCase())) {
 					characterMentions[char.name] = 1;

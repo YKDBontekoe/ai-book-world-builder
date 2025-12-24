@@ -37,7 +37,7 @@ export function DirectorDashboard({
 	metrics,
 	isVisible,
 	onClose,
-}: DirectorDashboardProps): JSX.Element | null {
+}: DirectorDashboardProps) {
 	if (!isVisible) return null;
 
 	const {
@@ -60,6 +60,8 @@ export function DirectorDashboard({
 			: pacingScore < 30
 				? "hsl(var(--primary))" // Slow/Descriptive
 				: "hsl(var(--chart-2))"; // Balanced
+
+	const gradientId = "pacingGradient";
 
 	return (
 		<motion.div
@@ -146,7 +148,7 @@ export function DirectorDashboard({
 									<AreaChart data={pacingGraphData}>
 										<defs>
 											<linearGradient
-												id="pacingGradient"
+												id={gradientId}
 												x1="0"
 												y1="0"
 												x2="0"
@@ -179,7 +181,7 @@ export function DirectorDashboard({
 											stroke={pacingColor}
 											strokeWidth={2}
 											fillOpacity={1}
-											fill="url(#pacingGradient)"
+											fill={`url(#${gradientId})`}
 											isAnimationActive={true}
 										/>
 									</AreaChart>
@@ -269,7 +271,7 @@ function StatBox({
 	label: string;
 	value: string;
 	subValue?: string;
-	icon: LucideIcon;
+	icon: any;
 	color?: string;
 }) {
 	return (
