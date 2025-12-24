@@ -27,14 +27,8 @@ import { getSelectedModelId } from "@/lib/ai/models";
 // Types
 // =============================================================================
 
-/**
- * Model Tier - Capability level of the AI model.
- *
- * - `light`  - Fast & cheap for simple tasks
- * - `middle` - Balanced for most tasks
- * - `large`  - Most capable for complex reasoning
- */
-export type ModelTier = "light" | "middle" | "large";
+import type { ModelTier } from "@/lib/ai/services/types";
+import { getSelectedModelId } from "@/lib/ai/models";
 
 /**
  * Model Role - Semantic role in the AI pipeline.
