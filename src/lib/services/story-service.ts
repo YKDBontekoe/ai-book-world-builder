@@ -34,10 +34,16 @@ export class StoryService {
 
 		await ensureProjectAccess(targetChapter.projectId, true);
 
-		const scenePlan = await planningService.planChapterScenes(
+		const result = await planningService.planChapterScenes(
 			targetChapter.title,
 			targetChapter.notes || "",
 		);
+
+		if (result.error || !result.plan) {
+			throw new Error(result.error || "Failed to plan scenes");
+		}
+
+		const scenePlan = result.plan;
 
 		const lastScene = await storyRepository.getLastSceneInChapter(chapterId);
 
