@@ -12,8 +12,9 @@ const mocks = vi.hoisted(() => {
         where: vi.fn().mockReturnThis(),
         orderBy: vi.fn().mockReturnThis(),
         limit: vi.fn(), // We'll mock impl later
-        then: (resolve: any) => resolve([]) // Placeholder
-    };
+    } as any;
+    // biome-ignore lint/suspicious/noThenProperty: Intentional mock for Thenable
+    queryBuilder.then = (resolve: any) => resolve([]); // Placeholder
 
     return {
         generateObject: vi.fn(),
