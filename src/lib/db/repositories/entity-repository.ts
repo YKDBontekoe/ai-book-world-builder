@@ -166,10 +166,13 @@ export class EntityRepository extends BaseRepository<
 			// Map details to entities
 			return entities.map((ent) => ({
 				...ent,
-				attributes: allAttributes.filter((attr) => attr.entityId === ent.id),
+				attributes: allAttributes
+					.filter((attr) => attr.entityId === ent.id)
+					.sort((a, b) => a.name.localeCompare(b.name)),
 				relationships: allRelationships.filter(
 					(rel) => rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
-				),
+				)
+					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
 			}));
 		} catch (error) {
 			console.error("EntityRepository.findByProjectWithDetails error:", error);
