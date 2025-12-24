@@ -2,7 +2,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach } from "vitest";
 import { WriterEditor } from "@/components/organisms/writer/writer-editor";
 import * as writerContext from "@/components/organisms/writer/writer-context";
-
+import { WriterControlProvider } from "@/components/organisms/writer/writer-control-context";
 
 // Mock child components
 vi.mock("@/components/organisms/editor/text-editor", () => ({
@@ -57,6 +57,7 @@ vi.mock("lucide-react", () => ({
   Sparkles: () => <span>Sparkles</span>,
   MousePointerClick: () => <span>Click</span>,
   Lock: () => <span>Lock</span>,
+  RotateCcw: () => <span>Time Travel</span>,
 }));
 
 // Mock useRouter
@@ -89,6 +90,14 @@ vi.mock("@/components/organisms/writer/writer-layout-context", async (importOrig
     };
 });
 
+// Helper to render with providers
+const renderWithProviders = (ui: React.ReactNode) => {
+  return render(
+    <WriterControlProvider>
+      {ui}
+    </WriterControlProvider>
+  );
+};
 
 describe("WriterEditor", () => {
   const defaultContext = {
@@ -124,7 +133,7 @@ describe("WriterEditor", () => {
         ...defaultContext,
         structure: []
     });
-    render(<WriterEditor />);
+    renderWithProviders(<WriterEditor />);
 
     expect(screen.getByTestId("story-wizard")).toBeInTheDocument();
   });
@@ -135,7 +144,7 @@ describe("WriterEditor", () => {
         structure: [],
         isReadOnly: true
     });
-    render(<WriterEditor />);
+    renderWithProviders(<WriterEditor />);
 
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
     expect(screen.getByText("Empty Project")).toBeInTheDocument();
@@ -147,7 +156,7 @@ describe("WriterEditor", () => {
         ...defaultContext,
         structure: [{ scenes: [{ id: 's1' }] }] // hasScenes = true
     });
-    render(<WriterEditor />);
+    renderWithProviders(<WriterEditor />);
 
     // In this case, empty state is rendered but with different content
     expect(screen.getByTestId("empty-state")).toBeInTheDocument();
@@ -161,7 +170,7 @@ describe("WriterEditor", () => {
         activeScene: { id: "scene-1", title: "Scene 1" },
         structure: [{ scenes: [{ id: 'scene-1' }] }]
     });
-    render(<WriterEditor />);
+    renderWithProviders(<WriterEditor />);
 
     expect(screen.getByTestId("text-editor")).toBeInTheDocument();
     expect(screen.queryByTestId("empty-state")).not.toBeInTheDocument();
@@ -172,7 +181,7 @@ describe("WriterEditor", () => {
         ...defaultContext,
         structure: []
     });
-    render(<WriterEditor />);
+    renderWithProviders(<WriterEditor />);
 
     const completeButton = screen.getByText("Complete");
     fireEvent.click(completeButton);
