@@ -269,7 +269,7 @@ function StatBox({
 	label: string;
 	value: string;
 	subValue?: string;
-	icon: any;
+	icon: LucideIcon;
 	color?: string;
 }) {
 	return (
