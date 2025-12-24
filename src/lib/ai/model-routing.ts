@@ -4,10 +4,10 @@ export type ModelRole = "orchestrator" | "writer" | "checker" | "context";
 
 // Mapping roles to our abstract "light", "middle", "large" types
 const ROLE_TYPE_MAP: Record<ModelRole, "light" | "middle" | "large"> = {
-  orchestrator: "large", // Complex planning
-  writer: "large", // High quality prose
-  checker: "large", // Reasoning/Consistency
-  context: "middle", // Large context but faster (or maybe Large if context window is key)
+	orchestrator: "large", // Complex planning
+	writer: "large", // High quality prose
+	checker: "large", // Reasoning/Consistency
+	context: "middle", // Large context but faster (or maybe Large if context window is key)
 };
 
 /**
@@ -16,16 +16,16 @@ const ROLE_TYPE_MAP: Record<ModelRole, "light" | "middle" | "large"> = {
  * Note: This function is now async because we need to fetch preferences.
  */
 export async function getModelIdForRole(role: ModelRole): Promise<string> {
-  const type = ROLE_TYPE_MAP[role];
-  const { getSelectedModelId } = await import("@/lib/ai/models");
-  return await getSelectedModelId(type);
+	const type = ROLE_TYPE_MAP[role];
+	const { getSelectedModelId } = await import("@/lib/ai/models");
+	return await getSelectedModelId(type);
 }
 
 /**
  * Returns the Gateway/Provider model ID string for a given role.
  */
 export async function getGatewayIdForRole(role: ModelRole): Promise<string> {
-  const modelId = await getModelIdForRole(role);
-  // For OpenRouter, the ID is the Gateway ID usually
-  return modelId;
+	const modelId = await getModelIdForRole(role);
+	// For OpenRouter, the ID is the Gateway ID usually
+	return modelId;
 }

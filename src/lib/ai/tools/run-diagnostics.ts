@@ -3,10 +3,7 @@ import type { Session } from "next-auth";
 import { z } from "zod";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
 import { getFullProjectDataForGeneration } from "@/lib/book-generation";
-import {
-	addTaskLogEntry,
-	getScenesForChapter,
-} from "@/lib/db/queries";
+import { addTaskLogEntry, getScenesForChapter } from "@/lib/db/queries";
 
 const runDiagnosticsSchema = z.object({
 	projectId: z.string().describe("The ID of the project"),

@@ -7,10 +7,13 @@ import {
 	ZapIcon,
 } from "lucide-react";
 import { SelectItem } from "@/components/atoms/select";
-import { cn } from "@/lib/utils";
-import { getProviderGradient, ProviderIcon } from "@/components/organisms/chat/provider-icon";
 import { FavoriteToggle } from "@/components/organisms/chat/multimodal-input/favorite-toggle";
+import {
+	getProviderGradient,
+	ProviderIcon,
+} from "@/components/organisms/chat/provider-icon";
 import type { ChatModel } from "@/lib/ai/models";
+import { cn } from "@/lib/utils";
 
 function getPricePerMillion(price: string | number): number {
 	const parsedPrice = typeof price === "string" ? parseFloat(price) : price;
@@ -59,14 +62,10 @@ export function ModelListItem({
 			data-testid={`model-card-${model.id}`}
 		>
 			<div className="flex items-start gap-2.5">
-				{showProvider && (
-					<ProviderIcon provider={model.provider} size="md" />
-				)}
+				{showProvider && <ProviderIcon provider={model.provider} size="md" />}
 				<div className="min-w-0 flex-1">
 					<div className="flex items-center gap-1.5">
-						<span className="truncate font-medium text-sm">
-							{model.name}
-						</span>
+						<span className="truncate font-medium text-sm">{model.name}</span>
 						<div className="flex items-center gap-1">
 							{model.supportsImages && (
 								<span

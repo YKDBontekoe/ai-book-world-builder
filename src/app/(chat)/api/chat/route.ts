@@ -7,6 +7,10 @@ import {
 	streamText,
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
+import {
+	type PostRequestBody,
+	postRequestBodySchema,
+} from "@/app/(chat)/api/chat/schema";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import type { ChatModel } from "@/lib/ai/models";
 import { getSelectedModelId } from "@/lib/ai/models";
@@ -19,7 +23,6 @@ import { initializeChatSession } from "@/lib/services/chat";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
 import { generateUUID } from "@/lib/utils";
-import { type PostRequestBody, postRequestBodySchema } from "@/app/(chat)/api/chat/schema";
 
 export const maxDuration = 60;
 
@@ -40,14 +43,14 @@ export async function POST(request: Request) {
 			projectId,
 			selectedChatModel,
 			selectedVisibilityType,
-            activeSceneId
+			activeSceneId,
 		}: {
 			id: string;
 			message: ChatMessage;
 			projectId?: string | null;
 			selectedChatModel: ChatModel["id"];
 			selectedVisibilityType: VisibilityType;
-            activeSceneId?: string;
+			activeSceneId?: string;
 		} = requestBody;
 
 		const session = await auth();
@@ -70,7 +73,7 @@ export async function POST(request: Request) {
 			selectedVisibilityType,
 			user: session.user,
 			request,
-            activeSceneId,
+			activeSceneId,
 		});
 
 		let finalMergedUsage: AppUsage | undefined;
@@ -125,27 +128,29 @@ export async function POST(request: Request) {
 						});
 					}
 
-                    // Add Active Scene
-                    if (contextMetadata.activeSceneId) {
-                        citations.push({
-                            type: "scene",
-                            id: contextMetadata.activeSceneId,
-                            name: "Active Scene Context"
-                        });
-                    }
+					// Add Active Scene
+					if (contextMetadata.activeSceneId) {
+						citations.push({
+							type: "scene",
+							id: contextMetadata.activeSceneId,
+							name: "Active Scene Context",
+						});
+					}
 
 					// Stream citations to UI
 					dataStream.write({ type: "data-sources", data: citations });
 				}
 
-                let targetModelId = selectedChatModel;
-                if (["light", "middle", "large"].includes(selectedChatModel)) {
-                    targetModelId = await getSelectedModelId(selectedChatModel as "light" | "middle" | "large");
-                }
+				let targetModelId = selectedChatModel;
+				if (["light", "middle", "large"].includes(selectedChatModel)) {
+					targetModelId = await getSelectedModelId(
+						selectedChatModel as "light" | "middle" | "large",
+					);
+				}
 
-                if (!targetModelId) {
-                     targetModelId = await getSelectedModelId("middle");
-                }
+				if (!targetModelId) {
+					targetModelId = await getSelectedModelId("middle");
+				}
 
 				const model = myProvider.languageModel(targetModelId);
 

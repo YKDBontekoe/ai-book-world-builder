@@ -4,103 +4,103 @@ import type { UserType } from "@/app/(auth)/auth";
 import { createSourceMaterial, updateSourceMaterial } from "@/lib/db/queries";
 import type { SourceMaterial } from "@/lib/db/schema";
 import {
-  isSupportedIngestionMimeType,
-  supportedIngestionMimeTypes,
+	isSupportedIngestionMimeType,
+	supportedIngestionMimeTypes,
 } from "@/lib/ingestion/mime-types";
 
 export const supportedSourceMaterialMimeTypes = supportedIngestionMimeTypes;
 
 export const sourceMaterialSizeLimits: Record<UserType, number> = {
-  regular: 20 * 1024 * 1024,
+	regular: 20 * 1024 * 1024,
 };
 
 export type SerializedSourceMaterial = Omit<
-  SourceMaterial,
-  "createdAt" | "updatedAt"
+	SourceMaterial,
+	"createdAt" | "updatedAt"
 > & {
-  createdAt: string;
-  updatedAt: string;
+	createdAt: string;
+	updatedAt: string;
 };
 
 export function isSupportedSourceMaterialType(mimeType: string): boolean {
-  return isSupportedIngestionMimeType(mimeType);
+	return isSupportedIngestionMimeType(mimeType);
 }
 
 export function sanitizeSourceMaterialName(filename: string): string {
-  const trimmed = filename.trim();
-  const safeName = trimmed.replace(/[^a-zA-Z0-9._-]+/g, "_");
-  return safeName.length > 0 ? safeName : `upload-${randomUUID()}`;
+	const trimmed = filename.trim();
+	const safeName = trimmed.replace(/[^a-zA-Z0-9._-]+/g, "_");
+	return safeName.length > 0 ? safeName : `upload-${randomUUID()}`;
 }
 
 export function getSourceMaterialUploadKey(
-  projectId: string,
-  filename: string
+	projectId: string,
+	filename: string,
 ): string {
-  const timestamp = Date.now();
-  const safeName = sanitizeSourceMaterialName(filename);
-  return `projects/${projectId}/${timestamp}-${safeName}`;
+	const timestamp = Date.now();
+	const safeName = sanitizeSourceMaterialName(filename);
+	return `projects/${projectId}/${timestamp}-${safeName}`;
 }
 
 export function serializeSourceMaterial(
-  material: SourceMaterial
+	material: SourceMaterial,
 ): SerializedSourceMaterial {
-  return {
-    ...material,
-    createdAt: material.createdAt.toISOString(),
-    updatedAt: material.updatedAt.toISOString(),
-  };
+	return {
+		...material,
+		createdAt: material.createdAt.toISOString(),
+		updatedAt: material.updatedAt.toISOString(),
+	};
 }
 
 export async function createPendingSourceMaterial({
-  filename,
-  mimeType,
-  projectId,
-  size,
-  userId,
+	filename,
+	mimeType,
+	projectId,
+	size,
+	userId,
 }: {
-  filename: string;
-  mimeType: string;
-  projectId: string;
-  size: number;
-  userId: string;
+	filename: string;
+	mimeType: string;
+	projectId: string;
+	size: number;
+	userId: string;
 }): Promise<SourceMaterial> {
-  return createSourceMaterial({
-    filename,
-    mimeType,
-    projectId,
-    size,
-    status: "pending",
-    userId,
-  });
+	return createSourceMaterial({
+		filename,
+		mimeType,
+		projectId,
+		size,
+		status: "pending",
+		userId,
+	});
 }
 
 export async function markSourceMaterialAsUploaded({
-  blobUrl,
-  id,
+	blobUrl,
+	id,
 }: {
-  blobUrl: string;
-  id: string;
+	blobUrl: string;
+	id: string;
 }): Promise<SourceMaterial | null> {
-  return updateSourceMaterial({
-    blobUrl,
-    id,
-    status: "uploaded",
-  });
+	return updateSourceMaterial({
+		blobUrl,
+		id,
+		status: "uploaded",
+	});
 }
 
 export async function markSourceMaterialAsFailed({
-  id,
+	id,
 }: {
-  id: string;
+	id: string;
 }): Promise<SourceMaterial | null> {
-  return updateSourceMaterial({
-    blobUrl: null,
-    id,
-    status: "failed",
-  });
+	return updateSourceMaterial({
+		blobUrl: null,
+		id,
+		status: "failed",
+	});
 }
 
 export function formatBytes(bytes: number): string {
-  const megabytes = bytes / (1024 * 1024);
-  return `${megabytes.toFixed(1)}MB`;
+	const megabytes = bytes / (1024 * 1024);
+	return `${megabytes.toFixed(1)}MB`;
 }

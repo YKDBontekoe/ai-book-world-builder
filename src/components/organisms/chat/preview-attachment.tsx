@@ -1,7 +1,7 @@
 import { Loader2, X } from "lucide-react";
 import Image from "next/image";
-import type { Attachment } from "@/lib/types";
 import { Button } from "@/components/atoms/button";
+import type { Attachment } from "@/lib/types";
 
 export const PreviewAttachment = ({
 	attachment,
@@ -44,7 +44,7 @@ export const PreviewAttachment = ({
 
 			{onRemove && !isUploading && (
 				<Button
-                    aria-label={`Remove ${name}`}
+					aria-label={`Remove ${name}`}
 					className="absolute top-0.5 right-0.5 size-4 rounded-full p-0 opacity-0 transition-opacity focus:opacity-100 group-hover:opacity-100"
 					onClick={onRemove}
 					size="sm"

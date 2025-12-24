@@ -6,6 +6,17 @@ import cx from "classnames";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
+import { ArtifactActions } from "@/components/organisms/artifact/artifact-actions";
+import { ArtifactCloseButton } from "@/components/organisms/artifact/artifact-close-button";
+import { ArtifactContent } from "@/components/organisms/artifact/artifact-content";
+import { ArtifactMessages } from "@/components/organisms/artifact/artifact-messages";
+import { artifactDefinitions } from "@/components/organisms/artifact/definitions";
+import { Toolbar } from "@/components/organisms/artifact/toolbar";
+import type {
+	ArtifactKind,
+	UIArtifact,
+} from "@/components/organisms/artifact/types";
+import { VersionFooter } from "@/components/organisms/artifact/version-footer";
 import {
 	DocumentSkeleton,
 	InlineDocumentSkeleton,
@@ -15,14 +26,6 @@ import { api } from "@/lib/api-client";
 import type { Document } from "@/lib/db/schema";
 import { QUERY_KEYS } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
-import { ArtifactActions } from "@/components/organisms/artifact/artifact-actions";
-import { ArtifactCloseButton } from "@/components/organisms/artifact/artifact-close-button";
-import { ArtifactContent } from "@/components/organisms/artifact/artifact-content";
-import { ArtifactMessages } from "@/components/organisms/artifact/artifact-messages";
-import { artifactDefinitions } from "@/components/organisms/artifact/definitions";
-import { Toolbar } from "@/components/organisms/artifact/toolbar";
-import type { ArtifactKind, UIArtifact } from "@/components/organisms/artifact/types";
-import { VersionFooter } from "@/components/organisms/artifact/version-footer";
 
 const ArtifactComponent = () => {
 	const { artifact, setArtifact } = useArtifact();

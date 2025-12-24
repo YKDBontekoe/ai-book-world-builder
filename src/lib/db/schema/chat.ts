@@ -12,10 +12,9 @@ import {
 	uuid,
 	varchar,
 } from "drizzle-orm/pg-core";
-
-import type { AppUsage } from "@/lib/usage";
 import { user } from "@/lib/db/schema/auth";
 import { project } from "@/lib/db/schema/projects";
+import type { AppUsage } from "@/lib/usage";
 
 export const chat = pgTable(
 	"Chat",

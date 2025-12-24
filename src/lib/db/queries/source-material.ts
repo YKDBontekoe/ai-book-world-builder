@@ -1,6 +1,7 @@
 import "server-only";
 import { and, asc, count, eq, inArray, isNull, lte, or } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
+import { safeQuery } from "@/lib/db/safe-query";
 import {
 	type NewSourceMaterialChapter,
 	type NewSourceMaterialChunk,
@@ -16,7 +17,6 @@ import {
 	sourceMaterialProcessing,
 } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import { safeQuery } from "@/lib/db/safe-query";
 
 export async function createSourceMaterial({
 	blobUrl,
@@ -176,7 +176,9 @@ export async function upsertSourceMaterialProcessing({
 				const [existing] = await tx
 					.select()
 					.from(sourceMaterialProcessing)
-					.where(eq(sourceMaterialProcessing.sourceMaterialId, sourceMaterialId))
+					.where(
+						eq(sourceMaterialProcessing.sourceMaterialId, sourceMaterialId),
+					)
 					.limit(1);
 
 				if (existing) {

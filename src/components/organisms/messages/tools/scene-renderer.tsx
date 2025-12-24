@@ -1,7 +1,10 @@
 "use client";
 
 import { SceneWidget } from "@/components/organisms/chat/widgets/scene-widget";
-import type { ToolMessagePart, ToolRendererProps } from "@/components/organisms/messages/tools/types";
+import type {
+	ToolMessagePart,
+	ToolRendererProps,
+} from "@/components/organisms/messages/tools/types";
 
 export const SceneRenderer = ({ part }: ToolRendererProps) => {
 	const toolPart = part as unknown as ToolMessagePart;

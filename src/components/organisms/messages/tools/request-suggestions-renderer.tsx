@@ -1,6 +1,5 @@
 "use client";
 
-import { DocumentToolResult } from "@/components/organisms/document/document";
 import {
 	Tool,
 	ToolContent,
@@ -8,7 +7,11 @@ import {
 	ToolInput,
 	ToolOutput,
 } from "@/components/molecules/tool";
-import type { ToolMessagePart, ToolRendererProps } from "@/components/organisms/messages/tools/types";
+import { DocumentToolResult } from "@/components/organisms/document/document";
+import type {
+	ToolMessagePart,
+	ToolRendererProps,
+} from "@/components/organisms/messages/tools/types";
 
 export const RequestSuggestionsRenderer = ({
 	part,

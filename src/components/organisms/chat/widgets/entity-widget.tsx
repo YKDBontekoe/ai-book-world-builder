@@ -19,8 +19,8 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Textarea } from "@/components/atoms/textarea";
-import { cn } from "@/lib/utils";
 import { InteractiveWidget } from "@/components/organisms/chat/widgets/interactive-widget";
+import { cn } from "@/lib/utils";
 
 export interface EntityWidgetProps {
 	entity: {

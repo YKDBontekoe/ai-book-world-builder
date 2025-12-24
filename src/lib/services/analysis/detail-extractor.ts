@@ -1,6 +1,6 @@
-import { openrouter } from "@/lib/ai/providers";
 import { generateObject } from "ai";
 import { z } from "zod";
+import { openrouter } from "@/lib/ai/providers";
 import { retrieveContext } from "@/lib/ai/rag";
 import { getChunksForSourceMaterial } from "@/lib/db/queries";
 import type { EntityDetails } from "@/lib/services/analysis/types";

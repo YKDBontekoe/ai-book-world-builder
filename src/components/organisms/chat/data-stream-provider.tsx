@@ -5,9 +5,7 @@ import { createContext, useContext, useState } from "react";
 import type { DataPart } from "@/lib/types";
 
 type DataStreamValue = DataPart[];
-type SetDataStreamValue = React.Dispatch<
-	React.SetStateAction<DataPart[]>
->;
+type SetDataStreamValue = React.Dispatch<React.SetStateAction<DataPart[]>>;
 
 const DataStreamValueContext = createContext<DataStreamValue | null>(null);
 const SetDataStreamContext = createContext<SetDataStreamValue | null>(null);
@@ -17,9 +15,7 @@ export function DataStreamProvider({
 }: {
 	children: React.ReactNode;
 }) {
-	const [dataStream, setDataStream] = useState<DataPart[]>(
-		[],
-	);
+	const [dataStream, setDataStream] = useState<DataPart[]>([]);
 
 	return (
 		<DataStreamValueContext.Provider value={dataStream}>

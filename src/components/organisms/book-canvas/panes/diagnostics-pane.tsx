@@ -1,31 +1,35 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+	AlertOctagonIcon,
 	AlertTriangleIcon,
 	BookIcon,
 	CheckCircleIcon,
+	CheckIcon,
 	GlobeIcon,
 	InfoIcon,
 	Loader2,
+	RefreshCwIcon,
 	Sparkles,
 	SparklesIcon,
 	TrendingUpIcon,
 	UsersIcon,
-    RefreshCwIcon,
-    AlertOctagonIcon,
-    XCircleIcon,
-    CheckIcon
+	XCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import {
+	analyzeProjectAction,
+	getProjectIssuesAction,
+	resolveIssueAction,
+} from "@/app/actions/analysis";
 import { getProjectStats } from "@/app/actions/project-stats";
-import { analyzeProjectAction, getProjectIssuesAction, resolveIssueAction } from "@/app/actions/analysis";
 import { Button } from "@/components/atoms/button";
-import { QUERY_KEYS } from "@/lib/query-options";
-import { cn } from "@/lib/utils";
 import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { ConsistencyIssue } from "@/lib/db/schema/issues";
+import { QUERY_KEYS } from "@/lib/query-options";
+import { cn } from "@/lib/utils";
 
 function ScoreRing({
 	score,
@@ -81,84 +85,111 @@ function ScoreRing({
 	);
 }
 
-function IssueCard({ issue, onResolve }: { issue: ConsistencyIssue; onResolve: (id: string) => void }) {
-    const isResolved = issue.status === "resolved";
+function IssueCard({
+	issue,
+	onResolve,
+}: {
+	issue: ConsistencyIssue;
+	onResolve: (id: string) => void;
+}) {
+	const isResolved = issue.status === "resolved";
 
-    return (
-        <div className={cn(
-            "p-3 rounded-lg border text-sm transition-all",
-            isResolved ? "bg-muted/30 opacity-60" : "bg-background",
-            !isResolved && issue.severity === "critical" && "border-red-500/50 bg-red-500/5",
-            !isResolved && issue.severity === "high" && "border-amber-500/50 bg-amber-500/5"
-        )}>
-            <div className="flex items-start gap-2">
-                {issue.severity === "critical" ? (
-                    <AlertOctagonIcon className="h-4 w-4 text-red-500 mt-0.5" />
-                ) : issue.severity === "high" ? (
-                    <AlertTriangleIcon className="h-4 w-4 text-amber-500 mt-0.5" />
-                ) : (
-                    <InfoIcon className="h-4 w-4 text-blue-500 mt-0.5" />
-                )}
-                <div className="flex-1 space-y-1">
-                    <p className="font-medium leading-tight">{issue.description}</p>
-                    {issue.suggestion && (
-                        <p className="text-xs text-muted-foreground">💡 {issue.suggestion}</p>
-                    )}
-                </div>
-                {!isResolved && (
-                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => onResolve(issue.id)}>
-                        <CheckIcon className="h-3 w-3" />
-                    </Button>
-                )}
-            </div>
-        </div>
-    );
+	return (
+		<div
+			className={cn(
+				"p-3 rounded-lg border text-sm transition-all",
+				isResolved ? "bg-muted/30 opacity-60" : "bg-background",
+				!isResolved &&
+					issue.severity === "critical" &&
+					"border-red-500/50 bg-red-500/5",
+				!isResolved &&
+					issue.severity === "high" &&
+					"border-amber-500/50 bg-amber-500/5",
+			)}
+		>
+			<div className="flex items-start gap-2">
+				{issue.severity === "critical" ? (
+					<AlertOctagonIcon className="h-4 w-4 text-red-500 mt-0.5" />
+				) : issue.severity === "high" ? (
+					<AlertTriangleIcon className="h-4 w-4 text-amber-500 mt-0.5" />
+				) : (
+					<InfoIcon className="h-4 w-4 text-blue-500 mt-0.5" />
+				)}
+				<div className="flex-1 space-y-1">
+					<p className="font-medium leading-tight">{issue.description}</p>
+					{issue.suggestion && (
+						<p className="text-xs text-muted-foreground">
+							💡 {issue.suggestion}
+						</p>
+					)}
+				</div>
+				{!isResolved && (
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-6 w-6"
+						onClick={() => onResolve(issue.id)}
+					>
+						<CheckIcon className="h-3 w-3" />
+					</Button>
+				)}
+			</div>
+		</div>
+	);
 }
 
 export function DiagnosticsPane() {
 	const { projectId, triggerChatAction } = useBookCanvas();
-    const queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 
 	const { data: stats, isLoading: isLoadingStats } = useQuery({
 		queryKey: projectId
 			? QUERY_KEYS.diagnostics(projectId)
 			: ["diagnostics", "null"],
-		queryFn: () => (projectId ? getProjectStats(projectId) : Promise.resolve(null)),
+		queryFn: () =>
+			projectId ? getProjectStats(projectId) : Promise.resolve(null),
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});
 
-    const { data: issuesData, isLoading: isLoadingIssues } = useQuery({
-        queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
-        queryFn: () => projectId ? getProjectIssuesAction(projectId) : Promise.resolve({ success: false, issues: [] }),
-        enabled: !!projectId
-    });
+	const { data: issuesData, isLoading: isLoadingIssues } = useQuery({
+		queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
+		queryFn: () =>
+			projectId
+				? getProjectIssuesAction(projectId)
+				: Promise.resolve({ success: false, issues: [] }),
+		enabled: !!projectId,
+	});
 
-    const { mutate: analyze, isPending: isAnalyzing } = useMutation({
-        mutationFn: async () => {
-            if (!projectId) return;
-            const res = await analyzeProjectAction(projectId);
-            if (!res.success) throw new Error(res.error);
-            return res;
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.issues(projectId!) });
-            toast.success("Analysis complete");
-        },
-        onError: () => {
-            toast.error("Analysis failed");
-        }
-    });
+	const { mutate: analyze, isPending: isAnalyzing } = useMutation({
+		mutationFn: async () => {
+			if (!projectId) return;
+			const res = await analyzeProjectAction(projectId);
+			if (!res.success) throw new Error(res.error);
+			return res;
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.issues(projectId!),
+			});
+			toast.success("Analysis complete");
+		},
+		onError: () => {
+			toast.error("Analysis failed");
+		},
+	});
 
-    const { mutate: resolve } = useMutation({
-        mutationFn: async (issueId: string) => {
-            if (!projectId) return;
-            await resolveIssueAction(projectId, issueId);
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: QUERY_KEYS.issues(projectId!) });
-        }
-    });
+	const { mutate: resolve } = useMutation({
+		mutationFn: async (issueId: string) => {
+			if (!projectId) return;
+			await resolveIssueAction(projectId, issueId);
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.issues(projectId!),
+			});
+		},
+	});
 
 	if (!projectId) {
 		return (
@@ -172,9 +203,10 @@ export function DiagnosticsPane() {
 		);
 	}
 
-    const issues = issuesData?.success ? issuesData.issues : [];
-    const openIssues = issues?.filter((i: any) => i.status === "open") || [];
-    const resolvedIssues = issues?.filter((i: any) => i.status === "resolved") || [];
+	const issues = issuesData?.success ? issuesData.issues : [];
+	const openIssues = issues?.filter((i: any) => i.status === "open") || [];
+	const resolvedIssues =
+		issues?.filter((i: any) => i.status === "resolved") || [];
 
 	const readiness = stats?.readiness ?? {
 		characters: { score: 0, feedback: "Add characters to get started" },
@@ -204,37 +236,41 @@ export function DiagnosticsPane() {
 				</span>
 			</div>
 
-            {/* Consistency Section */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                        <AlertTriangleIcon className="h-4 w-4 text-primary" />
-                        <h4 className="font-medium text-sm">Continuity Check</h4>
-                    </div>
-                    <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => analyze()}
-                        disabled={isAnalyzing}
-                    >
-                        {isAnalyzing ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <RefreshCwIcon className="mr-2 h-3 w-3" />}
-                        Run Analysis
-                    </Button>
-                </div>
+			{/* Consistency Section */}
+			<div className="space-y-3">
+				<div className="flex items-center justify-between">
+					<div className="flex items-center gap-2">
+						<AlertTriangleIcon className="h-4 w-4 text-primary" />
+						<h4 className="font-medium text-sm">Continuity Check</h4>
+					</div>
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={() => analyze()}
+						disabled={isAnalyzing}
+					>
+						{isAnalyzing ? (
+							<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+						) : (
+							<RefreshCwIcon className="mr-2 h-3 w-3" />
+						)}
+						Run Analysis
+					</Button>
+				</div>
 
-                <div className="space-y-2">
-                    {openIssues.length === 0 && !isAnalyzing && (
-                        <div className="text-center p-4 border rounded-lg bg-muted/20 text-muted-foreground text-xs">
-                            No active issues found. Run analysis to check your draft.
-                        </div>
-                    )}
-                    {openIssues.map((issue: any) => (
-                        <IssueCard key={issue.id} issue={issue} onResolve={resolve} />
-                    ))}
-                </div>
-            </div>
+				<div className="space-y-2">
+					{openIssues.length === 0 && !isAnalyzing && (
+						<div className="text-center p-4 border rounded-lg bg-muted/20 text-muted-foreground text-xs">
+							No active issues found. Run analysis to check your draft.
+						</div>
+					)}
+					{openIssues.map((issue: any) => (
+						<IssueCard key={issue.id} issue={issue} onResolve={resolve} />
+					))}
+				</div>
+			</div>
 
-            <div className="h-px bg-border/50" />
+			<div className="h-px bg-border/50" />
 
 			{/* Score Rings */}
 			<div className="flex justify-around rounded-xl border bg-gradient-to-b from-muted/20 to-muted/5 p-4">

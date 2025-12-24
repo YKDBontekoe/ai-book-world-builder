@@ -1,9 +1,6 @@
 "use client";
 
-import {
-	useQuery,
-	useQueryClient,
-} from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { updateChatVisibility } from "@/app/(chat)/actions";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";

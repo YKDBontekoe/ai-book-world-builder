@@ -19,7 +19,7 @@ function PureAttachmentsButton({
 }) {
 	// Assume all OpenRouter models support images for now, or at least don't block upload UI
 	// Doing async check here is hard without a hook.
-    // Ideally we pass `supportsImages` as a prop.
+	// Ideally we pass `supportsImages` as a prop.
 	const supportsImages = true;
 	const isDisabled = status !== "ready" || !supportsImages;
 

@@ -1,8 +1,8 @@
 import {
-	toolUsagePrompt,
 	artifactsPrompt,
 	regularPrompt,
 	storytellingPrompt,
+	toolUsagePrompt,
 } from "@/lib/ai/prompts/constants";
 import type { RequestHints } from "@/lib/ai/prompts/types";
 

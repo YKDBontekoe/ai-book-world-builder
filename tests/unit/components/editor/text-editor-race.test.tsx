@@ -21,8 +21,8 @@ vi.mock("prosemirror-view", () => ({
 			if (props.state) this.state = props.state;
 		}
 		dispatch(tr: any) {
-            mockDispatch(tr);
-        }
+			mockDispatch(tr);
+		}
 		destroy() {}
 		focus() {}
 		hasFocus() {
@@ -108,11 +108,11 @@ vi.mock("@/components/organisms/writer/tools/editor-bubble-menu", () => ({
 describe("Editor Race Condition", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-        hasFocusMock = false;
+		hasFocusMock = false;
 	});
 
 	it("overwrites content from props when NOT focused", () => {
-        hasFocusMock = false;
+		hasFocusMock = false;
 		const { rerender } = render(
 			<Editor
 				content="original"
@@ -140,8 +140,8 @@ describe("Editor Race Condition", () => {
 		expect(mockReplaceWith).toHaveBeenCalled();
 	});
 
-    it("does NOT overwrite content from props when focused", () => {
-        hasFocusMock = true;
+	it("does NOT overwrite content from props when focused", () => {
+		hasFocusMock = true;
 		const { rerender } = render(
 			<Editor
 				content="original"

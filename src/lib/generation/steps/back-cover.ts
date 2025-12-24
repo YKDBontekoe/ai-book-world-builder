@@ -1,6 +1,9 @@
 import type { BookGenerationStep, GenerationSettings } from "@/lib/db/schema";
+import type {
+	ProcessStepContext,
+	StepHandler,
+} from "@/lib/generation/steps/types";
 import { saveAsset } from "@/lib/generation/utils";
-import type { ProcessStepContext, StepHandler } from "@/lib/generation/steps/types";
 
 async function generateBackCoverBlurb(
 	projectData: any,

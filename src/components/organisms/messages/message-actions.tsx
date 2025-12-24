@@ -54,24 +54,27 @@ export function PureMessageActions({
 				QUERY_KEYS.votes(chatId),
 			);
 
-			queryClient.setQueryData<Vote[]>(QUERY_KEYS.votes(chatId), (currentVotes) => {
-				if (!currentVotes) {
-					return [];
-				}
+			queryClient.setQueryData<Vote[]>(
+				QUERY_KEYS.votes(chatId),
+				(currentVotes) => {
+					if (!currentVotes) {
+						return [];
+					}
 
-				const votesWithoutCurrent = currentVotes.filter(
-					(currentVote) => currentVote.messageId !== message.id,
-				);
+					const votesWithoutCurrent = currentVotes.filter(
+						(currentVote) => currentVote.messageId !== message.id,
+					);
 
-				return [
-					...votesWithoutCurrent,
-					{
-						chatId,
-						messageId: message.id,
-						isUpvoted: type === "up",
-					},
-				];
-			});
+					return [
+						...votesWithoutCurrent,
+						{
+							chatId,
+							messageId: message.id,
+							isUpvoted: type === "up",
+						},
+					];
+				},
+			);
 
 			return { previousVotes };
 		},

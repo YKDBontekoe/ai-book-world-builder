@@ -10,10 +10,10 @@ import {
 } from "lucide-react";
 import { getGenerationLog } from "@/app/actions/project-stats";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { GenerationTaskLog } from "@/lib/db/schema";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 
 export function ChangeLogPane() {
 	const { projectId } = useBookCanvas();
@@ -22,7 +22,8 @@ export function ChangeLogPane() {
 		queryKey: projectId
 			? QUERY_KEYS.changelog(projectId)
 			: ["changelog", "null"],
-		queryFn: () => (projectId ? getGenerationLog(projectId) : Promise.resolve(null)),
+		queryFn: () =>
+			projectId ? getGenerationLog(projectId) : Promise.resolve(null),
 		enabled: !!projectId,
 		refetchInterval: 3000,
 	});

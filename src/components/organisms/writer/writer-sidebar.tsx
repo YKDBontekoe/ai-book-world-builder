@@ -48,7 +48,7 @@ export function WriterSidebar() {
 	};
 
 	const handleAddChapter = async () => {
-        if (isReadOnly) return;
+		if (isReadOnly) return;
 		const toastId = toast.loading("Creating chapter...");
 		try {
 			await createNewChapter(project.id);
@@ -80,40 +80,40 @@ export function WriterSidebar() {
 					</h2>
 				</div>
 				<div className="flex items-center gap-1">
-                    {!isReadOnly && (
-                        <>
-					        <StructureEditorDialog
-						        projectId={project.id}
-						        currentStructure={structureText}
-						        onSave={() => {
-							        fetchStructure();
-						        }}
-					        >
-						        <Button
-							        variant="ghost"
-							        size="icon"
-							        className="h-8 w-8"
-							        aria-label="Edit Structure"
-						        >
-							        <FileText className="h-4 w-4" />
-						        </Button>
-					        </StructureEditorDialog>
-					        <Button
-						        variant="ghost"
-						        size="icon"
-						        className="h-8 w-8"
-						        onClick={handleAddChapter}
-						        aria-label="Add Chapter"
-					        >
-						        <Plus className="h-4 w-4" />
-					        </Button>
-                        </>
-                    )}
-                    {isReadOnly && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Lock className="h-3 w-3" /> Read Only
-                        </span>
-                    )}
+					{!isReadOnly && (
+						<>
+							<StructureEditorDialog
+								projectId={project.id}
+								currentStructure={structureText}
+								onSave={() => {
+									fetchStructure();
+								}}
+							>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8"
+									aria-label="Edit Structure"
+								>
+									<FileText className="h-4 w-4" />
+								</Button>
+							</StructureEditorDialog>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-8 w-8"
+								onClick={handleAddChapter}
+								aria-label="Add Chapter"
+							>
+								<Plus className="h-4 w-4" />
+							</Button>
+						</>
+					)}
+					{isReadOnly && (
+						<span className="text-xs text-muted-foreground flex items-center gap-1">
+							<Lock className="h-3 w-3" /> Read Only
+						</span>
+					)}
 				</div>
 			</div>
 
@@ -180,7 +180,11 @@ export function WriterSidebar() {
 											initial={{ height: 0, opacity: 0 }}
 											animate={{ height: "auto", opacity: 1 }}
 											exit={{ height: 0, opacity: 0 }}
-											transition={{ type: "spring", stiffness: 400, damping: 25 }}
+											transition={{
+												type: "spring",
+												stiffness: 400,
+												damping: 25,
+											}}
 											className="overflow-hidden"
 										>
 											<div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1 pb-1">

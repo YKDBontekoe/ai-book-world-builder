@@ -1,7 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
 import { FadeIn } from "@/components/atoms/animated";
+import { cn } from "@/lib/utils";
 
 function Skeleton({
 	className,

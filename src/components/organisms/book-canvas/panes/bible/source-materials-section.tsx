@@ -1,5 +1,9 @@
 "use client";
 
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BookUp2Icon, Check, FileTextIcon, SparklesIcon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
 	analyzeBook,
 	getSourceMaterialsForProject,
@@ -8,15 +12,6 @@ import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { QUERY_KEYS } from "@/lib/query-options";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-	BookUp2Icon,
-	Check,
-	FileTextIcon,
-	SparklesIcon,
-} from "lucide-react";
-import { useState } from "react";
-import { toast } from "sonner";
 
 export function SourceMaterialsSection({ projectId }: { projectId: string }) {
 	const queryClient = useQueryClient();
@@ -33,7 +28,10 @@ export function SourceMaterialsSection({ projectId }: { projectId: string }) {
 		mutationFn: async ({
 			materialId,
 			filename,
-		}: { materialId: string; filename: string }) => {
+		}: {
+			materialId: string;
+			filename: string;
+		}) => {
 			return analyzeBook({
 				sourceMaterialId: materialId,
 				projectId,

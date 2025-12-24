@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getSelectedModelId } from "@/lib/ai/models";
 import {
 	createEntity,
 	createEntityAttribute,
@@ -13,7 +14,6 @@ import { DetailExtractor } from "@/lib/services/analysis/detail-extractor";
 import { EntityDetector } from "@/lib/services/analysis/entity-detector";
 import { RelationshipInferrer } from "@/lib/services/analysis/relationship-inferrer";
 import type { AnalysisResult } from "@/lib/services/analysis/types";
-import { getSelectedModelId } from "@/lib/ai/models";
 
 export type { AnalysisResult };
 

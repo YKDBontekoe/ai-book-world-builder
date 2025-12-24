@@ -58,14 +58,17 @@ export function FloatingAssistant({
 	const isControlled = controlledIsOpen !== undefined;
 	const isOpen = isControlled ? controlledIsOpen : internalIsOpen;
 
-	const handleOpenChange = useCallback((open: boolean) => {
-		if (onOpenChange) {
-			onOpenChange(open);
-		}
-		if (!isControlled) {
-			setInternalIsOpen(open);
-		}
-	}, [onOpenChange, isControlled]);
+	const handleOpenChange = useCallback(
+		(open: boolean) => {
+			if (onOpenChange) {
+				onOpenChange(open);
+			}
+			if (!isControlled) {
+				setInternalIsOpen(open);
+			}
+		},
+		[onOpenChange, isControlled],
+	);
 
 	// Mode: 'floating' | 'sidebar'
 	const [mode, setMode] = useState<"floating" | "sidebar">("floating");

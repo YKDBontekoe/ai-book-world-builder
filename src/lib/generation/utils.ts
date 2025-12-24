@@ -1,6 +1,6 @@
+import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/queries";
 import { bookGenerationAsset, bookGenerationStep } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 
 export async function saveAsset(
 	generationId: string,

@@ -1,13 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import {
-	MessageSquare,
-	Redo,
-	Search,
-	Sparkles,
-	Undo,
-} from "lucide-react";
+import { MessageSquare, Redo, Search, Sparkles, Undo } from "lucide-react";
 import { Separator } from "@/components/atoms/separator";
 import {
 	Tooltip,

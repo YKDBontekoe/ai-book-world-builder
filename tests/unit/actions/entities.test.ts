@@ -4,17 +4,20 @@ const authMock = vi.hoisted(() => ({
 	auth: vi.fn(),
 }));
 
-const queriesMock = vi.hoisted(() => ({
-	deleteEntity: vi.fn(),
-	getEntitiesForProject: vi.fn(),
-	getEntityById: vi.fn(),
-	getProjectByIdWithAccess: vi.fn(),
-	updateEntity: vi.fn(),
+const repositoriesMock = vi.hoisted(() => ({
+	entityRepository: {
+		findById: vi.fn(),
+		findByProject: vi.fn(),
+		update: vi.fn(),
+		delete: vi.fn(),
+	},
+	projectRepository: {
+		findByIdWithAccess: vi.fn(),
+	},
 }));
 
 vi.mock("@/app/(auth)/auth", () => authMock);
-
-vi.mock("@/lib/db/queries", () => queriesMock);
+vi.mock("@/lib/db/repositories", () => repositoriesMock);
 
 vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
@@ -27,21 +30,17 @@ import {
 	getEntities,
 	updateEntityAction,
 } from "@/app/actions/entities";
-import {
-	deleteEntity,
-	getEntitiesForProject,
-	getEntityById,
-	getProjectByIdWithAccess,
-	updateEntity,
-} from "@/lib/db/queries";
+import { entityRepository, projectRepository } from "@/lib/db/repositories";
 import type { Entity, Project } from "@/lib/db/schema";
 
 const mockedAuth = vi.mocked(auth);
-const mockedGetProjectByIdWithAccess = vi.mocked(getProjectByIdWithAccess);
-const mockedGetEntitiesForProject = vi.mocked(getEntitiesForProject);
-const mockedGetEntityById = vi.mocked(getEntityById);
-const mockedUpdateEntity = vi.mocked(updateEntity);
-const mockedDeleteEntity = vi.mocked(deleteEntity);
+const mockedFindByIdWithAccess = vi.mocked(
+	projectRepository.findByIdWithAccess,
+);
+const mockedFindByProject = vi.mocked(entityRepository.findByProject);
+const mockedFindById = vi.mocked(entityRepository.findById);
+const mockedUpdate = vi.mocked(entityRepository.update);
+const mockedDelete = vi.mocked(entityRepository.delete);
 const mockedRevalidatePath = vi.mocked(revalidatePath);
 
 const userId = "user-123";
@@ -97,15 +96,12 @@ describe("entities server actions", () => {
 		const entity = buildEntity();
 
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetProjectByIdWithAccess.mockResolvedValue(buildProject());
-		mockedGetEntitiesForProject.mockResolvedValue([entity]);
+		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
+		mockedFindByProject.mockResolvedValue([entity]);
 
 		const result = await getEntities(projectId);
 
-		expect(mockedGetProjectByIdWithAccess).toHaveBeenCalledWith({
-			id: projectId,
-			userId,
-		});
+		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
 		expect(result).toEqual([
 			{
 				...entity,
@@ -119,12 +115,12 @@ describe("entities server actions", () => {
 
 	it("throws when the project is inaccessible", async () => {
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetProjectByIdWithAccess.mockResolvedValue(null);
+		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(getEntities(projectId)).rejects.toThrow(
 			"Project not found or access denied",
 		);
-		expect(mockedGetEntitiesForProject).not.toHaveBeenCalled();
+		expect(mockedFindByProject).not.toHaveBeenCalled();
 	});
 
 	it("updates an entity when the user owns the project", async () => {
@@ -132,9 +128,9 @@ describe("entities server actions", () => {
 		const updatedEntity = buildEntity({ name: "Updated" });
 
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetEntityById.mockResolvedValue(entity);
-		mockedGetProjectByIdWithAccess.mockResolvedValue(buildProject());
-		mockedUpdateEntity.mockResolvedValue(updatedEntity);
+		mockedFindById.mockResolvedValue(entity);
+		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
+		mockedUpdate.mockResolvedValue(updatedEntity);
 
 		const result = await updateEntityAction({
 			id: entity.id,
@@ -142,12 +138,11 @@ describe("entities server actions", () => {
 			projectId,
 		});
 
-		expect(mockedGetProjectByIdWithAccess).toHaveBeenCalledWith({
-			id: projectId,
+		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(
+			entity.projectId,
 			userId,
-		});
-		expect(mockedUpdateEntity).toHaveBeenCalledWith({
-			id: entity.id,
+		);
+		expect(mockedUpdate).toHaveBeenCalledWith(entity.id, {
 			name: updatedEntity.name,
 			kind: undefined,
 			summary: undefined,
@@ -161,41 +156,41 @@ describe("entities server actions", () => {
 		const entity = buildEntity();
 
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetEntityById.mockResolvedValue(entity);
-		mockedGetProjectByIdWithAccess.mockResolvedValue(null);
+		mockedFindById.mockResolvedValue(entity);
+		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(
 			updateEntityAction({ id: entity.id, projectId }),
 		).rejects.toThrow("Access denied to entity");
-		expect(mockedUpdateEntity).not.toHaveBeenCalled();
+		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
 
 	it("rejects updates when the entity belongs to another project", async () => {
 		const entity = buildEntity({ projectId: "other-project" });
 
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetEntityById.mockResolvedValue(entity);
-		mockedGetProjectByIdWithAccess.mockResolvedValue(
+		mockedFindById.mockResolvedValue(entity);
+		mockedFindByIdWithAccess.mockResolvedValue(
 			buildProject({ id: entity.projectId }),
 		);
 
 		await expect(
 			updateEntityAction({ id: entity.id, projectId }),
 		).rejects.toThrow("Entity does not belong to the provided project");
-		expect(mockedUpdateEntity).not.toHaveBeenCalled();
+		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
 
 	it("deletes an entity when the user has permission", async () => {
 		const entity = buildEntity();
 
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetEntityById.mockResolvedValue(entity);
-		mockedGetProjectByIdWithAccess.mockResolvedValue(buildProject());
-		mockedDeleteEntity.mockResolvedValue();
+		mockedFindById.mockResolvedValue(entity);
+		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
+		mockedDelete.mockResolvedValue();
 
 		await deleteEntityAction(entity.id);
 
-		expect(mockedDeleteEntity).toHaveBeenCalledWith({ id: entity.id });
+		expect(mockedDelete).toHaveBeenCalledWith(entity.id);
 		expect(mockedRevalidatePath).toHaveBeenCalledWith("/(chat)", "page");
 	});
 
@@ -203,13 +198,13 @@ describe("entities server actions", () => {
 		const entity = buildEntity();
 
 		mockedAuth.mockResolvedValue(buildSession());
-		mockedGetEntityById.mockResolvedValue(entity);
-		mockedGetProjectByIdWithAccess.mockResolvedValue(null);
+		mockedFindById.mockResolvedValue(entity);
+		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(deleteEntityAction(entity.id)).rejects.toThrow(
 			"Access denied to entity",
 		);
-		expect(mockedDeleteEntity).not.toHaveBeenCalled();
+		expect(mockedDelete).not.toHaveBeenCalled();
 	});
 
 	it("VULNERABILITY FIX: rejects update when user does not own the project (even if public)", async () => {
@@ -226,10 +221,10 @@ describe("entities server actions", () => {
 			expires: new Date().toISOString(),
 		});
 
-		mockedGetEntityById.mockResolvedValue(entity);
+		mockedFindById.mockResolvedValue(entity);
 
 		// Public project owned by someone else
-		mockedGetProjectByIdWithAccess.mockResolvedValue(
+		mockedFindByIdWithAccess.mockResolvedValue(
 			buildProject({
 				userId: "victim",
 				visibility: "public",
@@ -244,7 +239,7 @@ describe("entities server actions", () => {
 			}),
 		).rejects.toThrow("Unauthorized");
 
-		expect(mockedUpdateEntity).not.toHaveBeenCalled();
+		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
 
 	it("VULNERABILITY FIX: rejects deletion when user does not own the project (even if public)", async () => {
@@ -261,10 +256,10 @@ describe("entities server actions", () => {
 			expires: new Date().toISOString(),
 		});
 
-		mockedGetEntityById.mockResolvedValue(entity);
+		mockedFindById.mockResolvedValue(entity);
 
 		// Public project owned by someone else
-		mockedGetProjectByIdWithAccess.mockResolvedValue(
+		mockedFindByIdWithAccess.mockResolvedValue(
 			buildProject({
 				userId: "victim",
 				visibility: "public",
@@ -273,6 +268,6 @@ describe("entities server actions", () => {
 
 		await expect(deleteEntityAction(entity.id)).rejects.toThrow("Unauthorized");
 
-		expect(mockedDeleteEntity).not.toHaveBeenCalled();
+		expect(mockedDelete).not.toHaveBeenCalled();
 	});
 });

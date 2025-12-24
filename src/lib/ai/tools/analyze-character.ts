@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { getEntitiesForProject, getEntityWithDetails } from "@/lib/db/queries";
+import { entityRepository } from "@/lib/db/repositories";
 
 const analyzeCharacterSchema = z.object({
 	entityName: z
@@ -27,8 +27,8 @@ export const analyzeCharacter = ({ session }: { session: Session | null }) =>
 			}
 
 			try {
-				// Find the entity by name
-				const entities = await getEntitiesForProject({ projectId });
+				// Find the entity by name using repository
+				const entities = await entityRepository.findByProject(projectId);
 				const entity = entities.find(
 					(e) => e.name.toLowerCase() === entityName.toLowerCase().trim(),
 				);
@@ -45,8 +45,10 @@ export const analyzeCharacter = ({ session }: { session: Session | null }) =>
 					};
 				}
 
-				// Get detailed information
-				const entityDetails = await getEntityWithDetails({ id: entity.id });
+				// Get detailed information using repository
+				const entityDetails = await entityRepository.findByIdWithDetails(
+					entity.id,
+				);
 
 				if (!entityDetails) {
 					return { error: "Failed to load character details." };

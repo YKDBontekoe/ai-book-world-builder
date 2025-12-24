@@ -8,11 +8,11 @@ export function useProjectEntities(projectId: string) {
 		queryKey: ["entities", projectId],
 		queryFn: async () => {
 			const result = await getEntitiesForProject(projectId);
-            if ('error' in result) {
-                throw new Error(result.error);
-            }
+			if ("error" in result) {
+				throw new Error(result.error);
+			}
 			return result.success;
 		},
-        staleTime: 1000 * 60 * 5, // 5 minutes
+		staleTime: 1000 * 60 * 5, // 5 minutes
 	});
 }

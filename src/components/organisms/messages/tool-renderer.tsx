@@ -10,20 +10,25 @@ const ToolSkeleton = () => <Skeleton className="h-32 w-full" />;
 // Dynamically import tool renderers to reduce initial bundle size
 const CreateDocumentRenderer = dynamic(
 	() =>
-		import("@/components/organisms/messages/tools/create-document-renderer").then(
-			(mod) => mod.CreateDocumentRenderer,
-		),
+		import(
+			"@/components/organisms/messages/tools/create-document-renderer"
+		).then((mod) => mod.CreateDocumentRenderer),
 	{ loading: ToolSkeleton },
 );
 
 const EntityRenderer = dynamic(
-	() => import("@/components/organisms/messages/tools/entity-renderer").then((mod) => mod.EntityRenderer),
+	() =>
+		import("@/components/organisms/messages/tools/entity-renderer").then(
+			(mod) => mod.EntityRenderer,
+		),
 	{ loading: ToolSkeleton },
 );
 
 const GenerationRenderer = dynamic(
 	() =>
-		import("@/components/organisms/messages/tools/generation-renderer").then((mod) => mod.GenerationRenderer),
+		import("@/components/organisms/messages/tools/generation-renderer").then(
+			(mod) => mod.GenerationRenderer,
+		),
 	{ loading: ToolSkeleton },
 );
 
@@ -37,30 +42,33 @@ const GenericToolRenderer = dynamic(
 
 const ProposeManageEntitiesRenderer = dynamic(
 	() =>
-		import("@/components/organisms/messages/tools/propose-manage-entities-renderer").then(
-			(mod) => mod.ProposeManageEntitiesRenderer,
-		),
+		import(
+			"@/components/organisms/messages/tools/propose-manage-entities-renderer"
+		).then((mod) => mod.ProposeManageEntitiesRenderer),
 	{ loading: ToolSkeleton },
 );
 
 const RequestSuggestionsRenderer = dynamic(
 	() =>
-		import("@/components/organisms/messages/tools/request-suggestions-renderer").then(
-			(mod) => mod.RequestSuggestionsRenderer,
-		),
+		import(
+			"@/components/organisms/messages/tools/request-suggestions-renderer"
+		).then((mod) => mod.RequestSuggestionsRenderer),
 	{ loading: ToolSkeleton },
 );
 
 const SceneRenderer = dynamic(
-	() => import("@/components/organisms/messages/tools/scene-renderer").then((mod) => mod.SceneRenderer),
+	() =>
+		import("@/components/organisms/messages/tools/scene-renderer").then(
+			(mod) => mod.SceneRenderer,
+		),
 	{ loading: ToolSkeleton },
 );
 
 const UpdateDocumentRenderer = dynamic(
 	() =>
-		import("@/components/organisms/messages/tools/update-document-renderer").then(
-			(mod) => mod.UpdateDocumentRenderer,
-		),
+		import(
+			"@/components/organisms/messages/tools/update-document-renderer"
+		).then((mod) => mod.UpdateDocumentRenderer),
 	{ loading: ToolSkeleton },
 );
 

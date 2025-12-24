@@ -15,12 +15,12 @@ import {
 } from "lucide-react";
 import { memo } from "react";
 import { Button } from "@/components/atoms/button";
-import { api } from "@/lib/api-client";
+import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import type { ChatModelId } from "@/lib/ai/models";
+import { api } from "@/lib/api-client";
 import type { ProjectSummary } from "@/lib/project-context";
 import type { ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 
 type SuggestionType =
 	| "story"
@@ -58,7 +58,12 @@ function PureSuggestedActions({
 	const lastMessageId = messages.at(-1)?.id ?? "init";
 	const shouldFetch = !!projectId || messages.length > 0;
 
-	const { data: suggestions, isLoading, refetch, isRefetching } = useQuery({
+	const {
+		data: suggestions,
+		isLoading,
+		refetch,
+		isRefetching,
+	} = useQuery({
 		queryKey: ["suggestions", projectId, lastMessageId, selectedModelId],
 		queryFn: async () => {
 			if (!projectId && messages.length === 0) return null;
@@ -114,7 +119,9 @@ function PureSuggestedActions({
 							"hover:bg-primary/5",
 						)}
 					>
-						<span className="opacity-70 text-primary">{getIconForType(action.type)}</span>
+						<span className="opacity-70 text-primary">
+							{getIconForType(action.type)}
+						</span>
 						<span>{action.label}</span>
 					</motion.button>
 				))}
@@ -126,7 +133,9 @@ function PureSuggestedActions({
 	return (
 		<div className="flex flex-col gap-4">
 			<div className="flex items-center justify-between px-1">
-				<h3 className="text-sm font-medium text-muted-foreground">Suggested Actions</h3>
+				<h3 className="text-sm font-medium text-muted-foreground">
+					Suggested Actions
+				</h3>
 				<Button
 					variant="ghost"
 					size="icon"
@@ -134,7 +143,12 @@ function PureSuggestedActions({
 					onClick={() => refetch()}
 					disabled={isLoading || isValidating}
 				>
-					<RefreshCwIcon className={cn("h-3.5 w-3.5", (isLoading || isValidating) && "animate-spin")} />
+					<RefreshCwIcon
+						className={cn(
+							"h-3.5 w-3.5",
+							(isLoading || isValidating) && "animate-spin",
+						)}
+					/>
 				</Button>
 			</div>
 

@@ -21,8 +21,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/atoms/select";
-import { cn } from "@/lib/utils";
 import { InteractiveWidget } from "@/components/organisms/chat/widgets/interactive-widget";
+import { cn } from "@/lib/utils";
 
 export interface SceneWidgetProps {
 	scene: {

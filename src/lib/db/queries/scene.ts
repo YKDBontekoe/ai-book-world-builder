@@ -241,16 +241,20 @@ export async function createSceneCard({
 	}
 }
 
-export async function getSceneById({ id }: { id: string }): Promise<Scene | null> {
-    try {
-        const [found] = await db
-            .select()
-            .from(scene)
-            .where(eq(scene.id, id))
-            .limit(1);
-        return found ?? null;
-    } catch (error) {
-        console.error(error);
-        throw new ChatSDKError("bad_request:database", "Failed to load scene");
-    }
+export async function getSceneById({
+	id,
+}: {
+	id: string;
+}): Promise<Scene | null> {
+	try {
+		const [found] = await db
+			.select()
+			.from(scene)
+			.where(eq(scene.id, id))
+			.limit(1);
+		return found ?? null;
+	} catch (error) {
+		console.error(error);
+		throw new ChatSDKError("bad_request:database", "Failed to load scene");
+	}
 }

@@ -1,13 +1,16 @@
 import {
 	BookOpenIcon,
 	Loader2,
+	type LucideIcon,
 	MapPinIcon,
 	UsersIcon,
-	type LucideIcon,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { WidgetInput, WidgetOutput } from "@/components/organisms/chat/widgets/generation/types";
+import type {
+	WidgetInput,
+	WidgetOutput,
+} from "@/components/organisms/chat/widgets/generation/types";
 import { getReadinessColor } from "@/components/organisms/chat/widgets/generation/utils";
+import { cn } from "@/lib/utils";
 
 function StatBadge({
 	icon: Icon,

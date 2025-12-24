@@ -8,13 +8,13 @@ import {
 	type SerializedChapterWithScenes,
 } from "@/app/actions/scene-data";
 import { Button } from "@/components/atoms/button";
-import { EmptyState } from "@/components/molecules/empty-state";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
-import { QUERY_KEYS } from "@/lib/query-options";
-import { cn } from "@/lib/utils";
 import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 import { SceneCard } from "@/components/organisms/book-canvas/cards/scene-card";
+import { QUERY_KEYS } from "@/lib/query-options";
+import { cn } from "@/lib/utils";
 
 function ChapterSection({ chapter }: { chapter: SerializedChapterWithScenes }) {
 	const [expanded, setExpanded] = useState(true);
@@ -88,7 +88,8 @@ export function ScenePane() {
 
 	const { data: chapters, isLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.scenes(projectId) : ["scenes", "null"],
-		queryFn: () => (projectId ? getScenesData(projectId) : Promise.resolve(null)),
+		queryFn: () =>
+			projectId ? getScenesData(projectId) : Promise.resolve(null),
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});

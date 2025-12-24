@@ -1,13 +1,10 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import {
-	createEntityAttribute,
-	createEntity as createEntityMutation,
-} from "@/lib/db/queries";
+import { entityRepository } from "@/lib/db/repositories";
 
 export const batchCreateEntities = ({
-	session,
+	session: _session,
 	projectId,
 }: {
 	session: Session | null;
@@ -55,7 +52,15 @@ export const batchCreateEntities = ({
 					"The ID of the project to create the entities in. If not provided, it will infer from context or fail.",
 				),
 		}),
-		execute: async (args: any) => {
+		execute: async (args: {
+			entities: Array<{
+				name: string;
+				kind: string;
+				summary?: string;
+				attributes?: Array<{ name: string; value: string; dataType: string }>;
+			}>;
+			projectId?: string;
+		}) => {
 			const { entities, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
@@ -66,22 +71,20 @@ export const batchCreateEntities = ({
 			try {
 				const results = [];
 
-				// Process sequentially to be safe with DB connections, or parallel if robust enough.
-				// Parallel is better for "batch" speed.
 				for (const entityData of entities) {
 					try {
-						const entity = await createEntityMutation({
+						const entity = await entityRepository.create({
 							projectId: finalProjectId,
 							name: entityData.name,
 							kind: entityData.kind,
 							summary: entityData.summary,
 						});
 
-						let createdAttributes: any[] = [];
+						// Create attributes if provided
 						if (entityData.attributes && entityData.attributes.length > 0) {
-							createdAttributes = await Promise.all(
-								entityData.attributes.map((attr: any) =>
-									createEntityAttribute({
+							await Promise.all(
+								entityData.attributes.map((attr) =>
+									entityRepository.createAttribute({
 										projectId: finalProjectId,
 										entityId: entity.id,
 										name: attr.name,

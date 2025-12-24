@@ -1,7 +1,10 @@
 "use client";
 
 import { EntityWidget } from "@/components/organisms/chat/widgets/entity-widget";
-import type { ToolMessagePart, ToolRendererProps } from "@/components/organisms/messages/tools/types";
+import type {
+	ToolMessagePart,
+	ToolRendererProps,
+} from "@/components/organisms/messages/tools/types";
 
 export const EntityRenderer = ({ part }: ToolRendererProps) => {
 	const toolPart = part as unknown as ToolMessagePart;

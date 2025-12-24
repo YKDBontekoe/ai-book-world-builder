@@ -13,12 +13,12 @@ import {
 	getOutlineData,
 	type SerializedOutline,
 } from "@/app/actions/project-stats";
-import { EmptyState } from "@/components/molecules/empty-state";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
+import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
 
 const statusConfig: Record<
 	string,
@@ -143,7 +143,8 @@ export function OutlinePane() {
 
 	const { data: outline, isLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],
-		queryFn: () => (projectId ? getOutlineData(projectId) : Promise.resolve(null)),
+		queryFn: () =>
+			projectId ? getOutlineData(projectId) : Promise.resolve(null),
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});

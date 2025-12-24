@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Book Reader",
-  description: "Distraction-free reading mode",
+	title: "Book Reader",
+	description: "Distraction-free reading mode",
 };
 
 export default function ReaderLayout({
-  children,
+	children,
 }: {
-  children: React.ReactNode;
+	children: React.ReactNode;
 }) {
-  return (
-    <div className="h-screen w-screen overflow-hidden bg-background text-foreground">
-      {children}
-    </div>
-  );
+	return (
+		<div className="h-screen w-screen overflow-hidden bg-background text-foreground">
+			{children}
+		</div>
+	);
 }

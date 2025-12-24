@@ -3,11 +3,13 @@
 import { Trigger } from "@radix-ui/react-select";
 import { ChevronDownIcon } from "lucide-react";
 import { memo, useCallback, useMemo } from "react";
+import { Button } from "@/components/atoms/button";
 import {
 	PromptInputModelSelect,
 	PromptInputModelSelectContent,
 } from "@/components/molecules/prompt-input";
-import { Button } from "@/components/atoms/button";
+import { ModelListItem } from "@/components/organisms/chat/multimodal-input/model-list-item";
+import { ProviderIcon } from "@/components/organisms/chat/provider-icon";
 import { useModelSelection } from "@/hooks/use-model-selection";
 import {
 	type ChatModel,
@@ -15,8 +17,6 @@ import {
 	DEFAULT_MODELS,
 } from "@/lib/ai/models";
 import { cn } from "@/lib/utils";
-import { ProviderIcon } from "@/components/organisms/chat/provider-icon";
-import { ModelListItem } from "@/components/organisms/chat/multimodal-input/model-list-item";
 
 function PureModelSelectorCompact({
 	selectedModelId,
@@ -97,7 +97,11 @@ function PureModelSelectorCompact({
 			value={currentSelectValue}
 		>
 			<Trigger asChild>
-				<Button className="h-8 gap-1.5 px-2" variant="ghost" disabled={!selectedModel}>
+				<Button
+					className="h-8 gap-1.5 px-2"
+					variant="ghost"
+					disabled={!selectedModel}
+				>
 					{selectedModel ? (
 						<>
 							<ProviderIcon provider={selectedModel.provider} size="sm" />
