@@ -1,13 +1,17 @@
 "use client";
 
-import { DownloadIcon, FolderIcon, PlusIcon, LayoutDashboard, MessageSquarePlus } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+	DownloadIcon,
+	FolderIcon,
+	LayoutDashboard,
+	MessageSquarePlus,
+	PlusIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
 import type { User } from "next-auth";
-import { DashboardSheet } from "@/components/organisms/dashboard/dashboard-sheet";
-import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
-import { SidebarUserNav } from "@/components/organisms/sidebar/sidebar-user-nav";
+import { useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
 	Sidebar,
@@ -22,6 +26,11 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
+import { DashboardSheet } from "@/components/organisms/dashboard/dashboard-sheet";
+import { SidebarUserNav } from "@/components/organisms/sidebar/sidebar-user-nav";
+
+const MotionButton = motion.create(Button);
 
 export function AppSidebar({ user }: { user: User | undefined }) {
 	const router = useRouter();
@@ -43,7 +52,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										setOpenMobile(false);
 									}}
 								>
-									<span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
+									<span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted transition-colors duration-300">
 										Story Studio
 									</span>
 								</Link>
@@ -51,7 +60,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 							<div className="flex flex-row gap-1">
 								<Tooltip>
 									<TooltipTrigger asChild>
-										<Button
+										<MotionButton
 											className="h-8 p-1 md:h-fit md:p-2"
 											onClick={() => {
 												setOpenMobile(false);
@@ -60,9 +69,11 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											}}
 											type="button"
 											variant="ghost"
+											whileHover={{ scale: 1.05 }}
+											whileTap={{ scale: 0.95 }}
 										>
 											<PlusIcon size={16} />
-										</Button>
+										</MotionButton>
 									</TooltipTrigger>
 									<TooltipContent align="end" className="hidden md:block">
 										New Story
@@ -75,34 +86,56 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 				<SidebarContent>
 					<div className="flex flex-col gap-1 p-2">
 						<Link href="/" onClick={() => setOpenMobile(false)}>
-							<Button className="w-full justify-start gap-2" variant="default">
+							<MotionButton
+								className="w-full justify-start gap-2"
+								variant="default"
+								whileHover={{ x: 4 }}
+								whileTap={{ scale: 0.98 }}
+							>
 								<PlusIcon size={16} /> New Story
-							</Button>
+							</MotionButton>
 						</Link>
 						<Link href="/projects" onClick={() => setOpenMobile(false)}>
-							<Button className="w-full justify-start gap-2" variant="ghost">
+							<MotionButton
+								className="w-full justify-start gap-2"
+								variant="ghost"
+								whileHover={{ x: 4 }}
+								whileTap={{ scale: 0.98 }}
+							>
 								<FolderIcon size={16} /> Projects
-							</Button>
+							</MotionButton>
 						</Link>
 						<DashboardSheet
 							trigger={
-								<Button className="w-full justify-start gap-2" variant="ghost">
+								<MotionButton
+									className="w-full justify-start gap-2"
+									variant="ghost"
+									whileHover={{ x: 4 }}
+									whileTap={{ scale: 0.98 }}
+								>
 									<LayoutDashboard size={16} /> Dashboard
-								</Button>
+								</MotionButton>
 							}
 						/>
 						<Link href="/exports" onClick={() => setOpenMobile(false)}>
-							<Button className="w-full justify-start gap-2" variant="ghost">
+							<MotionButton
+								className="w-full justify-start gap-2"
+								variant="ghost"
+								whileHover={{ x: 4 }}
+								whileTap={{ scale: 0.98 }}
+							>
 								<DownloadIcon size={16} /> My Exports
-							</Button>
+							</MotionButton>
 						</Link>
-						<Button
+						<MotionButton
 							className="w-full justify-start gap-2"
 							variant="ghost"
 							onClick={() => setShowFeedback(true)}
+							whileHover={{ x: 4 }}
+							whileTap={{ scale: 0.98 }}
 						>
 							<MessageSquarePlus size={16} /> Feedback
-						</Button>
+						</MotionButton>
 					</div>
 				</SidebarContent>
 				<SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>

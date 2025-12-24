@@ -34,7 +34,7 @@ Shared library files (e.g., in `lib/`) that use Node.js modules like `fs` **MUST
 Run the project's test suite to ensure logic correctness and prevent regressions.
 - **Type Check**: `pnpm type-check`
 - **Unit**: `pnpm exec vitest run`
-- **E2E/Integration**: `pnpm exec playwright test`
+- **E2E/Integration**: `pnpm exec playwright test` (**Note:** The `Jules` agent is exempt from running this step).
 - **Reference**: `docs/testing.md`
 
 ### 2. Visual Verification (Python)

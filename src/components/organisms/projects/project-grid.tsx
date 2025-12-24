@@ -4,11 +4,11 @@ import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { CalendarIcon, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
+import { Checkbox } from "@/components/atoms/checkbox";
 import { GridList } from "@/components/atoms/grid-list";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { ProjectActionsMenu } from "@/components/organisms/projects/project-actions-menu";
 import type { Project } from "@/lib/db/schema";
-import { Checkbox } from "@/components/atoms/checkbox";
 import { cn } from "@/lib/utils";
 
 const container = {
@@ -22,11 +22,12 @@ const container = {
 };
 
 const item = {
-	hidden: { opacity: 0, y: 20 },
+	hidden: { opacity: 0, y: 20, scale: 0.95 },
 	show: {
 		opacity: 1,
 		y: 0,
-		transition: { type: "spring", stiffness: 400, damping: 25 },
+		scale: 1,
+		transition: { type: "spring", stiffness: 180, damping: 20 },
 	},
 };
 
@@ -41,7 +42,7 @@ function ProjectCard({
 	project,
 	selected,
 	onSelect,
-	onDelete
+	onDelete,
 }: {
 	project: Project;
 	selected?: boolean;
@@ -55,9 +56,15 @@ function ProjectCard({
 				<div
 					className={cn(
 						"absolute top-4 left-4 z-20 transition-opacity duration-200",
-						selected ? "opacity-100" : "opacity-0 group-hover:opacity-100 focus-within:opacity-100"
+						selected
+							? "opacity-100"
+							: "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
 					)}
 					onClick={(e) => e.stopPropagation()}
+					onKeyDown={(e) => e.stopPropagation()}
+					// biome-ignore lint/a11y/useSemanticElements: This is an overlay container, changing to button affects layout
+					role="button"
+					tabIndex={0}
 				>
 					<Checkbox
 						checked={selected}
@@ -73,7 +80,7 @@ function ProjectCard({
 					interactive
 					className={cn(
 						"h-full flex flex-col justify-between space-y-6 p-6 transition-all duration-300",
-						selected && "ring-2 ring-primary bg-primary/5 scale-[0.98]"
+						selected && "ring-2 ring-primary bg-primary/5 scale-[0.98]",
 					)}
 				>
 					<div className="space-y-4">
@@ -119,7 +126,12 @@ function ProjectCard({
 	);
 }
 
-export function ProjectGrid({ projects, selectedIds, onSelect, onDeleteProject }: ProjectGridProps) {
+export function ProjectGrid({
+	projects,
+	selectedIds,
+	onSelect,
+	onDeleteProject,
+}: ProjectGridProps) {
 	return (
 		<motion.div variants={container} initial="hidden" animate="show">
 			<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
