@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
 import { entityRepository, projectRepository } from "@/lib/db/repositories";
-import type { Entity } from "@/lib/db/schema";
+import type { EntityWithDetails } from "@/lib/db/repositories/entity-repository";
 
 export async function getEntitiesForProject(
 	projectId: string,
-): Promise<{ success: Entity[] } | { error: string }> {
+): Promise<{ success: EntityWithDetails[] } | { error: string }> {
 	try {
 		const session = await auth();
 		if (!session?.user?.id) {
@@ -23,7 +23,7 @@ export async function getEntitiesForProject(
 			return { error: "Project not found or access denied" };
 		}
 
-		const entities = await entityRepository.findByProject(projectId);
+		const entities = await entityRepository.findByProjectWithDetails(projectId);
 		return { success: entities };
 	} catch (e) {
 		console.error(e);

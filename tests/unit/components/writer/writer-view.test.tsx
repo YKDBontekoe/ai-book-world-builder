@@ -45,6 +45,11 @@ vi.mock("@/components/organisms/writer/writer-editor", () => ({
 	WriterEditor: () => <div data-testid="writer-editor">Writer Editor</div>,
 }));
 
+// Mock the hook that caused the crash
+vi.mock("@/hooks/use-project-entities", () => ({
+	useProjectEntities: () => ({ data: [] }),
+}));
+
 // Mock the server action file itself to prevent it from trying to load DB in test env
 vi.mock("@/app/actions/writer", () => ({
 	getProjectStructure: vi

@@ -139,6 +139,48 @@ export class EntityRepository extends BaseRepository<
 	}
 
 	/**
+	 * Find all entities with details by project ID
+	 */
+	async findByProjectWithDetails(projectId: string): Promise<EntityWithDetails[]> {
+		try {
+			const entities = await db
+				.select()
+				.from(entity)
+				.where(eq(entity.projectId, projectId))
+				.orderBy(desc(entity.createdAt));
+
+			if (entities.length === 0) return [];
+
+			// Fetch all attributes and relationships in parallel
+			const [allAttributes, allRelationships] = await Promise.all([
+				db
+					.select()
+					.from(entityAttribute)
+					.where(eq(entityAttribute.projectId, projectId)),
+				db
+					.select()
+					.from(relationship)
+					.where(eq(relationship.projectId, projectId)),
+			]);
+
+			// Map details to entities
+			return entities.map((ent) => ({
+				...ent,
+				attributes: allAttributes
+					.filter((attr) => attr.entityId === ent.id)
+					.sort((a, b) => a.name.localeCompare(b.name)),
+				relationships: allRelationships.filter(
+					(rel) => rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
+				)
+					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+			}));
+		} catch (error) {
+			console.error("EntityRepository.findByProjectWithDetails error:", error);
+			throw new DatabaseError("Failed to load entity details for project");
+		}
+	}
+
+	/**
 	 * Find entity with all details (attributes and relationships)
 	 */
 	async findByIdWithDetails(id: string): Promise<EntityWithDetails | null> {
