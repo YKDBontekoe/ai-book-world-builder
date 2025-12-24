@@ -20,14 +20,30 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
-export default async function LandingPage(): Promise<React.JSX.Element> {
+export default function Page() {
+	return (
+		<>
+			<Suspense fallback={null}>
+				<AuthRedirect />
+			</Suspense>
+			<LandingPageContent />
+		</>
+	);
+}
+
+async function AuthRedirect() {
 	const session = await auth();
 
 	if (session) {
 		redirect("/projects");
 	}
 
+	return null;
+}
+
+function LandingPageContent() {
 	return (
 		<div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-violet-50/50 via-white to-indigo-50/50 dark:from-zinc-950 dark:via-zinc-900 dark:to-violet-950/30">
 			{/* Animated background elements - slightly refined for subtlety */}
@@ -105,26 +121,26 @@ export default async function LandingPage(): Promise<React.JSX.Element> {
 						delay={0.3}
 						className="mb-24 flex flex-wrap items-center justify-center gap-4"
 					>
-					<Link href="/register">
-						<Button
-							className="h-12 rounded-lg bg-zinc-900 px-8 font-semibold text-white shadow-xl shadow-zinc-900/20 transition-all hover:scale-105 hover:bg-zinc-800 hover:shadow-2xl dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
-							size="lg"
-						>
-							Start Building Free
-							<ArrowRight className="ml-2 h-4 w-4" />
-						</Button>
-					</Link>
-					<Link href="#features">
-						<Button
-							variant="outline"
-							className="h-12 rounded-lg border-zinc-200 bg-white/50 px-8 font-medium backdrop-blur-sm hover:bg-white hover:text-zinc-900 dark:border-zinc-800 dark:bg-white/5 dark:text-zinc-100 dark:hover:bg-white/10"
-							size="lg"
-						>
-							<PlayCircle className="mr-2 h-4 w-4" />
-							How it Works
-						</Button>
-					</Link>
-				</SlideIn>
+						<Link href="/register">
+							<Button
+								className="h-12 rounded-full bg-zinc-900 px-8 font-semibold text-white shadow-xl shadow-zinc-900/20 transition-all hover:scale-105 hover:bg-zinc-800 hover:shadow-2xl dark:bg-white dark:text-zinc-900 dark:hover:bg-zinc-100"
+								size="lg"
+							>
+								Start Building Free
+								<ArrowRight className="ml-2 h-4 w-4" />
+							</Button>
+						</Link>
+						<Link href="#features">
+							<Button
+								variant="outline"
+								className="h-12 rounded-full border-zinc-200 bg-white/50 px-8 font-medium backdrop-blur-sm hover:bg-white hover:text-zinc-900 dark:border-zinc-800 dark:bg-white/5 dark:text-zinc-100 dark:hover:bg-white/10"
+								size="lg"
+							>
+								<PlayCircle className="mr-2 h-4 w-4" />
+								How it Works
+							</Button>
+						</Link>
+					</SlideIn>
 
 					{/* How It Works Section */}
 					<FadeIn delay={0.4} className="mb-24">
@@ -268,7 +284,7 @@ export default async function LandingPage(): Promise<React.JSX.Element> {
 							</span>
 						</div>
 						<p className="text-sm text-zinc-500 dark:text-zinc-400">
-							© {new Date().getFullYear()} AI Book World Builder. All rights reserved.
+							© 2024 AI Book World Builder. All rights reserved.
 						</p>
 					</div>
 				</div>
