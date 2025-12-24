@@ -1,5 +1,9 @@
 "use client";
 
+import { Dialog, DialogContent } from "@/components/atoms/dialog";
+import { Textarea } from "@/components/atoms/textarea";
+import { GlassCard } from "@/components/molecules/glass-card";
+import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { motion } from "framer-motion";
 import {
 	AlertTriangle,
@@ -14,39 +18,20 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-	analyzeConsistencyAction,
-	batchWriteChapterAction,
-	critiqueChapterAction,
-	expandSceneAction,
-	generateLoreAction,
-	rewriteSceneAction,
-	searchProjectAction,
-} from "@/app/actions/ai-operations";
-import { Dialog, DialogContent } from "@/components/atoms/dialog";
-import { Textarea } from "@/components/atoms/textarea";
-import { GlassCard } from "@/components/molecules/glass-card";
-import { useWriterContext } from "@/components/organisms/writer/writer-context";
+	ToolType,
+	toolStrategies,
+} from "./tool-strategies";
 
 interface AIToolsMenuProps {
 	isOpen: boolean;
 	onClose: () => void;
 }
 
-type ToolType =
-	| "write"
-	| "rewrite"
-	| "expand"
-	| "critique"
-	| "consistency"
-	| "lore"
-	| "search"
-	| null;
-
 export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 	const { activeSceneId, activeChapterId, project, structure } =
 		useWriterContext();
 
-	const [selectedTool, setSelectedTool] = useState<ToolType>(null);
+	const [selectedTool, setSelectedTool] = useState<ToolType | null>(null);
 	const [input, setInput] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [result, setResult] = useState<string | null>(null);
@@ -59,86 +44,34 @@ export function AIToolsMenu({ isOpen, onClose }: AIToolsMenuProps) {
 	};
 
 	const handleExecute = async () => {
-		if (!project?.id) return;
+		if (!project?.id || !selectedTool) return;
 		setLoading(true);
 		setResult(null);
 
 		try {
-			if (selectedTool === "write") {
-				if (!activeChapterId) {
-					toast.error("No active chapter selected.");
-					return;
-				}
-				const res = await batchWriteChapterAction(activeChapterId, input);
-				if (res.success) {
-					// We must cast or check properties, but Server Actions return union types often.
-					// Assuming generic Result structure: { success: true, writtenCount: number }
-					if ('writtenCount' in res) {
-						toast.success(`Generated content for ${res.writtenCount} scenes.`);
+			const strategy = toolStrategies[selectedTool];
+			if (!strategy) {
+				toast.error("Tool not implemented yet.");
+				return;
+			}
+
+			const toolContext = {
+				project,
+				structure: structure ?? [],
+				activeChapterId: activeChapterId || null,
+				activeSceneId: activeSceneId || null,
+			};
+
+			const outcome = await strategy.execute(toolContext, input);
+
+			if (outcome.success) {
+				if (outcome.result) {
+					setResult(outcome.result);
+				} else {
+					// Action completed without needing to show result (e.g., toast already shown)
+					if (selectedTool === "write" || selectedTool === "lore") {
+						onClose();
 					}
-					onClose();
-				} else {
-					if ('error' in res) toast.error(res.error);
-				}
-			} else if (selectedTool === "rewrite") {
-				if (!activeSceneId) {
-					toast.error("No active scene selected.");
-					return;
-				}
-				const res = await rewriteSceneAction(activeSceneId, input);
-				// Check for 'text' in result
-				if ('text' in res) {
-					setResult(res.text); // Show preview
-				} else {
-					if ('error' in res) toast.error(res.error);
-				}
-			} else if (selectedTool === "expand") {
-				if (!activeSceneId) {
-					toast.error("No active scene selected.");
-					return;
-				}
-				const res = await expandSceneAction(activeSceneId, input);
-				if ('text' in res) {
-					setResult(res.text); // Show preview
-				} else {
-					if ('error' in res) toast.error(res.error);
-				}
-			} else if (selectedTool === "critique") {
-				if (!activeChapterId) {
-					toast.error("No active chapter selected.");
-					return;
-				}
-				const res = await critiqueChapterAction(activeChapterId);
-				if (res.success && 'data' in res) {
-					setResult(JSON.stringify(res.data, null, 2));
-				} else {
-					if ('error' in res) toast.error(res.error);
-				}
-			} else if (selectedTool === "consistency") {
-				if (!activeChapterId) {
-					toast.error("No active chapter selected.");
-					return;
-				}
-				const res = await analyzeConsistencyAction(activeChapterId);
-				if (res.success && 'data' in res) {
-					setResult(JSON.stringify(res.data, null, 2));
-				} else {
-					if ('error' in res) toast.error(res.error);
-				}
-			} else if (selectedTool === "lore") {
-				const res = await generateLoreAction(project.id, input, "lore");
-				if (res.success && 'entity' in res && res.entity) {
-					toast.success(`Created entity: ${res.entity.name}`);
-					onClose();
-				} else {
-					if ('error' in res) toast.error(res.error);
-				}
-			} else if (selectedTool === "search") {
-				const res = await searchProjectAction(project.id, input);
-				if (res.success && 'answer' in res) {
-					setResult(res.answer || null);
-				} else {
-					if ('error' in res) toast.error(res.error);
 				}
 			}
 		} catch (_e) {
