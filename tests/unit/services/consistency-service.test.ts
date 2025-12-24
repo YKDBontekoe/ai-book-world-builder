@@ -21,9 +21,13 @@ vi.mock("@/lib/db/queries", () => ({
 	clearIssuesForProject: mocks.clearIssuesForProject,
 }));
 
-vi.mock("ai", () => ({
-	generateObject: mocks.generateObject,
-}));
+vi.mock("ai", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("ai")>();
+	return {
+		...actual,
+		generateObject: mocks.generateObject,
+	};
+});
 
 vi.mock("@/lib/ai/providers", () => ({
 	myProvider: mocks.myProvider,
