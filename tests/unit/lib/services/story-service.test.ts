@@ -34,9 +34,13 @@ const mocks = vi.hoisted(() => ({
 }));
 
 // Mock modules
-vi.mock("ai", () => ({
-	generateObject: mocks.generateObject,
-}));
+vi.mock("ai", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("ai")>();
+	return {
+		...actual,
+		generateObject: mocks.generateObject,
+	};
+});
 
 vi.mock("@/lib/ai/providers", () => ({
 	myProvider: {
@@ -70,13 +74,12 @@ vi.mock("@/lib/db/drizzle", () => ({
 	},
 }));
 
-vi.mock("@/lib/db/schema", () => ({
-	outline: "outline",
-	volume: "volume",
-	chapter: "chapter",
-	scene: "scene",
-	Vote: "Vote",
-}));
+vi.mock("@/lib/db/schema", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("@/lib/db/schema")>();
+	return {
+		...actual,
+	};
+});
 
 vi.mock("@/lib/actions-utils", () => ({
 	ensureProjectAccess: mocks.ensureProjectAccess,
