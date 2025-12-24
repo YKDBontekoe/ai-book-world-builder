@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { MessageSquare, Redo, Search, Sparkles, Undo } from "lucide-react";
+import { useState } from "react";
 import { Separator } from "@/components/atoms/separator";
 import {
 	Tooltip,
@@ -10,6 +11,7 @@ import {
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { AIToolsMenu } from "@/components/organisms/writer/tools/ai-tools-menu";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { cn } from "@/lib/utils";
@@ -25,6 +27,7 @@ export function WriterControlBar() {
 
 	const { viewMode } = useWriterLayoutContext();
 	const isZen = viewMode === "zen";
+	const [isToolsOpen, setIsToolsOpen] = useState(false);
 
 	// Animation variants
 	const containerVariants = {
@@ -91,7 +94,8 @@ export function WriterControlBar() {
 						<ControlButton
 							label="AI Tools"
 							icon={Sparkles}
-							onClick={() => {}} // To implement: Open tools menu
+							onClick={() => setIsToolsOpen(true)}
+							active={isToolsOpen}
 						/>
 					</ControlGroup>
 
@@ -109,6 +113,8 @@ export function WriterControlBar() {
 					</ControlGroup>
 				</GlassCard>
 			</motion.div>
+
+			<AIToolsMenu isOpen={isToolsOpen} onClose={() => setIsToolsOpen(false)} />
 		</TooltipProvider>
 	);
 }
