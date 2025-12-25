@@ -1,7 +1,9 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
-import { projectRepository, sceneRepository } from "@/lib/db/repositories";
+import { withProjectWriteAccess } from "@/lib/actions-utils";
+import { sceneRepository } from "@/lib/db/repositories";
+import type { Scene } from "@/lib/db/schema";
+import type { Result } from "@/lib/result";
 
 export async function updateSceneAction({
 	id,
@@ -15,31 +17,15 @@ export async function updateSceneAction({
 	status?: string;
 	content?: string;
 	projectId: string;
-}) {
-	const session = await auth();
+}): Promise<Result<Scene>> {
+	return withProjectWriteAccess(projectId, async () => {
+		const updatedScene = await sceneRepository.update(id, {
+			title,
+			status,
+			content,
+		});
 
-	if (!session?.user?.id) {
-		throw new Error("Unauthorized");
-	}
-
-	const project = await projectRepository.findByIdWithAccess(
-		projectId,
-		session.user.id,
-	);
-
-	if (!project || project.userId !== session.user.id) {
-		throw new Error("Unauthorized");
-	}
-
-	const updatedScene = await sceneRepository.update(id, {
-		title,
-		status,
-		content,
+		// Ensure we return the Scene type (with dates handled by repo/schema)
+		return updatedScene;
 	});
-
-	return {
-		...updatedScene,
-		createdAt: updatedScene.createdAt.toISOString(),
-		updatedAt: updatedScene.updatedAt.toISOString(),
-	};
 }

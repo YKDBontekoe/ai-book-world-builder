@@ -63,12 +63,18 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 
 		setIsSaving(true);
 		try {
-			await updateSceneAction({
+			const result = await updateSceneAction({
 				id: scene.id,
 				projectId: projectId ?? scene.projectId!,
 				title,
 				status,
 			});
+
+			if (!result.success) {
+				toast.error(result.error);
+				return;
+			}
+
 			setIsEditing(false);
 			toast.success("Scene updated");
 		} catch (error) {

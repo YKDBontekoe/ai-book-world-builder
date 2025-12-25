@@ -77,7 +77,7 @@ export function ProjectActionsMenu({
 		setIsDeleting(true);
 		try {
 			const result = await deleteProject(projectId);
-			if (result && "error" in result) {
+			if (!result.success) {
 				toast.error(result.error);
 			} else {
 				toast.success("Project deleted");
@@ -95,7 +95,7 @@ export function ProjectActionsMenu({
 		toast.info("Forking project...");
 		try {
 			const result = await forkProject(projectId);
-			if (result && "error" in result) {
+			if (!result.success) {
 				toast.error(result.error);
 			} else {
 				toast.success("Project forked successfully");
@@ -111,7 +111,7 @@ export function ProjectActionsMenu({
 		setIsRenaming(true);
 		try {
 			const result = await renameProject(projectId, newName, newDescription);
-			if (result && "error" in result) {
+			if (!result.success) {
 				toast.error(result.error);
 			} else {
 				toast.success("Project renamed");

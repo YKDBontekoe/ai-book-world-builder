@@ -3,8 +3,12 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import {
+	requireAuth,
+	withProjectReadAccess,
+	withProjectWriteAccess,
+} from "@/lib/actions-utils";
 import { db } from "@/lib/db/drizzle";
 import { projectRepository } from "@/lib/db/repositories";
 import {
@@ -26,6 +30,7 @@ import {
 	storyState,
 	volume,
 } from "@/lib/db/schema";
+import { err, ok, type Result } from "@/lib/result";
 
 // Validation Schemas
 const createProjectSchema = z.object({
@@ -43,28 +48,29 @@ export async function createProjectAction(params: {
 	name: string;
 	description?: string;
 	visibility: VisibilityType;
-}) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
+}): Promise<Result<{ projectId: string }>> {
+	const authResult = await requireAuth();
+	if (!authResult.success) {
+		return err(authResult.error);
 	}
+	const user = authResult.data;
 
 	const validation = createProjectSchema.safeParse(params);
 	if (!validation.success) {
-		return { error: validation.error.message };
+		return err(validation.error.message);
 	}
 
 	try {
 		const newProject = await projectRepository.create({
 			...validation.data,
-			userId: session.user.id,
+			userId: user.id,
 		});
 
 		revalidatePath("/projects");
-		return { success: true, projectId: newProject.id };
+		return ok({ projectId: newProject.id });
 	} catch (error) {
 		console.error("Create project error:", error);
-		return { error: "Failed to create project" };
+		return err("Failed to create project");
 	}
 }
 
@@ -72,56 +78,35 @@ export async function renameProject(
 	projectId: string,
 	name: string,
 	description?: string,
-) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
-	}
-	const userId = session.user.id;
+): Promise<Result<void>> {
+	return withProjectWriteAccess(projectId, async () => {
+		const validation = renameProjectSchema.safeParse({ name, description });
+		if (!validation.success) {
+			throw new Error(validation.error.message);
+		}
 
-	const validation = renameProjectSchema.safeParse({ name, description });
-	if (!validation.success) {
-		return { error: validation.error.message };
-	}
-
-	const existingProject = await projectRepository.findByIdWithAccess(
-		projectId,
-		userId,
-	);
-
-	if (!existingProject) {
-		return { error: "Project not found or access denied" };
-	}
-
-	if (existingProject.userId !== userId) {
-		return { error: "Only the project owner can rename it." };
-	}
-
-	try {
 		await projectRepository.update(projectId, validation.data);
 
 		revalidatePath("/projects");
 		revalidatePath(`/projects/${projectId}`);
-		return { success: true };
-	} catch (error) {
-		console.error("Rename project error:", error);
-		return { error: "Failed to rename project" };
-	}
+	});
 }
 
-export async function deleteProject(projectId: string) {
+export async function deleteProject(projectId: string): Promise<Result<void>> {
 	return deleteProjects([projectId]);
 }
 
-export async function deleteProjects(projectIds: string[]) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
+export async function deleteProjects(
+	projectIds: string[],
+): Promise<Result<void>> {
+	const authResult = await requireAuth();
+	if (!authResult.success) {
+		return err(authResult.error);
 	}
-	const userId = session.user.id;
+	const user = authResult.data;
 
 	if (projectIds.length === 0) {
-		return { success: true };
+		return ok(undefined);
 	}
 
 	try {
@@ -132,11 +117,11 @@ export async function deleteProjects(projectIds: string[]) {
 			.where(inArray(project.id, projectIds));
 
 		const ownedProjectIds = projects
-			.filter((p) => p.userId === userId)
+			.filter((p) => p.userId === user.id)
 			.map((p) => p.id);
 
 		if (ownedProjectIds.length === 0) {
-			return { error: "No valid projects to delete" };
+			return err("No valid projects to delete");
 		}
 
 		await db.transaction(async (tx) => {
@@ -206,30 +191,28 @@ export async function deleteProjects(projectIds: string[]) {
 		});
 
 		revalidatePath("/projects");
-		return { success: true };
+		return ok(undefined);
 	} catch (error) {
 		console.error("Delete projects error:", error);
-		return { error: "Failed to delete projects" };
+		return err("Failed to delete projects");
 	}
 }
 
-export async function forkProject(originalProjectId: string, newName?: string) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
+export async function forkProject(
+	originalProjectId: string,
+	newName?: string,
+): Promise<Result<{ projectId: string }>> {
+	const authResult = await requireAuth();
+	if (!authResult.success) {
+		return err(authResult.error);
 	}
-	const userId = session.user.id;
+	const user = authResult.data;
 
-	const originalProject = await projectRepository.findByIdWithAccess(
-		originalProjectId,
-		userId,
-	);
+	// Use withProjectReadAccess to verify we can access the original project
+	// We wrap the entire transaction in the callback
+	return withProjectReadAccess(originalProjectId, async (context) => {
+		const originalProject = context.project;
 
-	if (!originalProject) {
-		return { error: "Project not found or access denied" };
-	}
-
-	try {
 		const result = await db.transaction(async (tx) => {
 			// 1. Create New Project
 			const [newProject] = await tx
@@ -238,7 +221,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					name: newName || `Fork of ${originalProject.name}`,
 					description: originalProject.description,
 					visibility: "private",
-					userId,
+					userId: user.id,
 					folders: originalProject.folders,
 					forkedFromId: originalProjectId,
 					createdAt: new Date(),
@@ -454,13 +437,10 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 				}
 			}
 
-			return { success: true, projectId: newProject.id };
+			return { projectId: newProject.id };
 		});
 
 		revalidatePath("/projects");
 		return result;
-	} catch (error) {
-		console.error("Fork project error:", error);
-		return { error: "Failed to fork project" };
-	}
+	});
 }

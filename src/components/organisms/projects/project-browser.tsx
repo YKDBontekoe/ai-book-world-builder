@@ -227,7 +227,7 @@ export function ProjectBrowser({
 				pendingDeletionRef.current = null;
 				undoTimeoutRef.current = null;
 
-				if (result?.error) {
+				if (!result.success) {
 					toast.error("Failed to delete projects");
 					// Revert optimistic update
 					setOptimisticDeletedIds((prev) => {
@@ -281,7 +281,7 @@ export function ProjectBrowser({
 		);
 
 		const successCount = results.filter(
-			(r) => r.status === "fulfilled" && !("error" in r.value),
+			(r) => r.status === "fulfilled" && r.value.success,
 		).length;
 		const failureCount = idsToDuplicate.length - successCount;
 
