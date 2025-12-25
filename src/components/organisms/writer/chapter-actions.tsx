@@ -37,10 +37,13 @@ export function ChapterActions({
 			// 1. Plan Structure
 			const planResult = await planChapterScenes(chapterId);
 
-			if (!planResult.success || !planResult.sceneIds) {
-				toast.error(planResult.error || "Failed to plan scenes", {
-					id: toastId,
-				});
+			if (!planResult.success || !planResult.data.sceneIds) {
+				toast.error(
+					planResult.success ? "Failed to plan scenes" : (planResult.error || "Failed to plan scenes"),
+					{
+						id: toastId,
+					}
+				);
 				setLoading(false);
 				return;
 			}
@@ -48,10 +51,10 @@ export function ChapterActions({
 			onUpdate(); // Show empty scenes immediately
 
 			// 2. Generate Content Sequentially
-			const total = planResult.sceneIds.length;
+			const total = planResult.data.sceneIds.length;
 
 			for (let i = 0; i < total; i++) {
-				const sceneId = planResult.sceneIds[i];
+				const sceneId = planResult.data.sceneIds[i];
 				toast.loading(`Writing scene ${i + 1} of ${total}...`, { id: toastId });
 
 				await generateSceneText(sceneId);

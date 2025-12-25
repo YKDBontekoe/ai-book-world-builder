@@ -57,11 +57,13 @@ export function StoryWizard({ projectId, onComplete }: StoryWizardProps) {
 		setStep("generating");
 		try {
 			const result = await generateBookPlan(prompt, style);
-			if (result.success && result.plan) {
-				setPlan(result.plan);
+			if (result.success && result.data.plan) {
+				setPlan(result.data.plan);
 				setStep("review");
 			} else {
-				toast.error("Failed to generate plan. Please try again.");
+				toast.error(
+					result.success ? "Failed to generate plan." : (result.error ?? "Failed to generate plan."),
+				);
 				setStep("input");
 			}
 		} catch (_error) {
