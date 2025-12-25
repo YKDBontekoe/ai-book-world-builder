@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock dependencies
 const mockEditorActions = {
@@ -59,6 +59,8 @@ vi.mock("framer-motion", async () => {
         AnimatePresence: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
         motion: {
             div: ({ children, className, onClick, ...props }: any) => (
+                // biome-ignore lint/a11y/useKeyWithClickEvents: Mock component
+                // biome-ignore lint/a11y/noStaticElementInteractions: Mock component
                 <div className={className} onClick={onClick} {...props}>{children}</div>
             ),
         },
