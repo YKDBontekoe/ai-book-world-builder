@@ -212,34 +212,9 @@ describe("Story Generation Actions", () => {
 				chapters: [{ title: "Chapter 1", summary: "Intro" }],
 			};
 
-			// Mock db.transaction to return { success: true } or whatever the callback returns
-			// In our code, createBookFromPlan calls `withProjectWriteAccess`, which we mocked to return the callback result.
-			// The callback calls `storyService.createBookFromPlan`, which calls `db.transaction`.
-			// `db.transaction` returns whatever the callback returns.
-			// `storyService` usually returns void or something.
-			// `createBookFromPlan` (action) returns the result of `withProjectWriteAccess`.
-			// Since `withProjectWriteAccess` returns `Result`, and it wraps the callback which returns void...
-			// Wait, my mock for `withProjectWriteAccess` returns `await cb()`.
-			// The REAL `withProjectWriteAccess` (in my new impl) returns `ok(data)`.
-			// So my mock should probably wrap the result in `ok()` if I want to match reality,
-			// BUT `createBookFromPlan` action expects `Result<void>`.
-
-			// Let's adjust the mock for `withProjectWriteAccess` to match the expected return type structure if needed,
-			// OR just ensure the ACTION returns what we expect.
-			// In `src/app/actions/story-generation.ts`:
-			// return withProjectWriteAccess(projectId, async () => { ... });
-			// `withProjectWriteAccess` implementation:
-			// const data = await callback(context); return ok(data);
-
-			// So my mock for `withProjectWriteAccess` should look like:
-			// vi.fn(async (projectId, cb) => { await cb(...); return { success: true, data: undefined }; })
-
-			// Let's update the mock in this test file (via `vi.mock`).
-
 			const result = await createBookFromPlan(projectId, plan);
 			expect(db.transaction).toHaveBeenCalled();
-			// The result will be whatever `withProjectWriteAccess` returns.
-			// We need to update the mock below.
+			expect(result.success).toBe(true);
 		});
 	});
 
@@ -250,7 +225,6 @@ describe("Story Generation Actions", () => {
 			});
 
 			const result = await planChapterScenes("ch-1");
-			console.log("DEBUG RESULT:", JSON.stringify(result, null, 2));
 
 			expect(result.success).toBe(true);
 			if (result.success) {
