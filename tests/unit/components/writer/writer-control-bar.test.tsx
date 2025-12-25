@@ -1,3 +1,7 @@
+/**
+ * Unit tests for WriterControlBar
+ * Verifies accessibility (aria-labels) and rendering of key components.
+ */
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { WriterControlBar } from "@/components/organisms/writer/writer-control-bar";
