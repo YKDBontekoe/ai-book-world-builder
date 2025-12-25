@@ -14,7 +14,7 @@ type WriterContextType = UseWriterStateReturnType & {
 	activeChapterId?: string; // Derived from activeScene
 };
 
-const WriterContext = createContext<WriterContextType | null>(null);
+export const WriterContext = createContext<WriterContextType | null>(null);
 
 interface WriterProviderProps {
 	children: React.ReactNode;
