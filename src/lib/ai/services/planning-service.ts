@@ -2,11 +2,11 @@ import "server-only";
 
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
 import {
-	bookPlanSchema,
 	type BookPlan,
-	scenePlanSchema,
+	bookPlanSchema,
 	type ScenePlan,
 	type StoryStyle,
+	scenePlanSchema,
 } from "@/lib/services/schemas/story-schemas";
 
 export class PlanningService extends BaseAIService {
@@ -27,6 +27,7 @@ export class PlanningService extends BaseAIService {
 		const result = await this.generateObject(promptText, bookPlanSchema, {
 			modelId,
 			modelRole: "orchestrator",
+			maxTokens: 4000,
 		});
 
 		if (!result.success) {
@@ -49,6 +50,7 @@ export class PlanningService extends BaseAIService {
 		const result = await this.generateObject(prompt, scenePlanSchema, {
 			modelId,
 			modelRole: "orchestrator",
+			maxTokens: 2000,
 		});
 
 		if (!result.success) {

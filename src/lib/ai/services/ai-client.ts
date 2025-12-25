@@ -34,9 +34,9 @@ import { myProvider } from "@/lib/ai/providers";
 import {
 	type AIGenerationOptions,
 	type AIResult,
-	ROLE_TO_TIER,
 	aiError,
 	aiSuccess,
+	ROLE_TO_TIER,
 } from "@/lib/ai/services/types";
 
 // =============================================================================
@@ -145,6 +145,7 @@ export const aiClient = {
 				system: params.options?.system,
 				prompt: params.prompt,
 				temperature: params.options?.temperature,
+				maxOutputTokens: params.options?.maxTokens,
 			});
 
 			return aiSuccess({ text: result.text });
@@ -182,6 +183,7 @@ export const aiClient = {
 				schema: params.schema,
 				prompt: params.prompt,
 				temperature: params.options?.temperature,
+				maxOutputTokens: params.options?.maxTokens,
 			});
 
 			return aiSuccess({ object: result.object });
@@ -217,6 +219,7 @@ export const aiClient = {
 				system: params.options?.system,
 				prompt: params.prompt,
 				temperature: params.options?.temperature,
+				maxOutputTokens: params.options?.maxTokens,
 			});
 
 			// Collect chunks if callback provided

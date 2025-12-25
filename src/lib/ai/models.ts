@@ -25,7 +25,7 @@ export type ChatModelId = string;
 export const DEFAULT_MODELS = {
 	light: "openrouter/auto",
 	middle: "openrouter/auto",
-	large: "openrouter/auto",
+	large: "google/gemini-2.0-flash-001",
 };
 
 // Compatibility for existing code that expects a default
