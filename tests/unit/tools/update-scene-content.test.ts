@@ -27,6 +27,9 @@ describe("Tool: updateSceneContent", () => {
 		const toolInstance = updateSceneContent();
 
 		// Execute
+		if (!toolInstance.execute) {
+			throw new Error("toolInstance.execute is undefined");
+		}
 		const result = await toolInstance.execute(
 			{
 				sceneId: "scene-123",
@@ -61,6 +64,9 @@ describe("Tool: updateSceneContent", () => {
 		const toolInstance = updateSceneContent();
 
 		// Execute
+		if (!toolInstance.execute) {
+			throw new Error("toolInstance.execute is undefined");
+		}
 		const result = await toolInstance.execute(
 			{
 				sceneId: "scene-123",
@@ -80,6 +86,10 @@ describe("Tool: updateSceneContent", () => {
 		mocks.verifySceneAccess.mockRejectedValue(new Error("Unauthorized"));
 
 		const toolInstance = updateSceneContent();
+
+		if (!toolInstance.execute) {
+			throw new Error("toolInstance.execute is undefined");
+		}
 
 		// Execute & Assert
 		await expect(
