@@ -2,6 +2,7 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { db } from "@/lib/db/drizzle";
@@ -26,6 +27,18 @@ import {
 	volume,
 } from "@/lib/db/schema";
 
+// Validation Schemas
+const createProjectSchema = z.object({
+	name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+	description: z.string().max(500, "Description is too long").optional(),
+	visibility: z.enum(["private", "public"]),
+});
+
+const renameProjectSchema = z.object({
+	name: z.string().min(1, "Name is required").max(100, "Name is too long"),
+	description: z.string().max(500, "Description is too long").optional(),
+});
+
 export async function createProjectAction(params: {
 	name: string;
 	description?: string;
@@ -36,9 +49,14 @@ export async function createProjectAction(params: {
 		return { error: "Unauthorized" };
 	}
 
+	const validation = createProjectSchema.safeParse(params);
+	if (!validation.success) {
+		return { error: validation.error.message };
+	}
+
 	try {
 		const newProject = await projectRepository.create({
-			...params,
+			...validation.data,
 			userId: session.user.id,
 		});
 
@@ -61,6 +79,11 @@ export async function renameProject(
 	}
 	const userId = session.user.id;
 
+	const validation = renameProjectSchema.safeParse({ name, description });
+	if (!validation.success) {
+		return { error: validation.error.message };
+	}
+
 	const existingProject = await projectRepository.findByIdWithAccess(
 		projectId,
 		userId,
@@ -75,7 +98,7 @@ export async function renameProject(
 	}
 
 	try {
-		await projectRepository.update(projectId, { name, description });
+		await projectRepository.update(projectId, validation.data);
 
 		revalidatePath("/projects");
 		revalidatePath(`/projects/${projectId}`);
