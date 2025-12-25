@@ -146,6 +146,7 @@ function ControlButton({
 			<TooltipTrigger asChild>
 				<button
 					type="button"
+					aria-label={label}
 					onClick={onClick}
 					disabled={disabled}
 					className={cn(
