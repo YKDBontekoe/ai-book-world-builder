@@ -126,14 +126,14 @@ export function StoryWizard({ projectId, onComplete }: StoryWizardProps) {
 	};
 
 	return (
-		<div className="flex flex-col items-center justify-center h-full w-full max-w-4xl mx-auto p-6">
+		<div className="flex flex-col items-center justify-start md:justify-center h-full w-full max-w-4xl mx-auto p-4 md:p-6 overflow-y-auto pb-32">
 			<AnimatePresence mode="wait">
 				{step === "input" && (
 					<motion.div
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -20 }}
-						className="w-full max-w-2xl space-y-6"
+						className="w-full max-w-2xl space-y-6 pt-4 md:pt-0"
 						key="input"
 					>
 						<div className="text-center space-y-2">
@@ -148,7 +148,7 @@ export function StoryWizard({ projectId, onComplete }: StoryWizardProps) {
 							</p>
 						</div>
 
-						<div className="grid grid-cols-3 gap-4">
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 							<div className="space-y-2">
 								<Label>Genre</Label>
 								<Select

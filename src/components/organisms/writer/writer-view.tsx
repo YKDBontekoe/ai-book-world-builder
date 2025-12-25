@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
@@ -120,7 +119,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
 							ref={sidebarRef}
-							defaultSize={20}
+							defaultSize={isMobile ? 0 : 20}
 							minSize={15}
 							maxSize={30}
 							collapsible={true}
