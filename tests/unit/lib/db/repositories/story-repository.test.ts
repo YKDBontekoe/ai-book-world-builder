@@ -92,8 +92,7 @@ describe("StoryRepository", () => {
 			mocks.results = [
 				[{ id: "o1" }], // insert outline
 				[{ id: "v1" }], // insert volume
-				[], // insert ch 1
-				[], // insert ch 2
+				[], // insert chapters (batch)
 				[{ id: "ch1" }], // select chapter 1
 				[], // insert scene
 			];
@@ -104,9 +103,7 @@ describe("StoryRepository", () => {
 			);
 			expect(result).toEqual({ outlineId: "o1", volumeId: "v1" });
 			expect(mocks.transaction).toHaveBeenCalled();
-			expect(mocks.insert).toHaveBeenCalledTimes(5); // outline, volume, ch1, ch2, scene
-			// Wait, loop inserts chapters one by one.
-			// outline(1) + volume(1) + chapters(2) + scene(1) = 5 inserts.
+			expect(mocks.insert).toHaveBeenCalledTimes(4); // outline, volume, chapters(batch), scene
 		});
 	});
 
@@ -126,16 +123,20 @@ describe("StoryRepository", () => {
 	});
 
 	describe("createScenesBatch", () => {
-		it("should create multiple scenes using createScene query", async () => {
-			vi.mocked(createScene).mockResolvedValue({ id: "s1" } as any);
+		it("should create multiple scenes using batch insert", async () => {
+			// Setup mock return for the batch insert
+			mocks.results = [[{ id: "s1" }, { id: "s2" }]];
 
 			const result = await storyRepository.createScenesBatch("p1", "ch1", [
 				{ title: "S1", sequence: 1 },
 				{ title: "S2", sequence: 2 },
 			]);
 
-			expect(result).toEqual(["s1", "s1"]);
-			expect(createScene).toHaveBeenCalledTimes(2);
+			expect(result).toEqual(["s1", "s2"]);
+			expect(mocks.insert).toHaveBeenCalledTimes(1);
+			expect(mocks.values).toHaveBeenCalledWith(expect.any(Array));
+			const valuesCall = mocks.values.mock.calls[0][0];
+			expect(valuesCall).toHaveLength(2);
 		});
 	});
 
@@ -147,10 +148,10 @@ describe("StoryRepository", () => {
 			const mockScenes = [mockScene];
 
 			mocks.results = [
-				[mockScene], // targetScene
-				[mockChapter], // targetChapter
-				[mockOutline], // targetOutline
-				mockScenes, // scenesInChapter
+				[mockScene], // 1. targetScene
+				[mockChapter], // 2. targetChapter (via Promise.all)
+				mockScenes, // 3. scenesInChapter (via Promise.all)
+				[mockOutline], // 4. targetOutline
 			];
 
 			const result = await storyRepository.getSceneContextData("s1");

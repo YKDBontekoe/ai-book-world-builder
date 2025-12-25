@@ -1,21 +1,25 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Hoist mocks using vi.hoisted to allow access inside vi.mock factory
-const mocks = vi.hoisted(() => ({
-	generateObject: vi.fn(),
-	continueWriting: vi.fn(),
-	createScene: vi.fn().mockResolvedValue({ id: "new-scene-id" }),
-	ensureProjectAccess: vi.fn().mockResolvedValue(true),
-	getSelectedModelId: vi.fn().mockResolvedValue("mock-model-id"),
+const mocks = vi.hoisted(() => {
+	const chain: any = {};
+	chain.generateObject = vi.fn();
+	chain.continueWriting = vi.fn();
+	chain.createScene = vi.fn().mockResolvedValue({ id: "new-scene-id" });
+	chain.ensureProjectAccess = vi.fn().mockResolvedValue(true);
+	chain.getSelectedModelId = vi.fn().mockResolvedValue("mock-model-id");
+
 	// Drizzle chainable mocks
-	insert: vi.fn().mockReturnThis(),
-	values: vi.fn().mockReturnThis(),
-	returning: vi.fn().mockResolvedValue([{ id: "mock-id", sequence: 1 }]),
-	select: vi.fn().mockReturnThis(),
-	from: vi.fn().mockReturnThis(),
-	where: vi.fn().mockReturnThis(),
-	orderBy: vi.fn().mockReturnThis(),
-	limit: vi
+	// We use mockReturnValue(chain) instead of mockReturnThis() to ensure
+    // it always returns this chain object, regardless of call context.
+	chain.insert = vi.fn().mockReturnValue(chain);
+	chain.values = vi.fn().mockReturnValue(chain);
+	chain.returning = vi.fn().mockResolvedValue([{ id: "mock-id", sequence: 1 }]);
+	chain.select = vi.fn().mockReturnValue(chain);
+	chain.from = vi.fn().mockReturnValue(chain);
+	chain.where = vi.fn().mockReturnValue(chain);
+	chain.orderBy = vi.fn().mockReturnValue(chain);
+	chain.limit = vi
 		.fn()
 		.mockResolvedValue([
 			{
@@ -27,11 +31,27 @@ const mocks = vi.hoisted(() => ({
 				notes: "mock notes",
 				title: "mock title",
 			},
-		]),
-	update: vi.fn().mockReturnThis(),
-	set: vi.fn().mockReturnThis(),
-	transaction: vi.fn(),
-}));
+		]);
+	chain.update = vi.fn().mockReturnValue(chain);
+	chain.set = vi.fn().mockReturnValue(chain);
+
+	chain.transaction = vi.fn((callback) => {
+		return callback({
+			insert: chain.insert,
+			values: chain.values,
+			returning: chain.returning,
+			select: chain.select,
+			from: chain.from,
+			where: chain.where,
+			orderBy: chain.orderBy,
+			limit: chain.limit,
+			update: chain.update,
+			set: chain.set,
+		});
+	});
+
+	return chain;
+});
 
 // Mock modules
 vi.mock("ai", async (importOriginal) => {
@@ -50,20 +70,8 @@ vi.mock("@/lib/ai/providers", () => ({
 
 vi.mock("@/lib/db/drizzle", () => ({
 	db: {
-		transaction: mocks.transaction.mockImplementation((callback) => {
-			return callback({
-				insert: mocks.insert,
-				values: mocks.values,
-				returning: mocks.returning,
-				select: mocks.select,
-				from: mocks.from,
-				where: mocks.where,
-				orderBy: mocks.orderBy,
-				limit: mocks.limit,
-				update: mocks.update,
-				set: mocks.set,
-			});
-		}),
+		transaction: mocks.transaction,
+		insert: mocks.insert,
 		select: mocks.select,
 		from: mocks.from,
 		where: mocks.where,
@@ -110,6 +118,10 @@ import { storyService } from "@/lib/services/story-service";
 describe("StoryService", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Reset specific return values if needed
+		mocks.insert.mockReturnValue(mocks);
+		mocks.values.mockReturnValue(mocks);
+		mocks.returning.mockResolvedValue([{ id: "mock-id", sequence: 1 }]);
 	});
 
 	describe("generateBookPlan", () => {
@@ -170,8 +182,8 @@ describe("StoryService", () => {
 
 			expect(mocks.ensureProjectAccess).toHaveBeenCalled();
 			expect(mocks.generateObject).toHaveBeenCalled();
-			expect(mocks.createScene).toHaveBeenCalled();
-			expect(result).toEqual(["new-scene-id"]);
+			expect(mocks.insert).toHaveBeenCalled(); // Should call batch insert
+			expect(result).toEqual(["mock-id"]); // Returns mock-id from mocks.returning
 		});
 	});
 });
