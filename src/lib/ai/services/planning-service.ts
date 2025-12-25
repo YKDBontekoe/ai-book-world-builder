@@ -2,11 +2,11 @@ import "server-only";
 
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
 import {
-	bookPlanSchema,
 	type BookPlan,
-	scenePlanSchema,
+	bookPlanSchema,
 	type ScenePlan,
 	type StoryStyle,
+	scenePlanSchema,
 } from "@/lib/services/schemas/story-schemas";
 
 export class PlanningService extends BaseAIService {
