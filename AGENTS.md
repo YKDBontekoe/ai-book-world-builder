@@ -66,7 +66,7 @@ Adhere to the **Native macOS** aesthetic defined in [`docs/design-system.md`](do
 
 ## Code Review & PR Process
 
-- **CodeRabbit Bot**: You must always evaluate and respond to comments from `coderabbit[bot]` on PR reviews. Address the feedback or explain why it is not applicable.
+- **CodeRabbitAI Bot**: You must always evaluate and respond to comments from `coderabbitai[bot]` on PR reviews. Address the feedback or explain why it is not applicable.
 
 ## Agent Resources
 
