@@ -3,7 +3,7 @@ import type { NextAuthConfig } from "next-auth";
 export const authConfig = {
 	pages: {
 		signIn: "/login",
-		newUser: "/onboarding",
+		newUser: "/projects",
 	},
 	providers: [
 		// added later in auth.ts since it requires bcrypt which is only compatible with Node.js
@@ -15,12 +15,11 @@ export const authConfig = {
 
 			const isOnLogin = nextUrl.pathname.startsWith("/login");
 			const isOnRegister = nextUrl.pathname.startsWith("/register");
-			const isOnOnboarding = nextUrl.pathname.startsWith("/onboarding");
 			const isPing = nextUrl.pathname.startsWith("/ping");
 
 			if (isPing) return true;
 
-			if (isOnLogin || isOnRegister || isOnOnboarding) {
+			if (isOnLogin || isOnRegister) {
 				if (isLoggedIn) {
 					return Response.redirect(new URL("/", nextUrl));
 				}
@@ -29,7 +28,7 @@ export const authConfig = {
 
 			if (!isLoggedIn) {
 				if (nextUrl.pathname === "/") {
-					return Response.redirect(new URL("/onboarding", nextUrl));
+					return true;
 				}
 				return false;
 			}
