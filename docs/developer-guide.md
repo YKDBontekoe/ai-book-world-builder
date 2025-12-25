@@ -11,12 +11,14 @@ src/
 ├── app/                 # Next.js App Router pages and API routes
 │   ├── (auth)/          # Authentication routes (login, register)
 │   ├── (chat)/          # Main application (Projects, Writer View)
+│   ├── (reader)/        # Standalone Reader Mode application
 │   ├── actions/         # Server Actions (mutations)
 │   └── api/             # API Routes (webhooks, streaming)
 ├── components/          # React components
 │   ├── atoms/           # Low-level UI primitives (Button, Input)
 │   ├── molecules/       # Composition of atoms (GlassCard, StatCard)
 │   ├── messages/        # Chat message components
+│   ├── reader/          # Reader Mode specific components
 │   └── writer/          # Writer View components (Sidebar, Editor)
 ├── lib/                 # Shared logic
 │   ├── ai/              # AI Service wrappers (models, tools, providers)
@@ -36,19 +38,27 @@ The Writer View (`app/(chat)/projects/[id]/page.tsx`) uses a complex state manag
 -   **Client-Side**: `WriterProvider` hydrates `WriterContext` and `WriterLayoutContext`.
 -   **Hook**: `useWriterState` manages the active chapter/scene and syncs with the URL/History.
 
-### 2. Server Actions & Services
+### 2. Reader Mode Architecture
+Reader Mode (`app/(reader)`) is intentionally isolated from the main Writer app to provide a focused reading experience.
+-   **Client-Side Pagination**: We avoid server-side splitting. Instead, we use `column-width: 100vw` in CSS to reflow text into horizontal "pages". `ReaderView` calculates the total width to determine the page count.
+-   **Persistence**: Reading progress (chapter + percentage) is debounced and saved via `saveReadingProgress` Server Action. Local settings (theme, font) are stored in `localStorage`.
+
+### 3. Server Actions & Services
 We separate controller logic (Server Actions) from business logic (Services):
 -   **Server Actions** (`app/actions/`): Handle auth checks, input validation, and calling services. They must check `ensureProjectAccess`.
 -   **Services** (`lib/services/`): Pure business logic, database transactions, and AI orchestration.
+    -   `StoryService`: Handles scene planning and text generation.
+    -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
 
-### 3. AI Pipeline
+### 4. Smart Context (Context Flooding)
+To enable the AI to write coherently over long contexts without a Vector DB:
+-   **Selection**: The `StoryService` (and `ContextSelection` type) allows selecting relevant entities, outlines, and previous scenes.
+-   **Flooding**: We pass the *full text* of the immediately preceding scene and *summaries* of all prior scenes in the chapter to the model context window. This ensures continuity (e.g., characters are in the right room) without exceeding token limits for very long books.
+
+### 5. AI Pipeline
 -   **Providers**: `lib/ai/providers.ts` manages connections to OpenRouter/Verel AI SDK.
 -   **Tools**: `lib/ai/tools/` contains Zod-validated tools used by the AI Agent.
 -   **Generation**: `lib/generation/` implements the state-driven generation pipeline (see `generation-architecture.md`).
-
-### 4. Data Fetching
--   **Read**: We use `@tanstack/react-query` for client-side data fetching and caching.
--   **Write**: Server Actions are used for mutations. We invalidate React Query keys after successful mutations.
 
 ## Design System
 
