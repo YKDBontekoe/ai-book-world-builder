@@ -64,6 +64,10 @@ Adhere to the **Native macOS** aesthetic defined in [`docs/design-system.md`](do
     *   **MANDATORY**: Log critical UX, accessibility, or architectural learnings in `.AgentName/palette.md` (e.g., `.Jules/palette.md`).
     *   Format: `## YYYY-MM-DD - [Title]`.
 
+## Code Review & PR Process
+
+- **CodeRabbit Bot**: You must always evaluate and respond to comments from `coderabbit[bot]` on PR reviews. Address the feedback or explain why it is not applicable.
+
 ## Agent Resources
 
 ### 📚 Guidelines
