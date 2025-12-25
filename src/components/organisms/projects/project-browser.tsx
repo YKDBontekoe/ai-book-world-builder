@@ -5,18 +5,20 @@ import {
 	ArrowDownAZ,
 	ArrowUpAZ,
 	Clock,
+	Copy,
+	Download,
+	Eye,
 	LayoutGrid,
 	List,
 	Search,
 	Trash2,
 	Undo2,
-	X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
-import { deleteProjects } from "@/app/actions/projects";
+import { deleteProjects, forkProject } from "@/app/actions/projects";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import {
@@ -40,6 +42,7 @@ import type { Project } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
 type SortOption = "newest" | "oldest" | "a-z" | "z-a";
+type VisibilityFilter = "all" | "public" | "private";
 
 export function ProjectBrowser({
 	projects,
@@ -48,11 +51,14 @@ export function ProjectBrowser({
 }): JSX.Element {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortOption, setSortOption] = useState<SortOption>("newest");
+	const [visibilityFilter, setVisibilityFilter] =
+		useState<VisibilityFilter>("all");
 	const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">(
 		"project-view-mode",
 		"grid",
 	);
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	const [isProcessing, setIsProcessing] = useState(false);
 
 	// Optimistic UI state
 	const [optimisticDeletedIds, setOptimisticDeletedIds] = useState<Set<string>>(
@@ -86,7 +92,12 @@ export function ProjectBrowser({
 		// Filter out optimistically deleted projects
 		result = result.filter((p) => !optimisticDeletedIds.has(p.id));
 
-		// Filter
+		// Filter by Visibility
+		if (visibilityFilter !== "all") {
+			result = result.filter((p) => p.visibility === visibilityFilter);
+		}
+
+		// Filter by Search
 		if (searchQuery) {
 			const query = searchQuery.toLowerCase();
 			result = result.filter(
@@ -117,7 +128,13 @@ export function ProjectBrowser({
 		});
 
 		return result;
-	}, [projects, searchQuery, sortOption, optimisticDeletedIds]);
+	}, [
+		projects,
+		searchQuery,
+		sortOption,
+		optimisticDeletedIds,
+		visibilityFilter,
+	]);
 
 	// Clean up timeout and trigger pending deletions on unmount
 	useEffect(() => {
@@ -144,13 +161,17 @@ export function ProjectBrowser({
 
 			// 1. Optimistic Update
 			const newOptimisticDeleted = new Set(optimisticDeletedIds);
-			idsToDelete.forEach((id) => newOptimisticDeleted.add(id));
+			for (const id of idsToDelete) {
+				newOptimisticDeleted.add(id);
+			}
 			setOptimisticDeletedIds(newOptimisticDeleted);
 
 			// Clear selection if any deleted items were selected
 			setSelectedIds((prev) => {
 				const next = new Set(prev);
-				idsToDelete.forEach((id) => next.delete(id));
+				for (const id of idsToDelete) {
+					next.delete(id);
+				}
 				return next;
 			});
 
@@ -158,7 +179,7 @@ export function ProjectBrowser({
 			pendingDeletionRef.current = new Set(idsToDelete);
 
 			// 2. Undo Toast
-			const toastId = toast.custom(
+			toast.custom(
 				(t) => (
 					<GlassCard
 						variant="liquid"
@@ -179,7 +200,9 @@ export function ProjectBrowser({
 									clearTimeout(undoTimeoutRef.current);
 								setOptimisticDeletedIds((prev) => {
 									const next = new Set(prev);
-									idsToDelete.forEach((id) => next.delete(id));
+									for (const id of idsToDelete) {
+										next.delete(id);
+									}
 									return next;
 								});
 								pendingDeletionRef.current = null; // Clear pending
@@ -209,14 +232,18 @@ export function ProjectBrowser({
 					// Revert optimistic update
 					setOptimisticDeletedIds((prev) => {
 						const next = new Set(prev);
-						idsToDelete.forEach((id) => next.delete(id));
+						for (const id of idsToDelete) {
+							next.delete(id);
+						}
 						return next;
 					});
 				} else {
 					// Success
 					setOptimisticDeletedIds((prev) => {
 						const next = new Set(prev);
-						idsToDelete.forEach((id) => next.delete(id));
+						for (const id of idsToDelete) {
+							next.delete(id);
+						}
 						return next;
 					});
 				}
@@ -227,6 +254,48 @@ export function ProjectBrowser({
 
 	const handleBulkDelete = () => {
 		handleDelete(Array.from(selectedIds));
+	};
+
+	const handleBulkExport = () => {
+		const projectsToExport = projects.filter((p) => selectedIds.has(p.id));
+		const dataStr = JSON.stringify(projectsToExport, null, 2);
+		const blob = new Blob([dataStr], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `projects_export_${new Date().toISOString().split("T")[0]}.json`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		toast.success(`Exported ${projectsToExport.length} projects`);
+		setSelectedIds(new Set());
+	};
+
+	const handleBulkDuplicate = async () => {
+		setIsProcessing(true);
+		const idsToDuplicate = Array.from(selectedIds);
+		toast.info(`Duplicating ${idsToDuplicate.length} projects...`);
+
+		const results = await Promise.allSettled(
+			idsToDuplicate.map((id) => forkProject(id, undefined)),
+		);
+
+		const successCount = results.filter(
+			(r) => r.status === "fulfilled" && !("error" in r.value),
+		).length;
+		const failureCount = idsToDuplicate.length - successCount;
+
+		if (failureCount === 0) {
+			toast.success("All projects duplicated successfully");
+			setSelectedIds(new Set());
+		} else {
+			toast.warning(
+				`Duplicated ${successCount} projects. Failed to duplicate ${failureCount}.`,
+			);
+		}
+
+		router.refresh();
+		setIsProcessing(false);
 	};
 
 	return (
@@ -243,6 +312,27 @@ export function ProjectBrowser({
 					/>
 				</div>
 				<div className="flex items-center gap-2 w-full sm:w-auto">
+					<Select
+						value={visibilityFilter}
+						onValueChange={(value) =>
+							setVisibilityFilter(value as VisibilityFilter)
+						}
+					>
+						<SelectTrigger className="w-full sm:w-[140px] bg-background/50 backdrop-blur-sm border-border/50">
+							<div className="flex items-center gap-2 text-muted-foreground">
+								<Eye className="h-4 w-4" />
+								<SelectValue placeholder="Visibility" />
+							</div>
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value="all">All</SelectItem>
+							<SelectItem value="private">Private</SelectItem>
+							<SelectItem value="public">Public</SelectItem>
+						</SelectContent>
+					</Select>
+
+					<div className="h-8 w-px bg-border/50 mx-1" />
+
 					<div className="flex items-center bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg p-1 mr-2">
 						<TooltipProvider>
 							<Tooltip>
@@ -386,11 +476,35 @@ export function ProjectBrowser({
 									Select All
 								</Button>
 							</div>
+							<div className="flex items-center gap-2 border-r border-border pr-2 mr-2">
+								<Button
+									size="sm"
+									variant="ghost"
+									className="gap-2 text-muted-foreground hover:text-foreground"
+									onClick={handleBulkExport}
+									disabled={isProcessing}
+								>
+									<Download className="h-4 w-4" />
+									Export
+								</Button>
+								<Button
+									size="sm"
+									variant="ghost"
+									className="gap-2 text-muted-foreground hover:text-foreground"
+									onClick={handleBulkDuplicate}
+									disabled={isProcessing}
+								>
+									<Copy className="h-4 w-4" />
+									Duplicate
+								</Button>
+							</div>
+
 							<Button
 								size="sm"
 								variant="destructive"
 								className="gap-2 shadow-lg hover:shadow-destructive/20"
 								onClick={handleBulkDelete}
+								disabled={isProcessing}
 							>
 								<Trash2 className="h-4 w-4" />
 								Delete
