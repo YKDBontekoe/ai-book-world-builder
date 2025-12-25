@@ -19,6 +19,7 @@ import { rewriteScene } from "@/lib/ai/tools/rewrite-scene";
 import { runDiagnostics } from "@/lib/ai/tools/run-diagnostics";
 import { searchProject } from "@/lib/ai/tools/search-project";
 import { updateSceneCards } from "@/lib/ai/tools/update-scene-cards";
+import { updateSceneContent } from "@/lib/ai/tools/update-scene-content";
 
 type Session = any;
 type DataStream = any;
@@ -78,6 +79,7 @@ export function getAgentTools({
 		// --- Dynamic Pipeline ---
 		orchestrateBook: orchestrateBook({ dataStream }),
 		draftScene: draftScene({ session }),
+		updateSceneContent: updateSceneContent(),
 		updateSceneCards: updateSceneCards({ session }),
 		runDiagnostics: runDiagnostics({ session }),
 		assessReadiness: assessReadiness({
@@ -114,6 +116,7 @@ export const toolList: AgentToolName[] = [
 	// Dynamic Book Pipeline
 	"orchestrateBook",
 	"updateSceneCards",
+	"updateSceneContent",
 	"draftScene",
 	"runDiagnostics",
 	"assessReadiness",
