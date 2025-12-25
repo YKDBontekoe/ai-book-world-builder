@@ -1,5 +1,5 @@
-import { getCached } from "@/lib/cache";
 import type { ChatModel } from "@/lib/ai/models";
+import { getCached } from "@/lib/cache";
 
 export const getOpenRouterModels = async (): Promise<ChatModel[]> => {
 	return getCached(
@@ -28,7 +28,8 @@ export const getOpenRouterModels = async (): Promise<ChatModel[]> => {
 							gatewayId: model.id,
 							description: `Context: ${Math.round((model.context_length || 0) / 1000)}k`,
 							supportsImages: Boolean(supportsImages),
-							reasoning: model.id.includes("reasoner") || model.id.includes("o1"), // Basic heuristic
+							reasoning:
+								model.id.includes("reasoner") || model.id.includes("o1"), // Basic heuristic
 							pricing: {
 								input: model.pricing?.prompt || "0",
 								output: model.pricing?.completion || "0",

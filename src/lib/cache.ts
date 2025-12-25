@@ -68,6 +68,8 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
 		// Scan for keys matching pattern
 		let cursor = 0;
 		do {
+			// Scan returns { cursor: number, keys: string[] } in node-redis v4+
+			// Ensure cursor is treated correctly; scan uses number or string depending on version/config
 			const reply = await redis.scan(cursor, { MATCH: pattern, COUNT: 100 });
 			cursor = reply.cursor;
 			const keys = reply.keys;

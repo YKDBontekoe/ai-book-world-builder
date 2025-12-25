@@ -13,7 +13,15 @@ vi.mock("@/lib/redis", () => ({
 import { getCached, invalidateCache, invalidateCachePattern } from "@/lib/cache";
 import { redis } from "@/lib/redis";
 
-const mockedRedis = vi.mocked(redis!);
+// Define a type for the mocked redis client to satisfy TS
+type MockRedis = {
+	get: ReturnType<typeof vi.fn>;
+	set: ReturnType<typeof vi.fn>;
+	del: ReturnType<typeof vi.fn>;
+	scan: ReturnType<typeof vi.fn>;
+};
+
+const mockedRedis = redis as unknown as MockRedis;
 
 describe("Cache Utils", () => {
 	afterEach(() => {
