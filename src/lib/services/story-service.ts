@@ -7,6 +7,7 @@ import type {
 	BookPlan,
 	StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
+import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
 
 // Re-export types for backward compatibility
 export type {
@@ -69,30 +70,15 @@ export class StoryService {
 		await ensureProjectAccess(targetScene.projectId, true);
 
 		// 2. Build Context
-		const previousScenes = scenesInChapter.filter(
-			(s) => s.sequence < targetScene.sequence,
-		);
-
-		// Get full text of immediate predecessor (for continuity)
-		const lastScene = previousScenes[previousScenes.length - 1];
-		const lastSceneText = lastScene?.content
-			? `[IMMEDIATELY PREVIOUS SCENE - ${lastScene.title}]\n${lastScene.content.slice(-2000)}`
-			: "";
-
-		// Get summaries of earlier scenes (for arc memory)
-		const otherScenesSummary = previousScenes
-			.slice(0, -1)
-			.map((s) => `[SCENE ${s.title}]: ${s.content ? "Completed" : "Planned"}`)
-			.join("\n");
-
-		const chapterContext = `Chapter Title: ${targetChapter.title}\nChapter Summary: ${targetChapter.notes}`;
-		const fullContext = `${chapterContext}\n\nPrevious Scenes Summary:\n${otherScenesSummary}\n\n${lastSceneText}`;
+		const { fullContext, styleInstruction } = buildSceneGenerationContext({
+			targetScene,
+			targetChapter,
+			targetOutline,
+			scenesInChapter,
+		});
 
 		// 3. AI Generation
 		const modelId = await getSelectedModelId("large");
-		const styleInstruction = targetOutline
-			? `${targetOutline.pov}, ${targetOutline.tone}`
-			: undefined;
 
 		// Use generationService instead of raw continueWriting
 		const { text } = await generationService.continueWriting(
