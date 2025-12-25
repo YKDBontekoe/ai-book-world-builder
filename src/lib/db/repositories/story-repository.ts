@@ -1,7 +1,6 @@
 import "server-only";
 import { asc, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
-import { createScene } from "@/lib/db/queries/scene";
 import { chapter, outline, scene, volume } from "@/lib/db/schema";
 import type {
 	BookPlan,
@@ -46,23 +45,31 @@ export class StoryRepository {
 				})
 				.returning();
 
-			// 3. Create Chapters
-			for (let i = 0; i < plan.chapters.length; i++) {
-				const ch = plan.chapters[i];
-				await tx.insert(chapter).values({
-					projectId,
-					volumeId: newVolume.id,
-					outlineId: newOutline.id,
-					title: ch.title,
-					notes: ch.summary,
-					sequence: i + 1,
-					status: "planned",
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				});
+			// 3. Create Chapters (Batch Insert)
+			const chaptersToInsert = plan.chapters.map((ch, i) => ({
+				projectId,
+				volumeId: newVolume.id,
+				outlineId: newOutline.id,
+				title: ch.title,
+				notes: ch.summary,
+				sequence: i + 1,
+				status: "planned" as const, // Explicit cast to match enum if needed, or inferred string
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			}));
+
+			if (chaptersToInsert.length > 0) {
+				await tx.insert(chapter).values(chaptersToInsert);
 			}
 
 			// 4. Create Initial Scene for Chapter 1
+			// We need to fetch the ID of the first chapter created.
+			// Since we did a batch insert without returning (some drivers don't support returning all on batch easily, or we want to keep it simple),
+			// we can query it back or use returning().
+			// Drizzle supports returning() on batch inserts in Postgres.
+			// Let's optimize step 3 to return IDs or just fetch Chapter 1 as before.
+			// Since sequence is deterministic (1), fetching is safe and robust.
+
 			const [chapter1] = await tx
 				.select()
 				.from(chapter)
@@ -114,19 +121,25 @@ export class StoryRepository {
 		chapterId: string,
 		scenesData: { title: string; sequence: number }[],
 	) {
-		const createdIds: string[] = [];
-		for (const data of scenesData) {
-			const newScene = await createScene({
-				projectId: projectId,
-				chapterId,
-				title: data.title,
-				sequence: data.sequence,
-				content: "", // Start empty
-				status: "planned",
-			});
-			createdIds.push(newScene.id);
-		}
-		return createdIds;
+		if (scenesData.length === 0) return [];
+
+		const scenesToInsert = scenesData.map((data) => ({
+			projectId,
+			chapterId,
+			title: data.title,
+			sequence: data.sequence,
+			content: "",
+			status: "planned" as const,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		}));
+
+		const createdScenes = await db
+			.insert(scene)
+			.values(scenesToInsert)
+			.returning({ id: scene.id });
+
+		return createdScenes.map((s) => s.id);
 	}
 
 	async getSceneContextData(sceneId: string) {
@@ -137,28 +150,34 @@ export class StoryRepository {
 			.limit(1);
 		if (!targetScene) throw new Error("Scene not found");
 
-		const [targetChapter] = await db
-			.select()
-			.from(chapter)
-			.where(eq(chapter.id, targetScene.chapterId))
-			.limit(1);
+		// Parallelize independent fetches
+		const [targetChapterResult, scenesInChapter] = await Promise.all([
+			db
+				.select()
+				.from(chapter)
+				.where(eq(chapter.id, targetScene.chapterId))
+				.limit(1),
+			db
+				.select()
+				.from(scene)
+				.where(eq(scene.chapterId, targetScene.chapterId))
+				.orderBy(asc(scene.sequence)),
+		]);
+
+		const targetChapter = targetChapterResult[0];
+		if (!targetChapter) throw new Error("Chapter not found");
+
 		const [targetOutline] = await db
 			.select()
 			.from(outline)
 			.where(eq(outline.id, targetChapter.outlineId))
 			.limit(1);
 
-		const scenes = await db
-			.select()
-			.from(scene)
-			.where(eq(scene.chapterId, targetScene.chapterId))
-			.orderBy(asc(scene.sequence));
-
 		return {
 			targetScene,
 			targetChapter,
 			targetOutline,
-			scenesInChapter: scenes,
+			scenesInChapter,
 		};
 	}
 

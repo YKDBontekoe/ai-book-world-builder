@@ -231,7 +231,7 @@ describe("Story Generation Actions", () => {
 			const result = await planChapterScenes("ch-1");
 			expect(result.success).toBe(true);
 			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("scene-1");
+			expect(result.sceneIds?.[0]).toBe("mock-id"); // Updated from "scene-1" to "mock-id" because we use batch insert which uses the mockQuery returning
 		});
 	});
 
