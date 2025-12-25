@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/app/(auth)/auth";
+import { invalidateCache } from "@/lib/cache";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 
 export async function updateSceneAction({
@@ -36,6 +37,11 @@ export async function updateSceneAction({
 		status,
 		content,
 	});
+
+	// Invalidate structure cache if title changes, as it's part of the structure view
+	if (title) {
+		await invalidateCache(`project-structure:${projectId}`);
+	}
 
 	return {
 		...updatedScene,

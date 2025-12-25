@@ -2,6 +2,7 @@ import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service"; // Use new service
+import { invalidateCache } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 import type {
 	BookPlan,
@@ -27,7 +28,13 @@ export class StoryService {
 		style?: StoryStyle,
 	) {
 		await ensureProjectAccess(projectId, true);
-		return await storyRepository.createBookFromPlan(projectId, plan, style);
+		const result = await storyRepository.createBookFromPlan(
+			projectId,
+			plan,
+			style,
+		);
+		await invalidateCache(`project-structure:${projectId}`);
+		return result;
 	}
 
 	async planChapterScenes(chapterId: string) {
@@ -55,11 +62,15 @@ export class StoryService {
 			sequence: startSequence++,
 		}));
 
-		return await storyRepository.createScenesBatch(
+		const createResult = await storyRepository.createScenesBatch(
 			targetChapter.projectId,
 			chapterId,
 			scenesToCreate,
 		);
+
+		await invalidateCache(`project-structure:${targetChapter.projectId}`);
+
+		return createResult;
 	}
 
 	async generateSceneText(sceneId: string) {
@@ -93,6 +104,8 @@ export class StoryService {
 		// 4. Update DB
 		if (text) {
 			await storyRepository.updateSceneContent(sceneId, text);
+			// Content updates generally don't invalidate structure, but if needed:
+			// await invalidateCache(`project-structure:${targetScene.projectId}`);
 		}
 	}
 }
