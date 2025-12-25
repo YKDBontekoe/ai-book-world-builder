@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { MessageSquare, Redo, Search, Sparkles, Undo } from "lucide-react";
 import { useState } from "react";
-import { useMediaQuery } from "usehooks-ts";
 import { Separator } from "@/components/atoms/separator";
 import {
 	Tooltip,
@@ -26,7 +25,6 @@ export function WriterControlBar() {
 		isSpotlightOpen,
 	} = useWriterControl();
 
-	const isMobile = useMediaQuery("(max-width: 768px)");
 	const { viewMode } = useWriterLayoutContext();
 	const isZen = viewMode === "zen";
 	const [isToolsOpen, setIsToolsOpen] = useState(false);
@@ -54,7 +52,7 @@ export function WriterControlBar() {
 			<motion.div
 				className={cn(
 					"left-1/2 -translate-x-1/2 z-50",
-					isMobile ? "fixed bottom-6" : "absolute bottom-8",
+					"fixed bottom-6 md:absolute md:bottom-8",
 					isZen && "hover:opacity-100 transition-opacity duration-300",
 				)}
 				initial="hidden"
