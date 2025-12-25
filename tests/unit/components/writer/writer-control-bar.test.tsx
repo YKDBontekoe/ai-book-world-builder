@@ -1,4 +1,3 @@
-
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { WriterControlBar } from "@/components/organisms/writer/writer-control-bar";
@@ -26,7 +25,13 @@ vi.mock("@/components/organisms/writer/tools/ai-tools-menu", () => ({
 
 // Mock GlassCard since it might use complex Framer Motion or other things
 vi.mock("@/components/molecules/glass-card", () => ({
-	GlassCard: ({ children, className }: any) => (
+	GlassCard: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => (
 		<div className={className} data-testid="glass-card">
 			{children}
 		</div>
