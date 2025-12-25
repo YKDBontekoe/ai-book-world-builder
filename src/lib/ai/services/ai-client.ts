@@ -145,6 +145,7 @@ export const aiClient = {
 				system: params.options?.system,
 				prompt: params.prompt,
 				temperature: params.options?.temperature,
+				maxTokens: params.options?.maxTokens,
 			});
 
 			return aiSuccess({ text: result.text });
@@ -182,6 +183,7 @@ export const aiClient = {
 				schema: params.schema,
 				prompt: params.prompt,
 				temperature: params.options?.temperature,
+				maxTokens: params.options?.maxTokens,
 			});
 
 			return aiSuccess({ object: result.object });
@@ -217,6 +219,7 @@ export const aiClient = {
 				system: params.options?.system,
 				prompt: params.prompt,
 				temperature: params.options?.temperature,
+				maxTokens: params.options?.maxTokens,
 			});
 
 			// Collect chunks if callback provided

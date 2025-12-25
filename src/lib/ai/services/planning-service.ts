@@ -27,6 +27,7 @@ export class PlanningService extends BaseAIService {
 		const result = await this.generateObject(promptText, bookPlanSchema, {
 			modelId,
 			modelRole: "orchestrator",
+			maxTokens: 4000,
 		});
 
 		if (!result.success) {
@@ -49,6 +50,7 @@ export class PlanningService extends BaseAIService {
 		const result = await this.generateObject(prompt, scenePlanSchema, {
 			modelId,
 			modelRole: "orchestrator",
+			maxTokens: 2000,
 		});
 
 		if (!result.success) {
