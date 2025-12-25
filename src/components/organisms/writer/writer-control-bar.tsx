@@ -53,8 +53,8 @@ export function WriterControlBar() {
 		<TooltipProvider>
 			<motion.div
 				className={cn(
-					"absolute left-1/2 -translate-x-1/2 z-50",
-					isMobile ? "bottom-4" : "bottom-8",
+					"left-1/2 -translate-x-1/2 z-50",
+					isMobile ? "fixed bottom-6" : "absolute bottom-8",
 					isZen && "hover:opacity-100 transition-opacity duration-300",
 				)}
 				initial="hidden"
