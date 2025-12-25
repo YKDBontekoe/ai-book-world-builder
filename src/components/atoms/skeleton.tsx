@@ -1,5 +1,3 @@
-"use client";
-
 import { FadeIn } from "@/components/atoms/animated";
 import { cn } from "@/lib/utils";
 
