@@ -11186,7 +11186,7 @@ snapshots:
 
   prosemirror-transform@1.10.5:
     dependencies:
-      prosemirror-model: 1.24.1
+      prosemirror-model: 1.25.4
 
   prosemirror-view@1.38.1:
     dependencies:

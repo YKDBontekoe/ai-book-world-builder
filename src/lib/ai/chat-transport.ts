@@ -1,7 +1,29 @@
 import { DefaultChatTransport } from "ai";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import { ChatSDKError, type ErrorCode } from "@/lib/errors";
 import type { ChatModelId } from "@/lib/ai/models";
-import { fetchWithErrorHandlers } from "@/lib/utils";
+
+async function fetchWithErrorHandlers(
+	input: RequestInfo | URL,
+	init?: RequestInit,
+) {
+	try {
+		const response = await fetch(input, init);
+
+		if (!response.ok) {
+			const { code, cause } = await response.json();
+			throw new ChatSDKError(code as ErrorCode, cause);
+		}
+
+		return response;
+	} catch (error: unknown) {
+		if (typeof navigator !== "undefined" && !navigator.onLine) {
+			throw new ChatSDKError("offline:chat");
+		}
+
+		throw error;
+	}
+}
 
 interface CreateChatTransportOptions {
 	getProjectId: () => string | null;
