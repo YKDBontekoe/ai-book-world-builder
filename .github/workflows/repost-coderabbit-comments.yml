@@ -26,5 +26,10 @@ jobs:
             exit 1
           fi
 
+          # Prepare the comment body
+          echo "Jules check this out" > new_comment.md
+          echo "" >> new_comment.md
+          echo "$COMMENT_BODY" | sed 's/^/> /' >> new_comment.md
+
           echo "Reposting comment from CodeRabbit on Issue/PR #$ISSUE_NUMBER"
-          gh issue comment "$ISSUE_NUMBER" --body "$COMMENT_BODY"
+          gh issue comment "$ISSUE_NUMBER" --body-file new_comment.md
