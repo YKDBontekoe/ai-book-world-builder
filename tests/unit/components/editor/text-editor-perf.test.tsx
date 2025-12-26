@@ -63,18 +63,6 @@ vi.mock("@/lib/editor/config", () => ({
 	headingRule: vi.fn(),
 }));
 
-vi.mock("@/lib/editor/config", () => ({
-	documentSchema: {},
-	handleTransaction: vi.fn(),
-	headingRule: vi.fn(),
-}));
-
-vi.mock("@/lib/editor/functions", () => ({
-	buildContentFromDocument: vi.fn(() => ""),
-	buildDocumentFromContent: vi.fn(() => ({ content: {} })),
-	createDecorations: vi.fn(() => []),
-}));
-
 vi.mock("@/lib/editor/functions", () => ({
 	buildContentFromDocument: vi.fn(() => ""),
 	buildDocumentFromContent: vi.fn(() => ({ content: {} })),
@@ -85,16 +73,6 @@ vi.mock("@/lib/editor/suggestions", () => ({
 	projectWithPositions: vi.fn(() => []),
 	suggestionsPlugin: {},
 	suggestionsPluginKey: "suggestions",
-}));
-
-vi.mock("@/lib/editor/suggestions", () => ({
-	projectWithPositions: vi.fn(() => []),
-	suggestionsPlugin: {},
-	suggestionsPluginKey: "suggestions",
-}));
-
-vi.mock("@/components/organisms/writer/tools/editor-bubble-menu", () => ({
-	EditorBubbleMenu: () => null,
 }));
 
 vi.mock("@/components/organisms/writer/tools/editor-bubble-menu", () => ({
@@ -117,6 +95,10 @@ describe("Editor Performance", () => {
 				suggestions={[]}
 			/>,
 		);
+
+		// Clear initial mount call if Strict Mode is on (mount -> unmount -> mount)
+		// Or if normal mount doesn't call destroy (it shouldn't)
+		mockDestroy.mockClear();
 
 		// Rerender with different content
 		rerender(
