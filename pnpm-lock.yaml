@@ -264,8 +264,8 @@ importers:
         specifier: 19.2.3
         version: 19.2.3
       react-data-grid:
-        specifier: 7.0.0-beta.47
-        version: 7.0.0-beta.47(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: 7.0.0-beta.59
+        version: 7.0.0-beta.59(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-dom:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
@@ -5187,11 +5187,11 @@ packages:
       '@types/react-dom':
         optional: true
 
-  react-data-grid@7.0.0-beta.47:
-    resolution: {integrity: sha512-28kjsmwQGD/9RXYC50zn5Zv/SQMhBBoSvG5seq0fM8XXi9TZ0zr9Z5T3YJqLwcEtoNzTOq3y0njkmdujGkIwQQ==}
+  react-data-grid@7.0.0-beta.59:
+    resolution: {integrity: sha512-iAp/UYWjfmXYFsyKDtGDMP1IvhwtQSjCP6G/wFEbMNuumWGOEZF8Ut1S2Bp4XxVpOrBkEVKXn+QC3rs14AcB7A==}
     peerDependencies:
-      react: ^18.0 || ^19.0
-      react-dom: ^18.0 || ^19.0
+      react: ^19.2
+      react-dom: ^19.2
 
   react-docgen-typescript@2.4.0:
     resolution: {integrity: sha512-ZtAp5XTO5HRzQctjPU0ybY0RRCQO19X/8fxn3w7y2VVTUbGHDKULPTL4ky3vB05euSgG5NpALhEhDPvQ56wvXg==}
@@ -11061,9 +11061,8 @@ snapshots:
       '@types/react': 18.3.27
       '@types/react-dom': 18.3.7(@types/react@18.3.27)
 
-  react-data-grid@7.0.0-beta.47(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-data-grid@7.0.0-beta.59(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      clsx: 2.1.1
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
