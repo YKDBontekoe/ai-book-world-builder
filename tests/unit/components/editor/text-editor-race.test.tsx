@@ -66,12 +66,6 @@ vi.mock("@/lib/editor/config", () => ({
 	headingRule: vi.fn(),
 }));
 
-vi.mock("@/lib/editor/config", () => ({
-	documentSchema: {},
-	handleTransaction: vi.fn(),
-	headingRule: vi.fn(),
-}));
-
 // We need to control buildContentFromDocument to simulate the divergence
 vi.mock("@/lib/editor/functions", () => ({
 	buildContentFromDocument: vi.fn(() => "original"), // Editor always thinks it has "original"
@@ -79,26 +73,10 @@ vi.mock("@/lib/editor/functions", () => ({
 	createDecorations: vi.fn(() => []),
 }));
 
-vi.mock("@/lib/editor/functions", () => ({
-	buildContentFromDocument: vi.fn(() => "original"),
-	buildDocumentFromContent: vi.fn(() => ({ content: {} })),
-	createDecorations: vi.fn(() => []),
-}));
-
 vi.mock("@/lib/editor/suggestions", () => ({
 	projectWithPositions: vi.fn(() => []),
 	suggestionsPlugin: {},
 	suggestionsPluginKey: "suggestions",
-}));
-
-vi.mock("@/lib/editor/suggestions", () => ({
-	projectWithPositions: vi.fn(() => []),
-	suggestionsPlugin: {},
-	suggestionsPluginKey: "suggestions",
-}));
-
-vi.mock("@/components/organisms/writer/tools/editor-bubble-menu", () => ({
-	EditorBubbleMenu: () => null,
 }));
 
 vi.mock("@/components/organisms/writer/tools/editor-bubble-menu", () => ({
@@ -124,6 +102,9 @@ describe("Editor Race Condition", () => {
 			/>,
 		);
 
+		// Clear calls from initial render
+		mockReplaceWith.mockClear();
+
 		// Rerender with different content
 		rerender(
 			<Editor
@@ -137,6 +118,7 @@ describe("Editor Race Condition", () => {
 		);
 
 		// Should overwrite because we are not focused
+		// The sync effect runs because content changed
 		expect(mockReplaceWith).toHaveBeenCalled();
 	});
 
@@ -152,6 +134,8 @@ describe("Editor Race Condition", () => {
 				suggestions={[]}
 			/>,
 		);
+
+		mockReplaceWith.mockClear();
 
 		// Rerender with different content
 		rerender(
