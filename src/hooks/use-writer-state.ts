@@ -149,9 +149,9 @@ export function useWriterState({
 	}, [projectId, fetchStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
 	// Actually, if initialStructure changes, the other useEffect handles it. This one handles missing initialStructure.
 
-	const debouncedSave = useDebounceCallback(
-		async (content: string, id: string) => {
-			setIsSaving(true);
+	const performSave = async (content: string, id: string, retryCount = 0) => {
+		setIsSaving(true);
+		try {
 			const result = await updateSceneContent(id, content);
 			setIsSaving(false);
 			if (result.success) {
@@ -167,8 +167,46 @@ export function useWriterState({
 						: null,
 				);
 			} else {
-				toast.error("Failed to save changes");
+				// Retry up to 2 times with exponential backoff
+				if (retryCount < 2) {
+					setTimeout(() => {
+						performSave(content, id, retryCount + 1);
+					}, 1000 * Math.pow(2, retryCount));
+				} else {
+					toast.error("Failed to save changes. Please try again.", {
+						duration: 5000,
+						action: {
+							label: "Retry",
+							onClick: () => {
+								performSave(content, id, 0);
+							},
+						},
+					});
+				}
 			}
+		} catch (error) {
+			setIsSaving(false);
+			if (retryCount < 2) {
+				setTimeout(() => {
+					performSave(content, id, retryCount + 1);
+				}, 1000 * Math.pow(2, retryCount));
+			} else {
+				toast.error("Failed to save changes. Please check your connection.", {
+					duration: 5000,
+					action: {
+						label: "Retry",
+						onClick: () => {
+							performSave(content, id, 0);
+						},
+					},
+				});
+			}
+		}
+	};
+
+	const debouncedSave = useDebounceCallback(
+		(content: string, id: string) => {
+			performSave(content, id, 0);
 		},
 		1000,
 	);
