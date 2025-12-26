@@ -16,6 +16,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Set global memory limit for all jobs to prevent Heap errors
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
 jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
@@ -34,6 +38,9 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    env:
+      # Next.js specific memory saver
+      GENERATE_SOURCEMAP: false 
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
@@ -67,28 +74,21 @@ jobs:
       - name: Check for merge conflicts
         run: |
           git fetch origin ${{ github.base_ref }}
-          # Try to merge the target branch into the PR branch without actually committing
-          # If it fails, there's a conflict
-          git merge-tree --write-tree HEAD origin/${{ github.base_ref }} > /dev/null || (echo "❌ Merge conflict detected with ${{ github.base_ref }}" && exit 1)
-          echo "✅ No merge conflicts with ${{ github.base_ref }}"
+          git merge-tree --write-tree HEAD origin/${{ github.base_ref }} > /dev/null || (echo "❌ Merge conflict detected" && exit 1)
+          echo "✅ No merge conflicts"
 
-  # Summary job for PR status checks - single required check
   ci-success:
     runs-on: ubuntu-latest
     needs: [lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
     if: always()
     steps:
-      - name: Check all jobs passed
+      - name: Evaluate Results
         run: |
-          if [[ "${{ contains(needs.*.result, 'failure') }}" == "true" ]]; then
-            echo "❌ Some CI jobs failed"
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "CI pipeline failed."
             exit 1
           fi
-          if [[ "${{ contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
-            echo "⚠️ Some CI jobs were cancelled"
-            exit 1
-          fi
-          echo "✅ All CI jobs passed!"
+          echo "CI pipeline passed!"
 
   notify-failure:
     runs-on: ubuntu-latest
@@ -103,18 +103,15 @@ jobs:
       - name: Notify @jules
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          LINT_RESULT: ${{ needs.lint-and-typecheck.result }}
-          UNIT_TEST_RESULT: ${{ needs.unit-tests.result }}
-          BUILD_RESULT: ${{ needs.build.result }}
-          DB_RESULT: ${{ needs.db-check.result }}
-          CONFLICT_RESULT: ${{ needs.check-conflicts.result }}
+          RESULTS: ${{ toJson(needs) }}
         run: |
-          failures=""
-          if [[ "$LINT_RESULT" == "failure" || "$LINT_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Lint & Typecheck\n"; fi
-          if [[ "$UNIT_TEST_RESULT" == "failure" || "$UNIT_TEST_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Unit Tests\n"; fi
-          if [[ "$BUILD_RESULT" == "failure" || "$BUILD_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Build\n"; fi
-          if [[ "$DB_RESULT" == "failure" || "$DB_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 DB Check\n"; fi
-          if [[ "$CONFLICT_RESULT" == "failure" || "$CONFLICT_RESULT" == "cancelled" ]]; then failures="${failures}- 🛑 Merge Conflict (fix with target branch)\n"; fi
-          
-          echo -e "Jules, the following checks failed on this PR:\n\n$failures\n**Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease take a look! 🔍" > message.txt
+          MESSAGE="Jules, the following checks failed on this PR:"
+          for job in $(echo $RESULTS | jq -r 'keys[]'); do
+            result=$(echo $RESULTS | jq -r ".$job.result")
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              MESSAGE="$MESSAGE\n- 🛑 $job"
+            fi
+          done
+          MESSAGE="$MESSAGE\n\n**Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease take a look! 🔍"
+          echo -e "$MESSAGE" > message.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}
