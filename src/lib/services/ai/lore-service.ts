@@ -40,7 +40,7 @@ export const loreService = {
 		prompt: string,
 		category: string = "lore",
 	) {
-		await ensureProjectAccess(projectId, true);
+		await ensureProjectAccess(projectId);
 
 		const { object } = await generateObject({
 			model: openrouter(await getSelectedModelId("large")),
