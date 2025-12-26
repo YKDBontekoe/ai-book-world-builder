@@ -14,6 +14,17 @@ interface AutocompleteSuggestion {
 	reason: string;
 }
 
+interface APIResponseSuggestion {
+	label: string;
+	prompt: string;
+	type: string;
+	reasoning?: string;
+}
+
+interface APIResponse {
+	suggestions: APIResponseSuggestion[];
+}
+
 export function AIAutocomplete({
 	onSelect,
 	onDismiss,
@@ -51,7 +62,7 @@ export function AIAutocomplete({
 				const recentContext = sentences.slice(-3).join(" ");
 
 				// Call AI to generate continuation suggestions
-				const response = await api.post<{ suggestions: AutocompleteSuggestion[] }>(
+				const response = await api.post<APIResponse>(
 					"/api/ai-suggestions",
 					{
 						projectId: project.id,
@@ -65,9 +76,9 @@ export function AIAutocomplete({
 					},
 				);
 
-				if (response && Array.isArray(response)) {
+				if (response && Array.isArray(response?.suggestions)) {
 					// Transform suggestions format
-					const transformed = response.slice(0, 3).map((s: any, i: number) => ({
+					const transformed = response.suggestions.slice(0, 3).map((s: APIResponseSuggestion, i: number) => ({
 						text: s.prompt || s.label || "",
 						reason: s.reasoning || `Suggestion ${i + 1}`,
 					}));
