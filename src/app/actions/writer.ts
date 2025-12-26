@@ -425,7 +425,7 @@ export async function updateLastViewedScene(
 export async function updateChapterTitle(
 	chapterId: string,
 	title: string,
-) {
+): Promise<{ success: boolean; error?: string }> {
 	try {
 		const [currentChapter] = await db
 			.select()
