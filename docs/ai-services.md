@@ -35,6 +35,61 @@ RAG is primarily used for:
 1.  **Chat**: Quickly finding relevant entities in a large project during a chat session.
 2.  **Consistency Checks**: Verifying specific details against a large corpus.
 
+## Analysis Architecture
+
+The project features a multi-layered architecture for analyzing books and extracting structured data (Entities, Relationships).
+
+### 1. Business Logic Orchestrator (`lib/services/book-analysis-service.ts`)
+This is the high-level service consumed by Server Actions. It manages the analysis pipeline state and database transactions.
+-   **Responsibility**:
+    -   Verifies source material status.
+    -   Prevents duplicate entity creation (filters against existing project entities).
+    -   Orchestrates the 3-pass process (Detect -> Extract -> Infer).
+    -   Saves results (Entities, Attributes, Relationships) to the database.
+
+### 2. AI Service Wrapper (`lib/ai/services/analysis-service.ts`)
+This layer handles the direct interaction with the LLM. It extends `BaseAIService` and encapsulates the prompt engineering and RAG logic.
+-   **Key Methods**:
+    -   `detectEntities(sourceMaterialId)`: Scans sampled chunks to identify potential entities.
+    -   `extractDetails(name, kind, sourceMaterialId)`: Uses RAG to find relevant text and extract detailed attributes/quotes.
+    -   `inferRelationships(entities, sourceMaterialId)`: Analyzes co-occurrence of entities to infer relationships.
+
+### Data Flow
+```mermaid
+sequenceDiagram
+    participant Action as Server Action
+    participant Biz as BookAnalysisService
+    participant AI as AnalysisService (AI)
+    participant DB as Database
+
+    Action->>Biz: analyzeBook(sourceId)
+    Biz->>DB: Get Existing Entities
+
+    rect rgb(240, 248, 255)
+        Note right of Biz: Pass 1: Detection
+        Biz->>AI: detectEntities()
+        AI-->>Biz: DetectedEntity[]
+    end
+
+    rect rgb(255, 250, 240)
+        Note right of Biz: Pass 2: Extraction
+        loop For Top 20 Entities
+            Biz->>AI: extractDetails()
+            AI-->>Biz: EntityDetails
+            Biz->>DB: Create Entity + Attributes
+        end
+    end
+
+    rect rgb(240, 255, 240)
+        Note right of Biz: Pass 3: Relationships
+        Biz->>AI: inferRelationships()
+        AI-->>Biz: InferredRelationship[]
+        Biz->>DB: Create Relationships
+    end
+
+    Biz-->>Action: AnalysisResult
+```
+
 ## Chat Transport Layer
 
 The `ChatTransport` (`lib/ai/chat-transport.ts`) serves as the abstraction layer between the UI and the Vercel AI SDK.
