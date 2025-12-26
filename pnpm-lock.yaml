@@ -244,7 +244,7 @@ importers:
         version: 1.25.4
       prosemirror-placeholder:
         specifier: ^1.0.7
-        version: 1.0.7(prosemirror-state@1.4.3)(prosemirror-view@1.38.1)
+        version: 1.0.7(prosemirror-state@1.4.4)(prosemirror-view@1.38.1)
       prosemirror-schema-basic:
         specifier: ^1.2.3
         version: 1.2.3
@@ -253,7 +253,7 @@ importers:
         version: 1.5.1
       prosemirror-state:
         specifier: ^1.4.3
-        version: 1.4.3
+        version: 1.4.4
       prosemirror-view:
         specifier: ^1.34.3
         version: 1.38.1
@@ -5154,8 +5154,8 @@ packages:
   prosemirror-schema-list@1.5.1:
     resolution: {integrity: sha512-927lFx/uwyQaGwJxLWCZRkjXG0p48KpMj6ueoYiu4JX05GGuGcgzAy62dfiV8eFZftgyBUvLx76RsMe20fJl+Q==}
 
-  prosemirror-state@1.4.3:
-    resolution: {integrity: sha512-goFKORVbvPuAQaXhpbemJFRKJ2aixr+AZMGiquiqKxaucC6hlpHNZHWgz5R7dS4roHiwq9vDctE//CZ++o0W1Q==}
+  prosemirror-state@1.4.4:
+    resolution: {integrity: sha512-6jiYHH2CIGbCfnxdHbXZ12gySFY/fz/ulZE333G6bPqIZ4F+TXo9ifiR86nAHpWnfoNjOb3o5ESi7J8Uz1jXHw==}
 
   prosemirror-transform@1.10.3:
     resolution: {integrity: sha512-Nhh/+1kZGRINbEHmVu39oynhcap4hWTs/BlU7NnxWj3+l0qi8I1mu67v6mMdEe/ltD8hHvU4FV6PHiCw2VSpMw==}
@@ -10897,12 +10897,12 @@ snapshots:
   prosemirror-commands@1.7.0:
     dependencies:
       prosemirror-model: 1.25.4
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-transform: 1.10.5
 
   prosemirror-dropcursor@1.8.1:
     dependencies:
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-transform: 1.10.5
       prosemirror-view: 1.38.1
 
@@ -10916,30 +10916,30 @@ snapshots:
       prosemirror-keymap: 1.2.2
       prosemirror-menu: 1.2.4
       prosemirror-schema-list: 1.5.1
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
 
   prosemirror-gapcursor@1.3.2:
     dependencies:
       prosemirror-keymap: 1.2.2
       prosemirror-model: 1.25.4
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-view: 1.38.1
 
   prosemirror-history@1.5.0:
     dependencies:
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-transform: 1.10.3
       prosemirror-view: 1.38.1
       rope-sequence: 1.3.4
 
   prosemirror-inputrules@1.5.1:
     dependencies:
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-transform: 1.10.5
 
   prosemirror-keymap@1.2.2:
     dependencies:
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       w3c-keyname: 2.2.8
 
   prosemirror-markdown@1.13.1:
@@ -10953,15 +10953,15 @@ snapshots:
       crelt: 1.0.6
       prosemirror-commands: 1.7.0
       prosemirror-history: 1.5.0
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
 
   prosemirror-model@1.25.4:
     dependencies:
       orderedmap: 2.1.1
 
-  prosemirror-placeholder@1.0.7(prosemirror-state@1.4.3)(prosemirror-view@1.38.1):
+  prosemirror-placeholder@1.0.7(prosemirror-state@1.4.4)(prosemirror-view@1.38.1):
     dependencies:
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-view: 1.38.1
 
   prosemirror-schema-basic@1.2.3:
@@ -10971,13 +10971,13 @@ snapshots:
   prosemirror-schema-list@1.5.1:
     dependencies:
       prosemirror-model: 1.25.4
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-transform: 1.10.3
 
-  prosemirror-state@1.4.3:
+  prosemirror-state@1.4.4:
     dependencies:
       prosemirror-model: 1.25.4
-      prosemirror-transform: 1.10.3
+      prosemirror-transform: 1.10.5
       prosemirror-view: 1.38.1
 
   prosemirror-transform@1.10.3:
@@ -10991,7 +10991,7 @@ snapshots:
   prosemirror-view@1.38.1:
     dependencies:
       prosemirror-model: 1.25.4
-      prosemirror-state: 1.4.3
+      prosemirror-state: 1.4.4
       prosemirror-transform: 1.10.3
 
   punycode.js@2.3.1: {}
