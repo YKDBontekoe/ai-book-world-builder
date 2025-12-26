@@ -44,11 +44,12 @@ export async function getProjectPreviewData(
 
 	try {
 		// 1. Get Counts
-		// We can do this with aggregate queries
-		const [sceneStats] = await db
+		// Using array_length of regex split for approximate word count
+		// CAST(COALESCE(...) AS INTEGER) ensures we get a number back
+		const [stats] = await db
 			.select({
-				count: sql<number>`count(*)`,
-				words: sql<number>`sum(${scene.words})`,
+				sceneCount: sql<number>`count(*)`,
+				wordCount: sql<number>`COALESCE(sum(array_length(regexp_split_to_array(trim(${scene.content}), '\s+'), 1)), 0)`,
 			})
 			.from(scene)
 			.where(eq(scene.projectId, projectId));
@@ -61,48 +62,56 @@ export async function getProjectPreviewData(
 			.where(eq(chapter.projectId, projectId));
 
 		// 2. Get Recent Activity (Last updated scene)
-		const recentScene = await db.query.scene.findFirst({
-			where: eq(scene.projectId, projectId),
-			orderBy: [desc(scene.updatedAt)],
-			with: {
-				chapter: true,
-			},
-		});
+		const [recentScene] = await db
+			.select({
+				id: scene.id,
+				title: scene.title,
+				updatedAt: scene.updatedAt,
+				chapterTitle: chapter.title,
+			})
+			.from(scene)
+			.innerJoin(chapter, eq(scene.chapterId, chapter.id))
+			.where(eq(scene.projectId, projectId))
+			.orderBy(desc(scene.updatedAt))
+			.limit(1);
 
 		// 3. Get Structure Summary (First 5 chapters)
-		const chapters = await db.query.chapter.findMany({
-			where: eq(chapter.projectId, projectId),
-			orderBy: [sql`${chapter.sequence} asc`],
-			limit: 5,
-			with: {
-				scenes: {
-					columns: {
-						id: true,
-					},
-				},
-			},
-		});
+		// We'll just get the chapters first, then count scenes for them.
+		// A single group by query is better.
+		const chapters = await db
+			.select({
+				id: chapter.id,
+				title: chapter.title,
+				sequence: chapter.sequence,
+				sceneCount: sql<number>`count(${scene.id})`,
+			})
+			.from(chapter)
+			.leftJoin(scene, eq(chapter.id, scene.chapterId))
+			.where(eq(chapter.projectId, projectId))
+			.groupBy(chapter.id, chapter.title, chapter.sequence)
+			.orderBy(chapter.sequence)
+			.limit(5);
 
 		return {
 			success: true,
 			data: {
 				counts: {
 					chapters: Number(chapterStats?.count || 0),
-					scenes: Number(sceneStats?.count || 0),
-					words: Number(sceneStats?.words || 0),
+					scenes: Number(stats?.sceneCount || 0),
+					words: Number(stats?.wordCount || 0),
 				},
 				recentActivity: recentScene
 					? {
 							sceneId: recentScene.id,
 							sceneTitle: recentScene.title,
-							chapterTitle: recentScene.chapter.title,
+							chapterTitle: recentScene.chapterTitle,
 							updatedAt: recentScene.updatedAt,
 						}
 					: null,
 				structure: chapters.map((c) => ({
 					id: c.id,
 					title: c.title,
-					sceneCount: c.scenes.length,
+					sceneCount: Number(c.sceneCount),
 				})),
 			},
 		};
