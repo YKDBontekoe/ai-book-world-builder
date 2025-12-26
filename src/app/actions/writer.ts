@@ -546,7 +546,7 @@ export async function updateSceneTitle(
 	}
 }
 
-export async function deleteScene(sceneId: string) {
+export async function deleteScene(sceneId: string): Promise<{ success: boolean; error?: string }> {
 	try {
 		const targetScene = await sceneRepository.findById(sceneId);
 
