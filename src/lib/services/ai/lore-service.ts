@@ -3,6 +3,7 @@ import "server-only";
 import { generateObject } from "ai";
 import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
+import { getSelectedModelId } from "@/lib/ai/models";
 import { openrouter } from "@/lib/ai/providers";
 import { generationService } from "@/lib/ai/writer-service";
 import {
@@ -42,7 +43,7 @@ export const loreService = {
 		await ensureProjectAccess(projectId);
 
 		const { object } = await generateObject({
-			model: openrouter("google/gemini-2.0-flash-001"),
+			model: openrouter(await getSelectedModelId("large")),
 			schema: loreSchema,
 			prompt: `
         Create a new world-building entity for a story.

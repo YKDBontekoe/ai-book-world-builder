@@ -2,6 +2,7 @@ import "server-only";
 
 import { generateObject } from "ai";
 import { z } from "zod";
+import { getSelectedModelId } from "@/lib/ai/models";
 import { openrouter } from "@/lib/ai/providers";
 import { getEntitiesForProject, getScenesForChapter } from "@/lib/db/queries";
 import { verifyProjectAccessViaScenes } from "./utils";
@@ -59,7 +60,7 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
-			model: openrouter("google/gemini-2.0-flash-001"),
+			model: openrouter(await getSelectedModelId("large")),
 			schema: critiqueSchema,
 			prompt,
 		});
@@ -107,7 +108,7 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
-			model: openrouter("google/gemini-2.0-flash-001"),
+			model: openrouter(await getSelectedModelId("large")),
 			schema: consistencySchema,
 			prompt,
 		});
