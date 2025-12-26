@@ -12,8 +12,11 @@ import {
 	createVolumePlan,
 	getVolumePlansForProject,
 } from "@/lib/db/queries/volume";
-import { sceneRepository } from "@/lib/db/repositories";
-import { chapter, chapterVersion, project } from "@/lib/db/schema";
+import {
+	chapterRepository,
+	sceneRepository,
+} from "@/lib/db/repositories";
+import { chapter, chapterVersion, project, scene } from "@/lib/db/schema";
 
 export async function getProjectStructure(projectId: string) {
 	try {
@@ -416,5 +419,237 @@ export async function updateLastViewedScene(
 	} catch (error) {
 		console.error("Failed to update last viewed scene", error);
 		return { success: false };
+	}
+}
+
+export async function updateChapterTitle(
+	chapterId: string,
+	title: string,
+) {
+	try {
+		const [currentChapter] = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.id, chapterId))
+			.limit(1);
+
+		if (!currentChapter) {
+			return { success: false, error: "Chapter not found" };
+		}
+
+		await ensureProjectAccess(currentChapter.projectId, true);
+
+		await chapterRepository.update(chapterId, { title });
+
+		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to update chapter title", error);
+		return { success: false, error: "Failed to update chapter title" };
+	}
+}
+
+export async function reorderScenes(
+	sceneIds: string[],
+	chapterId: string,
+) {
+	try {
+		const [currentChapter] = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.id, chapterId))
+			.limit(1);
+
+		if (!currentChapter) {
+			return { success: false, error: "Chapter not found" };
+		}
+
+		await ensureProjectAccess(currentChapter.projectId, true);
+
+		// Update sequences in a transaction
+		await db.transaction(async (tx) => {
+			for (let i = 0; i < sceneIds.length; i++) {
+				await tx
+					.update(scene)
+					.set({ sequence: i + 1, updatedAt: new Date() })
+					.where(eq(scene.id, sceneIds[i]));
+			}
+		});
+
+		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to reorder scenes", error);
+		return { success: false, error: "Failed to reorder scenes" };
+	}
+}
+
+export async function reorderChapters(
+	chapterIds: string[],
+	volumeId: string,
+) {
+	try {
+		const [firstChapter] = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.id, chapterIds[0]))
+			.limit(1);
+
+		if (!firstChapter || firstChapter.volumeId !== volumeId) {
+			return { success: false, error: "Invalid chapter or volume" };
+		}
+
+		await ensureProjectAccess(firstChapter.projectId, true);
+
+		// Update sequences in a transaction
+		await db.transaction(async (tx) => {
+			for (let i = 0; i < chapterIds.length; i++) {
+				await tx
+					.update(chapter)
+					.set({ sequence: i + 1, updatedAt: new Date() })
+					.where(eq(chapter.id, chapterIds[i]));
+			}
+		});
+
+		await invalidateCache(`project-structure:${firstChapter.projectId}`);
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to reorder chapters", error);
+		return { success: false, error: "Failed to reorder chapters" };
+	}
+}
+
+export async function updateSceneTitle(
+	sceneId: string,
+	title: string,
+) {
+	try {
+		const targetScene = await sceneRepository.findById(sceneId);
+
+		if (!targetScene) {
+			return { success: false, error: "Scene not found" };
+		}
+
+		await ensureProjectAccess(targetScene.projectId, true);
+
+		await sceneRepository.update(sceneId, { title });
+
+		await invalidateCache(`project-structure:${targetScene.projectId}`);
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to update scene title", error);
+		return { success: false, error: "Failed to update scene title" };
+	}
+}
+
+export async function deleteScene(sceneId: string) {
+	try {
+		const targetScene = await sceneRepository.findById(sceneId);
+
+		if (!targetScene) {
+			return { success: false, error: "Scene not found" };
+		}
+
+		await ensureProjectAccess(targetScene.projectId, true);
+
+		await sceneRepository.delete(sceneId);
+
+		await invalidateCache(`project-structure:${targetScene.projectId}`);
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to delete scene", error);
+		return { success: false, error: "Failed to delete scene" };
+	}
+}
+
+export async function deleteChapter(chapterId: string) {
+	try {
+		const [currentChapter] = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.id, chapterId))
+			.limit(1);
+
+		if (!currentChapter) {
+			return { success: false, error: "Chapter not found" };
+		}
+
+		await ensureProjectAccess(currentChapter.projectId, true);
+
+		await chapterRepository.delete(chapterId);
+
+		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to delete chapter", error);
+		return { success: false, error: "Failed to delete chapter" };
+	}
+}
+
+export async function createSceneInChapter(
+	chapterId: string,
+	title: string,
+	insertAfterSceneId?: string,
+) {
+	try {
+		const [currentChapter] = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.id, chapterId))
+			.limit(1);
+
+		if (!currentChapter) {
+			return { success: false, error: "Chapter not found" };
+		}
+
+		await ensureProjectAccess(currentChapter.projectId, true);
+
+		const scenes = await sceneRepository.findByChapter(chapterId);
+		let newSequence = scenes.length + 1;
+		let prevSceneId: string | undefined;
+
+		if (insertAfterSceneId) {
+			const insertAfterScene = scenes.find((s) => s.id === insertAfterSceneId);
+			if (insertAfterScene) {
+				newSequence = insertAfterScene.sequence + 1;
+				prevSceneId = insertAfterScene.id;
+				// Shift subsequent scenes
+				await db.transaction(async (tx) => {
+					for (const s of scenes) {
+						if (s.sequence >= newSequence) {
+							await tx
+								.update(scene)
+								.set({ sequence: s.sequence + 1, updatedAt: new Date() })
+								.where(eq(scene.id, s.id));
+						}
+					}
+				});
+			}
+		} else if (scenes.length > 0) {
+			prevSceneId = scenes[scenes.length - 1].id;
+		}
+
+		const newScene = await sceneRepository.create({
+			projectId: currentChapter.projectId,
+			chapterId,
+			title,
+			sequence: newSequence,
+			content: "",
+			status: "planned",
+			prevSceneId,
+		});
+
+		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+
+		return { success: true, sceneId: newScene.id };
+	} catch (error) {
+		console.error("Failed to create scene", error);
+		return { success: false, error: "Failed to create scene" };
 	}
 }
