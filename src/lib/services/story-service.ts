@@ -2,11 +2,13 @@ import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service"; // Use new service
+import { invalidateCache } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 import type {
 	BookPlan,
 	StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
+import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
 
 // Re-export types for backward compatibility
 export type {
@@ -26,7 +28,13 @@ export class StoryService {
 		style?: StoryStyle,
 	) {
 		await ensureProjectAccess(projectId, true);
-		return await storyRepository.createBookFromPlan(projectId, plan, style);
+		const result = await storyRepository.createBookFromPlan(
+			projectId,
+			plan,
+			style,
+		);
+		await invalidateCache(`project-structure:${projectId}`);
+		return result;
 	}
 
 	async planChapterScenes(chapterId: string) {
@@ -54,11 +62,15 @@ export class StoryService {
 			sequence: startSequence++,
 		}));
 
-		return await storyRepository.createScenesBatch(
+		const createResult = await storyRepository.createScenesBatch(
 			targetChapter.projectId,
 			chapterId,
 			scenesToCreate,
 		);
+
+		await invalidateCache(`project-structure:${targetChapter.projectId}`);
+
+		return createResult;
 	}
 
 	async generateSceneText(sceneId: string) {
@@ -69,30 +81,15 @@ export class StoryService {
 		await ensureProjectAccess(targetScene.projectId, true);
 
 		// 2. Build Context
-		const previousScenes = scenesInChapter.filter(
-			(s) => s.sequence < targetScene.sequence,
-		);
-
-		// Get full text of immediate predecessor (for continuity)
-		const lastScene = previousScenes[previousScenes.length - 1];
-		const lastSceneText = lastScene?.content
-			? `[IMMEDIATELY PREVIOUS SCENE - ${lastScene.title}]\n${lastScene.content.slice(-2000)}`
-			: "";
-
-		// Get summaries of earlier scenes (for arc memory)
-		const otherScenesSummary = previousScenes
-			.slice(0, -1)
-			.map((s) => `[SCENE ${s.title}]: ${s.content ? "Completed" : "Planned"}`)
-			.join("\n");
-
-		const chapterContext = `Chapter Title: ${targetChapter.title}\nChapter Summary: ${targetChapter.notes}`;
-		const fullContext = `${chapterContext}\n\nPrevious Scenes Summary:\n${otherScenesSummary}\n\n${lastSceneText}`;
+		const { fullContext, styleInstruction } = buildSceneGenerationContext({
+			targetScene,
+			targetChapter,
+			targetOutline,
+			scenesInChapter,
+		});
 
 		// 3. AI Generation
 		const modelId = await getSelectedModelId("large");
-		const styleInstruction = targetOutline
-			? `${targetOutline.pov}, ${targetOutline.tone}`
-			: undefined;
 
 		// Use generationService instead of raw continueWriting
 		const { text } = await generationService.continueWriting(
@@ -107,6 +104,8 @@ export class StoryService {
 		// 4. Update DB
 		if (text) {
 			await storyRepository.updateSceneContent(sceneId, text);
+			// Content updates generally don't invalidate structure, but if needed:
+			// await invalidateCache(`project-structure:${targetScene.projectId}`);
 		}
 	}
 }

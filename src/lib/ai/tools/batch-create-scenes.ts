@@ -1,6 +1,5 @@
-import { tool } from "ai";
-import type { Session } from "next-auth";
 import { z } from "zod";
+import { createProtectedTool } from "@/lib/ai/tool-utils";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 
 const batchCreateScenesSchema = z.object({
@@ -29,72 +28,56 @@ const batchCreateScenesSchema = z.object({
 		.describe("Project ID (optional if context is clear)."),
 });
 
-export const batchCreateScenes = ({
-	session,
-	projectId,
-}: {
-	session: Session | null;
-	projectId?: string;
-}) =>
-	tool({
-		description: "Create multiple new scenes in a chapter.",
-		inputSchema: batchCreateScenesSchema,
-		execute: async (args: z.infer<typeof batchCreateScenesSchema>) => {
-			const { chapterId, scenes, projectId: projectIdInput } = args;
-			const finalProjectId = projectIdInput || projectId;
+export const batchCreateScenes = createProtectedTool({
+	description: "Create multiple new scenes in a chapter.",
+	inputSchema: batchCreateScenesSchema,
+	requireProjectId: true,
+	execute: async (args, { projectId, session }) => {
+		// projectId is guaranteed to be defined because requireProjectId is true
+		const finalProjectId = projectId as string;
+		const { chapterId, scenes } = args;
 
-			if (!session?.user?.id) {
-				return { error: "Authentication required." };
-			}
+		// SECURITY: Verify project ownership
+		// findByIdWithOwnership throws ForbiddenError if the user does not own the project.
+		// We explicitly await it to block execution if unauthorized.
+		// Note: createProtectedTool checks for session existence, but doesn't verify ownership.
+		await projectRepository.findByIdWithOwnership(
+			finalProjectId,
+			session.user?.id as string,
+		);
 
-			if (!finalProjectId) {
-				return { error: "Project ID is required to create scenes." };
-			}
+		const results = [];
 
+		for (const sceneData of scenes) {
 			try {
-				// SECURITY: Verify project ownership (throws ForbiddenError if invalid)
-				await projectRepository.findByIdWithOwnership(
-					finalProjectId,
-					session.user.id,
-				);
+				const scene = await sceneRepository.create({
+					projectId: finalProjectId,
+					chapterId,
+					title: sceneData.title,
+					sequence: sceneData.sequence,
+					content: sceneData.content,
+					status: sceneData.status,
+				});
 
-				const results = [];
-
-				for (const sceneData of scenes) {
-					try {
-						const scene = await sceneRepository.create({
-							projectId: finalProjectId,
-							chapterId,
-							title: sceneData.title,
-							sequence: sceneData.sequence,
-							content: sceneData.content,
-							status: sceneData.status,
-						});
-
-						results.push({
-							title: scene.title,
-							id: scene.id,
-							success: true,
-						});
-					} catch (err) {
-						results.push({
-							title: sceneData.title,
-							success: false,
-							error: err instanceof Error ? err.message : String(err),
-						});
-					}
-				}
-
-				const successCount = results.filter((r) => r.success).length;
-
-				return {
-					message: `Processed ${results.length} scenes. ${successCount} created successfully.`,
-					results,
-				};
-			} catch (error) {
-				return {
-					error: `Failed to batch create scenes: ${error instanceof Error ? error.message : String(error)}`,
-				};
+				results.push({
+					title: scene.title,
+					id: scene.id,
+					success: true,
+				});
+			} catch (err) {
+				results.push({
+					title: sceneData.title,
+					success: false,
+					error: err instanceof Error ? err.message : String(err),
+				});
 			}
-		},
-	});
+		}
+
+		const successCount = results.filter((r) => r.success).length;
+
+		return {
+			message: `Processed ${results.length} scenes. ${successCount} created successfully.`,
+			results,
+		};
+	},
+});

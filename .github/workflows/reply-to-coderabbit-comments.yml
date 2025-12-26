@@ -6,7 +6,7 @@ on:
 
 jobs:
   reply-to-comment:
-    if: github.actor == 'coderabbitai[bot]'
+    if: github.actor == 'coderabbitai[bot]' && !github.event.comment.in_reply_to_id
     runs-on: ubuntu-latest
     steps:
       - name: Reply to Comment

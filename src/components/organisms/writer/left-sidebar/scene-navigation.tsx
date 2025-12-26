@@ -1,8 +1,7 @@
 "use client";
 
-import { BookPlus, FileText, Loader2, Plus, Sparkles } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { BookPlus, Loader2, Plus, Sparkles } from "lucide-react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { createNewChapter, generateScene } from "@/app/actions/writer";
 import {
@@ -16,13 +15,12 @@ import {
 	ContextMenu,
 	ContextMenuContent,
 	ContextMenuItem,
-	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import { SceneItem } from "@/components/organisms/writer/left-sidebar/scene-item";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
 interface SceneNavigationProps {
 	project: Project;
@@ -41,35 +39,34 @@ export function SceneNavigation({
 	loading,
 	onStructureUpdate,
 }: SceneNavigationProps) {
-	const router = useRouter();
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 
-	const handleGenerateNextScene = async (
-		chapterId: string,
-		prevSceneId?: string,
-	) => {
-		setIsGenerating(true);
-		const toastId = toast.loading("Generating new scene...");
+	const handleGenerateNextScene = useCallback(
+		async (chapterId: string, prevSceneId?: string) => {
+			setIsGenerating(true);
+			const toastId = toast.loading("Generating new scene...");
 
-		try {
-			const result = await generateScene(chapterId, prevSceneId);
-			if (result.success && result.sceneId) {
-				toast.success("Scene generated!", { id: toastId });
-				if (onStructureUpdate) {
-					onStructureUpdate();
+			try {
+				const result = await generateScene(chapterId, prevSceneId);
+				if (result.success && result.sceneId) {
+					toast.success("Scene generated!", { id: toastId });
+					if (onStructureUpdate) {
+						onStructureUpdate();
+					} else {
+						window.location.reload();
+					}
 				} else {
-					window.location.reload();
+					toast.error("Generation failed", { id: toastId });
 				}
-			} else {
-				toast.error("Generation failed", { id: toastId });
+			} catch (_e) {
+				toast.error("Error generating scene", { id: toastId });
+			} finally {
+				setIsGenerating(false);
 			}
-		} catch (e) {
-			toast.error("Error generating scene", { id: toastId });
-		} finally {
-			setIsGenerating(false);
-		}
-	};
+		},
+		[onStructureUpdate],
+	);
 
 	const handleCreateChapter = async () => {
 		setIsCreatingChapter(true);
@@ -86,7 +83,7 @@ export function SceneNavigation({
 			} else {
 				toast.error("Failed to create chapter", { id: toastId });
 			}
-		} catch (e) {
+		} catch (_e) {
 			toast.error("Error creating chapter", { id: toastId });
 		} finally {
 			setIsCreatingChapter(false);
@@ -167,42 +164,15 @@ export function SceneNavigation({
 						<AccordionContent className="pb-2 pt-0">
 							<div className="flex flex-col gap-1 pl-2 relative border-l ml-2">
 								{chapter.scenes.map((scene) => (
-									<div key={scene.id} className="relative">
-										<ContextMenu>
-											<ContextMenuTrigger>
-												<Button
-													variant={
-														activeSceneId === scene.id ? "secondary" : "ghost"
-													}
-													size="sm"
-													className={cn(
-														"justify-start h-8 w-full px-2 text-xs font-normal",
-														activeSceneId === scene.id &&
-															"bg-secondary/50 font-medium",
-													)}
-													onClick={() => onSceneSelect(scene.id)}
-												>
-													<FileText className="mr-2 h-3 w-3 opacity-70" />
-													<span className="truncate">{scene.title}</span>
-												</Button>
-											</ContextMenuTrigger>
-											<ContextMenuContent>
-												<ContextMenuItem
-													onClick={() =>
-														handleGenerateNextScene(chapter.id, scene.id)
-													}
-													disabled={isGenerating}
-												>
-													<Sparkles className="mr-2 h-4 w-4" />
-													Generate Continuation
-												</ContextMenuItem>
-												<ContextMenuSeparator />
-												<ContextMenuItem className="text-destructive" disabled>
-													Delete Scene
-												</ContextMenuItem>
-											</ContextMenuContent>
-										</ContextMenu>
-									</div>
+									<SceneItem
+										key={scene.id}
+										scene={scene}
+										isActive={activeSceneId === scene.id}
+										chapterId={chapter.id}
+										onSelect={onSceneSelect}
+										onGenerateNext={handleGenerateNextScene}
+										isGenerating={isGenerating}
+									/>
 								))}
 								<Button
 									variant="ghost"
