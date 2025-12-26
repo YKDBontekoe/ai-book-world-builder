@@ -33,6 +33,7 @@ vi.mock("@/lib/db/drizzle", () => {
 						where: () => {
 							return {
 								orderBy: () => Promise.resolve(mockScenes), // For scenes
+								// biome-ignore lint/suspicious/noThenProperty: Mocking Promise-like interface
 								then: (resolve: any) => resolve([mockChapter]), // For chapter
 								limit: () => Promise.resolve([mockChapter]), // For limit(1)
 								[Symbol.iterator]: function* () {
