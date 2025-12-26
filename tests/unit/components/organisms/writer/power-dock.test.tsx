@@ -1,6 +1,6 @@
-import { PowerDock } from "@/components/organisms/writer/power-dock";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { PowerDock } from "@/components/organisms/writer/power-dock";
 
 // Mock dependencies
 const mockEditorActions = {

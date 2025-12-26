@@ -4,7 +4,6 @@ export * from "@/components/atoms/avatar";
 export * from "@/components/atoms/badge";
 export * from "@/components/atoms/button";
 export * from "@/components/atoms/card";
-export * from "@/components/atoms/carousel";
 export * from "@/components/atoms/checkbox";
 export * from "@/components/atoms/collapsible";
 export * from "@/components/atoms/collapsible-section";

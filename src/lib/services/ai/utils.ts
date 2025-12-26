@@ -1,6 +1,6 @@
 import "server-only";
-import { ensureProjectAccess } from "@/lib/actions-utils";
 import { db } from "@/lib/db/queries";
+import { ensureProjectAccess } from "@/lib/actions-utils";
 import { scene } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
