@@ -2,12 +2,21 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
-import { CalendarIcon, FolderIcon, Globe } from "lucide-react";
+import { CalendarIcon, Eye, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
+import { useState } from "react";
+import { Button } from "@/components/atoms/button";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { GridList } from "@/components/atoms/grid-list";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { ProjectActionsMenu } from "@/components/organisms/projects/project-actions-menu";
+import { ProjectPreviewSheet } from "@/components/organisms/projects/project-preview-sheet";
 import type { Project } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
@@ -48,76 +57,114 @@ function ProjectCard({
 	onSelect?: (id: string) => void;
 	onDelete?: (id: string) => void;
 }) {
+	const [showPreview, setShowPreview] = useState(false);
+
 	return (
-		<div className="relative h-full group">
-			{/* Checkbox Overlay */}
-			{onSelect && (
-				<div
-					className={cn(
-						"absolute top-4 left-4 z-20 transition-opacity duration-200",
-						selected
-							? "opacity-100"
-							: "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
-					)}
-					onClick={(e) => e.stopPropagation()}
-				>
-					<Checkbox
-						checked={selected}
-						onCheckedChange={() => onSelect(project.id)}
-						className="bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50 h-5 w-5"
+		<>
+			<div className="relative h-full group">
+				{/* Checkbox Overlay */}
+				{onSelect && (
+					// biome-ignore lint/a11y/useSemanticElements: this is an overlay wrapper for the checkbox
+					<div
+						className={cn(
+							"absolute top-4 left-4 z-20 transition-opacity duration-200",
+							selected
+								? "opacity-100"
+								: "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
+						)}
+						onClick={(e) => e.stopPropagation()}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.stopPropagation();
+							}
+						}}
+						role="button"
+						tabIndex={0}
+					>
+						<Checkbox
+							checked={selected}
+							onCheckedChange={() => onSelect(project.id)}
+							className="bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50 h-5 w-5"
+						/>
+					</div>
+				)}
+
+				<Link href={`/projects/${project.id}`} className="block h-full">
+					<GlassCard
+						variant="liquid"
+						interactive
+						className={cn(
+							"h-full flex flex-col justify-between space-y-6 p-6 transition-all duration-300",
+							selected && "ring-2 ring-primary bg-primary/5 scale-[0.98]",
+						)}
+					>
+						<div className="space-y-4">
+							<div className="flex items-center gap-3 pr-8 pl-6">
+								<div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
+									<FolderIcon className="h-6 w-6" />
+								</div>
+								<h3 className="font-bold text-lg truncate tracking-tight">
+									{project.name}
+								</h3>
+							</div>
+							{project.description && (
+								<p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+									{project.description}
+								</p>
+							)}
+						</div>
+						<div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30">
+							<div className="flex items-center gap-1">
+								<CalendarIcon className="h-3.5 w-3.5" />
+								<span>
+									{formatDistanceToNow(project.createdAt, {
+										addSuffix: true,
+									})}
+								</span>
+							</div>
+							{project.visibility === "public" && (
+								<Globe className="h-3.5 w-3.5" />
+							)}
+						</div>
+					</GlassCard>
+				</Link>
+
+				{/* Actions (Top Right) */}
+				<div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 z-10">
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 shadow-sm rounded-full"
+									onClick={(e) => {
+										e.stopPropagation();
+										setShowPreview(true);
+									}}
+								>
+									<Eye className="h-3.5 w-3.5 text-muted-foreground" />
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="left">Quick Preview</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
+
+					<ProjectActionsMenu
+						projectId={project.id}
+						projectName={project.name}
+						projectDescription={project.description}
+						onDelete={() => onDelete?.(project.id)}
 					/>
 				</div>
-			)}
-
-			<Link href={`/projects/${project.id}`} className="block h-full">
-				<GlassCard
-					variant="liquid"
-					interactive
-					className={cn(
-						"h-full flex flex-col justify-between space-y-6 p-6 transition-all duration-300",
-						selected && "ring-2 ring-primary bg-primary/5 scale-[0.98]",
-					)}
-				>
-					<div className="space-y-4">
-						<div className="flex items-center gap-3 pr-8 pl-6">
-							<div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
-								<FolderIcon className="h-6 w-6" />
-							</div>
-							<h3 className="font-bold text-lg truncate tracking-tight">
-								{project.name}
-							</h3>
-						</div>
-						{project.description && (
-							<p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-								{project.description}
-							</p>
-						)}
-					</div>
-					<div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30">
-						<div className="flex items-center gap-1">
-							<CalendarIcon className="h-3.5 w-3.5" />
-							<span>
-								{formatDistanceToNow(project.createdAt, {
-									addSuffix: true,
-								})}
-							</span>
-						</div>
-						{project.visibility === "public" && (
-							<Globe className="h-3.5 w-3.5" />
-						)}
-					</div>
-				</GlassCard>
-			</Link>
-
-			<div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 z-10">
-				<ProjectActionsMenu
-					projectId={project.id}
-					projectName={project.name}
-					projectDescription={project.description}
-					onDelete={() => onDelete?.(project.id)}
-				/>
 			</div>
-		</div>
+
+			<ProjectPreviewSheet
+				project={project}
+				isOpen={showPreview}
+				onClose={() => setShowPreview(false)}
+			/>
+		</>
 	);
 }
 
