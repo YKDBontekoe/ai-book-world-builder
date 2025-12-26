@@ -109,6 +109,8 @@ export function PowerDock() {
 					reset();
                     toast.success("Action completed");
 				}
+			} else {
+				toast.error("Operation failed. Please try again.");
 			}
 		} catch (e) {
 			toast.error("Operation failed.");
@@ -171,8 +173,30 @@ export function PowerDock() {
                                 <div className="max-h-60 overflow-y-auto text-sm font-mono bg-black/20 p-2 rounded">
                                     {result}
                                 </div>
-                                <div className="mt-2 text-xs text-muted-foreground text-center">
-                                    Copy the text above to use it.
+                                <div className="mt-2 flex items-center justify-between gap-2">
+                                    <button
+                                        onClick={() => {
+                                            if (editorActions?.insertText && result) {
+                                                editorActions.insertText(result);
+                                                reset();
+                                                toast.success("Text inserted into editor");
+                                            }
+                                        }}
+                                        className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                                    >
+                                        Insert into Editor
+                                    </button>
+                                    <button
+                                        onClick={() => {
+                                            if (result) {
+                                                navigator.clipboard.writeText(result);
+                                                toast.success("Copied to clipboard");
+                                            }
+                                        }}
+                                        className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
+                                    >
+                                        Copy
+                                    </button>
                                 </div>
                             </GlassCard>
                         </motion.div>
@@ -184,7 +208,8 @@ export function PowerDock() {
 					className={cn(
                         "rounded-2xl shadow-2xl border-white/20 backdrop-blur-xl transition-all duration-500 ease-spring overflow-hidden",
                         // Dynamic sizing based on mode
-                        mode === 'default' ? "p-2" : "p-3"
+                        mode === 'default' ? "p-2" : "p-3",
+						"border-primary/10"
                     )}
 				>
                     <div className="flex items-center gap-1">

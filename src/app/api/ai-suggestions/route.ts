@@ -133,11 +133,11 @@ GUIDELINES:
 `,
 		});
 
-		return new Response(JSON.stringify(object.suggestions), {
+		return new Response(JSON.stringify(object), {
 			headers: { "Content-Type": "application/json" },
 		});
 	} catch (error) {
 		console.error("Suggestion Generation Error:", error);
-		return new Response(JSON.stringify([]), { status: 500 });
+		return new Response(JSON.stringify({ suggestions: [] }), { status: 500 });
 	}
 }

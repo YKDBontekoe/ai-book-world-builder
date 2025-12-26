@@ -39,6 +39,8 @@ import { cn } from "@/lib/utils";
 export interface EditorHandle {
 	undo: () => void;
 	redo: () => void;
+	insertText: (text: string) => void;
+	getSelection: () => { from: number; to: number; text: string } | null;
 }
 
 type EditorProps = {
@@ -91,6 +93,26 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 					redo(editorRef.current.state, editorRef.current.dispatch);
 					editorRef.current.focus();
 				}
+			},
+			insertText: (text: string) => {
+				if (editorRef.current) {
+					const { from, to } = editorRef.current.state.selection;
+					const tr = editorRef.current.state.tr.replaceWith(
+						from,
+						to,
+						editorRef.current.state.schema.text(text),
+					);
+					editorRef.current.dispatch(tr);
+					editorRef.current.focus();
+				}
+			},
+			getSelection: () => {
+				if (editorRef.current) {
+					const { from, to } = editorRef.current.state.selection;
+					const text = editorRef.current.state.doc.textBetween(from, to);
+					return { from, to, text };
+				}
+				return null;
 			},
 		}));
 
@@ -299,9 +321,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 				{!readOnly && <EditorBubbleMenu editorView={editorRef.current} />}
 
 				<AnimatePresence>
-					{mentionState?.active &&
-						mentionCoords &&
-						filteredEntities.length > 0 && (
+					{mentionState?.active && mentionCoords && (
 							<motion.div
 								initial={{ opacity: 0, scale: 0.95 }}
 								animate={{ opacity: 1, scale: 1 }}
@@ -312,31 +332,47 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 									top: mentionCoords.top,
 								}}
 							>
-								<GlassCard
-									variant="liquid"
-									className="p-1 flex flex-col gap-1 max-h-48 overflow-y-auto"
-								>
-									{filteredEntities.map((entity, i) => (
+							<GlassCard
+								variant="liquid"
+								className="p-2 flex flex-col gap-1 max-h-64 overflow-y-auto shadow-2xl border-primary/20"
+							>
+								{filteredEntities.length === 0 ? (
+									<div className="px-3 py-2 text-xs text-muted-foreground">
+										No entities found
+									</div>
+								) : (
+									filteredEntities.map((entity, i) => (
 										<button
 											type="button"
 											key={entity.id}
 											className={cn(
-												"flex items-center gap-2 px-2 py-1.5 text-sm rounded-md transition-colors text-left",
+												"flex items-start gap-3 px-3 py-2.5 text-sm rounded-lg transition-all text-left group",
+												"hover:bg-primary/10 hover:scale-[1.02]",
 												i === mentionState.index
-													? "bg-primary/10 text-primary"
-													: "hover:bg-muted",
+													? "bg-primary/20 text-primary shadow-sm border border-primary/30"
+													: "hover:bg-muted/50",
 											)}
 											onClick={() => insertMention(entity)}
 										>
-											<span className="text-xs uppercase opacity-50 font-bold w-12 shrink-0">
-												{entity.kind}
-											</span>
-											<span className="truncate font-medium">
-												{entity.name}
-											</span>
+											<div className="flex-1 min-w-0">
+												<div className="flex items-center gap-2 mb-1">
+													<span className="text-[10px] uppercase tracking-wider opacity-60 font-bold px-1.5 py-0.5 rounded bg-background/50">
+														{entity.kind}
+													</span>
+													<span className="truncate font-semibold text-foreground">
+														{entity.name}
+													</span>
+												</div>
+												{entity.summary && (
+													<p className="text-xs text-muted-foreground line-clamp-2 mt-1">
+														{entity.summary}
+													</p>
+												)}
+											</div>
 										</button>
-									))}
-								</GlassCard>
+									))
+								)}
+							</GlassCard>
 							</motion.div>
 						)}
 				</AnimatePresence>

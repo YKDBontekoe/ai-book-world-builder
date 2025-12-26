@@ -10,7 +10,11 @@ import {
 	PanelLeftClose,
 	PanelLeftOpen,
 	Save,
+	TrendingUp,
+	BookOpen,
 } from "lucide-react";
+import { WritingGoals } from "@/components/organisms/writer/tools/writing-goals";
+import { SessionInsights } from "@/components/organisms/writer/tools/session-insights";
 import { Button } from "@/components/atoms/button";
 import {
 	Tooltip,
@@ -20,12 +24,16 @@ import {
 } from "@/components/atoms/tooltip";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
+import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
+import { useProjectEntities } from "@/hooks/use-project-entities";
 import { cn } from "@/lib/utils";
 
 export function WriterHeader() {
 	const {
+		project,
 		activeScene,
 		structure,
+		sceneContent,
 		handleSnapshot,
 		isSnapshotting,
 		isSaving,
@@ -42,6 +50,12 @@ export function WriterHeader() {
 		isDirectorMode,
 		toggleDirectorMode,
 	} = useWriterLayoutContext();
+
+	const { data: entities } = useProjectEntities(project.id);
+	const narrativeMetrics = useNarrativeIntelligence({
+		content: sceneContent || "",
+		entities: entities || [],
+	});
 
 	const hasScenes = structure
 		? structure.some((c) => c.scenes.length > 0)
@@ -135,6 +149,53 @@ export function WriterHeader() {
 
 				{activeScene && !isZen && (
 					<>
+						<div className="h-4 w-[1px] bg-border mx-1" />
+						{/* Writing Quality Indicators */}
+						{narrativeMetrics.wordCount > 0 && (
+							<>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/50 text-xs">
+											<BookOpen className="h-3 w-3" />
+											<span className="font-mono">
+												{narrativeMetrics.wordCount.toLocaleString()}
+											</span>
+										</div>
+									</TooltipTrigger>
+									<TooltipContent>
+										Word Count • {narrativeMetrics.readingTimeMinutes} min read
+									</TooltipContent>
+								</Tooltip>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<div
+											className={cn(
+												"flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium",
+												narrativeMetrics.pacingScore > 70
+													? "bg-orange-500/20 text-orange-500"
+													: narrativeMetrics.pacingScore < 30
+														? "bg-blue-500/20 text-blue-500"
+														: "bg-green-500/20 text-green-500",
+											)}
+										>
+											<TrendingUp className="h-3 w-3" />
+											{Math.round(narrativeMetrics.pacingScore)}
+										</div>
+									</TooltipTrigger>
+									<TooltipContent>
+										Pacing Score:{" "}
+										{narrativeMetrics.pacingScore > 70
+											? "Fast/Action"
+											: narrativeMetrics.pacingScore < 30
+												? "Slow/Descriptive"
+												: "Balanced"}
+									</TooltipContent>
+								</Tooltip>
+							</>
+						)}
+						<div className="h-4 w-[1px] bg-border mx-1" />
+						<WritingGoals />
+						<SessionInsights />
 						<div className="h-4 w-[1px] bg-border mx-1" />
 						<Button
 							variant="ghost"

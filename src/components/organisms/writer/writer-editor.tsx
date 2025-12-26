@@ -15,6 +15,8 @@ import {
 } from "@/components/organisms/editor/text-editor";
 import { DirectorDashboard } from "@/components/organisms/writer/dashboard/director-dashboard";
 import { StoryWizard } from "@/components/organisms/writer/story-wizard";
+import { ContextualPrompts } from "@/components/organisms/writer/tools/contextual-prompts";
+import { WritingStyleAnalyzer } from "@/components/organisms/writer/tools/writing-style-analyzer";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
@@ -52,12 +54,14 @@ export function WriterEditor() {
 	const [previewContent, setPreviewContent] = useState<string | null>(null);
 	const [sliderValue, setSliderValue] = useState([0]);
 
-	// Register Editor Actions (Undo/Redo)
+	// Register Editor Actions (Undo/Redo/Insert)
 	useEffect(() => {
 		if (editorRef.current) {
 			registerEditorActions({
 				undo: () => editorRef.current?.undo(),
 				redo: () => editorRef.current?.redo(),
+				insertText: (text: string) => editorRef.current?.insertText(text),
+				getSelection: () => editorRef.current?.getSelection() ?? null,
 			});
 		}
 	}, [registerEditorActions]); // Re-register when scene changes
@@ -181,6 +185,12 @@ export function WriterEditor() {
 					/>
 				)}
 			</AnimatePresence>
+
+			{/* Contextual Prompts */}
+			<ContextualPrompts />
+
+			{/* Writing Style Analyzer */}
+			{isDirectorMode && <WritingStyleAnalyzer />}
 
 			{/* Time Travel Controls */}
 			{activeSceneId && historyStack.length > 1 && (
