@@ -1,6 +1,6 @@
 "use server";
 
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
@@ -467,13 +467,33 @@ export async function reorderScenes(
 
 		await ensureProjectAccess(currentChapter.projectId, true);
 
+		// Verify all scenes belong to this chapter
+		if (sceneIds.length > 0) {
+			const scenesInChapter = await db
+				.select({ id: scene.id })
+				.from(scene)
+				.where(
+					and(
+						eq(scene.chapterId, chapterId),
+						inArray(scene.id, sceneIds)
+					)
+				);
+
+			if (scenesInChapter.length !== sceneIds.length) {
+				return { 
+					success: false, 
+					error: "One or more scenes do not belong to this chapter" 
+				};
+			}
+		}
+
 		// Update sequences in a transaction
 		await db.transaction(async (tx) => {
 			for (let i = 0; i < sceneIds.length; i++) {
 				await tx
 					.update(scene)
 					.set({ sequence: i + 1, updatedAt: new Date() })
-					.where(eq(scene.id, sceneIds[i]));
+					.where(and(eq(scene.id, sceneIds[i]), eq(scene.chapterId, chapterId)));
 			}
 		});
 
@@ -486,34 +506,48 @@ export async function reorderScenes(
 	}
 }
 
-export async function reorderChapters(
-	chapterIds: string[],
-	volumeId: string,
-) {
+export async function reorderChapters(chapterIds: string[], volumeId: string) {
 	try {
-		const [firstChapter] = await db
-			.select()
-			.from(chapter)
-			.where(eq(chapter.id, chapterIds[0]))
-			.limit(1);
+		if (chapterIds.length === 0) return { success: true };
 
-		if (!firstChapter || firstChapter.volumeId !== volumeId) {
-			return { success: false, error: "Invalid chapter or volume" };
+		// 1. Query the DB for all chapters with ids IN chapterIds AND volumeId = provided volumeId
+		const chapters = await db
+			.select({ id: chapter.id, projectId: chapter.projectId })
+			.from(chapter)
+			.where(and(inArray(chapter.id, chapterIds), eq(chapter.volumeId, volumeId)));
+
+		// 2. Verify the returned count equals chapterIds.length
+		if (chapters.length !== chapterIds.length) {
+			return {
+				success: false,
+				error: "One or more chapters do not belong to the specified volume",
+			};
 		}
 
-		await ensureProjectAccess(firstChapter.projectId, true);
+		// 3. Verify they all share the same projectId
+		const projectId = chapters[0].projectId;
+		const allSameProject = chapters.every((ch) => ch.projectId === projectId);
+		if (!allSameProject) {
+			return {
+				success: false,
+				error: "Chapters must belong to the same project",
+			};
+		}
 
-		// Update sequences in a transaction
+		// 4. Call ensureProjectAccess(projectId, true) once
+		await ensureProjectAccess(projectId, true);
+
+		// 5. Inside the transaction update chapters
 		await db.transaction(async (tx) => {
 			for (let i = 0; i < chapterIds.length; i++) {
 				await tx
 					.update(chapter)
 					.set({ sequence: i + 1, updatedAt: new Date() })
-					.where(eq(chapter.id, chapterIds[i]));
+					.where(and(eq(chapter.id, chapterIds[i]), eq(chapter.volumeId, volumeId)));
 			}
 		});
 
-		await invalidateCache(`project-structure:${firstChapter.projectId}`);
+		await invalidateCache(`project-structure:${projectId}`);
 
 		return { success: true };
 	} catch (error) {
