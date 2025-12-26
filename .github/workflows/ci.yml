@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm test:unit
+      - run: NODE_OPTIONS="--max-old-space-size=4096" pnpm test:unit
 
   build:
     runs-on: ubuntu-latest
