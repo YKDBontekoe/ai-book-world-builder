@@ -9,6 +9,9 @@ import {
 	varchar,
 } from "drizzle-orm/pg-core";
 
+export const userRole = ["user", "admin"] as const;
+export type UserRole = (typeof userRole)[number];
+
 export const user = pgTable("User", {
 	id: uuid("id").primaryKey().notNull().defaultRandom(),
 	name: text("name"),
@@ -16,6 +19,8 @@ export const user = pgTable("User", {
 	emailVerified: timestamp("emailVerified", { mode: "date" }),
 	image: text("image"),
 	password: varchar("password", { length: 64 }),
+	role: varchar("role", { enum: userRole }).notNull().default("user"),
+	bannedAt: timestamp("bannedAt"),
 });
 
 export type User = InferSelectModel<typeof user>;

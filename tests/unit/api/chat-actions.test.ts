@@ -42,6 +42,7 @@ function buildSession(userId: string): Session {
 			image: null,
 			name: "Test User",
 			type: "regular",
+			role: "user", // Added role
 		},
 		expires: new Date().toISOString(),
 	} satisfies Session;
