@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
+import { getCached, invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { createOutline, getOutlinesForProject } from "@/lib/db/queries/outline";
 import {
@@ -19,37 +20,43 @@ export async function getProjectStructure(projectId: string) {
 		// 1. Verify Access (Read is sufficient)
 		await ensureProjectAccess(projectId);
 
-		// 2. Fetch all data in parallel
-		const [chapters, allScenes] = await Promise.all([
-			db
-				.select()
-				.from(chapter)
-				.where(eq(chapter.projectId, projectId))
-				.orderBy(asc(chapter.sequence)),
-			sceneRepository.findByProject(projectId, true), // excludeContent for efficiency
-		]);
+		return getCached(
+			`project-structure:${projectId}`,
+			async () => {
+				// 2. Fetch all data in parallel
+				const [chapters, allScenes] = await Promise.all([
+					db
+						.select()
+						.from(chapter)
+						.where(eq(chapter.projectId, projectId))
+						.orderBy(asc(chapter.sequence)),
+					sceneRepository.findByProject(projectId, true), // excludeContent for efficiency
+				]);
 
-		// 3. Map scenes to chapters in memory
-		const scenesByChapter = allScenes.reduce(
-			(acc, s) => {
-				if (!acc[s.chapterId]) {
-					acc[s.chapterId] = [];
-				}
-				acc[s.chapterId].push(s);
-				return acc;
+				// 3. Map scenes to chapters in memory
+				const scenesByChapter = allScenes.reduce(
+					(acc, s) => {
+						if (!acc[s.chapterId]) {
+							acc[s.chapterId] = [];
+						}
+						acc[s.chapterId].push(s);
+						return acc;
+					},
+					{} as Record<string, typeof allScenes>,
+				);
+
+				const structure = chapters.map((ch) => ({
+					...ch,
+					scenes: scenesByChapter[ch.id] || [],
+				}));
+
+				// 4. Generate text representation
+				const structureText = formatStructure(structure);
+
+				return { structure, structureText };
 			},
-			{} as Record<string, typeof allScenes>,
+			3600, // Cache for 1 hour (invalidated on mutation)
 		);
-
-		const structure = chapters.map((ch) => ({
-			...ch,
-			scenes: scenesByChapter[ch.id] || [],
-		}));
-
-		// 4. Generate text representation
-		const structureText = formatStructure(structure);
-
-		return { structure, structureText };
 	} catch (error) {
 		console.error("Failed to fetch project structure", error);
 		return { structure: [], structureText: "" };
@@ -107,6 +114,8 @@ export async function updateSceneContent(sceneId: string, content: string) {
 
 		// 3. Update using repository
 		await sceneRepository.updateContent(sceneId, content, "drafting");
+
+		// Note: Content updates do not invalidate structure, only titles/ordering do.
 
 		return { success: true };
 	} catch (error) {
@@ -207,6 +216,8 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 			prevSceneId,
 		});
 
+		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+
 		return { success: true, sceneId: newScene.id };
 	} catch (error) {
 		console.error("Failed to generate scene", error);
@@ -223,6 +234,9 @@ export async function saveProjectStructure(
 		await ensureProjectAccess(projectId, true);
 
 		// Placeholder implementation for StructureEditorDialog
+
+		await invalidateCache(`project-structure:${projectId}`);
+
 		return { success: true };
 	} catch (error) {
 		console.error("Failed to save project structure", error);
@@ -284,6 +298,8 @@ export async function createNewChapter(projectId: string) {
 				updatedAt: new Date(),
 			})
 			.returning();
+
+		await invalidateCache(`project-structure:${projectId}`);
 
 		return { success: true, chapterId: newChapter.id };
 	} catch (error) {
@@ -373,6 +389,8 @@ export async function initializeProject(projectId: string) {
 			sceneId = newScene.id;
 		}
 
+		await invalidateCache(`project-structure:${projectId}`);
+
 		return { success: true, sceneId };
 	} catch (error) {
 		console.error("Failed to initialize project", error);
@@ -391,6 +409,8 @@ export async function updateLastViewedScene(
 			.update(project)
 			.set({ lastViewedSceneId: sceneId })
 			.where(eq(project.id, projectId));
+
+		// Does not affect structure
 
 		return { success: true };
 	} catch (error) {
