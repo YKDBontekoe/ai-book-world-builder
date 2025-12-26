@@ -65,6 +65,7 @@ vi.mock("ai", () => ({
 		return { object: {} };
 	}),
 	tool: vi.fn((def) => def),
+	generateId: () => "mock-id",
 }));
 
 // Mock Utils
