@@ -125,20 +125,24 @@ export class AnalysisService extends BaseAIService {
 			.map((c) => c.text)
 			.join("\n\n---\n\n");
 
-		const prompt = `You are analyzing excerpts from a book to identify story elements.
+		const systemPrompt = `You are an expert literary analyst. Your task is to identify key story elements from text excerpts.
+Identify all named entities (characters, locations, organizations, items, major events).
+Only include entities that are significant to the story. Assign a confidence score based on the clarity of the reference in the text.`;
 
-Identify all named entities (characters, locations, organizations, items, major events) mentioned in this text.
-Only include entities that are clearly named and appear to be significant to the story.
-Assign a confidence score (0-100) based on how sure you are this is a real story element.
+		const prompt = `Identify significant entities in the following text excerpts:
 
-Text excerpts:
 ${combinedText}
 
-List all entities found:`;
+Return the list of detected entities.`;
 
-		const result = await this.generateObject(prompt, entityDetectionSchema, {
-			modelRole: "context",
-		});
+		const result = await this.generateObjectWithSystem(
+			systemPrompt,
+			prompt,
+			entityDetectionSchema,
+			{
+				modelRole: "context",
+			},
+		);
 
 		if (!result.success) {
 			throw new Error(result.error);
@@ -198,19 +202,25 @@ List all entities found:`;
 			.map((c) => c.content)
 			.join("\n\n---\n\n");
 
+		const systemPrompt = `You are an expert biographer for fictional characters and worlds. 
+Your goal is to extract accurate, detailed information about an entity based on the provided text excerpts. 
+Be precise and only include information supported by the text.`;
+
 		const prompt = `Based on the following text excerpts, extract detailed information about "${entityName}" (a ${entityKind}).
 
 Text excerpts:
 ${relevantText}
 
-Provide:
-1. A summary of who/what this entity is
-2. Key attributes (personality traits, physical description, role, abilities, etc.)
-3. Direct quotes from the text that describe this entity`;
+Provide a summary, key attributes, and relevant quotes.`;
 
-		const result = await this.generateObject(prompt, entityDetailsSchema, {
-			modelRole: "context",
-		});
+		const result = await this.generateObjectWithSystem(
+			systemPrompt,
+			prompt,
+			entityDetailsSchema,
+			{
+				modelRole: "context",
+			},
+		);
 
 		if (!result.success) {
 			return {
@@ -291,16 +301,25 @@ Provide:
 				.map((c) => c.text)
 				.join("\n\n---\n\n");
 
+			const systemPrompt = `You are an expert in social dynamics and literary analysis.
+Your task is to identify and describe the relationship between two entities based on the provided text excerpts.
+Identify the type of relationship (e.g., friend, rival, family) and provide a clear description.`;
+
 			const prompt = `Based on these text excerpts, describe the relationship between "${entity1}" and "${entity2}".
 
 Text excerpts:
 ${contextText}
 
-What is their relationship?`;
+Identify how they interact and what their relationship is.`;
 
-			const result = await this.generateObject(prompt, relationshipSchema, {
-				modelRole: "context",
-			});
+			const result = await this.generateObjectWithSystem(
+				systemPrompt,
+				prompt,
+				relationshipSchema,
+				{
+					modelRole: "context",
+				},
+			);
 
 			if (result.success) {
 				allRelationships.push(

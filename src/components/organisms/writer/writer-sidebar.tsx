@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import {
+	Book,
 	ChevronDown,
 	ChevronRight,
 	FileText,
@@ -222,25 +223,28 @@ export function WriterSidebar() {
 
 	return (
 		<div
-			className="flex flex-col h-full border-r bg-sidebar"
+			className="flex flex-col h-full border-r border-sidebar-border bg-sidebar/30 backdrop-blur-xl transition-all duration-300 ease-in-out"
 			data-testid="writer-sidebar"
 		>
-			<div className="p-4 border-b flex items-center justify-between bg-sidebar-accent/50">
-				<div className="flex items-center gap-2">
+			<div className="px-4 py-3 border-b border-sidebar-border/50 flex items-center justify-between bg-sidebar/20 backdrop-blur-md sticky top-0 z-10">
+				<div className="flex items-center gap-2.5">
 					<Button
 						variant="ghost"
 						size="icon"
-						className="h-6 w-6 -ml-2 text-muted-foreground lg:hidden"
+						className="h-7 w-7 -ml-2 text-muted-foreground/70 hover:text-foreground lg:hidden"
 						onClick={toggleSidebar}
 						aria-label="Close Sidebar"
 					>
 						<PanelLeftClose className="h-4 w-4" />
 					</Button>
-					<h2 className="font-semibold text-sm text-sidebar-foreground">
-						Book Structure
-					</h2>
+					<div className="flex items-center gap-2 text-sidebar-foreground/90">
+						<Book className="h-4 w-4 opacity-70" />
+						<h2 className="font-semibold text-sm tracking-tight">
+							Book Structure
+						</h2>
+					</div>
 				</div>
-				<div className="flex items-center gap-1">
+				<div className="flex items-center gap-0.5">
 					{!isReadOnly && (
 						<>
 							<StructureEditorDialog
@@ -253,7 +257,7 @@ export function WriterSidebar() {
 								<Button
 									variant="ghost"
 									size="icon"
-									className="h-8 w-8"
+									className="h-7 w-7 text-muted-foreground/70 hover:text-foreground transition-colors"
 									aria-label="Edit Structure"
 								>
 									<FileText className="h-4 w-4" />
@@ -262,7 +266,7 @@ export function WriterSidebar() {
 							<Button
 								variant="ghost"
 								size="icon"
-								className="h-8 w-8"
+								className="h-7 w-7 text-muted-foreground/70 hover:text-foreground transition-colors"
 								onClick={handleAddChapter}
 								aria-label="Add Chapter"
 							>
@@ -271,7 +275,7 @@ export function WriterSidebar() {
 						</>
 					)}
 					{isReadOnly && (
-						<span className="text-xs text-muted-foreground flex items-center gap-1">
+						<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60 flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/50">
 							<Lock className="h-3 w-3" /> Read Only
 						</span>
 					)}
@@ -279,18 +283,18 @@ export function WriterSidebar() {
 			</div>
 
 			<ScrollArea className="flex-1">
-				<div className="p-2 space-y-1">
+				<div className="p-3 space-y-2">
 					{loading ? (
 						<SidebarSkeleton />
 					) : !structure || structure.length === 0 ? (
 						<div className="p-2">
 							<EmptyState
 								variant="glass"
-								title={isReadOnly ? "No chapters" : "No chapters"}
+								title={isReadOnly ? "No chapters" : "Start Writing"}
 								description={
 									isReadOnly
 										? "This project has no content yet."
-										: "Create a chapter to start."
+										: "Create your first chapter to begin your story."
 								}
 								className="p-4 py-8"
 								action={
@@ -299,7 +303,7 @@ export function WriterSidebar() {
 											variant="outline"
 											size="sm"
 											onClick={handleAddChapter}
-											className="w-full mt-2"
+											className="w-full mt-4 bg-background/50 backdrop-blur-sm hover:bg-background/80"
 										>
 											<Plus className="mr-2 h-3 w-3" />
 											Add Chapter
@@ -319,49 +323,74 @@ export function WriterSidebar() {
 									key={chapter.id}
 									id={chapter.id}
 									disabled={isReadOnly}
-									className="space-y-1"
+									className={cn(
+										"group/chapter rounded-xl transition-all duration-300 ease-out border border-transparent",
+										expandedChapters[chapter.id]
+											? "bg-sidebar-accent/30 shadow-sm border-sidebar-border/30 pb-2"
+											: "hover:bg-sidebar-accent/20"
+									)}
 								>
-									<div className="flex items-center gap-1 group">
-										<button
-											type="button"
+									<div className="flex items-center gap-1 px-1 py-1">
+										{/* biome-ignore lint: using div to prevent nested button hydration error */}
+										<div
+											role="button"
+											tabIndex={0}
 											onClick={() => toggleChapter(chapter.id)}
-											className={cn(
-												"flex-1 flex items-center gap-2 px-2 py-1.5 text-sm font-medium rounded-md hover:bg-sidebar-accent/50 transition-colors text-sidebar-foreground",
-												expandedChapters[chapter.id] && "bg-sidebar-accent",
-											)}
+											onKeyDown={(e) => {
+												if (e.key === "Enter" || e.key === " ") {
+													e.preventDefault();
+													toggleChapter(chapter.id);
+												}
+											}}
+											className="flex-1 flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-sidebar-foreground cursor-pointer outline-none select-none w-full text-left"
 										>
-											{expandedChapters[chapter.id] ? (
-												<ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
-											) : (
-												<ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
-											)}
-											<Folder className="h-4 w-4 text-blue-500/80 shrink-0" />
-											<div
-												className="flex-1 min-w-0"
-												onClick={(e) => e.stopPropagation()}
-												onKeyDown={(e) => {
-													if (e.key === "Enter" || e.key === " ") {
-														e.stopPropagation();
-													}
-												}}
-											>
-												<InlineEditableTitle
-													value={chapter.title}
-													onSave={(newTitle) =>
-														handleUpdateChapterTitle(chapter.id, newTitle)
-													}
-													disabled={isReadOnly}
-													className="font-medium"
-												/>
+											<div className={cn(
+												"p-1 rounded-md transition-colors",
+												expandedChapters[chapter.id] ? "bg-sidebar-accent/50 text-foreground" : "text-muted-foreground/70"
+											)}>
+												{expandedChapters[chapter.id] ? (
+													<ChevronDown className="h-3.5 w-3.5" />
+												) : (
+													<ChevronRight className="h-3.5 w-3.5" />
+												)}
 											</div>
+											
+											<div className="flex items-center gap-2 flex-1 min-w-0">
+												<Folder className={cn(
+													"h-4 w-4 transition-colors",
+													expandedChapters[chapter.id] ? "text-primary dark:text-primary/90 fill-primary/10" : "text-muted-foreground/60"
+												)} />
+												{/* biome-ignore lint/a11y/noStaticElementInteractions: preventing parent activation */}
+												<div
+													className="flex-1 min-w-0 truncate"
+													onKeyDown={(e) => {
+														if (e.key === "Enter" || e.key === " ") {
+															e.stopPropagation();
+														}
+													}}
+												>
+													<InlineEditableTitle
+														value={chapter.title}
+														onSave={(newTitle) =>
+															handleUpdateChapterTitle(chapter.id, newTitle)
+														}
+														disabled={isReadOnly}
+														className={cn(
+															"font-semibold tracking-tight transition-colors",
+															expandedChapters[chapter.id] ? "text-foreground" : "text-muted-foreground group-hover/chapter:text-foreground/80"
+														)}
+													/>
+												</div>
+											</div>
+
 											{chapter.scenes.length > 0 && (
-												<span className="text-xs text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md font-mono shrink-0">
+												<span className="text-[10px] font-medium text-muted-foreground/50 bg-sidebar-accent/50 px-1.5 py-0.5 rounded-full shrink-0 min-w-[1.25rem] text-center">
 													{chapter.scenes.length}
 												</span>
 											)}
-										</button>
+										</div>
 										{!isReadOnly && (
-											<div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+											<div className="flex items-center opacity-0 group-hover/chapter:opacity-100 transition-opacity px-1">
 												<ChapterActions
 													chapterId={chapter.id}
 													onUpdate={fetchStructure}
@@ -370,14 +399,14 @@ export function WriterSidebar() {
 												<Button
 													variant="ghost"
 													size="icon"
-													className="h-6 w-6"
+													className="h-7 w-7 text-muted-foreground/50 hover:text-destructive hover:bg-destructive/10 transition-colors rounded-lg"
 													onClick={(e) => {
 														e.stopPropagation();
 														handleDeleteChapter(chapter.id);
 													}}
 													aria-label="Delete chapter"
 												>
-													<Trash2 className="h-3 w-3 text-destructive" />
+													<Trash2 className="h-3.5 w-3.5" />
 												</Button>
 											</div>
 										)}
@@ -391,12 +420,13 @@ export function WriterSidebar() {
 												exit={{ height: 0, opacity: 0 }}
 												transition={{
 													type: "spring",
-													stiffness: 400,
-													damping: 25,
+													stiffness: 500,
+													damping: 30,
+													mass: 0.8
 												}}
 												className="overflow-hidden"
 											>
-												<div className="ml-4 pl-2 border-l border-border/50 space-y-1 mt-1 pb-1">
+												<div className="space-y-0.5 mt-1 px-2">
 													<SortableList
 														items={chapter.scenes}
 														onReorder={(reorderedScenes) =>
@@ -410,25 +440,48 @@ export function WriterSidebar() {
 																id={scene.id}
 																disabled={isReadOnly}
 																className={cn(
-																	"group/scene flex items-center gap-1",
-																	activeSceneId === scene.id &&
-																		"bg-blue-500/5 rounded-md px-1",
+																	"group/scene relative flex items-center gap-1 rounded-lg transition-all duration-200",
+																	activeSceneId === scene.id
+																		? "bg-white/50 dark:bg-white/5 shadow-sm ring-1 ring-black/5 dark:ring-white/10"
+																		: "hover:bg-sidebar-accent/40"
 																)}
 															>
-																<button
-																	type="button"
+																{/* Active Indicator */}
+																{activeSceneId === scene.id && (
+																	<motion.div 
+																		layoutId="activeSceneIndicator"
+																		className="absolute left-1 width-1 h-[60%] w-0.5 bg-primary rounded-full"
+																		initial={{ opacity: 0 }}
+																		animate={{ opacity: 1 }}
+																		transition={{ duration: 0.2 }}
+																	/>
+																)}
+																
+																{/* biome-ignore lint: using div to prevent nested button hydration error */}
+																<div
+																	role="button"
+																	tabIndex={0}
 																	onClick={() => setActiveSceneId(scene.id)}
+																	onKeyDown={(e) => {
+																		if (e.key === "Enter" || e.key === " ") {
+																			e.preventDefault();
+																			setActiveSceneId(scene.id);
+																		}
+																	}}
 																	className={cn(
-																		"flex-1 flex items-center gap-2 px-2 py-1.5 text-sm rounded-md hover:bg-sidebar-accent/50 transition-colors text-left",
+																		"flex-1 flex items-center gap-3 pl-4 pr-2 py-2 text-sm cursor-pointer outline-none select-none w-full text-left",
 																		activeSceneId === scene.id
-																			? "bg-blue-500/10 text-blue-600 dark:text-blue-400 font-medium"
-																			: "text-muted-foreground",
+																			? "text-primary dark:text-primary-foreground font-medium"
+																			: "text-muted-foreground/80 group-hover/scene:text-foreground"
 																	)}
 																>
-																	<div className="h-1.5 w-1.5 rounded-full bg-current opacity-50 shrink-0" />
+																	<div className={cn(
+																		"h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-300",
+																		activeSceneId === scene.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border group-hover/scene:bg-muted-foreground/50"
+																	)} />
+																	{/* biome-ignore lint/a11y/noStaticElementInteractions: preventing parent activation */}
 																	<div
 																		className="flex-1 min-w-0"
-																		onClick={(e) => e.stopPropagation()}
 																		onKeyDown={(e) => {
 																			if (e.key === "Enter" || e.key === " ") {
 																				e.stopPropagation();
@@ -443,19 +496,19 @@ export function WriterSidebar() {
 																			disabled={isReadOnly}
 																		/>
 																	</div>
-																</button>
+																</div>
 																{!isReadOnly && (
 																	<Button
 																		variant="ghost"
 																		size="icon"
-																		className="h-6 w-6 opacity-0 group-hover/scene:opacity-100 transition-opacity"
+																		className="h-7 w-7 mr-1 text-muted-foreground/40 opacity-0 group-hover/scene:opacity-100 hover:text-destructive hover:bg-destructive/10 transition-all rounded-md"
 																		onClick={(e) => {
 																			e.stopPropagation();
 																			handleDeleteScene(scene.id);
 																		}}
 																		aria-label="Delete scene"
 																	>
-																		<Trash2 className="h-3 w-3 text-destructive" />
+																		<Trash2 className="h-3.5 w-3.5" />
 																	</Button>
 																)}
 															</SortableItem>
@@ -465,7 +518,7 @@ export function WriterSidebar() {
 														<Button
 															variant="ghost"
 															size="sm"
-															className="w-full justify-start text-xs text-muted-foreground hover:text-foreground ml-4"
+															className="w-full justify-start text-xs text-muted-foreground/60 hover:text-primary hover:bg-primary/5 pl-9 py-2 h-auto font-normal rounded-lg mt-1 transition-all"
 															onClick={() => handleAddScene(chapter.id)}
 														>
 															<Plus className="mr-2 h-3 w-3" />
@@ -473,8 +526,8 @@ export function WriterSidebar() {
 														</Button>
 													)}
 													{chapter.scenes.length === 0 && (
-														<div className="px-2 py-1.5 text-xs text-muted-foreground italic">
-															No scenes
+														<div className="pl-9 py-2 text-xs text-muted-foreground/40 italic">
+															No scenes yet
 														</div>
 													)}
 												</div>

@@ -92,7 +92,7 @@ export class StoryService {
 		const modelId = await getSelectedModelId("large");
 
 		// Use generationService instead of raw continueWriting
-		const { text } = await generationService.continueWriting(
+		const result = await generationService.continueWriting(
 			fullContext,
 			`Scene Title: ${targetScene.title}\n\n`,
 			{
@@ -101,12 +101,17 @@ export class StoryService {
 			},
 		);
 
-		// 4. Update DB
-		if (text) {
-			await storyRepository.updateSceneContent(sceneId, text);
-			// Content updates generally don't invalidate structure, but if needed:
-			// await invalidateCache(`project-structure:${targetScene.projectId}`);
+		// 4. Check for errors
+		if (result.error) {
+			throw new Error(result.error);
 		}
+
+		if (!result.text) {
+			throw new Error("AI generated empty content for scene");
+		}
+
+		// 5. Update DB
+		await storyRepository.updateSceneContent(sceneId, result.text);
 	}
 }
 

@@ -15,7 +15,10 @@ import {
 	useRef,
 	useState,
 } from "react";
+import { createPortal } from "react-dom";
+import { placeholder } from "prosemirror-placeholder";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { PreviewSuggestion } from "@/components/molecules/preview-suggestion";
 import { EditorBubbleMenu } from "@/components/organisms/writer/tools/editor-bubble-menu";
 import type { Entity, Suggestion } from "@/lib/db/schema";
 import {
@@ -24,7 +27,6 @@ import {
 	headingRule,
 } from "@/lib/editor/config";
 import {
-	buildContentFromDocument,
 	buildDocumentFromContent,
 	createDecorations,
 } from "@/lib/editor/functions";
@@ -33,6 +35,7 @@ import {
 	projectWithPositions,
 	suggestionsPlugin,
 	suggestionsPluginKey,
+	type UISuggestion,
 } from "@/lib/editor/suggestions";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +66,11 @@ interface MentionState {
 	index: number;
 }
 
+interface ActiveSuggestion {
+	suggestion: UISuggestion;
+	coords: { left: number; top: number };
+}
+
 const PureEditor = forwardRef<EditorHandle, EditorProps>(
 	(
 		{
@@ -80,6 +88,8 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		const containerRef = useRef<HTMLDivElement>(null);
 		const editorRef = useRef<EditorView | null>(null);
 		const [, setMounted] = useState(false);
+		const [activeSuggestion, setActiveSuggestion] = useState<ActiveSuggestion | null>(null);
+		const [projectedSuggestions, setProjectedSuggestions] = useState<UISuggestion[]>([]);
 
 		useImperativeHandle(ref, () => ({
 			undo: () => {
@@ -149,42 +159,142 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			[mentionState],
 		);
 
-		// biome-ignore lint/correctness/useExhaustiveDependencies: Init effect
-		useEffect(() => {
-			if (containerRef.current && !editorRef.current) {
-				const state = EditorState.create({
-					doc: buildDocumentFromContent(content),
-					plugins: [
-						...exampleSetup({ schema: documentSchema, menuBar: false }),
-						inputRules({
-							rules: [
-								headingRule(1),
-								headingRule(2),
-								headingRule(3),
-								headingRule(4),
-								headingRule(5),
-								headingRule(6),
-							],
-						}),
-						suggestionsPlugin,
-						mentionPlugin((state) => {
-							setMentionState(state);
-							if (state?.active && state.range && editorRef.current) {
-								const coords = editorRef.current.coordsAtPos(state.range.from);
-								setMentionCoords({ left: coords.left, top: coords.bottom + 5 });
-							} else {
-								setMentionCoords(null);
-							}
-						}),
-					],
-				});
+		// Handle suggestion apply
+		const handleApplySuggestion = useCallback(() => {
+			if (!editorRef.current || !activeSuggestion) return;
 
-				editorRef.current = new EditorView(containerRef.current, {
-					state,
-					editable: () => !readOnly,
+			const { suggestion } = activeSuggestion;
+			const { state, dispatch } = editorRef.current;
+
+			// Remove the decoration for this suggestion
+			const currentState = suggestionsPluginKey.getState(state);
+			const currentDecorations = currentState?.decorations;
+
+			if (currentDecorations) {
+				const newDecorations = currentDecorations.find().filter(
+					(decoration: { spec: { suggestionId?: string } }) =>
+						decoration.spec.suggestionId !== suggestion.id,
+				);
+
+				const decorationTransaction = state.tr;
+				decorationTransaction.setMeta(suggestionsPluginKey, {
+					decorations: newDecorations.length > 0
+						? currentDecorations.remove(
+							currentDecorations.find().filter(
+								(d: { spec: { suggestionId?: string } }) =>
+									d.spec.suggestionId === suggestion.id,
+							),
+						)
+						: currentDecorations,
+					selected: null,
 				});
-				setMounted(true);
+				dispatch(decorationTransaction);
 			}
+
+			// Apply the text replacement
+			const textTransaction = editorRef.current.state.tr.replaceWith(
+				suggestion.selectionStart,
+				suggestion.selectionEnd,
+				state.schema.text(suggestion.suggestedText),
+			);
+			textTransaction.setMeta("no-debounce", true);
+			dispatch(textTransaction);
+
+			setActiveSuggestion(null);
+		}, [activeSuggestion]);
+
+		// Handle click on suggestion highlights
+		const handleEditorClick = useCallback(
+			(event: MouseEvent) => {
+				const target = event.target as HTMLElement;
+				const suggestionId = target.closest("[data-suggestion-id]")?.getAttribute("data-suggestion-id");
+
+				if (suggestionId) {
+					const suggestion = projectedSuggestions.find((s) => s.id === suggestionId);
+					if (suggestion && editorRef.current) {
+						const coords = editorRef.current.coordsAtPos(suggestion.selectionStart);
+						setActiveSuggestion({
+							suggestion,
+							coords: { left: coords.left, top: coords.bottom + 8 },
+						});
+						event.preventDefault();
+						event.stopPropagation();
+					}
+				} else if (activeSuggestion) {
+					// Close suggestion if clicking outside
+					const suggestionPopup = (event.target as HTMLElement).closest("[data-suggestion-popup]");
+					if (!suggestionPopup) {
+						setActiveSuggestion(null);
+					}
+				}
+			},
+			[projectedSuggestions, activeSuggestion],
+		);
+
+		// Track the previous content to detect external changes
+		const prevContentRef = useRef<string | null>(null);
+		
+		// Initialize/reinitialize editor when content changes
+		// biome-ignore lint/correctness/useExhaustiveDependencies: Editor init effect
+		useEffect(() => {
+			// Skip if content hasn't changed
+			if (prevContentRef.current === content && editorRef.current) {
+				return;
+			}
+			
+			// If editor exists and user is editing, don't interrupt
+			if (editorRef.current?.hasFocus()) {
+				return;
+			}
+			
+			// Clean up existing editor
+			if (editorRef.current) {
+				editorRef.current.destroy();
+				editorRef.current = null;
+			}
+			
+			if (!containerRef.current) {
+				return;
+			}
+			
+			// Create new editor with current content
+			const doc = buildDocumentFromContent(content || "");
+			
+			const state = EditorState.create({
+				doc,
+				plugins: [
+					...exampleSetup({ schema: documentSchema, menuBar: false }),
+					inputRules({
+						rules: [
+							headingRule(1),
+							headingRule(2),
+							headingRule(3),
+							headingRule(4),
+							headingRule(5),
+							headingRule(6),
+						],
+					}),
+					placeholder("Start writing your scene... (Type '/' for commands)"),
+					suggestionsPlugin,
+					mentionPlugin((state) => {
+						setMentionState(state);
+						if (state?.active && state.range && editorRef.current) {
+							const coords = editorRef.current.coordsAtPos(state.range.from);
+							setMentionCoords({ left: coords.left, top: coords.bottom + 5 });
+						} else {
+							setMentionCoords(null);
+						}
+					}),
+				],
+			});
+
+			editorRef.current = new EditorView(containerRef.current, {
+				state,
+				editable: () => !readOnly,
+			});
+			
+			prevContentRef.current = content;
+			setMounted(true);
 
 			return () => {
 				if (editorRef.current) {
@@ -192,7 +302,16 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 					editorRef.current = null;
 				}
 			};
-		}, []);
+		}, [content]);
+
+		// Add click handler for suggestion highlights
+		useEffect(() => {
+			const container = containerRef.current;
+			if (container) {
+				container.addEventListener("click", handleEditorClick);
+				return () => container.removeEventListener("click", handleEditorClick);
+			}
+		}, [handleEditorClick]);
 
 		// Update Editor Props (Handlers) to close over latest state
 		useEffect(() => {
@@ -213,6 +332,11 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 								return true;
 							}
 							return false;
+						}
+						// Close suggestion popup on Escape
+						if (activeSuggestion && event.key === "Escape") {
+							setActiveSuggestion(null);
+							return true;
 						}
 						return false;
 					},
@@ -252,58 +376,39 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			mentionState,
 			filteredEntities,
 			insertMention,
+			activeSuggestion,
 		]);
 
+		// Sync content during streaming mode (for real-time updates)
 		useEffect(() => {
-			if (editorRef.current && content) {
-				const currentContent = buildContentFromDocument(
-					editorRef.current.state.doc,
-				);
-
-				if (status === "streaming") {
-					const newDocument = buildDocumentFromContent(content);
-
-					const transaction = editorRef.current.state.tr.replaceWith(
-						0,
-						editorRef.current.state.doc.content.size,
-						newDocument.content,
-					);
-
-					transaction.setMeta("no-save", true);
-					editorRef.current.dispatch(transaction);
-					return;
-				}
-
-				if (editorRef.current.hasFocus()) {
-					return;
-				}
-
-				if (currentContent !== content) {
-					const newDocument = buildDocumentFromContent(content);
-
-					const transaction = editorRef.current.state.tr.replaceWith(
-						0,
-						editorRef.current.state.doc.content.size,
-						newDocument.content,
-					);
-
-					transaction.setMeta("no-save", true);
-					editorRef.current.dispatch(transaction);
-				}
+			// Only needed for streaming mode
+			if (status !== "streaming" || !content || !editorRef.current) {
+				return;
 			}
+
+			const newDocument = buildDocumentFromContent(content);
+			const transaction = editorRef.current.state.tr.replaceWith(
+				0,
+				editorRef.current.state.doc.content.size,
+				newDocument.content,
+			);
+			transaction.setMeta("no-save", true);
+			editorRef.current.dispatch(transaction);
 		}, [content, status]);
 
 		useEffect(() => {
 			if (editorRef.current?.state.doc && content) {
-				const projectedSuggestions = projectWithPositions(
+				const projected = projectWithPositions(
 					editorRef.current.state.doc,
 					suggestions,
 				).filter(
 					(suggestion) => suggestion.selectionStart && suggestion.selectionEnd,
 				);
 
+				setProjectedSuggestions(projected);
+
 				const decorations = createDecorations(
-					projectedSuggestions,
+					projected,
 					editorRef.current,
 				);
 
@@ -376,6 +481,29 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 							</motion.div>
 						)}
 				</AnimatePresence>
+
+				{/* Suggestion Popup - Rendered within React tree using portal */}
+				{activeSuggestion && typeof document !== "undefined" && createPortal(
+					<motion.div
+						data-suggestion-popup
+						initial={{ opacity: 0, y: -5 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: -5 }}
+						className="fixed z-[100]"
+						style={{
+							left: activeSuggestion.coords.left,
+							top: activeSuggestion.coords.top,
+						}}
+					>
+						<PreviewSuggestion
+							suggestion={activeSuggestion.suggestion}
+							onApply={handleApplySuggestion}
+							onReject={() => setActiveSuggestion(null)}
+							artifactKind="text"
+						/>
+					</motion.div>,
+					document.body,
+				)}
 			</div>
 		);
 	},

@@ -118,15 +118,14 @@ export function InlineEditableTitle({
 		<button
 			type="button"
 			className={cn(
-				"truncate cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-0 p-0 text-left w-full",
+				"truncate cursor-pointer hover:opacity-80 transition-opacity bg-transparent border-0 p-0 text-left w-full outline-none focus:ring-0",
 				disabled && "cursor-default hover:opacity-100",
 				className,
 			)}
-			onClick={handleStartEdit}
 			onDoubleClick={handleStartEdit}
 			disabled={disabled}
-			title={disabled ? undefined : "Click to edit"}
-			aria-label={disabled ? value : `Edit ${value}. Click to edit`}
+			title={disabled ? undefined : "Double-click to edit"}
+			aria-label={disabled ? value : `Edit ${value}. Double-click to edit`}
 		>
 			{value}
 		</button>

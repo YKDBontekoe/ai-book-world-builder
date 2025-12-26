@@ -174,25 +174,56 @@ export const aiClient = {
 	async generateObject<T extends z.ZodType>(
 		params: ObjectGenerationParams<T>,
 	): Promise<AIResult<{ object: z.infer<T> }>> {
-		try {
-			const modelId = await resolveModelId(params.options);
+		const maxRetries = 3;
+		const modelId = await resolveModelId(params.options);
+		let lastError: Error | null = null;
 
-			const result = await generateObject({
-				model: myProvider.languageModel(modelId),
-				system: params.options?.system,
-				schema: params.schema,
-				prompt: params.prompt,
-				temperature: params.options?.temperature,
-				maxOutputTokens: params.options?.maxTokens,
-			});
+		for (let attempt = 1; attempt <= maxRetries; attempt++) {
+			try {
+				const result = await generateObject({
+					model: myProvider.languageModel(modelId),
+					system: params.options?.system,
+					schema: params.schema,
+					prompt: params.prompt,
+					temperature: params.options?.temperature,
+					maxOutputTokens: params.options?.maxTokens,
+				});
 
-			return aiSuccess({ object: result.object });
-		} catch (error) {
-			console.error("[AIClient] Object generation failed:", error);
-			return aiError(
-				error instanceof Error ? error.message : "Object generation failed",
-			);
+				return aiSuccess({ object: result.object });
+			} catch (error) {
+				lastError = error instanceof Error ? error : new Error(String(error));
+				const isParseError = lastError.message.includes("could not parse") || 
+					lastError.message.includes("No object generated") ||
+					lastError.message.includes("JSON");
+				
+				console.warn(
+					`[AIClient] Object generation attempt ${attempt}/${maxRetries} failed (model: ${modelId}):`,
+					lastError.message
+				);
+
+				// Only retry on parse errors, not on rate limits or auth issues
+				if (!isParseError || attempt === maxRetries) {
+					break;
+				}
+
+				// Exponential backoff: 500ms, 1000ms, 2000ms
+				const delay = 500 * Math.pow(2, attempt - 1);
+				await new Promise(resolve => setTimeout(resolve, delay));
+			}
 		}
+
+		// All retries failed
+		console.error("[AIClient] Object generation failed after retries:", lastError);
+		
+		let errorMessage = "Object generation failed";
+		if (lastError) {
+			errorMessage = lastError.message;
+			if (errorMessage.includes("could not parse") || errorMessage.includes("No object generated")) {
+				errorMessage = `The AI failed to generate a valid structured response after ${maxRetries} attempts. This may be a model compatibility issue - try a different model or simplify your request.`;
+			}
+		}
+		
+		return aiError(errorMessage);
 	},
 
 	/**

@@ -130,7 +130,7 @@ export function WriterEditor() {
 
 			<div className="flex-1 overflow-y-auto relative scroll-smooth">
 				{activeSceneId ? (
-					<div className="max-w-3xl mx-auto min-h-full py-8 px-8 pb-32">
+					<div className="writer-instance max-w-3xl mx-auto min-h-full py-8 px-8 pb-32">
 						<Editor
 							ref={editorRef}
 							key={activeSceneId} // Reset editor when scene changes
