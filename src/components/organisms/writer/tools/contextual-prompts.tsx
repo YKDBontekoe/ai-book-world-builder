@@ -88,7 +88,7 @@ export function ContextualPrompts() {
 			const mentionedEntities = entities?.filter((e) =>
 				debouncedContent.toLowerCase().includes(e.name.toLowerCase()),
 			);
-			if (mentionedEntities && mentionedEntities.length === 0 && entities.length > 0) {
+			if (mentionedEntities && mentionedEntities.length === 0 && entities && entities.length > 0) {
 				newPrompts.push({
 					id: "entities",
 					text: `You have ${entities.length} entities in your world. Consider mentioning them.`,
