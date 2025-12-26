@@ -12,7 +12,7 @@ import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-ca
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
 import { WriterSpotlight } from "@/components/organisms/writer/tools/writer-spotlight";
 import { WriterProvider } from "@/components/organisms/writer/writer-context";
-import { WriterControlBar } from "@/components/organisms/writer/writer-control-bar";
+import { PowerDock } from "@/components/organisms/writer/power-dock";
 import {
 	useWriterControl,
 	WriterControlProvider,
@@ -121,7 +121,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				>
 					<WriterEditor />
 					{/* Control Bar lives here, overlaying the editor */}
-					<WriterControlBar />
+					<PowerDock />
 					<WriterSpotlight />
 				</ResizablePanel>
 

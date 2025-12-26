@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
+// Hoist mocks to avoid execution order issues
 vi.mock("@/app/(auth)/auth", () => ({
 	auth: vi.fn(),
 }));
@@ -25,11 +26,16 @@ vi.mock("@/lib/db/repositories", () => ({
 	},
 }));
 
+vi.mock("@/lib/cache", () => ({
+	invalidateCache: vi.fn(),
+}));
+
 import { auth } from "@/app/(auth)/auth";
 import { updateSceneAction } from "@/app/actions/scenes";
 // We must import projectRepository from the FILE to spy on it correctly if actions-utils uses the file
 import { projectRepository } from "@/lib/db/repositories/project-repository";
 import { sceneRepository } from "@/lib/db/repositories"; // Scenes uses index
+import { invalidateCache } from "@/lib/cache";
 import type { Project, Scene } from "@/lib/db/schema";
 import { isErr, isOk } from "@/lib/result";
 
@@ -39,6 +45,7 @@ const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
+const mockedInvalidateCache = vi.mocked(invalidateCache);
 
 const userId = "user-123";
 const projectId = "project-123";
@@ -90,7 +97,7 @@ describe("scenes server actions", () => {
 		vi.clearAllMocks();
 	});
 
-	it("updates a scene when the user owns the project", async () => {
+	it("updates a scene when the user owns the project and invalidates cache if title changes", async () => {
 		const updatedScene = buildScene({ title: "Updated Title" });
 
 		mockedAuth.mockResolvedValue(buildSession());
@@ -114,6 +121,31 @@ describe("scenes server actions", () => {
 		if (isOk(result)) {
 			expect(result.data.title).toBe("Updated Title");
 		}
+		expect(mockedInvalidateCache).toHaveBeenCalledWith(
+			`project-structure:${projectId}`,
+		);
+	});
+
+	it("updates a scene content but does NOT invalidate structure cache", async () => {
+		const updatedScene = buildScene({ content: "New content" });
+
+		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
+		mockedUpdateScene.mockResolvedValue(updatedScene);
+
+		await updateSceneAction({
+			id: sceneId,
+			content: "New content",
+			projectId,
+		});
+
+		expect(mockedUpdateScene).toHaveBeenCalledWith(sceneId, {
+			title: undefined,
+			status: undefined,
+			content: "New content",
+		});
+		// Should NOT be called because title was not passed
+		expect(mockedInvalidateCache).not.toHaveBeenCalled();
 	});
 
 	it("returns error when the project is inaccessible", async () => {
@@ -133,6 +165,7 @@ describe("scenes server actions", () => {
 		}
 
 		expect(mockedUpdateScene).not.toHaveBeenCalled();
+		expect(mockedInvalidateCache).not.toHaveBeenCalled();
 	});
 
 	it("returns error when the project is public but owned by someone else", async () => {
@@ -152,5 +185,6 @@ describe("scenes server actions", () => {
 		}
 
 		expect(mockedUpdateScene).not.toHaveBeenCalled();
+		expect(mockedInvalidateCache).not.toHaveBeenCalled();
 	});
 });
