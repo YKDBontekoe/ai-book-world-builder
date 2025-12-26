@@ -189,11 +189,13 @@ describe("POST /api/files/upload", () => {
 
 	it("enforces per-role size caps", async () => {
 		const sizeLimit = sourceMaterialSizeLimits.regular;
-		const file = createMockFile(
-			"a".repeat(sizeLimit + 1),
-			"oversize.pdf",
-			"application/pdf",
-		);
+		// Creating a huge string can cause memory issues and timeouts in testing.
+		// Instead of creating a real large string, we should mock the file size
+		// since we are testing the size check logic, not the file creation/handling.
+
+		const file = createMockFile("mock-content", "oversize.pdf", "application/pdf");
+		// Override size property to be over the limit
+		Object.defineProperty(file, 'size', { value: sizeLimit + 1 });
 
 		mockedAuth.mockResolvedValue(buildSession("regular-1") as any);
 		mockedGetProjectByIdWithAccess.mockResolvedValue(
