@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+
 import {
 	BarChart3,
 	Clock,
@@ -9,7 +9,7 @@ import {
 	X,
 	Zap,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import {
@@ -52,21 +52,26 @@ export function SessionInsights() {
 		entities: entities || [],
 	});
 
+	const lastWordCountRef = useRef(sessionStats.wordCountCurrent);
+
 	// Update session stats
 	useEffect(() => {
 		if (!sceneContent) return;
 
 		const currentWordCount = narrativeMetrics.wordCount;
-		const wordDelta = currentWordCount - sessionStats.wordCountCurrent;
-
-		if (wordDelta !== 0) {
+		
+		// Only update if the word count has actually changed from our last record
+		// This prevents infinite loops where state updates trigger the effect again
+		if (currentWordCount !== lastWordCountRef.current) {
+			lastWordCountRef.current = currentWordCount;
+			
 			setSessionStats((prev) => ({
 				...prev,
 				wordCountCurrent: currentWordCount,
 				editsCount: prev.editsCount + 1,
 			}));
 		}
-	}, [sceneContent, narrativeMetrics.wordCount, sessionStats.wordCountCurrent, setSessionStats]);
+	}, [sceneContent, narrativeMetrics.wordCount, setSessionStats]);
 
 	// Calculate time spent
 	const timeSpent = Math.floor(

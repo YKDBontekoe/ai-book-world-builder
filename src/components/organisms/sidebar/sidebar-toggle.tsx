@@ -1,3 +1,5 @@
+"use client";
+
 import { PanelLeftIcon } from "lucide-react";
 import type { ComponentProps } from "react";
 import { Button } from "@/components/atoms/button";

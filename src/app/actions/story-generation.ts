@@ -82,6 +82,7 @@ export async function generateSceneText(sceneId: string) {
 		return { success: true };
 	} catch (error) {
 		console.error("Failed to generate scene text", error);
-		return { success: false };
+		const errorMessage = error instanceof Error ? error.message : "Failed to generate scene content";
+		return { success: false, error: errorMessage };
 	}
 }
