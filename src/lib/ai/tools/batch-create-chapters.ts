@@ -1,8 +1,8 @@
 import { tool } from "ai";
-import { inArray } from "drizzle-orm"; // Might need this if we do bulk fetching, but singular is fine for now.
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { db, getVolumePlanById } from "@/lib/db/queries";
+import { projectRepository } from "@/lib/db/repositories";
 import { chapter } from "@/lib/db/schema";
 
 export const batchCreateChapters = ({
@@ -38,7 +38,7 @@ export const batchCreateChapters = ({
 			const { volumeId, chapters, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
-			if (!session?.user) {
+			if (!session?.user?.id) {
 				return { error: "Authentication required to create chapters." };
 			}
 
@@ -53,12 +53,21 @@ export const batchCreateChapters = ({
 					};
 				}
 
+				// If finalProjectId is provided, ensure it matches
 				const projectMatches =
 					!finalProjectId || volumePlan.projectId === finalProjectId;
 				if (!projectMatches) {
-					// Warning or soft error? Strict for now.
-					// actually getVolumePlanById might not check projectId, so good to check.
+					return {
+						error: "Provided project ID does not match volume's project.",
+					};
 				}
+
+				// SECURITY: Verify project ownership using the volume's projectId
+				// (Since a user could provide a valid volumeId from a public project they don't own)
+				await projectRepository.findByIdWithOwnership(
+					volumePlan.projectId,
+					session.user.id,
+				);
 
 				const results: Array<{
 					title: string;

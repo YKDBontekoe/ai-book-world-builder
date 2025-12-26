@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { entityRepository } from "@/lib/db/repositories";
+import { entityRepository, projectRepository } from "@/lib/db/repositories";
 
 export const batchCreateEntities = ({
 	session: _session,
@@ -64,11 +64,21 @@ export const batchCreateEntities = ({
 			const { entities, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
+			if (!_session?.user?.id) {
+				return { error: "Authentication required." };
+			}
+
 			if (!finalProjectId) {
 				return { error: "Project ID is required to create entities." };
 			}
 
 			try {
+				// SECURITY: Verify project ownership
+				await projectRepository.findByIdWithOwnership(
+					finalProjectId,
+					_session.user.id,
+				);
+
 				const results = [];
 
 				for (const entityData of entities) {

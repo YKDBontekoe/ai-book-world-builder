@@ -1,7 +1,7 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { sceneRepository } from "@/lib/db/repositories";
+import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 
 const batchCreateScenesSchema = z.object({
 	chapterId: z
@@ -43,7 +43,7 @@ export const batchCreateScenes = ({
 			const { chapterId, scenes, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
-			if (!session?.user) {
+			if (!session?.user?.id) {
 				return { error: "Authentication required." };
 			}
 
@@ -52,6 +52,12 @@ export const batchCreateScenes = ({
 			}
 
 			try {
+				// SECURITY: Verify project ownership (throws ForbiddenError if invalid)
+				await projectRepository.findByIdWithOwnership(
+					finalProjectId,
+					session.user.id,
+				);
+
 				const results = [];
 
 				for (const sceneData of scenes) {
