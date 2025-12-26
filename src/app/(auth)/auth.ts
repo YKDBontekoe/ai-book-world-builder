@@ -9,6 +9,8 @@ import { DUMMY_PASSWORD } from "@/lib/constants";
 import { db } from "@/lib/db/drizzle";
 import { getUser } from "@/lib/db/queries/user";
 import { account, user as userTable } from "@/lib/db/schema";
+import type { UserRole } from "@/lib/db/schema/auth";
+import { eq } from "drizzle-orm";
 
 export type UserType = "regular";
 
@@ -17,6 +19,7 @@ declare module "next-auth" {
 		user: {
 			id: string;
 			type: UserType;
+			role: UserRole;
 		} & DefaultSession["user"];
 	}
 
@@ -25,6 +28,7 @@ declare module "next-auth" {
 		id?: string;
 		email?: string | null;
 		type: UserType;
+		role: UserRole;
 	}
 }
 
@@ -32,6 +36,7 @@ declare module "next-auth/jwt" {
 	interface JWT extends DefaultJWT {
 		id: string;
 		type: UserType;
+		role: UserRole;
 	}
 }
 
@@ -74,6 +79,11 @@ export const {
 
 				const [user] = users;
 
+				// Ban Check
+				if (user.bannedAt) {
+					return null;
+				}
+
 				if (!user.password) {
 					await compare(password, DUMMY_PASSWORD);
 					return null;
@@ -85,15 +95,53 @@ export const {
 					return null;
 				}
 
-				return { ...user, type: "regular" };
+				return { ...user, type: "regular", role: user.role };
 			},
 		}),
 	],
 	callbacks: {
-		jwt({ token, user }) {
+		async signIn({ user }) {
+			// Check ban status for OAuth providers
+			// For Credentials, authorize() handles it, but safe to double check or if user comes from Adapter
+			if (user.email) {
+				// We need to fetch the user from DB to check bannedAt because 'user' object here might be from provider
+				// However, DrizzleAdapter should return the DB user if it exists.
+				// But NextAuth types are tricky. Let's do a quick query to be safe if 'bannedAt' isn't on the user object yet.
+				// Since we modified schema, 'user' might have it if adapter fetched it.
+				// To be safe, let's cast or check property.
+				const dbUser = (user as any);
+				if (dbUser.bannedAt) return false;
+
+				// Double check DB if strictly needed, but for perf let's rely on adapter or basic flow.
+				// Actually, for Google login, the user is created/fetched by adapter.
+				// Let's rely on jwt callback to reject? No, signIn is better to stop it early.
+
+				const existingUsers = await getUser(user.email);
+				if (existingUsers.length > 0 && existingUsers[0].bannedAt) {
+					return false;
+				}
+			}
+			return true;
+		},
+		async jwt({ token, user }) {
 			if (user) {
 				token.id = user.id as string;
 				token.type = "regular";
+
+				// Handle Admin Promotion on Login
+				let role = user.role;
+				if (user.email && user.email === process.env.ADMIN_EMAIL && role !== "admin") {
+					try {
+						await db
+							.update(userTable)
+							.set({ role: "admin" })
+							.where(eq(userTable.email, user.email));
+						role = "admin";
+					} catch (error) {
+						console.error("Failed to promote admin user", error);
+					}
+				}
+				token.role = role || "user";
 			}
 
 			return token;
@@ -102,6 +150,7 @@ export const {
 			if (session.user) {
 				session.user.id = token.id;
 				session.user.type = token.type;
+				session.user.role = token.role;
 			}
 
 			return session;
