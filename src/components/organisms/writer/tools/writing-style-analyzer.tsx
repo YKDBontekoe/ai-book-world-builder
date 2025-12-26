@@ -62,7 +62,9 @@ export function WritingStyleAnalyzer() {
 		// Voice analysis (active vs passive)
 		const passiveIndicators = /\b(was|were|been|being|is|are|am)\s+\w+ed\b/gi;
 		const passiveMatches = debouncedContent.match(passiveIndicators) || [];
-		const passiveRatio = passiveMatches.length / sentences.length;
+		const passiveRatio = sentences.length > 0 
+			? passiveMatches.length / sentences.length 
+			: 0;
 		const voice: "active" | "passive" | "mixed" =
 			passiveRatio > 0.3 ? "passive" : passiveRatio < 0.1 ? "active" : "mixed";
 
