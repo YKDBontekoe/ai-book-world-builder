@@ -49,6 +49,31 @@ The chat interface is now integrated into the **Floating Assistant** (Writer Vie
 
 > **Pro Tip**: Use the **"@"** key to explicitly reference a specific character or document in your chat.
 
+## Writer Tools
+
+The Writer View includes specialized AI tools to assist your creative process. Access these via the **Tools** menu in the control bar.
+
+### 1. AI Autocomplete
+Get instant suggestions for what comes next in your story.
+-   **How to use**: simply pause writing for a moment. The AI will analyze your context and automatically popup suggestions.
+-   **What it does**: The AI reads the preceding text and offers a continuation that matches your style.
+-   **Controls**: Use **Arrow Keys** to navigate suggestions and **Enter** to accept. Press **Esc** to dismiss.
+
+### 2. Writing Style Analyzer
+Ensure your writing feels consistent and polished.
+-   **How to use**: Open the **Style** panel. It updates automatically as you write.
+-   **What you get**: A real-time report detailing:
+    -   **Tone**: Is it formal, casual, or neutral?
+    -   **Voice**: Tracks active vs. passive voice usage.
+    -   **Pacing**: A score indicating if the scene is fast-paced or slow-burning.
+    -   **Descriptive Level**: Measures how rich your sensory details are.
+
+### 3. Session Insights
+Track your productivity and writing habits.
+-   **How to use**: Click the **Session** button in the top bar.
+-   **Metrics**: View your session duration, words written, words per minute (WPM), and edit count.
+-   **Reset**: You can reset the session stats at any time to start fresh (e.g., for a "sprint").
+
 ## Troubleshooting
 
 -   **The AI got a fact wrong**: Check your **World** entities. Does the entity exist? Is the description clear? The AI relies on what you've written there.
