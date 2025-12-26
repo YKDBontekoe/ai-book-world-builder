@@ -12,6 +12,8 @@ import {
 interface EditorActions {
 	undo: () => void;
 	redo: () => void;
+	insertText: (text: string) => void;
+	getSelection: () => { from: number; to: number; text: string } | null;
 }
 
 interface WriterControlContextType {
