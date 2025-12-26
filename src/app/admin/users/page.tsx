@@ -1,4 +1,12 @@
 import { getUsers } from "@/app/actions/admin";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/atoms/table"; // Assuming table component exists in atoms or ui, need to verify
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import Link from "next/link";

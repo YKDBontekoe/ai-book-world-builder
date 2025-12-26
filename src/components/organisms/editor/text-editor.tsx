@@ -234,13 +234,30 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		// Track the previous content to detect external changes
 		const prevContentRef = useRef<string | null>(null);
 		
-		// Initialize editor once
+		// Initialize/reinitialize editor when content changes
+		// biome-ignore lint/correctness/useExhaustiveDependencies: Editor init effect
 		useEffect(() => {
-			if (!containerRef.current) return;
+			// Skip if content hasn't changed
+			if (prevContentRef.current === content && editorRef.current) {
+				return;
+			}
 
-			// If editor already exists, don't recreate it
-			if (editorRef.current) return;
+			// If editor exists and user is editing, don't interrupt
+			if (editorRef.current?.hasFocus()) {
+				return;
+			}
 
+			// Clean up existing editor
+			if (editorRef.current) {
+				editorRef.current.destroy();
+				editorRef.current = null;
+			}
+
+			if (!containerRef.current) {
+				return;
+			}
+
+			// Create new editor with current content
 			const doc = buildDocumentFromContent(content || "");
 
 			const state = EditorState.create({
@@ -285,35 +302,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 					editorRef.current = null;
 				}
 			};
-		}, []); // Empty dependency array to run once on mount
-
-		// Synchronize content when it changes externally
-		// biome-ignore lint/correctness/useExhaustiveDependencies: Editor sync logic
-		useEffect(() => {
-			// Skip if content hasn't changed or editor doesn't exist
-			if (prevContentRef.current === content || !editorRef.current) {
-				return;
-			}
-
-			// If user is editing (has focus), don't overwrite their work with external updates
-			// UNLESS we are in streaming mode, which is an additive process we want to show
-			if (editorRef.current.hasFocus() && status !== "streaming") {
-				return;
-			}
-
-			const newDocument = buildDocumentFromContent(content || "");
-			const transaction = editorRef.current.state.tr.replaceWith(
-				0,
-				editorRef.current.state.doc.content.size,
-				newDocument.content,
-			);
-
-			// Mark as no-save to prevent looping back
-			transaction.setMeta("no-save", true);
-
-			editorRef.current.dispatch(transaction);
-			prevContentRef.current = content;
-		}, [content, status]);
+		}, [content]);
 
 		// Add click handler for suggestion highlights
 		useEffect(() => {
@@ -390,6 +379,22 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			activeSuggestion,
 		]);
 
+		// Sync content during streaming mode (for real-time updates)
+		useEffect(() => {
+			// Only needed for streaming mode
+			if (status !== "streaming" || !content || !editorRef.current) {
+				return;
+			}
+
+			const newDocument = buildDocumentFromContent(content);
+			const transaction = editorRef.current.state.tr.replaceWith(
+				0,
+				editorRef.current.state.doc.content.size,
+				newDocument.content,
+			);
+			transaction.setMeta("no-save", true);
+			editorRef.current.dispatch(transaction);
+		}, [content, status]);
 
 		useEffect(() => {
 			if (editorRef.current?.state.doc && content) {

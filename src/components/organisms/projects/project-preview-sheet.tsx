@@ -1,7 +1,6 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { useQuery } from "@tanstack/react-query";
 import {
 	Book,
 	ChevronRight,
@@ -12,8 +11,12 @@ import {
 	Zap,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getProjectPreviewData } from "@/app/actions/project-preview";
+import {
+	getProjectPreviewData,
+	type ProjectPreviewData,
+} from "@/app/actions/project-preview";
 import { Button } from "@/components/atoms/button";
 import { Sheet, SheetContent } from "@/components/atoms/sheet";
 import { GlassCard } from "@/components/molecules/glass-card";
@@ -30,19 +33,23 @@ export function ProjectPreviewSheet({
 	isOpen,
 	onClose,
 }: ProjectPreviewSheetProps) {
-	const { data, isLoading } = useQuery({
-		queryKey: ["project-preview", project.id],
-		queryFn: async () => {
-			const result = await getProjectPreviewData(project.id);
-			if ("error" in result) {
-				toast.error(result.error);
-				throw new Error(result.error);
-			}
-			return result.data;
-		},
-		enabled: isOpen,
-		staleTime: 60 * 1000,
-	});
+	const [data, setData] = useState<ProjectPreviewData | null>(null);
+	const [isLoading, setIsLoading] = useState(false);
+
+	useEffect(() => {
+		if (isOpen && !data) {
+			setIsLoading(true);
+			getProjectPreviewData(project.id)
+				.then((result) => {
+					if ("error" in result) {
+						toast.error(result.error);
+					} else {
+						setData(result.data);
+					}
+				})
+				.finally(() => setIsLoading(false));
+		}
+	}, [isOpen, project.id, data]);
 
 	return (
 		<Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
