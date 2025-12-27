@@ -1,6 +1,17 @@
 name: CI
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/**'
+      - 'next.config.*'
+      - 'tsconfig.json'
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
@@ -281,7 +292,18 @@ jobs:
             exit 0
           fi
           
-          gh pr comment "$PR_NUMBER" --body "🚨 CI Failed - Jobs: $FAILED_JOBS - [View Run]($RUN_URL)" --repo "${{ github.repository }}"
+          COMMENT_BODY=$(cat <<EOF
+          🚨 **CI Failed** - Jobs: \`$FAILED_JOBS\`
+          
+          @jules please fix the following CI failures:
+          - Failed jobs: $FAILED_JOBS
+          - [View Run]($RUN_URL)
+          
+          Run \`pnpm lint\`, \`pnpm type-check\`, and \`pnpm test:unit\` locally to reproduce and fix the issues.
+          EOF
+          )
+          
+          gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" --repo "${{ github.repository }}"
 
   # ============================================================================
   # JULES: Convert draft PR to ready when CI passes
