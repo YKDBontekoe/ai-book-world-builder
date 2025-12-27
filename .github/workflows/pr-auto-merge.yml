@@ -23,6 +23,9 @@ jobs:
       github.event.check_suite.conclusion == 'success' ||
       github.event.review.state == 'approved'
     steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
       - name: Get PR and check eligibility
         id: check
         env:
