@@ -297,8 +297,8 @@ importers:
         specifier: 1.6.10
         version: 1.6.10(@types/mdast@4.0.4)(micromark-util-types@2.0.2)(micromark@4.0.2)(react@19.2.3)
       tailwind-merge:
-        specifier: 2.6.0
-        version: 2.6.0
+        specifier: 3.4.0
+        version: 3.4.0
       tailwindcss-animate:
         specifier: 1.0.7
         version: 1.0.7(tailwindcss@4.1.18)
@@ -5717,9 +5717,6 @@ packages:
 
   symbol-tree@3.2.4:
     resolution: {integrity: sha512-9QNk5KwDF+Bvz+PyObkmSYjI5ksVUYtjW7AU22r2NKcfLJcXp96hkDWU3+XndOsUb+AQ9QhfzfCT2O+CNWT5Tw==}
-
-  tailwind-merge@2.6.0:
-    resolution: {integrity: sha512-P+Vu1qXfzediirmHOC3xKGAYeZtPcV9g76X+xg2FD4tYgR71ewMA35Y3sCz3zhiN/dwefRpJX0yBcgwi1fXNQA==}
 
   tailwind-merge@3.4.0:
     resolution: {integrity: sha512-uSaO4gnW+b3Y2aWoWfFpX62vn2sR3skfhbjsEnaBI81WD1wBLlHZe5sWf0AqjksNdYTbGBEd0UasQMT3SNV15g==}
@@ -11848,8 +11845,6 @@ snapshots:
       use-sync-external-store: 1.6.0(react@19.2.3)
 
   symbol-tree@3.2.4: {}
-
-  tailwind-merge@2.6.0: {}
 
   tailwind-merge@3.4.0: {}
 
