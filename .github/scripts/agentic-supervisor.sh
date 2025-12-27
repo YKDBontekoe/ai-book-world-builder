@@ -4,22 +4,8 @@ set -e
 # ==============================================================================
 # Agentic Supervisor Logic
 # ==============================================================================
-#
-# Inputs (Env Vars):
-#   GITHUB_EVENT_PATH: Path to the event JSON file
-#   GITHUB_EVENT_NAME: Name of the event (issue_comment, issues, pull_request, etc.)
-#   GITHUB_REPOSITORY: owner/repo
-#   GH_TOKEN: GitHub Token for API calls (optional, required for PR lookup)
-#
-# Outputs (GITHUB_OUTPUT):
-#   is_pr, number, branch, author, labels
-#   should_invoke_jules, jules_prompt, should_trigger_coderabbit
-#
-# ==============================================================================
 
-# 1. Helper Functions
-# -------------------
-
+# ... (Logging and Helper functions remain the same) ...
 log() {
   echo "[Supervisor] $1" >&2
 }
@@ -30,17 +16,14 @@ set_output() {
 
   if [[ -n "$GITHUB_OUTPUT" ]]; then
     if [[ "$val" == *$'\n'* ]]; then
-      # Multiline output
       local delimiter="EOF-$(date +%s)-$RANDOM"
       echo "$key<<$delimiter" >> "$GITHUB_OUTPUT"
       echo "$val" >> "$GITHUB_OUTPUT"
       echo "$delimiter" >> "$GITHUB_OUTPUT"
     else
-      # Single line output
       echo "$key=$val" >> "$GITHUB_OUTPUT"
     fi
   else
-    # Local fallback
     echo "::set-output name=$key::$val"
   fi
 }
@@ -79,9 +62,6 @@ if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "pull_request_review" 
 # Context: Issue Comment
 elif [[ "$EVENT_NAME" == "issue_comment" ]]; then
   NUMBER=$(get_json_val ".issue.number")
-  # Note: .issue.user.login is the issue creator, not necessarily the context we want for permissions,
-  # but for the "Author" output, we usually track the resource owner.
-  # The *comment* author is relevant for the prompt.
   AUTHOR=$(get_json_val ".issue.user.login")
   LABELS=$(get_json_val "[.issue.labels[].name] | join(\",\")")
 
@@ -89,22 +69,15 @@ elif [[ "$EVENT_NAME" == "issue_comment" ]]; then
 
   if [[ -n "$PR_URL" ]]; then
     IS_PR="true"
-    log "Comment is on a PR. Fetching PR details..."
-
     if [[ -n "$GH_TOKEN" ]]; then
-      # Fetch Branch Name safely
       PR_DATA=$(gh pr view "$NUMBER" --json headRefName,author --repo "${GITHUB_REPOSITORY}" 2>/dev/null || echo "")
       if [[ -n "$PR_DATA" ]]; then
         BRANCH=$(echo "$PR_DATA" | jq -r ".headRefName")
         AUTHOR=$(echo "$PR_DATA" | jq -r ".author.login")
-      else
-        log "Warning: Failed to fetch PR data via gh cli."
       fi
     elif [[ -n "$MOCK_GH_CLI" ]]; then
       BRANCH="mock-branch"
       AUTHOR="mock-pr-author"
-    else
-      log "Warning: GH_TOKEN not set, cannot fetch PR branch."
     fi
   else
     IS_PR="false"
@@ -135,9 +108,9 @@ ISSUE_TITLE=""
 REVIEW_BODY=""
 REVIEW_AUTHOR=""
 REVIEW_STATE=""
+REVIEW_ID=""
 LABEL_NAME=""
 
-# Extract specific content
 if [[ "$EVENT_NAME" == "issue_comment" ]]; then
   COMMENT_BODY=$(get_json_val ".comment.body")
   COMMENT_AUTHOR=$(get_json_val ".comment.user.login")
@@ -149,6 +122,7 @@ elif [[ "$EVENT_NAME" == "pull_request_review" ]]; then
   REVIEW_BODY=$(get_json_val ".review.body")
   REVIEW_AUTHOR=$(get_json_val ".review.user.login")
   REVIEW_STATE=$(get_json_val ".review.state")
+  REVIEW_ID=$(get_json_val ".review.id")
 fi
 
 # Logic A: @Jules Mention
@@ -162,8 +136,6 @@ if [[ "$EVENT_NAME" == "issue_comment" ]]; then
     fi
   fi
 
-  # Logic A.2: CodeRabbit Agent Prompt
-  # Robust check: Author is coderabbit AND body contains the magic header
   if [[ "$COMMENT_AUTHOR" == "coderabbitai[bot]" ]]; then
     if echo "$COMMENT_BODY" | grep -q "Prompt for AI Agents"; then
       SHOULD_INVOKE_JULES="true"
@@ -179,7 +151,6 @@ if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME"
 fi
 
 # Logic C: CodeRabbit Trigger (Bot PRs)
-# Triggers CodeRabbit review on PRs created by bots or specific users
 if [[ "$IS_PR" == "true" ]]; then
   if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" ]]; then
     if [[ "$EVENT_NAME" == "pull_request" && ( "$EVENT_ACTION" == "opened" || "$EVENT_ACTION" == "synchronize" ) ]]; then
@@ -188,11 +159,42 @@ if [[ "$IS_PR" == "true" ]]; then
   fi
 fi
 
-# Logic D: Human Review Changes Requested
-if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_STATE" == "changes_requested" ]]; then
-  if [[ "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
+# Logic D: Review Changes (Human or CodeRabbit)
+if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" ]]; then
+
+  # D.1 Human Review
+  if [[ "$REVIEW_STATE" == "changes_requested" && "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
     SHOULD_INVOKE_JULES="true"
     JULES_PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback on branch '$BRANCH'."
+  fi
+
+  # D.2 CodeRabbit Batch Review
+  if [[ "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
+    log "Processing CodeRabbit review submission..."
+
+    COMMENTS_DATA=""
+    if [[ -n "$GH_TOKEN" ]]; then
+      # Fetch review comments using GH CLI
+      # GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments
+      COMMENTS_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/reviews/${REVIEW_ID}/comments" --jq '.[] | "- File: \(.path) (Line \(.line // .original_line)): \(.body)"' 2>/dev/null || echo "")
+    elif [[ -n "$MOCK_GH_CLI" ]]; then
+      COMMENTS_DATA="- File: src/main.ts (Line 10): Fix typo\n- File: src/utils.ts (Line 5): Optimize loop"
+    fi
+
+    if [[ -n "$COMMENTS_DATA" ]]; then
+      SHOULD_INVOKE_JULES="true"
+      JULES_PROMPT="CodeRabbit Automatic Review for PR #$NUMBER (Branch: $BRANCH).
+
+Review Summary:
+$REVIEW_BODY
+
+Detailed Comments:
+$COMMENTS_DATA
+
+Please address these issues."
+    else
+      log "No detailed comments found for CodeRabbit review."
+    fi
   fi
 fi
 
