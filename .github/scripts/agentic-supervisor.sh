@@ -130,7 +130,7 @@ if [[ "$EVENT_NAME" == "issue_comment" ]]; then
   if echo "$COMMENT_BODY" | grep -q "@jules"; then
     SHOULD_INVOKE_JULES="true"
     if [[ "$IS_PR" == "true" ]]; then
-      JULES_PROMPT="User @$COMMENT_AUTHOR commented on PR #$NUMBER (Branch: $BRANCH): '$COMMENT_BODY'. Please address their request."
+      JULES_PROMPT="User @$COMMENT_AUTHOR commented on PR #$NUMBER (Branch: $BRANCH): '$COMMENT_BODY'. Please address their request. Commit changes directly to the '$BRANCH' branch."
     else
       JULES_PROMPT="User @$COMMENT_AUTHOR commented on Issue #$NUMBER: '$COMMENT_BODY'. Please address their request. If code changes are needed, create a new branch."
     fi
@@ -139,7 +139,7 @@ if [[ "$EVENT_NAME" == "issue_comment" ]]; then
   if [[ "$COMMENT_AUTHOR" == "coderabbitai[bot]" ]]; then
     if echo "$COMMENT_BODY" | grep -q "Prompt for AI Agents"; then
       SHOULD_INVOKE_JULES="true"
-      JULES_PROMPT="CodeRabbit Review on PR #$NUMBER. Instructions: $COMMENT_BODY. Please implement these changes on branch '$BRANCH'."
+      JULES_PROMPT="CodeRabbit Review on PR #$NUMBER. Instructions: $COMMENT_BODY. Please implement these changes directly on branch '$BRANCH'."
     fi
   fi
 fi
@@ -165,7 +165,7 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" ]
   # D.1 Human Review
   if [[ "$REVIEW_STATE" == "changes_requested" && "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
     SHOULD_INVOKE_JULES="true"
-    JULES_PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback on branch '$BRANCH'."
+    JULES_PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback. Commit changes directly to the '$BRANCH' branch."
   fi
 
   # D.2 CodeRabbit Batch Review
