@@ -1,0 +1,101 @@
+name: CI Auto-Fix
+
+# Jules automatically fixes CI failures - integrates with CodeRabbit labels
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: read
+
+jobs:
+  fix-failures:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion == 'failure'
+    steps:
+      - name: Get PR context
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          PR_DATA=$(gh api "/repos/${{ github.repository }}/pulls" \
+            --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, labels: [.labels[].name]}" | head -1)
+          
+          if [[ -z "$PR_DATA" || "$PR_DATA" == "null" ]]; then
+            echo "has_pr=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          PR_NUM=$(echo "$PR_DATA" | jq -r '.number')
+          BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
+          LABELS=$(echo "$PR_DATA" | jq -r '.labels | join(",")')
+          
+          # Skip if skip-ci label
+          if [[ "$LABELS" == *"skip-ci"* ]]; then
+            echo "has_pr=false" >> $GITHUB_OUTPUT
+            echo "⏭️ skip-ci label found, not fixing"
+            exit 0
+          fi
+          
+          echo "has_pr=true" >> $GITHUB_OUTPUT
+          echo "number=$PR_NUM" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Check if already fixing
+        if: steps.pr.outputs.has_pr == 'true'
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          RECENT=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "github-actions[bot]" and (.body | contains("fixing")) and (.created_at | fromdateiso8601) > (now - 1800))] | length' 2>/dev/null || echo "0")
+          
+          echo "already_fixing=$([[ "$RECENT" -gt 0 ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
+
+      - name: Collect failure context
+        if: steps.pr.outputs.has_pr == 'true' && steps.check.outputs.already_fixing != 'true'
+        id: failures
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          # Get failed jobs with their step names
+          JOBS=$(gh api "/repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs" \
+            --jq '[.jobs[] | select(.conclusion == "failure") | {name, failed_step: (.steps[] | select(.conclusion == "failure") | .name)}] | map("\(.name): \(.failed_step // "unknown")") | join(", ")' 2>/dev/null || echo "unknown")
+          
+          echo "failed_jobs=$JOBS" >> $GITHUB_OUTPUT
+          echo "run_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/$RUN_ID" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        if: steps.pr.outputs.has_pr == 'true' && steps.check.outputs.already_fixing != 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+          fetch-depth: 0
+
+      - name: Notify and add label
+        if: steps.pr.outputs.has_pr == 'true' && steps.check.outputs.already_fixing != 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+          FAILED: ${{ steps.failures.outputs.failed_jobs }}
+          URL: ${{ steps.failures.outputs.run_url }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body "🚨 CI failed: $FAILED - 🤖 Jules is fixing. [View]($URL)"
+          gh pr edit "$PR_NUMBER" --add-label "ci-failing" 2>/dev/null || true
+
+      - name: Invoke Jules with context
+        if: steps.pr.outputs.has_pr == 'true' && steps.check.outputs.already_fixing != 'true'
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ steps.pr.outputs.branch }}
+          prompt: "CI failed for PR #${{ steps.pr.outputs.number }}. Failed: ${{ steps.failures.outputs.failed_jobs }}. PR labels: ${{ steps.pr.outputs.labels }}. Debug: pnpm lint, pnpm type-check, pnpm test:unit, pnpm build. Fix all issues, verify passes, commit with 'fix: resolve CI failures'."

@@ -1,0 +1,276 @@
+name: Agentic Orchestrator
+
+# Dynamic PR automation that responds to labels
+# This is the main orchestrator - decisions are driven by CodeRabbit labels
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # ==========================================================================
+  # CONTEXT: Extract PR info for all subsequent jobs
+  # ==========================================================================
+  context:
+    runs-on: ubuntu-latest
+    outputs:
+      pr_number: ${{ steps.info.outputs.pr_number }}
+      pr_branch: ${{ steps.info.outputs.pr_branch }}
+      labels: ${{ steps.info.outputs.labels }}
+      author: ${{ steps.info.outputs.author }}
+      is_bot: ${{ steps.info.outputs.is_bot }}
+      is_draft: ${{ steps.info.outputs.is_draft }}
+      has_auto_merge: ${{ steps.info.outputs.has_auto_merge }}
+      has_security: ${{ steps.info.outputs.has_security }}
+      has_breaking: ${{ steps.info.outputs.has_breaking }}
+      has_needs_review: ${{ steps.info.outputs.has_needs_review }}
+      has_skip_ci: ${{ steps.info.outputs.has_skip_ci }}
+      size_label: ${{ steps.info.outputs.size_label }}
+    steps:
+      - name: Extract PR context
+        id: info
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          # Get PR number from various event types
+          if [[ -n "${{ github.event.pull_request.number }}" ]]; then
+            PR_NUM="${{ github.event.pull_request.number }}"
+          elif [[ -n "${{ github.event.issue.number }}" ]]; then
+            PR_NUM="${{ github.event.issue.number }}"
+          else
+            echo "No PR context found"
+            exit 0
+          fi
+          
+          # Fetch PR details
+          PR_DATA=$(gh pr view "$PR_NUM" --json headRefName,labels,author,isDraft --repo "${{ github.repository }}")
+          
+          BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
+          LABELS=$(echo "$PR_DATA" | jq -r '[.labels[].name] | join(",")')
+          AUTHOR=$(echo "$PR_DATA" | jq -r '.author.login')
+          IS_DRAFT=$(echo "$PR_DATA" | jq -r '.isDraft')
+          
+          # Check if bot
+          IS_BOT="false"
+          [[ "$AUTHOR" == *"[bot]"* || "$AUTHOR" == "google-labs-jules" ]] && IS_BOT="true"
+          
+          # Extract specific labels for job conditions
+          HAS_AUTO_MERGE="false"
+          HAS_SECURITY="false"
+          HAS_BREAKING="false"
+          HAS_NEEDS_REVIEW="false"
+          HAS_SKIP_CI="false"
+          SIZE_LABEL=""
+          
+          [[ "$LABELS" == *"auto-merge-candidate"* ]] && HAS_AUTO_MERGE="true"
+          [[ "$LABELS" == *"security"* ]] && HAS_SECURITY="true"
+          [[ "$LABELS" == *"breaking-change"* ]] && HAS_BREAKING="true"
+          [[ "$LABELS" == *"needs-review"* ]] && HAS_NEEDS_REVIEW="true"
+          [[ "$LABELS" == *"skip-ci"* ]] && HAS_SKIP_CI="true"
+          
+          # Extract size label
+          for size in xs s m l xl; do
+            [[ "$LABELS" == *"size/$size"* ]] && SIZE_LABEL="size/$size"
+          done
+          
+          # Output
+          echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          echo "pr_branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+          echo "is_bot=$IS_BOT" >> $GITHUB_OUTPUT
+          echo "is_draft=$IS_DRAFT" >> $GITHUB_OUTPUT
+          echo "has_auto_merge=$HAS_AUTO_MERGE" >> $GITHUB_OUTPUT
+          echo "has_security=$HAS_SECURITY" >> $GITHUB_OUTPUT
+          echo "has_breaking=$HAS_BREAKING" >> $GITHUB_OUTPUT
+          echo "has_needs_review=$HAS_NEEDS_REVIEW" >> $GITHUB_OUTPUT
+          echo "has_skip_ci=$HAS_SKIP_CI" >> $GITHUB_OUTPUT
+          echo "size_label=$SIZE_LABEL" >> $GITHUB_OUTPUT
+          
+          echo "📋 PR #$PR_NUM: labels=[$LABELS], author=$AUTHOR, bot=$IS_BOT"
+
+  # ==========================================================================
+  # TRIGGER CODERABBIT: Explicitly request review for bot PRs
+  # ==========================================================================
+  trigger-coderabbit:
+    needs: context
+    runs-on: ubuntu-latest
+    if: |
+      needs.context.outputs.is_bot == 'true' &&
+      (github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'ready_for_review')
+    steps:
+      - name: Request CodeRabbit review
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+          AUTHOR: ${{ needs.context.outputs.author }}
+        run: |
+          # Check if CodeRabbit already reviewed this commit
+          LATEST_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid')
+          REVIEWED=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+            --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" 2>/dev/null || echo "0")
+          
+          # Only trigger if no review yet or new commits
+          if [[ "$REVIEWED" -eq 0 ]] || [[ "${{ github.event.action }}" == "synchronize" ]]; then
+            echo "🐰 Requesting CodeRabbit review for bot PR from $AUTHOR"
+            
+            if [[ "$AUTHOR" == "google-labs-jules" ]]; then
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - AI-generated PR, verify implementation correctness"
+            elif [[ "$AUTHOR" == "renovate[bot]" || "$AUTHOR" == "dependabot[bot]" ]]; then
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - Dependency update, check for breaking changes"
+            else
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review"
+            fi
+          else
+            echo "⏭️ CodeRabbit already reviewed, skipping"
+          fi
+
+
+  # ==========================================================================
+  # DYNAMIC: Request human review based on labels
+  # ==========================================================================
+  request-review:
+    needs: context
+    runs-on: ubuntu-latest
+    if: |
+      github.event.action == 'labeled' &&
+      (needs.context.outputs.has_security == 'true' ||
+       needs.context.outputs.has_breaking == 'true' ||
+       needs.context.outputs.has_needs_review == 'true' ||
+       needs.context.outputs.size_label == 'size/xl')
+    steps:
+      - name: Request human review
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+          LABELS: ${{ needs.context.outputs.labels }}
+        run: |
+          REASON=""
+          [[ "$LABELS" == *"security"* ]] && REASON="Security-sensitive changes"
+          [[ "$LABELS" == *"breaking-change"* ]] && REASON="${REASON:+$REASON, }Breaking changes"
+          [[ "$LABELS" == *"needs-review"* ]] && REASON="${REASON:+$REASON, }Complex changes flagged by CodeRabbit"
+          [[ "$LABELS" == *"size/xl"* ]] && REASON="${REASON:+$REASON, }Extra large PR"
+          
+          EXISTING=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+            --jq '[.[] | select(.body | contains("Human Review Required"))] | length' 2>/dev/null || echo "0")
+          
+          if [[ "$EXISTING" -eq 0 ]]; then
+            gh pr comment "$PR_NUMBER" --body "🔍 **Human Review Required**: $REASON - @YKDBontekoe please review"
+          fi
+
+  # ==========================================================================
+  # DYNAMIC: Handle human review feedback -> Jules fixes
+  # ==========================================================================
+  handle-review:
+    needs: context
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request_review' &&
+      github.event.review.state == 'changes_requested' &&
+      github.event.review.user.login != 'coderabbitai[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.context.outputs.pr_branch }}
+          fetch-depth: 0
+
+      - name: Collect and process feedback
+        id: feedback
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+          REVIEW_ID: ${{ github.event.review.id }}
+        run: |
+          gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews/$REVIEW_ID/comments" \
+            --jq '[.[] | "\(.path):\(.line // 0): \(.body)"] | join(" | ")' > /tmp/comments.txt 2>/dev/null || echo "No inline comments" > /tmp/comments.txt
+          
+          COMMENTS=$(cat /tmp/comments.txt | head -c 1000)
+          echo "comments=$COMMENTS" >> $GITHUB_OUTPUT
+          echo "reviewer=${{ github.event.review.user.login }}" >> $GITHUB_OUTPUT
+
+      - name: Acknowledge and invoke Jules
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+        run: |
+          gh pr comment "$PR_NUMBER" --body "👀 @${{ steps.feedback.outputs.reviewer }} - Jules is on it!"
+
+      - name: Invoke Jules
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ needs.context.outputs.pr_branch }}
+          prompt: "Review feedback from @${{ steps.feedback.outputs.reviewer }} on PR #${{ needs.context.outputs.pr_number }}: ${{ github.event.review.body }}. Comments: ${{ steps.feedback.outputs.comments }}. Address all feedback, run pnpm build && pnpm test:unit, commit as 'fix: address review feedback'."
+
+  # ==========================================================================
+  # DYNAMIC: Handle CodeRabbit review completion
+  # ==========================================================================
+  handle-coderabbit:
+    needs: context
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      github.event.comment.user.login == 'coderabbitai[bot]' &&
+      (contains(github.event.comment.body, '## Walkthrough') || contains(github.event.comment.body, '## Summary'))
+    steps:
+      - name: Check for actionable comments
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+        run: |
+          COUNT=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
+          
+          echo "count=$COUNT" >> $GITHUB_OUTPUT
+          
+          if [[ "$COUNT" -gt 0 ]]; then
+            gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
+              --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "\(.path):\(.line // 0): \(.body | split("\n")[0])"] | join(" | ")' > /tmp/feedback.txt 2>/dev/null
+          fi
+
+      - name: Checkout
+        if: steps.check.outputs.count > 0
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.context.outputs.pr_branch }}
+          fetch-depth: 0
+
+      - name: Invoke Jules for CodeRabbit feedback
+        if: steps.check.outputs.count > 0
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ needs.context.outputs.pr_branch }}
+          prompt: "CodeRabbit reviewed PR #${{ needs.context.outputs.pr_number }} with ${{ steps.check.outputs.count }} comments. Feedback: $(cat /tmp/feedback.txt | head -c 1500). Priority: Security > Bugs > Performance > Style. Fix valid issues, run pnpm build && pnpm test:unit, commit as 'fix: address CodeRabbit feedback'."
+
+  # ==========================================================================
+  # DYNAMIC: Keep branches updated
+  # ==========================================================================
+  update-branch:
+    needs: context
+    runs-on: ubuntu-latest
+    if: |
+      github.event.action == 'synchronize' ||
+      github.event.action == 'opened'
+    steps:
+      - name: Update if behind
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+        run: |
+          STATUS=$(gh pr view "$PR_NUMBER" --json mergeStateStatus --jq '.mergeStateStatus' 2>/dev/null || echo "")
+          
+          if [[ "$STATUS" == "BEHIND" ]]; then
+            gh pr update-branch "$PR_NUMBER" --rebase 2>/dev/null || true
+          fi
