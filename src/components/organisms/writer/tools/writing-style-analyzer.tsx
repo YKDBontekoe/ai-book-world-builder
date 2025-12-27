@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Palette, X, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Minus, Palette, TrendingDown, TrendingUp, X } from "lucide-react";
 import { useMemo } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { Badge } from "@/components/atoms/badge";
@@ -62,9 +62,8 @@ export function WritingStyleAnalyzer() {
 		// Voice analysis (active vs passive)
 		const passiveIndicators = /\b(was|were|been|being|is|are|am)\s+\w+ed\b/gi;
 		const passiveMatches = debouncedContent.match(passiveIndicators) || [];
-		const passiveRatio = sentences.length > 0 
-			? passiveMatches.length / sentences.length 
-			: 0;
+		const passiveRatio =
+			sentences.length > 0 ? passiveMatches.length / sentences.length : 0;
 		const voice: "active" | "passive" | "mixed" =
 			passiveRatio > 0.3 ? "passive" : passiveRatio < 0.1 ? "active" : "mixed";
 
@@ -73,19 +72,22 @@ export function WritingStyleAnalyzer() {
 		const avgLength =
 			sentenceLengths.reduce((a, b) => a + b, 0) / sentenceLengths.length;
 		const variance =
-			sentenceLengths.reduce(
-				(sum, len) => sum + Math.pow(len - avgLength, 2),
-				0,
-			) / sentenceLengths.length;
+			sentenceLengths.reduce((sum, len) => sum + (len - avgLength) ** 2, 0) /
+			sentenceLengths.length;
 		const sentenceVariety: "high" | "medium" | "low" =
 			variance > 100 ? "high" : variance < 25 ? "low" : "medium";
 
 		// Descriptive level (adjectives, adverbs, sensory words)
-		const descriptiveWords = /\b(beautiful|dark|bright|soft|loud|quiet|smooth|rough|warm|cold|sweet|bitter)\b/gi;
+		const descriptiveWords =
+			/\b(beautiful|dark|bright|soft|loud|quiet|smooth|rough|warm|cold|sweet|bitter)\b/gi;
 		const descriptiveMatches = debouncedContent.match(descriptiveWords) || [];
 		const descriptiveRatio = descriptiveMatches.length / words.length;
 		const descriptiveLevel: "high" | "medium" | "low" =
-			descriptiveRatio > 0.05 ? "high" : descriptiveRatio < 0.01 ? "low" : "medium";
+			descriptiveRatio > 0.05
+				? "high"
+				: descriptiveRatio < 0.01
+					? "low"
+					: "medium";
 
 		return {
 			tone,
@@ -213,4 +215,3 @@ function StyleMetric({
 		</div>
 	);
 }
-

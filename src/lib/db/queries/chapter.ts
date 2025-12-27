@@ -13,7 +13,7 @@ export async function getChaptersWithContent({
 	projectId,
 }: {
 	projectId: string;
-}): Promise<Array<(typeof chapter.$inferSelect) & { content: string | null }>> {
+}): Promise<Array<typeof chapter.$inferSelect & { content: string | null }>> {
 	try {
 		const chapters = await db
 			.select()

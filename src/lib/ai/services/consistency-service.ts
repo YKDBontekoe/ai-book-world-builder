@@ -28,7 +28,9 @@ const issueSchema = z.object({
 	issues: z.array(
 		z.object({
 			type: z.enum(["continuity", "character", "plot", "tone", "world"]),
-			description: z.string().describe("A clear description of the inconsistency"),
+			description: z
+				.string()
+				.describe("A clear description of the inconsistency"),
 			suggestion: z.string().describe("How to fix it"),
 			severity: z.enum(["low", "medium", "high", "critical"]),
 			sceneIds: z
@@ -46,7 +48,9 @@ export class ConsistencyService extends BaseAIService {
 	/**
 	 * Analyze a project for consistency issues.
 	 */
-	async analyzeProject(projectId: string): Promise<Partial<ConsistencyIssue>[]> {
+	async analyzeProject(
+		projectId: string,
+	): Promise<Partial<ConsistencyIssue>[]> {
 		// 1. Fetch Data
 		const entities = await getEntitiesForProject({ projectId });
 		const scenes = await getScenesForProject({ projectId });
@@ -112,16 +116,15 @@ Return a list of issues.
 		// 4. Save Results
 		await clearIssuesForProject(projectId);
 
-		const newIssues: Partial<ConsistencyIssue>[] = result.data.object.issues.map(
-			(issue) => ({
+		const newIssues: Partial<ConsistencyIssue>[] =
+			result.data.object.issues.map((issue) => ({
 				projectId,
 				type: issue.type as ConsistencyIssueType,
 				description: issue.description,
 				suggestion: issue.suggestion,
 				severity: issue.severity as ConsistencyIssueSeverity,
 				sceneId: issue.sceneIds[0] || null,
-			}),
-		);
+			}));
 
 		if (newIssues.length > 0) {
 			await createIssues(newIssues);

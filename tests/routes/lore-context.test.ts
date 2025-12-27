@@ -1,9 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-import {
-	buildLoreContext,
-	outlineToPrompt,
-} from "@/lib/story/lore";
+import { buildLoreContext, outlineToPrompt } from "@/lib/story/lore";
 
 const baseDate = new Date("2024-01-01T00:00:00.000Z");
 
@@ -67,7 +64,6 @@ test("buildLoreContext lists entities and relationship names", () => {
 	expect(lore).toContain("Allies");
 	expect(lore).toContain("Secret alliance to avoid war");
 });
-
 
 test("outlineToPrompt formats pacing and tone with beats", () => {
 	const prompt = outlineToPrompt({

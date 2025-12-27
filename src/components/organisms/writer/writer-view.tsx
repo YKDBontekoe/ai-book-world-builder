@@ -10,9 +10,9 @@ import {
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
+import { PowerDock } from "@/components/organisms/writer/power-dock";
 import { WriterSpotlight } from "@/components/organisms/writer/tools/writer-spotlight";
 import { WriterProvider } from "@/components/organisms/writer/writer-context";
-import { PowerDock } from "@/components/organisms/writer/power-dock";
 import {
 	useWriterControl,
 	WriterControlProvider,

@@ -10,7 +10,11 @@ vi.mock("@/lib/redis", () => ({
 	},
 }));
 
-import { getCached, invalidateCache, invalidateCachePattern } from "@/lib/cache";
+import {
+	getCached,
+	invalidateCache,
+	invalidateCachePattern,
+} from "@/lib/cache";
 import { redis } from "@/lib/redis";
 
 // Define a type for the mocked redis client to satisfy TS

@@ -1,9 +1,7 @@
 "use client";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
-
-import { useContext } from "react";
+import { useContext, useEffect, useRef } from "react";
 import {
 	type CanvasPane,
 	useBookCanvasActions,

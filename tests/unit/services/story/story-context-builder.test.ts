@@ -30,11 +30,15 @@ describe("buildSceneGenerationContext", () => {
 
 		expect(result.styleInstruction).toBe("Third Person, Dark");
 		expect(result.fullContext).toContain("Chapter Title: Chapter 1");
-		expect(result.fullContext).toContain("Chapter Summary: Chapter summary notes");
+		expect(result.fullContext).toContain(
+			"Chapter Summary: Chapter summary notes",
+		);
 		// Scene 1 should be summarized
 		expect(result.fullContext).toContain("[SCENE Scene 1]: Completed");
 		// Scene 2 should be full text as immediate predecessor
-		expect(result.fullContext).toContain("[IMMEDIATELY PREVIOUS SCENE - Scene 2]");
+		expect(result.fullContext).toContain(
+			"[IMMEDIATELY PREVIOUS SCENE - Scene 2]",
+		);
 		expect(result.fullContext).toContain("Content of scene 2");
 	});
 

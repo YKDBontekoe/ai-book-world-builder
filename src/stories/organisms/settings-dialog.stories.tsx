@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, userEvent, within } from "@storybook/test";
 import { SettingsDialog } from "@/components/organisms/settings-dialog";
-import { within, userEvent, expect } from "@storybook/test";
 
 // Mock dependencies
 const availableModels = [

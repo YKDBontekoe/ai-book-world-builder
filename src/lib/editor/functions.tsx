@@ -14,7 +14,7 @@ import type { UISuggestion } from "@/lib/editor/suggestions";
 export const buildDocumentFromContent = (content: string): Node => {
 	const parser = DOMParser.fromSchema(documentSchema);
 	const tempContainer = document.createElement("div");
-	
+
 	if (!content || content.trim() === "") {
 		// For empty content, create a single empty paragraph
 		tempContainer.innerHTML = "<p></p>";
@@ -31,7 +31,7 @@ export const buildDocumentFromContent = (content: string): Node => {
 			.join("");
 		tempContainer.innerHTML = htmlContent;
 	}
-	
+
 	return parser.parse(tempContainer);
 };
 

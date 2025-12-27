@@ -141,7 +141,9 @@ export class EntityRepository extends BaseRepository<
 	/**
 	 * Find all entities with details by project ID
 	 */
-	async findByProjectWithDetails(projectId: string): Promise<EntityWithDetails[]> {
+	async findByProjectWithDetails(
+		projectId: string,
+	): Promise<EntityWithDetails[]> {
 		try {
 			const entities = await db
 				.select()
@@ -169,9 +171,11 @@ export class EntityRepository extends BaseRepository<
 				attributes: allAttributes
 					.filter((attr) => attr.entityId === ent.id)
 					.sort((a, b) => a.name.localeCompare(b.name)),
-				relationships: allRelationships.filter(
-					(rel) => rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
-				)
+				relationships: allRelationships
+					.filter(
+						(rel) =>
+							rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
+					)
 					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
 			}));
 		} catch (error) {

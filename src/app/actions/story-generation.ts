@@ -22,7 +22,10 @@ export async function generateBookPlan(
 		}
 		const result = await storyService.generateBookPlan(prompt, style, modelId);
 		if (result.error || !result.plan) {
-			return { success: false, error: result.error || "Failed to generate plan" };
+			return {
+				success: false,
+				error: result.error || "Failed to generate plan",
+			};
 		}
 		return { success: true, plan: result.plan };
 	} catch (error) {
@@ -82,7 +85,10 @@ export async function generateSceneText(sceneId: string) {
 		return { success: true };
 	} catch (error) {
 		console.error("Failed to generate scene text", error);
-		const errorMessage = error instanceof Error ? error.message : "Failed to generate scene content";
+		const errorMessage =
+			error instanceof Error
+				? error.message
+				: "Failed to generate scene content";
 		return { success: false, error: errorMessage };
 	}
 }

@@ -169,9 +169,12 @@ export function useWriterState({
 			} else {
 				// Retry up to 2 times with exponential backoff
 				if (retryCount < 2) {
-					setTimeout(() => {
-						performSave(content, id, retryCount + 1);
-					}, 1000 * Math.pow(2, retryCount));
+					setTimeout(
+						() => {
+							performSave(content, id, retryCount + 1);
+						},
+						1000 * 2 ** retryCount,
+					);
 				} else {
 					toast.error("Failed to save changes. Please try again.", {
 						duration: 5000,
@@ -187,9 +190,12 @@ export function useWriterState({
 		} catch (error) {
 			setIsSaving(false);
 			if (retryCount < 2) {
-				setTimeout(() => {
-					performSave(content, id, retryCount + 1);
-				}, 1000 * Math.pow(2, retryCount));
+				setTimeout(
+					() => {
+						performSave(content, id, retryCount + 1);
+					},
+					1000 * 2 ** retryCount,
+				);
 			} else {
 				toast.error("Failed to save changes. Please check your connection.", {
 					duration: 5000,
@@ -204,12 +210,9 @@ export function useWriterState({
 		}
 	};
 
-	const debouncedSave = useDebounceCallback(
-		(content: string, id: string) => {
-			performSave(content, id, 0);
-		},
-		1000,
-	);
+	const debouncedSave = useDebounceCallback((content: string, id: string) => {
+		performSave(content, id, 0);
+	}, 1000);
 
 	const handleContentChange = useCallback(
 		(newContent: string) => {

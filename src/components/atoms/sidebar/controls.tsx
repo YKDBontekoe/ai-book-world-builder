@@ -1,11 +1,11 @@
 "use client";
 
-import { useSidebar } from "@/components/atoms/sidebar/provider";
-import { cn } from "@/lib/utils";
 import { PanelLeft } from "lucide-react";
+import { Slot as SlotPrimitive } from "radix-ui";
 import * as React from "react";
 import { Button } from "@/components/atoms/button";
-import { Slot as SlotPrimitive } from "radix-ui";
+import { useSidebar } from "@/components/atoms/sidebar/provider";
+import { cn } from "@/lib/utils";
 
 export function SidebarTrigger({
 	className,
@@ -85,8 +85,7 @@ export const SidebarMenuItem = React.forwardRef<
 ));
 SidebarMenuItem.displayName = "SidebarMenuItem";
 
-export interface SidebarMenuButtonProps
-	extends React.ComponentProps<"button"> {
+export interface SidebarMenuButtonProps extends React.ComponentProps<"button"> {
 	asChild?: boolean;
 	isActive?: boolean;
 	tooltip?: string | React.ComponentProps<any>;
@@ -97,22 +96,35 @@ export interface SidebarMenuButtonProps
 export const SidebarMenuButton = React.forwardRef<
 	HTMLButtonElement,
 	SidebarMenuButtonProps
->(({ asChild = false, isActive = false, variant = "default", size = "default", tooltip, className, ...props }, ref) => {
-	const Comp = asChild ? SlotPrimitive.Slot : "button";
+>(
+	(
+		{
+			asChild = false,
+			isActive = false,
+			variant = "default",
+			size = "default",
+			tooltip,
+			className,
+			...props
+		},
+		ref,
+	) => {
+		const Comp = asChild ? SlotPrimitive.Slot : "button";
 
-	return (
-		<Comp
-			ref={ref}
-			data-sidebar="menu-button"
-			data-size={size}
-			data-active={isActive}
-			className={cn(
-				"peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
-				variant === "outline" && "border border-sidebar-border shadow-sm",
-				className,
-			)}
-			{...props}
-		/>
-	);
-});
+		return (
+			<Comp
+				ref={ref}
+				data-sidebar="menu-button"
+				data-size={size}
+				data-active={isActive}
+				className={cn(
+					"peer/menu-button flex w-full items-center gap-2 overflow-hidden rounded-md p-2 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-accent data-[active=true]:font-medium data-[active=true]:text-sidebar-accent-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[collapsible=icon]:!size-8 group-data-[collapsible=icon]:!p-2 [&>span:last-child]:truncate [&>svg]:size-4 [&>svg]:shrink-0",
+					variant === "outline" && "border border-sidebar-border shadow-sm",
+					className,
+				)}
+				{...props}
+			/>
+		);
+	},
+);
 SidebarMenuButton.displayName = "SidebarMenuButton";

@@ -1,5 +1,6 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
+import { eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
@@ -10,7 +11,6 @@ import { db } from "@/lib/db/drizzle";
 import { getUser } from "@/lib/db/queries/user";
 import { account, user as userTable } from "@/lib/db/schema";
 import type { UserRole } from "@/lib/db/schema/auth";
-import { eq } from "drizzle-orm";
 
 export type UserType = "regular";
 
@@ -109,7 +109,7 @@ export const {
 				// But NextAuth types are tricky. Let's do a quick query to be safe if 'bannedAt' isn't on the user object yet.
 				// Since we modified schema, 'user' might have it if adapter fetched it.
 				// To be safe, let's cast or check property.
-				const dbUser = (user as any);
+				const dbUser = user as any;
 				if (dbUser.bannedAt) return false;
 
 				// Double check DB if strictly needed, but for perf let's rely on adapter or basic flow.
@@ -130,7 +130,11 @@ export const {
 
 				// Handle Admin Promotion on Login
 				let role = user.role;
-				if (user.email && user.email === process.env.ADMIN_EMAIL && role !== "admin") {
+				if (
+					user.email &&
+					user.email === process.env.ADMIN_EMAIL &&
+					role !== "admin"
+				) {
 					try {
 						await db
 							.update(userTable)

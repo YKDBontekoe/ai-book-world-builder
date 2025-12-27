@@ -1,7 +1,7 @@
 import type { StorybookConfig } from "@storybook/nextjs-vite";
-import { mergeConfig } from "vite";
-import { resolve, dirname, join } from "path";
+import { dirname, join, resolve } from "path";
 import { fileURLToPath } from "url";
+import { mergeConfig } from "vite";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -35,7 +35,7 @@ const config: StorybookConfig = {
 					// Mock database drivers to prevent bundling them
 					postgres: resolve(__dirname, "../tests/mocks/postgres.mock.ts"),
 					// Mock Node.js built-ins that might slip through
-					"perf_hooks": resolve(__dirname, "../tests/mocks/empty.mock.ts"),
+					perf_hooks: resolve(__dirname, "../tests/mocks/empty.mock.ts"),
 					"node:crypto": resolve(__dirname, "../tests/mocks/empty.mock.ts"),
 				},
 			},
