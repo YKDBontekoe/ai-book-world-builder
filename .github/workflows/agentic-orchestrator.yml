@@ -5,14 +5,18 @@ name: Agentic Orchestrator
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
+    types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review, edited]
   pull_request_review:
     types: [submitted]
   issue_comment:
     types: [created]
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
   issues: write
 
@@ -22,6 +26,11 @@ jobs:
   # ==========================================================================
   context:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+      issues: read
     outputs:
       pr_number: ${{ steps.info.outputs.pr_number }}
       pr_branch: ${{ steps.info.outputs.pr_branch }}
@@ -104,6 +113,7 @@ jobs:
   trigger-coderabbit:
     needs: context
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: |
       needs.context.outputs.is_bot == 'true' &&
       (github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'ready_for_review')
@@ -173,6 +183,10 @@ jobs:
   handle-review:
     needs: context
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # for checkout and commit
+      pull-requests: write
     if: |
       github.event_name == 'pull_request_review' &&
       github.event.review.state == 'changes_requested' &&
@@ -218,9 +232,18 @@ jobs:
   handle-coderabbit:
     needs: context
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # for checkout and commit
+      pull-requests: write
+      issues: read
     if: |
-      (github.event_name == 'issue_comment' && github.event.comment.user.login == 'coderabbitai[bot]' && (contains(github.event.comment.body, '## Walkthrough') || contains(github.event.comment.body, '## Summary'))) ||
-      (github.event_name == 'pull_request_review' && github.event.review.user.login == 'coderabbitai[bot]' && (contains(github.event.review.body, '## Walkthrough') || contains(github.event.review.body, '## Summary')))
+      needs.context.outputs.pr_number != '' &&
+      (
+        github.event_name == 'pull_request' ||
+        (github.event_name == 'issue_comment' && github.event.comment.user.login == 'coderabbitai[bot]') ||
+        (github.event_name == 'pull_request_review' && github.event.review.user.login == 'coderabbitai[bot]')
+      )
     steps:
       - name: Check for actionable comments
         id: check
@@ -228,14 +251,31 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
         run: |
-          COUNT=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
+          # Count general review comments (issues endpoint)
+          SUMMARY_COUNT=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
             --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' --repo "${{ github.repository }}" 2>/dev/null || echo "0")
           
+          # Count code review comments (pulls endpoint)
+          INLINE_COUNT=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' --repo "${{ github.repository }}" 2>/dev/null || echo "0")
+          
+          COUNT=$((SUMMARY_COUNT + INLINE_COUNT))
           echo "count=$COUNT" >> $GITHUB_OUTPUT
           
           if [[ "$COUNT" -gt 0 ]]; then
+            # Harvest general feedback
+            gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+               --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "SUMMARY: \(.body)"] | join("\n---\n")' --repo "${{ github.repository }}" > /tmp/general_feedback.txt 2>/dev/null || true
+            
+            # Harvest inline feedback
             gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
-              --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "\(.path):\(.line // 0): \(.body | split("\n")[0])"] | join(" | ")' --repo "${{ github.repository }}" > /tmp/feedback.txt 2>/dev/null
+              --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "\(.path):\(.line // 0): \(.body | split("\n")[0])"] | join(" | ")' --repo "${{ github.repository }}" > /tmp/inline_feedback.txt 2>/dev/null || true
+            
+            cat /tmp/general_feedback.txt > /tmp/feedback.txt
+            printf "\n-- INLINE COMMENTS --\n" >> /tmp/feedback.txt
+            cat /tmp/inline_feedback.txt >> /tmp/feedback.txt
+          else
+             touch /tmp/feedback.txt
           fi
 
       - name: Checkout
