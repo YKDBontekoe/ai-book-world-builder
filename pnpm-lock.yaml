@@ -171,7 +171,7 @@ importers:
         specifier: 17.2.3
         version: 17.2.3
       drizzle-orm:
-        specifier: ^0.45.1
+        specifier: 0.45.1
         version: 0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@vercel/postgres@0.10.0)(postgres@3.4.7)
       embla-carousel-react:
         specifier: 8.6.0
@@ -397,7 +397,7 @@ importers:
         specifier: 4.0.16
         version: 4.0.16(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.16))(vitest@4.0.16)
       drizzle-kit:
-        specifier: ^0.31.8
+        specifier: 0.31.8
         version: 0.31.8
       jsdom:
         specifier: 27.4.0
