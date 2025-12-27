@@ -18,7 +18,12 @@ export function useSuggestions(
 	suggestions: Suggestion[],
 	content: string,
 	containerRef: React.RefObject<HTMLDivElement>,
-) {
+): {
+	activeSuggestion: ActiveSuggestion | null;
+	setActiveSuggestion: React.Dispatch<React.SetStateAction<ActiveSuggestion | null>>;
+	projectedSuggestions: UISuggestion[];
+	handleApplySuggestion: () => void;
+} {
 	const [activeSuggestion, setActiveSuggestion] =
 		useState<ActiveSuggestion | null>(null);
 	const [projectedSuggestions, setProjectedSuggestions] = useState<
@@ -32,44 +37,38 @@ export function useSuggestions(
 		const { suggestion } = activeSuggestion;
 		const { state, dispatch } = editorView;
 
-		// Remove the decoration for this suggestion
 		const currentState = suggestionsPluginKey.getState(state);
 		const currentDecorations = currentState?.decorations;
+		if (!currentDecorations) return;
 
-		if (currentDecorations) {
-			const newDecorations = currentDecorations
-				.find()
-				.filter(
-					(decoration: { spec: { suggestionId?: string } }) =>
-						decoration.spec.suggestionId !== suggestion.id,
-				);
+		const newDecorations = currentDecorations
+			.find()
+			.filter(
+				(decoration: { spec: { suggestionId?: string } }) =>
+					decoration.spec.suggestionId !== suggestion.id,
+			);
 
-			const decorationTransaction = state.tr;
-			decorationTransaction.setMeta(suggestionsPluginKey, {
-				decorations:
-					newDecorations.length > 0
-						? currentDecorations.remove(
-								currentDecorations
-									.find()
-									.filter(
-										(d: { spec: { suggestionId?: string } }) =>
-											d.spec.suggestionId === suggestion.id,
-									),
-							)
-						: currentDecorations,
-				selected: null,
-			});
-			dispatch(decorationTransaction);
-		}
-
-		// Apply the text replacement
-		const textTransaction = editorView.state.tr.replaceWith(
+		const tr = state.tr.replaceWith(
 			suggestion.selectionStart,
 			suggestion.selectionEnd,
 			state.schema.text(suggestion.suggestedText),
 		);
-		textTransaction.setMeta("no-debounce", true);
-		dispatch(textTransaction);
+		tr.setMeta("no-debounce", true);
+		tr.setMeta(suggestionsPluginKey, {
+			decorations:
+				newDecorations.length > 0
+					? currentDecorations.remove(
+							currentDecorations
+								.find()
+								.filter(
+									(d: { spec: { suggestionId?: string } }) =>
+										d.spec.suggestionId === suggestion.id,
+								),
+						)
+					: currentDecorations,
+			selected: null,
+		});
+		dispatch(tr);
 
 		setActiveSuggestion(null);
 	}, [editorView, activeSuggestion]);
@@ -123,7 +122,8 @@ export function useSuggestions(
 				editorView.state.doc,
 				suggestions,
 			).filter(
-				(suggestion) => suggestion.selectionStart && suggestion.selectionEnd,
+				(suggestion) =>
+					suggestion.selectionStart != null && suggestion.selectionEnd != null,
 			);
 
 			setProjectedSuggestions(projected);

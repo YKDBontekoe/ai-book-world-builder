@@ -1,7 +1,9 @@
 "use server";
 
+import { z } from "zod";
 import { and, eq, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { auth } from "@/app/(auth)/auth";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
@@ -10,10 +12,16 @@ import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
 
+const sceneIdSchema = z.string().uuid();
+const chapterIdSchema = z.string().uuid();
+const titleSchema = z.string().min(1).max(200);
+const contentSchema = z.string();
+
 export async function getSceneContent(sceneId: string) {
 	try {
+		const validatedId = sceneIdSchema.parse(sceneId);
 		// 1. Get Scene using repository
-		const targetScene = await sceneRepository.findById(sceneId);
+		const targetScene = await sceneRepository.findById(validatedId);
 
 		if (!targetScene) {
 			throw new Error("Scene not found");
@@ -31,8 +39,11 @@ export async function getSceneContent(sceneId: string) {
 
 export async function updateSceneContent(sceneId: string, content: string) {
 	try {
+		const validatedSceneId = sceneIdSchema.parse(sceneId);
+		const validatedContent = contentSchema.parse(content);
+
 		// 1. Get Scene using repository
-		const targetScene = await sceneRepository.findById(sceneId);
+		const targetScene = await sceneRepository.findById(validatedSceneId);
 
 		if (!targetScene) {
 			throw new Error("Scene not found");
@@ -42,7 +53,11 @@ export async function updateSceneContent(sceneId: string, content: string) {
 		await ensureProjectAccess(targetScene.projectId, true);
 
 		// 3. Update using repository
-		await sceneRepository.updateContent(sceneId, content, "drafting");
+		await sceneRepository.updateContent(
+			validatedSceneId,
+			validatedContent,
+			"drafting",
+		);
 
 		// Note: Content updates do not invalidate structure, only titles/ordering do.
 
@@ -53,13 +68,29 @@ export async function updateSceneContent(sceneId: string, content: string) {
 	}
 }
 
-export async function generateScene(chapterId: string, prevSceneId?: string) {
+export async function generateScene(
+	chapterId: string,
+	prevSceneId?: string,
+): Promise<{ success: boolean; sceneId?: string; error?: string }> {
 	try {
+		const validatedChapterId = chapterIdSchema.parse(chapterId);
+		const validatedPrevSceneId = prevSceneId
+			? sceneIdSchema.parse(prevSceneId)
+			: undefined;
+
+		// Rate Limiting (placeholder)
+		const session = await auth();
+		if (!session?.user?.id) {
+			return { success: false, error: "Unauthorized" };
+		}
+		// TODO: Implement actual rate limiting logic
+		// await checkRateLimit(session.user.id, "generateScene", { maxPerHour: 20 });
+
 		// 1. Fetch Context & Verify Access
 		const [currentChapter] = await db
 			.select()
 			.from(chapter)
-			.where(eq(chapter.id, chapterId))
+			.where(eq(chapter.id, validatedChapterId))
 			.limit(1);
 
 		if (!currentChapter) throw new Error("Chapter not found");
@@ -68,13 +99,13 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 		await ensureProjectAccess(currentChapter.projectId, true);
 
 		// Find previous scenes using repository
-		const scenes = await sceneRepository.findByChapter(chapterId);
+		const scenes = await sceneRepository.findByChapter(validatedChapterId);
 
 		// Use shared context builder
 		const { context, prevContent, newSequence } = buildSceneGenerationContext(
 			currentChapter,
 			scenes,
-			prevSceneId,
+			validatedPrevSceneId,
 		);
 
 		// Get preferred model from cookie
@@ -91,12 +122,12 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 		// 3. Create New Scene using repository
 		const newScene = await sceneRepository.create({
 			projectId: currentChapter.projectId,
-			chapterId,
+			chapterId: validatedChapterId,
 			title: "AI Generated Scene",
 			sequence: newSequence,
 			content: generation.text,
 			status: "drafted",
-			prevSceneId,
+			prevSceneId: validatedPrevSceneId,
 		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
@@ -110,7 +141,9 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 
 export async function updateSceneTitle(sceneId: string, title: string) {
 	try {
-		const targetScene = await sceneRepository.findById(sceneId);
+		const validatedSceneId = sceneIdSchema.parse(sceneId);
+		const validatedTitle = titleSchema.parse(title);
+		const targetScene = await sceneRepository.findById(validatedSceneId);
 
 		if (!targetScene) {
 			return { success: false, error: "Scene not found" };
@@ -118,7 +151,7 @@ export async function updateSceneTitle(sceneId: string, title: string) {
 
 		await ensureProjectAccess(targetScene.projectId, true);
 
-		await sceneRepository.update(sceneId, { title });
+		await sceneRepository.update(validatedSceneId, { title: validatedTitle });
 
 		await invalidateCache(`project-structure:${targetScene.projectId}`);
 

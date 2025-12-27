@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { asc, eq } from "drizzle-orm";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
@@ -12,16 +13,26 @@ import {
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, project } from "@/lib/db/schema";
 
-export async function initializeProject(projectId: string) {
+const projectIdSchema = z.string().uuid();
+const sceneIdSchema = z.string().uuid();
+
+export async function initializeProject(projectId: string): Promise<{
+	success: boolean;
+	sceneId?: string;
+	error?: string;
+}> {
 	try {
-		await ensureProjectAccess(projectId, true);
+		const validatedProjectId = projectIdSchema.parse(projectId);
+		await ensureProjectAccess(validatedProjectId, true);
 
 		// 1. Check/Create Structure
-		const outlines = await getOutlinesForProject({ projectId });
+		const outlines = await getOutlinesForProject({
+			projectId: validatedProjectId,
+		});
 		let outlineId = outlines[0]?.id;
 		if (!outlineId) {
 			const newOutline = await createOutline({
-				projectId,
+				projectId: validatedProjectId,
 				title: "Project Outline",
 				pov: "Third Person",
 				tone: "Neutral",
@@ -31,14 +42,16 @@ export async function initializeProject(projectId: string) {
 			outlineId = newOutline.id;
 		}
 
-		const volumes = await getVolumePlansForProject({ projectId });
+		const volumes = await getVolumePlansForProject({
+			projectId: validatedProjectId,
+		});
 		let volumeId = volumes[0]?.id;
 		let chapterId: string | null = null;
 
 		if (!volumeId) {
 			// Create Volume AND Chapter 1
 			const newVolume = await createVolumePlan({
-				projectId,
+				projectId: validatedProjectId,
 				outlineId,
 				title: "Volume 1",
 				chapters: [{ title: "Chapter 1", sequence: 1 }],
@@ -60,7 +73,7 @@ export async function initializeProject(projectId: string) {
 				const [newChapter] = await db
 					.insert(chapter)
 					.values({
-						projectId,
+						projectId: validatedProjectId,
 						volumeId,
 						outlineId,
 						title: "Chapter 1",
@@ -83,7 +96,7 @@ export async function initializeProject(projectId: string) {
 
 		if (!sceneId) {
 			const newScene = await sceneRepository.create({
-				projectId,
+				projectId: validatedProjectId,
 				chapterId,
 				title: "Scene 1",
 				sequence: 1,
@@ -93,7 +106,7 @@ export async function initializeProject(projectId: string) {
 			sceneId = newScene.id;
 		}
 
-		await invalidateCache(`project-structure:${projectId}`);
+		await invalidateCache(`project-structure:${validatedProjectId}`);
 
 		return { success: true, sceneId };
 	} catch (error) {
@@ -105,14 +118,23 @@ export async function initializeProject(projectId: string) {
 export async function updateLastViewedScene(
 	projectId: string,
 	sceneId: string,
-) {
+): Promise<{ success: boolean }> {
 	try {
-		await ensureProjectAccess(projectId, true);
+		const validatedProjectId = projectIdSchema.parse(projectId);
+		const validatedSceneId = sceneIdSchema.parse(sceneId);
+
+		await ensureProjectAccess(validatedProjectId, true);
+
+		// Verify scene belongs to this project
+		const targetScene = await sceneRepository.findById(validatedSceneId);
+		if (!targetScene || targetScene.projectId !== validatedProjectId) {
+			return { success: false };
+		}
 
 		await db
 			.update(project)
-			.set({ lastViewedSceneId: sceneId })
-			.where(eq(project.id, projectId));
+			.set({ lastViewedSceneId: validatedSceneId })
+			.where(eq(project.id, validatedProjectId));
 
 		// Does not affect structure
 

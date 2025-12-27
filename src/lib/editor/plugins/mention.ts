@@ -9,7 +9,7 @@ import { Entity } from "@/lib/db/schema";
 
 export const mentionPluginKey = new PluginKey("mention");
 
-interface MentionState {
+export interface MentionState {
 	active: boolean;
 	range: { from: number; to: number } | null;
 	query: string;

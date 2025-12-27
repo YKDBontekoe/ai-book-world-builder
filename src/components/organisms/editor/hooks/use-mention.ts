@@ -1,14 +1,8 @@
 import type { EditorView } from "prosemirror-view";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { Entity } from "@/lib/db/schema";
-import { mentionPlugin } from "@/lib/editor/plugins/mention";
-
-export interface MentionState {
-	active: boolean;
-	range: { from: number; to: number } | null;
-	query: string;
-	index: number;
-}
+import type { MentionState } from "@/lib/editor/plugins/mention";
+export type { MentionState } from "@/lib/editor/plugins/mention";
 
 export function useMention(
 	editorView: EditorView | null,
@@ -21,11 +15,17 @@ export function useMention(
 	} | null>(null);
 
 	// Filter Entities
-	const filteredEntities = mentionables
-		.filter((e) =>
-			e.name.toLowerCase().includes(mentionState?.query.toLowerCase() || ""),
-		)
-		.slice(0, 5);
+	const filteredEntities = useMemo(
+		() =>
+			mentionables
+				.filter((e) =>
+					e.name
+						.toLowerCase()
+						.includes(mentionState?.query.toLowerCase() || ""),
+				)
+				.slice(0, 5),
+		[mentionables, mentionState?.query],
+	);
 
 	// Handle Mention Selection
 	const insertMention = useCallback(
@@ -46,16 +46,6 @@ export function useMention(
 		[editorView, mentionState],
 	);
 
-	const plugin = mentionPlugin((state) => {
-		setMentionState(state);
-		if (state?.active && state.range && editorView) {
-			const coords = editorView.coordsAtPos(state.range.from);
-			setMentionCoords({ left: coords.left, top: coords.bottom + 5 });
-		} else {
-			setMentionCoords(null);
-		}
-	});
-
 	return {
 		mentionState,
 		mentionCoords,
@@ -63,6 +53,5 @@ export function useMention(
 		setMentionState,
 		filteredEntities,
 		insertMention,
-		plugin,
 	};
 }

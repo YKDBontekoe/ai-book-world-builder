@@ -113,8 +113,7 @@ export function useWriterState({
 		setLoading(true);
 		const result = await getProjectStructure(projectId);
 		if (result.structure) {
-			// Cast the result to our extended type for now
-			setStructure(result.structure as unknown as ChapterWithScenes[]);
+			setStructure(result.structure);
 			if (result.structureText) {
 				setStructureText(result.structureText);
 			}

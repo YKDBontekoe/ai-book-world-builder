@@ -37,7 +37,10 @@ export function useProseMirror({
 	typewriterMode,
 	status,
 	onMentionStateChange,
-}: UseProseMirrorProps) {
+}: UseProseMirrorProps): {
+	editorRef: React.MutableRefObject<EditorView | null>;
+	mounted: boolean;
+} {
 	const editorRef = useRef<EditorView | null>(null);
 	const [mounted, setMounted] = useState(false);
 	const prevContentRef = useRef<string | null>(null);
@@ -140,7 +143,7 @@ export function useProseMirror({
 
 					// Typewriter Logic
 					if (typewriterMode && transaction.selectionSet) {
-						setTimeout(() => {
+						requestAnimationFrame(() => {
 							const view = editorRef.current;
 							if (!view) return;
 							const coords = view.coordsAtPos(view.state.selection.from);
@@ -153,7 +156,7 @@ export function useProseMirror({
 								const diff = relativeTop - target;
 								scrollable.scrollBy({ top: diff, behavior: "smooth" });
 							}
-						}, 0);
+						});
 					}
 				},
 			});

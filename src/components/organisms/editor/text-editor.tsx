@@ -56,13 +56,14 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 	) => {
 		const containerRef = useRef<HTMLDivElement>(null);
 
-		// Hoist mention state to pass to useProseMirror init
-		const [tempMentionState, setTempMentionState] =
-			useState<MentionState | null>(null);
-		const [tempMentionCoords, setTempMentionCoords] = useState<{
-			left: number;
-			top: number;
-		} | null>(null);
+		const {
+			mentionState,
+			mentionCoords,
+			setMentionState,
+			setMentionCoords,
+			filteredEntities,
+			insertMention,
+		} = useMention(null, mentionables); // Pass null initially, editor is set later
 
 		const { editorRef, mounted } = useProseMirror({
 			containerRef,
@@ -73,32 +74,10 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			typewriterMode,
 			status,
 			onMentionStateChange: (state, coords) => {
-				setTempMentionState(state);
-				setTempMentionCoords(coords);
+				setMentionState(state);
+				setMentionCoords(coords);
 			},
 		});
-
-		// Sync local mention state with hook
-		const {
-			mentionState,
-			mentionCoords,
-			setMentionState,
-			setMentionCoords,
-			filteredEntities,
-			insertMention,
-		} = useMention(editorRef.current, mentionables);
-
-		// This effect synchronizes the state from the ProseMirror plugin (captured in useProseMirror)
-		// to the useMention hook which manages the UI
-		useEffect(() => {
-			setMentionState(tempMentionState);
-			setMentionCoords(tempMentionCoords);
-		}, [
-			tempMentionState,
-			tempMentionCoords,
-			setMentionState,
-			setMentionCoords,
-		]);
 
 		const {
 			activeSuggestion,
@@ -184,7 +163,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			insertMention,
 			activeSuggestion,
 			setActiveSuggestion,
-			editorRef.current, // Dependency on ref.current is stable but good for completeness if ref changes
+			mounted, // Use mounted state to ensure effect runs after editor initialization
 		]);
 
 		return (

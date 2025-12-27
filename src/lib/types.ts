@@ -22,8 +22,10 @@ import type { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import type { runDiagnostics } from "@/lib/ai/tools/run-diagnostics";
 import type { updateDocument } from "@/lib/ai/tools/update-document";
 import type { updateSceneCards } from "@/lib/ai/tools/update-scene-cards";
-import type { Chapter, Scene, Suggestion } from "@/lib/db/schema";
+import type { Suggestion } from "@/lib/db/schema";
 import type { AppUsage } from "@/lib/usage";
+export type { Chapter, Scene } from "@/lib/db/schema";
+import { Chapter, Scene } from "@/lib/db/schema";
 
 export type SceneWithPrev = Scene & { prevSceneId: string | null };
 export type ChapterWithScenes = Chapter & { scenes: SceneWithPrev[] };

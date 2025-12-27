@@ -13,12 +13,32 @@ import {
 } from "@/app/actions/writer";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 
-export function useWriterSidebarActions() {
+export function useWriterSidebarActions(): {
+	handleAddChapter: () => Promise<void>;
+	handleUpdateChapterTitle: (
+		chapterId: string,
+		newTitle: string,
+	) => Promise<boolean>;
+	handleUpdateSceneTitle: (sceneId: string, newTitle: string) => Promise<boolean>;
+	handleDeleteChapter: (chapterId: string) => Promise<void>;
+	handleDeleteScene: (sceneId: string) => Promise<void>;
+	handleAddScene: (chapterId: string) => Promise<void>;
+	handleReorderChapters: (
+		reorderedChapters: { id: string; volumeId: string | null }[],
+	) => Promise<void>;
+	handleReorderScenes: (
+		reorderedScenes: Array<{ id: string }>,
+		chapterId: string,
+	) => Promise<void>;
+} {
 	const { project, fetchStructure, isReadOnly, setActiveSceneId } =
 		useWriterContext();
 
 	const handleAddChapter = async () => {
-		if (isReadOnly) return;
+		if (isReadOnly) {
+			toast.error("You don't have permission to edit this project.");
+			return;
+		}
 		const toastId = toast.loading("Creating chapter...");
 		try {
 			await createNewChapter(project.id);
@@ -33,6 +53,10 @@ export function useWriterSidebarActions() {
 		chapterId: string,
 		newTitle: string,
 	) => {
+		if (isReadOnly) {
+			toast.error("You don't have permission to edit this project.");
+			return false;
+		}
 		const result = await updateChapterTitle(chapterId, newTitle);
 		if (result.success) {
 			fetchStructure();
@@ -43,6 +67,10 @@ export function useWriterSidebarActions() {
 	};
 
 	const handleUpdateSceneTitle = async (sceneId: string, newTitle: string) => {
+		if (isReadOnly) {
+			toast.error("You don't have permission to edit this project.");
+			return false;
+		}
 		const result = await updateSceneTitle(sceneId, newTitle);
 		if (result.success) {
 			fetchStructure();

@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
@@ -12,13 +13,18 @@ import {
 import { chapterRepository, sceneRepository } from "@/lib/db/repositories";
 import { chapter, chapterVersion } from "@/lib/db/schema";
 
+const chapterIdSchema = z.string().uuid();
+const volumeIdSchema = z.string().uuid();
+const titleSchema = z.string().min(1).max(200);
+
 export async function createChapterSnapshot(chapterId: string) {
 	try {
+		const validatedId = chapterIdSchema.parse(chapterId);
 		// 1. Fetch current chapter
 		const [currentChapter] = await db
 			.select()
 			.from(chapter)
-			.where(eq(chapter.id, chapterId))
+			.where(eq(chapter.id, validatedId))
 			.limit(1);
 
 		if (!currentChapter) return { success: false };
@@ -27,7 +33,7 @@ export async function createChapterSnapshot(chapterId: string) {
 		await ensureProjectAccess(currentChapter.projectId, true);
 
 		// 3. Get scenes using repository
-		const scenes = await sceneRepository.findByChapter(chapterId);
+		const scenes = await sceneRepository.findByChapter(validatedId);
 
 		const fullContent = scenes
 			.map((s) => `## ${s.title}\n\n${s.content || ""}`)
@@ -37,7 +43,7 @@ export async function createChapterSnapshot(chapterId: string) {
 		const [lastVersion] = await db
 			.select()
 			.from(chapterVersion)
-			.where(eq(chapterVersion.chapterId, chapterId))
+			.where(eq(chapterVersion.chapterId, validatedId))
 			.orderBy(desc(chapterVersion.version))
 			.limit(1);
 
@@ -45,7 +51,7 @@ export async function createChapterSnapshot(chapterId: string) {
 
 		// 5. Save snapshot
 		await db.insert(chapterVersion).values({
-			chapterId,
+			chapterId: validatedId,
 			content: fullContent,
 			version: nextVersion,
 			createdAt: new Date(),
@@ -58,7 +64,10 @@ export async function createChapterSnapshot(chapterId: string) {
 	}
 }
 
-export async function createNewChapter(projectId: string) {
+export async function createNewChapter(projectId: string): Promise<{
+	success: boolean;
+	chapterId?: string;
+}> {
 	try {
 		await ensureProjectAccess(projectId, true);
 
