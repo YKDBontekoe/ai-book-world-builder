@@ -40,10 +40,11 @@ env:
 
 jobs:
   # ============================================================================
-  # SETUP: Calculate test shards dynamically
+  # SETUP: Calculate test shards dynamically (PRs and workflow_dispatch only)
   # ============================================================================
   setup-tests:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     outputs:
       shard-matrix: ${{ steps.set-matrix.outputs.matrix }}
       shard-total: ${{ steps.set-matrix.outputs.total }}
@@ -74,10 +75,11 @@ jobs:
           echo "📊 Found $TEST_COUNT tests → $SHARD_TOTAL shards"
 
   # ============================================================================
-  # LINT & TYPE CHECK: Static analysis
+  # LINT & TYPE CHECK: Static analysis (PRs and workflow_dispatch only)
   # ============================================================================
   lint-and-typecheck:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     outputs:
       lint-result: ${{ steps.lint.outcome }}
       typecheck-result: ${{ steps.typecheck.outcome }}
@@ -117,10 +119,11 @@ jobs:
           exit 1
 
   # ============================================================================
-  # UNIT TESTS: Parallel sharded testing
+  # UNIT TESTS: Parallel sharded testing (PRs and workflow_dispatch only)
   # ============================================================================
   unit-tests:
     needs: setup-tests
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -149,10 +152,11 @@ jobs:
         run: exit 1
 
   # ============================================================================
-  # BUILD: Production build verification
+  # BUILD: Production build verification (PRs and workflow_dispatch only)
   # ============================================================================
   build:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     outputs:
       build-result: ${{ steps.build.outcome }}
     env:
@@ -188,10 +192,11 @@ jobs:
         run: exit 1
 
   # ============================================================================
-  # DATABASE: Schema validation
+  # DATABASE: Schema validation (PRs and workflow_dispatch only)
   # ============================================================================
   db-check:
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
@@ -199,7 +204,7 @@ jobs:
         run: pnpm db:check
 
   # ============================================================================
-  # CONFLICTS: Check merge compatibility
+  # CONFLICTS: Check merge compatibility (PRs only)
   # ============================================================================
   check-conflicts:
     runs-on: ubuntu-latest
@@ -222,12 +227,12 @@ jobs:
           fi
 
   # ============================================================================
-  # FINAL STATUS: Aggregate all job results
+  # FINAL STATUS: Aggregate all job results (PRs and workflow_dispatch only)
   # ============================================================================
   ci-status:
     runs-on: ubuntu-latest
     needs: [setup-tests, lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
-    if: always()
+    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
     outputs:
       success: ${{ steps.evaluate.outputs.success }}
       failed-jobs: ${{ steps.evaluate.outputs.failed_jobs }}
@@ -266,7 +271,7 @@ jobs:
           fi
 
   # ============================================================================
-  # NOTIFY: Post failure summary
+  # NOTIFY: Post failure summary (PRs only)
   # ============================================================================
   notify-failure:
     runs-on: ubuntu-latest
@@ -306,12 +311,11 @@ jobs:
           gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" --repo "${{ github.repository }}"
 
   # ============================================================================
-  # JULES: Convert draft PR to ready when CI passes
+  # JULES: Convert draft PR to ready when CI passes (PRs only)
   # ============================================================================
   mark-ready-for-review:
     needs: [ci-status]
     runs-on: ubuntu-latest
-    # Only run for Jules draft PRs when CI passes
     if: |
       needs.ci-status.outputs.success == 'true' &&
       github.event_name == 'pull_request' &&
@@ -331,24 +335,17 @@ jobs:
           echo "✅ PR #$PR_NUMBER is now ready for review"
 
   # ============================================================================
-  # DEPLOY: Vercel Preview/Production
+  # DEPLOY: Vercel Preview (PRs only - when CI passes)
   # ============================================================================
-  deploy-vercel:
+  deploy-vercel-preview:
     needs: [ci-status]
-    # Only deploy if CI passed AND:
-    # 1. It's a push to main (Production)
-    # 2. It's a PR with 'preview' label
-    # 3. It's a newly opened PR by a human (initial preview)
     if: |
-      needs.ci-status.outputs.success == 'true' && (
-        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-        (github.event_name == 'pull_request' && 
-         github.event.pull_request.draft == false &&
-         (
-           contains(github.event.pull_request.labels.*.name, 'preview') ||
-           (github.event.action == 'opened' && github.event.pull_request.user.login != 'google-labs-jules' && github.event.pull_request.user.login != 'renovate[bot]')
-         )
-        )
+      needs.ci-status.outputs.success == 'true' &&
+      github.event_name == 'pull_request' && 
+      github.event.pull_request.draft == false &&
+      (
+        contains(github.event.pull_request.labels.*.name, 'preview') ||
+        (github.event.action == 'opened' && github.event.pull_request.user.login != 'google-labs-jules' && github.event.pull_request.user.login != 'renovate[bot]')
       )
     runs-on: ubuntu-latest
     permissions:
@@ -366,7 +363,7 @@ jobs:
         run: pnpm add -g vercel@latest
 
       - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Cache Next.js build
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
@@ -378,22 +375,20 @@ jobs:
             nextjs-deploy-${{ runner.os }}-
 
       - name: Build Project Artifacts
-        run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel
         id: deploy
         run: |
-          PROD_FLAG=${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt $PROD_FLAG --token=${{ secrets.VERCEL_TOKEN }})
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
           echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
           
           echo "### 🚀 Vercel Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
-          echo "**Mode:** ${{ github.ref == 'refs/heads/main' && 'Production' || 'Preview' }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Mode:** Preview" >> $GITHUB_STEP_SUMMARY
 
       - name: Comment Preview URL on PR
-        if: github.event_name == 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -422,3 +417,48 @@ jobs:
           else
             gh pr comment ${{ github.event.pull_request.number }} --body "$MESSAGE" --repo "${{ github.repository }}"
           fi
+
+  # ============================================================================
+  # DEPLOY: Vercel Production (main branch only - no CI checks needed)
+  # ============================================================================
+  deploy-vercel-production:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Setup project
+        uses: ./.github/actions/setup
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Cache Next.js build
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+        with:
+          path: .next/cache
+          key: nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nextjs-deploy-${{ runner.os }}-
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          
+          echo "### 🚀 Vercel Production Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
+          echo "**Mode:** Production" >> $GITHUB_STEP_SUMMARY
