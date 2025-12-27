@@ -2,11 +2,13 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/atoms/resizable";
+import { GenerationDashboard } from "@/components/organisms/generation-dashboard";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
@@ -39,10 +41,14 @@ interface WriterViewProps {
 	isReadOnly?: boolean;
 	defaultModelId?: string;
 	availableModels?: ChatModel[];
+	initialGenerationId?: string;
 }
 
 function WriterViewContent({ props }: { props: WriterViewProps }) {
 	const [mounted, setMounted] = useState(false);
+	const [generationId, setGenerationId] = useState<string | null>(
+		props.initialGenerationId || null,
+	);
 
 	// Use extracted layout hook
 	const {
@@ -141,6 +147,28 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					</>
 				)}
 			</ResizablePanelGroup>
+
+			<AnimatePresence>
+				{generationId && (
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: 20 }}
+						className="absolute inset-0 z-50 bg-background/95 backdrop-blur-sm p-6"
+					>
+						<div className="h-full w-full max-w-5xl mx-auto border rounded-xl shadow-2xl bg-background overflow-hidden">
+							<GenerationDashboard
+								generationId={generationId}
+								projectId={props.project.id}
+								onClose={() => setGenerationId(null)}
+								onComplete={() => {
+									// Optional: Refresh data or show confetti
+								}}
+							/>
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
 
 			<FloatingAssistant
 				projectId={props.project.id}

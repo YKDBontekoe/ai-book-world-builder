@@ -274,14 +274,14 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           EXISTING=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq "[.[] | select(.body | contains(\"$RUN_ID\"))] | length" 2>/dev/null || echo "0")
+            --jq "[.[] | select(.body | contains(\"$RUN_ID\"))] | length" --repo "${{ github.repository }}" 2>/dev/null || echo "0")
           
           if [[ "$EXISTING" -gt 0 ]]; then
             echo "Already posted comment for this run"
             exit 0
           fi
           
-          gh pr comment "$PR_NUMBER" --body "🚨 CI Failed - Jobs: $FAILED_JOBS - [View Run]($RUN_URL)"
+          gh pr comment "$PR_NUMBER" --body "🚨 CI Failed - Jobs: $FAILED_JOBS - [View Run]($RUN_URL)" --repo "${{ github.repository }}"
 
   # ============================================================================
   # DEPLOY: Vercel Preview/Production
@@ -354,7 +354,7 @@ jobs:
           
           # Check if a deployment comment already exists
           COMMENT_ID=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            --jq '.[] | select(.body | contains("<!-- vercel-deployment -->")) | .id' | head -1)
+            --jq '.[] | select(.body | contains("<!-- vercel-deployment -->")) | .id' --repo "${{ github.repository }}" | head -1)
           
           MESSAGE="<!-- vercel-deployment -->
           ## 🚀 Vercel Preview Deployment
@@ -371,7 +371,7 @@ jobs:
           if [ -n "$COMMENT_ID" ]; then
             gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID \
               --method PATCH \
-              -f body="$MESSAGE"
+              -f body="$MESSAGE" --repo "${{ github.repository }}"
           else
-            gh pr comment ${{ github.event.pull_request.number }} --body "$MESSAGE"
+            gh pr comment ${{ github.event.pull_request.number }} --body "$MESSAGE" --repo "${{ github.repository }}"
           fi

@@ -35,7 +35,7 @@ jobs:
           ⏳ Working on it now...
 
           ---
-          🤖 Jules"
+          🤖 Jules" --repo "${{ github.repository }}"
 
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
@@ -110,7 +110,7 @@ jobs:
         run: |
           gh issue comment ${{ github.event.issue.number }} --body "🤖 Got it! Working on: **${{ steps.parse.outputs.command }}**
 
-          I'll get back to you shortly..."
+          I'll get back to you shortly..." --repo "${{ github.repository }}"
 
       - name: Checkout
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
@@ -198,7 +198,7 @@ jobs:
           # Apply labels if any
           LABELS=$(echo "$LABELS" | sed 's/^,//')
           if [ -n "$LABELS" ]; then
-            gh issue edit $ISSUE_NUMBER --add-label "$LABELS" 2>/dev/null || true
+            gh issue edit $ISSUE_NUMBER --add-label "$LABELS" --repo "${{ github.repository }}" 2>/dev/null || true
           fi
           
           # Add welcome comment
@@ -207,7 +207,7 @@ jobs:
           I've automatically analyzed and labeled it. Here's what I found:
           $([[ -n \"$LABELS\" ]] && echo \"**Labels applied:** \`$LABELS\`\" || echo \"No automatic labels applied.\")
 
-          💡 **Tip:** Add the \`jules\` label or mention \`@jules\` in a comment to have AI work on this automatically."
+          💡 **Tip:** Add the \`jules\` label or mention \`@jules\` in a comment to have AI work on this automatically." --repo "${{ github.repository }}"
 
   # ============================================================================
   # Good first issue helper
@@ -246,4 +246,4 @@ jobs:
           - Mention \`@jules\` for AI assistance
           - Check the README for more details
 
-          Happy coding! 🚀"
+          Happy coding! 🚀" --repo "${{ github.repository }}"

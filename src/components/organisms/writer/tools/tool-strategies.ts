@@ -1,11 +1,12 @@
 import {
-	analyzeConsistencyAction,
 	batchWriteChapterAction,
 	critiqueChapterAction,
 	expandSceneAction,
 	generateLoreAction,
 	rewriteSceneAction,
 	searchProjectAction,
+	analyzeWritingQuality,
+    analyzeChapterPlotAction,
 } from "@/app/actions/ai-operations";
 import type { ChapterWithScenes } from "@/lib/types";
 import type { Project } from "@/lib/db/schema/projects";
@@ -18,13 +19,15 @@ export type ToolType =
 	| "critique"
 	| "consistency"
 	| "lore"
-	| "search";
+	| "search"
+	| "coach";
 
 export interface ToolContext {
 	project: Project;
 	structure: ChapterWithScenes[];
 	activeChapterId: string | null;
 	activeSceneId: string | null;
+	content?: string | null;
 }
 
 export interface ToolStrategy {
@@ -32,6 +35,44 @@ export interface ToolStrategy {
 		context: ToolContext,
 		input: string,
 	): Promise<{ success: boolean; result?: string }>;
+}
+// ... (skip unchanged classes)
+export class CoachStrategy implements ToolStrategy {
+	async execute(context: ToolContext, _input: string) {
+		if (!context.content) {
+			toast.error("No content to analyze.");
+			return { success: false };
+		}
+
+		const toastId = toast.loading("Analyzing writing quality...", {
+			description: "Checking style, pacing, and show vs tell",
+		});
+
+		try {
+			const res = await analyzeWritingQuality(context.content);
+			if (res.success && res.analysis) {
+				toast.success("Analysis complete", { id: toastId });
+				const { overallScore, issues, suggestions } = res.analysis;
+				
+				const report = [
+					`## Writing Coach Report (Score: ${overallScore}/100)`,
+					`### Issues Detected`,
+					...issues.slice(0, 5).map(i => `- **${i.type}**: "${i.text.substring(0, 50)}..." — ${i.suggestion}`),
+					`### Suggestions`,
+					...suggestions.slice(0, 3).map(s => `- **${s.title}**: ${s.description}`),
+				].join('\n');
+
+				return { success: true, result: report };
+			}
+			if (res.error) {
+				toast.error(res.error || "Analysis failed", { id: toastId });
+			}
+			return { success: false };
+		} catch (error) {
+			toast.error("An error occurred during analysis", { id: toastId });
+			return { success: false };
+		}
+	}
 }
 
 export class WriteStrategy implements ToolStrategy {
@@ -159,14 +200,44 @@ export class ConsistencyStrategy implements ToolStrategy {
 		}
 		
 		const toastId = toast.loading("Checking consistency...", {
-			description: "Analyzing characters and world continuity",
+			description: "Analyzing plot holes, timeline, and motivations",
 		});
 		
 		try {
-			const res = await analyzeConsistencyAction(context.activeChapterId);
-			if (res.success && 'data' in res) {
-				toast.success("Consistency check complete", { id: toastId });
-				return { success: true, result: JSON.stringify(res.data, null, 2) };
+			const res = await analyzeChapterPlotAction(context.activeChapterId);
+			if (res.success && res.analysis) {
+				toast.success("Analysis complete", { id: toastId });
+                
+                const { overallScore, plotHoles, recommendations, timelineConflicts } = res.analysis;
+                
+                const reportParts = [
+                    `## Consistency Analysis (Score: ${overallScore}/100)`,
+                    
+                    `### 💡 Key Recommendations`,
+                    ...recommendations.map(r => `- ${r}`),
+                ];
+
+                if (plotHoles.length > 0) {
+                    reportParts.push(`### 🕳️ Detected Plot Holes`);
+                    plotHoles.slice(0, 5).forEach(h => {
+                        reportParts.push(`#### ${h.title} (${h.type})`);
+                        reportParts.push(`${h.description}`);
+                        reportParts.push(`> **Fix**: ${h.suggestion}`);
+                    });
+                }
+
+                if (timelineConflicts.length > 0) {
+                    reportParts.push(`### ⏳ Timeline Conflicts`);
+                    timelineConflicts.slice(0, 3).forEach(t => {
+                        reportParts.push(`- **${t.conflictReason}**: ${t.description}`);
+                    });
+                }
+
+                if (plotHoles.length === 0 && timelineConflicts.length === 0) {
+                    reportParts.push(`No significant issues detected.`);
+                }
+
+				return { success: true, result: reportParts.join('\n\n') };
 			}
 			if ('error' in res) {
 				toast.error(res.error || "Consistency check failed", { id: toastId });
@@ -213,6 +284,8 @@ export class SearchStrategy implements ToolStrategy {
 	}
 }
 
+
+
 export const toolStrategies: Record<ToolType, ToolStrategy> = {
 	write: new WriteStrategy(),
 	rewrite: new RewriteStrategy(),
@@ -221,4 +294,5 @@ export const toolStrategies: Record<ToolType, ToolStrategy> = {
 	consistency: new ConsistencyStrategy(),
 	lore: new LoreStrategy(),
 	search: new SearchStrategy(),
+	coach: new CoachStrategy(),
 };
