@@ -1,5 +1,3 @@
-"use client";
-
 import { Chat } from "@/components/organisms/chat/chat";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { DataStreamHandler } from "@/components/organisms/messages/data-stream-handler";

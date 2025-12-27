@@ -28,7 +28,6 @@ export interface ReviewResult {
 	consistency: {
 		characterConsistent: boolean;
 		worldConsistent: boolean;
-		timelineConsistent: boolean;
 		issues: string[];
 	};
 	pacing: {
@@ -62,7 +61,6 @@ const reviewSchema = z.object({
 	consistency: z.object({
 		characterConsistent: z.boolean().describe("Characters behave consistently"),
 		worldConsistent: z.boolean().describe("World details are consistent"),
-		timelineConsistent: z.boolean().describe("Timeline is logical"),
 		issues: z.array(z.string()).describe("Specific consistency issues found"),
 	}),
 	pacing: z.object({
@@ -94,7 +92,7 @@ Your job is to review fiction chapters for quality, consistency, and reader enga
 Be constructive but honest. A good review helps the writer improve.
 
 ## Review Criteria
-1. **Consistency**: Do characters, world details, and timeline match established lore?
+1. **Consistency**: Do characters and world details match established lore?
 2. **Pacing**: Does the chapter flow well? Are there lulls or rushes?
 3. **Engagement**: Would a reader want to keep reading?
 4. **Quality**: Is the prose well-crafted? Are there awkward phrases?
