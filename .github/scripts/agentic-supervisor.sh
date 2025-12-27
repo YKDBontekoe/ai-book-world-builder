@@ -1,5 +1,5 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
 # ==============================================================================
 # Agentic Supervisor Logic
@@ -24,7 +24,9 @@ set_output() {
       echo "$key=$val" >> "$GITHUB_OUTPUT"
     fi
   else
-    echo "::set-output name=$key::$val"
+    # Fallback for local testing without GITHUB_OUTPUT
+    echo "::warning::GITHUB_OUTPUT not set, output '$key' not captured"
+    echo "$key=$val"
   fi
 }
 
@@ -178,7 +180,7 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" ]
       # GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments
       COMMENTS_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/reviews/${REVIEW_ID}/comments" --jq '.[] | "- File: \(.path) (Line \(.line // .original_line)): \(.body)"' 2>/dev/null || echo "")
     elif [[ -n "$MOCK_GH_CLI" ]]; then
-      COMMENTS_DATA="- File: src/main.ts (Line 10): Fix typo\n- File: src/utils.ts (Line 5): Optimize loop"
+      COMMENTS_DATA=$'- File: src/main.ts (Line 10): Fix typo\n- File: src/utils.ts (Line 5): Optimize loop'
     fi
 
     if [[ -n "$COMMENTS_DATA" ]]; then
