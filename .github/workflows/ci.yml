@@ -27,7 +27,7 @@ jobs:
       shard-matrix: ${{ steps.set-matrix.outputs.matrix }}
       shard-total: ${{ steps.set-matrix.outputs.total }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - id: set-matrix
         run: |
           # Count unit test files
@@ -48,7 +48,7 @@ jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm type-check
@@ -61,7 +61,8 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.setup-tests.outputs.shard-matrix) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm test:unit --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }}
 
@@ -88,7 +89,7 @@ jobs:
   db-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm db:check
 
@@ -97,7 +98,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Check for merge conflicts
@@ -129,6 +130,7 @@ jobs:
     permissions:
       pull-requests: write
     steps:
+      - uses: actions/checkout@v4
       - name: Notify @jules
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
