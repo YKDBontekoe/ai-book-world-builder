@@ -147,9 +147,6 @@ export function AdvancedStep({ wizard }: AdvancedStepProps) {
 						</div>
 						<Switch
 							checked={state.advanced.generateFrontCover}
-							onCheckedChange={(checked) =>
-								updateAdvanced({ generateFrontCover: checked })
-							}
 							disabled
 						/>
 					</div>
@@ -165,9 +162,6 @@ export function AdvancedStep({ wizard }: AdvancedStepProps) {
 						</div>
 						<Switch
 							checked={state.advanced.generateCharacterSheets}
-							onCheckedChange={(checked) =>
-								updateAdvanced({ generateCharacterSheets: checked })
-							}
 							disabled
 						/>
 					</div>

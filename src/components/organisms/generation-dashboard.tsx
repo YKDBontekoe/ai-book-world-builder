@@ -66,32 +66,46 @@ export function GenerationDashboard({
     const [isRejectionDialogOpen, setIsRejectionDialogOpen] = useState(false);
     const [rejectionNote, setRejectionNote] = useState("");
     const [isProcessingAction, setIsProcessingAction] = useState(false);
-    
+
 	const logEndRef = useRef<HTMLDivElement>(null);
+	const mounted = useRef(false);
+
+	useEffect(() => {
+		mounted.current = true;
+		return () => {
+			mounted.current = false;
+		};
+	}, []);
 
 	// Add log entry
-	const addLog = useCallback(
-		(type: LogEntry["type"], message: string) => {
-			setLogs((prev) => [
-				...prev,
-				{
-					id: `${Date.now()}-${Math.random()}`,
-					timestamp: new Date(),
-					type,
-					message,
-				},
-			]);
-		},
-		[],
-	);
+	const addLog = useCallback((type: LogEntry["type"], message: string) => {
+		if (!mounted.current) return;
+		setLogs((prev) => [
+			...prev,
+			{
+				id: `${Date.now()}-${Math.random()}`,
+				timestamp: new Date(),
+				type,
+				message,
+			},
+		]);
+	}, []);
 
 	// Poll for status updates
 	useEffect(() => {
 		if (!isPolling) return;
 
+		let intervalId: NodeJS.Timeout;
+
 		const poll = async () => {
+			if (!mounted.current) {
+				clearInterval(intervalId);
+				return;
+			}
 			try {
 				const result = await getGenerationStatus(generationId);
+				if (!mounted.current) return;
+
 				if (result.success && result.status) {
 					const newStatus = result.status as PipelineStatus;
 
@@ -99,7 +113,7 @@ export function GenerationDashboard({
 					if (status?.status !== newStatus.status) {
 						if (newStatus.status === "completed") {
 							addLog("success", "Generation completed successfully!");
-							onComplete?.();
+							if (onComplete) onComplete();
 						} else if (newStatus.status === "failed") {
 							addLog("error", newStatus.error || "Generation failed");
 						} else if (newStatus.status === "paused") {
@@ -115,11 +129,11 @@ export function GenerationDashboard({
 						addLog("info", `Starting: ${newStatus.currentStep.name}`);
 					}
 
-					setStatus(newStatus);
+					if (mounted.current) setStatus(newStatus);
 
 					// Stop polling if completed, failed, or paused
 					if (["completed", "failed"].includes(newStatus.status)) {
-						setIsPolling(false);
+						if (mounted.current) setIsPolling(false);
 					}
 				}
 			} catch (error) {
@@ -127,11 +141,22 @@ export function GenerationDashboard({
 			}
 		};
 
+		// Initial poll
 		poll();
-		const interval = setInterval(poll, 2000);
+		// Set up interval
+		intervalId = setInterval(poll, 2000);
 
-		return () => clearInterval(interval);
-	}, [generationId, isPolling, status?.status, status?.currentStep?.id, addLog, onComplete]);
+		return () => {
+			clearInterval(intervalId);
+		};
+	}, [
+		generationId,
+		isPolling,
+		status?.status,
+		status?.currentStep?.id,
+		addLog,
+		onComplete,
+	]);
 
 	// Scroll logs to bottom
 	useEffect(() => {
@@ -156,11 +181,27 @@ export function GenerationDashboard({
 	};
 
 	const handleResume = async () => {
-		setIsPolling(true);
-		// Resume would need to trigger the pipeline again
-		// For now, just show a message
 		addLog("info", "Resuming generation...");
-		toast.info("Resume functionality coming soon");
+		setIsProcessingAction(true);
+		try {
+			const result = await approveChapterAction(generationId);
+			if (result.success) {
+				toast.success("Resuming pipeline...");
+				setIsPolling(true); // Start polling again
+			} else {
+				toast.error(result.error || "Failed to resume.");
+				addLog("error", result.error || "Failed to resume pipeline.");
+			}
+		} catch (error) {
+			const errorMessage =
+				error instanceof Error ? error.message : "An unknown error occurred.";
+			toast.error(`Failed to resume: ${errorMessage}`);
+			addLog("error", `Failed to resume: ${errorMessage}`);
+		} finally {
+			if (mounted.current) {
+				setIsProcessingAction(false);
+			}
+		}
 	};
 
 	const handleCancel = async () => {
@@ -208,16 +249,16 @@ export function GenerationDashboard({
             toast.error("Please provide instructions for revision.");
             return;
         }
+
+        // Need current step ID to reject. Use status.currentStep?.id
+        // If status is awaiting_approval, currentStep should be the paused one.
+        if (!status?.currentStep?.id) {
+            toast.error("No active step to reject");
+            return;
+        }
         
         setIsProcessingAction(true);
         try {
-            // Need current step ID to reject. Use status.currentStep?.id
-            // If status is awaiting_approval, currentStep should be the paused one.
-            if (!status?.currentStep?.id) {
-                toast.error("No active step to reject");
-                return;
-            }
-
             const result = await rejectChapterAction(generationId, status.currentStep.id, rejectionNote);
             if (result.success) {
                 toast.success("Rejected. Queuing revision...");
@@ -324,8 +365,17 @@ export function GenerationDashboard({
 						</Button>
 					)}
 					{status.status === "paused" && (
-						<Button variant="outline" size="sm" onClick={handleResume}>
-							<Play className="w-4 h-4" />
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={handleResume}
+							disabled={isProcessingAction}
+						>
+							{isProcessingAction ? (
+								<Loader2 className="w-4 h-4 animate-spin" />
+							) : (
+								<Play className="w-4 h-4" />
+							)}
 							<span className="ml-2">Resume</span>
 						</Button>
 					)}

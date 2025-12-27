@@ -31,18 +31,26 @@ export function useGenerationWizard(projectId: string) {
 	}, []);
 
 	const nextStep = useCallback(() => {
-		if (!isLastStep) {
-			const nextIndex = currentStepIndex + 1;
-			setState((prev) => ({ ...prev, step: STEP_ORDER[nextIndex] }));
-		}
-	}, [currentStepIndex, isLastStep]);
+		setState((prev) => {
+			const currentIndex = STEP_ORDER.indexOf(prev.step);
+			if (currentIndex < STEP_ORDER.length - 1) {
+				const nextIndex = currentIndex + 1;
+				return { ...prev, step: STEP_ORDER[nextIndex] };
+			}
+			return prev;
+		});
+	}, []);
 
 	const prevStep = useCallback(() => {
-		if (!isFirstStep) {
-			const prevIndex = currentStepIndex - 1;
-			setState((prev) => ({ ...prev, step: STEP_ORDER[prevIndex] }));
-		}
-	}, [currentStepIndex, isFirstStep]);
+		setState((prev) => {
+			const currentIndex = STEP_ORDER.indexOf(prev.step);
+			if (currentIndex > 0) {
+				const prevIndex = currentIndex - 1;
+				return { ...prev, step: STEP_ORDER[prevIndex] };
+			}
+			return prev;
+		});
+	}, []);
 
 	const updateContext = useCallback(
 		(updates: Partial<GenerationWizardState["context"]>) => {

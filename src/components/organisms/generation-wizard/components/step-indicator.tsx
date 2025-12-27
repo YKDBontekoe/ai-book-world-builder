@@ -32,6 +32,9 @@ export function StepIndicator({ wizard }: StepIndicatorProps) {
 							type="button"
 							onClick={() => wizard.goToStep(step.id)}
 							disabled={index > currentStepIndex}
+							aria-label={`Step ${index + 1}: ${step.label}${
+								isCompleted ? " (Completed)" : ""
+							}${isActive ? " (Active)" : ""}`}
 							className={cn(
 								"flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
 								isActive && "bg-primary text-primary-foreground",

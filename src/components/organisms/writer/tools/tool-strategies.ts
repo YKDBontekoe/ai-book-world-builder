@@ -20,7 +20,8 @@ export type ToolType =
 	| "consistency"
 	| "lore"
 	| "search"
-	| "coach";
+	| "coach"
+	| "voice";
 
 export interface ToolContext {
 	project: Project;
@@ -50,23 +51,40 @@ export class CoachStrategy implements ToolStrategy {
 
 		try {
 			const res = await analyzeWritingQuality(context.content);
-			if (res.success && res.analysis) {
+
+			if (
+				res.success &&
+				res.analysis &&
+				typeof res.analysis.overallScore === "number" &&
+				Array.isArray(res.analysis.issues) &&
+				Array.isArray(res.analysis.suggestions)
+			) {
 				toast.success("Analysis complete", { id: toastId });
 				const { overallScore, issues, suggestions } = res.analysis;
-				
+
 				const report = [
 					`## Writing Coach Report (Score: ${overallScore}/100)`,
-					`### Issues Detected`,
-					...issues.slice(0, 5).map(i => `- **${i.type}**: "${i.text.substring(0, 50)}..." — ${i.suggestion}`),
-					`### Suggestions`,
-					...suggestions.slice(0, 3).map(s => `- **${s.title}**: ${s.description}`),
-				].join('\n');
+					"### Issues Detected",
+					...issues
+						.slice(0, 5)
+						.map(
+							(i) =>
+								`- **${i.type}**: "${i.text.substring(
+									0,
+									50,
+								)}..." — ${i.suggestion}`,
+						),
+					"### Suggestions",
+					...suggestions
+						.slice(0, 3)
+						.map((s) => `- **${s.title}**: ${s.description}`),
+				].join("\n");
 
 				return { success: true, result: report };
 			}
-			if (res.error) {
-				toast.error(res.error || "Analysis failed", { id: toastId });
-			}
+			toast.error(res.error || "Invalid analysis data received", {
+				id: toastId,
+			});
 			return { success: false };
 		} catch (error) {
 			toast.error("An error occurred during analysis", { id: toastId });
@@ -284,7 +302,12 @@ export class SearchStrategy implements ToolStrategy {
 	}
 }
 
-
+export class VoiceStrategy implements ToolStrategy {
+	async execute(_context: ToolContext, _input: string) {
+		toast.info("Voice tool coming soon!");
+		return { success: false };
+	}
+}
 
 export const toolStrategies: Record<ToolType, ToolStrategy> = {
 	write: new WriteStrategy(),
@@ -295,4 +318,5 @@ export const toolStrategies: Record<ToolType, ToolStrategy> = {
 	lore: new LoreStrategy(),
 	search: new SearchStrategy(),
 	coach: new CoachStrategy(),
+	voice: new VoiceStrategy(),
 };

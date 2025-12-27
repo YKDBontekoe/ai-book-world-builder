@@ -27,7 +27,10 @@ import {
 	checkSceneVoiceConsistencyAction,
 } from "@/app/actions/ai-operations";
 import type { VoiceProfile } from "@/lib/db/schema";
-import type { VoiceConsistencyResult } from "@/lib/ai/services/voice-profile-service";
+import type {
+	VoiceConsistencyResult,
+	VoiceIssue,
+} from "@/lib/ai/services/voice-profile-service";
 import { Loader2, AlertCircle, CheckCircle, Ear } from "lucide-react";
 import { Badge } from "@/components/atoms/badge";
 import { ScrollArea } from "@/components/atoms/scroll-area";
@@ -177,7 +180,7 @@ export function VoiceProfileModal({ open, onOpenChange }: VoiceProfileModalProps
 												</div>
 												<div className="space-y-1">
 													<div className="text-sm text-muted-foreground">Sentence Style</div>
-													<div className="font-medium capitalize">{profile.sentenceStyle.replace('_', ' ')}</div>
+													<div className="font-medium capitalize">{profile.sentenceStyle.replaceAll('_', ' ')}</div>
 												</div>
 												<div className="space-y-1">
 													<div className="text-sm text-muted-foreground">Avg. Length</div>
@@ -204,11 +207,15 @@ export function VoiceProfileModal({ open, onOpenChange }: VoiceProfileModalProps
 
 											<div className="space-y-2">
 												<div className="text-sm font-medium">Speech Mannerisms</div>
-												<ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
-													{profile.speechMannerisms.map((m, i) => (
-														<li key={i}>{m}</li>
-													))}
-												</ul>
+												{profile.speechMannerisms.length > 0 ? (
+													<ul className="text-sm text-muted-foreground list-disc pl-4 space-y-1">
+														{profile.speechMannerisms.map((m, i) => (
+															<li key={i}>{m}</li>
+														))}
+													</ul>
+												) : (
+													<span className="text-muted-foreground text-sm">None</span>
+												)}
 											</div>
 										</div>
 									</ScrollArea>
@@ -250,10 +257,14 @@ export function VoiceProfileModal({ open, onOpenChange }: VoiceProfileModalProps
 													</div>
 												) : (
 													<div className="space-y-3">
-														{consistencyResult.issues.map((issue: any, i: number) => (
-															<div key={i} className="p-3 border rounded bg-background">
-																<div className="flex items-center gap-2 mb-1">
-																	<AlertCircle className="w-4 h-4 text-amber-500" />
+														{consistencyResult.issues.map(
+															(issue: VoiceIssue, i: number) => (
+																<div
+																	key={i}
+																	className="p-3 border rounded bg-background"
+																>
+																	<div className="flex items-center gap-2 mb-1">
+																		<AlertCircle className="w-4 h-4 text-amber-500" />
 																	<span className="font-medium text-sm capitalize">{issue.type.replace('_', ' ')}</span>
 																	<Badge variant="outline" className="text-xs h-5">{issue.severity}</Badge>
 																</div>

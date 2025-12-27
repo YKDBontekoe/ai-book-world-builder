@@ -48,7 +48,9 @@ export default async function ProjectPage({
 				isReadOnly={isReadOnly}
 				defaultModelId={defaultModelId}
 				availableModels={availableModels}
-				initialGenerationId={generation as string}
+				initialGenerationId={
+					Array.isArray(generation) ? generation[0] : generation
+				}
 			/>
 		</div>
 	);

@@ -1,5 +1,7 @@
 "use server";
 
+import { auth } from "@/app/(auth)/auth";
+import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import type { GenerationSettings } from "@/lib/db/schema/generation";
 import { analysisService } from "@/lib/services/ai/analysis-service";
 import { loreService } from "@/lib/services/ai/lore-service";
@@ -361,19 +363,30 @@ export async function analyzeChapterPlotAction(chapterId: string) {
 
 export async function getProjectCharactersAction(projectId: string) {
 	try {
-        const { db } = await import("@/lib/db/drizzle");
-        const { entity } = await import("@/lib/db/schema");
-        const { and, eq } = await import("drizzle-orm");
+		const session = await auth();
+		if (!session?.user?.id) {
+			return { success: false, error: "Unauthorized" };
+		}
+
+		const project = await getProjectByIdWithAccess({
+			id: projectId,
+			userId: session.user.id,
+		});
+
+		if (!project) {
+			return { success: false, error: "Unauthorized" };
+		}
+
+		const { db } = await import("@/lib/db/drizzle");
+		const { entity } = await import("@/lib/db/schema");
+		const { and, eq } = await import("drizzle-orm");
 
 		const characters = await db
-            .select({ id: entity.id, name: entity.name })
-            .from(entity)
-            .where(
-                and(
-                    eq(entity.projectId, projectId),
-                    eq(entity.kind, "character")
-                )
-            );
+			.select({ id: entity.id, name: entity.name })
+			.from(entity)
+			.where(
+				and(eq(entity.projectId, projectId), eq(entity.kind, "character")),
+			);
 		return { success: true, characters };
 	} catch (error) {
 		return { success: false, error: (error as Error).message };
@@ -527,13 +540,16 @@ export async function approveChapterAction(generationId: string) {
 			"@/lib/ai/services/book-pipeline-service"
 		);
 
-        // Resume pipeline (Fire and forget)
-        (async () => {
-             for await (const _ of bookPipelineService.resumePipeline(generationId)) {}
-        })();
-        
+		// Resume pipeline and wait for it to finish the current step
+		// The client will poll for status updates separately.
+		for await (const _ of bookPipelineService.resumePipeline(generationId)) {
+			// We only need to kick it off, not consume the whole stream here.
+			break;
+		}
+
 		return { success: true };
 	} catch (error) {
+		console.error("Failed to resume pipeline:", error);
 		return { success: false, error: (error as Error).message };
 	}
 }
@@ -551,15 +567,20 @@ export async function rejectChapterAction(
 			"@/lib/ai/services/book-pipeline-service"
 		);
 
-        await bookPipelineService.forceRevision(generationId, stepId, instructions);
+		await bookPipelineService.forceRevision(
+			generationId,
+			stepId,
+			instructions,
+		);
 
-        // Resume pipeline
-        (async () => {
-             for await (const _ of bookPipelineService.resumePipeline(generationId)) {}
-        })();
+		// Resume pipeline
+		for await (const _ of bookPipelineService.resumePipeline(generationId)) {
+			break; // Kick it off
+		}
 
 		return { success: true };
 	} catch (error) {
+		console.error("Failed to force revision and resume pipeline:", error);
 		return { success: false, error: (error as Error).message };
 	}
 }

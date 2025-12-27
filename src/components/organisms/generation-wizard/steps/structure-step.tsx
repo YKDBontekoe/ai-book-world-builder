@@ -1,9 +1,9 @@
 "use client";
 
-import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Slider } from "@/components/atoms/slider";
 import { Switch } from "@/components/atoms/switch";
+import { WORDS_PER_PAGE } from "../constants";
 import type { UseGenerationWizardReturn } from "../hooks/use-generation-wizard";
 
 interface StructureStepProps {
@@ -16,7 +16,7 @@ export function StructureStep({ wizard }: StructureStepProps) {
 	const estimatedWordCount =
 		state.structure.totalChapters *
 		state.structure.pagesPerChapter *
-		250; // ~250 words per page
+		WORDS_PER_PAGE;
 
 	return (
 		<div className="space-y-6">
@@ -86,7 +86,7 @@ export function StructureStep({ wizard }: StructureStepProps) {
 					{estimatedWordCount.toLocaleString()} words
 				</div>
 				<div className="text-xs text-muted-foreground mt-1">
-					Based on ~250 words per page
+					Based on ~{WORDS_PER_PAGE} words per page
 				</div>
 			</div>
 
@@ -106,6 +106,7 @@ export function StructureStep({ wizard }: StructureStepProps) {
 							onCheckedChange={(checked) =>
 								updateStructure({ includePrologue: checked })
 							}
+							aria-label="Include prologue"
 						/>
 					</div>
 					<div className="flex items-center justify-between">
@@ -120,6 +121,7 @@ export function StructureStep({ wizard }: StructureStepProps) {
 							onCheckedChange={(checked) =>
 								updateStructure({ includeEpilogue: checked })
 							}
+							aria-label="Include epilogue"
 						/>
 					</div>
 				</div>

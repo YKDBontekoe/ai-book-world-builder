@@ -11,6 +11,14 @@ import {
 	Layers,
 	Sparkles,
 } from "lucide-react";
+import {
+	ESTIMATION_BASE_MIN_PER_CHAPTER,
+	ESTIMATION_COST_PER_MILLION_TOKENS,
+	ESTIMATION_REVISION_MULTIPLIER_PER_ROUND,
+	ESTIMATION_TOKENS_PER_CHAPTER,
+	ESTIMATION_TOKENS_REVISION_MULTIPLIER,
+	WORDS_PER_PAGE,
+} from "../constants";
 import type { UseGenerationWizardReturn } from "../hooks/use-generation-wizard";
 
 interface ReviewStepProps {
@@ -27,22 +35,24 @@ export function ReviewStep({ wizard }: ReviewStepProps) {
 	const estimatedWordCount =
 		state.structure.totalChapters *
 		state.structure.pagesPerChapter *
-		250;
+		WORDS_PER_PAGE;
 
 	// Rough time estimate based on chapters and settings
-	const baseTimePerChapter = 2; // minutes
-	const revisionMultiplier = 1 + state.advanced.revisionRounds * 0.5;
+	const revisionMultiplier =
+		1 + state.advanced.revisionRounds * ESTIMATION_REVISION_MULTIPLIER_PER_ROUND;
 	const estimatedMinutes = Math.round(
-		state.structure.totalChapters * baseTimePerChapter * revisionMultiplier,
+		state.structure.totalChapters *
+			ESTIMATION_BASE_MIN_PER_CHAPTER *
+			revisionMultiplier,
 	);
 
 	// Rough cost estimate (simplified)
-	const tokensPerChapter = 15000; // ~15k tokens per chapter
 	const totalTokens =
 		state.structure.totalChapters *
-		tokensPerChapter *
-		(1 + state.advanced.revisionRounds * 0.3);
-	const estimatedCost = (totalTokens / 1000000) * 3; // $3 per 1M tokens rough
+		ESTIMATION_TOKENS_PER_CHAPTER *
+		(1 + state.advanced.revisionRounds * ESTIMATION_TOKENS_REVISION_MULTIPLIER);
+	const estimatedCost =
+		(totalTokens / 1000000) * ESTIMATION_COST_PER_MILLION_TOKENS;
 
 	return (
 		<div className="space-y-6">

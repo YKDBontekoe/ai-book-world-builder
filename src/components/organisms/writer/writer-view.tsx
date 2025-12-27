@@ -154,6 +154,11 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						initial={{ opacity: 0, y: 20 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: 20 }}
+						transition={{
+							type: "spring",
+							stiffness: 400,
+							damping: 25,
+						}}
 						className="absolute inset-0 z-50 bg-background/95 backdrop-blur-sm p-6"
 					>
 						<div className="h-full w-full max-w-5xl mx-auto border rounded-xl shadow-2xl bg-background overflow-hidden">
@@ -162,7 +167,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 								projectId={props.project.id}
 								onClose={() => setGenerationId(null)}
 								onComplete={() => {
-									// Optional: Refresh data or show confetti
+									// TODO: refresh writer data or show confetti
 								}}
 							/>
 						</div>
@@ -208,7 +213,7 @@ export function WriterView(props: WriterViewProps) {
 	const { project, isReadOnly = false } = props;
 
 	return (
-		<div className="h-full w-full overflow-hidden flex flex-col">
+		<div className="h-full w-full overflow-hidden flex flex-col relative">
 			<WriterProvider {...props}>
 				<WriterControlProvider>
 					<CanvasSync projectId={project.id} isReadOnly={isReadOnly} />

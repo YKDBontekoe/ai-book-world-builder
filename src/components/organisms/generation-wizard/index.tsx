@@ -31,6 +31,13 @@ export function GenerationWizard({
 	const router = useRouter();
 
 	const handleLaunch = async () => {
+		// Validate required fields before launching
+		if (!wizard.state.bookTitle?.trim()) {
+			toast.error("Please enter a book title to continue.");
+			wizard.goToStep("style"); // Go back to the relevant step
+			return;
+		}
+
 		wizard.setIsSubmitting(true);
 
 		try {
@@ -56,6 +63,7 @@ export function GenerationWizard({
 				});
 			}
 		} catch (error) {
+			console.error("Failed to launch generation:", error);
 			toast.error("An error occurred", {
 				description: error instanceof Error ? error.message : "Unknown error",
 			});

@@ -29,53 +29,79 @@ export function ContextStep({ wizard }: ContextStepProps) {
 	const [entities, setEntities] = useState<EntityItem[]>([]);
 	const [outlines, setOutlines] = useState<OutlineItem[]>([]);
 	const [isLoading, setIsLoading] = useState(true);
+	const [loadError, setLoadError] = useState<string | null>(null);
 
 	// Fetch entities and outlines for the project
 	useEffect(() => {
+		const controller = new AbortController();
+		const { signal } = controller;
+
 		async function loadData() {
 			setIsLoading(true);
+			setLoadError(null);
 			try {
-				// Fetch from API routes or server actions
 				const [entitiesRes, outlinesRes] = await Promise.all([
-					fetch(`/api/projects/${projectId}/entities`),
-					fetch(`/api/projects/${projectId}/outlines`),
+					fetch(`/api/projects/${projectId}/entities`, { signal }),
+					fetch(`/api/projects/${projectId}/outlines`, { signal }),
 				]);
 
-				if (entitiesRes.ok) {
-					const data = await entitiesRes.json();
-					setEntities(data.entities || []);
+				if (!entitiesRes.ok) {
+					throw new Error("Failed to fetch entities.");
+				}
+				if (!outlinesRes.ok) {
+					throw new Error("Failed to fetch outlines.");
 				}
 
-				if (outlinesRes.ok) {
-					const data = await outlinesRes.json();
-					setOutlines(data.outlines || []);
+				const entitiesData = await entitiesRes.json();
+				const outlinesData = await outlinesRes.json();
+
+				if (!signal.aborted) {
+					setEntities(entitiesData.entities || []);
+					setOutlines(outlinesData.outlines || []);
 				}
 			} catch (error) {
-				console.error("Failed to load context data:", error);
+				if (error instanceof Error && error.name !== "AbortError") {
+					console.error("Failed to load context data:", error);
+					setLoadError(
+						"Could not load project data. Please try again later.",
+					);
+				}
 			} finally {
-				setIsLoading(false);
+				if (!signal.aborted) {
+					setIsLoading(false);
+				}
 			}
 		}
 
 		loadData();
+
+		return () => {
+			controller.abort();
+		};
 	}, [projectId]);
 
 	const toggleEntity = (id: string) => {
-		const current = state.context.selectedEntityIds;
+		const currentIds = new Set(state.context.selectedEntityIds);
+		if (currentIds.has(id)) {
+			currentIds.delete(id);
+		} else {
+			currentIds.add(id);
+		}
 		updateContext({
-			selectedEntityIds: current.includes(id)
-				? current.filter((e) => e !== id)
-				: [...current, id],
+			selectedEntityIds: Array.from(currentIds),
 			includeAllEntities: false,
 		});
 	};
 
 	const toggleOutline = (id: string) => {
-		const current = state.context.selectedOutlineIds;
+		const currentIds = new Set(state.context.selectedOutlineIds);
+		if (currentIds.has(id)) {
+			currentIds.delete(id);
+		} else {
+			currentIds.add(id);
+		}
 		updateContext({
-			selectedOutlineIds: current.includes(id)
-				? current.filter((o) => o !== id)
-				: [...current, id],
+			selectedOutlineIds: Array.from(currentIds),
 			includeAllOutlines: false,
 		});
 	};
@@ -95,6 +121,15 @@ export function ContextStep({ wizard }: ContextStepProps) {
 					<Skeleton className="h-10 w-full" />
 					<Skeleton className="h-32 w-full" />
 				</div>
+			</div>
+		);
+	}
+
+	if (loadError) {
+		return (
+			<div className="flex flex-col items-center justify-center h-full text-center">
+				<p className="text-destructive font-semibold">Loading Error</p>
+				<p className="text-sm text-muted-foreground mt-1">{loadError}</p>
 			</div>
 		);
 	}

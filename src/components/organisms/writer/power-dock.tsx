@@ -98,7 +98,7 @@ export function PowerDock() {
 		setResult(null);
 
 		try {
-			const strategy = toolStrategies[selectedTool.id as ToolType]; // Use selectedTool.id
+			const strategy = toolStrategies[selectedTool.id];
 			if (!strategy) {
 				toast.error("Tool not implemented yet.");
 				return;
