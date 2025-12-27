@@ -2,8 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import * as ReactFlow from "@xyflow/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getProjectIssuesAction } from "../../../../../../src/app/actions/analysis";
-import { getProjectStructure } from "../../../../../../src/app/actions/writer";
+import { getEntitiesForProject } from "../../../../../../src/app/actions/entities";
 import { useBookCanvas } from "../../../../../../src/components/organisms/book-canvas/book-canvas-context";
 import { GraphPane } from "../../../../../../src/components/organisms/book-canvas/panes/graph-pane";
 
@@ -15,18 +14,8 @@ vi.mock(
 	}),
 );
 
-vi.mock("../../../../../../src/app/actions/writer", () => ({
-	getProjectStructure: vi.fn(),
-}));
-
-vi.mock("../../../../../../src/app/actions/analysis", () => ({
-	getProjectIssuesAction: vi.fn(),
-}));
-
-vi.mock("../../../../../../src/lib/query-options", () => ({
-	QUERY_KEYS: {
-		issues: (id: string) => ["issues", id],
-	},
+vi.mock("../../../../../../src/app/actions/entities", () => ({
+	getEntitiesForProject: vi.fn(),
 }));
 
 // Mock @tanstack/react-query
@@ -92,46 +81,48 @@ describe("GraphPane", () => {
 		};
 	});
 
-	it("renders without crashing", async () => {
+	it("renders without crashing and displays entities", async () => {
 		(useBookCanvas as any).mockReturnValue({
 			projectId: "test-project-id",
-			activeSceneId: null,
-			setActiveSceneId: vi.fn(),
 		});
 
-		// Mock return values
-		const mockStructure = {
-			structure: [
-				{
-					title: "Chapter 1",
-					scenes: [
-						{ id: "s1", title: "Scene 1", prevSceneId: null },
-						{ id: "s2", title: "Scene 2", prevSceneId: "s1" },
-					],
-				},
-			],
-		};
-
-		(getProjectStructure as any).mockResolvedValue(mockStructure);
-
-		(getProjectIssuesAction as any).mockResolvedValue({
-			success: true,
-			issues: [],
-		});
+		// Mock Entities Return
+		const mockEntities = [
+			{
+				id: "e1",
+				name: "Alice",
+				kind: "Character",
+				relationships: [
+					{
+						id: "rel1",
+						sourceEntityId: "e1",
+						targetEntityId: "e2",
+						type: "friend",
+					},
+				],
+			},
+			{
+				id: "e2",
+				name: "Bob",
+				kind: "Character",
+				relationships: [
+					{
+						id: "rel1",
+						sourceEntityId: "e1",
+						targetEntityId: "e2",
+						type: "friend",
+					},
+				],
+			},
+		];
 
 		const useQuery = await import("@tanstack/react-query").then(
 			(m) => m.useQuery,
 		);
 		(useQuery as any).mockImplementation(({ queryKey }: any) => {
-			if (queryKey[0] === "project-structure") {
+			if (queryKey[0] === "entities") {
 				return {
-					data: mockStructure,
-					isLoading: false,
-				};
-			}
-			if (queryKey[0] === "issues") {
-				return {
-					data: { success: true, issues: [] },
+					data: { success: mockEntities },
 					isLoading: false,
 				};
 			}
@@ -141,6 +132,27 @@ describe("GraphPane", () => {
 		render(<GraphPane />);
 
 		expect(screen.getByTestId("react-flow")).toBeInTheDocument();
+		// We have 2 entities -> 2 Nodes.
+		// We have 1 unique relationship -> 1 Edge.
 		expect(screen.getByText("Nodes: 2, Edges: 1")).toBeInTheDocument();
+	});
+
+	it("renders empty state when no entities", async () => {
+		(useBookCanvas as any).mockReturnValue({
+			projectId: "test-project-id",
+		});
+
+		const useQuery = await import("@tanstack/react-query").then(
+			(m) => m.useQuery,
+		);
+		(useQuery as any).mockImplementation(({ queryKey }: any) => {
+			return {
+				data: { success: [] },
+				isLoading: false,
+			};
+		});
+
+		render(<GraphPane />);
+		expect(screen.getByText("No Entities Found")).toBeInTheDocument();
 	});
 });

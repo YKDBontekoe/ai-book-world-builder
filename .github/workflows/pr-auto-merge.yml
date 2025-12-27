@@ -1,0 +1,116 @@
+name: Auto-Merge
+
+# Auto-merge PRs based on labels and check status
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+  check_suite:
+    types: [completed]
+  pull_request_review:
+    types: [submitted]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.workflow_run.conclusion == 'success' ||
+      github.event.check_suite.conclusion == 'success' ||
+      github.event.review.state == 'approved'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Get PR and check eligibility
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          # Find PR number
+          if [[ -n "${{ github.event.pull_request.number }}" ]]; then
+            PR_NUM="${{ github.event.pull_request.number }}"
+          else
+            SHA="${{ github.event.workflow_run.head_sha || github.event.check_suite.head_sha }}"
+            PR_NUM=$(gh api "/repos/${{ github.repository }}/pulls" \
+              --jq ".[] | select(.head.sha == \"$SHA\") | .number" | head -1)
+          fi
+
+          if [[ -z "$PR_NUM" ]]; then
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Get PR data
+          PR_DATA=$(gh pr view "$PR_NUM" --json labels,mergeable,mergeStateStatus,isDraft,reviewDecision)
+
+          LABELS=$(echo "$PR_DATA" | jq -r '[.labels[].name] | join(",")')
+          MERGEABLE=$(echo "$PR_DATA" | jq -r '.mergeable')
+          STATE=$(echo "$PR_DATA" | jq -r '.mergeStateStatus')
+          IS_DRAFT=$(echo "$PR_DATA" | jq -r '.isDraft')
+
+          echo "pr_number=$PR_NUM" >> $GITHUB_OUTPUT
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+          # Check conditions
+          SHOULD_MERGE="false"
+          REASON=""
+
+          if [[ "$LABELS" != *"auto-merge-candidate"* ]]; then
+            REASON="No auto-merge-candidate label"
+          elif [[ "$IS_DRAFT" == "true" ]]; then
+            REASON="Draft PR"
+          elif [[ "$LABELS" == *"ci-failing"* ]]; then
+            REASON="CI still failing"
+          elif [[ "$LABELS" == *"needs-review"* ]]; then
+            REASON="Needs human review"
+          elif [[ "$LABELS" == *"security"* ]]; then
+            REASON="Security changes need review"
+          elif [[ "$LABELS" == *"breaking-change"* ]]; then
+            REASON="Breaking changes need review"
+          elif [[ "$MERGEABLE" != "MERGEABLE" && "$MERGEABLE" != "true" ]]; then
+            REASON="Not mergeable"
+          elif [[ "$STATE" == "BEHIND" ]]; then
+            REASON="Behind base branch"
+            gh pr update-branch "$PR_NUM" --rebase 2>/dev/null || true
+          elif [[ "$STATE" == "BLOCKED" ]]; then
+            REASON="Blocked by checks"
+          else
+            # Final check - all checks passed?
+            PENDING=$(gh pr checks "$PR_NUM" --json state --jq '[.[] | select(.state != "SUCCESS" and .state != "SKIPPED" and .state != "NEUTRAL")] | length' 2>/dev/null || echo "99")
+
+            if [[ "$PENDING" -gt 0 ]]; then
+              REASON="$PENDING check(s) pending"
+            else
+              SHOULD_MERGE="true"
+            fi
+          fi
+
+          echo "should_merge=$SHOULD_MERGE" >> $GITHUB_OUTPUT
+          echo "reason=$REASON" >> $GITHUB_OUTPUT
+          echo "📋 PR #$PR_NUM: should_merge=$SHOULD_MERGE, reason=$REASON"
+
+      - name: Remove ci-failing label if CI passed
+        if: steps.check.outputs.pr_number != '' && github.event.workflow_run.conclusion == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ steps.check.outputs.pr_number }}
+        run: |
+          gh pr edit "$PR_NUMBER" --remove-label "ci-failing" 2>/dev/null || true
+
+      - name: Merge PR
+        if: steps.check.outputs.should_merge == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ steps.check.outputs.pr_number }}
+        run: |
+          echo "🚀 Auto-merging PR #$PR_NUMBER"
+          gh pr merge "$PR_NUMBER" --squash --auto --delete-branch --body "🤖 Auto-merged"
+
+      - name: Log skip
+        if: steps.check.outputs.should_merge != 'true' && steps.check.outputs.pr_number != ''
+        run: echo "Skipped auto-merge"

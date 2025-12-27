@@ -68,6 +68,41 @@ Adhere to the **Native macOS** aesthetic defined in [`docs/design-system.md`](do
 
 - **CodeRabbitAI Bot**: You must always evaluate and respond to comments from `coderabbitai[bot]` on PR reviews. Address the feedback or explain why it is not applicable.
 
+## Automated Agentic Workflow
+
+This project uses a fully automated CI/CD pipeline with AI agents. See [docs/agentic-workflow.md](docs/agentic-workflow.md) for complete details.
+
+### Key Automation Features
+
+| Feature | Description |
+|---------|-------------|
+| **Issue-to-PR** | Label an issue with `jules` to have Jules create a PR |
+| **CodeRabbit Review** | All PRs are automatically reviewed by CodeRabbit |
+| **Jules Fixes Feedback** | Jules automatically addresses CodeRabbit comments |
+| **CI Auto-Fix** | Jules automatically fixes failing CI checks |
+| **Auto-Merge** | Safe PRs (deps, docs) auto-merge when CI passes |
+| **Security Scans** | Nightly vulnerability scans with auto-fix |
+
+### Triggering Jules
+
+```markdown
+# Via Label
+Add the "jules" label to any issue
+
+# Via Comment
+@jules please implement this feature
+@jules fix this bug
+@jules investigate this error
+```
+
+### Auto-Merge Candidates
+
+PRs with these characteristics are auto-merged:
+- Dependency updates (Renovate/Dependabot)
+- Small documentation changes
+- PRs labeled `auto-merge-candidate`
+
+
 ## Agent Resources
 
 ### 📚 Guidelines

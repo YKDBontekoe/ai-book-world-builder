@@ -1,8 +1,170 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":semanticCommits",
+    ":automergePatch",
+    ":automergeMinor",
+    "group:allNonMajor",
+    "schedule:weekly"
   ],
-  "prHourlyLimit": 2,
-  "prConcurrentLimit": 10
+
+  "description": "Agentic Renovate configuration for automated dependency updates",
+
+  "labels": ["dependencies", "auto-merge-candidate"],
+
+  "prHourlyLimit": 3,
+  "prConcurrentLimit": 10,
+
+  "automerge": true,
+  "automergeType": "pr",
+  "automergeStrategy": "squash",
+
+  "platformAutomerge": true,
+
+  "rebaseWhen": "conflicted",
+
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["security", "priority/high"],
+    "automerge": true
+  },
+
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on monday"]
+  },
+
+  "packageRules": [
+    {
+      "description": "Auto-merge patch and minor updates",
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "labels": ["dependencies", "auto-merge-candidate"]
+    },
+    {
+      "description": "Major updates need review",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "labels": ["dependencies", "breaking-change"]
+    },
+    {
+      "description": "Group React ecosystem updates",
+      "matchPackagePatterns": ["^react", "^@types/react"],
+      "groupName": "React",
+      "labels": ["dependencies", "react"]
+    },
+    {
+      "description": "Group Next.js updates",
+      "matchPackagePatterns": ["^next", "^@next"],
+      "groupName": "Next.js",
+      "labels": ["dependencies", "nextjs"]
+    },
+    {
+      "description": "Group testing tools",
+      "matchPackagePatterns": ["vitest", "playwright", "@testing-library"],
+      "groupName": "Testing",
+      "labels": ["dependencies", "testing"]
+    },
+    {
+      "description": "Group TypeScript ecosystem",
+      "matchPackagePatterns": ["^typescript", "^@types/"],
+      "groupName": "TypeScript",
+      "labels": ["dependencies", "typescript"]
+    },
+    {
+      "description": "Group Drizzle ORM",
+      "matchPackagePatterns": ["^drizzle"],
+      "groupName": "Drizzle ORM",
+      "labels": ["dependencies", "database"]
+    },
+    {
+      "description": "Group Radix UI components",
+      "matchPackagePatterns": ["^@radix-ui/"],
+      "groupName": "Radix UI",
+      "labels": ["dependencies", "ui"]
+    },
+    {
+      "description": "Group shadcn/ui related packages",
+      "matchPackagePatterns": ["^class-variance-authority", "^clsx", "^tailwind-merge", "^lucide-react"],
+      "groupName": "UI Utilities",
+      "labels": ["dependencies", "ui"]
+    },
+    {
+      "description": "Group AI/LLM packages",
+      "matchPackagePatterns": ["^@google/generative-ai", "^ai", "^openai", "^@anthropic"],
+      "groupName": "AI/LLM",
+      "labels": ["dependencies", "ai"]
+    },
+    {
+      "description": "Group linting and formatting",
+      "matchPackagePatterns": ["^eslint", "^@eslint", "^biome", "^prettier"],
+      "groupName": "Linting & Formatting",
+      "labels": ["dependencies", "tooling"]
+    },
+    {
+      "description": "Security packages - always auto-merge",
+      "matchPackagePatterns": ["^@auth/", "^bcrypt", "^jsonwebtoken", "^jose"],
+      "automerge": true,
+      "labels": ["dependencies", "security"]
+    },
+    {
+      "description": "Pin GitHub Actions to digest",
+      "matchManagers": ["github-actions"],
+      "pinDigests": true
+    },
+    {
+      "description": "Auto-merge GitHub Actions minor/patch",
+      "matchManagers": ["github-actions"],
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "labels": ["dependencies", "ci/cd", "auto-merge-candidate"]
+    },
+    {
+      "description": "Weekly digest for dev dependencies",
+      "matchDepTypes": ["devDependencies"],
+      "schedule": ["before 5am on monday"]
+    },
+    {
+      "description": "Don't update Node.js automatically",
+      "matchPackageNames": ["node"],
+      "enabled": false
+    },
+    {
+      "description": "pnpm updates",
+      "matchPackageNames": ["pnpm"],
+      "groupName": "pnpm",
+      "automerge": true
+    }
+  ],
+
+  "commitMessagePrefix": "deps:",
+  "commitMessageAction": "update",
+  "commitMessageTopic": "{{depName}}",
+  "commitMessageExtra": "to {{newVersion}}",
+
+  "prTitle": "deps: update {{depName}} to {{newVersion}}",
+
+  "prBodyTemplate": "{{{header}}}\n\n{{{table}}}\n\n{{{notes}}}\n\n{{{changelogs}}}\n\n---\n\n🤖 This PR is auto-mergeable if all checks pass.\n\n{{{footer}}}",
+
+  "assignees": [],
+  "reviewers": [],
+
+  "ignoreDeps": [
+    "node"
+  ],
+
+  "ignorePaths": [
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/__fixtures__/**"
+  ],
+
+  "postUpdateOptions": [
+    "pnpmDedupe"
+  ],
+
+  "rangeStrategy": "pin",
+
+  "schedule": ["after 10pm and before 5am every weekday", "every weekend"]
 }
