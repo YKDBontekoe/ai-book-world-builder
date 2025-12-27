@@ -27,9 +27,6 @@ interface WriterControlContextType {
 	isSpotlightOpen: boolean;
 	setSpotlightOpen: (open: boolean) => void;
 	toggleSpotlight: () => void;
-    
-    mode: 'default' | 'tools' | 'input';
-    setMode: (mode: 'default' | 'tools' | 'input') => void;
 }
 
 const WriterControlContext = createContext<
@@ -58,7 +55,6 @@ export function WriterControlProvider({
 	);
 	const [isChatOpen, setChatOpen] = useState(false);
 	const [isSpotlightOpen, setSpotlightOpen] = useState(false);
-    const [mode, setMode] = useState<'default' | 'tools' | 'input'>('default');
 
 	const registerEditorActions = useCallback((actions: EditorActions) => {
 		setEditorActions(actions);
@@ -80,8 +76,6 @@ export function WriterControlProvider({
 			isSpotlightOpen,
 			setSpotlightOpen,
 			toggleSpotlight,
-            mode,
-            setMode,
 		}),
 		[
 			editorActions,
@@ -90,7 +84,6 @@ export function WriterControlProvider({
 			isSpotlightOpen,
 			toggleChat,
 			toggleSpotlight,
-            mode,
 		],
 	);
 

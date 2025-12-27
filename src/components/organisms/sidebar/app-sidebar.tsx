@@ -3,10 +3,8 @@
 import {
 	DownloadIcon,
 	FolderIcon,
-	LayoutDashboard,
 	MessageSquarePlus,
 	PlusIcon,
-	ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -27,7 +25,6 @@ import {
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
 import { FeedbackDialog } from "@/components/feedback/feedback-dialog";
-import { DashboardSheet } from "@/components/organisms/dashboard/dashboard-sheet";
 import { SidebarUserNav } from "@/components/organisms/sidebar/sidebar-user-nav";
 
 export function AppSidebar({ user }: { user: User | undefined }) {
@@ -91,13 +88,6 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 								<FolderIcon size={16} /> Projects
 							</Button>
 						</Link>
-						<DashboardSheet
-							trigger={
-								<Button className="w-full justify-start gap-2" variant="ghost">
-									<LayoutDashboard size={16} /> Dashboard
-								</Button>
-							}
-						/>
 						<Link href="/exports" onClick={() => setOpenMobile(false)}>
 							<Button className="w-full justify-start gap-2" variant="ghost">
 								<DownloadIcon size={16} /> My Exports
@@ -110,13 +100,6 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 						>
 							<MessageSquarePlus size={16} /> Feedback
 						</Button>
-						{user?.role === "admin" && (
-							<Link href="/admin" onClick={() => setOpenMobile(false)}>
-								<Button className="w-full justify-start gap-2" variant="ghost">
-									<ShieldCheck size={16} /> Admin
-								</Button>
-							</Link>
-						)}
 					</div>
 				</SidebarContent>
 				<SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>

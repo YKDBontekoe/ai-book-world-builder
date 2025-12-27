@@ -12,9 +12,7 @@ import {
 	Save,
 	TrendingUp,
 	BookOpen,
-	Sparkles,
 } from "lucide-react";
-import Link from "next/link";
 import { WritingGoals } from "@/components/organisms/writer/tools/writing-goals";
 import { SessionInsights } from "@/components/organisms/writer/tools/session-insights";
 import { Button } from "@/components/atoms/button";
@@ -198,18 +196,6 @@ export function WriterHeader() {
 						<div className="h-4 w-[1px] bg-border mx-1" />
 						<WritingGoals />
 						<SessionInsights />
-						<div className="h-4 w-[1px] bg-border mx-1" />
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-6 px-2 text-xs text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:text-purple-300 dark:hover:bg-purple-900/20"
-							asChild
-						>
-							<Link href={`/projects/${project.id}/generate`}>
-								<Sparkles className="mr-1 h-3 w-3" />
-								Generate
-							</Link>
-						</Button>
 						<div className="h-4 w-[1px] bg-border mx-1" />
 						<Button
 							variant="ghost"

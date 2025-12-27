@@ -8,8 +8,6 @@ import {
 	entityAttribute,
 	type Relationship,
 	relationship,
-	type VoiceProfile,
-	voiceProfile,
 } from "@/lib/db/schema";
 import { DatabaseError, NotFoundError, ValidationError } from "@/lib/errors";
 import { BaseRepository, type FindOptions } from "./base-repository";
@@ -505,64 +503,6 @@ export class EntityRepository extends BaseRepository<
 		} catch (error) {
 			console.error("EntityRepository.getRelationshipsByProject error:", error);
 			throw new DatabaseError("Failed to load relationships");
-		}
-	}
-
-
-	// ============================================================================
-	// Voice Profile Operations
-	// ============================================================================
-
-	/**
-	 * Get voice profile for an entity
-	 */
-	async getVoiceProfile(entityId: string): Promise<VoiceProfile | null> {
-		try {
-			const [result] = await db
-				.select()
-				.from(voiceProfile)
-				.where(eq(voiceProfile.entityId, entityId));
-			return result ?? null;
-		} catch (error) {
-			console.error("EntityRepository.getVoiceProfile error:", error);
-			throw new DatabaseError("Failed to fetch voice profile");
-		}
-	}
-
-	/**
-	 * Save (create or update) a voice profile
-	 */
-	async saveVoiceProfile(
-		data: Omit<VoiceProfile, "id" | "createdAt" | "updatedAt">,
-	): Promise<VoiceProfile> {
-		try {
-			// Check if exists using our own get method
-			const existing = await this.getVoiceProfile(data.entityId);
-
-			if (existing) {
-				const [updated] = await db
-					.update(voiceProfile)
-					.set({
-						...data,
-						updatedAt: new Date(),
-					})
-					.where(eq(voiceProfile.id, existing.id))
-					.returning();
-				return updated;
-			}
-
-			const [created] = await db
-				.insert(voiceProfile)
-				.values({
-					...data,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				})
-				.returning();
-			return created;
-		} catch (error) {
-			console.error("EntityRepository.saveVoiceProfile error:", error);
-			throw new DatabaseError("Failed to save voice profile");
 		}
 	}
 }

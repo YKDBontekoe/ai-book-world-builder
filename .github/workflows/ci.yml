@@ -1,19 +1,8 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'src/**'
-      - 'tests/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - '.github/**'
-      - 'next.config.*'
-      - 'tsconfig.json'
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened]
     paths:
       - 'src/**'
       - 'tests/**'
@@ -22,108 +11,50 @@ on:
       - '.github/**'
       - 'next.config.*'
       - 'tsconfig.json'
-  workflow_dispatch:
-    inputs:
-      pr_number:
-        description: 'PR number to run CI for (optional)'
-        required: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Set global memory limit and Vercel IDs
+# Set global memory limit for all jobs to prevent Heap errors
 env:
   NODE_OPTIONS: "--max-old-space-size=6144"
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
-  # ============================================================================
-  # SETUP: Calculate test shards dynamically (PRs and workflow_dispatch only)
-  # ============================================================================
   setup-tests:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     outputs:
       shard-matrix: ${{ steps.set-matrix.outputs.matrix }}
       shard-total: ${{ steps.set-matrix.outputs.total }}
-      test-count: ${{ steps.set-matrix.outputs.test_count }}
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - id: set-matrix
         run: |
           # Count unit test files
-          TEST_COUNT=$(find tests/unit -type f \( -name "*.test.ts" -o -name "*.test.tsx" -o -name "*.spec.ts" -o -name "*.spec.tsx" \) 2>/dev/null | wc -l | tr -d ' ')
+          TEST_COUNT=$(find tests/unit -type f \( -name "*.test.ts" -o -name "*.test.tsx" -o -name "*.spec.ts" -o -name "*.spec.tsx" \) | wc -l)
           
-          if [ "$TEST_COUNT" -eq 0 ]; then
-            # No tests found, use minimal config
-            SHARD_TOTAL=1
-          else
-            # Calculate shards: ~50 tests per shard, minimum 2, maximum 6
-            SHARD_TOTAL=$(( ($TEST_COUNT + 49) / 50 ))
-            if [ "$SHARD_TOTAL" -lt 2 ]; then SHARD_TOTAL=2; fi
-            if [ "$SHARD_TOTAL" -gt 6 ]; then SHARD_TOTAL=6; fi
-          fi
+          # Calculate shards: ~50 tests per shard, minimum 2, maximum 6
+          SHARD_TOTAL=$(( ($TEST_COUNT + 49) / 50 ))
+          if [ "$SHARD_TOTAL" -lt 2 ]; then SHARD_TOTAL=2; fi
+          if [ "$SHARD_TOTAL" -gt 6 ]; then SHARD_TOTAL=6; fi
           
           # Generate JSON array [1, 2, ..., SHARD_TOTAL]
           MATRIX=$(node -e "console.log(JSON.stringify(Array.from({length: $SHARD_TOTAL}, (_, i) => i + 1)))")
           
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
           echo "total=$SHARD_TOTAL" >> $GITHUB_OUTPUT
-          echo "test_count=$TEST_COUNT" >> $GITHUB_OUTPUT
-          echo "📊 Found $TEST_COUNT tests → $SHARD_TOTAL shards"
+          echo "Found $TEST_COUNT tests. Dynamic shard count: $SHARD_TOTAL"
 
-  # ============================================================================
-  # LINT & TYPE CHECK: Static analysis (PRs and workflow_dispatch only)
-  # ============================================================================
   lint-and-typecheck:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    outputs:
-      lint-result: ${{ steps.lint.outcome }}
-      typecheck-result: ${{ steps.typecheck.outcome }}
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
-      
-      - name: Run linter
-        id: lint
-        run: pnpm lint
-        continue-on-error: true
-        
-      - name: Run type check
-        id: typecheck
-        run: pnpm type-check
-        continue-on-error: true
-        
-      - name: Save lint errors
-        if: steps.lint.outcome == 'failure'
-        run: |
-          pnpm lint 2>&1 | head -100 > /tmp/lint-errors.txt || true
-          
-      - name: Upload lint errors artifact
-        if: steps.lint.outcome == 'failure'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: lint-errors
-          path: /tmp/lint-errors.txt
-          retention-days: 1
-          
-      - name: Fail if checks failed
-        if: steps.lint.outcome == 'failure' || steps.typecheck.outcome == 'failure'
-        run: |
-          echo "❌ Static analysis failed"
-          echo "Lint: ${{ steps.lint.outcome }}"
-          echo "Type check: ${{ steps.typecheck.outcome }}"
-          exit 1
+      - run: pnpm lint
+      - run: pnpm type-check
 
-  # ============================================================================
-  # UNIT TESTS: Parallel sharded testing (PRs and workflow_dispatch only)
-  # ============================================================================
   unit-tests:
     needs: setup-tests
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -132,41 +63,19 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
-      
-      - name: Run unit tests (shard ${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }})
-        id: test
-        run: |
-          pnpm test:unit --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }} 2>&1 | tee /tmp/test-output.txt
-        continue-on-error: true
-        
-      - name: Upload test output on failure
-        if: steps.test.outcome == 'failure'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: test-errors-shard-${{ matrix.shard }}
-          path: /tmp/test-output.txt
-          retention-days: 1
-          
-      - name: Fail if tests failed
-        if: steps.test.outcome == 'failure'
-        run: exit 1
+      - run: pnpm test:unit --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }}
 
-  # ============================================================================
-  # BUILD: Production build verification (PRs and workflow_dispatch only)
-  # ============================================================================
   build:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
-    outputs:
-      build-result: ${{ steps.build.outcome }}
     env:
+      # Next.js specific memory saver
       GENERATE_SOURCEMAP: false
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
 
       - name: Cache Next.js build
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: .next/cache
           key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
@@ -174,38 +83,15 @@ jobs:
             nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nextjs-${{ runner.os }}-
 
-      - name: Build application
-        id: build
-        run: pnpm build 2>&1 | tee /tmp/build-output.txt
-        continue-on-error: true
-        
-      - name: Upload build errors on failure
-        if: steps.build.outcome == 'failure'
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: build-errors
-          path: /tmp/build-output.txt
-          retention-days: 1
-          
-      - name: Fail if build failed
-        if: steps.build.outcome == 'failure'
-        run: exit 1
+      - run: pnpm build
 
-  # ============================================================================
-  # DATABASE: Schema validation (PRs and workflow_dispatch only)
-  # ============================================================================
   db-check:
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
-      - name: Validate database schema
-        run: pnpm db:check
+      - run: pnpm db:check
 
-  # ============================================================================
-  # CONFLICTS: Check merge compatibility (PRs only)
-  # ============================================================================
   check-conflicts:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
@@ -214,251 +100,112 @@ jobs:
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
-          
       - name: Check for merge conflicts
         run: |
           git fetch origin ${{ github.base_ref }}
-          if git merge-tree --write-tree HEAD origin/${{ github.base_ref }} > /dev/null 2>&1; then
-            echo "✅ No merge conflicts detected"
-          else
-            echo "❌ Merge conflict detected with ${{ github.base_ref }}"
-            echo "Please rebase or merge the latest changes from ${{ github.base_ref }}"
-            exit 1
-          fi
+          git merge-tree --write-tree HEAD origin/${{ github.base_ref }} > /dev/null || (echo "❌ Merge conflict detected" && exit 1)
+          echo "✅ No merge conflicts"
 
-  # ============================================================================
-  # FINAL STATUS: Aggregate all job results (PRs and workflow_dispatch only)
-  # ============================================================================
-  ci-status:
+  ci-success:
     runs-on: ubuntu-latest
     needs: [setup-tests, lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
-    if: always() && (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')
-    outputs:
-      success: ${{ steps.evaluate.outputs.success }}
-      failed-jobs: ${{ steps.evaluate.outputs.failed_jobs }}
+    if: always()
     steps:
-      - name: Evaluate all results
-        id: evaluate
+      - name: Evaluate Results
+        run: |
+          if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
+            echo "CI pipeline failed."
+            exit 1
+          fi
+          echo "CI pipeline passed!"
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: [setup-tests, lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
+    if: |
+      always() &&
+      github.event_name == 'pull_request' && 
+      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Collect failure details
+        id: failures
         env:
           RESULTS: ${{ toJson(needs) }}
         run: |
           FAILED_JOBS=""
-          SUCCESS="true"
-          
-          for job in $(echo "$RESULTS" | jq -r 'keys[]'); do
-            result=$(echo "$RESULTS" | jq -r ".[\"$job\"].result")
-            echo "Job $job: $result"
-            
-            if [[ "$result" == "failure" ]]; then
-              FAILED_JOBS="$FAILED_JOBS,$job"
-              SUCCESS="false"
-            elif [[ "$result" == "cancelled" ]]; then
-              FAILED_JOBS="$FAILED_JOBS,$job(cancelled)"
-              SUCCESS="false"
+          for job in $(echo $RESULTS | jq -r 'keys[]'); do
+            result=$(echo $RESULTS | jq -r ".$job.result")
+            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
+              FAILED_JOBS="$FAILED_JOBS\n- 🛑 $job ($result)"
             fi
           done
           
-          FAILED_JOBS=$(echo "$FAILED_JOBS" | sed 's/^,//')
+          echo "failed_jobs<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$FAILED_JOBS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
           
-          echo "success=$SUCCESS" >> $GITHUB_OUTPUT
-          echo "failed_jobs=$FAILED_JOBS" >> $GITHUB_OUTPUT
-          
-          if [[ "$SUCCESS" == "true" ]]; then
-            echo "✅ All CI checks passed!"
-          else
-            echo "❌ CI failed. Failed jobs: $FAILED_JOBS"
-            exit 1
-          fi
+          echo "workflow_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
 
-  # ============================================================================
-  # NOTIFY: Post failure summary (PRs only)
-  # ============================================================================
-  notify-failure:
-    runs-on: ubuntu-latest
-    needs: [ci-status]
-    if: always() && needs.ci-status.outputs.success == 'false' && github.event_name == 'pull_request'
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Post failure summary to PR
+      - name: Comment on PR about failures
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          FAILED_JOBS: ${{ needs.ci-status.outputs.failed-jobs }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          RUN_ID: ${{ github.run_id }}
-          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          EXISTING=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq "[.[] | select(.body | contains(\"$RUN_ID\"))] | length" --repo "${{ github.repository }}" 2>/dev/null || echo "0")
-          
-          if [[ "$EXISTING" -gt 0 ]]; then
-            echo "Already posted comment for this run"
-            exit 0
-          fi
-          
-          COMMENT_BODY=$(cat <<EOF
-          🚨 **CI Failed** - Jobs: \`$FAILED_JOBS\`
-          
-          @jules please fix the following CI failures:
-          - Failed jobs: $FAILED_JOBS
-          - [View Run]($RUN_URL)
-          
-          Run \`pnpm lint\`, \`pnpm type-check\`, and \`pnpm test:unit\` locally to reproduce and fix the issues.
-          EOF
-          )
-          
-          gh pr comment "$PR_NUMBER" --body "$COMMENT_BODY" --repo "${{ github.repository }}"
+          MESSAGE="🚨 **CI Pipeline Failed**
 
-  # ============================================================================
-  # JULES: Convert draft PR to ready when CI passes (PRs only)
-  # ============================================================================
-  mark-ready-for-review:
-    needs: [ci-status]
-    runs-on: ubuntu-latest
-    if: |
-      needs.ci-status.outputs.success == 'true' &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.draft == true &&
-      github.event.pull_request.user.login == 'google-labs-jules'
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Mark PR as ready for review
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: |
-          echo "🎉 CI passed for Jules draft PR #$PR_NUMBER - marking as ready for review"
-          gh pr ready "$PR_NUMBER" --repo "${{ github.repository }}"
-          echo "✅ PR #$PR_NUMBER is now ready for review"
+          The following checks failed on this PR:
+          ${{ steps.failures.outputs.failed_jobs }}
 
-  # ============================================================================
-  # DEPLOY: Vercel Preview (PRs only - when CI passes)
-  # ============================================================================
-  deploy-vercel-preview:
-    needs: [ci-status]
-    if: |
-      needs.ci-status.outputs.success == 'true' &&
-      github.event_name == 'pull_request' && 
-      github.event.pull_request.draft == false &&
-      (
-        contains(github.event.pull_request.labels.*.name, 'preview') ||
-        (github.event.action == 'opened' && github.event.pull_request.user.login != 'google-labs-jules' && github.event.pull_request.user.login != 'renovate[bot]')
-      )
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      pull-requests: write
-      deployments: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+          **Workflow Run:** ${{ steps.failures.outputs.workflow_url }}
 
-      - name: Setup project
-        uses: ./.github/actions/setup
+          🤖 Jules is investigating and will attempt to fix these issues."
 
-      - name: Install Vercel CLI
-        run: pnpm add -g vercel@latest
+          echo "$MESSAGE" > message.txt
+          gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}
 
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Cache Next.js build
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+      - name: Invoke Jules to fix CI failures
+        uses: google-labs-code/jules-invoke@v1
         with:
-          path: .next/cache
-          key: nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
-          restore-keys: |
-            nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
-            nextjs-deploy-${{ runner.os }}-
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ github.head_ref }}
+          prompt: |
+            The CI pipeline has failed for Pull Request #${{ github.event.pull_request.number }} in ${{ github.repository }}.
 
-      - name: Build Project Artifacts
-        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+            ## Failed Checks
+            ${{ steps.failures.outputs.failed_jobs }}
 
-      - name: Deploy to Vercel
-        id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          
-          echo "### 🚀 Vercel Deployment" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
-          echo "**Mode:** Preview" >> $GITHUB_STEP_SUMMARY
+            ## Workflow Run
+            ${{ steps.failures.outputs.workflow_url }}
 
-      - name: Comment Preview URL on PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          DEPLOYMENT_URL="${{ steps.deploy.outputs.deployment_url }}"
-          
-          # Check if a deployment comment already exists
-          COMMENT_ID=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            --jq '.[] | select(.body | contains("<!-- vercel-deployment -->")) | .id' --repo "${{ github.repository }}" | head -1)
-          
-          MESSAGE="<!-- vercel-deployment -->
-          ## 🚀 Vercel Preview Deployment
-          
-          | Name | Status | URL |
-          |------|--------|-----|
-          | **Preview** | ✅ Ready | [$DEPLOYMENT_URL]($DEPLOYMENT_URL) |
-          
-          > Built and deployed via CI Pipeline (Smarter Mode)
-          
-          ---
-          *Updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')*"
-          
-          if [ -n "$COMMENT_ID" ]; then
-            gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID \
-              --method PATCH \
-              -f body="$MESSAGE" --repo "${{ github.repository }}"
-          else
-            gh pr comment ${{ github.event.pull_request.number }} --body "$MESSAGE" --repo "${{ github.repository }}"
-          fi
+            ## Your Task
+            1. **Identify the root cause** of each failure:
+               - For `lint-and-typecheck`: Run `pnpm lint` and `pnpm type-check` to see errors
+               - For `unit-tests`: Run `pnpm test:unit` to see failing tests
+               - For `build`: Run `pnpm build` to see build errors
+               - For `db-check`: Run `pnpm db:check` to see schema issues
+               - For `check-conflicts`: Check for merge conflicts with the base branch
 
-  # ============================================================================
-  # DEPLOY: Vercel Production (main branch only - no CI checks needed)
-  # ============================================================================
-  deploy-vercel-production:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+            2. **Fix the issues**:
+               - Fix linting errors and type errors
+               - Fix failing tests or update tests if behavior changed intentionally
+               - Fix build errors
+               - Resolve any conflicts
 
-      - name: Setup project
-        uses: ./.github/actions/setup
+            3. **Verify your fixes**:
+               - Run `pnpm lint` - must pass
+               - Run `pnpm type-check` - must pass
+               - Run `pnpm test:unit` - must pass
+               - Run `pnpm build` - must succeed
 
-      - name: Install Vercel CLI
-        run: pnpm add -g vercel@latest
-
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Cache Next.js build
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
-        with:
-          path: .next/cache
-          key: nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
-          restore-keys: |
-            nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
-            nextjs-deploy-${{ runner.os }}-
-
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-      - name: Deploy to Vercel Production
-        id: deploy
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
-          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          
-          echo "### 🚀 Vercel Production Deployment" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
-          echo "**Mode:** Production" >> $GITHUB_STEP_SUMMARY
+            ## Constraints
+            - Only fix issues directly related to the failing checks
+            - Do not refactor unrelated code
+            - All checks must pass before committing
+            - Create clear commit messages explaining what was fixed

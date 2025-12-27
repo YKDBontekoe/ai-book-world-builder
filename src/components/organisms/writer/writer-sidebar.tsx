@@ -7,11 +7,13 @@ import {
 	ChevronRight,
 	FileText,
 	Folder,
+	LayoutDashboard,
 	Lock,
 	PanelLeftClose,
 	Plus,
 	Trash2,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -88,10 +90,7 @@ export function WriterSidebar() {
 		return false;
 	};
 
-	const handleUpdateSceneTitle = async (
-		sceneId: string,
-		newTitle: string,
-	) => {
+	const handleUpdateSceneTitle = async (sceneId: string, newTitle: string) => {
 		const result = await updateSceneTitle(sceneId, newTitle);
 		if (result.success) {
 			fetchStructure();
@@ -174,9 +173,7 @@ export function WriterSidebar() {
 		}
 	};
 
-	const handleReorderChapters = async (
-		reorderedChapters: typeof structure,
-	) => {
+	const handleReorderChapters = async (reorderedChapters: typeof structure) => {
 		if (!reorderedChapters || reorderedChapters.length === 0) return;
 
 		// Get volume ID from first chapter
@@ -226,6 +223,15 @@ export function WriterSidebar() {
 			className="flex flex-col h-full border-r border-sidebar-border bg-sidebar/30 backdrop-blur-xl transition-all duration-300 ease-in-out"
 			data-testid="writer-sidebar"
 		>
+			<div className="px-3 py-2 border-b border-sidebar-border/50">
+				<Link href={`/projects/${project.id}/dashboard`}>
+					<Button variant="ghost" size="sm" className="w-full justify-start">
+						<LayoutDashboard className="mr-2 h-4 w-4" />
+						Dashboard
+					</Button>
+				</Link>
+			</div>
+
 			<div className="px-4 py-3 border-b border-sidebar-border/50 flex items-center justify-between bg-sidebar/20 backdrop-blur-md sticky top-0 z-10">
 				<div className="flex items-center gap-2.5">
 					<Button
@@ -327,7 +333,7 @@ export function WriterSidebar() {
 										"group/chapter rounded-xl transition-all duration-300 ease-out border border-transparent",
 										expandedChapters[chapter.id]
 											? "bg-sidebar-accent/30 shadow-sm border-sidebar-border/30 pb-2"
-											: "hover:bg-sidebar-accent/20"
+											: "hover:bg-sidebar-accent/20",
 									)}
 								>
 									<div className="flex items-center gap-1 px-1 py-1">
@@ -344,22 +350,30 @@ export function WriterSidebar() {
 											}}
 											className="flex-1 flex items-center gap-3 px-2 py-2 text-sm font-medium rounded-lg text-sidebar-foreground cursor-pointer outline-none select-none w-full text-left"
 										>
-											<div className={cn(
-												"p-1 rounded-md transition-colors",
-												expandedChapters[chapter.id] ? "bg-sidebar-accent/50 text-foreground" : "text-muted-foreground/70"
-											)}>
+											<div
+												className={cn(
+													"p-1 rounded-md transition-colors",
+													expandedChapters[chapter.id]
+														? "bg-sidebar-accent/50 text-foreground"
+														: "text-muted-foreground/70",
+												)}
+											>
 												{expandedChapters[chapter.id] ? (
 													<ChevronDown className="h-3.5 w-3.5" />
 												) : (
 													<ChevronRight className="h-3.5 w-3.5" />
 												)}
 											</div>
-											
+
 											<div className="flex items-center gap-2 flex-1 min-w-0">
-												<Folder className={cn(
-													"h-4 w-4 transition-colors",
-													expandedChapters[chapter.id] ? "text-primary dark:text-primary/90 fill-primary/10" : "text-muted-foreground/60"
-												)} />
+												<Folder
+													className={cn(
+														"h-4 w-4 transition-colors",
+														expandedChapters[chapter.id]
+															? "text-primary dark:text-primary/90 fill-primary/10"
+															: "text-muted-foreground/60",
+													)}
+												/>
 												{/* biome-ignore lint/a11y/noStaticElementInteractions: preventing parent activation */}
 												<div
 													className="flex-1 min-w-0 truncate"
@@ -377,7 +391,9 @@ export function WriterSidebar() {
 														disabled={isReadOnly}
 														className={cn(
 															"font-semibold tracking-tight transition-colors",
-															expandedChapters[chapter.id] ? "text-foreground" : "text-muted-foreground group-hover/chapter:text-foreground/80"
+															expandedChapters[chapter.id]
+																? "text-foreground"
+																: "text-muted-foreground group-hover/chapter:text-foreground/80",
 														)}
 													/>
 												</div>
@@ -422,7 +438,7 @@ export function WriterSidebar() {
 													type: "spring",
 													stiffness: 500,
 													damping: 30,
-													mass: 0.8
+													mass: 0.8,
 												}}
 												className="overflow-hidden"
 											>
@@ -443,12 +459,12 @@ export function WriterSidebar() {
 																	"group/scene relative flex items-center gap-1 rounded-lg transition-all duration-200",
 																	activeSceneId === scene.id
 																		? "bg-white/50 dark:bg-white/5 shadow-sm ring-1 ring-black/5 dark:ring-white/10"
-																		: "hover:bg-sidebar-accent/40"
+																		: "hover:bg-sidebar-accent/40",
 																)}
 															>
 																{/* Active Indicator */}
 																{activeSceneId === scene.id && (
-																	<motion.div 
+																	<motion.div
 																		layoutId="activeSceneIndicator"
 																		className="absolute left-1 width-1 h-[60%] w-0.5 bg-primary rounded-full"
 																		initial={{ opacity: 0 }}
@@ -456,7 +472,7 @@ export function WriterSidebar() {
 																		transition={{ duration: 0.2 }}
 																	/>
 																)}
-																
+
 																{/* biome-ignore lint: using div to prevent nested button hydration error */}
 																<div
 																	role="button"
@@ -472,13 +488,17 @@ export function WriterSidebar() {
 																		"flex-1 flex items-center gap-3 pl-4 pr-2 py-2 text-sm cursor-pointer outline-none select-none w-full text-left",
 																		activeSceneId === scene.id
 																			? "text-primary dark:text-primary-foreground font-medium"
-																			: "text-muted-foreground/80 group-hover/scene:text-foreground"
+																			: "text-muted-foreground/80 group-hover/scene:text-foreground",
 																	)}
 																>
-																	<div className={cn(
-																		"h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-300",
-																		activeSceneId === scene.id ? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]" : "bg-border group-hover/scene:bg-muted-foreground/50"
-																	)} />
+																	<div
+																		className={cn(
+																			"h-1.5 w-1.5 rounded-full shrink-0 transition-colors duration-300",
+																			activeSceneId === scene.id
+																				? "bg-primary shadow-[0_0_8px_rgba(var(--primary),0.5)]"
+																				: "bg-border group-hover/scene:bg-muted-foreground/50",
+																		)}
+																	/>
 																	{/* biome-ignore lint/a11y/noStaticElementInteractions: preventing parent activation */}
 																	<div
 																		className="flex-1 min-w-0"
@@ -491,7 +511,10 @@ export function WriterSidebar() {
 																		<InlineEditableTitle
 																			value={scene.title}
 																			onSave={(newTitle) =>
-																				handleUpdateSceneTitle(scene.id, newTitle)
+																				handleUpdateSceneTitle(
+																					scene.id,
+																					newTitle,
+																				)
 																			}
 																			disabled={isReadOnly}
 																		/>
