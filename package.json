@@ -32,7 +32,7 @@
 	"dependencies": {
 		"@ai-sdk/anthropic": "2.0.56",
 		"@ai-sdk/openai": "2.0.88",
-		"@ai-sdk/provider": "2.0.0",
+		"@ai-sdk/provider": "3.0.0",
 		"@ai-sdk/react": "2.0.115",
 		"@ai-sdk/xai": "2.0.13",
 		"@auth/drizzle-adapter": "1.11.1",
