@@ -220,6 +220,21 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 	}
 	const userId = session.user.id;
 
+	// 1. Pre-flight check for project size to prevent OOM/Timeouts
+	const entityCount = await db.$count(
+		entity,
+		eq(entity.projectId, originalProjectId),
+	);
+
+	// Limit to reasonable size for synchronous operation (e.g. 5000 entities)
+	// Larger projects would require a background job queue
+	if (entityCount > 5000) {
+		return {
+			error:
+				"Project is too large to fork instantly. Please export and import instead.",
+		};
+	}
+
 	const originalProject = await projectRepository.findByIdWithAccess(
 		originalProjectId,
 		userId,
@@ -229,13 +244,17 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 		return { error: "Project not found or access denied" };
 	}
 
+	// Validate name length
+	const rawName = newName || `Fork of ${originalProject.name}`;
+	const finalName = rawName.slice(0, 100); // Truncate to DB limit
+
 	try {
 		const result = await db.transaction(async (tx) => {
 			// 1. Create New Project
 			const [newProject] = await tx
 				.insert(project)
 				.values({
-					name: newName || `Fork of ${originalProject.name}`,
+					name: finalName,
 					description: originalProject.description,
 					visibility: "private",
 					userId,
