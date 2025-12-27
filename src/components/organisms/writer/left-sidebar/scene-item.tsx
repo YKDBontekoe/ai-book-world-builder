@@ -16,8 +16,10 @@ import { cn } from "@/lib/utils";
 interface SceneItemProps {
 	scene: SceneWithPrev;
 	isActive: boolean;
+	isSelected?: boolean;
 	chapterId: string;
 	onSelect: (sceneId: string) => void;
+	onToggleSelection?: (multi: boolean, range: boolean) => void;
 	onGenerateNext: (chapterId: string, sceneId: string) => void;
 	isGenerating: boolean;
 }
@@ -25,8 +27,10 @@ interface SceneItemProps {
 export const SceneItem = memo(function SceneItem({
 	scene,
 	isActive,
+	isSelected,
 	chapterId,
 	onSelect,
+	onToggleSelection,
 	onGenerateNext,
 	isGenerating,
 }: SceneItemProps) {
@@ -40,10 +44,22 @@ export const SceneItem = memo(function SceneItem({
 						className={cn(
 							"justify-start h-8 w-full px-2 text-xs font-normal",
 							isActive && "bg-secondary/50 font-medium",
+							isSelected && "bg-primary/20 hover:bg-primary/30 text-primary font-medium"
 						)}
-						onClick={() => onSelect(scene.id)}
+						onClick={(e) => {
+							if (e.metaKey || e.ctrlKey || e.shiftKey) {
+								e.preventDefault();
+								e.stopPropagation();
+								onToggleSelection?.(e.metaKey || e.ctrlKey, e.shiftKey);
+							} else {
+								onSelect(scene.id);
+							}
+						}}
 					>
-						<FileText className="mr-2 h-3 w-3 opacity-70" />
+						<FileText className={cn(
+							"mr-2 h-3 w-3 opacity-70",
+							isSelected && "text-primary opacity-100"
+						)} />
 						<span className="truncate">{scene.title}</span>
 					</Button>
 				</ContextMenuTrigger>

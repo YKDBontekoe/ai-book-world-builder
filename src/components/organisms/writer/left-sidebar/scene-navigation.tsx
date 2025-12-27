@@ -1,8 +1,9 @@
 "use client";
 
-import { BookPlus, Loader2, Plus, Sparkles } from "lucide-react";
+import { BookPlus, Loader2, Plus, Sparkles, Trash2, X } from "lucide-react";
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
+import { bulkDeleteScenes } from "@/app/actions/scene-ops";
 import { createNewChapter, generateScene } from "@/app/actions/writer";
 import {
 	Accordion,
@@ -18,9 +19,13 @@ import {
 	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import { GlassCard } from "@/components/molecules/glass-card";
 import { SceneItem } from "@/components/organisms/writer/left-sidebar/scene-item";
+import { useSceneSelection } from "@/hooks/use-scene-selection";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface SceneNavigationProps {
 	project: Project;
@@ -41,6 +46,61 @@ export function SceneNavigation({
 }: SceneNavigationProps) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
+
+	// Flatten structure for range selection
+	const allSceneIds = structure?.flatMap(c => c.scenes.map(s => s.id)) || [];
+
+	const {
+		selectedSceneIds,
+		toggleSelection,
+		clearSelection,
+		hasSelection
+	} = useSceneSelection();
+
+	const [hiddenSceneIds, setHiddenSceneIds] = useState<Set<string>>(new Set());
+
+	const handleBulkDelete = async () => {
+		const count = selectedSceneIds.size;
+		const idsToDelete = Array.from(selectedSceneIds);
+
+		// 1. Clear selection so UI looks clean
+		clearSelection();
+
+		// 2. Hide items optimistically
+		setHiddenSceneIds(new Set(idsToDelete));
+
+		// 3. Show Toast with Undo
+		// We use a promise or customized timeout
+		const undoTimeoutMs = 4000;
+		let isUndone = false;
+
+		const toastId = toast.success(`Deleted ${count} scenes`, {
+			action: {
+				label: "Undo",
+				onClick: () => {
+					isUndone = true;
+					setHiddenSceneIds(new Set());
+					toast.dismiss(toastId);
+					toast.info("Deletion cancelled");
+				}
+			},
+			duration: undoTimeoutMs,
+		});
+
+		// 4. Delayed execution
+		setTimeout(async () => {
+			if (!isUndone) {
+				const result = await bulkDeleteScenes(idsToDelete);
+				if (result.success) {
+					onStructureUpdate?.();
+				} else {
+					toast.error("Failed to delete scenes");
+					// Revert hiding if failed
+					setHiddenSceneIds(new Set());
+				}
+			}
+		}, undoTimeoutMs + 100); // Slight buffer
+	};
 
 	const handleGenerateNextScene = useCallback(
 		async (chapterId: string, prevSceneId?: string) => {
@@ -163,7 +223,9 @@ export function SceneNavigation({
 
 						<AccordionContent className="pb-2 pt-0">
 							<div className="flex flex-col gap-1 pl-2 relative border-l ml-2">
-								{chapter.scenes.map((scene) => (
+								{chapter.scenes
+									.filter(s => !hiddenSceneIds.has(s.id))
+									.map((scene) => (
 									<SceneItem
 										key={scene.id}
 										scene={scene}
@@ -172,6 +234,10 @@ export function SceneNavigation({
 										onSelect={onSceneSelect}
 										onGenerateNext={handleGenerateNextScene}
 										isGenerating={isGenerating}
+										isSelected={selectedSceneIds.has(scene.id)}
+										onToggleSelection={(multi, range) =>
+											toggleSelection(scene.id, multi, range, allSceneIds)
+										}
 									/>
 								))}
 								<Button
@@ -210,6 +276,42 @@ export function SceneNavigation({
 					</Button>
 				</div>
 			</Accordion>
+
+			<AnimatePresence>
+				{hasSelection && (
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: 20 }}
+						className="absolute bottom-4 left-4 right-4 z-50"
+					>
+						<GlassCard className="flex items-center justify-between p-2 pl-4 pr-2 bg-black/80 border-white/10 shadow-2xl backdrop-blur-xl rounded-xl">
+							<span className="text-xs font-medium text-white/90">
+								{selectedSceneIds.size} selected
+							</span>
+							<div className="flex items-center gap-1">
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 text-white/70 hover:text-white hover:bg-white/20 rounded-lg"
+									onClick={clearSelection}
+								>
+									<X className="h-4 w-4" />
+								</Button>
+								<Button
+									variant="destructive"
+									size="sm"
+									className="h-8 px-3 rounded-lg text-xs font-medium bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:text-red-300 border border-red-500/20"
+									onClick={handleBulkDelete}
+								>
+									<Trash2 className="h-3 w-3 mr-2" />
+									Delete
+								</Button>
+							</div>
+						</GlassCard>
+					</motion.div>
+				)}
+			</AnimatePresence>
 		</ScrollArea>
 	);
 }
