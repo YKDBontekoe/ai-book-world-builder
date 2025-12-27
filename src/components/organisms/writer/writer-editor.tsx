@@ -13,7 +13,6 @@ import {
 	Editor,
 	type EditorHandle,
 } from "@/components/organisms/editor/text-editor";
-import { DirectorDashboard } from "@/components/organisms/writer/dashboard/director-dashboard";
 import { StoryWizard } from "@/components/organisms/writer/story-wizard";
 import { ContextualPrompts } from "@/components/organisms/writer/tools/contextual-prompts";
 import { WritingStyleAnalyzer } from "@/components/organisms/writer/tools/writing-style-analyzer";
@@ -21,7 +20,6 @@ import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
-import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 
 interface HistorySnapshot {
@@ -40,8 +38,7 @@ export function WriterEditor() {
 		isReadOnly,
 	} = useWriterContext();
 
-	const { isTypewriterMode, isDirectorMode, toggleDirectorMode } =
-		useWriterLayoutContext();
+	const { isTypewriterMode, isDirectorMode } = useWriterLayoutContext();
 	const { registerEditorActions } = useWriterControl();
 	const { data: entities } = useProjectEntities(project.id);
 	const editorRef = useRef<EditorHandle>(null);
@@ -118,12 +115,6 @@ export function WriterEditor() {
 		setSliderValue(val);
 	};
 
-	// Narrative Intelligence Hook
-	const narrativeMetrics = useNarrativeIntelligence({
-		content: previewContent ?? sceneContent,
-		entities: entities || [],
-	});
-
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background/50">
 			<WriterHeader />
@@ -174,17 +165,6 @@ export function WriterEditor() {
 					</div>
 				)}
 			</div>
-
-			{/* Director Dashboard Overlay */}
-			<AnimatePresence>
-				{isDirectorMode && (
-					<DirectorDashboard
-						metrics={narrativeMetrics}
-						isVisible={true}
-						onClose={toggleDirectorMode}
-					/>
-				)}
-			</AnimatePresence>
 
 			{/* Contextual Prompts */}
 			<ContextualPrompts />

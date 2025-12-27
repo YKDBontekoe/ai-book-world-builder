@@ -19,23 +19,7 @@ export default function ProjectsLoading(): React.JSX.Element {
 			<div className="mt-8">
 				{/* ProjectTabs Skeleton */}
 				<div className="mb-6">
-					<Skeleton className="h-10 w-[240px] rounded-lg bg-muted/50" />
-				</div>
-
-				{/* ProjectBrowser Toolbar Skeleton */}
-				<div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
-					{/* Search Input */}
-					<div className="w-full sm:max-w-md">
-						<Skeleton className="h-10 w-full rounded-lg" />
-					</div>
-
-					{/* Controls (Filter + View Toggle + Sort) */}
-					<div className="flex items-center gap-2 w-full sm:w-auto">
-						<Skeleton className="h-10 w-full sm:w-[140px] rounded-lg" /> {/* Visibility */}
-						<div className="h-8 w-px bg-border/50 mx-1" />
-						<Skeleton className="h-10 w-[76px] rounded-lg" /> {/* View Toggle Group */}
-						<Skeleton className="h-10 w-full sm:w-[180px] rounded-lg" /> {/* Sort */}
-					</div>
+					<Skeleton className="h-10 w-[240px] rounded-lg bg-muted" />
 				</div>
 
 				{/* Grid Content Skeleton */}

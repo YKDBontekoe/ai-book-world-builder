@@ -14,65 +14,55 @@ import {
 	useNodesState,
 } from "@xyflow/react";
 import dagre from "dagre";
-import { Network, User, MapPin, Package } from "lucide-react";
+import { AlertTriangle, Network } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useCallback, useEffect, useMemo } from "react";
 import "@xyflow/react/dist/style.css";
 
-import { getEntitiesForProject } from "@/app/actions/entities";
+import { getProjectIssuesAction } from "@/app/actions/analysis";
+import { getProjectStructure } from "@/app/actions/writer";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
-
-// Helper to resolve icon from name
-const getIconComponent = (name: string) => {
-	switch (name) {
-		case "MapPin": return MapPin;
-		case "Package": return Package;
-		default: return User;
-	}
-};
+import { QUERY_KEYS } from "@/lib/query-options";
 
 // Custom Node Component
-const EntityNode = ({ data, selected }: any) => {
-	const Icon = getIconComponent(data.iconName);
+const CustomSceneNode = ({ data, selected }: any) => {
+	const hasIssues = data.issueCount > 0;
 
 	return (
 		<div
-			className={`px-4 py-2 rounded-lg shadow-md border bg-card text-card-foreground min-w-[140px] relative transition-all
-      ${selected ? "ring-2 ring-primary border-primary shadow-lg scale-105" : "border-border"}
+			className={`px-4 py-2 rounded-md shadow-md border bg-card text-card-foreground min-w-[150px] relative
+      ${selected ? "ring-2 ring-primary border-primary" : hasIssues ? "border-amber-500 ring-1 ring-amber-500" : "border-border"}
     `}
 		>
-			<Handle type="target" position={Position.Top} className="w-2 h-2 !bg-muted-foreground" />
-			<div className="flex items-center gap-2 mb-1">
-				<div className={`p-1.5 rounded-full ${data.color || "bg-primary/10 text-primary"}`}>
-					<Icon className="w-3.5 h-3.5" />
-				</div>
-				<div className="text-xs font-bold truncate flex-1">{data.label}</div>
-			</div>
-			{data.kind && (
-				<div className="text-[10px] text-muted-foreground truncate pl-1 uppercase tracking-wider font-medium opacity-70">
-					{data.kind}
+			{hasIssues && (
+				<div className="absolute -top-2 -right-2 bg-amber-500 text-white rounded-full p-0.5 shadow-sm">
+					<AlertTriangle className="w-3 h-3" />
 				</div>
 			)}
-			<Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-muted-foreground" />
+			<Handle type="target" position={Position.Left} className="w-2 h-2" />
+			<div className="text-xs font-bold truncate">{data.label}</div>
+			<div className="text-[10px] text-muted-foreground truncate">
+				{data.chapter}
+			</div>
+			<Handle type="source" position={Position.Right} className="w-2 h-2" />
 		</div>
 	);
 };
 
 const nodeTypes = {
-	entity: EntityNode,
+	scene: CustomSceneNode,
 };
 
 const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 	const dagreGraph = new dagre.graphlib.Graph();
 	dagreGraph.setDefaultEdgeLabel(() => ({}));
 
-	// Use Top-Down for entity hierarchies (e.g. family trees) or just spread them out
-	dagreGraph.setGraph({ rankdir: "TB", nodesep: 80, ranksep: 80 });
+	dagreGraph.setGraph({ rankdir: "LR" });
 
 	nodes.forEach((node) => {
-		dagreGraph.setNode(node.id, { width: 160, height: 70 });
+		dagreGraph.setNode(node.id, { width: 180, height: 60 });
 	});
 
 	edges.forEach((edge) => {
@@ -85,8 +75,8 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 		const nodeWithPosition = dagreGraph.node(node.id);
 		if (nodeWithPosition) {
 			node.position = {
-				x: nodeWithPosition.x - 80,
-				y: nodeWithPosition.y - 35,
+				x: nodeWithPosition.x - 90, // center offset
+				y: nodeWithPosition.y - 30,
 			};
 		}
 	});
@@ -94,95 +84,102 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 	return { initialNodes: nodes, initialEdges: edges };
 };
 
-const getEntityIconName = (kind: string) => {
-	const lower = kind.toLowerCase();
-	if (lower.includes("location") || lower.includes("place")) return "MapPin";
-	if (lower.includes("item") || lower.includes("object")) return "Package";
-	return "User";
-};
-
-const getEntityColor = (kind: string) => {
-	const lower = kind.toLowerCase();
-	if (lower.includes("location") || lower.includes("place")) return "bg-emerald-500/10 text-emerald-500";
-	if (lower.includes("item") || lower.includes("object")) return "bg-amber-500/10 text-amber-500";
-	if (lower.includes("antagonist") || lower.includes("villain")) return "bg-red-500/10 text-red-500";
-	return "bg-blue-500/10 text-blue-500";
-};
-
 export function GraphPane() {
-	const { projectId } = useBookCanvas();
+	const { projectId, activeSceneId, setActiveSceneId } = useBookCanvas();
 	const { theme } = useTheme();
 
 	const { data: result, isLoading } = useQuery({
-		queryKey: projectId ? ["entities", projectId] : ["entities", "null"],
+		queryKey: projectId
+			? ["project-structure", projectId]
+			: ["structure", "null"],
 		queryFn: () =>
-			projectId ? getEntitiesForProject(projectId) : Promise.resolve({ success: [] }),
+			projectId ? getProjectStructure(projectId) : Promise.resolve(null),
 		enabled: !!projectId,
 	});
 
-	// Handle the union type return from action
-	const entities = result && 'success' in result ? result.success : [];
+	const { data: issuesData } = useQuery({
+		queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
+		queryFn: () =>
+			projectId
+				? getProjectIssuesAction(projectId)
+				: Promise.resolve({ success: false, issues: [] }),
+		enabled: !!projectId,
+	});
 
+	const structure = result?.structure;
+	const issues =
+		issuesData?.success && Array.isArray(issuesData.issues)
+			? issuesData.issues
+			: [];
+
+	// Transform structure into nodes and edges
 	const { initialNodes, initialEdges } = useMemo(() => {
 		const nodes: Node[] = [];
 		const edges: Edge[] = [];
-		const addedEdges = new Set<string>();
 
-		if (!entities || entities.length === 0) return { initialNodes: [], initialEdges: [] };
+		if (!structure) return { initialNodes: [], initialEdges: [] };
 
-		entities.forEach((entity) => {
-			nodes.push({
-				id: entity.id,
-				type: "entity",
-				position: { x: 0, y: 0 },
-				data: {
-					label: entity.name,
-					kind: entity.kind,
-					iconName: getEntityIconName(entity.kind),
-					color: getEntityColor(entity.kind),
-				},
-			});
+		// Flatten structure
+		structure.forEach((chapter: any) => {
+			chapter.scenes.forEach((scene: any) => {
+				const sceneIssues = issues.filter(
+					(i: any) => i.sceneId === scene.id && i.status === "open",
+				);
 
-			// Relationships are duplicated on both source and target in the API return.
-			// We iterate through them but use a Set to ensure we only add each edge once.
-			entity.relationships.forEach((rel) => {
-				const edgeId = rel.id;
-				if (!addedEdges.has(edgeId)) {
-					addedEdges.add(edgeId);
+				nodes.push({
+					id: scene.id,
+					type: "scene",
+					position: { x: 0, y: 0 }, // Calculated by dagre
+					data: {
+						label: scene.title,
+						chapter: chapter.title,
+						issueCount: sceneIssues.length,
+					},
+					selected: scene.id === activeSceneId,
+				});
+
+				if (scene.prevSceneId) {
 					edges.push({
-						id: edgeId,
-						source: rel.sourceEntityId,
-						target: rel.targetEntityId,
-						label: rel.type, // Show relationship type on edge
+						id: `${scene.prevSceneId}-${scene.id}`,
+						source: scene.prevSceneId,
+						target: scene.id,
 						type: "smoothstep",
 						markerEnd: {
 							type: MarkerType.ArrowClosed,
 						},
-						animated: false,
-						labelStyle: { fill: theme === 'dark' ? '#aaa' : '#555', fontSize: 10, fontWeight: 500 },
-						style: { stroke: theme === 'dark' ? '#555' : '#ccc' },
+						animated: true,
 					});
 				}
 			});
 		});
 
 		return getLayoutedElements(nodes, edges);
-	}, [entities, theme]);
+	}, [structure, activeSceneId, issues]);
 
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
+	// Update nodes when initialNodes change (due to layout or data updates)
 	useEffect(() => {
 		setNodes(initialNodes);
 		setEdges(initialEdges);
 	}, [initialNodes, initialEdges, setNodes, setEdges]);
+
+	const handleNodeClick = useCallback(
+		(_event: any, node: Node) => {
+			if (setActiveSceneId) {
+				setActiveSceneId(node.id);
+			}
+		},
+		[setActiveSceneId],
+	);
 
 	if (!projectId) {
 		return (
 			<EmptyState
 				icon={Network}
 				title="No Project Selected"
-				description="Select a project to view the entity web"
+				description="Select a project to view the node graph"
 				className="h-full m-4"
 			/>
 		);
@@ -196,17 +193,6 @@ export function GraphPane() {
 		);
 	}
 
-	if (nodes.length === 0) {
-		return (
-			<EmptyState
-				icon={Network}
-				title="No Entities Found"
-				description="Create characters and locations to see their connections here."
-				className="h-full m-4"
-			/>
-		);
-	}
-
 	return (
 		<div className="w-full h-full min-h-[300px] bg-muted/5">
 			<ReactFlow
@@ -214,6 +200,7 @@ export function GraphPane() {
 				edges={edges}
 				onNodesChange={onNodesChange}
 				onEdgesChange={onEdgesChange}
+				onNodeClick={handleNodeClick}
 				nodeTypes={nodeTypes}
 				fitView
 				minZoom={0.1}

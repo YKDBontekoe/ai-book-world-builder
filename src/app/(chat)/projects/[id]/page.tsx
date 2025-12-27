@@ -9,14 +9,11 @@ import type { ChapterWithScenes } from "@/lib/types";
 
 export default async function ProjectPage({
 	params,
-	searchParams,
 }: {
 	params: Promise<{ id: string }>;
-	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	const session = await auth();
 	const { id } = await params;
-	const { generation } = await searchParams;
 
 	const userId = session?.user?.id;
 
@@ -48,7 +45,6 @@ export default async function ProjectPage({
 				isReadOnly={isReadOnly}
 				defaultModelId={defaultModelId}
 				availableModels={availableModels}
-				initialGenerationId={generation as string}
 			/>
 		</div>
 	);
