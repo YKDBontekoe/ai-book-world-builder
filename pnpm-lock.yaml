@@ -144,8 +144,8 @@ importers:
         specifier: 5.0.116
         version: 5.0.116(zod@3.25.76)
       bcrypt-ts:
-        specifier: 5.0.3
-        version: 5.0.3
+        specifier: 8.0.0
+        version: 8.0.0
       class-variance-authority:
         specifier: 0.7.1
         version: 0.7.1
@@ -3308,9 +3308,9 @@ packages:
     resolution: {integrity: sha512-k9xFKplee6KIio3IDbwj+uaCLpqzOwakOgmqzPezM0sFJlFKcg30vk2wOiAJtkTSfx0SSQDSe8q+mWA/fSH5Zg==}
     hasBin: true
 
-  bcrypt-ts@5.0.3:
-    resolution: {integrity: sha512-2FcgD12xPbwCoe5i9/HK0jJ1xA1m+QfC1e6htG9Bl/hNOnLyaFmQSlqLKcfe3QdnoMPKpKEGFCbESBTg+SJNOw==}
-    engines: {node: '>=18'}
+  bcrypt-ts@8.0.0:
+    resolution: {integrity: sha512-v4X8KKKQfBQY5XHxrErsImUtDDGt53N6nKHgK9M72EN3GgJfxUimKCOGV9FTOPxVZzUdcyJEnmnpWMs3MgZq3w==}
+    engines: {node: '>=20'}
 
   bidi-js@1.0.3:
     resolution: {integrity: sha512-RKshQI1R3YQ+n9YJz2QQ147P66ELpa1FQEg20Dk8oW9t2KgLbpDLLp9aGZ7y8WHSshDknG0bknqGw5/tyCs5tw==}
@@ -8900,7 +8900,7 @@ snapshots:
 
   baseline-browser-mapping@2.9.7: {}
 
-  bcrypt-ts@5.0.3: {}
+  bcrypt-ts@8.0.0: {}
 
   bidi-js@1.0.3:
     dependencies:
