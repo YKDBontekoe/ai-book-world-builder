@@ -107,10 +107,9 @@ jobs:
 
       - name: Invoke Jules with context
         if: steps.pr.outputs.has_pr == 'true' && steps.check.outputs.already_fixing != 'true'
-        uses: google-labs-code/jules-invoke@main
+        uses: google-labs-code/jules-action@v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
-          starting_branch: ${{ steps.pr.outputs.branch }}
           starting_branch: ${{ steps.pr.outputs.branch }}
           prompt: |
             CI failed for PR #${{ steps.pr.outputs.number }} (Author: ${{ steps.pr.outputs.author }}).
