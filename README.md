@@ -23,9 +23,11 @@
 
 - **[User Guide](docs/user-guide.md)**: How to use the Book Generation Wizard, Project-Aware Chat, and World Building tools.
 - **[Developer Guide](docs/developer-guide.md)**: Technical guide for contributors, covering codebase structure and patterns.
+- **[Agentic Workflow](docs/agentic-workflow.md)**: Fully automated CI/CD with Jules, CodeRabbit, and Renovate.
 - **[Generation Architecture](docs/generation-architecture.md)**: Technical deep dive into the Orchestrator, Writer Agent, and Step Handlers.
 - **[AI Services](docs/ai-services.md)**: Explanation of Model Routing, Context Flooding, and RAG strategies.
 - **[Design System](docs/design-system.md)**: Guidelines for the Native macOS aesthetic and component usage.
+
 
 ## Features
 

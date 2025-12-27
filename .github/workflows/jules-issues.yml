@@ -1,0 +1,249 @@
+name: Jules Issue Handler
+
+# Automatically have Jules work on issues labeled with 'jules'
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # ============================================================================
+  # Handle issues labeled with 'jules'
+  # ============================================================================
+  jules-from-label:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'jules'
+    steps:
+      - name: Acknowledge issue
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "👋 Hi @${{ github.event.issue.user.login }}!
+
+          I've been assigned to work on this issue. I'll analyze it and create a PR with the solution.
+
+          ⏳ Working on it now...
+
+          ---
+          🤖 Jules"
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Invoke Jules
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          prompt: |
+            You have been assigned to work on GitHub Issue #${{ github.event.issue.number }}.
+
+            ## Issue Title
+            ${{ github.event.issue.title }}
+
+            ## Issue Description
+            ${{ github.event.issue.body }}
+
+            ## Labels
+            ${{ join(github.event.issue.labels.*.name, ', ') }}
+
+            ## Your Task
+            1. Analyze the issue carefully
+            2. Understand what needs to be done
+            3. Implement the solution:
+               - For bugs: Fix the bug
+               - For features: Implement the feature
+               - For improvements: Make the improvement
+            4. Write tests if applicable
+            5. Verify your changes:
+               - Run `pnpm install`
+               - Run `pnpm build`
+               - Run `pnpm test:unit`
+            6. Create a PR that:
+               - References this issue (Fixes #${{ github.event.issue.number }})
+               - Has a clear description of changes
+               - Is marked as ready for review
+
+            ## Constraints
+            - Follow existing code patterns
+            - Don't make unrelated changes
+            - Keep changes focused
+            - Add comments for complex logic
+
+  # ============================================================================
+  # Handle @jules mentions in comments
+  # ============================================================================
+  jules-from-mention:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issue_comment' &&
+      contains(github.event.comment.body, '@jules')
+    steps:
+      - name: Parse command
+        id: parse
+        run: |
+          COMMENT="${{ github.event.comment.body }}"
+          
+          # Extract the command after @jules
+          COMMAND=$(echo "$COMMENT" | sed -n 's/.*@jules[[:space:]]*\(.*\)/\1/p' | head -1)
+          
+          if [ -z "$COMMAND" ]; then
+            COMMAND="Please help with this issue based on the context above."
+          fi
+          
+          echo "command=$COMMAND" >> $GITHUB_OUTPUT
+
+      - name: Acknowledge mention
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "🤖 Got it! Working on: **${{ steps.parse.outputs.command }}**
+
+          I'll get back to you shortly..."
+
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Invoke Jules
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          prompt: |
+            A user has requested your help on Issue #${{ github.event.issue.number }}.
+
+            ## Issue Title
+            ${{ github.event.issue.title }}
+
+            ## Issue Description
+            ${{ github.event.issue.body }}
+
+            ## User Request
+            @${{ github.event.comment.user.login }} asked: "${{ steps.parse.outputs.command }}"
+
+            ## Comment Context
+            ${{ github.event.comment.body }}
+
+            ## Your Task
+            1. Understand what the user is asking for
+            2. Complete the requested task
+            3. If code changes are needed:
+               - Make the changes
+               - Run tests
+               - Create a PR
+            4. If it's a question:
+               - Research the answer
+               - Provide a helpful response
+            5. Update the issue with your findings/solution
+
+  # ============================================================================
+  # Auto-triage new issues
+  # ============================================================================
+  auto-triage:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' &&
+      github.event.action == 'opened'
+    steps:
+      - name: Analyze and label issue
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          LABELS=""
+          
+          # Detect issue type from title/body
+          LOWER_TITLE=$(echo "$ISSUE_TITLE" | tr '[:upper:]' '[:lower:]')
+          LOWER_BODY=$(echo "$ISSUE_BODY" | tr '[:upper:]' '[:lower:]')
+          
+          # Bug detection
+          if echo "$LOWER_TITLE $LOWER_BODY" | grep -qE "bug|error|crash|broken|doesn't work|not working|fail"; then
+            LABELS="$LABELS,bug"
+          fi
+          
+          # Feature detection
+          if echo "$LOWER_TITLE $LOWER_BODY" | grep -qE "feature|add|new|would be nice|request|enhancement"; then
+            LABELS="$LABELS,enhancement"
+          fi
+          
+          # Documentation detection
+          if echo "$LOWER_TITLE $LOWER_BODY" | grep -qE "doc|documentation|readme|typo"; then
+            LABELS="$LABELS,documentation"
+          fi
+          
+          # Question detection
+          if echo "$LOWER_TITLE $LOWER_BODY" | grep -qE "how to|how do|question|\?$"; then
+            LABELS="$LABELS,question"
+          fi
+          
+          # Priority detection
+          if echo "$LOWER_TITLE $LOWER_BODY" | grep -qE "urgent|critical|asap|security|vulnerability"; then
+            LABELS="$LABELS,priority/high"
+          fi
+          
+          # Apply labels if any
+          LABELS=$(echo "$LABELS" | sed 's/^,//')
+          if [ -n "$LABELS" ]; then
+            gh issue edit $ISSUE_NUMBER --add-label "$LABELS" 2>/dev/null || true
+          fi
+          
+          # Add welcome comment
+          gh issue comment $ISSUE_NUMBER --body "👋 Thanks for opening this issue!
+
+          I've automatically analyzed and labeled it. Here's what I found:
+          $([[ -n \"$LABELS\" ]] && echo \"**Labels applied:** \`$LABELS\`\" || echo \"No automatic labels applied.\")
+
+          💡 **Tip:** Add the \`jules\` label or mention \`@jules\` in a comment to have AI work on this automatically."
+
+  # ============================================================================
+  # Good first issue helper
+  # ============================================================================
+  good-first-issue-helper:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'issues' &&
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'good first issue'
+    steps:
+      - name: Add helpful context
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          gh issue comment ${{ github.event.issue.number }} --body "## 🌟 Good First Issue
+
+          This issue has been marked as a good first issue for new contributors!
+
+          ### Getting Started
+          1. Fork the repository
+          2. Clone your fork: \`git clone https://github.com/YOUR_USERNAME/ai-book-world-builder.git\`
+          3. Install dependencies: \`pnpm install\`
+          4. Create a branch: \`git checkout -b fix/issue-${{ github.event.issue.number }}\`
+          5. Make your changes
+          6. Run tests: \`pnpm test:unit\`
+          7. Submit a PR!
+
+          ### Project Structure
+          - \`src/\` - Main source code
+          - \`tests/\` - Test files
+          - \`src/components/\` - React components
+          - \`src/app/\` - Next.js app router pages
+
+          ### Need Help?
+          - Mention \`@jules\` for AI assistance
+          - Check the README for more details
+
+          Happy coding! 🚀"

@@ -127,20 +127,85 @@ jobs:
       github.event_name == 'pull_request' && 
       (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
     permissions:
+      contents: read
       pull-requests: write
     steps:
-      - name: Notify @jules
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Collect failure details
+        id: failures
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           RESULTS: ${{ toJson(needs) }}
         run: |
-          MESSAGE="Jules, the following checks failed on this PR:"
+          FAILED_JOBS=""
           for job in $(echo $RESULTS | jq -r 'keys[]'); do
             result=$(echo $RESULTS | jq -r ".$job.result")
             if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
-              MESSAGE="$MESSAGE\n- 🛑 $job"
+              FAILED_JOBS="$FAILED_JOBS\n- 🛑 $job ($result)"
             fi
           done
-          MESSAGE="$MESSAGE\n\n**Workflow Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\n\nPlease take a look! 🔍"
-          echo -e "$MESSAGE" > message.txt
+          
+          echo "failed_jobs<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$FAILED_JOBS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "workflow_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR about failures
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          MESSAGE="🚨 **CI Pipeline Failed**
+
+          The following checks failed on this PR:
+          ${{ steps.failures.outputs.failed_jobs }}
+
+          **Workflow Run:** ${{ steps.failures.outputs.workflow_url }}
+
+          🤖 Jules is investigating and will attempt to fix these issues."
+          
+          echo "$MESSAGE" > message.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}
+
+      - name: Invoke Jules to fix CI failures
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ github.head_ref }}
+          prompt: |
+            The CI pipeline has failed for Pull Request #${{ github.event.pull_request.number }} in ${{ github.repository }}.
+
+            ## Failed Checks
+            ${{ steps.failures.outputs.failed_jobs }}
+
+            ## Workflow Run
+            ${{ steps.failures.outputs.workflow_url }}
+
+            ## Your Task
+            1. **Identify the root cause** of each failure:
+               - For `lint-and-typecheck`: Run `pnpm lint` and `pnpm type-check` to see errors
+               - For `unit-tests`: Run `pnpm test:unit` to see failing tests
+               - For `build`: Run `pnpm build` to see build errors
+               - For `db-check`: Run `pnpm db:check` to see schema issues
+               - For `check-conflicts`: Check for merge conflicts with the base branch
+
+            2. **Fix the issues**:
+               - Fix linting errors and type errors
+               - Fix failing tests or update tests if behavior changed intentionally
+               - Fix build errors
+               - Resolve any conflicts
+
+            3. **Verify your fixes**:
+               - Run `pnpm lint` - must pass
+               - Run `pnpm type-check` - must pass
+               - Run `pnpm test:unit` - must pass
+               - Run `pnpm build` - must succeed
+
+            ## Constraints
+            - Only fix issues directly related to the failing checks
+            - Do not refactor unrelated code
+            - All checks must pass before committing
+            - Create clear commit messages explaining what was fixed

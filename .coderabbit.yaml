@@ -1,50 +1,316 @@
 # CodeRabbit Configuration File
-# Documentation: https://coderabbit.ai/docs/configure-coderabbit
+# Documentation: https://docs.coderabbit.ai/reference/configuration
 # Validate here: https://docs.coderabbit.ai/configuration/yaml-validator
 
+# =============================================================================
+# GENERAL SETTINGS
+# =============================================================================
 language: "en-US"
 early_access: true
 
-reviews:
-  profile: "assertive"
-  request_changes_workflow: false
-  high_level_summary: true
-  
-  # CORRECTED: Use review_instructions for code-level logic and @mentions
-  review_instructions: |
-    You are a Senior Full-Stack Engineer.
-    
-    CRITICAL INSTRUCTIONS:
-    1. Check the PR author. If (and only if) the author is "google-labs-jules", start every actionable comment (suggestions, bugs, refactors) with "@jules" to ensure the agent receives the feedback.
-    2. Examples (only if author is google-labs-jules):
-       - "@jules, I've found an improvement:"
-       - "@jules, please check this potential bug:"
-    3. Adhere strictly to the 'Native macOS' design system and 'Strict TypeScript' (zero tolerance for 'any').
-    4. Focus on Server Action security, payload optimization, and Zod validation.
-    5. Do not tag "@jules" for simple praise or neutral summaries; ONLY for actionable code improvements.
+# Custom tone for reviews - professional but friendly
+tone_instructions: |
+  Be concise and actionable. Focus on issues that matter.
+  Use code suggestions when possible instead of just describing issues.
+  Prioritize security and performance issues over style.
 
+# =============================================================================
+# REVIEWS CONFIGURATION
+# =============================================================================
+reviews:
+  # Assertive mode for thorough reviews
+  profile: "assertive"
+  
+  # Don't auto-request changes (let Jules handle fixes)
+  request_changes_workflow: false
+  
+  # Generate a high-level summary for quick understanding
+  high_level_summary: true
+  high_level_summary_in_walkthrough: true
+  
+  # Custom summary instructions
+  high_level_summary_instructions: |
+    Provide a brief summary suitable for a changelog entry.
+    Highlight any breaking changes, security implications, or performance impacts.
+    List the main files modified and their purposes.
+  
+  # Commit status integration
+  review_status: true
+  commit_status: true
+  fail_commit_status: false  # Don't fail status, let CI handle that
+  
+  # Walkthrough settings
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: true
+  
+  # Effort estimation helps prioritize reviews
+  estimate_code_review_effort: true
+  
+  # Link analysis
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  
+  # Auto-labeling for better agentic workflow
+  suggested_labels: true
+  auto_apply_labels: true  # Enable auto-labeling for agentic flow
+  labeling_instructions:
+    - label: "bug"
+      instructions: "Apply when the PR fixes a bug or defect"
+    - label: "enhancement"
+      instructions: "Apply when the PR adds new features or improvements"
+    - label: "security"
+      instructions: "Apply when the PR addresses security issues"
+    - label: "performance"
+      instructions: "Apply when the PR improves performance"
+    - label: "breaking-change"
+      instructions: "Apply when the PR contains breaking changes"
+    - label: "needs-tests"
+      instructions: "Apply when the PR lacks adequate test coverage"
+    - label: "auto-merge-candidate"
+      instructions: "Apply for low-risk changes like deps updates, typo fixes, docs"
+  
+  # Reviewer suggestions
+  suggested_reviewers: true
+  auto_assign_reviewers: false  # Keep manual for now
+  
+  # Disable fortune/poem for cleaner output
+  in_progress_fortune: false
+  poem: false
+  
+  # Enable AI agent prompt integration (for Jules)
+  enable_prompt_for_ai_agents: true
+  
+  # =============================================================================
+  # REVIEW INSTRUCTIONS FOR AI AGENTS
+  # =============================================================================
+  review_instructions: |
+    You are a Senior Full-Stack Engineer specialized in Next.js, TypeScript, and React.
+    
+    ## CRITICAL: AI Agent Integration
+    When the PR author is "google-labs-jules" or any bot ending in "[bot]":
+    1. Start actionable comments with "@jules" so the agent sees them
+    2. Be specific about file paths and line numbers
+    3. Provide complete code suggestions when possible
+    4. Prioritize: Security > Bugs > Performance > Style
+    
+    ## Technical Standards
+    - Strict TypeScript: Zero tolerance for 'any' types
+    - Server Actions: Verify Zod validation and auth checks
+    - React: Check for proper error boundaries and suspense
+    - Database: Verify Drizzle queries are optimized
+    - Security: Check for XSS, CSRF, injection vulnerabilities
+    
+    ## Review Focus Areas
+    1. **Security Issues** - ALWAYS flag
+    2. **Logic Bugs** - Clear explanation with fix
+    3. **Performance** - Database queries, re-renders, bundle size
+    4. **Type Safety** - Proper TypeScript usage
+    5. **Error Handling** - Graceful failures
+    
+    ## Don't Flag
+    - Minor style preferences already covered by Biome
+    - Import ordering (handled by tooling)
+    - Comment formatting
+  
+  # =============================================================================
+  # AUTO-REVIEW SETTINGS
+  # =============================================================================
   auto_review:
     enabled: true
     auto_incremental_review: true
-    drafts: true # Reviews Jules's agent-generated drafts immediately
+    drafts: true  # Review draft PRs (important for Jules)
+    
+    # Ignore certain PRs by title
+    ignore_title_keywords:
+      - "WIP"
+      - "DO NOT MERGE"
+      - "SKIP REVIEW"
+    
+    # Review PRs from all users including bots
     ignore_usernames: []
-
-  # Clean up the noise for the agent workflow
+    
+    # Only auto-review PRs targeting these branches
+    base_branches:
+      - main
+      - develop
+  
+  # =============================================================================
+  # PATH FILTERS - What to review/ignore
+  # =============================================================================
   path_filters:
+    # Ignore lock files and generated content
     - "!**/node_modules/**"
     - "!package-lock.json"
     - "!pnpm-lock.yaml"
     - "!bun.lockb"
-
+    - "!**/*.lock"
+    
+    # Ignore build outputs
+    - "!.next/**"
+    - "!storybook-static/**"
+    - "!playwright-report/**"
+    - "!test-results/**"
+    - "!coverage/**"
+    
+    # Ignore auto-generated files
+    - "!**/generated/**"
+    - "!**/*.generated.ts"
+    - "!drizzle/meta/**"
+  
+  # =============================================================================
+  # PATH-SPECIFIC INSTRUCTIONS
+  # =============================================================================
+  path_instructions:
+    - path: "src/app/actions/**"
+      instructions: |
+        CRITICAL: Server Actions require extra scrutiny:
+        - Verify authentication checks at the start
+        - Validate all inputs with Zod schemas
+        - Check for authorization (user owns resource)
+        - Ensure proper error handling
+        - Verify rate limiting where appropriate
+    
+    - path: "src/app/api/**"
+      instructions: |
+        API Routes need security review:
+        - Check authentication middleware
+        - Validate request bodies
+        - Ensure proper HTTP status codes
+        - Check for proper error responses
+    
+    - path: "src/components/**"
+      instructions: |
+        React Components review:
+        - Check for proper TypeScript props
+        - Verify accessibility (aria labels, keyboard nav)
+        - Check for memory leaks (useEffect cleanup)
+        - Ensure proper loading/error states
+    
+    - path: "src/db/**"
+      instructions: |
+        Database layer review:
+        - Check Drizzle queries for N+1 problems
+        - Verify proper indexes exist for queries
+        - Check for SQL injection vulnerabilities
+        - Ensure transactions where needed
+    
+    - path: "tests/**"
+      instructions: |
+        Test file review:
+        - Check test coverage is meaningful
+        - Verify edge cases are tested
+        - Ensure mocks are appropriate
+        - Check for flaky test patterns
+    
+    - path: ".github/workflows/**"
+      instructions: |
+        GitHub Actions review:
+        - Check for hardcoded secrets
+        - Verify proper permissions
+        - Check for injection vulnerabilities
+        - Ensure proper caching
+  
+  # =============================================================================
+  # PRE-MERGE CHECKS
+  # =============================================================================
+  pre_merge_checks:
+    docstrings:
+      mode: "warning"  # Warn about missing docstrings
+      threshold: 80
+    
+    title:
+      mode: "warning"
+      requirements: |
+        PR title should follow conventional commits:
+        - feat: for features
+        - fix: for bug fixes
+        - docs: for documentation
+        - chore: for maintenance
+        - refactor: for refactoring
+        - perf: for performance
+        - test: for tests
+    
+    description:
+      mode: "warning"  # Warn if description is empty
+    
+    issue_assessment:
+      mode: "warning"  # Check if linked issues are resolved
+  
+  # =============================================================================
+  # FINISHING TOUCHES
+  # =============================================================================
+  finishing_touches:
+    docstrings:
+      enabled: true  # Can generate docstrings
+    unit_tests:
+      enabled: true  # Can suggest unit tests
+  
+  # =============================================================================
+  # TOOLS INTEGRATION
+  # =============================================================================
   tools:
+    # Biome for formatting/linting
     biome:
       enabled: true
-    eslint:
-      enabled: true
+    
+    # GitHub checks integration
     github-checks:
       enabled: true
+      timeout_ms: 120000  # 2 minute timeout
+    
+    # Secret detection
     gitleaks:
       enabled: true
+    
+    # Shell script linting
+    shellcheck:
+      enabled: true
+    
+    # Markdown linting
+    markdownlint:
+      enabled: true
+    
+    # Dockerfile linting
+    hadolint:
+      enabled: true
+    
+    # AST-based rules
+    ast-grep:
+      essential_rules: true
+      packages: []
 
+# =============================================================================
+# CHAT CONFIGURATION
+# =============================================================================
 chat:
-  auto_reply: true
+  auto_reply: true  # Respond to @coderabbitai mentions
+
+# =============================================================================
+# KNOWLEDGE BASE
+# =============================================================================
+knowledge_base:
+  learnings:
+    scope: auto  # Learn from this repo
+  issues:
+    scope: auto  # Reference issues
+  jira:
+    project_keys: []
+  linear:
+    team_keys: []
+  pull_requests:
+    scope: auto  # Reference PRs
+
+# =============================================================================
+# CODE GENERATION
+# =============================================================================
+code_generation:
+  docstrings:
+    # Use JSDoc for TypeScript
+    language_config:
+      typescript:
+        style: jsdoc
+        include_types: false  # Types are in TS already
+      javascript:
+        style: jsdoc

@@ -1,0 +1,382 @@
+name: Agentic PR Automation
+
+# This workflow makes PRs fully agentic with minimal human intervention
+# It handles: auto-labeling, auto-review, auto-fix, and auto-merge
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, ready_for_review]
+  pull_request_review:
+    types: [submitted]
+  check_suite:
+    types: [completed]
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  checks: read
+
+env:
+  NODE_OPTIONS: "--max-old-space-size=4096"
+
+jobs:
+  # ============================================================================
+  # STEP 1: Auto-Label PRs based on content
+  # ============================================================================
+  auto-label:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'opened'
+    outputs:
+      labels: ${{ steps.label.outputs.labels }}
+      is_dependency_update: ${{ steps.label.outputs.is_dependency_update }}
+      is_minor_change: ${{ steps.label.outputs.is_minor_change }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Analyze PR and apply labels
+        id: label
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          LABELS=""
+          IS_DEPENDENCY_UPDATE="false"
+          IS_MINOR_CHANGE="false"
+
+          # Get changed files
+          FILES=$(gh pr diff $PR_NUMBER --name-only)
+          
+          # Detect dependency updates (Renovate/Dependabot)
+          if [[ "${{ github.actor }}" == "renovate[bot]" || "${{ github.actor }}" == "dependabot[bot]" ]]; then
+            LABELS="$LABELS,dependencies,auto-merge-candidate"
+            IS_DEPENDENCY_UPDATE="true"
+          fi
+          
+          # Detect file patterns
+          if echo "$FILES" | grep -q "^src/"; then
+            LABELS="$LABELS,source-code"
+          fi
+          if echo "$FILES" | grep -q "^tests/"; then
+            LABELS="$LABELS,tests"
+          fi
+          if echo "$FILES" | grep -q "^\.github/"; then
+            LABELS="$LABELS,ci/cd"
+          fi
+          if echo "$FILES" | grep -q "package.json\|pnpm-lock.yaml"; then
+            LABELS="$LABELS,dependencies"
+          fi
+          if echo "$FILES" | grep -q "\.md$"; then
+            LABELS="$LABELS,documentation"
+          fi
+          
+          # Detect size (lines changed)
+          STATS=$(gh pr view $PR_NUMBER --json additions,deletions --jq '.additions + .deletions')
+          if [ "$STATS" -lt 50 ]; then
+            LABELS="$LABELS,size/small"
+            IS_MINOR_CHANGE="true"
+          elif [ "$STATS" -lt 200 ]; then
+            LABELS="$LABELS,size/medium"
+          else
+            LABELS="$LABELS,size/large"
+          fi
+          
+          # Apply labels
+          LABELS=$(echo "$LABELS" | sed 's/^,//' | tr ',' '\n' | sort -u | tr '\n' ',' | sed 's/,$//')
+          if [ -n "$LABELS" ]; then
+            gh pr edit $PR_NUMBER --add-label "$LABELS" || true
+          fi
+          
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+          echo "is_dependency_update=$IS_DEPENDENCY_UPDATE" >> $GITHUB_OUTPUT
+          echo "is_minor_change=$IS_MINOR_CHANGE" >> $GITHUB_OUTPUT
+
+  # ============================================================================
+  # STEP 2: Auto-approve safe PRs (dependency updates, docs, etc.)
+  # ============================================================================
+  auto-approve:
+    runs-on: ubuntu-latest
+    needs: [auto-label]
+    if: |
+      needs.auto-label.outputs.is_dependency_update == 'true' ||
+      (needs.auto-label.outputs.is_minor_change == 'true' && 
+       contains(needs.auto-label.outputs.labels, 'documentation'))
+    steps:
+      - name: Auto-approve safe PR
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "🤖 Auto-approving safe PR..."
+          gh pr review $PR_NUMBER --approve --body "🤖 Auto-approved: This is a safe automated change (dependency update or minor documentation change)."
+
+  # ============================================================================
+  # STEP 3: Auto-merge when all checks pass
+  # ============================================================================
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success'
+    steps:
+      - name: Check if PR is auto-merge candidate
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          # Get the PR associated with this workflow run
+          PR_NUMBER=$(gh api "/repos/${{ github.repository }}/pulls" \
+            --jq ".[] | select(.head.sha == \"${{ github.event.workflow_run.head_sha }}\") | .number" | head -1)
+          
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR found for this commit"
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          
+          # Check if PR has auto-merge label
+          LABELS=$(gh pr view $PR_NUMBER --json labels --jq '.labels[].name' | tr '\n' ',')
+          
+          if echo "$LABELS" | grep -q "auto-merge-candidate"; then
+            # Check if all checks passed
+            CHECKS=$(gh pr checks $PR_NUMBER --json state --jq '.[] | select(.state != "SUCCESS" and .state != "SKIPPED") | .state' | wc -l)
+            
+            if [ "$CHECKS" -eq 0 ]; then
+              echo "should_merge=true" >> $GITHUB_OUTPUT
+            else
+              echo "should_merge=false" >> $GITHUB_OUTPUT
+              echo "Some checks still pending or failed"
+            fi
+          else
+            echo "should_merge=false" >> $GITHUB_OUTPUT
+            echo "PR does not have auto-merge-candidate label"
+          fi
+
+      - name: Auto-merge PR
+        if: steps.check.outputs.should_merge == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          echo "🚀 Auto-merging PR #${{ steps.check.outputs.pr_number }}..."
+          gh pr merge ${{ steps.check.outputs.pr_number }} \
+            --squash \
+            --auto \
+            --delete-branch \
+            --body "🤖 Auto-merged by Agentic PR Automation"
+
+  # ============================================================================
+  # STEP 4: Jules handles CI failures
+  # ============================================================================
+  jules-fix-failures:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'failure'
+    steps:
+      - name: Get PR info
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          PR_NUMBER=$(gh api "/repos/${{ github.repository }}/pulls" \
+            --jq ".[] | select(.head.sha == \"${{ github.event.workflow_run.head_sha }}\") | .number" | head -1)
+          
+          if [ -z "$PR_NUMBER" ]; then
+            echo "No PR found"
+            echo "has_pr=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          
+          BRANCH=$(gh pr view $PR_NUMBER --json headRefName --jq '.headRefName')
+          echo "pr_number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "has_pr=true" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        if: steps.pr.outputs.has_pr == 'true'
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.pr.outputs.branch }}
+          fetch-depth: 0
+
+      - name: Fetch failure details
+        if: steps.pr.outputs.has_pr == 'true'
+        id: failures
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          # Get failed jobs from the workflow run
+          FAILED_JOBS=$(gh api "/repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs" \
+            --jq '[.jobs[] | select(.conclusion == "failure") | .name] | join(", ")')
+          
+          echo "failed_jobs=$FAILED_JOBS" >> $GITHUB_OUTPUT
+          echo "run_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR
+        if: steps.pr.outputs.has_pr == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          gh pr comment ${{ steps.pr.outputs.pr_number }} --body "🚨 **CI Failed**
+          
+          Failed jobs: ${{ steps.failures.outputs.failed_jobs }}
+          
+          🤖 Jules is investigating and will attempt to fix these issues.
+          
+          [View workflow run](${{ steps.failures.outputs.run_url }})"
+
+      - name: Invoke Jules to fix
+        if: steps.pr.outputs.has_pr == 'true'
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ steps.pr.outputs.branch }}
+          prompt: |
+            CI has failed for PR #${{ steps.pr.outputs.pr_number }}.
+
+            ## Failed Jobs
+            ${{ steps.failures.outputs.failed_jobs }}
+
+            ## Workflow Run
+            ${{ steps.failures.outputs.run_url }}
+
+            ## Your Task
+            1. Identify the root cause by running the failed checks locally
+            2. Fix the issues
+            3. Verify all checks pass before committing
+            4. Create a clear commit message
+
+  # ============================================================================
+  # STEP 5: Jules handles human review comments
+  # ============================================================================
+  jules-handle-review:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request_review' &&
+      github.event.review.state == 'changes_requested' &&
+      github.actor != 'coderabbitai[bot]' &&
+      github.actor != 'github-actions[bot]'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Collect review feedback
+        id: feedback
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REVIEW_ID: ${{ github.event.review.id }}
+        run: |
+          # Get the review body
+          REVIEW_BODY="${{ github.event.review.body }}"
+          
+          # Get review comments
+          COMMENTS=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews/$REVIEW_ID/comments" \
+            --jq '[.[] | {path: .path, line: .line, body: .body}]')
+          
+          echo "review_body=$REVIEW_BODY" >> $GITHUB_OUTPUT
+          echo "$COMMENTS" > /tmp/review-comments.json
+
+      - name: Acknowledge review
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "👀 Thanks for the review, @${{ github.event.review.user.login }}!
+
+          🤖 Jules is reviewing your feedback and will address the requested changes."
+
+      - name: Invoke Jules
+        uses: google-labs-code/jules-invoke@v1
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ github.event.pull_request.head.ref }}
+          prompt: |
+            A human reviewer has requested changes on PR #${{ github.event.pull_request.number }}.
+
+            ## Reviewer
+            @${{ github.event.review.user.login }}
+
+            ## Review Summary
+            ${{ github.event.review.body }}
+
+            ## Review Comments
+            $(cat /tmp/review-comments.json)
+
+            ## Your Task
+            1. Read and understand each piece of feedback
+            2. Implement the requested changes
+            3. If a request is unclear, make your best judgment
+            4. Verify changes don't break anything:
+               - Run `pnpm build`
+               - Run `pnpm test:unit`
+            5. Commit with message: "fix: address review feedback from @${{ github.event.review.user.login }}"
+
+            ## Important
+            - Treat this as high priority - a human took time to review
+            - Address ALL comments, not just some
+            - If you disagree with a suggestion, still implement it (human knows best)
+
+  # ============================================================================
+  # STEP 6: Request human review for complex PRs
+  # ============================================================================
+  request-human-review:
+    runs-on: ubuntu-latest
+    needs: [auto-label]
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action == 'opened' &&
+      contains(needs.auto-label.outputs.labels, 'size/large')
+    steps:
+      - name: Request review from maintainers
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "📢 **Human Review Required**
+
+          This PR has been labeled as \`size/large\` and requires human review before merging.
+
+          @YKDBontekoe - please review when you have a moment.
+
+          **Why?**
+          - Large PRs (200+ lines changed) have higher risk
+          - AI review is good but human oversight is better for big changes"
+
+  # ============================================================================
+  # STEP 7: Keep PRs up-to-date with base branch
+  # ============================================================================
+  update-branch:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action == 'synchronize' == false
+    steps:
+      - name: Check if PR needs update
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          # Check if PR is behind base branch
+          BEHIND=$(gh pr view $PR_NUMBER --json mergeable,mergeStateStatus \
+            --jq 'if .mergeStateStatus == "BEHIND" then "true" else "false" end')
+          
+          echo "needs_update=$BEHIND" >> $GITHUB_OUTPUT
+
+      - name: Update branch
+        if: steps.check.outputs.needs_update == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+        run: |
+          gh pr update-branch ${{ github.event.pull_request.number }} --rebase || \
+          gh pr comment ${{ github.event.pull_request.number }} --body "⚠️ Could not automatically update this branch. Please update manually."
