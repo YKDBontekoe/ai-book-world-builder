@@ -4,6 +4,18 @@ import type * as writerContext from "@/components/organisms/writer/writer-contex
 import { WriterControlProvider } from "@/components/organisms/writer/writer-control-context";
 import { WriterEditor } from "@/components/organisms/writer/writer-editor";
 
+// Mock Appearance Provider
+vi.mock("@/components/providers/appearance-provider", () => ({
+	useAppearance: () => ({
+		theme: "violet",
+		editorFont: "sans",
+		editorFontSize: 16,
+		editorLineHeight: 1.6,
+		updatePreferences: vi.fn(),
+		isLoading: false,
+	}),
+}));
+
 // Mock child components
 vi.mock("@/components/organisms/editor/text-editor", () => ({
 	Editor: () => <div data-testid="text-editor">Editor Content</div>,

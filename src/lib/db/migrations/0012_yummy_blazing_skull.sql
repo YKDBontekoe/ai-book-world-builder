@@ -1,0 +1,1 @@
+ALTER TABLE "UserPreferences" ADD COLUMN "appearancePreferences" jsonb DEFAULT '{"theme":"violet","editorFont":"sans","editorFontSize":16,"editorLineHeight":1.6}'::jsonb;

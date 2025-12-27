@@ -21,6 +21,7 @@ import { useWriterControl } from "@/components/organisms/writer/writer-control-c
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { useProjectEntities } from "@/hooks/use-project-entities";
+import { useAppearance } from "@/components/providers/appearance-provider";
 
 interface HistorySnapshot {
 	content: string;
@@ -42,6 +43,7 @@ export function WriterEditor() {
 	const { registerEditorActions } = useWriterControl();
 	const { data: entities } = useProjectEntities(project.id);
 	const editorRef = useRef<EditorHandle>(null);
+	const { editorFont, editorFontSize, editorLineHeight } = useAppearance();
 
 	const hasStructure = structure && structure.length > 0;
 
@@ -121,7 +123,14 @@ export function WriterEditor() {
 
 			<div className="flex-1 overflow-y-auto relative scroll-smooth">
 				{activeSceneId ? (
-					<div className="writer-instance max-w-3xl mx-auto min-h-full py-8 px-8 pb-32">
+					<div
+						className="writer-instance max-w-3xl mx-auto min-h-full py-8 px-8 pb-32 transition-all duration-300"
+						style={{
+							fontFamily: editorFont === 'mono' ? 'var(--font-mono)' : editorFont === 'serif' ? 'serif' : 'var(--font-sans)',
+							fontSize: `${editorFontSize}px`,
+							lineHeight: editorLineHeight,
+						}}
+					>
 						<Editor
 							ref={editorRef}
 							key={activeSceneId} // Reset editor when scene changes

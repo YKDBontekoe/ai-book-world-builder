@@ -31,6 +31,13 @@ export interface ModelPreferences {
 	large: string | null;
 }
 
+export interface AppearancePreferences {
+	theme: "violet" | "blue" | "emerald" | "amber" | "rose" | "slate";
+	editorFont: "sans" | "serif" | "mono";
+	editorFontSize: number;
+	editorLineHeight: number;
+}
+
 export const userPreferences = pgTable(
 	"UserPreferences",
 	{
@@ -47,6 +54,14 @@ export const userPreferences = pgTable(
 		modelPreferences: jsonb("modelPreferences")
 			.$type<ModelPreferences>()
 			.default({ light: null, middle: null, large: null }),
+		appearancePreferences: jsonb("appearancePreferences")
+			.$type<AppearancePreferences>()
+			.default({
+				theme: "violet",
+				editorFont: "sans",
+				editorFontSize: 16,
+				editorLineHeight: 1.6,
+			}),
 		createdAt: timestamp("createdAt").notNull(),
 		updatedAt: timestamp("updatedAt").notNull(),
 	},
