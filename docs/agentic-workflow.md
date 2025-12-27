@@ -150,7 +150,7 @@ New issues are automatically analyzed and labeled:
 
 ┌──────────────────────────────────────────────────────────────────────────┐
 │ STAGE 3: CI VERIFICATION                                                  │
-├──────────────────────────────────────────────────────────────────────────┤
+├──────────────────────���───────────────────────────────────────────────────┤
 │                                                                           │
 │  CI Triggered ──▶ Lint + Type Check ──▶ Unit Tests ──▶ Build            │
 │                                                              │            │
@@ -159,10 +159,20 @@ New issues are automatically analyzed and labeled:
 │                                           Pass                   Fail   │
 │                                              │                      │    │
 │                                              ▼                      ▼    │
-│                                    Ready for Merge          Jules Fixes │
-│                                                                      │    │
-│                                                                      ▼    │
-│                                                              Re-run CI   │
+│                                    Is Draft PR?             Jules Fixes │
+│                                         │                            │    │
+│                              ┌──────────┴──────────┐                 ▼    │
+│                              ▼                     ▼          Re-run CI   │
+│                        Yes (Jules)              No                       │
+│                              │                     │                      │
+│                              ▼                     ▼                      │
+│                    Mark Ready for Review    Ready for Merge              │
+│                              │                                            │
+│                              ▼                                            │
+│                    Triggers ready_for_review                             │
+│                              │                                            │
+│                              ▼                                            │
+│                    Ready for Merge                                       │
 │                                                                           │
 └──────────────────────────────────────────────────────────────────────────┘
 
@@ -209,6 +219,32 @@ PRs are auto-merged when ALL conditions are met:
 2. All CI checks pass
 3. No merge conflicts
 4. CodeRabbit review complete
+
+### Jules Draft PR Handling
+
+Jules always creates PRs in **draft mode**. The CI pipeline handles this automatically:
+
+1. **CI runs on draft PRs** - The CI workflow triggers on `opened`, `synchronize`, `reopened`, and `ready_for_review` events
+2. **Auto-promotion on success** - When CI passes on a Jules draft PR, it's automatically marked as "ready for review"
+3. **Re-triggers workflows** - The `ready_for_review` event triggers additional workflows like CodeRabbit review
+
+```
+Jules Creates Draft PR ──▶ CI Runs ──▶ Pass? ──▶ Mark Ready for Review
+                                         │
+                                         ▼
+                                       Fail
+                                         │
+                                         ▼
+                                   Jules Fixes
+                                         │
+                                         ▼
+                                   Re-run CI
+```
+
+This ensures:
+- Jules PRs are validated before being visible for review
+- Failed PRs stay in draft until fixed
+- Human reviewers only see PRs that pass CI
 
 ---
 

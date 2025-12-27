@@ -2,7 +2,7 @@ name: CI
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'src/**'
       - 'tests/**'
@@ -282,6 +282,31 @@ jobs:
           fi
           
           gh pr comment "$PR_NUMBER" --body "🚨 CI Failed - Jobs: $FAILED_JOBS - [View Run]($RUN_URL)" --repo "${{ github.repository }}"
+
+  # ============================================================================
+  # JULES: Convert draft PR to ready when CI passes
+  # ============================================================================
+  mark-ready-for-review:
+    needs: [ci-status]
+    runs-on: ubuntu-latest
+    # Only run for Jules draft PRs when CI passes
+    if: |
+      needs.ci-status.outputs.success == 'true' &&
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.draft == true &&
+      github.event.pull_request.user.login == 'google-labs-jules'
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Mark PR as ready for review
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "🎉 CI passed for Jules draft PR #$PR_NUMBER - marking as ready for review"
+          gh pr ready "$PR_NUMBER" --repo "${{ github.repository }}"
+          echo "✅ PR #$PR_NUMBER is now ready for review"
 
   # ============================================================================
   # DEPLOY: Vercel Preview/Production
