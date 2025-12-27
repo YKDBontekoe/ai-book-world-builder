@@ -2,13 +2,14 @@ import { cookies } from "next/headers";
 import Script from "next/script";
 import { Suspense } from "react";
 import { auth } from "@/app/(auth)/auth";
-import { SidebarInset, SidebarProvider } from "@/components/atoms/sidebar";
 import { Separator } from "@/components/atoms/separator";
+import { SidebarInset, SidebarProvider } from "@/components/atoms/sidebar";
 import { GlobalErrorBoundary } from "@/components/feedback/global-error-boundary";
 import { BookCanvasProvider } from "@/components/organisms/book-canvas";
 import { DataStreamProvider } from "@/components/organisms/chat/data-stream-provider";
 import { AppSidebar } from "@/components/organisms/sidebar/app-sidebar";
 import { SidebarToggle } from "@/components/organisms/sidebar/sidebar-toggle";
+import { AppearanceProvider } from "@/components/providers/appearance-provider";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
 	return (
@@ -19,11 +20,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 			/>
 			<BookCanvasProvider>
 				<DataStreamProvider>
-					<Suspense fallback={<div className="flex h-dvh bg-background" />}>
-						<SidebarWrapper>
-							{children}
-						</SidebarWrapper>
-					</Suspense>
+					<AppearanceProvider>
+						<Suspense fallback={<div className="flex h-dvh bg-background" />}>
+							<SidebarWrapper>{children}</SidebarWrapper>
+						</Suspense>
+					</AppearanceProvider>
 				</DataStreamProvider>
 			</BookCanvasProvider>
 		</>
