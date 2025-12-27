@@ -241,7 +241,7 @@ jobs:
           gh pr comment "$PR_NUMBER" --body "@${{ steps.feedback.outputs.reviewer }} - Jules is on it!" --repo "${{ github.repository }}"
 
       - name: Invoke Jules
-        uses: google-labs-code/jules-action@v1.0.0
+        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ needs.context.outputs.pr_branch }}
@@ -334,7 +334,7 @@ jobs:
 
       - name: Invoke Jules for AI Agent prompts
         if: steps.extract.outputs.has_prompts == 'true'
-        uses: google-labs-code/jules-action@v1.0.0
+        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ needs.context.outputs.pr_branch }}
