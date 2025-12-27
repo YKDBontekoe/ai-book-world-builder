@@ -19,7 +19,7 @@ on:
     types: [submitted]
   pull_request:
     types: [opened, synchronize, ready_for_review, labeled]
-  # Trigger CodeRabbit review after CI passes
+  # Trigger CodeRabbit review after CI passes (only for bots, filtered in supervisor)
   workflow_run:
     workflows: ["CI"]
     types: [completed]
@@ -111,13 +111,13 @@ jobs:
           gh pr comment "$PR_NUMBER" --body "@coderabbitai resolve" --repo "${{ github.repository }}"
 
   # ==========================================================================
-  # 3. EXECUTE: CodeRabbit Trigger (after CI passes or on bot PR sync)
+  # 3. EXECUTE: CodeRabbit Trigger (Bot PRs Only)
   # ==========================================================================
   coderabbit-trigger:
     needs: supervisor
-    if: |
-      needs.supervisor.outputs.should_trigger_coderabbit == 'true' ||
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    # CRITICAL: Only trigger if explicitly requested by supervisor (which filters for bots)
+    # This prevents duplicate reviews for human users who are handled by the native App
+    if: needs.supervisor.outputs.should_trigger_coderabbit == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Get PR number
@@ -125,22 +125,15 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
-            # Find PR by SHA for workflow_run events
-            PR=$(gh api "/repos/${{ github.repository }}/pulls" \
-              --jq ".[] | select(.head.sha == \"${{ github.event.workflow_run.head_sha }}\") | .number" | head -1)
-            echo "number=$PR" >> $GITHUB_OUTPUT
-            echo "Found PR #$PR from workflow_run"
-          else
-            echo "number=${{ needs.supervisor.outputs.number }}" >> $GITHUB_OUTPUT
-          fi
+          # Use number from supervisor context
+          echo "number=${{ needs.supervisor.outputs.number }}" >> $GITHUB_OUTPUT
       - name: Request CodeRabbit Review
         if: steps.pr.outputs.number != ''
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
-          echo "Requesting CodeRabbit full review for PR #$PR_NUMBER"
+          echo "Requesting CodeRabbit full review for Bot PR #$PR_NUMBER"
           gh pr comment "$PR_NUMBER" --body "@coderabbitai full review" --repo "${{ github.repository }}"
 
   # ==========================================================================
