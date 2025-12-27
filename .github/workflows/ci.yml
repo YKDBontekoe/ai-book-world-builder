@@ -36,7 +36,7 @@ jobs:
       shard-total: ${{ steps.set-matrix.outputs.total }}
       test-count: ${{ steps.set-matrix.outputs.test_count }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - id: set-matrix
         run: |
           # Count unit test files
@@ -69,7 +69,7 @@ jobs:
       lint-result: ${{ steps.lint.outcome }}
       typecheck-result: ${{ steps.typecheck.outcome }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
       
       - name: Run linter
@@ -89,7 +89,7 @@ jobs:
           
       - name: Upload lint errors artifact
         if: steps.lint.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: lint-errors
           path: /tmp/lint-errors.txt
@@ -114,7 +114,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.setup-tests.outputs.shard-matrix) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
       
       - name: Run unit tests (shard ${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }})
@@ -125,7 +125,7 @@ jobs:
         
       - name: Upload test output on failure
         if: steps.test.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: test-errors-shard-${{ matrix.shard }}
           path: /tmp/test-output.txt
@@ -145,11 +145,11 @@ jobs:
     env:
       GENERATE_SOURCEMAP: false
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
 
       - name: Cache Next.js build
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: .next/cache
           key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
@@ -164,7 +164,7 @@ jobs:
         
       - name: Upload build errors on failure
         if: steps.build.outcome == 'failure'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: build-errors
           path: /tmp/build-output.txt
@@ -180,7 +180,7 @@ jobs:
   db-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
       - name: Validate database schema
         run: pnpm db:check
@@ -193,7 +193,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
           
