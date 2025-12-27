@@ -18,9 +18,33 @@ concurrency:
 
 # Set global memory limit for all jobs to prevent Heap errors
 env:
-  NODE_OPTIONS: "--max-old-space-size=4096"
+  NODE_OPTIONS: "--max-old-space-size=6144"
 
 jobs:
+  setup-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      shard-matrix: ${{ steps.set-matrix.outputs.matrix }}
+      shard-total: ${{ steps.set-matrix.outputs.total }}
+    steps:
+      - uses: actions/checkout@v6
+      - id: set-matrix
+        run: |
+          # Count unit test files
+          TEST_COUNT=$(find tests/unit -type f \( -name "*.test.ts" -o -name "*.test.tsx" -o -name "*.spec.ts" -o -name "*.spec.tsx" \) | wc -l)
+          
+          # Calculate shards: ~50 tests per shard, minimum 2, maximum 6
+          SHARD_TOTAL=$(( ($TEST_COUNT + 49) / 50 ))
+          if [ "$SHARD_TOTAL" -lt 2 ]; then SHARD_TOTAL=2; fi
+          if [ "$SHARD_TOTAL" -gt 6 ]; then SHARD_TOTAL=6; fi
+          
+          # Generate JSON array [1, 2, ..., SHARD_TOTAL]
+          MATRIX=$(node -e "console.log(JSON.stringify(Array.from({length: $SHARD_TOTAL}, (_, i) => i + 1)))")
+          
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          echo "total=$SHARD_TOTAL" >> $GITHUB_OUTPUT
+          echo "Found $TEST_COUNT tests. Dynamic shard count: $SHARD_TOTAL"
+
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
@@ -30,11 +54,16 @@ jobs:
       - run: pnpm type-check
 
   unit-tests:
+    needs: setup-tests
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(needs.setup-tests.outputs.shard-matrix) }}
     steps:
       - uses: actions/checkout@v6
       - uses: ./.github/actions/setup
-      - run: pnpm test:unit
+      - run: pnpm test:unit --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }}
 
   build:
     runs-on: ubuntu-latest
@@ -79,7 +108,7 @@ jobs:
 
   ci-success:
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
+    needs: [setup-tests, lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
     if: always()
     steps:
       - name: Evaluate Results
@@ -92,7 +121,7 @@ jobs:
 
   notify-failure:
     runs-on: ubuntu-latest
-    needs: [lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
+    needs: [setup-tests, lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
     if: |
       always() && 
       github.event_name == 'pull_request' && 
