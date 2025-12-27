@@ -28,10 +28,50 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { Slider } from "@/components/atoms/slider";
+import { Skeleton } from "@/components/atoms/skeleton";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { SettingsModelSelector } from "@/components/organisms/settings/settings-model-selector";
 import { useAppearance } from "@/components/providers/appearance-provider";
+import { APPEARANCE_THEMES } from "@/lib/db/schema/auth";
 import { cn } from "@/lib/utils";
+
+const AppearanceSkeleton = () => (
+	<div className="space-y-8">
+		<div>
+			<Skeleton className="h-7 w-2/3" />
+			<Skeleton className="h-4 w-1/3 mt-2" />
+		</div>
+		<div className="space-y-4">
+			<Skeleton className="h-6 w-1/4" />
+			<div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+				{Array.from({ length: 6 }).map((_, i) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: ok for skeletons
+					<Skeleton key={i} className="h-12 w-full rounded-xl" />
+				))}
+			</div>
+		</div>
+		<div className="space-y-6">
+			<Skeleton className="h-6 w-1/3" />
+			<div className="p-6 space-y-6 border rounded-2xl">
+				<div className="space-y-3">
+					<Skeleton className="h-5 w-1/4" />
+					<Skeleton className="h-10 w-full" />
+				</div>
+				<div className="grid grid-cols-2 gap-8">
+					<div className="space-y-3">
+						<Skeleton className="h-5 w-1/3" />
+						<Skeleton className="h-8 w-full" />
+					</div>
+					<div className="space-y-3">
+						<Skeleton className="h-5 w-1/3" />
+						<Skeleton className="h-8 w-full" />
+					</div>
+				</div>
+				<Skeleton className="h-20 w-full rounded-lg" />
+			</div>
+		</div>
+	</div>
+);
 
 export function SettingsDialog({
 	open,
@@ -164,149 +204,148 @@ export function SettingsDialog({
 				{/* Content Area */}
 				<div className="flex-1 flex flex-col overflow-hidden relative">
 					<div className="flex-1 overflow-y-auto p-8">
-						{activeTab === "appearance" && (
-							<div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-								<div>
-									<h3 className="text-xl font-semibold mb-1">
-										Appearance & Customization
-									</h3>
-									<p className="text-sm text-muted-foreground">
-										Personalize your writing environment.
-									</p>
-								</div>
+						{activeTab === "appearance" &&
+							(isAppearanceLoading ? (
+								<AppearanceSkeleton />
+							) : (
+								<div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+									<div>
+										<h3 className="text-xl font-semibold mb-1">
+											Appearance & Customization
+										</h3>
+										<p className="text-sm text-muted-foreground">
+											Personalize your writing environment.
+										</p>
+									</div>
 
-								{/* Theme Selection */}
-								<div className="space-y-4">
-									<Label className="text-base font-medium">Theme Color</Label>
-									<div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-										{[
-											{ id: "violet", color: "bg-violet-500" },
-											{ id: "blue", color: "bg-blue-500" },
-											{ id: "emerald", color: "bg-emerald-500" },
-											{ id: "amber", color: "bg-amber-500" },
-											{ id: "rose", color: "bg-rose-500" },
-											{ id: "slate", color: "bg-slate-500" },
-										].map((t) => (
-											<button
-												key={t.id}
-												type="button"
-												onClick={() =>
-													updatePreferences({ theme: t.id as any })
-												}
-												className={cn(
-													"relative h-12 rounded-xl border transition-all hover:scale-105 active:scale-95 overflow-hidden",
-													theme === t.id
-														? "ring-2 ring-primary ring-offset-2 dark:ring-offset-background border-transparent"
-														: "border-border hover:border-primary/50",
-												)}
-												aria-label={`Select ${t.id} theme`}
-											>
-												<div
-													className={cn("absolute inset-0 opacity-50", t.color)}
-												/>
-												<div className="absolute inset-0 flex items-center justify-center">
-													{theme === t.id && (
-														<Check className="w-5 h-5 text-white drop-shadow-md" />
+									{/* Theme Selection */}
+									<div className="space-y-4">
+										<Label className="text-base font-medium">Theme Color</Label>
+										<div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+											{APPEARANCE_THEMES.map((t) => (
+												<button
+													key={t.id}
+													type="button"
+													onClick={() => updatePreferences({ theme: t.id })}
+													className={cn(
+														"relative h-12 rounded-xl border transition-all hover:scale-105 active:scale-95 overflow-hidden",
+														theme === t.id
+															? "ring-2 ring-primary ring-offset-2 dark:ring-offset-background border-transparent"
+															: "border-border hover:border-primary/50",
 													)}
-												</div>
-											</button>
-										))}
+													aria-label={`Select ${t.id} theme`}
+												>
+													<div
+														className={cn(
+															"absolute inset-0 opacity-50",
+															t.color,
+														)}
+													/>
+													<div className="absolute inset-0 flex items-center justify-center">
+														{theme === t.id && (
+															<Check className="w-5 h-5 text-white drop-shadow-md" />
+														)}
+													</div>
+												</button>
+											))}
+										</div>
 									</div>
-								</div>
 
-								{/* Editor Typography */}
-								<div className="space-y-6">
-									<div className="flex items-center justify-between">
-										<Label className="text-base font-medium flex items-center gap-2">
-											<Type className="w-4 h-4 text-muted-foreground" />
-											Editor Typography
-										</Label>
-									</div>
-
-									<GlassCard variant="subtle" className="p-6 space-y-6">
-										<div className="space-y-3">
-											<Label>Font Family</Label>
-											<Select
-												value={editorFont}
-												onValueChange={(val) =>
-													updatePreferences({ editorFont: val as any })
-												}
-											>
-												<SelectTrigger>
-													<SelectValue />
-												</SelectTrigger>
-												<SelectContent>
-													<SelectItem value="sans">
-														Modern Sans (Geist)
-													</SelectItem>
-													<SelectItem value="serif">Classic Serif</SelectItem>
-													<SelectItem value="mono">Technical Mono</SelectItem>
-												</SelectContent>
-											</Select>
+									{/* Editor Typography */}
+									<div className="space-y-6">
+										<div className="flex items-center justify-between">
+											<Label className="text-base font-medium flex items-center gap-2">
+												<Type className="w-4 h-4 text-muted-foreground" />
+												Editor Typography
+											</Label>
 										</div>
 
-										<div className="grid grid-cols-2 gap-8">
+										<GlassCard variant="subtle" className="p-6 space-y-6">
 											<div className="space-y-3">
-												<div className="flex items-center justify-between">
-													<Label>Font Size</Label>
-													<span className="text-sm text-muted-foreground tabular-nums">
-														{editorFontSize}px
-													</span>
-												</div>
-												<Slider
-													value={[editorFontSize]}
-													min={12}
-													max={24}
-													step={1}
-													onValueChange={([val]) =>
-														updatePreferences({ editorFontSize: val })
+												<Label>Font Family</Label>
+												<Select
+													value={editorFont}
+													onValueChange={(val) =>
+														updatePreferences({ editorFont: val })
 													}
-												/>
+												>
+													<SelectTrigger>
+														<SelectValue />
+													</SelectTrigger>
+													<SelectContent>
+														<SelectItem value="sans">
+															Modern Sans (Geist)
+														</SelectItem>
+														<SelectItem value="serif">
+															Classic Serif
+														</SelectItem>
+														<SelectItem value="mono">Technical Mono</SelectItem>
+													</SelectContent>
+												</Select>
 											</div>
 
-											<div className="space-y-3">
-												<div className="flex items-center justify-between">
-													<Label>Line Height</Label>
-													<span className="text-sm text-muted-foreground tabular-nums">
-														{editorLineHeight}
-													</span>
+											<div className="grid grid-cols-2 gap-8">
+												<div className="space-y-3">
+													<div className="flex items-center justify-between">
+														<Label>Font Size</Label>
+														<span className="text-sm text-muted-foreground tabular-nums">
+															{editorFontSize}px
+														</span>
+													</div>
+													<Slider
+														value={[editorFontSize]}
+														min={12}
+														max={24}
+														step={1}
+														onValueChange={([val]) =>
+															updatePreferences({ editorFontSize: val })
+														}
+													/>
 												</div>
-												<Slider
-													value={[editorLineHeight]}
-													min={1.2}
-													max={2.0}
-													step={0.1}
-													onValueChange={([val]) =>
-														updatePreferences({ editorLineHeight: val })
-													}
-												/>
-											</div>
-										</div>
 
-										{/* Preview */}
-										<div className="mt-4 p-4 rounded-lg bg-background/50 border border-border/50">
-											<p
-												style={{
-													fontFamily:
-														editorFont === "mono"
-															? "var(--font-mono)"
-															: editorFont === "serif"
-																? "serif"
-																: "var(--font-sans)",
-													fontSize: `${editorFontSize}px`,
-													lineHeight: editorLineHeight,
-												}}
-												className="text-foreground transition-all duration-300"
-											>
-												The quick brown fox jumps over the lazy dog. Adjusting
-												your reading environment helps maintain focus during
-												long writing sessions.
-											</p>
-										</div>
-									</GlassCard>
+												<div className="space-y-3">
+													<div className="flex items-center justify-between">
+														<Label>Line Height</Label>
+														<span className="text-sm text-muted-foreground tabular-nums">
+															{editorLineHeight}
+														</span>
+													</div>
+													<Slider
+														value={[editorLineHeight]}
+														min={1.2}
+														max={2.0}
+														step={0.1}
+														onValueChange={([val]) =>
+															updatePreferences({ editorLineHeight: val })
+														}
+													/>
+												</div>
+											</div>
+
+											{/* Preview */}
+											<div className="mt-4 p-4 rounded-lg bg-background/50 border border-border/50">
+												<p
+													style={{
+														fontSize: `${editorFontSize}px`,
+														lineHeight: editorLineHeight,
+													}}
+													className={cn(
+														"text-foreground transition-all duration-300",
+														{
+															"font-serif": editorFont === "serif",
+															"font-mono": editorFont === "mono",
+														},
+													)}
+												>
+													The quick brown fox jumps over the lazy dog. Adjusting
+													your reading environment helps maintain focus during
+													long writing sessions.
+												</p>
+											</div>
+										</GlassCard>
+									</div>
 								</div>
-							</div>
-						)}
+							))}
 
 						{activeTab === "account" && (
 							<div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">

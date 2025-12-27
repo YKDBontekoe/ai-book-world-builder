@@ -31,9 +31,21 @@ export interface ModelPreferences {
 	large: string | null;
 }
 
+export const APPEARANCE_THEMES = [
+	{ id: "violet", color: "bg-violet-500" },
+	{ id: "blue", color: "bg-blue-500" },
+	{ id: "emerald", color: "bg-emerald-500" },
+	{ id: "amber", color: "bg-amber-500" },
+	{ id: "rose", color: "bg-rose-500" },
+	{ id: "slate", color: "bg-slate-500" },
+] as const;
+
+export type Theme = (typeof APPEARANCE_THEMES)[number]["id"];
+export type EditorFont = "sans" | "serif" | "mono";
+
 export interface AppearancePreferences {
-	theme: "violet" | "blue" | "emerald" | "amber" | "rose" | "slate";
-	editorFont: "sans" | "serif" | "mono";
+	theme: Theme;
+	editorFont: EditorFont;
 	editorFontSize: number;
 	editorLineHeight: number;
 }

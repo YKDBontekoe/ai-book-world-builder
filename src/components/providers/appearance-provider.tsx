@@ -18,15 +18,6 @@ const AppearanceContext = React.createContext<
 	AppearanceContextType | undefined
 >(undefined);
 
-const THEME_COLORS: Record<string, string> = {
-	violet: "262 80% 60%",
-	blue: "217 91% 60%",
-	emerald: "142 76% 36%",
-	amber: "38 92% 50%",
-	rose: "340 75% 55%",
-	slate: "215 16% 47%",
-};
-
 export function AppearanceProvider({
 	children,
 }: {
@@ -70,6 +61,9 @@ export function AppearanceProvider({
 			}
 			toast.error("Failed to save appearance settings");
 		},
+		onSuccess: () => {
+			toast.success("Appearance settings saved");
+		},
 		onSettled: () => {
 			queryClient.invalidateQueries({ queryKey: ["appearance-preferences"] });
 		},
@@ -83,20 +77,14 @@ export function AppearanceProvider({
 		[],
 	);
 
-	// Apply Theme Side Effect
+	// Apply Theme and Font Side Effects
 	React.useEffect(() => {
-		if (preferences?.theme) {
+		if (preferences) {
 			const root = document.documentElement;
-			const hsl = THEME_COLORS[preferences.theme] || THEME_COLORS.violet;
-
-			// Update CSS variables
-			root.style.setProperty("--primary", hsl);
-			root.style.setProperty("--sidebar-primary", hsl);
-
-			// Also update darker/lighter variants if needed, or rely on HSL manipulation in CSS
-			// For simplicity, we assume Tailwind using <alpha-value> works with this
+			root.setAttribute("data-theme", preferences.theme);
+			root.setAttribute("data-editor-font", preferences.editorFont);
 		}
-	}, [preferences?.theme]);
+	}, [preferences]);
 
 	const value = React.useMemo(() => {
 		return {
