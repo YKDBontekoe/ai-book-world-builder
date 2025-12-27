@@ -21,13 +21,6 @@ reviews:
   # Assertive mode for thorough reviews
   profile: "assertive"
   
-  # CRITICAL: Review bot PRs (Jules, Renovate, etc.)
-  # Without this, CodeRabbit skips all bot PRs
-  auto_review:
-    enabled: true
-    ignore_bots: false  # Review ALL PRs including bots
-    drafts: true  # Also review drafts for early feedback
-  
   # Don't auto-request changes (let Jules handle fixes)
   request_changes_workflow: false
   
@@ -191,6 +184,7 @@ reviews:
   # =============================================================================
   auto_review:
     enabled: true
+    ignore_bots: false  # Review ALL PRs including bots
     auto_incremental_review: true
     drafts: true  # Review draft PRs (important for Jules)
     
