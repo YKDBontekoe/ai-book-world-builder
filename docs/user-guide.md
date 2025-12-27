@@ -68,7 +68,12 @@ Ensure your writing feels consistent and polished.
     -   **Pacing**: A score indicating if the scene is fast-paced or slow-burning.
     -   **Descriptive Level**: Measures how rich your sensory details are.
 
-### 3. Session Insights
+### 3. Chapter Actions
+Automate complex tasks for an entire chapter via the Chapter context menu (three dots next to a chapter in the sidebar).
+-   **Plan Scenes**: Generates a beat-by-beat outline of scenes for the chapter based on its summary.
+-   **Batch Write**: Automatically drafts prose for all empty scenes in the chapter (requires "Large" model).
+
+### 4. Session Insights
 Track your productivity and writing habits.
 -   **How to use**: Click the **Session** button in the top bar.
 -   **Metrics**: View your session duration, words written, words per minute (WPM), and edit count.
