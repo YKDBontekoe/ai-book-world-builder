@@ -2,6 +2,7 @@
 
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { Dispatch, SetStateAction } from "react";
+import type { ParagraphActionType } from "@/components/molecules/paragraph-actions";
 import { ReasoningPart } from "@/components/organisms/messages/parts/reasoning-part";
 import { TextPart } from "@/components/organisms/messages/parts/text-part";
 import { ToolPart } from "@/components/organisms/messages/parts/tool-part";
@@ -16,6 +17,7 @@ interface PartsRendererProps {
 	setMode: Dispatch<SetStateAction<"view" | "edit">>;
 	setMessages: UseChatHelpers<ChatMessage>["setMessages"];
 	regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+	onAction?: (type: ParagraphActionType, text: string) => void;
 }
 
 export function PartsRenderer({
@@ -26,6 +28,7 @@ export function PartsRenderer({
 	setMode,
 	setMessages,
 	regenerate,
+	onAction,
 }: PartsRendererProps) {
 	if (!message.parts) return null;
 
@@ -54,6 +57,7 @@ export function PartsRenderer({
 								setMode={setMode}
 								setMessages={setMessages}
 								regenerate={regenerate}
+								onAction={onAction}
 							/>
 						</div>
 					);

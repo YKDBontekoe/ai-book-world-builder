@@ -2,6 +2,7 @@
 
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { Dispatch, SetStateAction } from "react";
+import type { ParagraphActionType } from "@/components/molecules/paragraph-actions";
 import { Response } from "@/components/molecules/response";
 import { MessageEditor } from "@/components/organisms/messages/message-editor";
 import { MessageBubble } from "@/components/organisms/messages/message-ui";
@@ -15,6 +16,7 @@ interface TextPartProps {
 	setMode: Dispatch<SetStateAction<"view" | "edit">>;
 	setMessages: UseChatHelpers<ChatMessage>["setMessages"];
 	regenerate: UseChatHelpers<ChatMessage>["regenerate"];
+	onAction?: (type: ParagraphActionType, text: string) => void;
 }
 
 export function TextPart({
@@ -24,11 +26,12 @@ export function TextPart({
 	setMode,
 	setMessages,
 	regenerate,
+	onAction,
 }: TextPartProps) {
 	if (mode === "view") {
 		return (
 			<MessageBubble role={message.role}>
-				<Response>{sanitizeText(text)}</Response>
+				<Response onAction={onAction}>{sanitizeText(text)}</Response>
 			</MessageBubble>
 		);
 	}

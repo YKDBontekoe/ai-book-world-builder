@@ -99,6 +99,29 @@ function PureMessages({
 							}
 							setMessages={setMessages}
 							vote={votesMap.get(message.id)}
+							onAction={(type, text) => {
+								let prompt = "";
+								switch (type) {
+									case "rewrite":
+										prompt = `Rewrite the following text:\n\n> ${text}`;
+										break;
+									case "expand":
+										prompt = `Expand upon the following text:\n\n> ${text}`;
+										break;
+									case "shorten":
+										prompt = `Shorten the following text:\n\n> ${text}`;
+										break;
+									case "ask":
+										prompt = `I have a question about this text:\n\n> ${text}\n\n[Your question here]`;
+										break;
+									default:
+										prompt = text;
+								}
+								sendMessage({
+									role: "user",
+									parts: [{ type: "text", text: prompt }],
+								});
+							}}
 						/>
 					))}
 

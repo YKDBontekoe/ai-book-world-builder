@@ -22,7 +22,6 @@ import { ChatHeader } from "@/components/organisms/chat/chat-header";
 import { ChatLayout } from "@/components/organisms/chat/chat-layout";
 import { MultimodalInput } from "@/components/organisms/chat/multimodal-input";
 import { ProcessLogs } from "@/components/organisms/chat/process-logs";
-import { SuggestedActions } from "@/components/organisms/chat/suggested-actions";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { Messages } from "@/components/organisms/messages/messages";
 import { useArtifactSelector } from "@/hooks/use-artifact";
@@ -164,19 +163,6 @@ function ChatContent({
 						<ProcessLogs logs={processLogs} />
 						{!isReadonly && (
 							<>
-								{messages.length > 0 && (
-									<div className="mb-2">
-										<SuggestedActions
-											chatId={id}
-											selectedProject={selectedProject}
-											selectedVisibilityType={visibilityType}
-											sendMessage={sendMessage}
-											isCompact={true}
-											messages={messages}
-											selectedModelId={currentModelId}
-										/>
-									</div>
-								)}
 								<AgentCapabilities className="mb-2" />
 								<MultimodalInput
 									availableModels={availableModels}
