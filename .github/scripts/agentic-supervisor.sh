@@ -150,29 +150,6 @@ if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME"
   JULES_PROMPT="Assigned Issue #$NUMBER: '$ISSUE_TITLE'. Description: $ISSUE_BODY. Please implement a solution on a new branch."
 fi
 
-# Logic C: CodeRabbit Trigger (Bot PRs) - max 5 per 15min debounce
-if [[ "$IS_PR" == "true" ]]; then
-  if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" || "$AUTHOR" == "renovate[bot]" ]]; then
-    if [[ "$EVENT_NAME" == "pull_request" && ( "$EVENT_ACTION" == "opened" || "$EVENT_ACTION" == "synchronize" ) ]]; then
-      RECENT_CR="0"
-      if [[ -n "$GH_TOKEN" ]]; then
-        # Count CR comments in last 15 min across ALL PRs (rate limit: 5 per 15min)
-        RECENT_CR=$(gh api "/repos/${GITHUB_REPOSITORY}/issues/comments" \
-          --jq '[.[] | select(.user.login == "coderabbitai[bot]" and 
-            ((.created_at | fromdateiso8601) > (now - 900)))] | length' 2>/dev/null || echo "0")
-        log "CodeRabbit calls in last 15min: $RECENT_CR"
-      fi
-      # Allow up to 5 per 15 min
-      if [[ "$RECENT_CR" -lt 5 ]]; then
-        SHOULD_TRIGGER_CODERABBIT="true"
-        log "Triggering CodeRabbit review (within rate limit)"
-      else
-        log "Skipping CodeRabbit - rate limit reached ($RECENT_CR/5 in 15min)"
-      fi
-    fi
-  fi
-fi
-
 # Logic D: Review Changes (Human or CodeRabbit)
 if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" ]]; then
 
@@ -234,6 +211,5 @@ set_output "author" "$AUTHOR"
 set_output "labels" "$LABELS"
 set_output "should_invoke_jules" "$SHOULD_INVOKE_JULES"
 set_output "jules_prompt" "$JULES_PROMPT"
-set_output "should_trigger_coderabbit" "$SHOULD_TRIGGER_CODERABBIT"
 
 log "Done."
