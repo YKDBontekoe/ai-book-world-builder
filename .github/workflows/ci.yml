@@ -21,9 +21,11 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# Set global memory limit for all jobs to prevent Heap errors
+# Set global memory limit and Vercel IDs
 env:
   NODE_OPTIONS: "--max-old-space-size=6144"
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
 jobs:
   # ============================================================================
@@ -280,3 +282,96 @@ jobs:
           fi
           
           gh pr comment "$PR_NUMBER" --body "🚨 CI Failed - Jobs: $FAILED_JOBS - [View Run]($RUN_URL)"
+
+  # ============================================================================
+  # DEPLOY: Vercel Preview/Production
+  # ============================================================================
+  deploy-vercel:
+    needs: [ci-status]
+    # Only deploy if CI passed AND:
+    # 1. It's a push to main (Production)
+    # 2. It's a PR with 'preview' label
+    # 3. It's a newly opened PR by a human (initial preview)
+    if: |
+      needs.ci-status.outputs.success == 'true' && (
+        (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+        (github.event_name == 'pull_request' && 
+         github.event.pull_request.draft == false &&
+         (
+           contains(github.event.pull_request.labels.*.name, 'preview') ||
+           (github.event.action == 'opened' && github.event.pull_request.user.login != 'google-labs-jules' && github.event.pull_request.user.login != 'renovate[bot]')
+         )
+        )
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      deployments: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Setup project
+        uses: ./.github/actions/setup
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Cache Next.js build
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
+        with:
+          path: .next/cache
+          key: nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
+          restore-keys: |
+            nextjs-deploy-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nextjs-deploy-${{ runner.os }}-
+
+      - name: Build Project Artifacts
+        run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          PROD_FLAG=${{ github.ref == 'refs/heads/main' && '--prod' || '' }}
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt $PROD_FLAG --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          
+          echo "### 🚀 Vercel Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
+          echo "**Mode:** ${{ github.ref == 'refs/heads/main' && 'Production' || 'Preview' }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment Preview URL on PR
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DEPLOYMENT_URL="${{ steps.deploy.outputs.deployment_url }}"
+          
+          # Check if a deployment comment already exists
+          COMMENT_ID=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
+            --jq '.[] | select(.body | contains("<!-- vercel-deployment -->")) | .id' | head -1)
+          
+          MESSAGE="<!-- vercel-deployment -->
+          ## 🚀 Vercel Preview Deployment
+          
+          | Name | Status | URL |
+          |------|--------|-----|
+          | **Preview** | ✅ Ready | [$DEPLOYMENT_URL]($DEPLOYMENT_URL) |
+          
+          > Built and deployed via CI Pipeline (Smarter Mode)
+          
+          ---
+          *Updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')*"
+          
+          if [ -n "$COMMENT_ID" ]; then
+            gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID \
+              --method PATCH \
+              -f body="$MESSAGE"
+          else
+            gh pr comment ${{ github.event.pull_request.number }} --body "$MESSAGE"
+          fi
