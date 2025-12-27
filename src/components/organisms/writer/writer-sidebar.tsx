@@ -7,11 +7,13 @@ import {
 	ChevronRight,
 	FileText,
 	Folder,
+	LayoutDashboard,
 	Lock,
 	PanelLeftClose,
 	Plus,
 	Trash2,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -226,6 +228,15 @@ export function WriterSidebar() {
 			className="flex flex-col h-full border-r border-sidebar-border bg-sidebar/30 backdrop-blur-xl transition-all duration-300 ease-in-out"
 			data-testid="writer-sidebar"
 		>
+			<div className="px-3 py-2 border-b border-sidebar-border/50">
+				<Link href={`/projects/${project.id}/dashboard`}>
+					<Button variant="ghost" size="sm" className="w-full justify-start">
+						<LayoutDashboard className="mr-2 h-4 w-4" />
+						Dashboard
+					</Button>
+				</Link>
+			</div>
+
 			<div className="px-4 py-3 border-b border-sidebar-border/50 flex items-center justify-between bg-sidebar/20 backdrop-blur-md sticky top-0 z-10">
 				<div className="flex items-center gap-2.5">
 					<Button
