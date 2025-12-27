@@ -270,10 +270,10 @@ importers:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
       react-resizable-panels:
-        specifier: ^2.1.7
+        specifier: 2.1.9
         version: 2.1.9(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-syntax-highlighter:
-        specifier: ^15.6.6
+        specifier: 15.6.6
         version: 15.6.6(react@19.2.3)
       recharts:
         specifier: 3.5.1
