@@ -27,7 +27,7 @@ jobs:
       shard-matrix: ${{ steps.set-matrix.outputs.matrix }}
       shard-total: ${{ steps.set-matrix.outputs.total }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - id: set-matrix
         run: |
           # Count unit test files
@@ -48,7 +48,7 @@ jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
       - run: pnpm lint
       - run: pnpm type-check
@@ -61,7 +61,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.setup-tests.outputs.shard-matrix) }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
       - run: pnpm test:unit --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }}
 
@@ -71,11 +71,11 @@ jobs:
       # Next.js specific memory saver
       GENERATE_SOURCEMAP: false 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
 
       - name: Cache Next.js build
-        uses: actions/cache@v5
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         with:
           path: .next/cache
           key: nextjs-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ hashFiles('src/**') }}
@@ -88,7 +88,7 @@ jobs:
   db-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
       - run: pnpm db:check
 
@@ -97,7 +97,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
       - name: Check for merge conflicts
@@ -131,7 +131,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
         with:
           fetch-depth: 0
 

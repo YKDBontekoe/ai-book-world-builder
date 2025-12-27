@@ -12,10 +12,10 @@ importers:
   .:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: ^2.0.56
+        specifier: 2.0.56
         version: 2.0.56(zod@3.25.76)
       '@ai-sdk/openai':
-        specifier: ^2.0.86
+        specifier: 2.0.88
         version: 2.0.88(zod@3.25.76)
       '@ai-sdk/provider':
         specifier: 2.0.0
@@ -27,7 +27,7 @@ importers:
         specifier: 2.0.13
         version: 2.0.13(zod@3.25.76)
       '@auth/drizzle-adapter':
-        specifier: ^1.11.1
+        specifier: 1.11.1
         version: 1.11.1
       '@codemirror/lang-javascript':
         specifier: ^6.2.2
@@ -45,22 +45,22 @@ importers:
         specifier: ^6.35.3
         version: 6.39.7
       '@dnd-kit/core':
-        specifier: ^6.3.1
+        specifier: 6.3.1
         version: 6.3.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@dnd-kit/sortable':
-        specifier: ^10.0.0
+        specifier: 10.0.0
         version: 10.0.0(@dnd-kit/core@6.3.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       '@dnd-kit/utilities':
-        specifier: ^3.2.2
+        specifier: 3.2.2
         version: 3.2.2(react@19.2.3)
       '@icons-pack/react-simple-icons':
-        specifier: ^13.7.0
+        specifier: 13.8.0
         version: 13.8.0(react@19.2.3)
       '@opentelemetry/api':
-        specifier: ^1.9.0
+        specifier: 1.9.0
         version: 1.9.0
       '@opentelemetry/api-logs':
-        specifier: ^0.200.0
+        specifier: 0.200.0
         version: 0.200.0
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
@@ -108,13 +108,13 @@ importers:
         specifier: ^1.1.0
         version: 1.2.4(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/query-sync-storage-persister':
-        specifier: ^5.90.14
+        specifier: 5.90.14
         version: 5.90.14
       '@tanstack/react-query':
-        specifier: ^5.90.12
+        specifier: 5.90.12
         version: 5.90.12(react@19.2.3)
       '@tanstack/react-query-persist-client':
-        specifier: ^5.90.14
+        specifier: 5.90.14
         version: 5.90.14(@tanstack/react-query@5.90.12(react@19.2.3))(react@19.2.3)
       '@types/dagre':
         specifier: ^0.7.53
@@ -123,85 +123,85 @@ importers:
         specifier: ^0.17.4
         version: 0.17.4
       '@vercel/analytics':
-        specifier: ^1.3.1
+        specifier: 1.6.1
         version: 1.6.1(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       '@vercel/blob':
-        specifier: ^0.27.0
+        specifier: 0.27.3
         version: 0.27.3
       '@vercel/functions':
-        specifier: ^2.0.0
+        specifier: 2.2.13
         version: 2.2.13
       '@vercel/otel':
-        specifier: ^1.12.0
+        specifier: 1.14.0
         version: 1.14.0(@opentelemetry/api-logs@0.200.0)(@opentelemetry/api@1.9.0)(@opentelemetry/instrumentation@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/resources@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-logs@0.57.2(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-metrics@1.30.1(@opentelemetry/api@1.9.0))(@opentelemetry/sdk-trace-base@1.30.1(@opentelemetry/api@1.9.0))
       '@vercel/speed-insights':
-        specifier: ^1.3.1
+        specifier: 1.3.1
         version: 1.3.1(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       '@xyflow/react':
-        specifier: ^12.10.0
+        specifier: 12.10.0
         version: 12.10.0(@types/react@18.3.27)(immer@11.0.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       ai:
         specifier: 5.0.116
         version: 5.0.116(zod@3.25.76)
       bcrypt-ts:
-        specifier: ^5.0.2
+        specifier: 5.0.3
         version: 5.0.3
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
       classnames:
-        specifier: ^2.5.1
+        specifier: 2.5.1
         version: 2.5.1
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
       codemirror:
-        specifier: ^6.0.1
+        specifier: 6.0.2
         version: 6.0.2
       dagre:
-        specifier: ^0.8.5
+        specifier: 0.8.5
         version: 0.8.5
       date-fns:
-        specifier: ^4.1.0
+        specifier: 4.1.0
         version: 4.1.0
       diff-match-patch:
-        specifier: ^1.0.5
+        specifier: 1.0.5
         version: 1.0.5
       dotenv:
-        specifier: ^16.4.5
+        specifier: 16.6.1
         version: 16.6.1
       drizzle-orm:
         specifier: ^0.45.1
         version: 0.45.1(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@vercel/postgres@0.10.0)(postgres@3.4.7)
       embla-carousel-react:
-        specifier: ^8.6.0
+        specifier: 8.6.0
         version: 8.6.0(react@19.2.3)
       epub-gen-memory:
-        specifier: ^1.1.2
+        specifier: 1.1.2
         version: 1.1.2
       fast-deep-equal:
-        specifier: ^3.1.3
+        specifier: 3.1.3
         version: 3.1.3
       framer-motion:
-        specifier: ^11.3.19
+        specifier: 11.18.2
         version: 11.18.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       geist:
-        specifier: ^1.3.1
+        specifier: 1.5.1
         version: 1.5.1(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       jszip:
-        specifier: ^3.10.1
+        specifier: 3.10.1
         version: 3.10.1
       katex:
-        specifier: ^0.16.25
+        specifier: 0.16.27
         version: 0.16.27
       lucide-react:
         specifier: ^0.562.0
         version: 0.562.0(react@19.2.3)
       mammoth:
-        specifier: ^1.8.0
+        specifier: 1.11.0
         version: 1.11.0
       nanoid:
-        specifier: ^5.0.8
+        specifier: 5.1.6
         version: 5.1.6
       next:
         specifier: 16.0.7
@@ -213,52 +213,52 @@ importers:
         specifier: ^0.3.0
         version: 0.3.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       orderedmap:
-        specifier: ^2.1.1
+        specifier: 2.1.1
         version: 2.1.1
       papaparse:
-        specifier: ^5.5.2
+        specifier: 5.5.3
         version: 5.5.3
       pdf-parse:
-        specifier: ^1.1.1
+        specifier: 1.1.4
         version: 1.1.4
       pdfkit:
-        specifier: ^0.17.2
+        specifier: 0.17.2
         version: 0.17.2
       postgres:
-        specifier: ^3.4.4
+        specifier: 3.4.7
         version: 3.4.7
       prosemirror-example-setup:
-        specifier: ^1.2.3
+        specifier: 1.2.3
         version: 1.2.3
       prosemirror-history:
-        specifier: ^1.5.0
+        specifier: 1.5.0
         version: 1.5.0
       prosemirror-inputrules:
-        specifier: ^1.4.0
+        specifier: 1.5.1
         version: 1.5.1
       prosemirror-markdown:
-        specifier: ^1.13.1
+        specifier: 1.13.1
         version: 1.13.1
       prosemirror-model:
-        specifier: ^1.23.0
+        specifier: 1.25.4
         version: 1.25.4
       prosemirror-placeholder:
-        specifier: ^1.0.7
+        specifier: 1.0.7
         version: 1.0.7(prosemirror-state@1.4.3)(prosemirror-view@1.38.1)
       prosemirror-schema-basic:
-        specifier: ^1.2.3
+        specifier: 1.2.3
         version: 1.2.3
       prosemirror-schema-list:
-        specifier: ^1.4.1
+        specifier: 1.5.1
         version: 1.5.1
       prosemirror-state:
-        specifier: ^1.4.3
+        specifier: 1.4.3
         version: 1.4.3
       prosemirror-view:
-        specifier: ^1.34.3
+        specifier: 1.38.1
         version: 1.38.1
       radix-ui:
-        specifier: ^1.4.3
+        specifier: 1.4.3
         version: 1.4.3(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react:
         specifier: 19.2.3
@@ -276,83 +276,83 @@ importers:
         specifier: ^15.6.6
         version: 15.6.6(react@19.2.3)
       recharts:
-        specifier: ^3.5.1
+        specifier: 3.5.1
         version: 3.5.1(@types/react@18.3.27)(react-dom@19.2.3(react@19.2.3))(react-is@17.0.2)(react@19.2.3)(redux@5.0.1)
       redis:
-        specifier: ^5.0.0
+        specifier: 5.10.0
         version: 5.10.0
       resumable-stream:
-        specifier: ^2.0.0
+        specifier: 2.2.10
         version: 2.2.10
       server-only:
-        specifier: ^0.0.1
+        specifier: 0.0.1
         version: 0.0.1
       shiki:
-        specifier: ^3.12.2
+        specifier: 3.20.0
         version: 3.20.0
       sonner:
-        specifier: ^1.5.0
+        specifier: 1.7.4
         version: 1.7.4(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       streamdown:
-        specifier: ^1.3.0
+        specifier: 1.6.10
         version: 1.6.10(@types/mdast@4.0.4)(micromark-util-types@2.0.2)(micromark@4.0.2)(react@19.2.3)
       tailwind-merge:
         specifier: ^2.5.2
         version: 2.6.0
       tailwindcss-animate:
-        specifier: ^1.0.7
+        specifier: 1.0.7
         version: 1.0.7(tailwindcss@4.1.18)
       tokenlens:
         specifier: 1.3.1
         version: 1.3.1
       use-stick-to-bottom:
-        specifier: ^1.1.1
+        specifier: 1.1.1
         version: 1.1.1(react@19.2.3)
       usehooks-ts:
-        specifier: ^3.1.0
+        specifier: 3.1.1
         version: 3.1.1(react@19.2.3)
       zod:
-        specifier: ^3.25.76
+        specifier: 3.25.76
         version: 3.25.76
     devDependencies:
       '@biomejs/biome':
         specifier: 2.3.10
         version: 2.3.10
       '@chromatic-com/storybook':
-        specifier: ^4.1.3
+        specifier: 4.1.3
         version: 4.1.3(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@playwright/test':
         specifier: ^1.57.0
         version: 1.57.0
       '@storybook/addon-a11y':
-        specifier: ^10.1.8
+        specifier: 10.1.10
         version: 10.1.10(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@storybook/addon-docs':
-        specifier: ^10.1.8
+        specifier: 10.1.10
         version: 10.1.10(@types/react@18.3.27)(esbuild@0.25.12)(rollup@4.54.0)(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
       '@storybook/addon-interactions':
-        specifier: ^8.6.14
+        specifier: 8.6.14
         version: 8.6.14(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@storybook/addon-onboarding':
-        specifier: ^10.1.8
+        specifier: 10.1.10
         version: 10.1.10(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@storybook/addon-vitest':
         specifier: ^10.1.10
         version: 10.1.10(@vitest/browser-playwright@4.0.16)(@vitest/browser@4.0.16(bufferutil@4.0.9)(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))(vitest@4.0.16))(@vitest/runner@4.0.16)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(vitest@4.0.16)
       '@storybook/nextjs-vite':
-        specifier: ^10.1.8
+        specifier: 10.1.10
         version: 10.1.10(@babel/core@7.28.5)(esbuild@0.25.12)(next@16.0.7(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.57.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(rollup@4.54.0)(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
       '@storybook/react':
         specifier: 10.1.10
         version: 10.1.10(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(typescript@5.9.3)
       '@storybook/test':
-        specifier: ^8.6.14
+        specifier: 8.6.14
         version: 8.6.14(storybook@10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))
       '@tailwindcss/postcss':
-        specifier: ^4.1.13
+        specifier: 4.1.18
         version: 4.1.18
       '@tailwindcss/typography':
-        specifier: ^0.5.15
+        specifier: 0.5.19
         version: 0.5.19(tailwindcss@4.1.18)
       '@testing-library/jest-dom':
         specifier: ^6.6.3
@@ -400,25 +400,25 @@ importers:
         specifier: ^0.31.8
         version: 0.31.8
       jsdom:
-        specifier: ^27.3.0
+        specifier: 27.4.0
         version: 27.4.0(bufferutil@4.0.9)
       lint-staged:
-        specifier: ^16.2.7
+        specifier: 16.2.7
         version: 16.2.7
       playwright:
         specifier: ^1.57.0
         version: 1.57.0
       postcss:
-        specifier: ^8
+        specifier: 8.5.6
         version: 8.5.6
       storybook:
-        specifier: ^10.1.8
+        specifier: 10.1.10
         version: 10.1.10(@testing-library/dom@10.4.0)(bufferutil@4.0.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       tailwindcss:
-        specifier: ^4.1.13
+        specifier: 4.1.18
         version: 4.1.18
       tsx:
-        specifier: ^4.19.1
+        specifier: 4.21.0
         version: 4.21.0
       typescript:
         specifier: ^5.8.2
@@ -427,10 +427,10 @@ importers:
         specifier: 5.6.4
         version: 5.6.4(typescript@5.9.3)
       vite:
-        specifier: ^7.2.7
+        specifier: 7.3.0
         version: 7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
       vite-tsconfig-paths:
-        specifier: ^6.0.2
+        specifier: 6.0.3
         version: 6.0.3(typescript@5.9.3)(vite@7.3.0(@types/node@22.19.3)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
       vitest:
         specifier: ^4.0.16
@@ -2515,9 +2515,6 @@ packages:
     resolution: {integrity: sha512-t09vSN3MdfsyCHoFcTRCH/iUtG7OJ0CsjzB8cjAmKc/va/kIgeDI/TxsigdncE/4be734m0cvIYwNaV4i2XqAw==}
     engines: {node: '>=10'}
 
-  '@standard-schema/spec@1.0.0':
-    resolution: {integrity: sha512-m2bOd0f2RT9k8QJx1JN85cZYyH1RqFBdlwtkSlf4tBDYLCiiZnv1fIIwacK6cqwXavOydf0NPToMQgpKq+dVlA==}
-
   '@standard-schema/spec@1.1.0':
     resolution: {integrity: sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w==}
 
@@ -3366,9 +3363,6 @@ packages:
     resolution: {integrity: sha512-P8BjAsXvZS+VIDUI11hHCQEv74YT67YUi5JJFNWIqL235sBmjX4+qx9Muvls5ivyNENctx46xQLQ3aTuE7ssaQ==}
     engines: {node: '>=6'}
 
-  caniuse-lite@1.0.30001704:
-    resolution: {integrity: sha512-+L2IgBbV6gXB4ETf0keSvLr7JUrRVbIaB/lrQ1+z8mRcQiisG5k+lG6O4n6Y5q6f5EuNfaYXKgymucphlEXQew==}
-
   caniuse-lite@1.0.30001760:
     resolution: {integrity: sha512-7AAMPcueWELt1p3mi13HR/LHH0TJLT11cnwDJEs3xA4+CK/PLKeO9Kl1oru24htkyUKtkGCvAx4ohB0Ttry8Dw==}
 
@@ -4149,9 +4143,6 @@ packages:
   get-nonce@1.0.1:
     resolution: {integrity: sha512-FJhYRoDaiatfEkUK8HKlicmu/3SGFD51q3itKDGoSTysQJBnfOcxU5GxnhE1E6soB76MbT0MBtnKJuXyAx+96Q==}
     engines: {node: '>=6'}
-
-  get-tsconfig@4.10.0:
-    resolution: {integrity: sha512-kGzZ3LWWQcGIAmg6iWvXn0ei6WDtV26wzHRMwDSzmAbcXrTEXxHy6IehI6/4eT6VRKyMP1eF1VqwrVUmE/LR7A==}
 
   get-tsconfig@4.13.0:
     resolution: {integrity: sha512-1VKTZJCwBrvbd+Wn3AOgQP/2Av+TfTCOlE4AcRJE72W1ksZXbAx8PPBR9RzgTeSPzlPMHrbANMH3LbltH73wxQ==}
@@ -5214,9 +5205,6 @@ packages:
   prosemirror-state@1.4.3:
     resolution: {integrity: sha512-goFKORVbvPuAQaXhpbemJFRKJ2aixr+AZMGiquiqKxaucC6hlpHNZHWgz5R7dS4roHiwq9vDctE//CZ++o0W1Q==}
 
-  prosemirror-transform@1.10.3:
-    resolution: {integrity: sha512-Nhh/+1kZGRINbEHmVu39oynhcap4hWTs/BlU7NnxWj3+l0qi8I1mu67v6mMdEe/ltD8hHvU4FV6PHiCw2VSpMw==}
-
   prosemirror-transform@1.10.5:
     resolution: {integrity: sha512-RPDQCxIDhIBb1o36xxwsaeAvivO8VLJcgBtzmOwQ64bMtsVFh5SSuJ6dWSxO1UsHTiTXPCgQm3PDJt7p6IOLbw==}
 
@@ -6226,7 +6214,7 @@ snapshots:
   '@ai-sdk/provider-utils@3.0.7(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       eventsource-parser: 3.0.6
       zod: 3.25.76
 
@@ -6606,7 +6594,7 @@ snapshots:
   '@esbuild-kit/esm-loader@2.6.5':
     dependencies:
       '@esbuild-kit/core-utils': 3.3.2
-      get-tsconfig: 4.10.0
+      get-tsconfig: 4.13.0
 
   '@esbuild/aix-ppc64@0.25.12':
     optional: true
@@ -7932,7 +7920,7 @@ snapshots:
 
   '@reduxjs/toolkit@2.11.1(react-redux@9.2.0(@types/react@18.3.27)(react@19.2.3)(redux@5.0.1))(react@19.2.3)':
     dependencies:
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       '@standard-schema/utils': 0.3.0
       immer: 11.0.1
       redux: 5.0.1
@@ -8050,8 +8038,6 @@ snapshots:
   '@shikijs/vscode-textmate@10.0.2': {}
 
   '@sindresorhus/is@4.6.0': {}
-
-  '@standard-schema/spec@1.0.0': {}
 
   '@standard-schema/spec@1.1.0': {}
 
@@ -8746,7 +8732,7 @@ snapshots:
 
   '@vitest/expect@4.0.16':
     dependencies:
-      '@standard-schema/spec': 1.0.0
+      '@standard-schema/spec': 1.1.0
       '@types/chai': 5.2.3
       '@vitest/spy': 4.0.16
       '@vitest/utils': 4.0.16
@@ -8985,8 +8971,6 @@ snapshots:
       run-applescript: 7.1.0
 
   callsites@3.1.0: {}
-
-  caniuse-lite@1.0.30001704: {}
 
   caniuse-lite@1.0.30001760: {}
 
@@ -9707,10 +9691,6 @@ snapshots:
   get-east-asian-width@1.4.0: {}
 
   get-nonce@1.0.1: {}
-
-  get-tsconfig@4.10.0:
-    dependencies:
-      resolve-pkg-maps: 1.0.0
 
   get-tsconfig@4.13.0:
     dependencies:
@@ -10765,7 +10745,7 @@ snapshots:
     dependencies:
       '@next/env': 16.0.7
       '@swc/helpers': 0.5.15
-      caniuse-lite: 1.0.30001704
+      caniuse-lite: 1.0.30001760
       postcss: 8.4.31
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
@@ -11074,7 +11054,7 @@ snapshots:
   prosemirror-history@1.5.0:
     dependencies:
       prosemirror-state: 1.4.3
-      prosemirror-transform: 1.10.3
+      prosemirror-transform: 1.10.5
       prosemirror-view: 1.38.1
       rope-sequence: 1.3.4
 
@@ -11118,17 +11098,13 @@ snapshots:
     dependencies:
       prosemirror-model: 1.25.4
       prosemirror-state: 1.4.3
-      prosemirror-transform: 1.10.3
+      prosemirror-transform: 1.10.5
 
   prosemirror-state@1.4.3:
     dependencies:
       prosemirror-model: 1.25.4
-      prosemirror-transform: 1.10.3
+      prosemirror-transform: 1.10.5
       prosemirror-view: 1.38.1
-
-  prosemirror-transform@1.10.3:
-    dependencies:
-      prosemirror-model: 1.25.4
 
   prosemirror-transform@1.10.5:
     dependencies:
@@ -11138,7 +11114,7 @@ snapshots:
     dependencies:
       prosemirror-model: 1.25.4
       prosemirror-state: 1.4.3
-      prosemirror-transform: 1.10.3
+      prosemirror-transform: 1.10.5
 
   punycode.js@2.3.1: {}
 
