@@ -1,11 +1,8 @@
-
 import { notFound } from "next/navigation";
-import { Suspense } from "react";
 import { getDashboardStatsAction } from "@/app/actions/dashboard";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { EntityInsights } from "@/components/organisms/dashboard/entity-insights";
 import { UsageChart } from "@/components/organisms/dashboard/usage-chart";
-import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 
 export const metadata = {
 	title: "Project Dashboard",
@@ -16,7 +13,7 @@ export default async function ProjectDashboardPage({
 }: {
 	params: { id: string };
 }) {
-    const { id } = await params;
+	const { id } = await params;
 	const result = await getDashboardStatsAction(id);
 
 	if (result.error) {

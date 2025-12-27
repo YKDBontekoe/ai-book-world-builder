@@ -52,78 +52,28 @@ reviews:
   related_issues: true
   related_prs: true
   
-  # =============================================================================
-  # AUTO-LABELING - Critical for dynamic agentic workflows
-  # =============================================================================
+  # Auto-labeling for better agentic workflow
   suggested_labels: true
-  auto_apply_labels: true
-  
+  auto_apply_labels: true  # Enable auto-labeling for agentic flow
   labeling_instructions:
-    # Type labels
     - label: "bug"
-      instructions: "Apply when the PR fixes a bug, defect, or error"
+      instructions: "Apply when the PR fixes a bug or defect"
     - label: "enhancement"
       instructions: "Apply when the PR adds new features or improvements"
-    - label: "refactor"
-      instructions: "Apply when the PR refactors code without changing behavior"
-    - label: "docs"
-      instructions: "Apply when the PR only changes documentation files (.md)"
-    - label: "chore"
-      instructions: "Apply for maintenance tasks, config changes, tooling updates"
-    - label: "test"
-      instructions: "Apply when the PR adds or modifies tests"
-    
-    # Risk/Priority labels
     - label: "security"
-      instructions: "Apply when the PR addresses security issues or vulnerabilities"
-    - label: "breaking-change"
-      instructions: "Apply when the PR contains API changes, removed features, or incompatible updates"
+      instructions: "Apply when the PR addresses security issues"
     - label: "performance"
-      instructions: "Apply when the PR improves performance, reduces bundle size, or optimizes queries"
-    - label: "critical"
-      instructions: "Apply for urgent fixes that should be reviewed immediately"
-    
-    # Scope labels
-    - label: "frontend"
-      instructions: "Apply when changes are in src/components, src/app pages, or styling"
-    - label: "backend"
-      instructions: "Apply when changes are in src/app/api, src/app/actions, or src/db"
-    - label: "ci"
-      instructions: "Apply when changes are in .github/workflows or CI configuration"
-    - label: "deps"
-      instructions: "Apply for dependency updates (package.json, lockfiles)"
-    
-    # Quality labels  
+      instructions: "Apply when the PR improves performance"
+    - label: "breaking-change"
+      instructions: "Apply when the PR contains breaking changes"
     - label: "needs-tests"
-      instructions: "Apply when new code lacks adequate test coverage"
-    - label: "needs-docs"
-      instructions: "Apply when new features lack documentation"
-    - label: "needs-review"
-      instructions: "Apply for complex changes that need careful human review"
-    
-    # Size labels (auto-applied based on diff size)
-    - label: "size/xs"
-      instructions: "Apply for trivial changes (< 10 lines)"
-    - label: "size/s"
-      instructions: "Apply for small changes (10-50 lines)"
-    - label: "size/m"
-      instructions: "Apply for medium changes (50-200 lines)"
-    - label: "size/l"
-      instructions: "Apply for large changes (200-500 lines)"
-    - label: "size/xl"
-      instructions: "Apply for extra large changes (> 500 lines)"
-    
-    # Automation labels
+      instructions: "Apply when the PR lacks adequate test coverage"
     - label: "auto-merge-candidate"
-      instructions: "Apply for low-risk, well-tested changes: deps updates, typo fixes, docs-only, small refactors with tests"
-    - label: "jules-review"
-      instructions: "Apply when Jules should prioritize reviewing this PR"
-    - label: "skip-ci"
-      instructions: "Apply for changes that don't need CI (docs only, comments only)"
+      instructions: "Apply for low-risk changes like deps updates, typo fixes, docs"
   
   # Reviewer suggestions
   suggested_reviewers: true
-  auto_assign_reviewers: false
+  auto_assign_reviewers: false  # Keep manual for now
   
   # Disable fortune/poem for cleaner output
   in_progress_fortune: false
@@ -138,27 +88,12 @@ reviews:
   review_instructions: |
     You are a Senior Full-Stack Engineer specialized in Next.js, TypeScript, and React.
     
-    ## CRITICAL: AI Agent Integration (Jules Automation)
-    When leaving actionable comments:
-    1. Start inline code comments with `@jules` for automatic handling
-    2. Be specific: include exact file paths and line numbers
-    3. Provide complete code suggestions when possible (use diff format)
-    4. Categorize severity: 🔴 Critical, 🟠 Bug, 🟡 Performance, 🟢 Style
-    5. Example format:
-       ```
-       @jules 🟠 Bug: This could cause a null reference error
-       
-       **File:** src/utils/helper.ts:42
-       **Issue:** Missing null check before accessing property
-       **Suggested fix:**
-       ```diff
-       - const value = data.property;
-       + const value = data?.property;
-       ```
-       
-    ## PR Author Detection
-    - For `google-labs-jules` or `*[bot]` authors: Use @jules prefix
-    - For human authors: Write for human readability first
+    ## CRITICAL: AI Agent Integration
+    When the PR author is "google-labs-jules" or any bot ending in "[bot]":
+    1. Start actionable comments with "@jules" so the agent sees them
+    2. Be specific about file paths and line numbers
+    3. Provide complete code suggestions when possible
+    4. Prioritize: Security > Bugs > Performance > Style
     
     ## Technical Standards
     - Strict TypeScript: Zero tolerance for 'any' types
@@ -167,12 +102,12 @@ reviews:
     - Database: Verify Drizzle queries are optimized
     - Security: Check for XSS, CSRF, injection vulnerabilities
     
-    ## Review Focus (Priority Order)
-    1. 🔴 **Security Issues** - ALWAYS flag, include CVE if known
-    2. 🟠 **Logic Bugs** - Clear explanation with fix suggestion
-    3. 🟡 **Performance** - Database queries, re-renders, bundle size
-    4. 🔵 **Type Safety** - Proper TypeScript usage
-    5. ⚪ **Error Handling** - Graceful failures
+    ## Review Focus Areas
+    1. **Security Issues** - ALWAYS flag
+    2. **Logic Bugs** - Clear explanation with fix
+    3. **Performance** - Database queries, re-renders, bundle size
+    4. **Type Safety** - Proper TypeScript usage
+    5. **Error Handling** - Graceful failures
     
     ## Don't Flag
     - Minor style preferences already covered by Biome
@@ -182,10 +117,6 @@ reviews:
   # =============================================================================
   # AUTO-REVIEW SETTINGS
   # =============================================================================
-  # NOTE: CodeRabbit automatically skips bot users (including google-labs-jules).
-  # To enable reviews for bot PRs, we use a GitHub Action workflow that posts
-  # "@coderabbitai review" comment when a bot creates a PR.
-  # See: .github/workflows/agentic-orchestrator.yml (trigger-coderabbit job)
   auto_review:
     enabled: true
     auto_incremental_review: true
@@ -197,7 +128,7 @@ reviews:
       - "DO NOT MERGE"
       - "SKIP REVIEW"
     
-    # Do not ignore any usernames - bot reviews are triggered via @coderabbitai command
+    # Review PRs from all users including bots
     ignore_usernames: []
     
     # Only auto-review PRs targeting these branches

@@ -112,7 +112,7 @@ export function BookCanvas({
 
 	const tabs: { id: CanvasPane; label: string; icon: LucideIcon }[] = [
 		{ id: "outline", label: "Outline", icon: LayoutIcon },
-		{ id: "graph", label: "Relations", icon: NetworkIcon },
+		{ id: "graph", label: "Graph", icon: NetworkIcon },
 		{ id: "scenes", label: "Scenes", icon: LibraryIcon },
 		{ id: "draft", label: "Draft", icon: FileTextIcon },
 		{ id: "diagnostics", label: "Readiness", icon: ActivityIcon },
