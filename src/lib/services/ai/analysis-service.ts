@@ -25,7 +25,7 @@ const critiqueSchema = z.object({
 const consistencySchema = z.object({
 	issues: z.array(
 		z.object({
-			type: z.enum(["plot", "character", "setting", "timeline"]),
+			type: z.enum(["plot", "character", "setting"]),
 			description: z.string(),
 			location: z.string().describe("Where in the text this issue occurs."),
 			severity: z.enum(["high", "medium", "low"]),
@@ -98,7 +98,7 @@ export const analysisService = {
       Check for:
       1. Plot holes or contradictions.
       2. Character inconsistencies (names, behavior, physical traits).
-      3. Setting/Timeline errors.
+      3. Setting errors.
 
       Known Entities (Context):
       ${entityContext}

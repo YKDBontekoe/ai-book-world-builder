@@ -36,12 +36,6 @@ export const DEFAULT_PROJECT_FOLDERS: ProjectFolder[] = [
 			"Map out key places and how they relate to events or characters.",
 	},
 	{
-		id: "timelines",
-		name: "Timelines",
-		slug: "timelines",
-		description: "Sequence major beats, arcs, and branching outcomes.",
-	},
-	{
 		id: "drafts",
 		name: "Drafts",
 		slug: "drafts",

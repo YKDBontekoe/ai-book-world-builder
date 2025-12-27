@@ -14,7 +14,6 @@ export const QUERY_KEYS = {
 	diagnostics: (projectId: string) => ["diagnostics", projectId],
 	changelog: (projectId: string) => ["changelog", projectId],
 	scenes: (projectId: string) => ["scenes", projectId],
-	timeline: (projectId: string) => ["timeline", projectId],
 	versions: (chapterId: string) => ["versions", chapterId],
 	votes: (chatId: string) => ["votes", chatId],
 	suggestions: (chatId: string) => ["suggestions", chatId],
