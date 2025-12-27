@@ -142,7 +142,7 @@ export function PowerDock() {
             case "critique": return "Specific questions? (Optional)";
             case "lore": return "Describe the entity...";
             case "coach": return "Any specific focus?";
-            case "search": return "What are you looking for?";
+
             case "voice": return "Describe the voice you want to create..."; // Added for voice tool
             default: return "Enter instructions...";
         }

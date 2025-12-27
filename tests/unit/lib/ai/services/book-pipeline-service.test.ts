@@ -12,9 +12,9 @@ describe('BookPipelineService', () => {
         vi.clearAllMocks();
         // Default DB mocks to chainable
         (db.select as any).mockReturnThis();
-        (db.from as any).mockReturnThis();
-        (db.where as any).mockReturnThis();
-        (db.limit as any).mockReturnThis();
+        (db as any).from.mockReturnThis();
+        (db as any).where.mockReturnThis();
+        (db as any).limit.mockReturnThis();
     });
 
     describe('Quality Gate Logic', () => {
