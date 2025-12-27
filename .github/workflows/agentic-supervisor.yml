@@ -203,7 +203,7 @@ jobs:
           gh api "/repos/${{ github.repository }}/issues/comments/$COMMENT_ID/reactions" -f content="eyes" --repo "${{ github.repository }}" 2>/dev/null || true
 
       - name: Invoke Jules
-        uses: google-labs-code/jules-action@v1.0.0
+        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ needs.supervisor.outputs.branch }}
