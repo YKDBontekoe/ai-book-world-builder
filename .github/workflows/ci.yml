@@ -191,7 +191,7 @@ jobs:
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}
 
       - name: Invoke Jules to fix CI failures
-        uses: google-labs-code/jules-invoke@v1
+        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ github.head_ref }}

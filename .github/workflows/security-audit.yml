@@ -159,7 +159,7 @@ jobs:
           path: /tmp
 
       - name: Invoke Jules for complex fixes
-        uses: google-labs-code/jules-invoke@v1
+        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           prompt: |
