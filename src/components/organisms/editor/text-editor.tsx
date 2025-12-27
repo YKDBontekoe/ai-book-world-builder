@@ -1,43 +1,24 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { exampleSetup } from "prosemirror-example-setup";
 import { redo, undo } from "prosemirror-history";
-import { inputRules } from "prosemirror-inputrules";
-import { EditorState } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
 import {
 	forwardRef,
 	memo,
-	useCallback,
 	useEffect,
 	useImperativeHandle,
 	useRef,
 	useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { placeholder } from "prosemirror-placeholder";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { PreviewSuggestion } from "@/components/molecules/preview-suggestion";
 import { EditorBubbleMenu } from "@/components/organisms/writer/tools/editor-bubble-menu";
 import type { Entity, Suggestion } from "@/lib/db/schema";
-import {
-	documentSchema,
-	handleTransaction,
-	headingRule,
-} from "@/lib/editor/config";
-import {
-	buildDocumentFromContent,
-	createDecorations,
-} from "@/lib/editor/functions";
-import { mentionPlugin } from "@/lib/editor/plugins/mention";
-import {
-	projectWithPositions,
-	suggestionsPlugin,
-	suggestionsPluginKey,
-	type UISuggestion,
-} from "@/lib/editor/suggestions";
 import { cn } from "@/lib/utils";
+import { type MentionState, useMention } from "./hooks/use-mention";
+import { useProseMirror } from "./hooks/use-prosemirror";
+import { useSuggestions } from "./hooks/use-suggestions";
 
 export interface EditorHandle {
 	undo: () => void;
@@ -59,18 +40,6 @@ type EditorProps = {
 	mentionables?: Entity[];
 };
 
-interface MentionState {
-	active: boolean;
-	range: { from: number; to: number } | null;
-	query: string;
-	index: number;
-}
-
-interface ActiveSuggestion {
-	suggestion: UISuggestion;
-	coords: { left: number; top: number };
-}
-
 const PureEditor = forwardRef<EditorHandle, EditorProps>(
 	(
 		{
@@ -86,10 +55,57 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		ref,
 	) => {
 		const containerRef = useRef<HTMLDivElement>(null);
-		const editorRef = useRef<EditorView | null>(null);
-		const [, setMounted] = useState(false);
-		const [activeSuggestion, setActiveSuggestion] = useState<ActiveSuggestion | null>(null);
-		const [projectedSuggestions, setProjectedSuggestions] = useState<UISuggestion[]>([]);
+
+		// Hoist mention state to pass to useProseMirror init
+		const [tempMentionState, setTempMentionState] =
+			useState<MentionState | null>(null);
+		const [tempMentionCoords, setTempMentionCoords] = useState<{
+			left: number;
+			top: number;
+		} | null>(null);
+
+		const { editorRef, mounted } = useProseMirror({
+			containerRef,
+			content,
+			readOnly,
+			onSaveContent,
+			onSelectionChange,
+			typewriterMode,
+			status,
+			onMentionStateChange: (state, coords) => {
+				setTempMentionState(state);
+				setTempMentionCoords(coords);
+			},
+		});
+
+		// Sync local mention state with hook
+		const {
+			mentionState,
+			mentionCoords,
+			setMentionState,
+			setMentionCoords,
+			filteredEntities,
+			insertMention,
+		} = useMention(editorRef.current, mentionables);
+
+		// This effect synchronizes the state from the ProseMirror plugin (captured in useProseMirror)
+		// to the useMention hook which manages the UI
+		useEffect(() => {
+			setMentionState(tempMentionState);
+			setMentionCoords(tempMentionCoords);
+		}, [
+			tempMentionState,
+			tempMentionCoords,
+			setMentionState,
+			setMentionCoords,
+		]);
+
+		const {
+			activeSuggestion,
+			setActiveSuggestion,
+			projectedSuggestions,
+			handleApplySuggestion,
+		} = useSuggestions(editorRef.current, suggestions, content, containerRef);
 
 		useImperativeHandle(ref, () => ({
 			undo: () => {
@@ -126,208 +142,18 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			},
 		}));
 
-		// Mention State
-		const [mentionState, setMentionState] = useState<MentionState | null>(null);
-		const [mentionCoords, setMentionCoords] = useState<{
-			left: number;
-			top: number;
-		} | null>(null);
-
-		// Filter Entities
-		const filteredEntities = mentionables
-			.filter((e) =>
-				e.name.toLowerCase().includes(mentionState?.query.toLowerCase() || ""),
-			)
-			.slice(0, 5);
-
-		// Handle Mention Selection
-		const insertMention = useCallback(
-			(entity: Entity) => {
-				if (!editorRef.current || !mentionState || !mentionState.range) return;
-
-				const { range } = mentionState;
-				const tr = editorRef.current.state.tr.replaceWith(
-					range.from,
-					range.to,
-					editorRef.current.state.schema.text(`${entity.name} `),
-				);
-
-				editorRef.current.dispatch(tr);
-				editorRef.current.focus();
-				setMentionState(null);
-			},
-			[mentionState],
-		);
-
-		// Handle suggestion apply
-		const handleApplySuggestion = useCallback(() => {
-			if (!editorRef.current || !activeSuggestion) return;
-
-			const { suggestion } = activeSuggestion;
-			const { state, dispatch } = editorRef.current;
-
-			// Remove the decoration for this suggestion
-			const currentState = suggestionsPluginKey.getState(state);
-			const currentDecorations = currentState?.decorations;
-
-			if (currentDecorations) {
-				const newDecorations = currentDecorations.find().filter(
-					(decoration: { spec: { suggestionId?: string } }) =>
-						decoration.spec.suggestionId !== suggestion.id,
-				);
-
-				const decorationTransaction = state.tr;
-				decorationTransaction.setMeta(suggestionsPluginKey, {
-					decorations: newDecorations.length > 0
-						? currentDecorations.remove(
-							currentDecorations.find().filter(
-								(d: { spec: { suggestionId?: string } }) =>
-									d.spec.suggestionId === suggestion.id,
-							),
-						)
-						: currentDecorations,
-					selected: null,
-				});
-				dispatch(decorationTransaction);
-			}
-
-			// Apply the text replacement
-			const textTransaction = editorRef.current.state.tr.replaceWith(
-				suggestion.selectionStart,
-				suggestion.selectionEnd,
-				state.schema.text(suggestion.suggestedText),
-			);
-			textTransaction.setMeta("no-debounce", true);
-			dispatch(textTransaction);
-
-			setActiveSuggestion(null);
-		}, [activeSuggestion]);
-
-		// Handle click on suggestion highlights
-		const handleEditorClick = useCallback(
-			(event: MouseEvent) => {
-				const target = event.target as HTMLElement;
-				const suggestionId = target.closest("[data-suggestion-id]")?.getAttribute("data-suggestion-id");
-
-				if (suggestionId) {
-					const suggestion = projectedSuggestions.find((s) => s.id === suggestionId);
-					if (suggestion && editorRef.current) {
-						const coords = editorRef.current.coordsAtPos(suggestion.selectionStart);
-						setActiveSuggestion({
-							suggestion,
-							coords: { left: coords.left, top: coords.bottom + 8 },
-						});
-						event.preventDefault();
-						event.stopPropagation();
-					}
-				} else if (activeSuggestion) {
-					// Close suggestion if clicking outside
-					const suggestionPopup = (event.target as HTMLElement).closest("[data-suggestion-popup]");
-					if (!suggestionPopup) {
-						setActiveSuggestion(null);
-					}
-				}
-			},
-			[projectedSuggestions, activeSuggestion],
-		);
-
-		// Track the previous content to detect external changes
-		const prevContentRef = useRef<string | null>(null);
-		
-		// Initialize editor once
-		useEffect(() => {
-			if (!containerRef.current) return;
-
-			// If editor already exists, don't recreate it
-			if (editorRef.current) return;
-
-			const doc = buildDocumentFromContent(content || "");
-
-			const state = EditorState.create({
-				doc,
-				plugins: [
-					...exampleSetup({ schema: documentSchema, menuBar: false }),
-					inputRules({
-						rules: [
-							headingRule(1),
-							headingRule(2),
-							headingRule(3),
-							headingRule(4),
-							headingRule(5),
-							headingRule(6),
-						],
-					}),
-					placeholder("Start writing your scene... (Type '/' for commands)"),
-					suggestionsPlugin,
-					mentionPlugin((state) => {
-						setMentionState(state);
-						if (state?.active && state.range && editorRef.current) {
-							const coords = editorRef.current.coordsAtPos(state.range.from);
-							setMentionCoords({ left: coords.left, top: coords.bottom + 5 });
-						} else {
-							setMentionCoords(null);
-						}
-					}),
-				],
-			});
-
-			editorRef.current = new EditorView(containerRef.current, {
-				state,
-				editable: () => !readOnly,
-			});
-
-			prevContentRef.current = content;
-			setMounted(true);
-
-			return () => {
-				if (editorRef.current) {
-					editorRef.current.destroy();
-					editorRef.current = null;
-				}
-			};
-		}, []); // Empty dependency array to run once on mount
-
-		// Synchronize content when it changes externally
-		// biome-ignore lint/correctness/useExhaustiveDependencies: Editor sync logic
-		useEffect(() => {
-			// Skip if content hasn't changed or editor doesn't exist
-			if (prevContentRef.current === content || !editorRef.current) {
-				return;
-			}
-
-			// If user is editing (has focus), don't overwrite their work with external updates
-			// UNLESS we are in streaming mode, which is an additive process we want to show
-			if (editorRef.current.hasFocus() && status !== "streaming") {
-				return;
-			}
-			const newDocument = buildDocumentFromContent(content || "");
-			const transaction = editorRef.current.state.tr.replaceWith(
-				0,
-				editorRef.current.state.doc.content.size,
-				newDocument.content,
-			);
-
-			// Mark as no-save to prevent looping back
-			transaction.setMeta("no-save", true);
-
-			editorRef.current.dispatch(transaction);
-			prevContentRef.current = content;
-		}, [content, status]);
-
-		// Add click handler for suggestion highlights
-		useEffect(() => {
-			const container = containerRef.current;
-			if (container) {
-				container.addEventListener("click", handleEditorClick);
-				return () => container.removeEventListener("click", handleEditorClick);
-			}
-		}, [handleEditorClick]);
-
 		// Update Editor Props (Handlers) to close over latest state
+		// This is necessary because some handlers (keydown) need access to the latest react state (mentionState, activeSuggestion)
 		useEffect(() => {
 			if (editorRef.current) {
-				editorRef.current.setProps({
-					editable: () => !readOnly,
+				const view = editorRef.current;
+
+				// We access the current props of the view to merge or overwrite handlers
+				// Note: useProseMirror sets basic props, here we add interaction-specific ones
+				const currentProps = view.props;
+
+				view.setProps({
+					...currentProps,
 					handleKeyDown: (_view, event) => {
 						// Check if mention menu is active
 						if (mentionState?.active) {
@@ -350,86 +176,38 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 						}
 						return false;
 					},
-					dispatchTransaction: (transaction) => {
-						handleTransaction({
-							transaction,
-							editorRef,
-							onSaveContent,
-							onSelectionChange,
-						});
-
-						// Typewriter Logic
-						if (typewriterMode && transaction.selectionSet) {
-							setTimeout(() => {
-								const view = editorRef.current;
-								if (!view) return;
-								const coords = view.coordsAtPos(view.state.selection.from);
-								const scrollable =
-									containerRef.current?.closest(".overflow-y-auto");
-								if (scrollable) {
-									const containerRect = scrollable.getBoundingClientRect();
-									const relativeTop = coords.top - containerRect.top;
-									const target = containerRect.height / 2;
-									const diff = relativeTop - target;
-									scrollable.scrollBy({ top: diff, behavior: "smooth" });
-								}
-							}, 0);
-						}
-					},
 				});
 			}
 		}, [
-			readOnly,
-			typewriterMode,
-			onSaveContent,
-			onSelectionChange,
 			mentionState,
 			filteredEntities,
 			insertMention,
 			activeSuggestion,
+			setActiveSuggestion,
+			editorRef.current, // Dependency on ref.current is stable but good for completeness if ref changes
 		]);
-
-		useEffect(() => {
-			if (editorRef.current?.state.doc && content) {
-				const projected = projectWithPositions(
-					editorRef.current.state.doc,
-					suggestions,
-				).filter(
-					(suggestion) => suggestion.selectionStart && suggestion.selectionEnd,
-				);
-
-				setProjectedSuggestions(projected);
-
-				const decorations = createDecorations(
-					projected,
-					editorRef.current,
-				);
-
-				const transaction = editorRef.current.state.tr;
-				transaction.setMeta(suggestionsPluginKey, { decorations });
-				editorRef.current.dispatch(transaction);
-			}
-		}, [suggestions, content]);
 
 		return (
 			<div
 				className="prose dark:prose-invert relative h-full"
 				ref={containerRef}
 			>
-				{!readOnly && <EditorBubbleMenu editorView={editorRef.current} />}
+				{!readOnly && editorRef.current && (
+					<EditorBubbleMenu editorView={editorRef.current} />
+				)}
 
 				<AnimatePresence>
 					{mentionState?.active && mentionCoords && (
-							<motion.div
-								initial={{ opacity: 0, scale: 0.95 }}
-								animate={{ opacity: 1, scale: 1 }}
-								exit={{ opacity: 0, scale: 0.95 }}
-								className="fixed z-50 w-64"
-								style={{
-									left: mentionCoords.left,
-									top: mentionCoords.top,
-								}}
-							>
+						<motion.div
+							initial={{ opacity: 0, scale: 0.95 }}
+							animate={{ opacity: 1, scale: 1 }}
+							exit={{ opacity: 0, scale: 0.95 }}
+							className="fixed z-50 w-64"
+							style={{
+								left: mentionCoords.left,
+								top: mentionCoords.top,
+							}}
+						>
 							<GlassCard
 								variant="liquid"
 								className="p-2 flex flex-col gap-1 max-h-64 overflow-y-auto shadow-2xl border-primary/20"
@@ -471,32 +249,34 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 									))
 								)}
 							</GlassCard>
-							</motion.div>
-						)}
+						</motion.div>
+					)}
 				</AnimatePresence>
 
 				{/* Suggestion Popup - Rendered within React tree using portal */}
-				{activeSuggestion && typeof document !== "undefined" && createPortal(
-					<motion.div
-						data-suggestion-popup
-						initial={{ opacity: 0, y: -5 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: -5 }}
-						className="fixed z-[100]"
-						style={{
-							left: activeSuggestion.coords.left,
-							top: activeSuggestion.coords.top,
-						}}
-					>
-						<PreviewSuggestion
-							suggestion={activeSuggestion.suggestion}
-							onApply={handleApplySuggestion}
-							onReject={() => setActiveSuggestion(null)}
-							artifactKind="text"
-						/>
-					</motion.div>,
-					document.body,
-				)}
+				{activeSuggestion &&
+					typeof document !== "undefined" &&
+					createPortal(
+						<motion.div
+							data-suggestion-popup
+							initial={{ opacity: 0, y: -5 }}
+							animate={{ opacity: 1, y: 0 }}
+							exit={{ opacity: 0, y: -5 }}
+							className="fixed z-[100]"
+							style={{
+								left: activeSuggestion.coords.left,
+								top: activeSuggestion.coords.top,
+							}}
+						>
+							<PreviewSuggestion
+								suggestion={activeSuggestion.suggestion}
+								onApply={handleApplySuggestion}
+								onReject={() => setActiveSuggestion(null)}
+								artifactKind="text"
+							/>
+						</motion.div>,
+						document.body,
+					)}
 			</div>
 		);
 	},
