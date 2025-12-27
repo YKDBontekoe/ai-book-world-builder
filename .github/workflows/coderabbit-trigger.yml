@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor != 'renovate[bot]'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Trigger CodeRabbit Review
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
