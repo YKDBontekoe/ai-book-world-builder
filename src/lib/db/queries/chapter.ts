@@ -13,7 +13,7 @@ export async function getChaptersWithContent({
 	projectId,
 }: {
 	projectId: string;
-}) {
+}): Promise<Array<(typeof chapter.$inferSelect) & { content: string | null }>> {
 	try {
 		const chapters = await db
 			.select()
@@ -44,7 +44,7 @@ export async function getChaptersWithContent({
 
 		return chapters.map((ch) => ({
 			...ch,
-			content: versionMap.get(ch.id) || null,
+			content: versionMap.get(ch.id) ?? null,
 		}));
 	} catch (_error) {
 		throw new ChatSDKError(

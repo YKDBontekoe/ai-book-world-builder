@@ -31,5 +31,6 @@
 **Action:** Always memoize the return object of custom hooks using `useMemo` if the hook is meant to provide stable values to contexts or memoized children.
 
 ## 2025-02-23 - Batching Database Queries with DISTINCT ON
+
 **Learning:** The "N+1" query problem (fetching a parent list, then looping to fetch children one by one) is a common bottleneck. In Drizzle ORM + Postgres, this can be solved elegantly using `selectDistinctOn` combined with `inArray`.
 **Action:** Instead of querying children in a loop, collect parent IDs and execute a single query: `db.selectDistinctOn([child.parentId]).from(child).where(inArray(child.parentId, ids)).orderBy(child.parentId, desc(child.version))`. This pattern is especially useful for fetching the "latest" version of related entities efficiently.
