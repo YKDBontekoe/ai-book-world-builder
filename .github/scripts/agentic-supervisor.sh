@@ -91,6 +91,29 @@ elif [[ "$EVENT_NAME" == "issues" ]]; then
   AUTHOR=$(get_json_val ".issue.user.login")
   LABELS=$(get_json_val "[.issue.labels[].name] | join(\",\")")
   BRANCH="main"
+
+# Context: Workflow Run (from CI)
+elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
+  SHA=$(get_json_val ".workflow_run.head_sha")
+  if [[ -n "$GH_TOKEN" && -n "$SHA" ]]; then
+    # Find PR associated with this commit
+    PR_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls" \
+      --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, user: .user.login}" 2>/dev/null | head -1)
+
+    if [[ -n "$PR_DATA" ]]; then
+      IS_PR="true"
+      NUMBER=$(echo "$PR_DATA" | jq -r ".number")
+      BRANCH=$(echo "$PR_DATA" | jq -r ".headRefName")
+      AUTHOR=$(echo "$PR_DATA" | jq -r ".user")
+      log "Identified PR #$NUMBER from workflow_run SHA $SHA"
+    else
+      log "No PR found for workflow_run SHA $SHA"
+      IS_PR="false"
+    fi
+  else
+    log "Cannot process workflow_run without GH_TOKEN"
+    IS_PR="false"
+  fi
 fi
 
 log "Context Resolved: PR=$IS_PR, #$NUMBER, Branch=$BRANCH"
@@ -148,6 +171,39 @@ fi
 if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME" == "jules" ]]; then
   SHOULD_INVOKE_JULES="true"
   JULES_PROMPT="Assigned Issue #$NUMBER: '$ISSUE_TITLE'. Description: $ISSUE_BODY. Please implement a solution on a new branch."
+fi
+
+# Logic C: CodeRabbit Trigger (Bot PRs Only)
+# Explicitly trigger CodeRabbit for bots because the native GitHub App often ignores them.
+# We DO NOT trigger for humans here to avoid duplicate reviews (native app handles humans).
+SHOULD_TRIGGER_CODERABBIT="false"
+
+if [[ "$IS_PR" == "true" ]]; then
+  # Only trigger if author is a known bot
+  if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" || "$AUTHOR" == "renovate[bot]" ]]; then
+
+    # Trigger on:
+    # 1. CI Completed (workflow_run) ONLY
+    # We avoid triggering on 'pull_request' to prevent double-execution if CI is running,
+    # and to ensure we only review code that passes tests (saving tokens).
+    if [[ "$EVENT_NAME" == "workflow_run" ]]; then
+
+      RECENT_CR="0"
+      if [[ -n "$GH_TOKEN" ]]; then
+        # Count CR comments in last 15 min (rate limit: 5 per 15min)
+        RECENT_CR=$(gh api "/repos/${GITHUB_REPOSITORY}/issues/comments" \
+          --jq '[.[] | select(.user.login == "coderabbitai[bot]" and
+            ((.created_at | fromdateiso8601) > (now - 900)))] | length' 2>/dev/null || echo "0")
+      fi
+
+      if [[ "$RECENT_CR" -lt 5 ]]; then
+        SHOULD_TRIGGER_CODERABBIT="true"
+        log "Triggering CodeRabbit review for BOT user $AUTHOR"
+      else
+        log "Skipping CodeRabbit - rate limit reached"
+      fi
+    fi
+  fi
 fi
 
 # Logic D: Review Changes (Human or CodeRabbit)
@@ -211,5 +267,6 @@ set_output "author" "$AUTHOR"
 set_output "labels" "$LABELS"
 set_output "should_invoke_jules" "$SHOULD_INVOKE_JULES"
 set_output "jules_prompt" "$JULES_PROMPT"
+set_output "should_trigger_coderabbit" "$SHOULD_TRIGGER_CODERABBIT"
 
 log "Done."
