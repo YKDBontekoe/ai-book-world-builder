@@ -1,7 +1,9 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
+	integer,
 	jsonb,
 	pgTable,
+	real,
 	text,
 	timestamp,
 	uniqueIndex,
@@ -93,3 +95,40 @@ export const relationship = pgTable(
 );
 
 export type Relationship = InferSelectModel<typeof relationship>;
+
+export const voiceProfile = pgTable(
+	"VoiceProfile",
+	{
+		id: uuid("id").primaryKey().notNull().defaultRandom(),
+		createdAt: timestamp("createdAt").notNull().defaultNow(),
+		updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+		entityId: uuid("entityId")
+			.notNull()
+			.references(() => entity.id),
+
+		vocabularyLevel: varchar("vocabularyLevel", { length: 50 }).notNull(),
+		sentenceStyle: varchar("sentenceStyle", { length: 50 }).notNull(),
+		averageSentenceLength: real("averageSentenceLength").notNull(),
+
+		catchphrases: jsonb("catchphrases").$type<string[]>().default([]).notNull(),
+		speechMannerisms: jsonb("speechMannerisms").$type<string[]>().default([]).notNull(),
+		avoidedWords: jsonb("avoidedWords").$type<string[]>().default([]).notNull(),
+
+		defaultTone: varchar("defaultTone", { length: 100 }).notNull(),
+		emotionalRange: jsonb("emotionalRange")
+			.$type<{
+				positive: string[];
+				negative: string[];
+			}>()
+			.notNull(),
+
+		sampleDialogue: jsonb("sampleDialogue").$type<string[]>().default([]).notNull(),
+		dialect: text("dialect"),
+		confidence: real("confidence").notNull(),
+	},
+	(table) => ({
+		entityIdx: uniqueIndex("voice_profile_entity_idx").on(table.entityId),
+	}),
+);
+
+export type VoiceProfile = InferSelectModel<typeof voiceProfile>;

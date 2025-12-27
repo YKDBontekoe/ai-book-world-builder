@@ -15,8 +15,11 @@ import {
     Expand,
     BookOpenCheck,
     AlertTriangle,
-    Globe
+    Globe,
+    GraduationCap,
+    AudioLines,
 } from "lucide-react";
+import { VoiceProfileModal } from "@/components/organisms/writer/tools/voice-profile-modal";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { Separator } from "@/components/atoms/separator";
@@ -42,6 +45,8 @@ const TOOLS = [
     { id: 'critique', icon: BookOpenCheck, label: 'Critique', color: 'text-yellow-400' },
     { id: 'consistency', icon: AlertTriangle, label: 'Fix', color: 'text-orange-400' },
     { id: 'lore', icon: Globe, label: 'Lore', color: 'text-pink-400' },
+    { id: 'coach', icon: GraduationCap, label: 'Coach', color: 'text-indigo-400' },
+    { id: 'voice', icon: AudioLines, label: 'Voice Profile', color: 'text-pink-400' },
 ] as const;
 
 export function PowerDock() {
@@ -51,15 +56,16 @@ export function PowerDock() {
 		isChatOpen,
 		toggleSpotlight,
 		isSpotlightOpen,
+        mode, setMode, // mode and setMode now come from useWriterControl
 	} = useWriterControl();
 
-    const { project, structure, activeChapterId, activeSceneId } = useWriterContext();
+    const { project, structure, activeChapterId, activeSceneId, sceneContent } = useWriterContext();
 	const { viewMode } = useWriterLayoutContext();
 	const isZen = viewMode === "zen";
 
     // Dock States
-	const [mode, setMode] = useState<'default' | 'tools' | 'input'>('default');
-    const [selectedTool, setSelectedTool] = useState<ToolType | null>(null);
+    const [selectedTool, setSelectedTool] = useState<typeof TOOLS[number] | null>(null);
+    const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
     const [input, setInput] = useState("");
     const [isProcessing, setIsProcessing] = useState(false);
     const [result, setResult] = useState<string | null>(null);
@@ -73,10 +79,17 @@ export function PowerDock() {
         setIsProcessing(false);
     };
 
-    const handleToolSelect = (toolId: string) => {
-        setSelectedTool(toolId as ToolType);
-        setMode('input');
-        setResult(null);
+    const handleToolSelect = (tool: typeof TOOLS[number]) => {
+        if (tool.id === 'voice') {
+            setIsVoiceModalOpen(true);
+            return;
+        }
+
+        setSelectedTool(tool);
+        if (mode !== 'input') {
+            setMode('input');
+        }
+        setResult(null); // This was likely intended to be here
     };
 
     const handleExecute = async () => {
@@ -85,7 +98,7 @@ export function PowerDock() {
 		setResult(null);
 
 		try {
-			const strategy = toolStrategies[selectedTool];
+			const strategy = toolStrategies[selectedTool.id as ToolType]; // Use selectedTool.id
 			if (!strategy) {
 				toast.error("Tool not implemented yet.");
 				return;
@@ -96,6 +109,7 @@ export function PowerDock() {
 				structure: structure ?? [],
 				activeChapterId: activeChapterId || null,
 				activeSceneId: activeSceneId || null,
+				content: sceneContent,
 			};
 
 			const outcome = await strategy.execute(toolContext, input);
@@ -120,14 +134,16 @@ export function PowerDock() {
 		}
 	};
 
-    const getPlaceholder = (tool: ToolType) => {
-        switch (tool) {
+    const getPlaceholder = (tool: typeof TOOLS[number]) => { // Update type to typeof TOOLS[number]
+        switch (tool.id) { // Access tool.id
             case "write": return "Instructions (e.g., 'Make it tense')";
             case "rewrite": return "Instructions (e.g., 'Change to 1st person')";
             case "expand": return "Paste notes or outline...";
             case "critique": return "Specific questions? (Optional)";
             case "lore": return "Describe the entity...";
+            case "coach": return "Any specific focus?";
             case "search": return "What are you looking for?";
+            case "voice": return "Describe the voice you want to create..."; // Added for voice tool
             default: return "Enter instructions...";
         }
     };
@@ -288,7 +304,7 @@ export function PowerDock() {
                                             key={tool.id}
                                             label={tool.label}
                                             icon={tool.icon}
-                                            onClick={() => handleToolSelect(tool.id)}
+                                            onClick={() => handleToolSelect(tool)} // Pass the whole tool object
                                             className={tool.color}
                                         />
                                     ))}
@@ -307,7 +323,7 @@ export function PowerDock() {
                                 >
                                     <div className="flex items-center gap-2 mr-2 text-muted-foreground">
                                         <Sparkles className="w-4 h-4 text-primary" />
-                                        <span className="text-xs font-bold uppercase">{TOOLS.find(t => t.id === selectedTool)?.label}</span>
+                                        <span className="text-xs font-bold uppercase">{selectedTool.label}</span> {/* Access selectedTool.label */}
                                     </div>
 
                                     <div className="flex-1 relative group">
@@ -354,6 +370,10 @@ export function PowerDock() {
 
                     </div>
 				</GlassCard>
+                <VoiceProfileModal 
+                    open={isVoiceModalOpen} 
+                    onOpenChange={setIsVoiceModalOpen} 
+                />
 			</motion.div>
 		</TooltipProvider>
 	);
