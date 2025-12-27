@@ -12,6 +12,12 @@ const config: StorybookConfig = {
   framework: "@storybook/nextjs-vite",
   staticDirs: [
     "../public"
-  ]
+  ],
+  async viteFinal(config, { configType }) {
+    if (configType === 'PRODUCTION') {
+      config.base = '/ai-book-world-builder/';
+    }
+    return config;
+  },
 };
 export default config;

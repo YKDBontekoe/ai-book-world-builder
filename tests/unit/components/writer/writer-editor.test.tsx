@@ -38,6 +38,37 @@ vi.mock("@/components/organisms/writer/story-wizard", () => ({
 	),
 }));
 
+vi.mock("@/components/organisms/writer/dashboard/director-dashboard", () => ({
+	DirectorDashboard: () => (
+		<div data-testid="director-dashboard">Director Dashboard</div>
+	),
+}));
+
+vi.mock("@/components/organisms/writer/tools/contextual-prompts", () => ({
+	ContextualPrompts: () => (
+		<div data-testid="contextual-prompts">Contextual Prompts</div>
+	),
+}));
+
+vi.mock("@/components/organisms/writer/tools/writing-style-analyzer", () => ({
+	WritingStyleAnalyzer: () => (
+		<div data-testid="writing-style-analyzer">Analyzer</div>
+	),
+}));
+
+vi.mock("@/hooks/use-narrative-intelligence", () => ({
+	useNarrativeIntelligence: vi.fn(() => ({
+		wordCount: 100,
+		readingTimeMinutes: 1,
+		pacingScore: 50,
+		sentimentScore: 0,
+		complexityScore: 50,
+		characterMentions: {},
+		sentenceCount: 10,
+		pacingGraphData: [],
+	})),
+}));
+
 // Mock Server Actions
 vi.mock("@/app/actions/writer", () => ({
 	initializeProject: vi.fn(),
