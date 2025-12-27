@@ -4,15 +4,6 @@ on:
   push:
     branches:
       - main
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths:
-      - 'src/**'
-      - 'public/**'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
-      - 'next.config.*'
-      - 'tsconfig.json'
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -28,7 +19,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
       deployments: write
     steps:
       - name: Checkout code
@@ -41,7 +31,7 @@ jobs:
         run: pnpm add -g vercel@latest
 
       - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=${{ github.ref == 'refs/heads/main' && 'production' || 'preview' }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Cache Next.js build
         uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
@@ -53,10 +43,9 @@ jobs:
             nextjs-deploy-${{ runner.os }}-
 
       - name: Build Project Artifacts
-        run: vercel build ${{ github.ref == 'refs/heads/main' && '--prod' || '' }} --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Deploy to Vercel (Production)
-        if: github.ref == 'refs/heads/main'
         id: deploy-production
         run: |
           DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
@@ -64,48 +53,3 @@ jobs:
           echo "### 🚀 Production Deployment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
-
-      - name: Deploy to Vercel (Preview)
-        if: github.event_name == 'pull_request'
-        id: deploy-preview
-        run: |
-          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
-          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
-          echo "### 🔍 Preview Deployment" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**URL:** $DEPLOYMENT_URL" >> $GITHUB_STEP_SUMMARY
-
-      - name: Comment Preview URL on PR
-        if: github.event_name == 'pull_request'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          DEPLOYMENT_URL="${{ steps.deploy-preview.outputs.deployment_url }}"
-
-          # Check if a deployment comment already exists
-          COMMENT_ID=$(gh api repos/${{ github.repository }}/issues/${{ github.event.pull_request.number }}/comments \
-            --jq '.[] | select(.body | contains("<!-- vercel-deployment -->")) | .id' | head -1)
-
-          MESSAGE="<!-- vercel-deployment -->
-          ## 🚀 Vercel Preview Deployment
-
-          | Name | Status | URL |
-          |------|--------|-----|
-          | **Preview** | ✅ Ready | [$DEPLOYMENT_URL]($DEPLOYMENT_URL) |
-
-          > Built and deployed via GitHub Actions
-
-          ---
-          *Updated: $(date -u '+%Y-%m-%d %H:%M:%S UTC')*"
-
-          if [ -n "$COMMENT_ID" ]; then
-            # Update existing comment
-            echo "$MESSAGE" > message.txt
-            gh api repos/${{ github.repository }}/issues/comments/$COMMENT_ID \
-              --method PATCH \
-              -f body="$(cat message.txt)"
-          else
-            # Create new comment
-            echo "$MESSAGE" > message.txt
-            gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt
-          fi
