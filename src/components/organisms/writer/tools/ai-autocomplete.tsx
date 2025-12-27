@@ -1,13 +1,13 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { ArrowRight, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
-import { cn } from "@/lib/utils";
 import { api } from "@/lib/api-client";
+import { cn } from "@/lib/utils";
 
 interface AutocompleteSuggestion {
 	text: string;
@@ -62,26 +62,25 @@ export function AIAutocomplete({
 				const recentContext = sentences.slice(-3).join(" ");
 
 				// Call AI to generate continuation suggestions
-				const response = await api.post<APIResponse>(
-					"/api/ai-suggestions",
-					{
-						projectId: project.id,
-						messages: [
-							{
-								role: "user",
-								content: `Based on this writing context, suggest 2-3 natural continuations (just the next sentence or phrase, not explanations):\n\n${recentContext}`,
-							},
-						],
-						modelId: "openrouter/anthropic/claude-3.5-sonnet",
-					},
-				);
+				const response = await api.post<APIResponse>("/api/ai-suggestions", {
+					projectId: project.id,
+					messages: [
+						{
+							role: "user",
+							content: `Based on this writing context, suggest 2-3 natural continuations (just the next sentence or phrase, not explanations):\n\n${recentContext}`,
+						},
+					],
+					modelId: "openrouter/anthropic/claude-3.5-sonnet",
+				});
 
 				if (response && Array.isArray(response?.suggestions)) {
 					// Transform suggestions format
-					const transformed = response.suggestions.slice(0, 3).map((s: APIResponseSuggestion, i: number) => ({
-						text: s.prompt || s.label || "",
-						reason: s.reasoning || `Suggestion ${i + 1}`,
-					}));
+					const transformed = response.suggestions
+						.slice(0, 3)
+						.map((s: APIResponseSuggestion, i: number) => ({
+							text: s.prompt || s.label || "",
+							reason: s.reasoning || `Suggestion ${i + 1}`,
+						}));
 					setSuggestions(transformed);
 					setSelectedIndex(0);
 				}
@@ -107,7 +106,9 @@ export function AIAutocomplete({
 				setSelectedIndex((prev) => (prev + 1) % suggestions.length);
 			} else if (e.key === "ArrowUp") {
 				e.preventDefault();
-				setSelectedIndex((prev) => (prev - 1 + suggestions.length) % suggestions.length);
+				setSelectedIndex(
+					(prev) => (prev - 1 + suggestions.length) % suggestions.length,
+				);
 			} else if (e.key === "Enter" && !e.shiftKey) {
 				e.preventDefault();
 				if (suggestions[selectedIndex]) {
@@ -197,4 +198,3 @@ export function AIAutocomplete({
 		</AnimatePresence>
 	);
 }
-

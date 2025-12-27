@@ -3,6 +3,7 @@
 import {
 	Activity,
 	AlignVerticalJustifyCenter,
+	BookOpen,
 	History,
 	Loader2,
 	Maximize2,
@@ -11,10 +12,7 @@ import {
 	PanelLeftOpen,
 	Save,
 	TrendingUp,
-	BookOpen,
 } from "lucide-react";
-import { WritingGoals } from "@/components/organisms/writer/tools/writing-goals";
-import { SessionInsights } from "@/components/organisms/writer/tools/session-insights";
 import { Button } from "@/components/atoms/button";
 import {
 	Tooltip,
@@ -22,6 +20,8 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { SessionInsights } from "@/components/organisms/writer/tools/session-insights";
+import { WritingGoals } from "@/components/organisms/writer/tools/writing-goals";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";

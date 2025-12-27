@@ -15,8 +15,8 @@ import {
 	DropdownMenuTrigger,
 } from "@/components/atoms/dropdown-menu";
 import {
-	GenerationProgressDialog,
 	type GenerationPhase,
+	GenerationProgressDialog,
 	type SceneProgress,
 } from "@/components/organisms/writer/generation-progress-dialog";
 
@@ -73,11 +73,13 @@ export function ChapterActions({
 			}
 
 			// Initialize scene progress with titles (we'll get titles from the response)
-			const initialScenes: SceneProgress[] = planResult.sceneIds.map((id, index) => ({
-				id,
-				title: `Scene ${index + 1}`,
-				status: "pending" as const,
-			}));
+			const initialScenes: SceneProgress[] = planResult.sceneIds.map(
+				(id, index) => ({
+					id,
+					title: `Scene ${index + 1}`,
+					status: "pending" as const,
+				}),
+			);
 			setScenes(initialScenes);
 			setPhase("generating");
 
@@ -98,8 +100,8 @@ export function ChapterActions({
 				// Update scene status to generating
 				setScenes((prev) =>
 					prev.map((s, idx) =>
-						idx === i ? { ...s, status: "generating" as const } : s
-					)
+						idx === i ? { ...s, status: "generating" as const } : s,
+					),
 				);
 
 				try {
@@ -110,15 +112,15 @@ export function ChapterActions({
 						console.error(`Failed to generate scene ${i + 1}:`, result.error);
 						setScenes((prev) =>
 							prev.map((s, idx) =>
-								idx === i ? { ...s, status: "error" as const } : s
-							)
+								idx === i ? { ...s, status: "error" as const } : s,
+							),
 						);
 					} else {
 						// Update scene status to complete
 						setScenes((prev) =>
 							prev.map((s, idx) =>
-								idx === i ? { ...s, status: "complete" as const } : s
-							)
+								idx === i ? { ...s, status: "complete" as const } : s,
+							),
 						);
 					}
 
@@ -127,8 +129,8 @@ export function ChapterActions({
 					// Mark scene as error but continue with others
 					setScenes((prev) =>
 						prev.map((s, idx) =>
-							idx === i ? { ...s, status: "error" as const } : s
-						)
+							idx === i ? { ...s, status: "error" as const } : s,
+						),
 					);
 				}
 			}
@@ -137,7 +139,9 @@ export function ChapterActions({
 			toast.success("Chapter generation complete!");
 		} catch (e) {
 			setPhase("error");
-			setError(e instanceof Error ? e.message : "An error occurred during generation");
+			setError(
+				e instanceof Error ? e.message : "An error occurred during generation",
+			);
 		} finally {
 			setLoading(false);
 		}
@@ -194,4 +198,3 @@ export function ChapterActions({
 		</>
 	);
 }
-

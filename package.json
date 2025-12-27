@@ -3,6 +3,9 @@
 	"version": "3.1.0",
 	"description": "AI-powered tool for authors to build worlds and generate books",
 	"private": true,
+	"engines": {
+		"node": "^18.19.0 || >=20.6.0"
+	},
 	"scripts": {
 		"dev": "next dev --turbo",
 		"build": "next build",

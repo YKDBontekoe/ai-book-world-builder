@@ -74,15 +74,18 @@ export async function getChatModelById(
 		// Assuming mixed return types for now, we use a safer check.
 
 		// If it's already a valid ChatModel
-		if ('contextLength' in model && model.pricing?.input) {
+		if ("contextLength" in model && model.pricing?.input) {
 			return model;
 		}
 
 		// If it's raw data (defensive coding)
 		const rawModel = model as unknown as RawModelData;
-		const contextLength = model.contextLength ?? rawModel.context_length ?? 4096;
-		const pricingInput = model.pricing?.input ?? rawModel.pricing?.prompt ?? "0";
-		const pricingOutput = model.pricing?.output ?? rawModel.pricing?.completion ?? "0";
+		const contextLength =
+			model.contextLength ?? rawModel.context_length ?? 4096;
+		const pricingInput =
+			model.pricing?.input ?? rawModel.pricing?.prompt ?? "0";
+		const pricingOutput =
+			model.pricing?.output ?? rawModel.pricing?.completion ?? "0";
 
 		return {
 			id: model.id,

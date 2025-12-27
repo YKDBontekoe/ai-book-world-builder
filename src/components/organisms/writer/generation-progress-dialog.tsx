@@ -38,7 +38,8 @@ export function GenerationProgressDialog({
 }: GenerationProgressDialogProps) {
 	const totalScenes = scenes.length;
 	const completedScenes = scenes.filter((s) => s.status === "complete").length;
-	const progressPercent = totalScenes > 0 ? (completedScenes / totalScenes) * 100 : 0;
+	const progressPercent =
+		totalScenes > 0 ? (completedScenes / totalScenes) * 100 : 0;
 
 	const getPhaseTitle = () => {
 		switch (phase) {
@@ -84,10 +85,12 @@ export function GenerationProgressDialog({
 
 				<div className="space-y-4">
 					{/* Phase description */}
-					<p className={cn(
-						"text-sm",
-						phase === "error" ? "text-destructive" : "text-muted-foreground"
-					)}>
+					<p
+						className={cn(
+							"text-sm",
+							phase === "error" ? "text-destructive" : "text-muted-foreground",
+						)}
+					>
 						{getPhaseDescription()}
 					</p>
 
@@ -118,9 +121,12 @@ export function GenerationProgressDialog({
 										transition={{ duration: 0.2, delay: index * 0.05 }}
 										className={cn(
 											"flex items-center gap-3 p-2 rounded-lg transition-colors",
-											scene.status === "generating" && "bg-purple-50 dark:bg-purple-950/20",
-											scene.status === "complete" && "bg-green-50/50 dark:bg-green-950/10",
-											scene.status === "error" && "bg-red-50 dark:bg-red-950/20"
+											scene.status === "generating" &&
+												"bg-purple-50 dark:bg-purple-950/20",
+											scene.status === "complete" &&
+												"bg-green-50/50 dark:bg-green-950/10",
+											scene.status === "error" &&
+												"bg-red-50 dark:bg-red-950/20",
 										)}
 									>
 										{/* Status icon */}
@@ -146,13 +152,17 @@ export function GenerationProgressDialog({
 										</div>
 
 										{/* Scene title */}
-										<span className={cn(
-											"text-sm truncate flex-1",
-											scene.status === "pending" && "text-muted-foreground/60",
-											scene.status === "generating" && "text-purple-700 dark:text-purple-300 font-medium",
-											scene.status === "complete" && "text-foreground",
-											scene.status === "error" && "text-destructive"
-										)}>
+										<span
+											className={cn(
+												"text-sm truncate flex-1",
+												scene.status === "pending" &&
+													"text-muted-foreground/60",
+												scene.status === "generating" &&
+													"text-purple-700 dark:text-purple-300 font-medium",
+												scene.status === "complete" && "text-foreground",
+												scene.status === "error" && "text-destructive",
+											)}
+										>
 											{scene.title}
 										</span>
 
@@ -181,10 +191,7 @@ export function GenerationProgressDialog({
 					{/* Actions */}
 					<div className="flex justify-end gap-2 pt-2">
 						{phase === "error" && (
-							<Button
-								variant="outline"
-								onClick={() => onOpenChange(false)}
-							>
+							<Button variant="outline" onClick={() => onOpenChange(false)}>
 								Close
 							</Button>
 						)}

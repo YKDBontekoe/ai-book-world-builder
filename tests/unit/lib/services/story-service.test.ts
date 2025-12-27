@@ -11,7 +11,7 @@ const mocks = vi.hoisted(() => {
 
 	// Drizzle chainable mocks
 	// We use mockReturnValue(chain) instead of mockReturnThis() to ensure
-    // it always returns this chain object, regardless of call context.
+	// it always returns this chain object, regardless of call context.
 	chain.insert = vi.fn().mockReturnValue(chain);
 	chain.values = vi.fn().mockReturnValue(chain);
 	chain.returning = vi.fn().mockResolvedValue([{ id: "mock-id", sequence: 1 }]);
@@ -19,19 +19,17 @@ const mocks = vi.hoisted(() => {
 	chain.from = vi.fn().mockReturnValue(chain);
 	chain.where = vi.fn().mockReturnValue(chain);
 	chain.orderBy = vi.fn().mockReturnValue(chain);
-	chain.limit = vi
-		.fn()
-		.mockResolvedValue([
-			{
-				id: "mock-id",
-				sequence: 1,
-				content: "mock content",
-				chapterId: "mock-chapter-id",
-				projectId: "mock-project-id",
-				notes: "mock notes",
-				title: "mock title",
-			},
-		]);
+	chain.limit = vi.fn().mockResolvedValue([
+		{
+			id: "mock-id",
+			sequence: 1,
+			content: "mock content",
+			chapterId: "mock-chapter-id",
+			projectId: "mock-project-id",
+			notes: "mock notes",
+			title: "mock title",
+		},
+	]);
 	chain.update = vi.fn().mockReturnValue(chain);
 	chain.set = vi.fn().mockReturnValue(chain);
 

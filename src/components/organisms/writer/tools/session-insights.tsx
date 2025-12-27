@@ -1,15 +1,8 @@
 "use client";
 
-
-import {
-	BarChart3,
-	Clock,
-	Target,
-	TrendingUp,
-	X,
-	Zap,
-} from "lucide-react";
+import { BarChart3, Clock, Target, TrendingUp, X, Zap } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import {
@@ -22,7 +15,6 @@ import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 import { cn } from "@/lib/utils";
-import { useLocalStorage } from "usehooks-ts";
 
 interface SessionStats {
 	startTime: number;
@@ -59,12 +51,12 @@ export function SessionInsights() {
 		if (!sceneContent) return;
 
 		const currentWordCount = narrativeMetrics.wordCount;
-		
+
 		// Only update if the word count has actually changed from our last record
 		// This prevents infinite loops where state updates trigger the effect again
 		if (currentWordCount !== lastWordCountRef.current) {
 			lastWordCountRef.current = currentWordCount;
-			
+
 			setSessionStats((prev) => ({
 				...prev,
 				wordCountCurrent: currentWordCount,
@@ -97,11 +89,7 @@ export function SessionInsights() {
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
-				<Button
-					variant="ghost"
-					size="sm"
-					className="h-7 px-2 text-xs gap-1.5"
-				>
+				<Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1.5">
 					<BarChart3 className="h-3 w-3" />
 					Session
 				</Button>
@@ -202,10 +190,7 @@ function StatCard({
 					{label}
 				</span>
 			</div>
-			<div className={cn("text-lg font-bold font-mono", color)}>
-				{value}
-			</div>
+			<div className={cn("text-lg font-bold font-mono", color)}>{value}</div>
 		</div>
 	);
 }
-

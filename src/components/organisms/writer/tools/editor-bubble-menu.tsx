@@ -1,18 +1,18 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	Check,
-	Sparkles,
-	Wand2,
-	Zap,
 	FileText,
-	Palette,
-	TrendingUp,
 	MoreHorizontal,
+	Palette,
+	Sparkles,
+	TrendingUp,
+	Wand2,
 	X,
+	Zap,
 } from "lucide-react";
 import type { EditorView } from "prosemirror-view";
-import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
@@ -30,11 +30,31 @@ interface EditorBubbleMenuProps {
 }
 
 const REWRITE_STYLES = [
-	{ id: "descriptive", label: "More Descriptive", icon: FileText, color: "text-blue-400" },
+	{
+		id: "descriptive",
+		label: "More Descriptive",
+		icon: FileText,
+		color: "text-blue-400",
+	},
 	{ id: "concise", label: "More Concise", icon: Zap, color: "text-green-400" },
-	{ id: "dramatic", label: "More Dramatic", icon: TrendingUp, color: "text-purple-400" },
-	{ id: "formal", label: "More Formal", icon: FileText, color: "text-gray-400" },
-	{ id: "casual", label: "More Casual", icon: Sparkles, color: "text-orange-400" },
+	{
+		id: "dramatic",
+		label: "More Dramatic",
+		icon: TrendingUp,
+		color: "text-purple-400",
+	},
+	{
+		id: "formal",
+		label: "More Formal",
+		icon: FileText,
+		color: "text-gray-400",
+	},
+	{
+		id: "casual",
+		label: "More Casual",
+		icon: Sparkles,
+		color: "text-orange-400",
+	},
 	{ id: "poetic", label: "More Poetic", icon: Palette, color: "text-pink-400" },
 ] as const;
 
@@ -162,26 +182,28 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 				) : (
 					<div className="flex flex-col gap-2">
 						<div className="flex items-center gap-1 flex-wrap">
-							{REWRITE_STYLES.slice(0, showMore ? undefined : 3).map((style) => {
-								const Icon = style.icon;
-								return (
-									<Button
-										key={style.id}
-										variant="ghost"
-										size="sm"
-										className={cn(
-											"h-8 px-3 text-xs gap-1.5 transition-all",
-											"hover:scale-105 active:scale-95",
-											style.color,
-										)}
-										onClick={() => handleRewrite(style.id)}
-										disabled={loading}
-									>
-										<Icon className="h-3.5 w-3.5" />
-										{style.label}
-									</Button>
-								);
-							})}
+							{REWRITE_STYLES.slice(0, showMore ? undefined : 3).map(
+								(style) => {
+									const Icon = style.icon;
+									return (
+										<Button
+											key={style.id}
+											variant="ghost"
+											size="sm"
+											className={cn(
+												"h-8 px-3 text-xs gap-1.5 transition-all",
+												"hover:scale-105 active:scale-95",
+												style.color,
+											)}
+											onClick={() => handleRewrite(style.id)}
+											disabled={loading}
+										>
+											<Icon className="h-3.5 w-3.5" />
+											{style.label}
+										</Button>
+									);
+								},
+							)}
 							<Button
 								variant="ghost"
 								size="sm"

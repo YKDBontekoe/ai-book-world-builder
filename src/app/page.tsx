@@ -1,12 +1,3 @@
-import { auth } from "@/app/(auth)/auth";
-import {
-	FadeIn,
-	SlideIn,
-	StaggerItem,
-	StaggerList,
-} from "@/components/atoms/animated";
-import { Button } from "@/components/atoms/button";
-import { GlassCard } from "@/components/molecules/glass-card";
 import {
 	ArrowRight,
 	BookOpen,
@@ -21,6 +12,15 @@ import {
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { auth } from "@/app/(auth)/auth";
+import {
+	FadeIn,
+	SlideIn,
+	StaggerItem,
+	StaggerList,
+} from "@/components/atoms/animated";
+import { Button } from "@/components/atoms/button";
+import { GlassCard } from "@/components/molecules/glass-card";
 
 export default function Page() {
 	return (
