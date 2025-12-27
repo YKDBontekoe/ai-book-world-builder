@@ -1,7 +1,14 @@
 "use client";
 
-import { BookPlus, Loader2, Plus, Sparkles } from "lucide-react";
-import { useCallback, useState } from "react";
+import {
+	BookPlus,
+	ChevronsDown,
+	ChevronsUp,
+	Loader2,
+	Plus,
+	Sparkles,
+} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { createNewChapter, generateScene } from "@/app/actions/writer";
 import {
@@ -41,6 +48,24 @@ export function SceneNavigation({
 }: SceneNavigationProps) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
+	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
+
+	// Initialize expanded state when structure loads
+	useEffect(() => {
+		if (structure) {
+			setExpandedChapters(structure.map((c) => c.id));
+		}
+	}, [structure]);
+
+	const handleExpandAll = () => {
+		if (structure) {
+			setExpandedChapters(structure.map((c) => c.id));
+		}
+	};
+
+	const handleCollapseAll = () => {
+		setExpandedChapters([]);
+	};
 
 	const handleGenerateNextScene = useCallback(
 		async (chapterId: string, prevSceneId?: string) => {
@@ -128,88 +153,116 @@ export function SceneNavigation({
 	}
 
 	return (
-		<ScrollArea className="flex-1">
-			<Accordion
-				type="multiple"
-				defaultValue={structure.map((c) => c.id)}
-				className="w-full"
-			>
-				{structure.map((chapter) => (
-					<AccordionItem
-						key={chapter.id}
-						value={chapter.id}
-						className="border-b-0 px-2"
-					>
-						<ContextMenu>
-							<ContextMenuTrigger>
-								<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-									<span className="truncate text-left">{chapter.title}</span>
-								</AccordionTrigger>
-							</ContextMenuTrigger>
-							<ContextMenuContent>
-								<ContextMenuItem
-									onClick={() => handleGenerateNextScene(chapter.id)}
-									disabled={isGenerating}
-								>
-									<Sparkles className="mr-2 h-4 w-4" />
-									Generate New Scene
-								</ContextMenuItem>
-								<ContextMenuItem disabled>
-									<Plus className="mr-2 h-4 w-4" />
-									Add Scene Manually (Coming Soon)
-								</ContextMenuItem>
-							</ContextMenuContent>
-						</ContextMenu>
-
-						<AccordionContent className="pb-2 pt-0">
-							<div className="flex flex-col gap-1 pl-2 relative border-l ml-2">
-								{chapter.scenes.map((scene) => (
-									<SceneItem
-										key={scene.id}
-										scene={scene}
-										isActive={activeSceneId === scene.id}
-										chapterId={chapter.id}
-										onSelect={onSceneSelect}
-										onGenerateNext={handleGenerateNextScene}
-										isGenerating={isGenerating}
-									/>
-								))}
-								<Button
-									variant="ghost"
-									size="sm"
-									className="justify-start h-8 w-full px-2 text-xs text-muted-foreground italic"
-									onClick={() => handleGenerateNextScene(chapter.id)}
-									disabled={isGenerating}
-								>
-									{isGenerating ? (
-										<Loader2 className="mr-2 h-3 w-3 animate-spin" />
-									) : (
-										<Plus className="mr-2 h-3 w-3" />
-									)}
-									Add Scene
-								</Button>
-							</div>
-						</AccordionContent>
-					</AccordionItem>
-				))}
-				{/* Always allow adding a new chapter at the bottom */}
-				<div className="p-2">
+		<div className="flex flex-col h-full">
+			<div className="flex items-center justify-between px-4 py-2 border-b">
+				<span className="text-xs font-medium text-muted-foreground">
+					{structure.length} Chapters
+				</span>
+				<div className="flex gap-1">
 					<Button
 						variant="ghost"
-						size="sm"
-						className="w-full justify-start text-muted-foreground"
-						onClick={handleCreateChapter}
-						disabled={isCreatingChapter}
+						size="icon"
+						className="h-6 w-6"
+						onClick={handleExpandAll}
+						title="Expand All"
 					>
-						{isCreatingChapter ? (
-							<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-						) : (
-							<Plus className="mr-2 h-4 w-4" />
-						)}
-						Add Chapter
+						<ChevronsDown className="h-3 w-3" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-6 w-6"
+						onClick={handleCollapseAll}
+						title="Collapse All"
+					>
+						<ChevronsUp className="h-3 w-3" />
 					</Button>
 				</div>
-			</Accordion>
-		</ScrollArea>
+			</div>
+			<ScrollArea className="flex-1">
+				<Accordion
+					type="multiple"
+					value={expandedChapters}
+					onValueChange={setExpandedChapters}
+					className="w-full"
+				>
+					{structure.map((chapter) => (
+						<AccordionItem
+							key={chapter.id}
+							value={chapter.id}
+							className="border-b-0 px-2"
+						>
+							<ContextMenu>
+								<ContextMenuTrigger>
+									<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
+										<span className="truncate text-left">{chapter.title}</span>
+									</AccordionTrigger>
+								</ContextMenuTrigger>
+								<ContextMenuContent>
+									<ContextMenuItem
+										onClick={() => handleGenerateNextScene(chapter.id)}
+										disabled={isGenerating}
+									>
+										<Sparkles className="mr-2 h-4 w-4" />
+										Generate New Scene
+									</ContextMenuItem>
+									<ContextMenuItem disabled>
+										<Plus className="mr-2 h-4 w-4" />
+										Add Scene Manually (Coming Soon)
+									</ContextMenuItem>
+								</ContextMenuContent>
+							</ContextMenu>
+
+							<AccordionContent className="pb-2 pt-0">
+								<div className="flex flex-col gap-1 pl-2 relative border-l ml-2">
+									{chapter.scenes.map((scene) => (
+										<SceneItem
+											key={scene.id}
+											scene={scene}
+											isActive={activeSceneId === scene.id}
+											chapterId={chapter.id}
+											onSelect={onSceneSelect}
+											onGenerateNext={handleGenerateNextScene}
+											isGenerating={isGenerating}
+										/>
+									))}
+									<Button
+										variant="ghost"
+										size="sm"
+										className="justify-start h-8 w-full px-2 text-xs text-muted-foreground italic"
+										onClick={() => handleGenerateNextScene(chapter.id)}
+										disabled={isGenerating}
+									>
+										{isGenerating ? (
+											<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+										) : (
+											<Plus className="mr-2 h-3 w-3" />
+										)}
+										Add Scene
+									</Button>
+								</div>
+							</AccordionContent>
+						</AccordionItem>
+					))}
+					{/* Always allow adding a new chapter at the bottom */}
+					<div className="p-2">
+						<Button
+							variant="ghost"
+							size="sm"
+							className="w-full justify-start text-muted-foreground"
+							onClick={handleCreateChapter}
+							disabled={isCreatingChapter}
+						>
+							{isCreatingChapter ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : (
+								<Plus className="mr-2 h-4 w-4" />
+							)}
+							Add Chapter
+						</Button>
+					</div>
+				</Accordion>
+			</ScrollArea>
+		</div>
 	);
 }
