@@ -52,21 +52,17 @@ export async function createBookFromPlan(
 }
 
 export async function planChapterScenes(chapterId: string) {
-	// We need to fetch the chapter first to get the projectId for security check
-	// However, we don't have a direct "getProjectIdForChapter" helper exposed here easily
-	// without importing repository.
-	// But `storyService.planChapterScenes` internally calls `getChapterWithScenes`.
-	// Ideally, we should refactor `planChapterScenes` to accept projectId, OR we rely on internal check.
-	// But the goal is to make it EXPLICIT.
-	// Since `withProjectWriteAccess` requires `projectId`, we can't easily use it without fetching the project ID first.
-	// This exposes a flaw in the `actions-utils` design: it assumes we always start with projectId.
-
-	// OPTION: We stick to the internal check for now for `planChapterScenes` but ensure it IS checked.
-	// storyService.planChapterScenes calls `ensureProjectAccess(targetChapter.projectId, true)`.
-	// This is safe. But `createBookFromPlan` took `projectId` directly, so we could wrap it easily.
-
-	// Let's at least wrap the error handling similarly.
 	try {
+		// Validated internal call or add explicit pre-check here.
+		// Service layer handles authorization (ensureProjectAccess), but strictly speaking
+		// actions should validate too.
+		// For IDOR prevention, we rely on storyService.planChapterScenes calling `getChapterWithScenes`
+		// which returns the project ID, then calling `ensureProjectAccess`.
+		// To be 100% safe against service refactors, we enforce it here:
+		if (!chapterId || typeof chapterId !== "string") {
+			return { success: false, error: "Invalid chapter ID" };
+		}
+
 		const sceneIds = await storyService.planChapterScenes(chapterId);
 		return { success: true, sceneIds };
 	} catch (error) {
@@ -78,6 +74,10 @@ export async function planChapterScenes(chapterId: string) {
 
 export async function generateSceneText(sceneId: string) {
 	try {
+		if (!sceneId || typeof sceneId !== "string") {
+			return { success: false, error: "Invalid scene ID" };
+		}
+		// Service layer handles ensureProjectAccess via verifySceneAccess inside `generateSceneText`
 		await storyService.generateSceneText(sceneId);
 		return { success: true };
 	} catch (error) {

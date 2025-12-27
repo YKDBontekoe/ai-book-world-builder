@@ -9,7 +9,7 @@ import { verifyProjectAccessViaScenes, verifySceneAccess } from "./utils";
 export const writingService = {
 	/**
 	 * Batch writes all scenes in a chapter.
-	 * Iterates sequentially to maintain context.
+	 * Iterates with limited concurrency to maintain context while speeding up.
 	 */
 	async batchWriteChapter(
 		chapterId: string,
@@ -22,14 +22,16 @@ export const writingService = {
 
 		await verifyProjectAccessViaScenes(scenes);
 
-		let writtenCount = 0;
 		// Sort by sequence to ensure logical flow
 		const sortedScenes = scenes.sort((a, b) => a.sequence - b.sequence);
 
-		for (const sceneItem of sortedScenes) {
+		// Concurrency limit to prevent timeouts/rate-limits
+		const CONCURRENCY_LIMIT = 3;
+
+		const tasks = sortedScenes.map((sceneItem) => async () => {
 			// Skip if already has substantial content (safety check)
 			if (sceneItem.content && sceneItem.content.length > 500) {
-				continue;
+				return false;
 			}
 
 			try {
@@ -47,14 +49,23 @@ export const writingService = {
 						content: text,
 						status: "drafted",
 					});
-					writtenCount++;
+					return true;
 				}
 			} catch (e) {
 				console.error(`Failed to write scene ${sceneItem.id}`, e);
 			}
+			return false;
+		});
+
+		// Execute in chunks
+		let processed = 0;
+		for (let i = 0; i < tasks.length; i += CONCURRENCY_LIMIT) {
+			const chunk = tasks.slice(i, i + CONCURRENCY_LIMIT);
+			const chunkResults = await Promise.all(chunk.map((t) => t()));
+			processed += chunkResults.filter(Boolean).length;
 		}
 
-		return { success: true, writtenCount };
+		return { success: true, writtenCount: processed };
 	},
 
 	/**

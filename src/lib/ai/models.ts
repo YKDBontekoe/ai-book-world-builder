@@ -47,6 +47,17 @@ export async function getSelectedModelId(
 	return preferences[type] || DEFAULT_MODELS[type];
 }
 
+// Interface for raw API response to avoid 'any'
+interface RawModelData {
+	id: string;
+	name: string;
+	context_length?: number;
+	pricing?: {
+		prompt?: string;
+		completion?: string;
+	};
+}
+
 // Function to get model info - needs to be async now
 export async function getChatModelById(
 	id?: string,
@@ -54,17 +65,24 @@ export async function getChatModelById(
 	if (!id) return undefined;
 
 	const models = await getAvailableModels();
-	// The models returned by getAvailableModels are of type ChatModel, but here we are treating them as raw data
-	// to be safe, let's cast or check
-	const model = models.find((m: any) => m.id === id);
+	const model = models.find((m) => m.id === id);
 
 	if (model) {
-		// Check if model properties are snake_case (raw API) or camelCase (ChatModel)
-		const contextLength = model.contextLength ?? (model as any).context_length;
-		const pricingInput =
-			model.pricing?.input ?? (model.pricing as any)?.prompt ?? "0";
-		const pricingOutput =
-			model.pricing?.output ?? (model.pricing as any)?.completion ?? "0";
+		// Use type assertion only if we know the shape might differ from ChatModel (e.g. from raw API)
+		// But getAvailableModels returns ChatModel[].
+		// If getAvailableModels actually returns raw data typed as ChatModel improperly, we should fix that upstream.
+		// Assuming mixed return types for now, we use a safer check.
+
+		// If it's already a valid ChatModel
+		if ('contextLength' in model && model.pricing?.input) {
+			return model;
+		}
+
+		// If it's raw data (defensive coding)
+		const rawModel = model as unknown as RawModelData;
+		const contextLength = model.contextLength ?? rawModel.context_length ?? 4096;
+		const pricingInput = model.pricing?.input ?? rawModel.pricing?.prompt ?? "0";
+		const pricingOutput = model.pricing?.output ?? rawModel.pricing?.completion ?? "0";
 
 		return {
 			id: model.id,
