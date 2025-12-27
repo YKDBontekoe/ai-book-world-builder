@@ -6,20 +6,13 @@ import {
 	LayoutDashboard,
 	Lock,
 	PanelLeftClose,
-	Plus,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
 import { Button } from "@/components/atoms/button";
-import { ScrollArea } from "@/components/atoms/scroll-area";
-import { EmptyState } from "@/components/molecules/empty-state";
-import { SortableList } from "@/components/molecules/sortable-list";
-import { SidebarChapterItem } from "@/components/organisms/writer/sidebar/sidebar-chapter-item";
-import { SidebarSkeleton } from "@/components/organisms/writer/sidebar-skeleton";
+import { SceneNavigation } from "@/components/organisms/writer/left-sidebar/scene-navigation";
 import { StructureEditorDialog } from "@/components/organisms/writer/structure-editor-dialog";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
-import { useWriterSidebarActions } from "@/hooks/use-writer-sidebar-actions";
 
 export function WriterSidebar() {
 	const { toggleSidebar } = useWriterLayoutContext();
@@ -30,29 +23,9 @@ export function WriterSidebar() {
 		loading,
 		fetchStructure,
 		isReadOnly,
+		activeSceneId,
+		setActiveSceneId,
 	} = useWriterContext();
-
-	const {
-		handleAddChapter,
-		handleUpdateChapterTitle,
-		handleUpdateSceneTitle,
-		handleDeleteChapter,
-		handleDeleteScene,
-		handleAddScene,
-		handleReorderChapters,
-		handleReorderScenes,
-	} = useWriterSidebarActions();
-
-	const [expandedChapters, setExpandedChapters] = useState<
-		Record<string, boolean>
-	>({});
-
-	const toggleChapter = (chapterId: string) => {
-		setExpandedChapters((prev) => ({
-			...prev,
-			[chapterId]: !prev[chapterId],
-		}));
-	};
 
 	return (
 		<div
@@ -88,33 +61,22 @@ export function WriterSidebar() {
 				</div>
 				<div className="flex items-center gap-0.5">
 					{!isReadOnly && (
-						<>
-							<StructureEditorDialog
-								projectId={project.id}
-								currentStructure={structureText}
-								onSave={() => {
-									fetchStructure();
-								}}
-							>
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-7 w-7 text-muted-foreground/70 hover:text-foreground transition-colors"
-									aria-label="Edit Structure"
-								>
-									<FileText className="h-4 w-4" />
-								</Button>
-							</StructureEditorDialog>
+						<StructureEditorDialog
+							projectId={project.id}
+							currentStructure={structureText}
+							onSave={() => {
+								fetchStructure();
+							}}
+						>
 							<Button
 								variant="ghost"
 								size="icon"
 								className="h-7 w-7 text-muted-foreground/70 hover:text-foreground transition-colors"
-								onClick={handleAddChapter}
-								aria-label="Add Chapter"
+								aria-label="Edit Structure"
 							>
-								<Plus className="h-4 w-4" />
+								<FileText className="h-4 w-4" />
 							</Button>
-						</>
+						</StructureEditorDialog>
 					)}
 					{isReadOnly && (
 						<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60 flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/50">
@@ -124,62 +86,14 @@ export function WriterSidebar() {
 				</div>
 			</div>
 
-			<ScrollArea className="flex-1">
-				<div className="p-3 space-y-2">
-					{loading ? (
-						<SidebarSkeleton />
-					) : !structure || structure.length === 0 ? (
-						<div className="p-2">
-							<EmptyState
-								variant="glass"
-								title={isReadOnly ? "No chapters" : "Start Writing"}
-								description={
-									isReadOnly
-										? "This project has no content yet."
-										: "Create your first chapter to begin your story."
-								}
-								className="p-4 py-8"
-								action={
-									!isReadOnly ? (
-										<Button
-											variant="outline"
-											size="sm"
-											onClick={handleAddChapter}
-											className="w-full mt-4 bg-background/50 backdrop-blur-sm hover:bg-background/80"
-										>
-											<Plus className="mr-2 h-3 w-3" />
-											Add Chapter
-										</Button>
-									) : undefined
-								}
-							/>
-						</div>
-					) : (
-						<SortableList
-							items={structure}
-							onReorder={handleReorderChapters}
-							disabled={isReadOnly}
-						>
-							{(chapter) => (
-								<SidebarChapterItem
-									key={chapter.id}
-									chapter={chapter}
-									isExpanded={expandedChapters[chapter.id] ?? false}
-									isReadOnly={isReadOnly}
-									onToggle={() => toggleChapter(chapter.id)}
-									onUpdateTitle={handleUpdateChapterTitle}
-									onDelete={handleDeleteChapter}
-									onReorderScenes={handleReorderScenes}
-									onUpdateSceneTitle={handleUpdateSceneTitle}
-									onDeleteScene={handleDeleteScene}
-									onAddScene={handleAddScene}
-									onUpdateStructure={fetchStructure}
-								/>
-							)}
-						</SortableList>
-					)}
-				</div>
-			</ScrollArea>
+			<SceneNavigation
+				project={project}
+				activeSceneId={activeSceneId}
+				onSceneSelect={setActiveSceneId}
+				structure={structure}
+				loading={loading}
+				onStructureUpdate={fetchStructure}
+			/>
 		</div>
 	);
 }
