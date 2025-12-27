@@ -260,15 +260,20 @@ jobs:
           gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
             --jq '[.[] | select(.user.login == "coderabbitai[bot]")]' > /tmp/comments.json 2>/dev/null || echo "[]" > /tmp/comments.json
           
-          TOTAL_COMMENTS=$(jq length /tmp/comments.json)
+          # Debug: show structure of first comment
+          echo "📋 Sample comment structure:"
+          jq '.[0] | keys' /tmp/comments.json 2>/dev/null || echo "No comments found"
+          
+          TOTAL_COMMENTS=$(jq 'length' /tmp/comments.json 2>/dev/null || echo "0")
           echo "📝 Found $TOTAL_COMMENTS CodeRabbit comments"
           
-          # Count committable suggestions (have suggestion blocks with valid line info)
-          SUGGESTION_COUNT=$(jq '[.[] | select(.body | test("```suggestion") and .line != null)] | length' /tmp/comments.json)
+          # Count committable suggestions (have suggestion blocks AND have line info)
+          # Use 'has("line")' to check if field exists, and test body for suggestion
+          SUGGESTION_COUNT=$(jq '[.[] | select(has("line") and .line != null and (.body | test("```suggestion")))] | length' /tmp/comments.json 2>/dev/null || echo "0")
           echo "✅ Committable suggestions: $SUGGESTION_COUNT"
           
           # Count AI agent prompts
-          AI_PROMPT_COUNT=$(jq '[.[] | select(.body | test("Prompt for AI Agents"; "i"))] | length' /tmp/comments.json)
+          AI_PROMPT_COUNT=$(jq '[.[] | select(.body | test("Prompt for AI Agents"; "i"))] | length' /tmp/comments.json 2>/dev/null || echo "0")
           echo "🤖 AI Agent prompts: $AI_PROMPT_COUNT"
           
           echo "suggestion_count=$SUGGESTION_COUNT" >> $GITHUB_OUTPUT
