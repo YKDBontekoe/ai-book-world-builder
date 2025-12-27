@@ -39,6 +39,7 @@ const PurePreviewMessage = ({
 	regenerate: UseChatHelpers<ChatMessage>["regenerate"];
 	isReadonly: boolean;
 	requiresScrollPadding: boolean;
+	onAction?: (type: string, text: string) => void;
 }) => {
 	const [mode, setMode] = useState<"view" | "edit">("view");
 

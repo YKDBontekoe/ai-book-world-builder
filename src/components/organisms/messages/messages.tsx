@@ -2,7 +2,6 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import { ArrowDownIcon } from "lucide-react";
 import { useMemo } from "react";
 
-import { SuggestedActions } from "@/components/organisms/chat/suggested-actions";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { Greeting } from "@/components/organisms/messages/greeting";
 import {
@@ -70,16 +69,6 @@ function PureMessages({
 					{messages.length === 0 && (
 						<>
 							<Greeting selectedProject={selectedProject} />
-							<div className="mx-auto mt-4 w-full max-w-3xl px-4 md:px-8">
-								<SuggestedActions
-									chatId={chatId}
-									selectedProject={selectedProject}
-									selectedVisibilityType={selectedVisibilityType}
-									sendMessage={sendMessage}
-									messages={messages}
-									selectedModelId={_selectedModelId}
-								/>
-							</div>
 						</>
 					)}
 
