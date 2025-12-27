@@ -39,6 +39,7 @@ const meta = {
 	},
 	args: {
 		open: true,
+		onOpenChange: (open: boolean) => console.log("onOpenChange", open),
 	},
 } satisfies Meta<typeof SettingsDialog>;
 
@@ -48,12 +49,14 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
 	args: {
 		open: true,
+		onOpenChange: (open: boolean) => console.log("onOpenChange", open),
 	},
 };
 
 export const InteractionTest: Story = {
 	args: {
 		open: true,
+		onOpenChange: (open: boolean) => console.log("onOpenChange", open),
 	},
 	play: async ({ canvasElement }) => {
 		const canvas = within(canvasElement);
