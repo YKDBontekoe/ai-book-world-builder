@@ -32,11 +32,15 @@ export async function updateSceneAction({
 		throw new Error("Unauthorized");
 	}
 
-	const updatedScene = await sceneRepository.update(id, {
-		title,
-		status,
-		content,
-	});
+	const updatedScene = await sceneRepository.update(
+		id,
+		{
+			title,
+			status,
+			content,
+		},
+		projectId,
+	);
 
 	// Invalidate structure cache if title changes, as it's part of the structure view
 	if (title) {
