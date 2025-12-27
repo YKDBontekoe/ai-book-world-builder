@@ -13,75 +13,75 @@
 
 /* define design tokens (light mode) */
 :root {
-	--background: hsl(0 0% 100%);
-	--foreground: hsl(240 10% 3.9%);
-	--card: hsl(0 0% 100%);
-	--card-foreground: hsl(240 10% 3.9%);
-	--popover: hsl(0 0% 100%);
-	--popover-foreground: hsl(240 10% 3.9%);
-	--primary: hsl(262 80% 60%);
-	--primary-foreground: hsl(0 0% 98%);
-	--secondary: hsl(240 4.8% 95.9%);
-	--secondary-foreground: hsl(240 5.9% 10%);
-	--muted: hsl(240 4.8% 95.9%);
-	--muted-foreground: hsl(240 3.8% 46.1%);
-	--accent: hsl(240 4.8% 95.9%);
-	--accent-foreground: hsl(240 5.9% 10%);
-	--destructive: hsl(0 84.2% 60.2%);
-	--destructive-foreground: hsl(0 0% 98%);
-	--border: hsl(240 5.9% 90%);
-	--input: hsl(240 5.9% 90%);
-	--ring: hsl(240 10% 3.9%);
-	--chart-1: hsl(12 76% 61%);
-	--chart-2: hsl(173 58% 39%);
-	--chart-3: hsl(197 37% 24%);
-	--chart-4: hsl(43 74% 66%);
-	--chart-5: hsl(27 87% 67%);
+	--background: 0 0% 100%;
+	--foreground: 240 10% 3.9%;
+	--card: 0 0% 100%;
+	--card-foreground: 240 10% 3.9%;
+	--popover: 0 0% 100%;
+	--popover-foreground: 240 10% 3.9%;
+	--primary: 262 80% 60%;
+	--primary-foreground: 0 0% 98%;
+	--secondary: 240 4.8% 95.9%;
+	--secondary-foreground: 240 5.9% 10%;
+	--muted: 240 4.8% 95.9%;
+	--muted-foreground: 240 3.8% 46.1%;
+	--accent: 240 4.8% 95.9%;
+	--accent-foreground: 240 5.9% 10%;
+	--destructive: 0 84.2% 60.2%;
+	--destructive-foreground: 0 0% 98%;
+	--border: 240 5.9% 90%;
+	--input: 240 5.9% 90%;
+	--ring: 240 10% 3.9%;
+	--chart-1: 12 76% 61%;
+	--chart-2: 173 58% 39%;
+	--chart-3: 197 37% 24%;
+	--chart-4: 43 74% 66%;
+	--chart-5: 27 87% 67%;
 
 	/* MacOS Style Sidebar & Glass - Liquid 2025 */
-	--sidebar-background: hsl(0 0% 96% / 0.6); /* Increased transparency */
-	--sidebar-foreground: hsl(240 5.3% 26.1%);
-	--sidebar-primary: hsl(262 80% 60%); /* Creative Violet */
-	--sidebar-primary-foreground: hsl(0 0% 100%);
-	--sidebar-accent: hsl(240 4.8% 90%);
-	--sidebar-accent-foreground: hsl(240 5.9% 10%);
-	--sidebar-border: hsl(220 13% 91% / 0.5);
-	--sidebar-ring: hsl(217.2 91.2% 59.8%);
+	--sidebar-background: 0 0% 96% / 0.6; /* Increased transparency */
+	--sidebar-foreground: 240 5.3% 26.1%;
+	--sidebar-primary: 262 80% 60%; /* Creative Violet */
+	--sidebar-primary-foreground: 0 0% 100%;
+	--sidebar-accent: 240 4.8% 90%;
+	--sidebar-accent-foreground: 240 5.9% 10%;
+	--sidebar-border: 220 13% 91% / 0.5;
+	--sidebar-ring: 217.2 91.2% 59.8%;
 
 	/* border radius unit - Larger for MacOS feel */
 	--radius: 1rem;
-	--sidebar: hsl(0 0% 96% / 0.75);
+	--sidebar: 0 0% 96% / 0.75;
 
 	/* Status Colors */
-	--status-success: hsl(142 76% 36%);
-	--status-success-bg: hsl(142 76% 36% / 0.1);
-	--status-success-foreground: hsl(142 76% 30%);
-	--status-warning: hsl(38 92% 50%);
-	--status-warning-bg: hsl(38 92% 50% / 0.1);
-	--status-warning-foreground: hsl(38 92% 40%);
-	--status-error: hsl(0 84% 60%);
-	--status-error-bg: hsl(0 84% 60% / 0.1);
-	--status-error-foreground: hsl(0 84% 50%);
-	--status-info: hsl(217 91% 60%);
-	--status-info-bg: hsl(217 91% 60% / 0.1);
-	--status-info-foreground: hsl(217 91% 50%);
+	--status-success: 142 76% 36%;
+	--status-success-bg: 142 76% 36% / 0.1;
+	--status-success-foreground: 142 76% 30%;
+	--status-warning: 38 92% 50%;
+	--status-warning-bg: 38 92% 50% / 0.1;
+	--status-warning-foreground: 38 92% 40%;
+	--status-error: 0 84% 60%;
+	--status-error-bg: 0 84% 60% / 0.1;
+	--status-error-foreground: 0 84% 50%;
+	--status-info: 217 91% 60%;
+	--status-info-bg: 217 91% 60% / 0.1;
+	--status-info-foreground: 217 91% 50%;
 
 	/* Entity Type Colors */
-	--entity-character: hsl(270 50% 60%);
-	--entity-character-bg: hsl(270 50% 60% / 0.1);
-	--entity-location: hsl(160 60% 45%);
-	--entity-location-bg: hsl(160 60% 45% / 0.1);
-	--entity-item: hsl(38 92% 50%);
-	--entity-item-bg: hsl(38 92% 50% / 0.1);
-	--entity-event: hsl(217 91% 60%);
-	--entity-event-bg: hsl(217 91% 60% / 0.1);
-	--entity-organization: hsl(340 65% 55%);
-	--entity-organization-bg: hsl(340 65% 55% / 0.1);
+	--entity-character: 270 50% 60%;
+	--entity-character-bg: 270 50% 60% / 0.1;
+	--entity-location: 160 60% 45%;
+	--entity-location-bg: 160 60% 45% / 0.1;
+	--entity-item: 38 92% 50%;
+	--entity-item-bg: 38 92% 50% / 0.1;
+	--entity-event: 217 91% 60%;
+	--entity-event-bg: 217 91% 60% / 0.1;
+	--entity-organization: 340 65% 55%;
+	--entity-organization-bg: 340 65% 55% / 0.1;
 
 	/* Glass Effect - Liquid 2025 (Refined) */
-	--glass-bg: hsl(0 0% 100% / 0.75);
-	--glass-input-bg: hsl(0 0% 100% / 0.6);
-	--glass-border: hsl(0 0% 100% / 0.3);
+	--glass-bg: 0 0% 100% / 0.75;
+	--glass-input-bg: 0 0% 100% / 0.6;
+	--glass-border: 0 0% 100% / 0.3;
 	--glass-blur: 50px;
 	--glass-shadow: 0 12px 40px -8px rgba(31, 38, 135, 0.08);
 
@@ -91,46 +91,46 @@
 
 /* define design tokens (dark mode) */
 .dark {
-	--background: hsl(240 10% 3.9%);
-	--foreground: hsl(0 0% 98%);
-	--card: hsl(240 10% 5%);
-	--card-foreground: hsl(0 0% 98%);
-	--popover: hsl(240 10% 5%);
-	--popover-foreground: hsl(0 0% 98%);
-	--primary: hsl(262 80% 65%);
-	--primary-foreground: hsl(0 0% 100%);
-	--secondary: hsl(240 3.7% 15.9%);
-	--secondary-foreground: hsl(0 0% 98%);
-	--muted: hsl(240 3.7% 15.9%);
-	--muted-foreground: hsl(240 5% 64.9%);
-	--accent: hsl(240 3.7% 15.9%);
-	--accent-foreground: hsl(0 0% 98%);
-	--destructive: hsl(0 62.8% 30.6%);
-	--destructive-foreground: hsl(0 0% 98%);
-	--border: hsl(240 3.7% 15.9%);
-	--input: hsl(240 3.7% 15.9%);
-	--ring: hsl(240 4.9% 83.9%);
-	--chart-1: hsl(220 70% 50%);
-	--chart-2: hsl(160 60% 45%);
-	--chart-3: hsl(30 80% 55%);
-	--chart-4: hsl(280 65% 60%);
-	--chart-5: hsl(340 75% 55%);
+	--background: 240 10% 3.9%;
+	--foreground: 0 0% 98%;
+	--card: 240 10% 5%;
+	--card-foreground: 0 0% 98%;
+	--popover: 240 10% 5%;
+	--popover-foreground: 0 0% 98%;
+	--primary: 262 80% 65%;
+	--primary-foreground: 0 0% 100%;
+	--secondary: 240 3.7% 15.9%;
+	--secondary-foreground: 0 0% 98%;
+	--muted: 240 3.7% 15.9%;
+	--muted-foreground: 240 5% 64.9%;
+	--accent: 240 3.7% 15.9%;
+	--accent-foreground: 0 0% 98%;
+	--destructive: 0 62.8% 30.6%;
+	--destructive-foreground: 0 0% 98%;
+	--border: 240 3.7% 15.9%;
+	--input: 240 3.7% 15.9%;
+	--ring: 240 4.9% 83.9%;
+	--chart-1: 220 70% 50%;
+	--chart-2: 160 60% 45%;
+	--chart-3: 30 80% 55%;
+	--chart-4: 280 65% 60%;
+	--chart-5: 340 75% 55%;
 
 	/* MacOS Dark Sidebar */
-	--sidebar-background: hsl(240 5.9% 10% / 0.5);
-	--sidebar-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-primary: hsl(262 80% 65%);
-	--sidebar-primary-foreground: hsl(0 0% 100%);
-	--sidebar-accent: hsl(240 3.7% 20%);
-	--sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-	--sidebar-border: hsl(240 3.7% 15.9% / 0.2);
-	--sidebar-ring: hsl(217.2 91.2% 59.8%);
-	--sidebar: hsl(240 5.9% 10% / 0.65);
+	--sidebar-background: 240 5.9% 10% / 0.5;
+	--sidebar-foreground: 240 4.8% 95.9%;
+	--sidebar-primary: 262 80% 65%;
+	--sidebar-primary-foreground: 0 0% 100%;
+	--sidebar-accent: 240 3.7% 20%;
+	--sidebar-accent-foreground: 240 4.8% 95.9%;
+	--sidebar-border: 240 3.7% 15.9% / 0.2;
+	--sidebar-ring: 217.2 91.2% 59.8%;
+	--sidebar: 240 5.9% 10% / 0.65;
 
 	/* Glass Effect - Dark mode (Refined) */
-	--glass-bg: hsl(240 5.9% 10% / 0.7);
-	--glass-input-bg: hsl(240 5.9% 10% / 0.6);
-	--glass-border: hsl(0 0% 100% / 0.06);
+	--glass-bg: 240 5.9% 10% / 0.7;
+	--glass-input-bg: 240 5.9% 10% / 0.6;
+	--glass-border: 0 0% 100% / 0.06;
 	--glass-shadow: 0 12px 40px -10px rgba(0, 0, 0, 0.4);
 }
 
@@ -145,52 +145,52 @@
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-sm: calc(var(--radius) - 4px);
 
-	--color-background: var(--background);
-	--color-foreground: var(--foreground);
+	--color-background: hsl(var(--background));
+	--color-foreground: hsl(var(--foreground));
 
-	--color-card: var(--card);
-	--color-card-foreground: var(--card-foreground);
+	--color-card: hsl(var(--card));
+	--color-card-foreground: hsl(var(--card-foreground));
 
-	--color-popover: var(--popover);
-	--color-popover-foreground: var(--popover-foreground);
+	--color-popover: hsl(var(--popover));
+	--color-popover-foreground: hsl(var(--popover-foreground));
 
-	--color-primary: var(--primary);
-	--color-primary-foreground: var(--primary-foreground);
+	--color-primary: hsl(var(--primary));
+	--color-primary-foreground: hsl(var(--primary-foreground));
 
-	--color-secondary: var(--secondary);
-	--color-secondary-foreground: var(--secondary-foreground);
+	--color-secondary: hsl(var(--secondary));
+	--color-secondary-foreground: hsl(var(--secondary-foreground));
 
-	--color-muted: var(--muted);
-	--color-muted-foreground: var(--muted-foreground);
+	--color-muted: hsl(var(--muted));
+	--color-muted-foreground: hsl(var(--muted-foreground));
 
-	--color-accent: var(--accent);
-	--color-accent-foreground: var(--accent-foreground);
+	--color-accent: hsl(var(--accent));
+	--color-accent-foreground: hsl(var(--accent-foreground));
 
-	--color-destructive: var(--destructive);
-	--color-destructive-foreground: var(--destructive-foreground);
+	--color-destructive: hsl(var(--destructive));
+	--color-destructive-foreground: hsl(var(--destructive-foreground));
 
-	--color-border: var(--border);
-	--color-input: var(--input);
-	--color-ring: var(--ring);
+	--color-border: hsl(var(--border));
+	--color-input: hsl(var(--input));
+	--color-ring: hsl(var(--ring));
 
-	--color-chart-1: var(--chart-1);
-	--color-chart-2: var(--chart-2);
-	--color-chart-3: var(--chart-3);
-	--color-chart-4: var(--chart-4);
-	--color-chart-5: var(--chart-5);
+	--color-chart-1: hsl(var(--chart-1));
+	--color-chart-2: hsl(var(--chart-2));
+	--color-chart-3: hsl(var(--chart-3));
+	--color-chart-4: hsl(var(--chart-4));
+	--color-chart-5: hsl(var(--chart-5));
 
-	--color-sidebar: var(--sidebar-background);
-	--color-sidebar-foreground: var(--sidebar-foreground);
-	--color-sidebar-primary: var(--sidebar-primary);
-	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-	--color-sidebar-accent: var(--sidebar-accent);
-	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-	--color-sidebar-border: var(--sidebar-border);
-	--color-sidebar-ring: var(--sidebar-ring);
+	--color-sidebar: hsl(var(--sidebar-background));
+	--color-sidebar-foreground: hsl(var(--sidebar-foreground));
+	--color-sidebar-primary: hsl(var(--sidebar-primary));
+	--color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+	--color-sidebar-accent: hsl(var(--sidebar-accent));
+	--color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+	--color-sidebar-border: hsl(var(--sidebar-border));
+	--color-sidebar-ring: hsl(var(--sidebar-ring));
 
-	--color-glass: var(--glass-bg);
-	--color-glass-input: var(--glass-input-bg);
-	--color-glass-border: var(--glass-border);
+	--color-glass: hsl(var(--glass-bg));
+	--color-glass-input: hsl(var(--glass-input-bg));
+	--color-glass-border: hsl(var(--glass-border));
 
 	--ease-liquid: var(--ease-liquid);
 	--animate-accordion-down: accordion-down 0.2s ease-out;
