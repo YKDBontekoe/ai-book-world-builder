@@ -1,0 +1,304 @@
+name: Agentic Supervisor
+
+# Centralized orchestration for AI agents (Jules & CodeRabbit) & Workflow Automation
+# Replaces agentic-orchestrator.yml and jules-issues.yml
+#
+# Capabilities:
+# 1. SUPERVISOR: Detects context (Issue vs PR) and routes instructions to Jules
+# 2. TRIAGE: Auto-labels new issues
+# 3. ONBOARDING: Helpers for "good first issue"
+# 4. REVIEW: Manages CodeRabbit and Human review requests
+# 5. MAINTENANCE: Auto-updates branches
+
+on:
+  issues:
+    types: [opened, labeled]
+  issue_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+  pull_request:
+    types: [opened, synchronize, ready_for_review, labeled]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  # ==========================================================================
+  # 1. SUPERVISOR: Analyze Context & Determine Intent
+  # ==========================================================================
+  supervisor:
+    runs-on: ubuntu-latest
+    outputs:
+      # Context
+      is_pr: ${{ steps.analyze.outputs.is_pr }}
+      number: ${{ steps.analyze.outputs.number }}
+      branch: ${{ steps.analyze.outputs.branch }}
+      author: ${{ steps.analyze.outputs.author }}
+      labels: ${{ steps.analyze.outputs.labels }}
+
+      # Intent
+      should_invoke_jules: ${{ steps.analyze.outputs.should_invoke_jules }}
+      jules_prompt: ${{ steps.analyze.outputs.jules_prompt }}
+
+      # Bot Actions
+      should_trigger_coderabbit: ${{ steps.analyze.outputs.should_trigger_coderabbit }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 1
+
+      - name: Analyze Event Context
+        id: analyze
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          # Event Data
+          EVENT_NAME: ${{ github.event_name }}
+          EVENT_ACTION: ${{ github.event.action }}
+          # PR Data
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          # Issue Data
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_PR_LINK: ${{ github.event.issue.pull_request.url }}
+          # Comment Data
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+          # Review Data
+          REVIEW_STATE: ${{ github.event.review.state }}
+          REVIEW_BODY: ${{ github.event.review.body }}
+          REVIEW_AUTHOR: ${{ github.event.review.user.login }}
+          # Label Data
+          LABEL_NAME: ${{ github.event.label.name }}
+        run: |
+          # ---------------------------------------------------------
+          # IDENTIFY RESOURCE (PR vs ISSUE)
+          # ---------------------------------------------------------
+          IS_PR="false"
+          NUMBER=""
+          BRANCH=""
+          AUTHOR=""
+          LABELS=""
+
+          if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "pull_request_review" ]]; then
+            IS_PR="true"
+            NUMBER="$PR_NUMBER"
+            BRANCH="$PR_BRANCH"
+            AUTHOR="$PR_AUTHOR"
+            LABELS="$PR_LABELS"
+          elif [[ "$EVENT_NAME" == "issue_comment" ]]; then
+            NUMBER="$ISSUE_NUMBER"
+            AUTHOR="$ISSUE_AUTHOR"
+            LABELS="$ISSUE_LABELS"
+
+            if [[ -n "$ISSUE_PR_LINK" ]]; then
+              IS_PR="true"
+              # Fetch branch name safely
+              PR_DATA=$(gh pr view "$NUMBER" --json headRefName,author --repo "${{ github.repository }}")
+              BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
+            else
+              IS_PR="false"
+              BRANCH="main"
+            fi
+          elif [[ "$EVENT_NAME" == "issues" ]]; then
+            IS_PR="false"
+            NUMBER="$ISSUE_NUMBER"
+            AUTHOR="$ISSUE_AUTHOR"
+            BRANCH="main"
+            LABELS="$ISSUE_LABELS"
+          fi
+
+          echo "is_pr=$IS_PR" >> $GITHUB_OUTPUT
+          echo "number=$NUMBER" >> $GITHUB_OUTPUT
+          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+          # ---------------------------------------------------------
+          # DETERMINE ACTIONS
+          # ---------------------------------------------------------
+          SHOULD_INVOKE_JULES="false"
+          SHOULD_TRIGGER_CODERABBIT="false"
+          PROMPT=""
+
+          # A. @Jules Mention
+          if [[ "$EVENT_NAME" == "issue_comment" ]]; then
+            if [[ "$COMMENT_BODY" == *"@jules"* ]]; then
+              SHOULD_INVOKE_JULES="true"
+
+              if [[ "$IS_PR" == "true" ]]; then
+                PROMPT="User @$COMMENT_AUTHOR commented on PR #$NUMBER (Branch: $BRANCH): '$COMMENT_BODY'. Please address their request."
+              else
+                PROMPT="User @$COMMENT_AUTHOR commented on Issue #$NUMBER: '$COMMENT_BODY'. Please address their request. If code changes are needed, create a new branch."
+              fi
+            fi
+
+            # CodeRabbit Agent Prompt
+            if [[ "$COMMENT_AUTHOR" == "coderabbitai[bot]" && "$COMMENT_BODY" == *"Prompt for AI Agents"* ]]; then
+              SHOULD_INVOKE_JULES="true"
+              PROMPT="CodeRabbit Review on PR #$NUMBER. Instructions: $COMMENT_BODY. Please implement these changes on branch '$BRANCH'."
+            fi
+          fi
+
+          # B. New Issue Labeled 'jules'
+          if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME" == "jules" ]]; then
+            SHOULD_INVOKE_JULES="true"
+            PROMPT="Assigned Issue #$NUMBER: '$ISSUE_TITLE'. Description: $ISSUE_BODY. Please implement a solution on a new branch."
+          fi
+
+          # C. CodeRabbit Trigger (Bot PRs)
+          if [[ "$IS_PR" == "true" ]]; then
+             if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" ]]; then
+               if [[ "$EVENT_NAME" == "pull_request" && ("$EVENT_ACTION" == "opened" || "$EVENT_ACTION" == "synchronize") ]]; then
+                 SHOULD_TRIGGER_CODERABBIT="true"
+               fi
+             fi
+          fi
+
+          # D. Human Review Changes Requested
+          if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_STATE" == "changes_requested" ]]; then
+             if [[ "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
+                SHOULD_INVOKE_JULES="true"
+                PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback on branch '$BRANCH'."
+             fi
+          fi
+
+          echo "should_invoke_jules=$SHOULD_INVOKE_JULES" >> $GITHUB_OUTPUT
+          echo "should_trigger_coderabbit=$SHOULD_TRIGGER_CODERABBIT" >> $GITHUB_OUTPUT
+
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          echo "jules_prompt<<$EOF" >> $GITHUB_OUTPUT
+          echo "$PROMPT" >> $GITHUB_OUTPUT
+          echo "$EOF" >> $GITHUB_OUTPUT
+
+  # ==========================================================================
+  # 2. EXECUTE: Jules Agent
+  # ==========================================================================
+  jules-agent:
+    needs: supervisor
+    if: needs.supervisor.outputs.should_invoke_jules == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Acknowledge (Emoji)
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+        run: |
+          gh api "/repos/${{ github.repository }}/issues/comments/$COMMENT_ID/reactions" -f content="eyes" --repo "${{ github.repository }}" 2>/dev/null || true
+
+      - name: Invoke Jules
+        uses: google-labs-code/jules-action@v1.0.0
+        with:
+          jules_api_key: ${{ secrets.JULES_API_KEY }}
+          starting_branch: ${{ needs.supervisor.outputs.branch }}
+          prompt: ${{ needs.supervisor.outputs.jules_prompt }}
+
+  # ==========================================================================
+  # 3. EXECUTE: CodeRabbit Trigger
+  # ==========================================================================
+  coderabbit-trigger:
+    needs: supervisor
+    if: needs.supervisor.outputs.should_trigger_coderabbit == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Review
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.supervisor.outputs.number }}
+        run: gh pr comment "$PR_NUMBER" --body "@coderabbitai review" --repo "${{ github.repository }}"
+
+  # ==========================================================================
+  # 4. TRIAGE: Auto-Label Issues
+  # ==========================================================================
+  auto-triage:
+    if: github.event_name == 'issues' && github.event.action == 'opened'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label & Welcome
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          TITLE: ${{ github.event.issue.title }}
+          BODY: ${{ github.event.issue.body }}
+        run: |
+          LABELS=""
+          TEXT=$(echo "$TITLE $BODY" | tr '[:upper:]' '[:lower:]')
+
+          echo "$TEXT" | grep -qE "bug|error|crash" && LABELS="$LABELS,bug"
+          echo "$TEXT" | grep -qE "feature|add|request" && LABELS="$LABELS,enhancement"
+          echo "$TEXT" | grep -qE "doc|readme" && LABELS="$LABELS,documentation"
+          echo "$TEXT" | grep -qE "how to|question" && LABELS="$LABELS,question"
+
+          LABELS=$(echo "$LABELS" | sed 's/^,//')
+          if [[ -n "$LABELS" ]]; then
+            gh issue edit $ISSUE_NUMBER --add-label "$LABELS" --repo "${{ github.repository }}"
+            gh issue comment $ISSUE_NUMBER --body "👋 I've added labels: \`$LABELS\`. Add \`jules\` label to have me solve this!" --repo "${{ github.repository }}"
+          fi
+
+  # ==========================================================================
+  # 5. ONBOARDING: Good First Issue
+  # ==========================================================================
+  good-first-issue:
+    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'good first issue'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post Help
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          ISSUE: ${{ github.event.issue.number }}
+        run: |
+          gh issue comment $ISSUE --body "🌟 **Good First Issue!**
+          1. Fork & Clone
+          2. Branch: \`fix/issue-$ISSUE\`
+          3. Mention \`@jules\` if stuck!" --repo "${{ github.repository }}"
+
+  # ==========================================================================
+  # 6. REVIEW: Request Human Review
+  # ==========================================================================
+  request-human-review:
+    needs: supervisor
+    if: |
+      needs.supervisor.outputs.is_pr == 'true' &&
+      github.event.action == 'labeled' &&
+      (contains(github.event.label.name, 'security') || contains(github.event.label.name, 'breaking-change') || contains(github.event.label.name, 'size/xl'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Request Review
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR: ${{ needs.supervisor.outputs.number }}
+        run: gh pr comment "$PR" --body "**Human Review Required** due to labels." --repo "${{ github.repository }}"
+
+  # ==========================================================================
+  # 7. MAINTENANCE: Update Branch
+  # ==========================================================================
+  update-branch:
+    needs: supervisor
+    if: needs.supervisor.outputs.is_pr == 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update if Behind
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR: ${{ needs.supervisor.outputs.number }}
+        run: |
+          STATUS=$(gh pr view "$PR" --json mergeStateStatus --jq '.mergeStateStatus' --repo "${{ github.repository }}" 2>/dev/null || echo "")
+          if [[ "$STATUS" == "BEHIND" ]]; then
+            gh pr update-branch "$PR" --rebase --repo "${{ github.repository }}" || true
+          fi
