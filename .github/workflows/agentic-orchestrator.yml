@@ -223,7 +223,7 @@ jobs:
           prompt: "Review feedback from @${{ steps.feedback.outputs.reviewer }} on PR #${{ needs.context.outputs.pr_number }}: ${{ github.event.review.body }}. Comments: ${{ steps.feedback.outputs.comments }}. Address all feedback, run pnpm build && pnpm test:unit, commit as 'fix: address review feedback'."
 
   # ==========================================================================
-  # DYNAMIC: Handle CodeRabbit review - Apply suggestions & send prompts to Jules
+  # DYNAMIC: Handle CodeRabbit review - Extract AI prompts and send to Jules
   # ==========================================================================
   handle-coderabbit:
     needs: context
@@ -248,8 +248,8 @@ jobs:
           token: ${{ secrets.CUSTOM_PAT }}
           fetch-depth: 0
 
-      - name: Process CodeRabbit comments
-        id: process
+      - name: Extract CodeRabbit AI prompts
+        id: extract
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
@@ -260,115 +260,53 @@ jobs:
           gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
             --jq '[.[] | select(.user.login == "coderabbitai[bot]")]' > /tmp/comments.json 2>/dev/null || echo "[]" > /tmp/comments.json
           
-          # Debug: show structure of first comment
-          echo "📋 Sample comment structure:"
-          jq '.[0] | keys' /tmp/comments.json 2>/dev/null || echo "No comments found"
-          
           TOTAL_COMMENTS=$(jq 'length' /tmp/comments.json 2>/dev/null || echo "0")
-          echo "📝 Found $TOTAL_COMMENTS CodeRabbit comments"
+          echo "📝 Found $TOTAL_COMMENTS CodeRabbit inline comments"
           
-          # Count committable suggestions (have suggestion blocks AND have line info)
-          # Use 'has("line")' to check if field exists, and test body for suggestion
-          SUGGESTION_COUNT=$(jq '[.[] | select(has("line") and .line != null and (.body | test("```suggestion")))] | length' /tmp/comments.json 2>/dev/null || echo "0")
-          echo "✅ Committable suggestions: $SUGGESTION_COUNT"
-          
-          # Count AI agent prompts
+          # Count AI agent prompts (comments with "Prompt for AI Agents")
           AI_PROMPT_COUNT=$(jq '[.[] | select(.body | test("Prompt for AI Agents"; "i"))] | length' /tmp/comments.json 2>/dev/null || echo "0")
           echo "🤖 AI Agent prompts: $AI_PROMPT_COUNT"
           
-          echo "suggestion_count=$SUGGESTION_COUNT" >> $GITHUB_OUTPUT
           echo "ai_prompt_count=$AI_PROMPT_COUNT" >> $GITHUB_OUTPUT
           echo "total_count=$TOTAL_COMMENTS" >> $GITHUB_OUTPUT
-
-      - name: Apply committable suggestions
-        if: steps.process.outputs.suggestion_count > 0
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
-        run: |
-          echo "📝 Applying committable suggestions directly..."
           
-          # Extract suggestions with file path, line, and code
-          jq -r '.[] | select(.body | test("```suggestion")) | 
-            select(.path != null and .line != null) |
-            "\(.path)|\(.line)|\(.body)"' /tmp/comments.json > /tmp/suggestions.txt
-          
-          APPLIED=0
-          FAILED=0
-          
-          while IFS='|' read -r FILE LINE BODY; do
-            [[ -z "$FILE" ]] && continue
+          if [[ "$AI_PROMPT_COUNT" -gt 0 ]]; then
+            echo "🤖 Extracting AI Agent prompts..."
             
-            echo "  Processing: $FILE:$LINE"
+            # Extract the AI prompts - get the code block content after "Prompt for AI Agents"
+            # The format is: <details><summary>🤖 Prompt for AI Agents</summary>```...```</details>
+            AI_PROMPTS=$(jq -r '
+              .[] | 
+              select(.body | test("Prompt for AI Agents"; "i")) | 
+              "=== FILE: \(.path // "unknown") | LINE: \(.line // .original_line // "N/A") ===",
+              "INSTRUCTION:",
+              (
+                # Try to extract content between ``` markers after "Prompt for AI Agents"
+                .body | 
+                split("Prompt for AI Agents")[1] // "" |
+                split("```")[1] // "See the CodeRabbit comment for detailed instructions."
+              ),
+              ""
+            ' /tmp/comments.json 2>/dev/null | head -c 20000)
             
-            # Extract the suggestion code block
-            SUGGESTION=$(echo "$BODY" | grep -ozP '```suggestion\n\K[\s\S]*?(?=\n```)' | tr -d '\0' || echo "")
-            
-            if [[ -z "$SUGGESTION" ]]; then
-              echo "    ⚠️ Could not extract suggestion code"
-              ((FAILED++))
-              continue
-            fi
-            
-            # Check if file exists
-            if [[ ! -f "$FILE" ]]; then
-              echo "    ⚠️ File not found: $FILE"
-              ((FAILED++))
-              continue
-            fi
-            
-            # Apply the suggestion using sed (replace line)
-            # Note: This is a simple replacement - complex multi-line suggestions may need manual review
-            if sed -i "${LINE}s/.*/$SUGGESTION/" "$FILE" 2>/dev/null; then
-              echo "    ✅ Applied suggestion"
-              ((APPLIED++))
+            if [[ -n "$AI_PROMPTS" ]]; then
+              echo "has_prompts=true" >> $GITHUB_OUTPUT
+              echo "📄 Extracted prompts preview:"
+              echo "$AI_PROMPTS" | head -c 800
+              
+              # Output using heredoc
+              {
+                echo 'prompts<<EOPROMPTS'
+                echo "$AI_PROMPTS"
+                echo 'EOPROMPTS'
+              } >> $GITHUB_OUTPUT
             else
-              echo "    ❌ Failed to apply"
-              ((FAILED++))
+              echo "has_prompts=false" >> $GITHUB_OUTPUT
+              echo "⚠️ Could not extract prompt content"
             fi
-            
-          done < /tmp/suggestions.txt
-          
-          echo "📊 Applied: $APPLIED, Failed: $FAILED"
-          
-          # Commit if any changes were made
-          if [[ "$APPLIED" -gt 0 ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "fix: apply CodeRabbit suggestions" || echo "No changes to commit"
-            git push || echo "Nothing to push"
-            echo "✅ Committed applied suggestions"
-          fi
-
-      - name: Extract AI Agent prompts for Jules
-        id: extract
-        if: steps.process.outputs.ai_prompt_count > 0
-        run: |
-          echo "🤖 Extracting AI Agent prompts..."
-          
-          # Extract prompts from comments that have "Prompt for AI Agents" section
-          AI_PROMPTS=$(jq -r '
-            .[] | 
-            select(.body | test("Prompt for AI Agents"; "i")) | 
-            "=== TASK FOR FILE: \(.path) (around line \(.line // .original_line // "unknown")) ===\n" +
-            (.body | split("```") | .[1] // "Follow the instructions in the CodeRabbit comment for this file.")
-          ' /tmp/comments.json 2>/dev/null | head -c 15000 || echo "")
-          
-          if [[ -z "$AI_PROMPTS" ]]; then
-            echo "No AI prompts extracted"
-            echo "has_prompts=false" >> $GITHUB_OUTPUT
           else
-            echo "has_prompts=true" >> $GITHUB_OUTPUT
-            echo "📄 Extracted prompts preview:"
-            echo "$AI_PROMPTS" | head -c 500
-            
-            # Output using heredoc
-            {
-              echo 'prompts<<EOPROMPTS'
-              echo "$AI_PROMPTS"
-              echo 'EOPROMPTS'
-            } >> $GITHUB_OUTPUT
+            echo "has_prompts=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No AI Agent prompts found in CodeRabbit comments"
           fi
 
       - name: Invoke Jules for AI Agent prompts
@@ -378,21 +316,26 @@ jobs:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ needs.context.outputs.pr_branch }}
           prompt: |
-            CodeRabbit reviewed PR #${{ needs.context.outputs.pr_number }} and provided specific instructions for an AI agent.
+            CodeRabbit reviewed PR #${{ needs.context.outputs.pr_number }} and provided ${{ steps.extract.outputs.ai_prompt_count }} specific instructions for an AI agent to implement.
             
-            YOUR TASK: Follow the instructions below. Each task specifies a file and what needs to be done.
+            YOUR TASK: Follow each instruction below carefully. Each task specifies:
+            - FILE: The file path to modify
+            - LINE: Approximate line number where the change is needed
+            - INSTRUCTION: What you need to do
             
             For each task:
             1. Open the specified file
-            2. Go to the mentioned line number
-            3. Follow the instruction exactly
-            4. Make sure your changes are consistent with the rest of the codebase
+            2. Find the relevant code around the mentioned line
+            3. Follow the instruction exactly as described
+            4. Ensure your changes are consistent with the codebase patterns
             
-            After completing all tasks:
+            After completing ALL tasks:
             - Run: pnpm build && pnpm test:unit
+            - If tests fail, fix the issues
             - Commit with message: "fix: address CodeRabbit AI agent prompts"
             
-            === AI AGENT INSTRUCTIONS ===
+            === AI AGENT INSTRUCTIONS FROM CODERABBIT ===
+            
             ${{ steps.extract.outputs.prompts }}
 
   # ==========================================================================
