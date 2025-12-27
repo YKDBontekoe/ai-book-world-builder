@@ -105,10 +105,11 @@ jobs:
           echo "has_skip_ci=$HAS_SKIP_CI" >> $GITHUB_OUTPUT
           echo "size_label=$SIZE_LABEL" >> $GITHUB_OUTPUT
           
-          echo "📋 PR #$PR_NUM: labels=[$LABELS], author=$AUTHOR, bot=$IS_BOT"
+          echo "PR #$PR_NUM: labels=[$LABELS], author=$AUTHOR, bot=$IS_BOT"
 
   # ==========================================================================
   # TRIGGER CODERABBIT: Explicitly request review for bot PRs
+  # CodeRabbit skips bot users by default, so we trigger reviews manually
   # ==========================================================================
   trigger-coderabbit:
     needs: context
@@ -116,29 +117,53 @@ jobs:
     timeout-minutes: 5
     if: |
       needs.context.outputs.is_bot == 'true' &&
+      needs.context.outputs.pr_number != '' &&
       (github.event.action == 'opened' || github.event.action == 'synchronize' || github.event.action == 'ready_for_review')
     steps:
+      - name: Wait for PR to be ready
+        run: |
+          echo "Waiting 10 seconds for PR to be fully ready..."
+          sleep 10
+
       - name: Request CodeRabbit review
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
           AUTHOR: ${{ needs.context.outputs.author }}
         run: |
-          REVIEWED=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+          echo "Checking for existing CodeRabbit review on PR #$PR_NUMBER..."
+          
+          REVIEW_COMMENTS=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
             --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" 2>/dev/null || echo "0")
           
-          if [[ "$REVIEWED" -eq 0 ]] || [[ "${{ github.event.action }}" == "synchronize" ]]; then
-            echo "🐰 Requesting CodeRabbit review for bot PR from $AUTHOR"
+          ISSUE_COMMENTS=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+            --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" 2>/dev/null || echo "0")
+          
+          TOTAL_REVIEWED=$((REVIEW_COMMENTS + ISSUE_COMMENTS))
+          echo "Found $TOTAL_REVIEWED existing CodeRabbit comments"
+          
+          RECENT_REQUEST=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+            --jq "[.[] | select(.body | contains(\"@coderabbitai review\")) | select((.created_at | fromdateiso8601) > (now - 300))] | length" 2>/dev/null || echo "0")
+          
+          if [[ "$RECENT_REQUEST" -gt 0 ]]; then
+            echo "Review already requested recently, skipping to avoid spam"
+            exit 0
+          fi
+          
+          if [[ "$TOTAL_REVIEWED" -eq 0 ]] || [[ "${{ github.event.action }}" == "synchronize" ]]; then
+            echo "Requesting CodeRabbit review for bot PR from $AUTHOR"
             
             if [[ "$AUTHOR" == "google-labs-jules" ]]; then
-              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - AI-generated PR, verify implementation correctness" --repo "${{ github.repository }}"
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - AI-generated PR by Jules, please verify implementation correctness and type safety" --repo "${{ github.repository }}"
             elif [[ "$AUTHOR" == "renovate[bot]" || "$AUTHOR" == "dependabot[bot]" ]]; then
-              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - Dependency update, check for breaking changes" --repo "${{ github.repository }}"
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - Dependency update, please check for breaking changes" --repo "${{ github.repository }}"
             else
               gh pr comment "$PR_NUMBER" --body "@coderabbitai review" --repo "${{ github.repository }}"
             fi
+            
+            echo "Review request posted successfully"
           else
-            echo "⏭️ CodeRabbit already reviewed, skipping"
+            echo "CodeRabbit already reviewed this PR"
           fi
 
   # ==========================================================================
@@ -170,7 +195,7 @@ jobs:
             --jq '[.[] | select(.body | contains("Human Review Required"))] | length' 2>/dev/null || echo "0")
           
           if [[ "$EXISTING" -eq 0 ]]; then
-            gh pr comment "$PR_NUMBER" --body "🔍 **Human Review Required**: $REASON - @YKDBontekoe please review" --repo "${{ github.repository }}"
+            gh pr comment "$PR_NUMBER" --body "**Human Review Required**: $REASON - @YKDBontekoe please review" --repo "${{ github.repository }}"
           fi
 
   # ==========================================================================
@@ -213,7 +238,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
         run: |
-          gh pr comment "$PR_NUMBER" --body "👀 @${{ steps.feedback.outputs.reviewer }} - Jules is on it!" --repo "${{ github.repository }}"
+          gh pr comment "$PR_NUMBER" --body "@${{ steps.feedback.outputs.reviewer }} - Jules is on it!" --repo "${{ github.repository }}"
 
       - name: Invoke Jules
         uses: google-labs-code/jules-action@v1.0.0
@@ -254,34 +279,32 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
         run: |
-          echo "🔍 Processing CodeRabbit comments on PR #$PR_NUMBER..."
+          echo "Processing CodeRabbit comments on PR #$PR_NUMBER..."
           
           # Get all inline comments as JSON
           gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
             --jq '[.[] | select(.user.login == "coderabbitai[bot]")]' > /tmp/comments.json 2>/dev/null || echo "[]" > /tmp/comments.json
           
           TOTAL_COMMENTS=$(jq 'length' /tmp/comments.json 2>/dev/null || echo "0")
-          echo "📝 Found $TOTAL_COMMENTS CodeRabbit inline comments"
+          echo "Found $TOTAL_COMMENTS CodeRabbit inline comments"
           
           # Count AI agent prompts (comments with "Prompt for AI Agents")
           AI_PROMPT_COUNT=$(jq '[.[] | select(.body | test("Prompt for AI Agents"; "i"))] | length' /tmp/comments.json 2>/dev/null || echo "0")
-          echo "🤖 AI Agent prompts: $AI_PROMPT_COUNT"
+          echo "AI Agent prompts: $AI_PROMPT_COUNT"
           
           echo "ai_prompt_count=$AI_PROMPT_COUNT" >> $GITHUB_OUTPUT
           echo "total_count=$TOTAL_COMMENTS" >> $GITHUB_OUTPUT
           
           if [[ "$AI_PROMPT_COUNT" -gt 0 ]]; then
-            echo "🤖 Extracting AI Agent prompts..."
+            echo "Extracting AI Agent prompts..."
             
             # Extract the AI prompts - get the code block content after "Prompt for AI Agents"
-            # The format is: <details><summary>🤖 Prompt for AI Agents</summary>```...```</details>
             AI_PROMPTS=$(jq -r '
               .[] | 
               select(.body | test("Prompt for AI Agents"; "i")) | 
               "=== FILE: \(.path // "unknown") | LINE: \(.line // .original_line // "N/A") ===",
               "INSTRUCTION:",
               (
-                # Try to extract content between ``` markers after "Prompt for AI Agents"
                 .body | 
                 split("Prompt for AI Agents")[1] // "" |
                 split("```")[1] // "See the CodeRabbit comment for detailed instructions."
@@ -291,7 +314,7 @@ jobs:
             
             if [[ -n "$AI_PROMPTS" ]]; then
               echo "has_prompts=true" >> $GITHUB_OUTPUT
-              echo "📄 Extracted prompts preview:"
+              echo "Extracted prompts preview:"
               echo "$AI_PROMPTS" | head -c 800
               
               # Output using heredoc
@@ -302,11 +325,11 @@ jobs:
               } >> $GITHUB_OUTPUT
             else
               echo "has_prompts=false" >> $GITHUB_OUTPUT
-              echo "⚠️ Could not extract prompt content"
+              echo "Could not extract prompt content"
             fi
           else
             echo "has_prompts=false" >> $GITHUB_OUTPUT
-            echo "ℹ️ No AI Agent prompts found in CodeRabbit comments"
+            echo "No AI Agent prompts found in CodeRabbit comments"
           fi
 
       - name: Invoke Jules for AI Agent prompts

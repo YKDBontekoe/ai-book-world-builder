@@ -182,9 +182,12 @@ reviews:
   # =============================================================================
   # AUTO-REVIEW SETTINGS
   # =============================================================================
+  # NOTE: CodeRabbit automatically skips bot users (including google-labs-jules).
+  # To enable reviews for bot PRs, we use a GitHub Action workflow that posts
+  # "@coderabbitai review" comment when a bot creates a PR.
+  # See: .github/workflows/agentic-orchestrator.yml (trigger-coderabbit job)
   auto_review:
     enabled: true
-    ignore_bots: false  # Review ALL PRs including bots
     auto_incremental_review: true
     drafts: true  # Review draft PRs (important for Jules)
     
@@ -194,7 +197,7 @@ reviews:
       - "DO NOT MERGE"
       - "SKIP REVIEW"
     
-    # Review PRs from all users including bots
+    # Do not ignore any usernames - bot reviews are triggered via @coderabbitai command
     ignore_usernames: []
     
     # Only auto-review PRs targeting these branches
