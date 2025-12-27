@@ -45,7 +45,7 @@ FAILED_JOBS=""
 JOB_KEYS=$(echo "$RESULTS_JSON" | jq -r 'keys[]')
 
 for job in $JOB_KEYS; do
-  result=$(echo "$RESULTS_JSON" | jq -r ".$job.result")
+  result=$(echo "$RESULTS_JSON" | jq -r --arg k "$job" '.[$k].result')
   if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
     FAILED_JOBS="${FAILED_JOBS}\n- 🛑 $job ($result)"
   fi
