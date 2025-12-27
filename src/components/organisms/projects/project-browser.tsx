@@ -4,10 +4,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowDownAZ,
 	ArrowUpAZ,
+	ChevronDown,
 	Clock,
 	Copy,
 	Download,
 	Eye,
+	FileJson,
+	FileText,
 	LayoutGrid,
 	List,
 	Search,
@@ -20,6 +23,12 @@ import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import { deleteProjects, forkProject } from "@/app/actions/projects";
 import { Button } from "@/components/atoms/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/atoms/dropdown-menu";
 import { Input } from "@/components/atoms/input";
 import {
 	Select,
@@ -256,7 +265,7 @@ export function ProjectBrowser({
 		handleDelete(Array.from(selectedIds));
 	};
 
-	const handleBulkExport = () => {
+	const handleBulkExportJson = () => {
 		const projectsToExport = projects.filter((p) => selectedIds.has(p.id));
 		const dataStr = JSON.stringify(projectsToExport, null, 2);
 		const blob = new Blob([dataStr], { type: "application/json" });
@@ -267,7 +276,46 @@ export function ProjectBrowser({
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
-		toast.success(`Exported ${projectsToExport.length} projects`);
+		toast.success(`Exported ${projectsToExport.length} projects to JSON`);
+		setSelectedIds(new Set());
+	};
+
+	const handleBulkExportCsv = () => {
+		const projectsToExport = projects.filter((p) => selectedIds.has(p.id));
+
+		const headers = [
+			"ID",
+			"Name",
+			"Description",
+			"Created At",
+			"Visibility",
+			"Folder Count",
+		];
+
+		const csvContent = [
+			headers.join(","),
+			...projectsToExport.map((p) => {
+				const row = [
+					p.id,
+					`"${(p.name || "").replace(/"/g, '""')}"`,
+					`"${(p.description || "").replace(/"/g, '""')}"`,
+					new Date(p.createdAt).toISOString(),
+					p.visibility,
+					p.folders.length,
+				];
+				return row.join(",");
+			}),
+		].join("\n");
+
+		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `projects_export_${new Date().toISOString().split("T")[0]}.csv`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		toast.success(`Exported ${projectsToExport.length} projects to CSV`);
 		setSelectedIds(new Set());
 	};
 
@@ -477,16 +525,30 @@ export function ProjectBrowser({
 								</Button>
 							</div>
 							<div className="flex items-center gap-2 border-r border-border pr-2 mr-2">
-								<Button
-									size="sm"
-									variant="ghost"
-									className="gap-2 text-muted-foreground hover:text-foreground"
-									onClick={handleBulkExport}
-									disabled={isProcessing}
-								>
-									<Download className="h-4 w-4" />
-									Export
-								</Button>
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											size="sm"
+											variant="ghost"
+											className="gap-2 text-muted-foreground hover:text-foreground"
+											disabled={isProcessing}
+										>
+											<Download className="h-4 w-4" />
+											Export
+											<ChevronDown className="h-3 w-3 opacity-50" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="start">
+										<DropdownMenuItem onClick={handleBulkExportJson}>
+											<FileJson className="mr-2 h-4 w-4" />
+											<span>Export to JSON</span>
+										</DropdownMenuItem>
+										<DropdownMenuItem onClick={handleBulkExportCsv}>
+											<FileText className="mr-2 h-4 w-4" />
+											<span>Export to CSV</span>
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
 								<Button
 									size="sm"
 									variant="ghost"
