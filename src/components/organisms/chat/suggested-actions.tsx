@@ -68,13 +68,16 @@ function PureSuggestedActions({
 		queryFn: async () => {
 			if (!projectId && messages.length === 0) return null;
 
-			const response = await api.post<{ suggestions: Suggestion[] }>("/api/ai-suggestions", {
-				projectId: projectId,
-				messages: messages
-					.map((m: any) => ({ role: m.role, content: m.content }))
-					.slice(-5),
-				modelId: selectedModelId,
-			});
+			const response = await api.post<{ suggestions: Suggestion[] }>(
+				"/api/ai-suggestions",
+				{
+					projectId: projectId,
+					messages: messages
+						.map((m: any) => ({ role: m.role, content: m.content }))
+						.slice(-5),
+					modelId: selectedModelId,
+				},
+			);
 			return response.suggestions;
 		},
 		enabled: shouldFetch,

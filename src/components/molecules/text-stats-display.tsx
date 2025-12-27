@@ -8,8 +8,8 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
-import { getTextStats } from "@/lib/utils/text-stats";
 import { cn } from "@/lib/utils";
+import { getTextStats } from "@/lib/utils/text-stats";
 
 interface TextStatsDisplayProps {
 	content: string;
@@ -38,7 +38,7 @@ export function TextStatsDisplay({
 							<div className="flex items-center gap-1">
 								<FileText className="h-3 w-3" />
 								<span>{stats.words.toLocaleString()}</span>
-			</div>
+							</div>
 						</TooltipTrigger>
 						<TooltipContent>
 							<p>Word count</p>

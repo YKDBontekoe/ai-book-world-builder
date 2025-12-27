@@ -1,7 +1,7 @@
 import { DefaultChatTransport } from "ai";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
-import { ChatSDKError, type ErrorCode } from "@/lib/errors";
 import type { ChatModelId } from "@/lib/ai/models";
+import { ChatSDKError, type ErrorCode } from "@/lib/errors";
 
 async function fetchWithErrorHandlers(
 	input: RequestInfo | URL,

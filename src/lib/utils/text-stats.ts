@@ -111,8 +111,9 @@ export function getTextStats(text: string): TextStats {
 		.filter((p) => p.trim().length > 0).length;
 
 	// Count sentences (rough estimate)
-	const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0)
-		.length;
+	const sentences = text
+		.split(/[.!?]+/)
+		.filter((s) => s.trim().length > 0).length;
 
 	return {
 		words,

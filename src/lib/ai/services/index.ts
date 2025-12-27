@@ -4,19 +4,7 @@
  * Central export point for all AI services.
  */
 
-// Core types and utilities
-export * from "./types";
 export { aiClient } from "./ai-client";
-export { BaseAIService } from "./base-ai-service";
-
-// Services
-export { GenerationService, generationService } from "./generation-service";
-export type { GenerationOptions, SceneCardData } from "./generation-service";
-
-export { PlanningService, planningService } from "./planning-service";
-
-export { ConsistencyService, consistencyService } from "./consistency-service";
-
 export {
 	AnalysisService,
 	analysisService,
@@ -25,3 +13,11 @@ export {
 	type EntityKind,
 	type InferredRelationship,
 } from "./analysis-service";
+export { BaseAIService } from "./base-ai-service";
+export { ConsistencyService, consistencyService } from "./consistency-service";
+export type { GenerationOptions, SceneCardData } from "./generation-service";
+// Services
+export { GenerationService, generationService } from "./generation-service";
+export { PlanningService, planningService } from "./planning-service";
+// Core types and utilities
+export * from "./types";

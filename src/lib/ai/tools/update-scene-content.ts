@@ -1,9 +1,9 @@
 import "server-only";
 
+import { tool } from "ai";
 import { z } from "zod";
 import { updateSceneContent as dbUpdateSceneContent } from "@/app/actions/writer";
 import { verifySceneAccess } from "@/lib/services/ai/utils";
-import { tool } from "ai";
 
 const inputSchema = z.object({
 	sceneId: z

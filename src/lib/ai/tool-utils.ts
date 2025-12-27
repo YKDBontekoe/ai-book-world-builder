@@ -38,8 +38,7 @@ export function createProtectedTool<T extends z.ZodType>({
 				}
 
 				// Resolve projectId: arguments take precedence over global context
-				// @ts-ignore - Check if projectId exists in args
-				const projectId = args.projectId || globalProjectId;
+				const projectId = (args as { projectId?: string }).projectId || globalProjectId;
 
 				if (requireProjectId && !projectId) {
 					return { error: "Project ID is required." };

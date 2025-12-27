@@ -12,10 +12,7 @@ import "server-only";
 import { z } from "zod";
 import { retrieveContext } from "@/lib/ai/rag";
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
-import {
-	getChunksForSourceMaterial,
-	getSampledChunks,
-} from "@/lib/db/queries";
+import { getChunksForSourceMaterial, getSampledChunks } from "@/lib/db/queries";
 import type { SourceMaterialChunk } from "@/lib/db/schema";
 
 // =============================================================================
@@ -74,7 +71,9 @@ const entityDetailsSchema = z.object({
 	attributes: z
 		.array(
 			z.object({
-				name: z.string().describe("Attribute name (e.g., 'Personality', 'Role')"),
+				name: z
+					.string()
+					.describe("Attribute name (e.g., 'Personality', 'Role')"),
 				value: z.string().describe("Attribute value"),
 			}),
 		)

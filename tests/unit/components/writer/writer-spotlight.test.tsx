@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+	cleanup,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted to ensure mocks are available before import
@@ -72,7 +78,9 @@ describe("WriterSpotlight", () => {
 
 		render(<WriterSpotlight />);
 
-		expect(screen.getByPlaceholderText("What do you need?")).toBeInTheDocument();
+		expect(
+			screen.getByPlaceholderText("What do you need?"),
+		).toBeInTheDocument();
 		expect(screen.getByText("Neural Command")).toBeInTheDocument();
 	});
 
@@ -95,9 +103,7 @@ describe("WriterSpotlight", () => {
 		});
 
 		mocks.useProjectEntities.mockReturnValue({
-			data: [
-				{ id: "e1", name: "Gandalf", kind: "Character", attributes: [] }
-			],
+			data: [{ id: "e1", name: "Gandalf", kind: "Character", attributes: [] }],
 		});
 
 		render(<WriterSpotlight />);

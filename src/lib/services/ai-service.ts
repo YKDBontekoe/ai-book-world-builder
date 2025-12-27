@@ -31,7 +31,11 @@ export class AIService {
 		return analysisService.analyzeConsistency(chapterId);
 	}
 
-	async generateLore(projectId: string, prompt: string, category: string = "lore") {
+	async generateLore(
+		projectId: string,
+		prompt: string,
+		category: string = "lore",
+	) {
 		return loreService.generateLore(projectId, prompt, category);
 	}
 

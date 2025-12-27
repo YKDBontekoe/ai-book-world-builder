@@ -1,10 +1,10 @@
 // Export non-conflicting components from controls
 export {
-	SidebarTrigger,
-	SidebarRail,
 	SidebarMenu,
-	SidebarMenuItem,
 	SidebarMenuButton,
+	SidebarMenuItem,
+	SidebarRail,
+	SidebarTrigger,
 } from "@/components/atoms/sidebar/controls";
 
 // Export layout components (Sidebar, SidebarContent, etc.)

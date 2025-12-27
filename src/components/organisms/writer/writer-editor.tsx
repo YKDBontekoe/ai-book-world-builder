@@ -20,8 +20,8 @@ import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
-import { useProjectEntities } from "@/hooks/use-project-entities";
 import { useAppearance } from "@/components/providers/appearance-provider";
+import { useProjectEntities } from "@/hooks/use-project-entities";
 
 interface HistorySnapshot {
 	content: string;
@@ -126,7 +126,12 @@ export function WriterEditor() {
 					<div
 						className="writer-instance max-w-3xl mx-auto min-h-full py-8 px-8 pb-32 transition-all duration-300"
 						style={{
-							fontFamily: editorFont === 'mono' ? 'var(--font-mono)' : editorFont === 'serif' ? 'serif' : 'var(--font-sans)',
+							fontFamily:
+								editorFont === "mono"
+									? "var(--font-mono)"
+									: editorFont === "serif"
+										? "serif"
+										: "var(--font-sans)",
 							fontSize: `${editorFontSize}px`,
 							lineHeight: editorLineHeight,
 						}}

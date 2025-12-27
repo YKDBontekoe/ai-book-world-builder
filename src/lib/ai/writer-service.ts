@@ -7,11 +7,10 @@
  * @deprecated Use `import { generationService } from "@/lib/ai/services"` instead
  */
 
+// Re-export with old name for full backward compatibility
 export {
+	type GenerationOptions,
 	GenerationService,
 	generationService,
-	type GenerationOptions,
+	generationService as writerService,
 } from "@/lib/ai/services/generation-service";
-
-// Re-export with old name for full backward compatibility
-export { generationService as writerService } from "@/lib/ai/services/generation-service";

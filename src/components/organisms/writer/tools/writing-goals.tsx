@@ -3,21 +3,21 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Target, X } from "lucide-react";
 import { useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import { Button } from "@/components/atoms/button";
+import { Input } from "@/components/atoms/input";
+import { Label } from "@/components/atoms/label";
 import {
 	Popover,
 	PopoverContent,
 	PopoverTrigger,
 } from "@/components/atoms/popover";
-import { GlassCard } from "@/components/molecules/glass-card";
 import { Slider } from "@/components/atoms/slider";
-import { Input } from "@/components/atoms/input";
-import { Label } from "@/components/atoms/label";
+import { GlassCard } from "@/components/molecules/glass-card";
+import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
-import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { cn } from "@/lib/utils";
-import { useLocalStorage } from "usehooks-ts";
 
 interface WritingGoals {
 	wordCountTarget: number;
@@ -40,18 +40,24 @@ export function WritingGoals() {
 	const [isOpen, setIsOpen] = useState(false);
 	const [tempGoals, setTempGoals] = useState(goals);
 
-	const wordProgress = goals.wordCountTarget > 0
-		? Math.min(100, (narrativeMetrics.wordCount / goals.wordCountTarget) * 100)
-		: 0;
+	const wordProgress =
+		goals.wordCountTarget > 0
+			? Math.min(
+					100,
+					(narrativeMetrics.wordCount / goals.wordCountTarget) * 100,
+				)
+			: 0;
 
-	const pacingProgress = goals.pacingTarget !== null && narrativeMetrics.pacingScore > 0
-		? Math.min(
-				100,
-				Math.abs(narrativeMetrics.pacingScore - goals.pacingTarget) < 10
-					? 100
-					: 100 - Math.abs(narrativeMetrics.pacingScore - goals.pacingTarget) * 2,
-			)
-		: null;
+	const pacingProgress =
+		goals.pacingTarget !== null && narrativeMetrics.pacingScore > 0
+			? Math.min(
+					100,
+					Math.abs(narrativeMetrics.pacingScore - goals.pacingTarget) < 10
+						? 100
+						: 100 -
+								Math.abs(narrativeMetrics.pacingScore - goals.pacingTarget) * 2,
+				)
+			: null;
 
 	const handleSave = () => {
 		setGoals(tempGoals);
@@ -61,11 +67,7 @@ export function WritingGoals() {
 	return (
 		<Popover open={isOpen} onOpenChange={setIsOpen}>
 			<PopoverTrigger asChild>
-				<Button
-					variant="ghost"
-					size="sm"
-					className="h-7 px-2 text-xs gap-1.5"
-				>
+				<Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1.5">
 					<Target className="h-3 w-3" />
 					Goals
 					{wordProgress >= 100 && (
@@ -249,4 +251,3 @@ export function WritingGoals() {
 		</Popover>
 	);
 }
-

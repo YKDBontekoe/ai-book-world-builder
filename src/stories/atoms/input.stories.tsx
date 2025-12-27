@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, userEvent, within } from "@storybook/test";
 import * as React from "react";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
-import { userEvent, within, expect } from "@storybook/test";
 
 const meta = {
 	title: "Design System/Atoms/Input",
