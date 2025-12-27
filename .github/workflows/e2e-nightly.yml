@@ -29,7 +29,7 @@ jobs:
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
 
       - name: Get Playwright version
@@ -37,7 +37,7 @@ jobs:
         run: echo "version=$(pnpm list @playwright/test --json | jq -r '.[0].devDependencies["@playwright/test"].version // .[0].dependencies["@playwright/test"].version')" >> $GITHUB_OUTPUT
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v5
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -57,7 +57,7 @@ jobs:
           AUTH_SECRET: dummy_secret_for_e2e_tests
 
       - name: Upload test results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: failure()
         with:
           name: playwright-report-shard-${{ matrix.shardIndex }}
@@ -72,7 +72,7 @@ jobs:
     if: failure() && github.event_name == 'schedule'
     steps:
       - name: Create issue for nightly failure
-        uses: actions/github-script@v8
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
         with:
           github-token: ${{ secrets.CUSTOM_PAT }}
           script: |
