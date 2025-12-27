@@ -5,6 +5,7 @@ import {
 	FolderIcon,
 	MessageSquarePlus,
 	PlusIcon,
+	ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -100,6 +101,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 						>
 							<MessageSquarePlus size={16} /> Feedback
 						</Button>
+						{user?.role === "admin" && (
+							<Link href="/admin" onClick={() => setOpenMobile(false)}>
+								<Button className="w-full justify-start gap-2" variant="ghost">
+									<ShieldCheck size={16} /> Admin
+								</Button>
+							</Link>
+						)}
 					</div>
 				</SidebarContent>
 				<SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
