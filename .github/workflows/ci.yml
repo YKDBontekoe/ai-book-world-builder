@@ -155,24 +155,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Make Scripts Executable
+        run: chmod +x .github/scripts/*.sh
+
       - name: Collect failure details
         id: failures
         env:
-          RESULTS: ${{ toJson(needs) }}
-        run: |
-          FAILED_JOBS=""
-          for job in $(echo $RESULTS | jq -r 'keys[]'); do
-            result=$(echo $RESULTS | jq -r ".$job.result")
-            if [[ "$result" == "failure" || "$result" == "cancelled" ]]; then
-              FAILED_JOBS="$FAILED_JOBS\n- 🛑 $job ($result)"
-            fi
-          done
-          
-          echo "failed_jobs<<EOF" >> $GITHUB_OUTPUT
-          echo -e "$FAILED_JOBS" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
-          
-          echo "workflow_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
+          RESULTS_JSON: ${{ toJson(needs) }}
+        run: ./.github/scripts/analyze-failures.sh
 
       - name: Comment on PR about failures
         env:

@@ -56,135 +56,14 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Make Scripts Executable
+        run: chmod +x .github/scripts/*.sh
+
       - name: Analyze Event Context
         id: analyze
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          # Event Data
-          EVENT_NAME: ${{ github.event_name }}
-          EVENT_ACTION: ${{ github.event.action }}
-          # PR Data
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
-          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-          PR_BODY: ${{ github.event.pull_request.body }}
-          # Issue Data
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
-          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ',') }}
-          ISSUE_BODY: ${{ github.event.issue.body }}
-          ISSUE_TITLE: ${{ github.event.issue.title }}
-          ISSUE_PR_LINK: ${{ github.event.issue.pull_request.url }}
-          # Comment Data
-          COMMENT_BODY: ${{ github.event.comment.body }}
-          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
-          # Review Data
-          REVIEW_STATE: ${{ github.event.review.state }}
-          REVIEW_BODY: ${{ github.event.review.body }}
-          REVIEW_AUTHOR: ${{ github.event.review.user.login }}
-          # Label Data
-          LABEL_NAME: ${{ github.event.label.name }}
-        run: |
-          # ---------------------------------------------------------
-          # IDENTIFY RESOURCE (PR vs ISSUE)
-          # ---------------------------------------------------------
-          IS_PR="false"
-          NUMBER=""
-          BRANCH=""
-          AUTHOR=""
-          LABELS=""
-
-          if [[ "$EVENT_NAME" == "pull_request" || "$EVENT_NAME" == "pull_request_review" ]]; then
-            IS_PR="true"
-            NUMBER="$PR_NUMBER"
-            BRANCH="$PR_BRANCH"
-            AUTHOR="$PR_AUTHOR"
-            LABELS="$PR_LABELS"
-          elif [[ "$EVENT_NAME" == "issue_comment" ]]; then
-            NUMBER="$ISSUE_NUMBER"
-            AUTHOR="$ISSUE_AUTHOR"
-            LABELS="$ISSUE_LABELS"
-
-            if [[ -n "$ISSUE_PR_LINK" ]]; then
-              IS_PR="true"
-              # Fetch branch name safely
-              PR_DATA=$(gh pr view "$NUMBER" --json headRefName,author --repo "${{ github.repository }}")
-              BRANCH=$(echo "$PR_DATA" | jq -r '.headRefName')
-            else
-              IS_PR="false"
-              BRANCH="main"
-            fi
-          elif [[ "$EVENT_NAME" == "issues" ]]; then
-            IS_PR="false"
-            NUMBER="$ISSUE_NUMBER"
-            AUTHOR="$ISSUE_AUTHOR"
-            BRANCH="main"
-            LABELS="$ISSUE_LABELS"
-          fi
-
-          echo "is_pr=$IS_PR" >> $GITHUB_OUTPUT
-          echo "number=$NUMBER" >> $GITHUB_OUTPUT
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
-          echo "author=$AUTHOR" >> $GITHUB_OUTPUT
-          echo "labels=$LABELS" >> $GITHUB_OUTPUT
-
-          # ---------------------------------------------------------
-          # DETERMINE ACTIONS
-          # ---------------------------------------------------------
-          SHOULD_INVOKE_JULES="false"
-          SHOULD_TRIGGER_CODERABBIT="false"
-          PROMPT=""
-
-          # A. @Jules Mention
-          if [[ "$EVENT_NAME" == "issue_comment" ]]; then
-            if [[ "$COMMENT_BODY" == *"@jules"* ]]; then
-              SHOULD_INVOKE_JULES="true"
-
-              if [[ "$IS_PR" == "true" ]]; then
-                PROMPT="User @$COMMENT_AUTHOR commented on PR #$NUMBER (Branch: $BRANCH): '$COMMENT_BODY'. Please address their request."
-              else
-                PROMPT="User @$COMMENT_AUTHOR commented on Issue #$NUMBER: '$COMMENT_BODY'. Please address their request. If code changes are needed, create a new branch."
-              fi
-            fi
-
-            # CodeRabbit Agent Prompt
-            if [[ "$COMMENT_AUTHOR" == "coderabbitai[bot]" && "$COMMENT_BODY" == *"Prompt for AI Agents"* ]]; then
-              SHOULD_INVOKE_JULES="true"
-              PROMPT="CodeRabbit Review on PR #$NUMBER. Instructions: $COMMENT_BODY. Please implement these changes on branch '$BRANCH'."
-            fi
-          fi
-
-          # B. New Issue Labeled 'jules'
-          if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME" == "jules" ]]; then
-            SHOULD_INVOKE_JULES="true"
-            PROMPT="Assigned Issue #$NUMBER: '$ISSUE_TITLE'. Description: $ISSUE_BODY. Please implement a solution on a new branch."
-          fi
-
-          # C. CodeRabbit Trigger (Bot PRs)
-          if [[ "$IS_PR" == "true" ]]; then
-             if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" ]]; then
-               if [[ "$EVENT_NAME" == "pull_request" && ("$EVENT_ACTION" == "opened" || "$EVENT_ACTION" == "synchronize") ]]; then
-                 SHOULD_TRIGGER_CODERABBIT="true"
-               fi
-             fi
-          fi
-
-          # D. Human Review Changes Requested
-          if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_STATE" == "changes_requested" ]]; then
-             if [[ "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
-                SHOULD_INVOKE_JULES="true"
-                PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback on branch '$BRANCH'."
-             fi
-          fi
-
-          echo "should_invoke_jules=$SHOULD_INVOKE_JULES" >> $GITHUB_OUTPUT
-          echo "should_trigger_coderabbit=$SHOULD_TRIGGER_CODERABBIT" >> $GITHUB_OUTPUT
-
-          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
-          echo "jules_prompt<<$EOF" >> $GITHUB_OUTPUT
-          echo "$PROMPT" >> $GITHUB_OUTPUT
-          echo "$EOF" >> $GITHUB_OUTPUT
+        run: ./.github/scripts/agentic-supervisor.sh
 
   # ==========================================================================
   # 2. EXECUTE: Jules Agent

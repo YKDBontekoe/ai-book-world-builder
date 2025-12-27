@@ -95,11 +95,15 @@ describe("scenes server actions", () => {
 		});
 
 		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
-		expect(mockedUpdateScene).toHaveBeenCalledWith(sceneId, {
-			title: "Updated Title",
-			status: undefined,
-			content: undefined,
-		});
+		expect(mockedUpdateScene).toHaveBeenCalledWith(
+			sceneId,
+			{
+				title: "Updated Title",
+				status: undefined,
+				content: undefined,
+			},
+			projectId,
+		);
 		expect(mockedInvalidateCache).toHaveBeenCalledWith(
 			`project-structure:${projectId}`,
 		);
@@ -119,11 +123,15 @@ describe("scenes server actions", () => {
 			projectId,
 		});
 
-		expect(mockedUpdateScene).toHaveBeenCalledWith(sceneId, {
-			title: undefined,
-			status: undefined,
-			content: "New content",
-		});
+		expect(mockedUpdateScene).toHaveBeenCalledWith(
+			sceneId,
+			{
+				title: undefined,
+				status: undefined,
+				content: "New content",
+			},
+			projectId,
+		);
 		// Should NOT be called because title was not passed
 		expect(mockedInvalidateCache).not.toHaveBeenCalled();
 	});

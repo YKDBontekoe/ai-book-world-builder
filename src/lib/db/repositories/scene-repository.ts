@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
@@ -162,7 +162,11 @@ export class SceneRepository extends BaseRepository<
 	/**
 	 * Update an existing scene
 	 */
-	async update(id: string, data: UpdateSceneInput): Promise<Scene> {
+	async update(
+		id: string,
+		data: UpdateSceneInput,
+		projectId?: string,
+	): Promise<Scene> {
 		try {
 			const updateData: Record<string, unknown> = { updatedAt: new Date() };
 			if (data.title !== undefined) updateData.title = data.title;
@@ -175,7 +179,11 @@ export class SceneRepository extends BaseRepository<
 			const [updated] = await db
 				.update(scene)
 				.set(updateData)
-				.where(eq(scene.id, id))
+				.where(
+					projectId
+						? and(eq(scene.id, id), eq(scene.projectId, projectId))
+						: eq(scene.id, id),
+				)
 				.returning();
 
 			if (!updated) {
