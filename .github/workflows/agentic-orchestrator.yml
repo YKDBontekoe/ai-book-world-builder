@@ -124,12 +124,9 @@ jobs:
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
           AUTHOR: ${{ needs.context.outputs.author }}
         run: |
-          # Check if CodeRabbit already reviewed this commit
-          LATEST_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid' --repo "${{ github.repository }}")
           REVIEWED=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" --repo "${{ github.repository }}" 2>/dev/null || echo "0")
+            --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" 2>/dev/null || echo "0")
           
-          # Only trigger if no review yet or new commits
           if [[ "$REVIEWED" -eq 0 ]] || [[ "${{ github.event.action }}" == "synchronize" ]]; then
             echo "🐰 Requesting CodeRabbit review for bot PR from $AUTHOR"
             
@@ -143,7 +140,6 @@ jobs:
           else
             echo "⏭️ CodeRabbit already reviewed, skipping"
           fi
-
 
   # ==========================================================================
   # DYNAMIC: Request human review based on labels
@@ -171,7 +167,7 @@ jobs:
           [[ "$LABELS" == *"size/xl"* ]] && REASON="${REASON:+$REASON, }Extra large PR"
           
           EXISTING=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq '[.[] | select(.body | contains("Human Review Required"))] | length' --repo "${{ github.repository }}" 2>/dev/null || echo "0")
+            --jq '[.[] | select(.body | contains("Human Review Required"))] | length' 2>/dev/null || echo "0")
           
           if [[ "$EXISTING" -eq 0 ]]; then
             gh pr comment "$PR_NUMBER" --body "🔍 **Human Review Required**: $REASON - @YKDBontekoe please review" --repo "${{ github.repository }}"
@@ -185,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write # for checkout and commit
+      contents: write
       pull-requests: write
     if: |
       github.event_name == 'pull_request_review' &&
@@ -193,7 +189,7 @@ jobs:
       github.event.review.user.login != 'coderabbitai[bot]'
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
         with:
           ref: ${{ needs.context.outputs.pr_branch }}
           fetch-depth: 0
@@ -227,14 +223,14 @@ jobs:
           prompt: "Review feedback from @${{ steps.feedback.outputs.reviewer }} on PR #${{ needs.context.outputs.pr_number }}: ${{ github.event.review.body }}. Comments: ${{ steps.feedback.outputs.comments }}. Address all feedback, run pnpm build && pnpm test:unit, commit as 'fix: address review feedback'."
 
   # ==========================================================================
-  # DYNAMIC: Handle CodeRabbit review completion
+  # DYNAMIC: Handle CodeRabbit review - Apply suggestions & send prompts to Jules
   # ==========================================================================
   handle-coderabbit:
     needs: context
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
-      contents: write # for checkout and commit
+      contents: write
       pull-requests: write
       issues: read
     if: |
@@ -245,99 +241,154 @@ jobs:
         (github.event_name == 'pull_request_review' && github.event.review.user.login == 'coderabbitai[bot]')
       )
     steps:
-      - name: Check for actionable comments
-        id: check
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        with:
+          ref: ${{ needs.context.outputs.pr_branch }}
+          token: ${{ secrets.CUSTOM_PAT }}
+          fetch-depth: 0
+
+      - name: Process CodeRabbit comments
+        id: process
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
         run: |
-          echo "🔍 Checking for CodeRabbit comments on PR #$PR_NUMBER..."
+          echo "🔍 Processing CodeRabbit comments on PR #$PR_NUMBER..."
           
-          # Count general issue comments from CodeRabbit
-          SUMMARY_COUNT=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
-          echo "  📝 Issue comments: $SUMMARY_COUNT"
+          # Get all inline comments as JSON
+          gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
+            --jq '[.[] | select(.user.login == "coderabbitai[bot]")]' > /tmp/comments.json 2>/dev/null || echo "[]" > /tmp/comments.json
           
-          # Count PR review comments (inline code comments) from CodeRabbit
-          INLINE_COUNT=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
-            --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
-          echo "  💬 Inline review comments: $INLINE_COUNT"
+          TOTAL_COMMENTS=$(jq length /tmp/comments.json)
+          echo "📝 Found $TOTAL_COMMENTS CodeRabbit comments"
           
-          # Count pending review threads (unresolved conversations)
-          # These are review comments that haven't been resolved
-          PENDING_THREADS=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/reviews" \
-            --jq '[.[] | select(.user.login == "coderabbitai[bot]" and .state != "DISMISSED")] | length' 2>/dev/null || echo "0")
-          echo "  🔄 Pending reviews: $PENDING_THREADS"
+          # Count committable suggestions (have suggestion blocks with valid line info)
+          SUGGESTION_COUNT=$(jq '[.[] | select(.body | test("```suggestion") and .line != null)] | length' /tmp/comments.json)
+          echo "✅ Committable suggestions: $SUGGESTION_COUNT"
           
-          # Also check for review comments via GraphQL for better accuracy
-          UNRESOLVED=$(gh api graphql -f query='
-            query($owner: String!, $repo: String!, $pr: Int!) {
-              repository(owner: $owner, name: $repo) {
-                pullRequest(number: $pr) {
-                  reviewThreads(first: 100) {
-                    nodes {
-                      isResolved
-                      comments(first: 1) {
-                        nodes {
-                          author { login }
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ' -f owner="${{ github.repository_owner }}" -f repo="${{ github.event.repository.name }}" -F pr="$PR_NUMBER" \
-            --jq '[.data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false and .comments.nodes[0].author.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
-          echo "  ⚠️ Unresolved CodeRabbit threads: $UNRESOLVED"
+          # Count AI agent prompts
+          AI_PROMPT_COUNT=$(jq '[.[] | select(.body | test("Prompt for AI Agents"; "i"))] | length' /tmp/comments.json)
+          echo "🤖 AI Agent prompts: $AI_PROMPT_COUNT"
           
-          # Total actionable items (prioritize unresolved threads)
-          if [[ "$UNRESOLVED" -gt 0 ]]; then
-            COUNT=$UNRESOLVED
-            echo "  ✅ Using unresolved thread count: $COUNT"
-          else
-            COUNT=$((SUMMARY_COUNT + INLINE_COUNT))
-            echo "  ✅ Using total comment count: $COUNT"
-          fi
+          echo "suggestion_count=$SUGGESTION_COUNT" >> $GITHUB_OUTPUT
+          echo "ai_prompt_count=$AI_PROMPT_COUNT" >> $GITHUB_OUTPUT
+          echo "total_count=$TOTAL_COMMENTS" >> $GITHUB_OUTPUT
+
+      - name: Apply committable suggestions
+        if: steps.process.outputs.suggestion_count > 0
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+        run: |
+          echo "📝 Applying committable suggestions directly..."
           
-          echo "count=$COUNT" >> $GITHUB_OUTPUT
-          echo "📊 Total actionable CodeRabbit items: $COUNT"
+          # Extract suggestions with file path, line, and code
+          jq -r '.[] | select(.body | test("```suggestion")) | 
+            select(.path != null and .line != null) |
+            "\(.path)|\(.line)|\(.body)"' /tmp/comments.json > /tmp/suggestions.txt
           
-          if [[ "$COUNT" -gt 0 ]]; then
-            # Harvest general feedback from issue comments
-            gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-               --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "SUMMARY: \(.body)"] | join("\n---\n")' > /tmp/general_feedback.txt 2>/dev/null || true
+          APPLIED=0
+          FAILED=0
+          
+          while IFS='|' read -r FILE LINE BODY; do
+            [[ -z "$FILE" ]] && continue
             
-            # Harvest inline code review comments
-            gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
-              --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "\(.path):\(.line // .original_line // 0): \(.body | split("\n")[0])"] | join(" | ")' > /tmp/inline_feedback.txt 2>/dev/null || true
+            echo "  Processing: $FILE:$LINE"
             
-            # Combine feedback
-            cat /tmp/general_feedback.txt > /tmp/feedback.txt 2>/dev/null || true
-            printf "\n-- INLINE COMMENTS --\n" >> /tmp/feedback.txt
-            cat /tmp/inline_feedback.txt >> /tmp/feedback.txt 2>/dev/null || true
+            # Extract the suggestion code block
+            SUGGESTION=$(echo "$BODY" | grep -ozP '```suggestion\n\K[\s\S]*?(?=\n```)' | tr -d '\0' || echo "")
             
-            echo "📄 Feedback collected:"
-            head -c 500 /tmp/feedback.txt
-          else
-            touch /tmp/feedback.txt
-            echo "ℹ️ No actionable CodeRabbit comments found"
+            if [[ -z "$SUGGESTION" ]]; then
+              echo "    ⚠️ Could not extract suggestion code"
+              ((FAILED++))
+              continue
+            fi
+            
+            # Check if file exists
+            if [[ ! -f "$FILE" ]]; then
+              echo "    ⚠️ File not found: $FILE"
+              ((FAILED++))
+              continue
+            fi
+            
+            # Apply the suggestion using sed (replace line)
+            # Note: This is a simple replacement - complex multi-line suggestions may need manual review
+            if sed -i "${LINE}s/.*/$SUGGESTION/" "$FILE" 2>/dev/null; then
+              echo "    ✅ Applied suggestion"
+              ((APPLIED++))
+            else
+              echo "    ❌ Failed to apply"
+              ((FAILED++))
+            fi
+            
+          done < /tmp/suggestions.txt
+          
+          echo "📊 Applied: $APPLIED, Failed: $FAILED"
+          
+          # Commit if any changes were made
+          if [[ "$APPLIED" -gt 0 ]]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "fix: apply CodeRabbit suggestions" || echo "No changes to commit"
+            git push || echo "Nothing to push"
+            echo "✅ Committed applied suggestions"
           fi
 
-      - name: Checkout
-        if: steps.check.outputs.count > 0
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-        with:
-          ref: ${{ needs.context.outputs.pr_branch }}
-          fetch-depth: 0
+      - name: Extract AI Agent prompts for Jules
+        id: extract
+        if: steps.process.outputs.ai_prompt_count > 0
+        run: |
+          echo "🤖 Extracting AI Agent prompts..."
+          
+          # Extract prompts from comments that have "Prompt for AI Agents" section
+          AI_PROMPTS=$(jq -r '
+            .[] | 
+            select(.body | test("Prompt for AI Agents"; "i")) | 
+            "=== TASK FOR FILE: \(.path) (around line \(.line // .original_line // "unknown")) ===\n" +
+            (.body | split("```") | .[1] // "Follow the instructions in the CodeRabbit comment for this file.")
+          ' /tmp/comments.json 2>/dev/null | head -c 15000 || echo "")
+          
+          if [[ -z "$AI_PROMPTS" ]]; then
+            echo "No AI prompts extracted"
+            echo "has_prompts=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_prompts=true" >> $GITHUB_OUTPUT
+            echo "📄 Extracted prompts preview:"
+            echo "$AI_PROMPTS" | head -c 500
+            
+            # Output using heredoc
+            {
+              echo 'prompts<<EOPROMPTS'
+              echo "$AI_PROMPTS"
+              echo 'EOPROMPTS'
+            } >> $GITHUB_OUTPUT
+          fi
 
-      - name: Invoke Jules for CodeRabbit feedback
-        if: steps.check.outputs.count > 0
+      - name: Invoke Jules for AI Agent prompts
+        if: steps.extract.outputs.has_prompts == 'true'
         uses: google-labs-code/jules-action@v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ needs.context.outputs.pr_branch }}
-          prompt: "CodeRabbit reviewed PR #${{ needs.context.outputs.pr_number }} with ${{ steps.check.outputs.count }} comments. Feedback: $(cat /tmp/feedback.txt | head -c 1500). Priority: Security > Bugs > Performance > Style. Fix valid issues, run pnpm build && pnpm test:unit, commit as 'fix: address CodeRabbit feedback'."
+          prompt: |
+            CodeRabbit reviewed PR #${{ needs.context.outputs.pr_number }} and provided specific instructions for an AI agent.
+            
+            YOUR TASK: Follow the instructions below. Each task specifies a file and what needs to be done.
+            
+            For each task:
+            1. Open the specified file
+            2. Go to the mentioned line number
+            3. Follow the instruction exactly
+            4. Make sure your changes are consistent with the rest of the codebase
+            
+            After completing all tasks:
+            - Run: pnpm build && pnpm test:unit
+            - Commit with message: "fix: address CodeRabbit AI agent prompts"
+            
+            === AI AGENT INSTRUCTIONS ===
+            ${{ steps.extract.outputs.prompts }}
 
   # ==========================================================================
   # DYNAMIC: Keep branches updated
