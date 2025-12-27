@@ -117,7 +117,7 @@ jobs:
           # Check if CodeRabbit already reviewed this commit
           LATEST_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid' --repo "${{ github.repository }}")
           REVIEWED=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" 2>/dev/null || echo "0")
+            --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" --repo "${{ github.repository }}" 2>/dev/null || echo "0")
           
           # Only trigger if no review yet or new commits
           if [[ "$REVIEWED" -eq 0 ]] || [[ "${{ github.event.action }}" == "synchronize" ]]; then
@@ -161,7 +161,7 @@ jobs:
           [[ "$LABELS" == *"size/xl"* ]] && REASON="${REASON:+$REASON, }Extra large PR"
           
           EXISTING=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq '[.[] | select(.body | contains("Human Review Required"))] | length' 2>/dev/null || echo "0")
+            --jq '[.[] | select(.body | contains("Human Review Required"))] | length' --repo "${{ github.repository }}" 2>/dev/null || echo "0")
           
           if [[ "$EXISTING" -eq 0 ]]; then
             gh pr comment "$PR_NUMBER" --body "🔍 **Human Review Required**: $REASON - @YKDBontekoe please review" --repo "${{ github.repository }}"
@@ -203,7 +203,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
         run: |
-          gh pr comment "$PR_NUMBER" --body "👀 @${{ steps.feedback.outputs.reviewer }} - Jules is on it!"
+          gh pr comment "$PR_NUMBER" --body "👀 @${{ steps.feedback.outputs.reviewer }} - Jules is on it!" --repo "${{ github.repository }}"
 
       - name: Invoke Jules
         uses: google-labs-code/jules-invoke@v1
@@ -219,9 +219,8 @@ jobs:
     needs: context
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'issue_comment' &&
-      github.event.comment.user.login == 'coderabbitai[bot]' &&
-      (contains(github.event.comment.body, '## Walkthrough') || contains(github.event.comment.body, '## Summary'))
+      (github.event_name == 'issue_comment' && github.event.comment.user.login == 'coderabbitai[bot]' && (contains(github.event.comment.body, '## Walkthrough') || contains(github.event.comment.body, '## Summary'))) ||
+      (github.event_name == 'pull_request_review' && github.event.review.user.login == 'coderabbitai[bot]' && (contains(github.event.review.body, '## Walkthrough') || contains(github.event.review.body, '## Summary')))
     steps:
       - name: Check for actionable comments
         id: check
@@ -230,7 +229,7 @@ jobs:
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
         run: |
           COUNT=$(gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
-            --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
+            --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' --repo "${{ github.repository }}" 2>/dev/null || echo "0")
           
           echo "count=$COUNT" >> $GITHUB_OUTPUT
           

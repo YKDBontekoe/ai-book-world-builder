@@ -6,6 +6,11 @@ on:
   workflow_run:
     workflows: ["CI"]
     types: [completed]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to fix (optional)'
+        required: false
 
 permissions:
   contents: write
@@ -15,16 +20,22 @@ permissions:
 jobs:
   fix-failures:
     runs-on: ubuntu-latest
-    if: github.event.workflow_run.conclusion == 'failure'
+    if: github.event.workflow_run.conclusion == 'failure' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Get PR context
         id: pr
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           SHA: ${{ github.event.workflow_run.head_sha }}
+          INPUT_PR: ${{ github.event.inputs.pr_number }}
         run: |
-          PR_DATA=$(gh api "/repos/${{ github.repository }}/pulls" \
-            --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, labels: [.labels[].name]}" --repo "${{ github.repository }}" | head -1)
+          if [[ -n "$INPUT_PR" ]]; then
+            echo "Manually triggered for PR #$INPUT_PR"
+            PR_DATA=$(gh pr view "$INPUT_PR" --json number,headRefName,labels --repo "${{ github.repository }}" --jq '{number, headRefName, labels: [.labels[].name]}')
+          else
+            PR_DATA=$(gh api "/repos/${{ github.repository }}/pulls" \
+              --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, labels: [.labels[].name]}" --repo "${{ github.repository }}" | head -1)
+          fi
           
           if [[ -z "$PR_DATA" || "$PR_DATA" == "null" ]]; then
             echo "has_pr=false" >> $GITHUB_OUTPUT
@@ -99,3 +110,7 @@ jobs:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ steps.pr.outputs.branch }}
           prompt: "CI failed for PR #${{ steps.pr.outputs.number }}. Failed: ${{ steps.failures.outputs.failed_jobs }}. PR labels: ${{ steps.pr.outputs.labels }}. Debug: pnpm lint, pnpm type-check, pnpm test:unit, pnpm build. Fix all issues, verify passes, commit with 'fix: resolve CI failures'."
+      
+      - name: Log if no PR found
+        if: steps.pr.outputs.has_pr != 'true'
+        run: echo "No PR found for this run"
