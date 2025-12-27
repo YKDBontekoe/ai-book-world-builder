@@ -24,7 +24,7 @@ jobs:
           SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
           PR_DATA=$(gh api "/repos/${{ github.repository }}/pulls" \
-            --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, labels: [.labels[].name]}" | head -1)
+            --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, labels: [.labels[].name]}" --repo "${{ github.repository }}" | head -1)
           
           if [[ -z "$PR_DATA" || "$PR_DATA" == "null" ]]; then
             echo "has_pr=false" >> $GITHUB_OUTPUT
@@ -55,7 +55,7 @@ jobs:
           PR_NUMBER: ${{ steps.pr.outputs.number }}
         run: |
           RECENT=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
-            --jq '[.[] | select(.user.login == "github-actions[bot]" and (.body | contains("fixing")) and (.created_at | fromdateiso8601) > (now - 1800))] | length' 2>/dev/null || echo "0")
+            --jq '[.[] | select(.user.login == "github-actions[bot]" and (.body | contains("fixing")) and (.created_at | fromdateiso8601) > (now - 1800))] | length' --repo "${{ github.repository }}" 2>/dev/null || echo "0")
           
           echo "already_fixing=$([[ "$RECENT" -gt 0 ]] && echo "true" || echo "false")" >> $GITHUB_OUTPUT
 
@@ -69,7 +69,7 @@ jobs:
         run: |
           # Get failed jobs with their step names
           JOBS=$(gh api "/repos/${{ github.repository }}/actions/runs/$RUN_ID/jobs" \
-            --jq '[.jobs[] | select(.conclusion == "failure") | {name, failed_step: (.steps[] | select(.conclusion == "failure") | .name)}] | map("\(.name): \(.failed_step // "unknown")") | join(", ")' 2>/dev/null || echo "unknown")
+            --jq '[.jobs[] | select(.conclusion == "failure") | {name, failed_step: (.steps[] | select(.conclusion == "failure") | .name)}] | map("\(.name): \(.failed_step // "unknown")") | join(", ")' --repo "${{ github.repository }}" 2>/dev/null || echo "unknown")
           
           echo "failed_jobs=$JOBS" >> $GITHUB_OUTPUT
           echo "run_url=${{ github.server_url }}/${{ github.repository }}/actions/runs/$RUN_ID" >> $GITHUB_OUTPUT
@@ -89,8 +89,8 @@ jobs:
           FAILED: ${{ steps.failures.outputs.failed_jobs }}
           URL: ${{ steps.failures.outputs.run_url }}
         run: |
-          gh pr comment "$PR_NUMBER" --body "🚨 CI failed: $FAILED - 🤖 Jules is fixing. [View]($URL)"
-          gh pr edit "$PR_NUMBER" --add-label "ci-failing" 2>/dev/null || true
+          gh pr comment "$PR_NUMBER" --body "🚨 CI failed: $FAILED - 🤖 Jules is fixing. [View]($URL)" --repo "${{ github.repository }}"
+          gh pr edit "$PR_NUMBER" --add-label "ci-failing" --repo "${{ github.repository }}" 2>/dev/null || true
 
       - name: Invoke Jules with context
         if: steps.pr.outputs.has_pr == 'true' && steps.check.outputs.already_fixing != 'true'

@@ -46,7 +46,7 @@ jobs:
           fi
           
           # Get PR data
-          PR_DATA=$(gh pr view "$PR_NUM" --json labels,mergeable,mergeStateStatus,isDraft,reviewDecision)
+          PR_DATA=$(gh pr view "$PR_NUM" --json labels,mergeable,mergeStateStatus,isDraft,reviewDecision --repo "${{ github.repository }}")
           
           LABELS=$(echo "$PR_DATA" | jq -r '[.labels[].name] | join(",")')
           MERGEABLE=$(echo "$PR_DATA" | jq -r '.mergeable')
@@ -76,12 +76,12 @@ jobs:
             REASON="Not mergeable"
           elif [[ "$STATE" == "BEHIND" ]]; then
             REASON="Behind base branch"
-            gh pr update-branch "$PR_NUM" --rebase 2>/dev/null || true
+            gh pr update-branch "$PR_NUM" --rebase --repo "${{ github.repository }}" 2>/dev/null || true
           elif [[ "$STATE" == "BLOCKED" ]]; then
             REASON="Blocked by checks"
           else
             # Final check - all checks passed?
-            PENDING=$(gh pr checks "$PR_NUM" --json state --jq '[.[] | select(.state != "SUCCESS" and .state != "SKIPPED" and .state != "NEUTRAL")] | length' 2>/dev/null || echo "99")
+            PENDING=$(gh pr checks "$PR_NUM" --json state --jq '[.[] | select(.state != "SUCCESS" and .state != "SKIPPED" and .state != "NEUTRAL")] | length' --repo "${{ github.repository }}" 2>/dev/null || echo "99")
             
             if [[ "$PENDING" -gt 0 ]]; then
               REASON="$PENDING check(s) pending"
@@ -100,7 +100,7 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ steps.check.outputs.pr_number }}
         run: |
-          gh pr edit "$PR_NUMBER" --remove-label "ci-failing" 2>/dev/null || true
+          gh pr edit "$PR_NUMBER" --remove-label "ci-failing" --repo "${{ github.repository }}" 2>/dev/null || true
 
       - name: Merge PR
         if: steps.check.outputs.should_merge == 'true'
@@ -109,7 +109,7 @@ jobs:
           PR_NUMBER: ${{ steps.check.outputs.pr_number }}
         run: |
           echo "🚀 Auto-merging PR #$PR_NUMBER"
-          gh pr merge "$PR_NUMBER" --squash --auto --delete-branch --body "🤖 Auto-merged"
+          gh pr merge "$PR_NUMBER" --squash --auto --delete-branch --body "🤖 Auto-merged" --repo "${{ github.repository }}"
 
       - name: Log skip
         if: steps.check.outputs.should_merge != 'true' && steps.check.outputs.pr_number != ''

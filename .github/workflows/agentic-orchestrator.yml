@@ -115,7 +115,7 @@ jobs:
           AUTHOR: ${{ needs.context.outputs.author }}
         run: |
           # Check if CodeRabbit already reviewed this commit
-          LATEST_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid')
+          LATEST_SHA=$(gh pr view "$PR_NUMBER" --json headRefOid --jq '.headRefOid' --repo "${{ github.repository }}")
           REVIEWED=$(gh api "/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
             --jq "[.[] | select(.user.login == \"coderabbitai[bot]\")] | length" 2>/dev/null || echo "0")
           
@@ -124,11 +124,11 @@ jobs:
             echo "🐰 Requesting CodeRabbit review for bot PR from $AUTHOR"
             
             if [[ "$AUTHOR" == "google-labs-jules" ]]; then
-              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - AI-generated PR, verify implementation correctness"
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - AI-generated PR, verify implementation correctness" --repo "${{ github.repository }}"
             elif [[ "$AUTHOR" == "renovate[bot]" || "$AUTHOR" == "dependabot[bot]" ]]; then
-              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - Dependency update, check for breaking changes"
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review - Dependency update, check for breaking changes" --repo "${{ github.repository }}"
             else
-              gh pr comment "$PR_NUMBER" --body "@coderabbitai review"
+              gh pr comment "$PR_NUMBER" --body "@coderabbitai review" --repo "${{ github.repository }}"
             fi
           else
             echo "⏭️ CodeRabbit already reviewed, skipping"
@@ -164,7 +164,7 @@ jobs:
             --jq '[.[] | select(.body | contains("Human Review Required"))] | length' 2>/dev/null || echo "0")
           
           if [[ "$EXISTING" -eq 0 ]]; then
-            gh pr comment "$PR_NUMBER" --body "🔍 **Human Review Required**: $REASON - @YKDBontekoe please review"
+            gh pr comment "$PR_NUMBER" --body "🔍 **Human Review Required**: $REASON - @YKDBontekoe please review" --repo "${{ github.repository }}"
           fi
 
   # ==========================================================================
@@ -236,7 +236,7 @@ jobs:
           
           if [[ "$COUNT" -gt 0 ]]; then
             gh api "/repos/${{ github.repository }}/pulls/$PR_NUMBER/comments" \
-              --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "\(.path):\(.line // 0): \(.body | split("\n")[0])"] | join(" | ")' > /tmp/feedback.txt 2>/dev/null
+              --jq '[.[] | select(.user.login == "coderabbitai[bot]") | "\(.path):\(.line // 0): \(.body | split("\n")[0])"] | join(" | ")' --repo "${{ github.repository }}" > /tmp/feedback.txt 2>/dev/null
           fi
 
       - name: Checkout
@@ -269,8 +269,8 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.context.outputs.pr_number }}
         run: |
-          STATUS=$(gh pr view "$PR_NUMBER" --json mergeStateStatus --jq '.mergeStateStatus' 2>/dev/null || echo "")
+          STATUS=$(gh pr view "$PR_NUMBER" --json mergeStateStatus --jq '.mergeStateStatus' --repo "${{ github.repository }}" 2>/dev/null || echo "")
           
           if [[ "$STATUS" == "BEHIND" ]]; then
-            gh pr update-branch "$PR_NUMBER" --rebase 2>/dev/null || true
+            gh pr update-branch "$PR_NUMBER" --rebase --repo "${{ github.repository }}" 2>/dev/null || true
           fi
