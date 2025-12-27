@@ -24,6 +24,11 @@
   
   "rebaseWhen": "conflicted",
   
+  "minimumReleaseAge": "3 days",
+  
+  "dependencyDashboard": true,
+  "dependencyDashboardTitle": "📦 Dependency Dashboard",
+  
   "vulnerabilityAlerts": {
     "enabled": true,
     "labels": ["security", "priority/high"],

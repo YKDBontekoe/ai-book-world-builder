@@ -150,11 +150,25 @@ if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME"
   JULES_PROMPT="Assigned Issue #$NUMBER: '$ISSUE_TITLE'. Description: $ISSUE_BODY. Please implement a solution on a new branch."
 fi
 
-# Logic C: CodeRabbit Trigger (Bot PRs)
+# Logic C: CodeRabbit Trigger (Bot PRs) - max 5 per 15min debounce
 if [[ "$IS_PR" == "true" ]]; then
-  if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" ]]; then
+  if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" || "$AUTHOR" == "renovate[bot]" ]]; then
     if [[ "$EVENT_NAME" == "pull_request" && ( "$EVENT_ACTION" == "opened" || "$EVENT_ACTION" == "synchronize" ) ]]; then
-      SHOULD_TRIGGER_CODERABBIT="true"
+      RECENT_CR="0"
+      if [[ -n "$GH_TOKEN" ]]; then
+        # Count CR comments in last 15 min across ALL PRs (rate limit: 5 per 15min)
+        RECENT_CR=$(gh api "/repos/${GITHUB_REPOSITORY}/issues/comments" \
+          --jq '[.[] | select(.user.login == "coderabbitai[bot]" and 
+            ((.created_at | fromdateiso8601) > (now - 900)))] | length' 2>/dev/null || echo "0")
+        log "CodeRabbit calls in last 15min: $RECENT_CR"
+      fi
+      # Allow up to 5 per 15 min
+      if [[ "$RECENT_CR" -lt 5 ]]; then
+        SHOULD_TRIGGER_CODERABBIT="true"
+        log "Triggering CodeRabbit review (within rate limit)"
+      else
+        log "Skipping CodeRabbit - rate limit reached ($RECENT_CR/5 in 15min)"
+      fi
     fi
   fi
 fi
@@ -168,32 +182,45 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" ]
     JULES_PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback. Commit changes directly to the '$BRANCH' branch."
   fi
 
-  # D.2 CodeRabbit Batch Review
+  # D.2 CodeRabbit Batch Review - Collect ALL inline comments
   if [[ "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
-    log "Processing CodeRabbit review submission..."
+    log "CodeRabbit review submitted - collecting ALL inline comments..."
 
     COMMENTS_DATA=""
     if [[ -n "$GH_TOKEN" ]]; then
-      # Fetch review comments using GH CLI
-      # GET /repos/{owner}/{repo}/pulls/{pull_number}/reviews/{review_id}/comments
-      COMMENTS_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/reviews/${REVIEW_ID}/comments" --jq '.[] | "- File: \(.path) (Line \(.line // .original_line)): \(.body)"' 2>/dev/null || echo "")
+      # Fetch ALL CodeRabbit inline comments on this PR (not just this review)
+      # This ensures we get all actionable feedback
+      COMMENTS_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
+        --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | 
+          map("### \(.path):\(.line // .original_line)\n\(.body)") | join("\n\n---\n\n")' 2>/dev/null || echo "")
+      
+      COMMENT_COUNT=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
+        --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
+      log "Found $COMMENT_COUNT CodeRabbit inline comments"
     elif [[ -n "$MOCK_GH_CLI" ]]; then
-      COMMENTS_DATA="- File: src/main.ts (Line 10): Fix typo\n- File: src/utils.ts (Line 5): Optimize loop"
+      COMMENTS_DATA="### src/main.ts:10\nFix typo\n\n---\n\n### src/utils.ts:5\nOptimize loop"
     fi
 
-    if [[ -n "$COMMENTS_DATA" ]]; then
+    if [[ -n "$COMMENTS_DATA" && "$COMMENTS_DATA" != "" ]]; then
       SHOULD_INVOKE_JULES="true"
-      JULES_PROMPT="CodeRabbit Automatic Review for PR #$NUMBER (Branch: $BRANCH).
+      JULES_PROMPT="CodeRabbit finished reviewing PR #$NUMBER (Branch: $BRANCH).
 
-Review Summary:
-$REVIEW_BODY
+You MUST address ALL the following code review comments. Each comment may include:
+- A 'Prompt for AI Agents' section with specific instructions
+- A 'Committable suggestion' with exact code to apply
+- A 'Proposed fix' with diff format changes
 
-Detailed Comments:
+## Comments to Address
+
 $COMMENTS_DATA
 
-Please address these issues. Commit these changes directly to the '$BRANCH' branch."
+## Instructions
+1. Fix EVERY comment listed above
+2. Run: pnpm lint && pnpm type-check && pnpm test:unit
+3. Commit with message: 'fix: address CodeRabbit review feedback'
+4. Push directly to branch '$BRANCH'"
     else
-      log "No detailed comments found for CodeRabbit review."
+      log "No CodeRabbit inline comments found for this PR"
     fi
   fi
 fi

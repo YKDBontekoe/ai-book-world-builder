@@ -19,6 +19,10 @@ on:
     types: [submitted]
   pull_request:
     types: [opened, synchronize, ready_for_review, labeled]
+  # Trigger CodeRabbit review after CI passes
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
@@ -89,18 +93,55 @@ jobs:
           prompt: ${{ needs.supervisor.outputs.jules_prompt }}
 
   # ==========================================================================
-  # 3. EXECUTE: CodeRabbit Trigger
+  # 2b. AUTO-RESOLVE: Resolve CodeRabbit comments after Jules push
+  # ==========================================================================
+  auto-resolve-coderabbit:
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action == 'synchronize' &&
+      github.actor == 'google-labs-jules'
+    steps:
+      - name: Resolve CodeRabbit comments
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          echo "Jules pushed to PR #$PR_NUMBER - resolving CodeRabbit comments"
+          gh pr comment "$PR_NUMBER" --body "@coderabbitai resolve" --repo "${{ github.repository }}"
+
+  # ==========================================================================
+  # 3. EXECUTE: CodeRabbit Trigger (after CI passes or on bot PR sync)
   # ==========================================================================
   coderabbit-trigger:
     needs: supervisor
-    if: needs.supervisor.outputs.should_trigger_coderabbit == 'true'
+    if: |
+      needs.supervisor.outputs.should_trigger_coderabbit == 'true' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     steps:
-      - name: Request Review
+      - name: Get PR number
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          PR_NUMBER: ${{ needs.supervisor.outputs.number }}
-        run: gh pr comment "$PR_NUMBER" --body "@coderabbitai review" --repo "${{ github.repository }}"
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_run" ]]; then
+            # Find PR by SHA for workflow_run events
+            PR=$(gh api "/repos/${{ github.repository }}/pulls" \
+              --jq ".[] | select(.head.sha == \"${{ github.event.workflow_run.head_sha }}\") | .number" | head -1)
+            echo "number=$PR" >> $GITHUB_OUTPUT
+            echo "Found PR #$PR from workflow_run"
+          else
+            echo "number=${{ needs.supervisor.outputs.number }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Request CodeRabbit Review
+        if: steps.pr.outputs.number != ''
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ steps.pr.outputs.number }}
+        run: |
+          echo "Requesting CodeRabbit full review for PR #$PR_NUMBER"
+          gh pr comment "$PR_NUMBER" --body "@coderabbitai full review" --repo "${{ github.repository }}"
 
   # ==========================================================================
   # 4. TRIAGE: Auto-Label Issues
