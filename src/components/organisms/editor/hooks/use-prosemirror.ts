@@ -43,6 +43,7 @@ export function useProseMirror({
 	const prevContentRef = useRef<string | null>(null);
 
 	// Initialize editor once
+	// biome-ignore lint/correctness/useExhaustiveDependencies: "We only want to initialize the editor once"
 	useEffect(() => {
 		if (!containerRef.current) return;
 
@@ -95,7 +96,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, []); // Empty dependency array to run once on mount
+	}, [containerRef.current, content, onMentionStateChange, readOnly]); // Empty dependency array to run once on mount
 
 	// Synchronize content when it changes externally
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Editor sync logic
@@ -158,7 +159,13 @@ export function useProseMirror({
 				},
 			});
 		}
-	}, [readOnly, typewriterMode, onSaveContent, onSelectionChange]);
+	}, [
+		readOnly,
+		typewriterMode,
+		onSaveContent,
+		onSelectionChange,
+		containerRef.current?.closest,
+	]);
 
 	return { editorRef, mounted };
 }

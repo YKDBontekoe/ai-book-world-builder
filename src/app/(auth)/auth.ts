@@ -23,7 +23,7 @@ declare module "next-auth" {
 		} & DefaultSession["user"];
 	}
 
-	// biome-ignore lint/nursery/useConsistentTypeDefinitions: "Required"
+	// biome-ignore lint/style/useConsistentTypeDefinitions: "Required"
 	interface User {
 		id?: string;
 		email?: string | null;

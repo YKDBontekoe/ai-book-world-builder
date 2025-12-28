@@ -80,7 +80,7 @@ export function CreateProjectDialog({
 				setOpen(false);
 				router.push(`/projects/${result.projectId}`);
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to create project");
 		} finally {
 			setIsLoading(false);

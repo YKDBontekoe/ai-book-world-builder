@@ -52,8 +52,9 @@ export function EntityInsights({ stats }: { stats: EntityStats }) {
 												paddingAngle={5}
 												dataKey="value"
 											>
-												{formattedData.map((entry, index) => (
+												{formattedData.map((_entry, index) => (
 													<Cell
+														// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
 														key={`cell-${index}`}
 														fill={COLORS[index % COLORS.length]}
 													/>

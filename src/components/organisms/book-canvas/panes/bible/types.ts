@@ -1,5 +1,4 @@
 import {
-	BookOpenIcon,
 	BuildingIcon,
 	CalendarIcon,
 	MapPinIcon,

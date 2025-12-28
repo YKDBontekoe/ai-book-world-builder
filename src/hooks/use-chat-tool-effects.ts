@@ -28,6 +28,7 @@ export function useChatToolEffects({
 	const processedToolCallIdsRef = useRef<Set<string>>(new Set());
 
 	// Listen for Orchestrator decisions and Tool Results
+	// biome-ignore lint/correctness/useExhaustiveDependencies: "writerContext dependencies are refs or stable"
 	useEffect(() => {
 		const lastMessage = messages.at(-1);
 		if (!lastMessage?.toolInvocations) {
@@ -91,5 +92,5 @@ export function useChatToolEffects({
 			// Mark as processed
 			processedToolCallIdsRef.current.add(toolInvocation.toolCallId);
 		}
-	}, [messages, queryClient, selectedProjectId, setActivePane]);
+	}, [messages, queryClient, selectedProjectId, setActivePane, writerContext]);
 }

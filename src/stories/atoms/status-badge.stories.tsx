@@ -34,6 +34,7 @@ export const Warning: Story = {
 	},
 };
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: "Storybook"
 export const Error: Story = {
 	args: {
 		children: "Error",

@@ -45,7 +45,11 @@ export function KeyValueTable({
 		return (
 			<div className="flex flex-col gap-1">
 				{data.map((item, index) => (
-					<div key={index} className="flex items-start gap-2 text-xs">
+					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
+						key={index}
+						className="flex items-start gap-2 text-xs"
+					>
 						<span className="text-muted-foreground shrink-0">{index + 1}.</span>
 						{typeof item === "object" ? (
 							<KeyValueTable data={item} maxHeight={150} />

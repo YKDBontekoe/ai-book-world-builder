@@ -47,8 +47,9 @@ export async function retrieveContext({
 
 	// Check cache first
 	candidates.forEach((candidate, index) => {
-		if (embeddingCache.has(candidate.content)) {
-			embeddings[index] = embeddingCache.get(candidate.content)!;
+		const cached = embeddingCache.get(candidate.content);
+		if (cached) {
+			embeddings[index] = cached;
 		} else {
 			missIndices.push(index);
 			missValues.push(candidate.content);

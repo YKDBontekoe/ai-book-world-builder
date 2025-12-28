@@ -27,13 +27,13 @@ test.describe("chat activity with reasoning", () => {
 
 		const assistantMessage = await chatPage.getRecentAssistantMessage();
 		const reasoningElement =
-			assistantMessage!.element.getByTestId("message-reasoning");
+			assistantMessage?.element.getByTestId("message-reasoning");
 		expect(reasoningElement).toBeVisible();
 
-		await assistantMessage!.toggleReasoningVisibility();
+		await assistantMessage?.toggleReasoningVisibility();
 		await expect(reasoningElement).not.toBeVisible();
 
-		await assistantMessage!.toggleReasoningVisibility();
+		await assistantMessage?.toggleReasoningVisibility();
 		await expect(reasoningElement).toBeVisible();
 	});
 
@@ -43,7 +43,7 @@ test.describe("chat activity with reasoning", () => {
 
 		const assistantMessage = await chatPage.getRecentAssistantMessage();
 		const reasoningElement =
-			assistantMessage!.element.getByTestId("message-reasoning");
+			assistantMessage?.element.getByTestId("message-reasoning");
 		expect(reasoningElement).toBeVisible();
 
 		const userMessage = await chatPage.getRecentUserMessage();

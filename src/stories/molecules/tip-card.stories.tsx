@@ -41,6 +41,7 @@ export const Success: Story = {
 	},
 };
 
+// biome-ignore lint/suspicious/noShadowRestrictedNames: "Storybook"
 export const Error: Story = {
 	args: {
 		variant: "error",

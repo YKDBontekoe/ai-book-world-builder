@@ -1,6 +1,6 @@
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import type { StorybookConfig } from "@storybook/nextjs-vite";
-import { dirname, join, resolve } from "path";
-import { fileURLToPath } from "url";
 import { mergeConfig } from "vite";
 
 const __filename = fileURLToPath(import.meta.url);

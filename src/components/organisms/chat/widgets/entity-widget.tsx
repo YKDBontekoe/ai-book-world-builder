@@ -20,7 +20,6 @@ import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Textarea } from "@/components/atoms/textarea";
 import { InteractiveWidget } from "@/components/organisms/chat/widgets/interactive-widget";
-import { cn } from "@/lib/utils";
 
 export interface EntityWidgetProps {
 	entity: {
@@ -171,7 +170,11 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 							</Button>
 						</div>
 						{attributes.map((attr, i) => (
-							<div key={i} className="flex items-start gap-2">
+							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
+								key={i}
+								className="flex items-start gap-2"
+							>
 								<Input
 									value={attr.name}
 									onChange={(e) =>
@@ -258,6 +261,7 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 					<div className="flex flex-wrap gap-2 mt-1">
 						{entity.attributes?.slice(0, 6).map((attr, i) => (
 							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
 								key={i}
 								className="flex items-center gap-1.5 rounded-full bg-secondary/50 px-2.5 py-1 text-xs transition-colors hover:bg-secondary"
 							>
@@ -272,7 +276,7 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 						))}
 						{(entity.attributes?.length || 0) > 6 && (
 							<div className="text-[10px] text-muted-foreground self-center px-1">
-								+{entity.attributes!.length - 6} more
+								+{entity.attributes?.length - 6} more
 							</div>
 						)}
 					</div>

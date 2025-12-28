@@ -108,6 +108,7 @@ function PureSuggestedActions({
 				)}
 				{displaySuggestions.map((action, index) => (
 					<motion.button
+						// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
 						key={action.label + index}
 						initial={{ opacity: 0, scale: 0.9 }}
 						animate={{ opacity: 1, scale: 1 }}
@@ -165,6 +166,7 @@ function PureSuggestedActions({
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: 10 }}
 						initial={{ opacity: 0, y: 10 }}
+						// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
 						key={action.label + index}
 						transition={{ delay: 0.05 * index }}
 					>

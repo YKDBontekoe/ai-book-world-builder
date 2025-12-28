@@ -1,10 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/queries";
-import {
-	type BookGenerationStep,
-	bookGeneration,
-	bookGenerationStep,
-} from "@/lib/db/schema";
+import { type BookGenerationStep, bookGeneration } from "@/lib/db/schema";
 import { updateStepStatus } from "@/lib/generation/utils";
 
 export interface GenerationCallbacks {

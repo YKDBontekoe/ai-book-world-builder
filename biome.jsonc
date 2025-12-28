@@ -5,7 +5,8 @@
 			"**/*",
 			"!components/ui",
 			"!lib/utils.ts",
-			"!hooks/use-mobile.ts"
+			"!hooks/use-mobile.ts",
+			"!src/app/globals.css"
 		]
 	},
 	"linter": {
@@ -46,5 +47,25 @@
 				"noSvgWithoutTitle": "off"
 			}
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": ["tests/**"],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noThenProperty": "off",
+						"noNonNullAssertedOptionalChain": "off",
+						"noDocumentCookie": "off"
+					},
+					"style": {
+						"noNonNullAssertion": "off"
+					},
+					"a11y": {
+						"useButtonType": "off"
+					}
+				}
+			}
+		}
+	]
 }

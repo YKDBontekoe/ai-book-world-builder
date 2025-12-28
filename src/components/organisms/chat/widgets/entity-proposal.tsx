@@ -98,6 +98,7 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 			<CardContent className="grid gap-2 text-sm px-4 pb-2">
 				{operations.map((op, idx) => (
 					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
 						key={idx}
 						className="group flex items-start gap-3 rounded-lg border border-border/40 p-3 bg-card hover:bg-muted/30 transition-colors"
 					>

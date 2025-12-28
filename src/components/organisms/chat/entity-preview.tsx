@@ -1,15 +1,6 @@
 "use client";
 
-import {
-	BookOpen,
-	Calendar,
-	LinkIcon,
-	MapPin,
-	Package,
-	TagIcon,
-	User,
-	Users,
-} from "lucide-react";
+import { BookOpen, Calendar, MapPin, Package, User, Users } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +63,7 @@ export function EntityPreview({ result, projectId }: EntityPreviewProps) {
 
 	const hasAttributes =
 		result.entity.attributes && result.entity.attributes.length > 0;
-	const hasRelationships =
+	const _hasRelationships =
 		result.entity.relationships && result.entity.relationships.length > 0;
 
 	return (
@@ -124,6 +115,7 @@ export function EntityPreview({ result, projectId }: EntityPreviewProps) {
 					<div className="grid grid-cols-2 gap-2">
 						{result.entity.attributes?.slice(0, 4).map((attr, i) => (
 							<div
+								// biome-ignore lint/suspicious/noArrayIndexKey: "Index is stable here"
 								key={i}
 								className="flex flex-col rounded-md border bg-muted/30 p-2"
 							>
@@ -140,7 +132,7 @@ export function EntityPreview({ result, projectId }: EntityPreviewProps) {
 						))}
 						{(result.entity.attributes?.length || 0) > 4 && (
 							<div className="text-[10px] text-muted-foreground self-center">
-								+{result.entity.attributes!.length - 4} more
+								+{result.entity.attributes?.length - 4} more
 							</div>
 						)}
 					</div>

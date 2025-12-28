@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { FileText } from "lucide-react";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { useBookCanvasValue } from "@/components/organisms/book-canvas/book-canvas-context";
 import { ChatActionHandler } from "@/components/organisms/chat/chat-action-handler";
@@ -22,7 +22,6 @@ import type { Vote } from "@/lib/db/schema";
 import { QUERY_KEYS, STALE_TIMES } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
 import type { AppUsage } from "@/lib/usage";
-import { cn } from "@/lib/utils";
 
 interface FloatingChatProps {
 	id: string;
@@ -55,19 +54,11 @@ export function FloatingChat({
 	// Safe Context Access
 	// We try to access context. If not present (e.g. Dashboard), we proceed with null
 	let activeSceneId: string | null = null;
-	const sceneName: string | null = null;
+	const _sceneName: string | null = null;
 
-	// We can't conditionally call hooks.
-	// So we need to handle the case where Provider is missing.
-	// However, FloatingAssistant is inside layout.tsx which HAS BookCanvasProvider.
-	// So theoretically this should be safe.
-	// But if we want to be extra safe:
-	try {
-		const bookCanvas = useBookCanvasValue();
-		activeSceneId = bookCanvas.activeSceneId;
-	} catch (e) {
-		// Ignore if context is missing (though it shouldn't be in this app structure)
-	}
+	// We assume BookCanvasProvider is always present in the layout
+	const bookCanvas = useBookCanvasValue();
+	activeSceneId = bookCanvas.activeSceneId;
 
 	// Local state for name (though we decided to just show "Active Scene" or rely on a query if we wanted name)
 	const [displaySceneName, setDisplaySceneName] = useState<string | null>(null);
