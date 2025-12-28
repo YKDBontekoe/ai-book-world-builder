@@ -154,10 +154,14 @@ export async function POST(request: Request) {
 
 				const model = myProvider.languageModel(targetModelId);
 
+				const { messages: modelMessages } = await convertToModelMessages(
+					uiMessages,
+				);
+
 				const result = streamText({
 					model,
 					system: groundedSystemPrompt,
-					messages: convertToModelMessages(uiMessages),
+					messages: modelMessages,
 					stopWhen: stepCountIs(5),
 					experimental_activeTools:
 						selectedChatModel === "chat-model-reasoning" ? [] : toolList,
@@ -190,10 +194,10 @@ export async function POST(request: Request) {
 				);
 			},
 			generateId: generateUUID,
-			onFinish: async ({ messages }) => {
+			onFinish: async ({ uiMessages }) => {
 				await persistChat({
 					chatId: id,
-					messages,
+					messages: uiMessages,
 					finalUsage: finalMergedUsage,
 				});
 			},

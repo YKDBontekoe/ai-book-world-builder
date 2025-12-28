@@ -4,6 +4,7 @@ import {
 	extractReasoningMiddleware,
 	wrapLanguageModel,
 } from "ai";
+import { type LanguageModel } from "ai";
 import { DEFAULT_MODELS } from "@/lib/ai/models";
 import { isTestEnvironment } from "@/lib/constants";
 
@@ -31,7 +32,7 @@ export const myProvider = isTestEnvironment
 			});
 		})()
 	: {
-			languageModel: (modelId: string) => {
+			languageModel: (modelId: string): LanguageModel => {
 				const baseModel = openrouter(modelId);
 
 				// Add reasoning middleware if needed, though OpenRouter handles many models natively.
