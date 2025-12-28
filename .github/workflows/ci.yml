@@ -164,7 +164,7 @@ jobs:
 
           **Workflow Run:** ${{ steps.failures.outputs.workflow_url }}
 
-          🤖 Jules will automatically attempt to fix these issues."
+          🤖 @Jules will automatically attempt to fix these issues."
 
           echo "$MESSAGE" > message.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}

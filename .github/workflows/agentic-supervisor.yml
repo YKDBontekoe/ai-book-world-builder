@@ -161,7 +161,7 @@ jobs:
           LABELS=$(echo "$LABELS" | sed 's/^,//')
           if [[ -n "$LABELS" ]]; then
             gh issue edit $ISSUE_NUMBER --add-label "$LABELS" --repo "${{ github.repository }}"
-            gh issue comment $ISSUE_NUMBER --body "👋 I've added labels: \`$LABELS\`. Add \`jules\` label to have me solve this!" --repo "${{ github.repository }}"
+            gh issue comment $ISSUE_NUMBER --body "👋 I've added labels: \`$LABELS\`. Add \`jules\` label or mention \`@Jules\` to have me solve this!" --repo "${{ github.repository }}"
           fi
 
   # ==========================================================================
@@ -179,7 +179,7 @@ jobs:
           gh issue comment $ISSUE --body "🌟 **Good First Issue!**
           1. Fork & Clone
           2. Branch: \`fix/issue-$ISSUE\`
-          3. Mention \`@jules\` if stuck!" --repo "${{ github.repository }}"
+          3. Mention \`@Jules\` if stuck!" --repo "${{ github.repository }}"
 
   # ==========================================================================
   # 6. REVIEW: Request Human Review

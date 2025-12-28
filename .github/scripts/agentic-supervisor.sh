@@ -150,7 +150,7 @@ fi
 
 # Logic A: @Jules Mention
 if [[ "$EVENT_NAME" == "issue_comment" ]]; then
-  if echo "$COMMENT_BODY" | grep -q "@jules"; then
+  if echo "$COMMENT_BODY" | grep -qi "@jules"; then
     SHOULD_INVOKE_JULES="true"
     if [[ "$IS_PR" == "true" ]]; then
       JULES_PROMPT="User @$COMMENT_AUTHOR commented on PR #$NUMBER (Branch: $BRANCH): '$COMMENT_BODY'. Please address their request. Commit changes directly to the '$BRANCH' branch."

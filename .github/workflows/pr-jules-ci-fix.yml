@@ -107,7 +107,7 @@ jobs:
           FAILED: ${{ steps.failures.outputs.failed_jobs }}
           URL: ${{ steps.failures.outputs.run_url }}
         run: |
-          gh pr comment "$PR_NUMBER" --body "🚨 CI failed: $FAILED - 🤖 Jules is fixing. [View]($URL)" --repo "${{ github.repository }}"
+          gh pr comment "$PR_NUMBER" --body "🚨 CI failed: $FAILED - 🤖 @Jules is fixing. [View]($URL)" --repo "${{ github.repository }}"
           gh pr edit "$PR_NUMBER" --add-label "ci-failing" --repo "${{ github.repository }}" 2>/dev/null || true
 
       - name: Invoke Jules with context
