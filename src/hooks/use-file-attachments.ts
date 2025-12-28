@@ -78,7 +78,7 @@ export function useFileAttachments({ projectId }: UseFileAttachmentsProps) {
 				setUploadQueue([]);
 			}
 		},
-		[setAttachments, uploadFile],
+		[uploadFile],
 	);
 
 	const handlePaste = useCallback(
@@ -123,7 +123,7 @@ export function useFileAttachments({ projectId }: UseFileAttachmentsProps) {
 				setUploadQueue([]);
 			}
 		},
-		[setAttachments, uploadFile],
+		[uploadFile],
 	);
 
 	return {
