@@ -65,7 +65,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		} | null>(null);
 
 		const { editorRef, mounted } = useProseMirror({
-			containerRef,
+			containerRef: containerRef as React.RefObject<HTMLDivElement>,
 			content,
 			readOnly,
 			onSaveContent,
@@ -105,7 +105,12 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			setActiveSuggestion,
 			projectedSuggestions,
 			handleApplySuggestion,
-		} = useSuggestions(editorRef.current, suggestions, content, containerRef);
+		} = useSuggestions(
+			editorRef.current,
+			suggestions,
+			content,
+			containerRef as React.RefObject<HTMLDivElement>,
+		);
 
 		useImperativeHandle(ref, () => ({
 			undo: () => {
