@@ -1,6 +1,6 @@
 "use server";
 
-import { generateText, type UIMessage } from "ai";
+import { generateText, type LanguageModel, type UIMessage } from "ai";
 import { cookies } from "next/headers";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
@@ -54,7 +54,7 @@ export async function generateTitleFromUserMessage({
 	message: UIMessage;
 }) {
 	const { text: title } = await generateText({
-		model: myProvider.languageModel(DEFAULT_MODELS.light),
+		model: myProvider.languageModel(DEFAULT_MODELS.light) as LanguageModel,
 		system: titlePrompt,
 		prompt: getTextFromMessage(message),
 	});
