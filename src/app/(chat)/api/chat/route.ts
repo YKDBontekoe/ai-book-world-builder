@@ -1,10 +1,10 @@
 import {
-	convertToModelMessages,
 	createUIMessageStream,
 	JsonToSseTransformStream,
 	smoothStream,
 	stepCountIs,
 	streamText,
+	type LanguageModel,
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
 import {
@@ -152,12 +152,12 @@ export async function POST(request: Request) {
 					targetModelId = await getSelectedModelId("middle");
 				}
 
-				const model = myProvider.languageModel(targetModelId);
+				const model = myProvider.languageModel(targetModelId) as LanguageModel;
 
 				const result = streamText({
 					model,
 					system: groundedSystemPrompt,
-					messages: convertToModelMessages(uiMessages),
+					messages: uiMessages,
 					stopWhen: stepCountIs(5),
 					experimental_activeTools:
 						selectedChatModel === "chat-model-reasoning" ? [] : toolList,

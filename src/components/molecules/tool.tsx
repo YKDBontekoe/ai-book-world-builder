@@ -21,6 +21,15 @@ import { cn } from "@/lib/utils";
 
 export type ToolProps = ComponentProps<typeof Collapsible>;
 
+const toolStati = [
+	"input-streaming",
+	"input-available",
+	"output-available",
+	"output-error",
+] as const;
+
+export type ToolStatus = (typeof toolStati)[number];
+
 export const Tool = ({ className, ...props }: ToolProps) => (
 	<Collapsible
 		className={cn(
@@ -38,27 +47,31 @@ export type ToolHeaderProps = {
 };
 
 const getStatusBadge = (status: ToolUIPart["state"]) => {
-	const labels = {
+	const labels: Record<ToolStatus, string> = {
 		"input-streaming": "Pending",
 		"input-available": "Running",
 		"output-available": "Completed",
 		"output-error": "Error",
-	} as const;
+	};
 
-	const icons = {
+	const icons: Record<ToolStatus, ReactNode> = {
 		"input-streaming": <CircleIcon className="size-4" />,
 		"input-available": <ClockIcon className="size-4 animate-pulse" />,
 		"output-available": <CheckCircleIcon className="size-4 text-green-600" />,
 		"output-error": <XCircleIcon className="size-4 text-red-600" />,
-	} as const;
+	};
+
+	if (!toolStati.includes(status as ToolStatus)) {
+		return null;
+	}
 
 	return (
 		<Badge
 			className="flex items-center gap-1 rounded-full text-xs"
 			variant="secondary"
 		>
-			{icons[status]}
-			<span>{labels[status]}</span>
+			{icons[status as ToolStatus]}
+			<span>{labels[status as ToolStatus]}</span>
 		</Badge>
 	);
 };
