@@ -157,6 +157,7 @@ export function AIAutocomplete({
 						</div>
 					) : (
 						<div className="space-y-1">
+							{/* biome-ignore lint/suspicious/noArrayIndexKey: <explanation> */}
 							{suggestions.map((suggestion, index) => (
 								<button
 									key={index}

@@ -9,7 +9,7 @@ import {
 	UserIcon,
 } from "lucide-react";
 import { signIn } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
 	getAvailableModels,
@@ -61,14 +61,7 @@ export function SettingsDialog({
 		isLoading: isAppearanceLoading,
 	} = useAppearance();
 
-	useEffect(() => {
-		if (open) {
-			loadAccounts();
-			loadModelSettings();
-		}
-	}, [open]);
-
-	const loadAccounts = async () => {
+	const loadAccounts = useCallback(async () => {
 		setIsLoading(true);
 		try {
 			const accounts = await getConnectedAccounts();
@@ -78,9 +71,9 @@ export function SettingsDialog({
 		} finally {
 			setIsLoading(false);
 		}
-	};
+	}, []);
 
-	const loadModelSettings = async () => {
+	const loadModelSettings = useCallback(async () => {
 		try {
 			const [models, prefs] = await Promise.all([
 				getAvailableModels(),
@@ -95,7 +88,14 @@ export function SettingsDialog({
 		} catch (error) {
 			toast.error("Failed to load model settings");
 		}
-	};
+	}, []);
+
+	useEffect(() => {
+		if (open) {
+			loadAccounts();
+			loadModelSettings();
+		}
+	}, [open, loadAccounts, loadModelSettings]);
 
 	const handleModelChange = async (
 		type: "light" | "middle" | "large",

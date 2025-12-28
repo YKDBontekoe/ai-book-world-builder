@@ -93,11 +93,10 @@ function PureSettingsModelSelector({
 		recentModels,
 		getModelItemValue,
 		selectedModel,
-		optimisticModelId,
 	]);
 
 	const renderModelCard = useCallback(
-		(model: ChatModel, keyPrefix: string, showProvider = true) => {
+		(model: ChatModel, keyPrefix:string, showProvider = true) => {
 			const isFavorite = favoriteModels.includes(model.id);
 			const isSelected = model.id === optimisticModelId;
 			const canSort = keyPrefix === "fav";
