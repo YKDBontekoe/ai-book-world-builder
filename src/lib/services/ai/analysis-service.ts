@@ -60,6 +60,7 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
+			// @ts-expect-error some version mismatch shenanigans
 			model: openrouter(await getSelectedModelId("large")),
 			schema: critiqueSchema,
 			prompt,
@@ -108,6 +109,7 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
+			// @ts-expect-error some version mismatch shenanigans
 			model: openrouter(await getSelectedModelId("large")),
 			schema: consistencySchema,
 			prompt,

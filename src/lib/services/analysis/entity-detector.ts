@@ -37,6 +37,7 @@ export class EntityDetector {
 			.join("\n\n---\n\n");
 
 		const { object } = await generateObject({
+			// @ts-expect-error some version mismatch shenanigans
 			model: openrouter(this.modelId),
 			schema: entityDetectionSchema,
 			prompt: `You are analyzing excerpts from a book to identify story elements.

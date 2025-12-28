@@ -79,6 +79,7 @@ export async function processDailyFeedback() {
 	const modelId = await getSelectedModelId("large");
 
 	const { object } = await generateObject({
+		// @ts-expect-error some version mismatch shenanigans
 		model: myProvider.languageModel(modelId),
 		schema: z.object({
 			groups: z.array(

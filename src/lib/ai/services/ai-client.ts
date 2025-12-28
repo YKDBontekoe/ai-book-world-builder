@@ -141,6 +141,7 @@ export const aiClient = {
 			const modelId = await resolveModelId(params.options);
 
 			const result = await generateText({
+				// @ts-expect-error some version mismatch shenanigans
 				model: myProvider.languageModel(modelId),
 				system: params.options?.system,
 				prompt: params.prompt,
@@ -181,6 +182,7 @@ export const aiClient = {
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
 				const result = await generateObject({
+					// @ts-expect-error some version mismatch shenanigans
 					model: myProvider.languageModel(modelId),
 					system: params.options?.system,
 					schema: params.schema,
@@ -253,6 +255,7 @@ export const aiClient = {
 			const modelId = await resolveModelId(params.options);
 
 			const result = streamText({
+				// @ts-expect-error some version mismatch shenanigans
 				model: myProvider.languageModel(modelId),
 				system: params.options?.system,
 				prompt: params.prompt,

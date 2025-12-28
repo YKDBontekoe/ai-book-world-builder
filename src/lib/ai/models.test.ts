@@ -1,51 +1,57 @@
-import { simulateReadableStream } from "ai";
-import { MockLanguageModelV2 } from "ai/test";
+import { experimental_generateObject, simulateReadableStream } from "ai";
+import { MockLanguageModelV3 } from "ai/test";
 import { getResponseChunksByPrompt } from "../../../tests/prompts/utils";
 
-export const chatModel = new MockLanguageModelV2({
-	doGenerate: async () => ({
-		rawCall: { rawPrompt: null, rawSettings: {} },
-		finishReason: "stop",
-		usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-		content: [{ type: "text", text: "Hello, world!" }],
-		warnings: [],
-	}),
-	doStream: async ({ prompt }) => ({
+export const chatModel = new MockLanguageModelV3({
+	specificationVersion: "v2",
+	doGenerate: async () =>
+		({
+			rawCall: { rawPrompt: null, rawSettings: {} },
+			finishReason: "stop",
+			usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
+			content: [{ type: "text", text: "Hello, world!" }],
+			warnings: [],
+		}) as any,
+	doStream: async ({ prompt }: any) => ({
 		stream: simulateReadableStream({
 			chunkDelayInMs: 500,
 			initialDelayInMs: 1000,
-			chunks: getResponseChunksByPrompt(prompt),
+			chunks: getResponseChunksByPrompt(prompt) as any,
 		}),
 		rawCall: { rawPrompt: null, rawSettings: {} },
 	}),
 });
 
-export const reasoningModel = new MockLanguageModelV2({
-	doGenerate: async () => ({
-		rawCall: { rawPrompt: null, rawSettings: {} },
-		finishReason: "stop",
-		usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-		content: [{ type: "text", text: "Hello, world!" }],
-		warnings: [],
-	}),
-	doStream: async ({ prompt }) => ({
+export const reasoningModel = new MockLanguageModelV3({
+	specificationVersion: "v2",
+	doGenerate: async () =>
+		({
+			rawCall: { rawPrompt: null, rawSettings: {} },
+			finishReason: "stop",
+			usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
+			content: [{ type: "text", text: "Hello, world!" }],
+			warnings: [],
+		}) as any,
+	doStream: async ({ prompt }: any) => ({
 		stream: simulateReadableStream({
 			chunkDelayInMs: 500,
-			initialDelayInMs: 1000,
-			chunks: getResponseChunksByPrompt(prompt, true),
+_FIX_ME_		initialDelayInMs: 1000,
+			chunks: getResponseChunksByPrompt(prompt, true) as any,
 		}),
 		rawCall: { rawPrompt: null, rawSettings: {} },
 	}),
 });
 
-export const titleModel = new MockLanguageModelV2({
-	doGenerate: async () => ({
-		rawCall: { rawPrompt: null, rawSettings: {} },
-		finishReason: "stop",
-		usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-		content: [{ type: "text", text: "This is a test title" }],
-		warnings: [],
-	}),
+export const titleModel = new MockLanguageModelV3({
+	specificationVersion: "v2",
+	doGenerate: async () =>
+		({
+			rawCall: { rawPrompt: null, rawSettings: {} },
+			finishReason: "stop",
+			usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
+			content: [{ type: "text", text: "This is a test title" }],
+			warnings: [],
+		}) as any,
 	doStream: async () => ({
 		stream: simulateReadableStream({
 			chunkDelayInMs: 500,
@@ -59,25 +65,27 @@ export const titleModel = new MockLanguageModelV2({
 					finishReason: "stop",
 					usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
 				},
-			],
+			] as any,
 		}),
 		rawCall: { rawPrompt: null, rawSettings: {} },
 	}),
 });
 
-export const artifactModel = new MockLanguageModelV2({
-	doGenerate: async () => ({
-		rawCall: { rawPrompt: null, rawSettings: {} },
-		finishReason: "stop",
-		usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
-		content: [{ type: "text", text: "Hello, world!" }],
-		warnings: [],
-	}),
-	doStream: async ({ prompt }) => ({
+export const artifactModel = new MockLanguageModelV3({
+	specificationVersion: "v2",
+	doGenerate: async () =>
+		({
+			rawCall: { rawPrompt: null, rawSettings: {} },
+			finishReason: "stop",
+			usage: { inputTokens: 10, outputTokens: 20, totalTokens: 30 },
+			content: [{ type: "text", text: "Hello, world!" }],
+			warnings: [],
+		}) as any,
+	doStream: async ({ prompt }: any) => ({
 		stream: simulateReadableStream({
 			chunkDelayInMs: 50,
-			initialDelayInMs: 100,
-			chunks: getResponseChunksByPrompt(prompt),
+			initialDelayInMs: 1000,
+			chunks: getResponseChunksByPrompt(prompt) as any,
 		}),
 		rawCall: { rawPrompt: null, rawSettings: {} },
 	}),
