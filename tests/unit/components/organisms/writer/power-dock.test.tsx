@@ -11,37 +11,31 @@ const { mockExecute } = vi.hoisted(() => {
 });
 
 // Mock dependencies
-const mockEditorActions = {
-	undo: vi.fn(),
-	redo: vi.fn(),
-};
-
-const mockToggleChat = vi.fn();
-const mockToggleSpotlight = vi.fn();
-
-vi.mock("@/components/organisms/writer/writer-control-context", () => ({
-	useWriterControl: () => ({
-		editorActions: mockEditorActions,
-		toggleChat: mockToggleChat,
-		isChatOpen: false,
-		toggleSpotlight: mockToggleSpotlight,
-		isSpotlightOpen: false,
-	}),
+vi.mock("sonner", () => ({
+  toast: {
+    success: vi.fn(),
+    error: vi.fn(),
+    loading: vi.fn(),
+    dismiss: vi.fn(),
+  },
 }));
 
-vi.mock("@/components/organisms/writer/writer-layout-context", () => ({
-	useWriterLayoutContext: () => ({
-		viewMode: "default",
-	}),
+import type { HistoryItem } from "@/components/organisms/writer/power-dock";
+
+vi.mock("usehooks-ts", () => ({
+  useLocalStorage: <T,>(key: string, initialValue: T) => {
+    const [state, setState] = React.useState(initialValue);
+    return [state, setState];
+  },
 }));
 
-vi.mock("@/components/organisms/writer/writer-context", () => ({
-	useWriterContext: () => ({
-		project: { id: "p1" },
-		structure: [],
-		activeChapterId: "c1",
-		activeSceneId: "s1",
-	}),
+import React from "react";
+
+// Mock UI components
+vi.mock("@/components/atoms/textarea", () => ({
+	Textarea: (props: React.ComponentProps<"textarea">) => (
+		<textarea {...props} />
+	),
 }));
 
 vi.mock("usehooks-ts", () => {

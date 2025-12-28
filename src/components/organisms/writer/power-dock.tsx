@@ -1,24 +1,35 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
 	AlertTriangle,
 	BookOpenCheck,
-	ChevronDown,
+	Clock,
 	Edit,
 	Expand,
 	Feather,
 	Globe,
+	History as HistoryIcon,
 	MessageSquare,
 	Redo,
 	Search,
 	Send,
 	Sparkles,
+	Trash2,
 	Undo,
 	X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
+import { useLocalStorage } from "usehooks-ts";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuLabel,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/atoms/dropdown-menu";
 import { Separator } from "@/components/atoms/separator";
 import { Textarea } from "@/components/atoms/textarea";
 import {
@@ -62,6 +73,12 @@ const TOOLS = [
 	{ id: "lore", icon: Globe, label: "Lore", color: "text-pink-400" },
 ] as const;
 
+export type HistoryItem = {
+	toolId: ToolType;
+	input: string;
+	timestamp: number;
+};
+
 export function PowerDock() {
 	const {
 		editorActions,
@@ -83,6 +100,11 @@ export function PowerDock() {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [result, setResult] = useState<string | null>(null);
 
+	const [history, setHistory] = useLocalStorage<HistoryItem[]>(
+		"power-dock-history",
+		[],
+	);
+
 	// Reset when closing or changing modes
 	const reset = () => {
 		setMode("default");
@@ -98,10 +120,26 @@ export function PowerDock() {
 		setResult(null);
 	};
 
+	const addToHistory = (toolId: ToolType, text: string) => {
+		setHistory((prev) => {
+			// Remove identical recent entry to avoid clutter
+			const filtered = prev.filter(
+				(item) => !(item.toolId === toolId && item.input === text),
+			);
+			// Add new item to top, keep max 20
+			return [
+				{ toolId, input: text, timestamp: Date.now() },
+				...filtered,
+			].slice(0, 20);
+		});
+	};
+
 	const handleExecute = async () => {
 		if (!project?.id || !selectedTool) return;
 		setIsProcessing(true);
 		setResult(null);
+
+		const currentInput = input; // Capture input before potential reset
 
 		try {
 			const strategy = toolStrategies[selectedTool];
@@ -117,9 +155,10 @@ export function PowerDock() {
 				activeSceneId: activeSceneId || null,
 			};
 
-			const outcome = await strategy.execute(toolContext, input);
+			const outcome = await strategy.execute(toolContext, currentInput);
 
 			if (outcome.success) {
+				addToHistory(selectedTool, currentInput);
 				if (outcome.result) {
 					setResult(outcome.result);
 					toast.success("Action completed");
@@ -137,6 +176,10 @@ export function PowerDock() {
 		} finally {
 			setIsProcessing(false);
 		}
+	};
+
+	const getToolHistory = (toolId: ToolType) => {
+		return history.filter((h) => h.toolId === toolId);
 	};
 
 	const getPlaceholder = (tool: ToolType) => {
@@ -159,7 +202,7 @@ export function PowerDock() {
 	};
 
 	// Animation variants
-	const containerVariants = {
+	const containerVariants: Variants = {
 		hidden: { y: 100, opacity: 0 },
 		visible: {
 			y: 0,
@@ -198,6 +241,7 @@ export function PowerDock() {
 										Result
 									</span>
 									<button
+										type="button"
 										onClick={() => setResult(null)}
 										className="hover:bg-white/10 p-1 rounded"
 									>
@@ -209,6 +253,7 @@ export function PowerDock() {
 								</div>
 								<div className="mt-2 flex items-center justify-between gap-2">
 									<button
+										type="button"
 										onClick={() => {
 											if (editorActions?.insertText && result) {
 												editorActions.insertText(result);
@@ -221,6 +266,7 @@ export function PowerDock() {
 										Insert into Editor
 									</button>
 									<button
+										type="button"
 										onClick={() => {
 											if (result) {
 												navigator.clipboard.writeText(result);
@@ -356,34 +402,95 @@ export function PowerDock() {
 										</span>
 									</div>
 
-									<div className="flex-1 relative group">
-										<Textarea
-											value={input}
-											onChange={(e) => setInput(e.target.value)}
-											placeholder={getPlaceholder(selectedTool)}
-											className="min-h-[36px] max-h-[100px] py-2 px-3 pr-10 resize-none bg-white/5 border-white/10 focus:border-primary/50 text-sm rounded-lg w-full"
-											autoFocus
-											onKeyDown={(e) => {
-												if (e.key === "Enter" && !e.shiftKey) {
-													e.preventDefault();
-													handleExecute();
-												}
-												if (e.key === "Escape") {
-													reset();
-												}
-											}}
-										/>
-										<button
-											onClick={handleExecute}
-											disabled={isProcessing}
-											className="absolute right-1 top-1 p-1.5 hover:bg-primary rounded-md text-muted-foreground hover:text-primary-foreground transition-colors disabled:opacity-50"
-										>
-											{isProcessing ? (
-												<span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin block" />
-											) : (
-												<Send className="w-3 h-3" />
-											)}
-										</button>
+									<div className="flex-1 relative group flex gap-2 items-start">
+										<div className="relative flex-1">
+											<Textarea
+												value={input}
+												onChange={(e) => setInput(e.target.value)}
+												placeholder={getPlaceholder(selectedTool)}
+												className="min-h-[36px] max-h-[100px] py-2 px-3 pr-10 resize-none bg-white/5 border-white/10 focus:border-primary/50 text-sm rounded-lg w-full"
+												autoFocus
+												onKeyDown={(e) => {
+													if (e.key === "Enter" && !e.shiftKey) {
+														e.preventDefault();
+														handleExecute();
+													}
+													if (e.key === "Escape") {
+														reset();
+													}
+												}}
+											/>
+											<button
+												type="button"
+												onClick={handleExecute}
+												disabled={isProcessing}
+												className="absolute right-1 top-1 p-1.5 hover:bg-primary rounded-md text-muted-foreground hover:text-primary-foreground transition-colors disabled:opacity-50"
+											>
+												{isProcessing ? (
+													<span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin block" />
+												) : (
+													<Send className="w-3 h-3" />
+												)}
+											</button>
+										</div>
+
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<button
+													type="button"
+													aria-label="Command history"
+													className={cn(
+														"p-2 rounded-lg transition-colors border border-transparent",
+														"hover:bg-white/10 text-muted-foreground hover:text-foreground",
+														getToolHistory(selectedTool).length > 0 &&
+															"text-primary/70 hover:text-primary hover:border-primary/20",
+													)}
+												>
+													<HistoryIcon className="w-4 h-4" />
+												</button>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent
+												align="end"
+												side="top"
+												className="w-64 max-h-60"
+											>
+												<DropdownMenuLabel className="flex items-center justify-between text-xs font-normal text-muted-foreground">
+													<span>Recent {selectedTool} commands</span>
+													<button
+														type="button"
+														aria-label="Clear history for this tool"
+														onClick={() =>
+															setHistory((prev) =>
+																prev.filter((h) => h.toolId !== selectedTool),
+															)
+														}
+														className="p-1 hover:text-destructive transition-colors"
+														title="Clear history for this tool"
+													>
+														<Trash2 className="w-3 h-3" />
+													</button>
+												</DropdownMenuLabel>
+												<DropdownMenuSeparator />
+												{getToolHistory(selectedTool).length === 0 ? (
+													<div className="p-2 text-xs text-muted-foreground text-center italic">
+														No recent history
+													</div>
+												) : (
+													getToolHistory(selectedTool).map((item, idx) => (
+														<DropdownMenuItem
+															key={`${item.timestamp}-${idx}`}
+															onClick={() => setInput(item.input)}
+															className="flex items-start gap-2 py-2 cursor-pointer"
+														>
+															<Clock className="w-3 h-3 mt-0.5 shrink-0 opacity-50" />
+															<span className="line-clamp-2 text-xs">
+																{item.input}
+															</span>
+														</DropdownMenuItem>
+													))
+												)}
+											</DropdownMenuContent>
+										</DropdownMenu>
 									</div>
 
 									<Separator
@@ -392,6 +499,8 @@ export function PowerDock() {
 									/>
 
 									<button
+										type="button"
+										aria-label="Close"
 										onClick={reset}
 										className="p-2 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
 									>

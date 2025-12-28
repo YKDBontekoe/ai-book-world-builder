@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { CheckIcon, CopyIcon } from "lucide-react";
-import { useState } from "react";
+import { type ReactElement, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,7 @@ export function CopyButton({
 	showToast = true,
 	toastMessage = "Copied to clipboard",
 	variant = "ghost",
-}: CopyButtonProps): JSX.Element {
+}: CopyButtonProps): ReactElement {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = async () => {
