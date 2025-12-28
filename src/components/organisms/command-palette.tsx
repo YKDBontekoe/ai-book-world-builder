@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { motion } from "framer-motion";
 import {
 	FolderIcon,
@@ -35,7 +36,7 @@ export function CommandPalette({
 	isOpen,
 	onClose,
 	commands: propCommands,
-}: CommandPaletteProps): JSX.Element {
+}: CommandPaletteProps) {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);

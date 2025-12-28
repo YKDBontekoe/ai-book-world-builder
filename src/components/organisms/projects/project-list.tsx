@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { CalendarIcon, FolderIcon, Globe } from "lucide-react";
@@ -25,7 +26,7 @@ const item = {
 	show: {
 		opacity: 1,
 		x: 0,
-		transition: { type: "spring", stiffness: 400, damping: 25 },
+		transition: { type: "spring", stiffness: 300, damping: 20 } as any,
 	},
 };
 
@@ -46,7 +47,7 @@ function ProjectRow({
 	selected?: boolean;
 	onSelect?: (id: string) => void;
 	onDelete?: (id: string) => void;
-}): JSX.Element {
+}) {
 	return (
 		<div className="relative group flex items-center gap-4">
 			{/* Checkbox */}
@@ -127,7 +128,7 @@ export function ProjectList({
 	selectedIds,
 	onSelect,
 	onDeleteProject,
-}: ProjectListProps): JSX.Element {
+}: ProjectListProps) {
 	return (
 		<motion.div
 			variants={container}

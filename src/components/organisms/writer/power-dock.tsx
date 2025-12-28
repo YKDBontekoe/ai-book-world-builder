@@ -164,7 +164,7 @@ export function PowerDock() {
 		visible: {
 			y: 0,
 			opacity: 1,
-			transition: { type: "spring", stiffness: 300, damping: 30 },
+			transition: { type: "spring", stiffness: 300, damping: 30 } as any,
 		},
 		zen: { y: 100, opacity: 0 },
 	};

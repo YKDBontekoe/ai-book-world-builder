@@ -27,7 +27,7 @@ export function useWriterLayout(): WriterLayoutState {
 	const [isTypewriterMode, setIsTypewriterMode] = useState(false);
 	const [isDirectorMode, setIsDirectorMode] = useState(false);
 
-	const sidebarRef = useRef<ImperativePanelHandle>(null);
+	const sidebarRef = useRef<ImperativePanelHandle>(null!);
 
 	const toggleSidebar = () => {
 		const panel = sidebarRef.current;

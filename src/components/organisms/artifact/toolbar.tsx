@@ -201,15 +201,17 @@ const ReadingLevelSelector = ({
 							dragMomentum={false}
 							onClick={() => {
 								if (currentLevel !== 2 && hasUserSelectedLevel) {
-									sendMessage({
-										role: "user",
-										parts: [
-											{
-												type: "text",
-												text: `Please adjust the reading level to ${LEVELS[currentLevel]} level.`,
-											},
-										],
-									});
+										const message: ChatMessage = {
+											id: nanoid(),
+											role: "user",
+											parts: [
+												{
+													type: "text",
+													text: `Please adjust the reading level to ${LEVELS[currentLevel]} level.`,
+												},
+											],
+										};
+										sendMessage(message);
 
 									setSelectedTool(null);
 								}

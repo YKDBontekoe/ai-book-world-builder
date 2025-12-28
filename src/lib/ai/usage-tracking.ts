@@ -35,13 +35,7 @@ export async function enrichUsage({
 		const providers = await getTokenlensCatalog();
 		let modelId = selectedChatModel;
 
-		if (!isDynamicModel) {
-			try {
-				modelId = myProvider.languageModel(selectedChatModel).modelId;
-			} catch (_error) {
-				// ignore
-			}
-		}
+		// No-op - modelId is already set to selectedChatModel
 
 		if (!modelId || !providers) {
 			return usage as AppUsage;
