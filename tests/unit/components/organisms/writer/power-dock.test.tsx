@@ -5,29 +5,27 @@ import type { HistoryItem } from "@/components/organisms/writer/power-dock";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
 
 // Hoist mock functions
-const {
-	mockExecute,
-	getMockLocalStorage,
-	resetMockLocalStorage,
-} = vi.hoisted(() => {
-	let store: HistoryItem[] = [];
-	return {
-		mockExecute: vi.fn(),
-		getMockLocalStorage: () => [
-			store,
-			(value: HistoryItem[] | ((prev: HistoryItem[]) => HistoryItem[])) => {
-				if (typeof value === "function") {
-					store = value(store);
-				} else {
-					store = value;
-				}
+const { mockExecute, getMockLocalStorage, resetMockLocalStorage } = vi.hoisted(
+	() => {
+		let store: HistoryItem[] = [];
+		return {
+			mockExecute: vi.fn(),
+			getMockLocalStorage: () => [
+				store,
+				(value: HistoryItem[] | ((prev: HistoryItem[]) => HistoryItem[])) => {
+					if (typeof value === "function") {
+						store = value(store);
+					} else {
+						store = value;
+					}
+				},
+			],
+			resetMockLocalStorage: () => {
+				store = [];
 			},
-		],
-		resetMockLocalStorage: () => {
-			store = [];
-		},
-	};
-});
+		};
+	},
+);
 
 // Mock dependencies
 vi.mock("sonner", () => ({
@@ -223,7 +221,8 @@ describe("PowerDock", () => {
 			"Instructions (e.g., 'Make it tense')",
 		);
 
-		for (let i = 0; i < 25; i++) {
+		// Loop 21 times to exceed the 20-item limit by one
+		for (let i = 0; i < 21; i++) {
 			fireEvent.change(input, { target: { value: `Command ${i}` } });
 			fireEvent.keyDown(input, { key: "Enter" });
 			await waitFor(() =>
@@ -237,7 +236,8 @@ describe("PowerDock", () => {
 		fireEvent.click(screen.getByLabelText("Command history"));
 		const historyItems = screen.getAllByTestId("history-item");
 		expect(historyItems).toHaveLength(20);
-		expect(historyItems[0]).toHaveTextContent("Command 24");
+		// The oldest item ("Command 0") should be trimmed, and the newest ("Command 20") should be first.
+		expect(historyItems[0]).toHaveTextContent("Command 20");
 	});
 
 	it("deduplicates identical recent commands", async () => {
@@ -276,7 +276,10 @@ describe("PowerDock", () => {
 
 		fireEvent.click(screen.getByLabelText("Clear history for this tool"));
 
-		// Force re-render by typing in input, since mock doesn't trigger it
+		// WORKAROUND: The mock localStorage `setItem` function directly mutates
+		// the store but doesn't trigger a React state update. We must force a
+		// re-render to assert the effects of the clear operation. A better
+		// long-term solution would be to make the mock call the real state updater.
 		fireEvent.change(input, { target: { value: " " } });
 
 		await waitFor(() => {
