@@ -1,5 +1,10 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { customProvider, type LanguageModel } from "ai";
+import {
+	customProvider,
+	extractReasoningMiddleware,
+	wrapLanguageModel,
+	type LanguageModel,
+} from "ai";
 import { DEFAULT_MODELS } from "@/lib/ai/models";
 import { isTestEnvironment } from "@/lib/constants";
 
