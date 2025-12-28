@@ -1,6 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
+const { mockExecute } = vi.hoisted(() => {
+	return {
+		mockExecute: vi
+			.fn()
+			.mockResolvedValue({ success: true, result: "Generated text" }),
+	};
+});
 
 // Mock dependencies
 const mockEditorActions = {
@@ -36,35 +44,94 @@ vi.mock("@/components/organisms/writer/writer-context", () => ({
 	}),
 }));
 
+vi.mock("usehooks-ts", () => {
+	let store: any[] = [];
+	return {
+		useLocalStorage: vi.fn(() => [
+			store,
+			(value: any) => {
+				if (typeof value === "function") {
+					store = value(store);
+				} else {
+					store = value;
+				}
+			},
+		]),
+	};
+});
+
 // Mock tool strategies
 vi.mock("@/components/organisms/writer/tools/tool-strategies", () => ({
 	toolStrategies: {
-		write: {
-			execute: vi
-				.fn()
-				.mockResolvedValue({ success: true, result: "Generated text" }),
-		},
-		rewrite: {
-			execute: vi
-				.fn()
-				.mockResolvedValue({ success: true, result: "Rewritten text" }),
-		},
+		write: { execute: mockExecute },
+		rewrite: { execute: mockExecute },
+		expand: { execute: mockExecute },
+		critique: { execute: mockExecute },
+		consistency: { execute: mockExecute },
+		lore: { execute: mockExecute },
 	},
 }));
 
-vi.mock("@/components/atoms/tooltip", () => ({
-	Tooltip: ({ children }: { children: React.ReactNode }) => (
-		<div>{children}</div>
+vi.mock("@/components/atoms/textarea", () => ({
+	Textarea: (props: React.ComponentProps<"textarea">) => (
+		<textarea {...props} />
 	),
+}));
+
+vi.mock("@/components/molecules/glass-card", () => ({
+	GlassCard: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => <div className={className}>{children}</div>,
+}));
+
+vi.mock("@/components/atoms/tooltip", () => ({
+	Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 	TooltipTrigger: ({ children }: { children: React.ReactNode }) => (
-		<div>{children}</div>
+		<>{children}</>
 	),
 	TooltipContent: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),
 	TooltipProvider: ({ children }: { children: React.ReactNode }) => (
+		<>{children}</>
+	),
+}));
+
+vi.mock("@/components/atoms/dropdown-menu", () => ({
+	DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="dropdown-menu">{children}</div>
+	),
+	DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="dropdown-trigger">{children}</div>
+	),
+	DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="dropdown-content">{children}</div>
+	),
+	DropdownMenuItem: ({
+		children,
+		onClick,
+	}: {
+		children: React.ReactNode;
+		onClick?: () => void;
+	}) => (
+		<div
+			role="menuitem"
+			onClick={onClick}
+			onKeyDown={() => {}}
+			tabIndex={0}
+			data-testid="history-item"
+		>
+			{children}
+		</div>
+	),
+	DropdownMenuLabel: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),
+	DropdownMenuSeparator: () => <div />,
 }));
 
 // Mock framer-motion to avoid animation issues in tests
@@ -73,16 +140,10 @@ vi.mock("framer-motion", async () => {
 	return {
 		...actual,
 		AnimatePresence: ({ children }: { children: React.ReactNode }) => (
-			<div>{children}</div>
+			<>{children}</>
 		),
 		motion: {
-			div: ({ children, className, onClick, ...props }: any) => (
-				// biome-ignore lint/a11y/useKeyWithClickEvents: Mock component
-				// biome-ignore lint/a11y/noStaticElementInteractions: Mock component
-				<div className={className} onClick={onClick} {...props}>
-					{children}
-				</div>
-			),
+			div: (props: React.ComponentProps<"div">) => <div {...props} />,
 		},
 	};
 });
@@ -129,10 +190,12 @@ describe("PowerDock", () => {
 		fireEvent.click(screen.getByLabelText("Rewrite"));
 
 		await waitFor(() => {
-			expect(screen.getByPlaceholderText(/Instructions/i)).toBeInTheDocument();
+			expect(
+				screen.getByPlaceholderText(
+					"Instructions (e.g., 'Change to 1st person')",
+				),
+			).toBeInTheDocument();
 		});
 	});
 
-	// Note: Testing actual execution might be tricky with mock tool strategies,
-	// but we can verify the input appears.
 });
