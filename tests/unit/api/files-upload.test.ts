@@ -100,8 +100,16 @@ function buildRequest({ file, projectId }: { file: File; projectId: string }) {
 	return req;
 }
 
-function createMockFile(content: string, name: string, type: string) {
+function createMockFile(
+	content: string,
+	name: string,
+	type: string,
+	size?: number,
+) {
 	const file = new File([content], name, { type }) as any;
+	if (size) {
+		Object.defineProperty(file, "size", { value: size });
+	}
 	file.arrayBuffer = async () => {
 		const buffer = Buffer.from(content);
 		return buffer.buffer.slice(
@@ -190,9 +198,10 @@ describe("POST /api/files/upload", () => {
 	it("enforces per-role size caps", async () => {
 		const sizeLimit = sourceMaterialSizeLimits.regular;
 		const file = createMockFile(
-			"a".repeat(sizeLimit + 1),
+			"a",
 			"oversize.pdf",
 			"application/pdf",
+			sizeLimit + 1,
 		);
 
 		mockedAuth.mockResolvedValue(buildSession("regular-1") as any);

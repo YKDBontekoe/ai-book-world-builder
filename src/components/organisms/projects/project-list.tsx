@@ -47,7 +47,7 @@ function ProjectRow({
 	selected?: boolean;
 	onSelect?: (id: string) => void;
 	onDelete?: (id: string) => void;
-}): JSX.Element {
+}) {
 	return (
 		<div className="relative group flex items-center gap-4">
 			{/* Checkbox */}
@@ -128,7 +128,7 @@ export function ProjectList({
 	selectedIds,
 	onSelect,
 	onDeleteProject,
-}: ProjectListProps): JSX.Element {
+}: ProjectListProps) {
 	return (
 		<motion.div
 			variants={container}
@@ -137,7 +137,7 @@ export function ProjectList({
 			className="flex flex-col gap-3"
 		>
 			{projects.map((project) => (
-				<motion.div key={project.id} variants={item}>
+				<motion.div key={project.id} variants={item} layout>
 					<ProjectRow
 						project={project}
 						selected={selectedIds?.has(project.id)}

@@ -61,7 +61,9 @@ export function DocumentPreview({
 	const hitboxRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		const boundingBox = hitboxRef.current?.getBoundingClientRect();
+		const boundingBox = (
+			hitboxRef as React.RefObject<HTMLDivElement>
+		).current?.getBoundingClientRect();
 
 		if (artifact.documentId && boundingBox) {
 			setArtifact((currentArtifact) => ({
