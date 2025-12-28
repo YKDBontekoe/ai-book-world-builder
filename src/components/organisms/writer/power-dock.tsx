@@ -199,6 +199,7 @@ export function PowerDock() {
 										Result
 									</span>
 									<button
+											type="button"
 										onClick={() => setResult(null)}
 										className="hover:bg-white/10 p-1 rounded"
 									>
@@ -210,6 +211,7 @@ export function PowerDock() {
 								</div>
 								<div className="mt-2 flex items-center justify-between gap-2">
 									<button
+										type="button"
 										onClick={() => {
 											if (editorActions?.insertText && result) {
 												editorActions.insertText(result);
@@ -222,6 +224,7 @@ export function PowerDock() {
 										Insert into Editor
 									</button>
 									<button
+										type="button"
 										onClick={() => {
 											if (result) {
 												navigator.clipboard.writeText(result);
@@ -375,6 +378,7 @@ export function PowerDock() {
 											}}
 										/>
 										<button
+											type="button"
 											onClick={handleExecute}
 											disabled={isProcessing}
 											className="absolute right-1 top-1 p-1.5 hover:bg-primary rounded-md text-muted-foreground hover:text-primary-foreground transition-colors disabled:opacity-50"
@@ -393,6 +397,7 @@ export function PowerDock() {
 									/>
 
 									<button
+										type="button"
 										onClick={reset}
 										className="p-2 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
 									>

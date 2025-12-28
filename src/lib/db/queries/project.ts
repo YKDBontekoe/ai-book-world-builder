@@ -47,7 +47,7 @@ export async function getProjectsVisibleToUser({
 	filter?: "all" | "mine" | "shared";
 }): Promise<Project[]> {
 	try {
-		let whereClause;
+		let whereClause: any;
 
 		if (filter === "mine") {
 			whereClause = eq(project.userId, userId);

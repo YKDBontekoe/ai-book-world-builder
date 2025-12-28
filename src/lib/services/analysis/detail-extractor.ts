@@ -72,7 +72,7 @@ export class DetailExtractor {
 			.join("\n\n---\n\n");
 
 		const { object } = await generateObject({
-			model: openrouter(this.modelId),
+			model: openrouter(this.modelId) as any,
 			schema: entityDetailsSchema,
 			prompt: `Based on the following text excerpts, extract detailed information about "${entityName}" (a ${entityKind}).
 

@@ -18,7 +18,10 @@ export const Default: Story = {
 	render: (args) => (
 		<GridList {...args}>
 			{Array.from({ length: 6 }).map((_, i) => (
-				<Card key={i}>
+				<Card
+					// biome-ignore lint/suspicious/noArrayIndexKey: Storybook example
+					key={i}
+				>
 					<CardContent className="p-6">
 						<div className="font-medium">Item {i + 1}</div>
 						<div className="text-sm text-muted-foreground">
@@ -39,7 +42,10 @@ export const Responsive: Story = {
 	render: (args) => (
 		<GridList {...args}>
 			{Array.from({ length: 8 }).map((_, i) => (
-				<Card key={i}>
+				<Card
+					// biome-ignore lint/suspicious/noArrayIndexKey: Storybook example
+					key={i}
+				>
 					<CardContent className="p-6">
 						<div className="font-medium">Item {i + 1}</div>
 					</CardContent>

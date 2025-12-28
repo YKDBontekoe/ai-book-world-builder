@@ -91,5 +91,11 @@ export function useChatToolEffects({
 			// Mark as processed
 			processedToolCallIdsRef.current.add(toolInvocation.toolCallId);
 		}
-	}, [messages, queryClient, selectedProjectId, setActivePane]);
+	}, [
+		messages,
+		queryClient,
+		selectedProjectId,
+		setActivePane,
+		writerContext,
+	]);
 }
