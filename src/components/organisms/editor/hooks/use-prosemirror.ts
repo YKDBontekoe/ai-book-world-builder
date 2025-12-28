@@ -15,7 +15,7 @@ import { suggestionsPlugin } from "@/lib/editor/suggestions";
 import type { MentionState } from "./use-mention";
 
 interface UseProseMirrorProps {
-	containerRef: React.RefObject<HTMLDivElement>;
+	containerRef: React.RefObject<HTMLDivElement | null>;
 	content: string;
 	readOnly: boolean;
 	onSaveContent: (updatedContent: string, debounce: boolean) => void;

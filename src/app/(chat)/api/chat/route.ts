@@ -157,7 +157,10 @@ export async function POST(request: Request) {
 				const result = streamText({
 					model,
 					system: groundedSystemPrompt,
-					messages: uiMessages,
+					messages: uiMessages.map((m) => ({
+						role: m.role,
+						content: m.content,
+					})),
 					stopWhen: stepCountIs(5),
 					experimental_activeTools:
 						selectedChatModel === "chat-model-reasoning" ? [] : toolList,

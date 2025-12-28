@@ -30,13 +30,9 @@ export const myProvider = isTestEnvironment
 				},
 			});
 		})()
-	: {
-			languageModel: (modelId: string) => {
-				const baseModel = openrouter(modelId);
-
-				// Add reasoning middleware if needed, though OpenRouter handles many models natively.
-				// For DeepSeek R1/reasoner models, we might need specific handling if not via OpenRouter's standard API.
-				// For now, return the base model.
-				return baseModel;
+	: customProvider({
+			languageModels: {
+				"artifact-model": openrouter(DEFAULT_MODELS.middle),
+				"artifact-model-reasoning": openrouter(DEFAULT_MODELS.large),
 			},
-		};
+		});

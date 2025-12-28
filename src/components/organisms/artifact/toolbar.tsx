@@ -203,12 +203,7 @@ const ReadingLevelSelector = ({
 								if (currentLevel !== 2 && hasUserSelectedLevel) {
 									sendMessage({
 										role: "user",
-										parts: [
-											{
-												type: "text",
-												text: `Please adjust the reading level to ${LEVELS[currentLevel]} level.`,
-											},
-										],
+										content: `Please adjust the reading level to ${LEVELS[currentLevel]} level.`,
 									});
 
 									setSelectedTool(null);
