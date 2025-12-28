@@ -207,7 +207,6 @@ export async function generateEpilogue(
 	const targetWords = Math.min(settings.pagesPerChapter * 250, 2000);
 
 	const response = await generateText({
-		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(settings.writerModelId),
 		system: `You are a professional novelist. ${stylePrompt}
 Write a satisfying epilogue that provides closure while leaving room for reader imagination.`,

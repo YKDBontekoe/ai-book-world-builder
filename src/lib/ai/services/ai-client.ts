@@ -141,7 +141,6 @@ export const aiClient = {
 			const modelId = await resolveModelId(params.options);
 
 			const result = await generateText({
-				// @ts-expect-error Version mismatch between ai and provider packages
 				model: myProvider.languageModel(modelId),
 				system: params.options?.system,
 				prompt: params.prompt,
@@ -255,7 +254,6 @@ export const aiClient = {
 			const modelId = await resolveModelId(params.options);
 
 			const result = streamText({
-				// @ts-expect-error Version mismatch between ai and provider packages
 				model: myProvider.languageModel(modelId),
 				system: params.options?.system,
 				prompt: params.prompt,
