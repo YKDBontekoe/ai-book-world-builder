@@ -5,29 +5,27 @@ import type { HistoryItem } from "@/components/organisms/writer/power-dock";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
 
 // Hoist mock functions
-const {
-	mockExecute,
-	getMockLocalStorage,
-	resetMockLocalStorage,
-} = vi.hoisted(() => {
-	let store: HistoryItem[] = [];
-	return {
-		mockExecute: vi.fn(),
-		getMockLocalStorage: () => [
-			store,
-			(value: HistoryItem[] | ((prev: HistoryItem[]) => HistoryItem[])) => {
-				if (typeof value === "function") {
-					store = value(store);
-				} else {
-					store = value;
-				}
+const { mockExecute, getMockLocalStorage, resetMockLocalStorage } = vi.hoisted(
+	() => {
+		let store: HistoryItem[] = [];
+		return {
+			mockExecute: vi.fn(),
+			getMockLocalStorage: () => [
+				store,
+				(value: HistoryItem[] | ((prev: HistoryItem[]) => HistoryItem[])) => {
+					if (typeof value === "function") {
+						store = value(store);
+					} else {
+						store = value;
+					}
+				},
+			],
+			resetMockLocalStorage: () => {
+				store = [];
 			},
-		],
-		resetMockLocalStorage: () => {
-			store = [];
-		},
-	};
-});
+		};
+	},
+);
 
 // Mock dependencies
 vi.mock("sonner", () => ({
