@@ -136,7 +136,7 @@ export function ProjectList({
 			className="flex flex-col gap-3"
 		>
 			{projects.map((project) => (
-				<motion.div key={project.id} variants={item}>
+				<motion.div key={project.id} variants={item} layout>
 					<ProjectRow
 						project={project}
 						selected={selectedIds?.has(project.id)}

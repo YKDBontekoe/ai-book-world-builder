@@ -179,6 +179,7 @@ export function PowerDock() {
 				initial="hidden"
 				animate={isZen ? "zen" : "visible"}
 				variants={containerVariants}
+				layout
 			>
 				{/* Result Popover (if any) */}
 				<AnimatePresence>

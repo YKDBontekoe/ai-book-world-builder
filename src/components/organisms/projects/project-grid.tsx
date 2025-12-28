@@ -178,12 +178,7 @@ export function ProjectGrid({
 		<motion.div variants={container} initial="hidden" animate="show">
 			<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
 				{projects.map((project) => (
-					<motion.div
-						key={project.id}
-						variants={item}
-						className="h-full"
-						layout
-					>
+					<motion.div key={project.id} variants={item} className="h-full">
 						<ProjectCard
 							project={project}
 							selected={selectedIds?.has(project.id)}

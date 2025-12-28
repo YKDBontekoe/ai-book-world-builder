@@ -30,7 +30,7 @@ export function useWriterLayout(): WriterLayoutState {
 	const sidebarRef = useRef<ImperativePanelHandle>(null);
 
 	const toggleSidebar = () => {
-		const panel = sidebarRef.current;
+		const panel = (sidebarRef as React.RefObject<ImperativePanelHandle>).current;
 		if (panel) {
 			if (isSidebarOpen) {
 				panel.collapse();

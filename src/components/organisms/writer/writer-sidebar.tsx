@@ -14,7 +14,7 @@ import { StructureEditorDialog } from "@/components/organisms/writer/structure-e
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 
-export function WriterSidebar(): JSX.Element {
+export function WriterSidebar() {
 	const { toggleSidebar } = useWriterLayoutContext();
 	const {
 		project,
