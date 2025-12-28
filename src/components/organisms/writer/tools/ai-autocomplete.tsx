@@ -159,6 +159,7 @@ export function AIAutocomplete({
 						<div className="space-y-1">
 							{suggestions.map((suggestion, index) => (
 								<button
+									// biome-ignore lint/suspicious/noArrayIndexKey: Dynamic suggestions
 									key={index}
 									type="button"
 									onClick={() => {

@@ -257,10 +257,21 @@ function PaginatedContent({
 		}
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "ArrowRight") {
+			handlePageTurn("next");
+		} else if (e.key === "ArrowLeft") {
+			handlePageTurn("prev");
+		}
+	};
+
 	return (
 		<div
-			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
+			role="button"
+			tabIndex={0}
+			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
 			onClick={handleClick}
+			onKeyDown={handleKeyDown}
 		>
 			<div
 				ref={containerRef}

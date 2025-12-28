@@ -107,7 +107,7 @@ export function useWriterState({
 		return () => {
 			isMounted = false;
 		};
-	}, [activeSceneId, activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
+	}, [activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);
@@ -146,7 +146,7 @@ export function useWriterState({
 			fetchStructure();
 		}
 		// biome-ignore lint/correctness/useExhaustiveDependencies: initialStructure is intentionally omitted to prevent re-fetching on optimistic updates.
-	}, [projectId, fetchStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
+	}, [fetchStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
 	// Actually, if initialStructure changes, the other useEffect handles it. This one handles missing initialStructure.
 
 	const performSave = async (content: string, id: string, retryCount = 0) => {

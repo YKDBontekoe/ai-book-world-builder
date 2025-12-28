@@ -43,7 +43,7 @@ export const loreService = {
 		await ensureProjectAccess(projectId);
 
 		const { object } = await generateObject({
-			model: openrouter(await getSelectedModelId("large")),
+			model: openrouter(await getSelectedModelId("large")) as any,
 			schema: loreSchema,
 			prompt: `
         Create a new world-building entity for a story.
