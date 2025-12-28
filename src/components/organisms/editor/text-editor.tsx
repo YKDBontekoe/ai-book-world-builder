@@ -65,7 +65,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		} | null>(null);
 
 		const { editorRef, mounted } = useProseMirror({
-			containerRef,
+			containerRef: containerRef as any,
 			content,
 			readOnly,
 			onSaveContent,
@@ -86,7 +86,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			setMentionCoords,
 			filteredEntities,
 			insertMention,
-		} = useMention(editorRef.current, mentionables);
+		} = useMention(editorRef.current as any, mentionables);
 
 		// This effect synchronizes the state from the ProseMirror plugin (captured in useProseMirror)
 		// to the useMention hook which manages the UI
@@ -105,7 +105,12 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			setActiveSuggestion,
 			projectedSuggestions,
 			handleApplySuggestion,
-		} = useSuggestions(editorRef.current, suggestions, content, containerRef);
+		} = useSuggestions(
+			editorRef.current,
+			suggestions,
+			content,
+			containerRef as any,
+		);
 
 		useImperativeHandle(ref, () => ({
 			undo: () => {

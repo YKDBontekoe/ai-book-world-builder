@@ -9,7 +9,7 @@ import {
 	SearchIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { type ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/atoms/dialog";
 import { springs } from "@/lib/animations";
 import { cn } from "@/lib/utils";
@@ -35,7 +35,7 @@ export function CommandPalette({
 	isOpen,
 	onClose,
 	commands: propCommands,
-}: CommandPaletteProps): JSX.Element {
+}: CommandPaletteProps): ReactElement {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);

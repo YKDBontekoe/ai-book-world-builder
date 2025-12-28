@@ -5,6 +5,7 @@ import {
 	smoothStream,
 	stepCountIs,
 	streamText,
+	type LanguageModel,
 } from "ai";
 import { auth } from "@/app/(auth)/auth";
 import {
@@ -152,7 +153,7 @@ export async function POST(request: Request) {
 					targetModelId = await getSelectedModelId("middle");
 				}
 
-				const model = myProvider.languageModel(targetModelId);
+				const model = myProvider.languageModel(targetModelId) as LanguageModel;
 
 				const result = streamText({
 					model,

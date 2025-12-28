@@ -329,7 +329,7 @@ const PureToolbar = ({
 	const [selectedTool, setSelectedTool] = useState<string | null>(null);
 	const [isAnimating, setIsAnimating] = useState(false);
 
-	useOnClickOutside(toolbarRef, () => {
+	useOnClickOutside(toolbarRef as any, () => {
 		setIsToolbarVisible(false);
 		setSelectedTool(null);
 	});
@@ -436,8 +436,10 @@ const PureToolbar = ({
 						initial={{ scale: 1 }}
 						key="stop-icon"
 						onClick={() => {
-							stop();
-							setMessages((messages) => messages);
+							stop(undefined);
+							setMessages((messages) => {
+								return [...messages];
+							});
 						}}
 					>
 						<StopCircleIcon size={16} />
