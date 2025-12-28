@@ -32,11 +32,23 @@ src/
 
 ## Key Architectural Patterns
 
-### 1. Writer View State
-The Writer View (`app/(chat)/projects/[id]/page.tsx`) uses a complex state management strategy:
--   **Server-Side**: Fetches initial structure (Chapters/Scenes) and Project data.
--   **Client-Side**: `WriterProvider` hydrates `WriterContext` and `WriterLayoutContext`.
--   **Hook**: `useWriterState` manages the active chapter/scene and syncs with the URL/History.
+### 1. Writer View Architecture
+The `WriterView` (`components/organisms/writer/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
+
+1.  **Sidebar (Left)**: Managed by `WriterSidebar`. Contains navigation (Chapters/Scenes) and Project structure.
+2.  **Editor (Center)**: The `WriterEditor` wraps a ProseMirror instance. It is the primary workspace.
+3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas`. Displays the Entity Bible, Graphs, and Context.
+
+**State Management**:
+The Writer uses a context stack to manage its state without prop drilling:
+-   **WriterProvider**: Holds project data (`project`, `chapters`, `scenes`).
+-   **WriterControlProvider**: Manages UI state like `isChatOpen`, `activePane`.
+-   **WriterLayoutContext**: Handles layout toggles like `ZenMode`, `DirectorMode`.
+
+**Lazy Loading**:
+To optimize TTI (Time to Interactive), heavy components are lazy-loaded:
+-   `FloatingAssistant` (The chat interface)
+-   `BookCanvas` (The entity graph/bible)
 
 ### 2. Reader Mode Architecture
 Reader Mode (`app/(reader)`) is intentionally isolated from the main Writer app to provide a focused reading experience.
@@ -55,10 +67,19 @@ To enable the AI to write coherently over long contexts without a Vector DB:
 -   **Selection**: The `StoryService` (and `ContextSelection` type) allows selecting relevant entities, outlines, and previous scenes.
 -   **Flooding**: We pass the *full text* of the immediately preceding scene and *summaries* of all prior scenes in the chapter to the model context window. This ensures continuity (e.g., characters are in the right room) without exceeding token limits for very long books.
 
-### 5. AI Pipeline
--   **Providers**: `lib/ai/providers.ts` manages connections to OpenRouter/Verel AI SDK.
--   **Tools**: `lib/ai/tools/` contains Zod-validated tools used by the AI Agent.
--   **Generation**: `lib/generation/` implements the state-driven generation pipeline (see `generation-architecture.md`).
+### 5. AI Integration & Models
+
+**Role-Based Routing**:
+We do not hardcode model IDs. Instead, we use a role-based system defined in `lib/ai/model-routing.ts`:
+- `light`: Fast, cheap (e.g., Haiku, Flash). Used for UI labeling.
+- `middle`: Balanced (e.g., Sonnet 3.5, GPT-4o). Used for most generation.
+- `large`: Powerful (e.g., Opus). Used for complex planning.
+
+**Tools**:
+Tools are defined in `lib/ai/tools/`. They must:
+1.  Verify ownership (`verifyToolAccess`).
+2.  Return typed results.
+3.  Be registered in `lib/ai/tool-registry.ts`.
 
 ## Design System
 
@@ -75,6 +96,11 @@ We employ a **Dual Verification Strategy** (`AGENTS.md`) to ensure quality:
 -   Located in `tests/unit/`.
 -   Run: `pnpm test:unit`
 -   Mocking: We use `vi.mock` heavily. Note that `server-only` imports must be mocked.
+    ```typescript
+    vi.mock("@/lib/ai/models", () => ({
+      getSelectedModelId: vi.fn().mockResolvedValue("mock-model"),
+    }));
+    ```
 
 ### 2. End-to-End Verification (Playwright)
 -   Located in `tests/e2e/`.
