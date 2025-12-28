@@ -116,7 +116,15 @@ elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
   fi
 fi
 
-log "Context Resolved: PR=$IS_PR, #$NUMBER, Branch=$BRANCH"
+log "Context Resolved: PR=$IS_PR, #$NUMBER, Branch=$BRANCH, Author=$AUTHOR"
+
+# CRITICAL: Skip ALL Jules API invocations for PRs created by Jules itself
+# Jules PRs should only use the CUSTOM_PAT token for actions, never spawn new Jules sessions
+SKIP_JULES_INVOCATION="false"
+if [[ "$IS_PR" == "true" && "$AUTHOR" == "google-labs-jules" ]]; then
+  SKIP_JULES_INVOCATION="true"
+  log "⚠️ Skipping Jules API invocation - PR was created by Jules. Use CUSTOM_PAT for any actions."
+fi
 
 # 3. Determine Intent
 # -------------------
@@ -149,8 +157,11 @@ elif [[ "$EVENT_NAME" == "pull_request_review" ]]; then
 fi
 
 # Logic A: @Jules Mention
-if [[ "$EVENT_NAME" == "issue_comment" ]]; then
-  if echo "$COMMENT_BODY" | grep -qi "@jules"; then
+if [[ "$EVENT_NAME" == "issue_comment" && "$SKIP_JULES_INVOCATION" != "true" ]]; then
+  # Skip if comment is from automated bots (prevents double invocation from CI auto-fix notifications)
+  if [[ "$COMMENT_AUTHOR" == "github-actions[bot]" || "$COMMENT_AUTHOR" == "google-labs-jules" ]]; then
+    log "Skipping @Jules detection for automated bot comment from $COMMENT_AUTHOR"
+  elif echo "$COMMENT_BODY" | grep -qi "@jules"; then
     SHOULD_INVOKE_JULES="true"
     if [[ "$IS_PR" == "true" ]]; then
       JULES_PROMPT="User @$COMMENT_AUTHOR commented on PR #$NUMBER (Branch: $BRANCH): '$COMMENT_BODY'. Please address their request. Commit changes directly to the '$BRANCH' branch."
@@ -167,8 +178,8 @@ if [[ "$EVENT_NAME" == "issue_comment" ]]; then
   fi
 fi
 
-# Logic B: New Issue Labeled 'jules'
-if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME" == "jules" ]]; then
+# Logic B: New Issue Labeled 'jules' (Issues are never from Jules, but keep consistent)
+if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME" == "jules" && "$SKIP_JULES_INVOCATION" != "true" ]]; then
   SHOULD_INVOKE_JULES="true"
   JULES_PROMPT="Assigned Issue #$NUMBER: '$ISSUE_TITLE'. Description: $ISSUE_BODY. Please implement a solution on a new branch."
 fi
@@ -207,7 +218,7 @@ if [[ "$IS_PR" == "true" ]]; then
 fi
 
 # Logic D: Review Changes (Human or CodeRabbit)
-if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" ]]; then
+if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" && "$SKIP_JULES_INVOCATION" != "true" ]]; then
 
   # D.1 Human Review
   if [[ "$REVIEW_STATE" == "changes_requested" && "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then

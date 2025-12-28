@@ -59,6 +59,13 @@ jobs:
             exit 0
           fi
 
+          # Skip if PR author is Jules (prevents double invocation - Jules PRs use CUSTOM_PAT only)
+          if [[ "$AUTHOR" == "google-labs-jules" ]]; then
+            echo "has_pr=false" >> $GITHUB_OUTPUT
+            echo "⏭️ PR created by Jules, skipping Jules API invocation"
+            exit 0
+          fi
+
           echo "has_pr=true" >> $GITHUB_OUTPUT
           echo "number=$PR_NUM" >> $GITHUB_OUTPUT
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
