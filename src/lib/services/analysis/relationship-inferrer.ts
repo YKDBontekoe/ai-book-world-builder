@@ -86,6 +86,7 @@ export class RelationshipInferrer {
 
 			try {
 				const { object } = await generateObject({
+					// @ts-expect-error Version mismatch between ai and provider packages
 					model: openrouter(this.modelId),
 					schema: relationshipInferenceSchema,
 					prompt: `Based on these text excerpts, describe the relationship between "${entity1}" and "${entity2}".

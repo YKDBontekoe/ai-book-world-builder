@@ -1,6 +1,4 @@
 import type {
-	CoreAssistantMessage,
-	CoreToolMessage,
 	UIMessage,
 	UIMessagePart,
 } from "ai";
