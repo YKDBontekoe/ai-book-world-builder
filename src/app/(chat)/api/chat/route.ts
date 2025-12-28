@@ -154,7 +154,7 @@ export async function POST(request: Request) {
 
 				const model = myProvider.languageModel(targetModelId);
 
-			const modelMessages = await convertToModelMessages(uiMessages);
+				const modelMessages = await convertToModelMessages(uiMessages);
 
 				const result = streamText({
 					model,

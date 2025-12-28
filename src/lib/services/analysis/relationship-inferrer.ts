@@ -86,7 +86,7 @@ export class RelationshipInferrer {
 
 			try {
 				const { object } = await generateObject({
-					model: openrouter(this.modelId),
+					model: openrouter(this.modelId) as any,
 					schema: relationshipInferenceSchema,
 					prompt: `Based on these text excerpts, describe the relationship between "${entity1}" and "${entity2}".
 

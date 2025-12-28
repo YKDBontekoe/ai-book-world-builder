@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import type { Variants } from "framer-motion";
 import { motion } from "framer-motion";
 import { CalendarIcon, Eye, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
@@ -30,7 +31,7 @@ const container = {
 	},
 };
 
-const item = {
+const item: Variants = {
 	hidden: { opacity: 0, y: 20 },
 	show: {
 		opacity: 1,
@@ -178,12 +179,7 @@ export function ProjectGrid({
 		<motion.div variants={container} initial="hidden" animate="show">
 			<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
 				{projects.map((project) => (
-					<motion.div
-						key={project.id}
-						variants={item}
-						className="h-full"
-						layout
-					>
+					<motion.div key={project.id} variants={item} className="h-full">
 						<ProjectCard
 							project={project}
 							selected={selectedIds?.has(project.id)}

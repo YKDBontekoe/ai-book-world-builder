@@ -60,7 +60,7 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
-			model: openrouter(await getSelectedModelId("large")),
+			model: openrouter(await getSelectedModelId("large")) as any,
 			schema: critiqueSchema,
 			prompt,
 		});
@@ -108,7 +108,7 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
-			model: openrouter(await getSelectedModelId("large")),
+			model: openrouter(await getSelectedModelId("large")) as any,
 			schema: consistencySchema,
 			prompt,
 		});

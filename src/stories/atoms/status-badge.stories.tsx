@@ -34,7 +34,8 @@ export const Warning: Story = {
 	},
 };
 
-export const Error: Story = {
+export const ErrorStatus: Story = {
+	name: "Error",
 	args: {
 		children: "Error",
 		status: "error",

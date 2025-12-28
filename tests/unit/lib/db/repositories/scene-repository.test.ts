@@ -16,14 +16,24 @@ const mocks = vi.hoisted(() => {
 		update: vi.fn(),
 		set: vi.fn(),
 		delete: vi.fn(),
-		then: vi.fn((resolve, reject) => {
-			if (mockChain.error) {
-				return Promise.reject(mockChain.error).catch(reject);
-			}
-			return Promise.resolve(mockChain.result).then(resolve);
-		}),
+		_then: vi.fn(), // Internal thenable for async resolution
 		result: [],
 		error: null,
+	};
+
+	// Mock the thenable behavior for promise-like chaining
+	// biome-ignore lint/suspicious/noThenProperty: Mocking a promise
+	mockChain.then = async function (resolve: any, reject: any) {
+		if (mockChain.error) {
+			if (reject) {
+				return reject(mockChain.error);
+			}
+			throw mockChain.error;
+		}
+		if (resolve) {
+			return resolve(mockChain.result);
+		}
+		return mockChain.result;
 	};
 
 	const methods = [
