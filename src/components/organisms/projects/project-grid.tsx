@@ -37,7 +37,7 @@ const item = {
 		y: 0,
 		transition: { type: "spring", stiffness: 400, damping: 25 },
 	},
-};
+} as const;
 
 interface ProjectGridProps {
 	projects: Project[];

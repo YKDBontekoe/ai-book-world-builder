@@ -42,7 +42,7 @@ interface CommandPaletteProviderProps {
 
 export function CommandPaletteProvider({
 	children,
-}: CommandPaletteProviderProps): JSX.Element {
+}: CommandPaletteProviderProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [customCommands, setCustomCommands] = useState<Command[]>([]);
 

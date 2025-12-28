@@ -35,7 +35,7 @@ export function CommandPalette({
 	isOpen,
 	onClose,
 	commands: propCommands,
-}: CommandPaletteProps): JSX.Element {
+}: CommandPaletteProps) {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);

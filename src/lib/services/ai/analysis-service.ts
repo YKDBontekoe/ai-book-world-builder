@@ -60,7 +60,6 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
-			// @ts-expect-error Version mismatch between ai and provider packages
 			model: openrouter(await getSelectedModelId("large")),
 			schema: critiqueSchema,
 			prompt,
@@ -109,7 +108,6 @@ export const analysisService = {
     `;
 
 		const { object } = await generateObject({
-			// @ts-expect-error Version mismatch between ai and provider packages
 			model: openrouter(await getSelectedModelId("large")),
 			schema: consistencySchema,
 			prompt,
