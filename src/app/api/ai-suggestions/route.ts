@@ -1,4 +1,4 @@
-import { generateObject } from "ai";
+import { generateObject, type LanguageModel } from "ai";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { DEFAULT_MODELS, isChatModelId } from "@/lib/ai/models";
@@ -77,7 +77,7 @@ ${recentChapters || "None"}
 			: DEFAULT_MODELS.light;
 
 		const { object } = await generateObject({
-			model: myProvider.languageModel(effectiveModelId),
+			model: myProvider.languageModel(effectiveModelId) as LanguageModel,
 			schema: z.object({
 				suggestions: z
 					.array(

@@ -118,6 +118,7 @@ ${input.chapterContent}
 Provide a detailed review following the schema.`;
 
 	const response = await generateObject({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(input.settings.reviewerModelId),
 		system: systemPrompt,
 		prompt: userPrompt,
@@ -143,6 +144,7 @@ export async function generateRevisionGuidance(
 	}
 
 	const { object } = await generateObject({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(settings.reviewerModelId),
 		system:
 			"You are a helpful writing coach. Provide clear, actionable revision guidance.",
@@ -173,6 +175,7 @@ export async function quickCheck(
 	modelId: string,
 ): Promise<{ passes: boolean; issues: string[] }> {
 	const { object } = await generateObject({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(modelId),
 		system: "You are a quick proofreader. Identify major issues only.",
 		prompt: `Quick check this content for major issues:
