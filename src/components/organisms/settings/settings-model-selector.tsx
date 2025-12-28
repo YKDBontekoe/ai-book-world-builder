@@ -62,7 +62,7 @@ function PureSettingsModelSelector({
 
 	const handleSelectModel = useCallback(
 		(value: string) => {
-			const [prefix, ...rest] = value.split("__");
+			const [_prefix, ...rest] = value.split("__");
 			const modelId = rest.join("__");
 			selectModel(modelId);
 		},
@@ -96,7 +96,7 @@ function PureSettingsModelSelector({
 	]);
 
 	const renderModelCard = useCallback(
-		(model: ChatModel, keyPrefix:string, showProvider = true) => {
+		(model: ChatModel, keyPrefix: string, showProvider = true) => {
 			const isFavorite = favoriteModels.includes(model.id);
 			const isSelected = model.id === optimisticModelId;
 			const canSort = keyPrefix === "fav";
