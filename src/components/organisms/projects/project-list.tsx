@@ -1,6 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
+import type { Variants } from "framer-motion";
 import { motion } from "framer-motion";
 import { CalendarIcon, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
@@ -20,7 +21,7 @@ const container = {
 	},
 };
 
-const item = {
+const item: Variants = {
 	hidden: { opacity: 0, x: -20 },
 	show: {
 		opacity: 1,

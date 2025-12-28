@@ -201,10 +201,9 @@ const ReadingLevelSelector = ({
 							dragMomentum={false}
 							onClick={() => {
 								if (currentLevel !== 2 && hasUserSelectedLevel) {
-									sendMessage({
-										role: "user",
-										content: `Please adjust the reading level to ${LEVELS[currentLevel]} level.`,
-									});
+									sendMessage(
+										`Please adjust the reading level to ${LEVELS[currentLevel]} level.`,
+									);
 									setSelectedTool(null);
 								}
 							}}
@@ -277,7 +276,7 @@ export const Tools = ({
 							icon={secondaryTool.icon}
 							isAnimating={isAnimating}
 							key={secondaryTool.description}
-							onClick={secondaryTool.onClick}
+							onClick={() => secondaryTool.onClick({ sendMessage })}
 							selectedTool={selectedTool}
 							sendMessage={sendMessage}
 							setSelectedTool={setSelectedTool}
@@ -290,7 +289,7 @@ export const Tools = ({
 				icon={primaryTool.icon}
 				isAnimating={isAnimating}
 				isToolbarVisible={isToolbarVisible}
-				onClick={primaryTool.onClick}
+				onClick={() => primaryTool.onClick({ sendMessage })}
 				selectedTool={selectedTool}
 				sendMessage={sendMessage}
 				setIsToolbarVisible={setIsToolbarVisible}

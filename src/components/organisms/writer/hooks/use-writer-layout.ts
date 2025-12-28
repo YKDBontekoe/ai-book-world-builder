@@ -58,7 +58,7 @@ export function useWriterLayout(): WriterLayoutState {
 		isTypewriterMode,
 		isDirectorMode,
 		isMobile,
-		sidebarRef,
+		sidebarRef: sidebarRef as React.RefObject<ImperativePanelHandle>,
 		actions: {
 			toggleSidebar,
 			toggleZenMode,

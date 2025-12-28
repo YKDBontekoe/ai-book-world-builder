@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
 	AlertTriangle,
 	BookOpenCheck,
@@ -159,7 +159,7 @@ export function PowerDock() {
 	};
 
 	// Animation variants
-	const containerVariants = {
+	const containerVariants: Variants = {
 		hidden: { y: 100, opacity: 0 },
 		visible: {
 			y: 0,
