@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { submitFeedbackAction } from "@/app/actions/feedback";
 import { Button } from "@/components/atoms/button";
 
-export default function Error({
+export default function ErrorPage({
 	error,
 	reset,
 }: {

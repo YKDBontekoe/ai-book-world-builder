@@ -157,7 +157,7 @@ export async function POST(request: Request) {
 				const result = streamText({
 					model,
 					system: groundedSystemPrompt,
-					messages: convertToModelMessages(uiMessages),
+					messages: await convertToModelMessages(uiMessages),
 					stopWhen: stepCountIs(5),
 					experimental_activeTools:
 						selectedChatModel === "chat-model-reasoning" ? [] : toolList,

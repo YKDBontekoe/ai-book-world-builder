@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
 	Check,
 	FileText,
@@ -8,7 +8,6 @@ import {
 	Palette,
 	Sparkles,
 	TrendingUp,
-	Wand2,
 	X,
 	Zap,
 } from "lucide-react";
@@ -16,11 +15,6 @@ import type { EditorView } from "prosemirror-view";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/atoms/popover";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { rewriteSelection } from "@/lib/ai/writer";
 import { cn } from "@/lib/utils";
@@ -63,7 +57,7 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 		top: number;
 		left: number;
 	} | null>(null);
-	const [isOpen, setIsOpen] = useState(false);
+	const [_isOpen, setIsOpen] = useState(false);
 	const [loading, setLoading] = useState(false);
 	const [rewrittenText, setRewrittenText] = useState<string | null>(null);
 	const [showMore, setShowMore] = useState(false);
@@ -82,7 +76,7 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 			}
 
 			const start = editorView.coordsAtPos(from);
-			const end = editorView.coordsAtPos(to);
+			const _end = editorView.coordsAtPos(to);
 			const box = editorView.dom.getBoundingClientRect();
 
 			setPosition({

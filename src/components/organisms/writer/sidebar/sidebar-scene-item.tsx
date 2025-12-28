@@ -46,7 +46,6 @@ export function SidebarSceneItem({
 				/>
 			)}
 
-			{/* biome-ignore lint: using div to prevent nested button hydration error */}
 			<div
 				role="button"
 				tabIndex={0}
@@ -72,7 +71,6 @@ export function SidebarSceneItem({
 							: "bg-border group-hover/scene:bg-muted-foreground/50",
 					)}
 				/>
-				{/* biome-ignore lint/a11y/noStaticElementInteractions: preventing parent activation */}
 				<div
 					className="flex-1 min-w-0"
 					onKeyDown={(e) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { CalendarIcon, Eye, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
@@ -28,7 +28,7 @@ const container = {
 			staggerChildren: 0.1,
 		},
 	},
-};
+} as Variants;
 
 const item = {
 	hidden: { opacity: 0, y: 20 },
@@ -37,7 +37,7 @@ const item = {
 		y: 0,
 		transition: { type: "spring", stiffness: 400, damping: 25 },
 	},
-};
+} as Variants;
 
 interface ProjectGridProps {
 	projects: Project[];
@@ -64,7 +64,6 @@ function ProjectCard({
 			<div className="relative h-full group">
 				{/* Checkbox Overlay */}
 				{onSelect && (
-					// biome-ignore lint/a11y/useSemanticElements: this is an overlay wrapper for the checkbox
 					<div
 						className={cn(
 							"absolute top-4 left-4 z-20 transition-opacity duration-200",

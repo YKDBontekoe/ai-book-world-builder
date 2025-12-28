@@ -52,7 +52,7 @@ export function EntityInsights({ stats }: { stats: EntityStats }) {
 												paddingAngle={5}
 												dataKey="value"
 											>
-												{formattedData.map((entry, index) => (
+												{formattedData.map((_entry, index) => (
 													<Cell
 														key={`cell-${index}`}
 														fill={COLORS[index % COLORS.length]}

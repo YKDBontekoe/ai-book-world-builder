@@ -268,7 +268,6 @@ export function FloatingAssistant({
 
 						{/* Resize Handle (Only in Floating Mode) */}
 						{mode === "floating" && (
-							// biome-ignore lint/a11y/noStaticElementInteractions: Resize handle
 							<div
 								className="absolute top-0 left-0 p-1 cursor-nw-resize opacity-0 hover:opacity-100 transition-opacity z-50"
 								onMouseDown={handleMouseDown}
@@ -282,7 +281,6 @@ export function FloatingAssistant({
 							</div>
 						)}
 						{mode === "floating" && (
-							// biome-ignore lint/a11y/noStaticElementInteractions: Resize handle
 							<div
 								className="absolute top-0 left-0 w-6 h-6 z-50 cursor-nwse-resize flex items-center justify-center opacity-0 hover:opacity-50"
 								onMouseDown={handleMouseDown}

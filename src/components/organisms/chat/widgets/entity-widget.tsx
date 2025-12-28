@@ -20,7 +20,6 @@ import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Textarea } from "@/components/atoms/textarea";
 import { InteractiveWidget } from "@/components/organisms/chat/widgets/interactive-widget";
-import { cn } from "@/lib/utils";
 
 export interface EntityWidgetProps {
 	entity: {
@@ -272,7 +271,7 @@ export function EntityWidget({ entity, projectId }: EntityWidgetProps) {
 						))}
 						{(entity.attributes?.length || 0) > 6 && (
 							<div className="text-[10px] text-muted-foreground self-center px-1">
-								+{entity.attributes!.length - 6} more
+								+{entity.attributes?.length - 6} more
 							</div>
 						)}
 					</div>

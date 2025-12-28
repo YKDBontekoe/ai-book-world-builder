@@ -56,7 +56,6 @@ export function SidebarChapterItem({
 			)}
 		>
 			<div className="flex items-center gap-1 px-1 py-1">
-				{/* biome-ignore lint: using div to prevent nested button hydration error */}
 				<div
 					role="button"
 					tabIndex={0}
@@ -93,7 +92,6 @@ export function SidebarChapterItem({
 									: "text-muted-foreground/60",
 							)}
 						/>
-						{/* biome-ignore lint/a11y/noStaticElementInteractions: preventing parent activation */}
 						<div
 							className="flex-1 min-w-0 truncate"
 							onKeyDown={(e) => {

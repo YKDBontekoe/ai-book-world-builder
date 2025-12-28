@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { volumeRepository } from "@/lib/db/repositories/volume-repository";
-import { DatabaseError, NotFoundError } from "@/lib/errors";
+import { NotFoundError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
 	const mockChain: any = {

@@ -57,26 +57,24 @@ function PureProjectContextBar({
 							No projects yet
 						</div>
 					) : (
-						<>
-							{projects.map((project) => (
-								<DropdownMenuItem
-									className={cn(
-										"cursor-pointer gap-2",
-										project.id === selectedProjectId && "bg-accent",
-									)}
-									key={project.id}
-									onClick={() => onProjectSelect(project.id)}
-								>
-									<FolderIcon className="size-4" />
-									<span className="truncate">{project.name}</span>
-									{project.id === selectedProjectId && (
-										<Badge className="ml-auto" variant="secondary">
-											Active
-										</Badge>
-									)}
-								</DropdownMenuItem>
-							))}
-						</>
+						projects.map((project) => (
+							<DropdownMenuItem
+								className={cn(
+									"cursor-pointer gap-2",
+									project.id === selectedProjectId && "bg-accent",
+								)}
+								key={project.id}
+								onClick={() => onProjectSelect(project.id)}
+							>
+								<FolderIcon className="size-4" />
+								<span className="truncate">{project.name}</span>
+								{project.id === selectedProjectId && (
+									<Badge className="ml-auto" variant="secondary">
+										Active
+									</Badge>
+								)}
+							</DropdownMenuItem>
+						))
 					)}
 				</DropdownMenuContent>
 			</DropdownMenu>

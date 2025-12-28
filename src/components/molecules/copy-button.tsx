@@ -23,7 +23,7 @@ export function CopyButton({
 	showToast = true,
 	toastMessage = "Copied to clipboard",
 	variant = "ghost",
-}: CopyButtonProps): JSX.Element {
+}: CopyButtonProps): React.JSX.Element {
 	const [copied, setCopied] = useState(false);
 
 	const handleCopy = async () => {

@@ -35,7 +35,7 @@ export function CommandPalette({
 	isOpen,
 	onClose,
 	commands: propCommands,
-}: CommandPaletteProps): JSX.Element {
+}: CommandPaletteProps): React.JSX.Element {
 	const router = useRouter();
 	const [search, setSearch] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
@@ -124,7 +124,6 @@ export function CommandPalette({
 	}, [filteredCommands]);
 
 	// Reset selection when search changes
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Reset selection when results change
 	useEffect(() => {
 		setSelectedIndex(0);
 	}, [filteredCommands]);

@@ -308,7 +308,6 @@ export function StoryWizard({ projectId, onComplete }: StoryWizardProps) {
 										<div className="space-y-4">
 											{plan.chapters.map((chapter, i) => (
 												<div
-													// biome-ignore lint/suspicious/noArrayIndexKey: Order is stable during editing
 													key={i}
 													className="p-4 rounded-lg bg-muted/30 border border-border/50 group relative hover:border-primary/20 transition-colors"
 												>

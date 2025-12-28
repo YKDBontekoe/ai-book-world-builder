@@ -66,14 +66,14 @@ export function SettingsDialog({
 			loadAccounts();
 			loadModelSettings();
 		}
-	}, [open]);
+	}, [open, loadAccounts, loadModelSettings]);
 
 	const loadAccounts = async () => {
 		setIsLoading(true);
 		try {
 			const accounts = await getConnectedAccounts();
 			setConnectedAccounts(accounts.map((a) => a.provider));
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to load account settings");
 		} finally {
 			setIsLoading(false);
@@ -92,7 +92,7 @@ export function SettingsDialog({
 				middle: prefs.middle || "",
 				large: prefs.large || "",
 			});
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to load model settings");
 		}
 	};
@@ -107,7 +107,7 @@ export function SettingsDialog({
 		try {
 			await saveModelPreferences(newPrefs);
 			toast.success("Preference saved");
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to save preference");
 			// Revert if needed, but for settings simple toast is usually enough
 		}
@@ -116,7 +116,7 @@ export function SettingsDialog({
 	const handleConnectGoogle = async () => {
 		try {
 			await signIn("google", { callbackUrl: "/" });
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to connect Google account");
 		}
 	};

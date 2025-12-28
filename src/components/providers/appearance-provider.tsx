@@ -75,7 +75,6 @@ export function AppearanceProvider({
 		},
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: mutation is stable
 	const updatePreferences = React.useCallback(
 		async (updates: Partial<AppearancePreferences>) => {
 			await mutation.mutateAsync(updates);

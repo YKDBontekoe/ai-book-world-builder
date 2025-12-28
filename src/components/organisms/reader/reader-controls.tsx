@@ -3,7 +3,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
 	Select,

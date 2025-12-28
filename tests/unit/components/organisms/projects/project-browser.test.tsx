@@ -1,7 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { ProjectBrowser } from "@/components/organisms/projects/project-browser";
 import type { Project } from "@/lib/db/schema";
+
+beforeAll(() => {
+	Object.defineProperty(window, "localStorage", {
+		value: {
+			getItem: vi.fn(() => null),
+			setItem: vi.fn(),
+			removeItem: vi.fn(),
+			clear: vi.fn(),
+		},
+		writable: true,
+	});
+});
 
 // Mock ProjectGrid
 vi.mock("@/components/organisms/projects/project-grid", () => ({

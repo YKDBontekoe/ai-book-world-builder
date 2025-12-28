@@ -16,7 +16,6 @@ export function WriterSkeleton() {
 				{/* Navigation List */}
 				<div className="flex-1 p-4 space-y-6 overflow-hidden">
 					{Array.from({ length: 4 }).map((_, i) => (
-						// biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton items
 						<div key={i} className="space-y-3">
 							<Skeleton className="h-4 w-32 font-medium" />
 							<div className="pl-4 space-y-2">

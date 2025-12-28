@@ -1,4 +1,3 @@
-import type { LanguageModelV2StreamPart } from "@ai-sdk/provider";
 import { generateId, type ModelMessage } from "ai";
 import { TEST_PROMPTS } from "./basic";
 
@@ -48,7 +47,7 @@ export function compareMessages(
 	return true;
 }
 
-const textToDeltas = (text: string): LanguageModelV2StreamPart[] => {
+const textToDeltas = (text: string): any[] => {
 	const id = generateId();
 
 	const deltas = text.split(" ").map((char) => ({
@@ -57,29 +56,39 @@ const textToDeltas = (text: string): LanguageModelV2StreamPart[] => {
 		delta: `${char} `,
 	}));
 
-	return [{ id, type: "text-start" }, ...deltas, { id, type: "text-end" }];
+	return deltas;
 };
 
-const reasoningToDeltas = (text: string): LanguageModelV2StreamPart[] => {
+const reasoningToDeltas = (text: string): any[] => {
 	const id = generateId();
 
 	const deltas = text.split(" ").map((char) => ({
 		id,
 		type: "reasoning-delta" as const,
-		delta: `${char} `,
+		reasoningDelta: `${char} `,
 	}));
 
-	return [
-		{ id, type: "reasoning-start" },
-		...deltas,
-		{ id, type: "reasoning-end" },
-	];
+	return deltas;
+};
+
+const mockUsage = {
+	inputTokens: {
+		total: 3,
+		noCache: undefined,
+		cacheRead: undefined,
+		cacheWrite: undefined,
+	},
+	outputTokens: {
+		total: 10,
+		text: 10,
+		reasoning: 0,
+	},
 };
 
 export const getResponseChunksByPrompt = (
 	prompt: ModelMessage[],
 	isReasoningEnabled = false,
-): LanguageModelV2StreamPart[] => {
+): any[] => {
 	const recentMessage = prompt.at(-1);
 
 	if (!recentMessage) {
@@ -93,8 +102,8 @@ export const getResponseChunksByPrompt = (
 				...textToDeltas("It's just blue duh!"),
 				{
 					type: "finish",
-					finishReason: "stop",
-					usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+					finishReason: "stop" as const,
+					usage: mockUsage,
 				},
 			];
 		}
@@ -107,8 +116,8 @@ export const getResponseChunksByPrompt = (
 				...textToDeltas("It's just green duh!"),
 				{
 					type: "finish",
-					finishReason: "stop",
-					usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+					finishReason: "stop" as const,
+					usage: mockUsage,
 				},
 			];
 		}
@@ -119,8 +128,8 @@ export const getResponseChunksByPrompt = (
 			...textToDeltas("You're welcome!"),
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -130,8 +139,8 @@ export const getResponseChunksByPrompt = (
 			...textToDeltas("It's just green duh!"),
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -141,8 +150,8 @@ export const getResponseChunksByPrompt = (
 			...textToDeltas("It's just blue duh!"),
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -153,8 +162,8 @@ export const getResponseChunksByPrompt = (
 
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -164,8 +173,8 @@ export const getResponseChunksByPrompt = (
 			...textToDeltas("This painting is by Monet!"),
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -176,24 +185,16 @@ export const getResponseChunksByPrompt = (
 		return [
 			{
 				id: toolCallId,
-				type: "tool-input-start",
+				type: "tool-call-delta" as const,
 				toolName: "createDocument",
-			},
-			{
-				id: toolCallId,
-				type: "tool-input-delta",
-				delta: JSON.stringify({
+				argsTextDelta: JSON.stringify({
 					title: "Essay about Silicon Valley",
 					kind: "text",
 				}),
 			},
 			{
-				id: toolCallId,
-				type: "tool-input-end",
-			},
-			{
+				type: "tool-result" as const,
 				toolCallId,
-				type: "tool-result",
 				toolName: "createDocument",
 				result: {
 					id: "doc_123",
@@ -203,8 +204,8 @@ export const getResponseChunksByPrompt = (
 			},
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -232,8 +233,8 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
 `),
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -245,8 +246,8 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
 			...textToDeltas("A document was created and is now visible to the user."),
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -254,18 +255,18 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
 	if (compareMessages(recentMessage, TEST_PROMPTS.CREATE_VOLUME_CALL)) {
 		return [
 			{
-				type: "tool-call",
-				toolCallId: "call_456",
+				type: "tool-call-delta" as const,
+				id: "call_456",
 				toolName: "createVolume",
-				input: JSON.stringify({
+				argsTextDelta: JSON.stringify({
 					title: "Volume 1",
 					description: "The beginning.",
 				}),
 			},
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
@@ -275,11 +276,13 @@ As we move forward, Silicon Valley continues to reinvent itself. While some pred
 			...textToDeltas("Volume 1 created successfully."),
 			{
 				type: "finish",
-				finishReason: "stop",
-				usage: { inputTokens: 3, outputTokens: 10, totalTokens: 13 },
+				finishReason: "stop" as const,
+				usage: mockUsage,
 			},
 		];
 	}
 
-	return [{ id: "6", type: "text-delta", delta: "Unknown test prompt!" }];
+	return [
+		{ id: "6", type: "text-delta" as const, delta: "Unknown test prompt!" },
+	];
 };

@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	AlertTriangle,
 	BookOpenCheck,
-	ChevronDown,
 	Edit,
 	Expand,
 	Feather,
@@ -17,7 +16,7 @@ import {
 	Undo,
 	X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Separator } from "@/components/atoms/separator";
 import { Textarea } from "@/components/atoms/textarea";
@@ -178,7 +177,7 @@ export function PowerDock() {
 				)}
 				initial="hidden"
 				animate={isZen ? "zen" : "visible"}
-				variants={containerVariants}
+				variants={containerVariants as any}
 			>
 				{/* Result Popover (if any) */}
 				<AnimatePresence>

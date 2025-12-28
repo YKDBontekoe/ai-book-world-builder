@@ -5,7 +5,6 @@ export function SidebarSkeleton() {
 		<div className="space-y-4 p-4">
 			{/* Simulate 4 chapters */}
 			{Array.from({ length: 4 }).map((_, i) => (
-				// biome-ignore lint/suspicious/noArrayIndexKey: Static skeleton items
 				<div key={i} className="space-y-2">
 					{/* Chapter header */}
 					<Skeleton className="h-8 w-full rounded-md" />

@@ -100,11 +100,11 @@ export const draftScene = ({ session }: { session: Session | null }) =>
 					success: true,
 					sceneId,
 					wordCount: prose.split(" ").length,
-					preview: prose.substring(0, 200) + "...",
+					preview: `${prose.substring(0, 200)}...`,
 				};
 			} catch (error) {
 				console.error("Draft scene failed:", error);
-				return { error: "Drafting failed: " + (error as Error).message };
+				return { error: `Drafting failed: ${(error as Error).message}` };
 			}
 		},
 	});

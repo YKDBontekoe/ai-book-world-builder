@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { messageRepository } from "@/lib/db/repositories/message-repository";
-import { DatabaseError, NotFoundError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
 	const mockChain: any = {

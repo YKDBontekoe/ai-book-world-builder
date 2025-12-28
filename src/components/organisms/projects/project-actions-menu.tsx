@@ -82,7 +82,7 @@ export function ProjectActionsMenu({
 			} else {
 				toast.success("Project deleted");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to delete project");
 		} finally {
 			setIsDeleting(false);
@@ -100,7 +100,7 @@ export function ProjectActionsMenu({
 			} else {
 				toast.success("Project forked successfully");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to fork project");
 		} finally {
 			setIsForking(false);
@@ -117,7 +117,7 @@ export function ProjectActionsMenu({
 				toast.success("Project renamed");
 				setShowRenameDialog(false);
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to rename project");
 		} finally {
 			setIsRenaming(false);

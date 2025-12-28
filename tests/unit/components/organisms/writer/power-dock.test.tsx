@@ -77,8 +77,6 @@ vi.mock("framer-motion", async () => {
 		),
 		motion: {
 			div: ({ children, className, onClick, ...props }: any) => (
-				// biome-ignore lint/a11y/useKeyWithClickEvents: Mock component
-				// biome-ignore lint/a11y/noStaticElementInteractions: Mock component
 				<div className={className} onClick={onClick} {...props}>
 					{children}
 				</div>

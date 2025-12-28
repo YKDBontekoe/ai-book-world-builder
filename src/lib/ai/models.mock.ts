@@ -1,59 +1,54 @@
-import type { LanguageModel } from "ai";
+import { type LanguageModel, simulateReadableStream } from "ai";
+import { MockLanguageModelV3 } from "ai/test";
 
 const createMockModel = (): LanguageModel => {
-	return {
-		specificationVersion: "v1",
-		provider: "mock",
-		modelId: "mock-model",
-		defaultObjectGenerationMode: "json",
-		doGenerate: async (options: any) => {
-			const promptString = JSON.stringify(
-				options.inputFormat === "messages" ? options.input : options.prompt,
-			);
-			let text = "Hello, world!";
-
-			if (promptString.includes("Break this chapter into")) {
-				text = JSON.stringify({
-					scenes: [
-						{ title: "Scene 1", beat: "Something happens" },
-						{ title: "Scene 2", beat: "Something else happens" },
-					],
-				});
-			} else if (promptString.includes("Create a book outline")) {
-				text = JSON.stringify({
-					title: "Mock Book",
-					logline: "A mock story.",
-					summary: "Full summary.",
-					chapters: [
-						{ title: "Chapter 1", summary: "Summary 1" },
-						{ title: "Chapter 2", summary: "Summary 2" },
-					],
-				});
-			}
-
-			return {
-				text,
-				finishReason: "stop",
-				usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
-				rawCall: { rawPrompt: null, rawSettings: {} },
-				warnings: [],
-			};
-		},
-		doStream: async () => ({
-			stream: new ReadableStream({
-				start(controller) {
-					controller.enqueue({
-						type: "text-delta",
-						textDelta: "Mock response",
-					});
-					controller.close();
-				},
-			}),
+	return new MockLanguageModelV3({
+		doGenerate: async () => ({
 			rawCall: { rawPrompt: null, rawSettings: {} },
-			usage: { promptTokens: 10, completionTokens: 20, totalTokens: 30 },
+			finishReason: "stop" as any,
+			usage: {
+				inputTokens: {
+					total: 10,
+					noCache: undefined,
+					cacheRead: undefined,
+					cacheWrite: undefined,
+				},
+				outputTokens: {
+					total: 20,
+					text: 20,
+					reasoning: 0,
+				},
+			},
+			text: "Hello, world!",
+			content: [{ type: "text", text: "Hello, world!" }],
 			warnings: [],
 		}),
-	} as any as LanguageModel;
+		doStream: async () => ({
+			stream: simulateReadableStream({
+				chunks: [
+					{ type: "text-delta", id: "1", delta: "Mock response" },
+					{
+						type: "finish",
+						finishReason: "stop" as any,
+						usage: {
+							inputTokens: {
+								total: 10,
+								noCache: undefined,
+								cacheRead: undefined,
+								cacheWrite: undefined,
+							},
+							outputTokens: {
+								total: 20,
+								text: 20,
+								reasoning: 0,
+							},
+						},
+					},
+				],
+			}),
+			rawCall: { rawPrompt: null, rawSettings: {} },
+		}),
+	});
 };
 
 export const chatModel = createMockModel();

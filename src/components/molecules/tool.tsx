@@ -38,27 +38,35 @@ export type ToolHeaderProps = {
 };
 
 const getStatusBadge = (status: ToolUIPart["state"]) => {
-	const labels = {
+	const labels: Record<string, string> = {
 		"input-streaming": "Pending",
 		"input-available": "Running",
 		"output-available": "Completed",
 		"output-error": "Error",
-	} as const;
+		"call-available": "Ready",
+		"approval-requested": "Awaiting Approval",
+		"approval-responded": "Approved",
+		"output-denied": "Denied",
+	};
 
-	const icons = {
+	const icons: Record<string, ReactNode> = {
 		"input-streaming": <CircleIcon className="size-4" />,
 		"input-available": <ClockIcon className="size-4 animate-pulse" />,
 		"output-available": <CheckCircleIcon className="size-4 text-green-600" />,
 		"output-error": <XCircleIcon className="size-4 text-red-600" />,
-	} as const;
+		"call-available": <WrenchIcon className="size-4" />,
+		"approval-requested": <ClockIcon className="size-4 text-yellow-600" />,
+		"approval-responded": <CheckCircleIcon className="size-4 text-blue-600" />,
+		"output-denied": <XCircleIcon className="size-4 text-orange-600" />,
+	};
 
 	return (
 		<Badge
 			className="flex items-center gap-1 rounded-full text-xs"
 			variant="secondary"
 		>
-			{icons[status]}
-			<span>{labels[status]}</span>
+			{icons[status] || <WrenchIcon className="size-4" />}
+			<span>{labels[status] || "Unknown"}</span>
 		</Badge>
 	);
 };
@@ -99,8 +107,6 @@ export const ToolHeader = ({
 	</CollapsibleTrigger>
 );
 
-export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
-
 export const ToolContent = ({ className, ...props }: ToolContentProps) => (
 	<CollapsibleContent
 		className={cn(
@@ -110,6 +116,8 @@ export const ToolContent = ({ className, ...props }: ToolContentProps) => (
 		{...props}
 	/>
 );
+
+export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 
 export type ToolInputProps = ComponentProps<"div"> & {
 	input: ToolUIPart["input"];

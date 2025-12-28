@@ -23,7 +23,6 @@ export default function InspirationLoading() {
 				<GridList columns={{ md: 2 }}>
 					{Array.from({ length: 4 }).map((_, i) => (
 						<GlassCard
-							// biome-ignore lint/suspicious/noArrayIndexKey: Skeleton list has no stable IDs
 							key={i}
 							variant="liquid"
 							className="flex flex-col gap-4 p-6"

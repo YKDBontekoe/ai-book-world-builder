@@ -27,7 +27,6 @@ export default function ProjectsLoading(): React.JSX.Element {
 					<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
 						{Array.from({ length: 8 }).map((_, i) => (
 							<GlassCard
-								// biome-ignore lint/suspicious/noArrayIndexKey: Skeleton list has no stable IDs
 								key={i}
 								variant="liquid"
 								className="h-[200px] p-6 flex flex-col justify-between"

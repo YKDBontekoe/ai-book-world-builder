@@ -63,7 +63,7 @@ export function ReaderView({
 		if (saved) {
 			try {
 				setSettings(JSON.parse(saved));
-			} catch (e) {}
+			} catch (_e) {}
 		}
 	}, []);
 
@@ -206,7 +206,7 @@ function PaginatedContent({
 			window.removeEventListener("resize", measure);
 			clearTimeout(timer);
 		};
-	}, [content, settings, initialProgress]);
+	}, [initialProgress]);
 
 	// Report progress whenever page changes
 	useEffect(() => {

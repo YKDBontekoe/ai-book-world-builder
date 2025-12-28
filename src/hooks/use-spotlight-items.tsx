@@ -60,7 +60,6 @@ export function useSpotlightItems() {
 	}, [isSpotlightOpen]);
 
 	// Reset selection when list changes
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Reset index on filter change
 	useEffect(() => {
 		setSelectedIndex(0);
 	}, [activeCategory, debouncedQuery]);

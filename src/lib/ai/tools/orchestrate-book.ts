@@ -116,7 +116,7 @@ export const orchestrateBook = ({ dataStream }: { dataStream?: any }) =>
 						metadata: { id: e.id, type: "entity" },
 					})),
 					...(projectData.outlines || []).map((o) => ({
-						content: o.title + "\n" + (o.summary || ""),
+						content: `${o.title}\n${o.summary || ""}`,
 						metadata: { id: o.id, type: "outline" },
 					})),
 				],

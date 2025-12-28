@@ -15,7 +15,6 @@ export const createMockDb = () => {
 		set: vi.fn(),
 		delete: vi.fn(),
 		transaction: vi.fn((cb) => cb(mockChain)),
-		// biome-ignore lint/suspicious/noThenProperty: Standard thenable implementation for mocking database queries
 		then(onFulfilled: any, onRejected: any) {
 			const currentResult =
 				mockChain.results && mockChain.results.length > 0

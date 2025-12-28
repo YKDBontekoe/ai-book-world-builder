@@ -5,7 +5,6 @@ import {
 	type Transaction,
 } from "prosemirror-state";
 import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
-import { Entity } from "@/lib/db/schema";
 
 export const mentionPluginKey = new PluginKey("mention");
 
@@ -17,7 +16,10 @@ interface MentionState {
 }
 
 export const mentionPlugin = (
-	onMentionStateChange: (state: MentionState | null) => void,
+	onMentionStateChange: (
+		state: MentionState | null,
+		coords: { left: number; top: number } | null,
+	) => void,
 ) =>
 	new Plugin({
 		key: mentionPluginKey,
@@ -28,8 +30,8 @@ export const mentionPlugin = (
 			apply(
 				tr: Transaction,
 				value: MentionState,
-				oldState: EditorState,
-				newState: EditorState,
+				_oldState: EditorState,
+				_newState: EditorState,
 			): MentionState {
 				const { selection } = tr;
 				const { $from } = selection;
@@ -63,14 +65,26 @@ export const mentionPlugin = (
 				if (!state?.active) return false;
 
 				if (event.key === "ArrowDown") {
-					onMentionStateChange({ ...state, index: state.index + 1 });
+					const coords = state.range
+						? view.coordsAtPos(state.range.from)
+						: null;
+					onMentionStateChange(
+						{ ...state, index: state.index + 1 },
+						coords ? { left: coords.left, top: coords.bottom } : null,
+					);
 					return true;
 				}
 				if (event.key === "ArrowUp") {
-					onMentionStateChange({
-						...state,
-						index: Math.max(0, state.index - 1),
-					});
+					const coords = state.range
+						? view.coordsAtPos(state.range.from)
+						: null;
+					onMentionStateChange(
+						{
+							...state,
+							index: Math.max(0, state.index - 1),
+						},
+						coords ? { left: coords.left, top: coords.bottom } : null,
+					);
 					return true;
 				}
 				if (event.key === "Enter") {
@@ -79,7 +93,7 @@ export const mentionPlugin = (
 					return true;
 				}
 				if (event.key === "Escape") {
-					onMentionStateChange(null);
+					onMentionStateChange(null, null);
 					return true;
 				}
 
@@ -87,7 +101,7 @@ export const mentionPlugin = (
 			},
 			decorations(state: EditorState) {
 				const pluginState = mentionPluginKey.getState(state);
-				if (pluginState && pluginState.active && pluginState.range) {
+				if (pluginState?.active && pluginState.range) {
 					return DecorationSet.create(state.doc, [
 						Decoration.inline(pluginState.range.from, pluginState.range.to, {
 							class: "bg-primary/20 text-primary rounded-sm px-0.5",
@@ -97,11 +111,19 @@ export const mentionPlugin = (
 				return null;
 			},
 		},
-		view(editorView: EditorView) {
+		view(_editorView: EditorView) {
 			return {
-				update(view: EditorView, prevState: EditorState) {
+				update(view: EditorView, _prevState: EditorState) {
 					const state = mentionPluginKey.getState(view.state);
-					onMentionStateChange(state.active ? state : null);
+					if (state.active && state.range) {
+						const coords = view.coordsAtPos(state.range.from);
+						onMentionStateChange(state, {
+							left: coords.left,
+							top: coords.bottom,
+						});
+					} else {
+						onMentionStateChange(null, null);
+					}
 				},
 			};
 		},

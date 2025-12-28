@@ -24,7 +24,7 @@ export function UserStatusToggle({
 				toast.success(result.banned ? "User banned" : "User activated");
 				router.refresh();
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to update user status");
 		} finally {
 			setIsLoading(false);
