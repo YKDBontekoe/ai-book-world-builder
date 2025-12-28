@@ -73,7 +73,7 @@ const TOOLS = [
 	{ id: "lore", icon: Globe, label: "Lore", color: "text-pink-400" },
 ] as const;
 
-type HistoryItem = {
+export type HistoryItem = {
 	toolId: ToolType;
 	input: string;
 	timestamp: number;
@@ -438,6 +438,7 @@ export function PowerDock() {
 											<DropdownMenuTrigger asChild>
 												<button
 													type="button"
+													aria-label="Command history"
 													className={cn(
 														"p-2 rounded-lg transition-colors border border-transparent",
 														"hover:bg-white/10 text-muted-foreground hover:text-foreground",
@@ -457,6 +458,7 @@ export function PowerDock() {
 													<span>Recent {selectedTool} commands</span>
 													<button
 														type="button"
+														aria-label="Clear history for this tool"
 														onClick={() =>
 															setHistory((prev) =>
 																prev.filter((h) => h.toolId !== selectedTool),
@@ -474,9 +476,9 @@ export function PowerDock() {
 														No recent history
 													</div>
 												) : (
-													getToolHistory(selectedTool).map((item) => (
+													getToolHistory(selectedTool).map((item, idx) => (
 														<DropdownMenuItem
-															key={item.timestamp}
+															key={`${item.timestamp}-${idx}`}
 															onClick={() => setInput(item.input)}
 															className="flex items-start gap-2 py-2 cursor-pointer"
 														>
@@ -498,6 +500,7 @@ export function PowerDock() {
 
 									<button
 										type="button"
+										aria-label="Close"
 										onClick={reset}
 										className="p-2 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
 									>

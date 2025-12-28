@@ -18,55 +18,76 @@ vi.mock("sonner", () => ({
   },
 }));
 
-vi.mock("usehooks-ts", () => {
-  let store: any[] = [];
-  return {
-    useLocalStorage: vi.fn(() => [
-      store,
-      (value: any) => {
-        if (typeof value === "function") {
-          store = value(store);
-        } else {
-          store = value;
-        }
-      },
-    ]),
-  };
-});
+import type { HistoryItem } from "@/components/organisms/writer/power-dock";
+
+vi.mock("usehooks-ts", () => ({
+  useLocalStorage: <T,>(key: string, initialValue: T) => {
+    const [state, setState] = React.useState(initialValue);
+    return [state, setState];
+  },
+}));
+
+import React from "react";
 
 // Mock UI components
 vi.mock("@/components/atoms/textarea", () => ({
-  Textarea: (props: any) => <textarea {...props} />,
+	Textarea: (props: React.ComponentProps<"textarea">) => (
+		<textarea {...props} />
+	),
 }));
 
 vi.mock("@/components/molecules/glass-card", () => ({
-  GlassCard: ({ children, className }: any) => (
-    <div className={className}>{children}</div>
-  ),
+	GlassCard: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => <div className={className}>{children}</div>,
 }));
 
 vi.mock("@/components/atoms/tooltip", () => ({
-  Tooltip: ({ children }: any) => <>{children}</>,
-  TooltipTrigger: ({ children }: any) => <>{children}</>,
-  TooltipContent: ({ children }: any) => <div>{children}</div>,
-  TooltipProvider: ({ children }: any) => <>{children}</>,
+	Tooltip: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+	TooltipTrigger: ({ children }: { children: React.ReactNode }) => (
+		<>{children}</>
+	),
+	TooltipContent: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	TooltipProvider: ({ children }: { children: React.ReactNode }) => (
+		<>{children}</>
+	),
 }));
 
 vi.mock("@/components/atoms/separator", () => ({
-  Separator: () => <div data-testid="separator" />,
+	Separator: () => <div data-testid="separator" />,
 }));
 
 vi.mock("@/components/atoms/dropdown-menu", () => ({
-  DropdownMenu: ({ children }: any) => <div data-testid="dropdown-menu">{children}</div>,
-  DropdownMenuTrigger: ({ children }: any) => <div>{children}</div>,
-  DropdownMenuContent: ({ children }: any) => <div data-testid="dropdown-content">{children}</div>,
-  DropdownMenuItem: ({ children, onClick }: any) => (
-    <div role="menuitem" onClick={onClick} data-testid="history-item">
-      {children}
-    </div>
-  ),
-  DropdownMenuLabel: ({ children }: any) => <div>{children}</div>,
-  DropdownMenuSeparator: () => <div />,
+	DropdownMenu: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="dropdown-menu">{children}</div>
+	),
+	DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	DropdownMenuContent: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="dropdown-content">{children}</div>
+	),
+	DropdownMenuItem: ({
+		children,
+		onClick,
+	}: {
+		children: React.ReactNode;
+		onClick?: () => void;
+	}) => (
+		<div role="menuitem" onClick={onClick} data-testid="history-item">
+			{children}
+		</div>
+	),
+	DropdownMenuLabel: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	DropdownMenuSeparator: () => <div />,
 }));
 
 // Mock contexts
@@ -167,5 +188,119 @@ describe("PowerDock", () => {
     const historyItems = screen.getAllByTestId("history-item");
     expect(historyItems).toHaveLength(1);
     expect(historyItems[0]).toHaveTextContent("Test command");
+  });
+
+  it("limits history to 20 items", async () => {
+    render(<PowerDock />);
+    fireEvent.click(screen.getByLabelText("AI Tools"));
+    fireEvent.click(screen.getByLabelText("Batch Write"));
+
+    const input = screen.getByPlaceholderText("Instructions (e.g., 'Make it tense')");
+
+    // Add 25 commands
+    for (let i = 0; i < 25; i++) {
+      fireEvent.change(input, { target: { value: `Command ${i}` } });
+      fireEvent.keyDown(input, { key: "Enter" });
+      await waitFor(() => expect(mockExecute).toHaveBeenCalled());
+    }
+
+    const historyItems = screen.getAllByTestId("history-item");
+    expect(historyItems).toHaveLength(20);
+  });
+
+  it("deduplicates identical recent commands", async () => {
+    render(<PowerDock />);
+    fireEvent.click(screen.getByLabelText("AI Tools"));
+    fireEvent.click(screen.getByLabelText("Batch Write"));
+
+    const input = screen.getByPlaceholderText("Instructions (e.g., 'Make it tense')");
+
+    // Add same command twice
+    fireEvent.change(input, { target: { value: "Same command" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() => expect(mockExecute).toHaveBeenCalled());
+
+    fireEvent.change(input, { target: { value: "Same command" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+    await waitFor(() => expect(mockExecute).toHaveBeenCalledTimes(2));
+
+    const historyItems = screen.getAllByTestId("history-item");
+    expect(historyItems).toHaveLength(1);
+  });
+
+  it("clears history for a tool", async () => {
+    render(<PowerDock />);
+    fireEvent.click(screen.getByLabelText("AI Tools"));
+    fireEvent.click(screen.getByLabelText("Batch Write"));
+
+    const input = screen.getByPlaceholderText(
+      "Instructions (e.g., 'Make it tense')",
+    );
+    fireEvent.change(input, { target: { value: "A command to clear" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    await waitFor(() => {
+      expect(mockExecute).toHaveBeenCalledWith(
+        expect.anything(),
+        "A command to clear",
+      );
+    });
+
+    expect(screen.getAllByTestId("history-item")).toHaveLength(1);
+
+    fireEvent.click(screen.getByLabelText("Clear history for this tool"));
+
+    // Dropdown closes, so we need to re-open to check
+    fireEvent.click(screen.getByLabelText("Command history"));
+    expect(
+      screen.getByText("No recent history"),
+    ).toBeInTheDocument();
+  });
+
+  it("maintains separate history for each tool", async () => {
+    render(<PowerDock />);
+
+    // Add command for "Batch Write"
+    fireEvent.click(screen.getByLabelText("AI Tools"));
+    fireEvent.click(screen.getByLabelText("Batch Write"));
+    const writeInput = screen.getByPlaceholderText(
+      "Instructions (e.g., 'Make it tense')",
+    );
+    fireEvent.change(writeInput, { target: { value: "Write command" } });
+    fireEvent.keyDown(writeInput, { key: "Enter" });
+    await waitFor(() => expect(mockExecute).toHaveBeenCalledWith(expect.anything(), "Write command"));
+
+    // Close and switch to "Rewrite"
+    fireEvent.click(screen.getByLabelText("Close")); // Reset button has X icon
+    fireEvent.click(screen.getByLabelText("AI Tools"));
+    fireEvent.click(screen.getByLabelText("Rewrite"));
+
+    // Check history for "Rewrite" - should be empty
+    fireEvent.click(screen.getByLabelText("Command history"));
+    expect(screen.getByText("No recent history")).toBeInTheDocument();
+
+    // Add command for "Rewrite"
+    const rewriteInput = screen.getByPlaceholderText(
+      "Instructions (e.g., 'Change to 1st person')",
+    );
+    fireEvent.change(rewriteInput, { target: { value: "Rewrite command" } });
+    fireEvent.keyDown(rewriteInput, { key: "Enter" });
+    await waitFor(() => expect(mockExecute).toHaveBeenCalledWith(expect.anything(), "Rewrite command"));
+
+    // Check rewrite history has 1 item
+    const rewriteHistoryItems = screen.getAllByTestId("history-item");
+    expect(rewriteHistoryItems).toHaveLength(1);
+    expect(rewriteHistoryItems[0]).toHaveTextContent("Rewrite command");
+
+    // Switch back to "Batch Write"
+    fireEvent.click(screen.getByLabelText("Close"));
+    fireEvent.click(screen.getByLabelText("AI Tools"));
+    fireEvent.click(screen.getByLabelText("Batch Write"));
+
+    // Check write history still has its item
+    fireEvent.click(screen.getByLabelText("Command history"));
+    const writeHistoryItems = screen.getAllByTestId("history-item");
+    expect(writeHistoryItems).toHaveLength(1);
+    expect(writeHistoryItems[0]).toHaveTextContent("Write command");
   });
 });
