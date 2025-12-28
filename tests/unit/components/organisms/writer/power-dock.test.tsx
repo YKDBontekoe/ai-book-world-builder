@@ -312,6 +312,9 @@ describe("PowerDock", () => {
 			),
 		);
 
+		// Open history to check content
+		fireEvent.click(screen.getByLabelText("Command history"));
+
 		// Check rewrite history has 1 item
 		const rewriteHistoryItems = screen.getAllByTestId("history-item");
 		expect(rewriteHistoryItems).toHaveLength(1);
