@@ -37,7 +37,7 @@ export type ToolHeaderProps = {
 	className?: string;
 };
 
-const getStatusBadge = (status: ToolUIPart["state"]) => {
+const getStatusBadge = (status: ToolUIPart["state"]): JSX.Element => {
 	const labels: Record<ToolUIPart["state"], string> = {
 		"input-streaming": "Pending",
 		"input-available": "Running",

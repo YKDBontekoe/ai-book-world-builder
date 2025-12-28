@@ -154,9 +154,7 @@ export async function POST(request: Request) {
 
 				const model = myProvider.languageModel(targetModelId);
 
-				const { messages: modelMessages } = await convertToModelMessages(
-					uiMessages,
-				);
+			const modelMessages = await convertToModelMessages(uiMessages);
 
 				const result = streamText({
 					model,
@@ -194,10 +192,10 @@ export async function POST(request: Request) {
 				);
 			},
 			generateId: generateUUID,
-			onFinish: async ({ uiMessages }) => {
+			onFinish: async ({ messages }) => {
 				await persistChat({
 					chatId: id,
-					messages: uiMessages,
+					messages,
 					finalUsage: finalMergedUsage,
 				});
 			},
