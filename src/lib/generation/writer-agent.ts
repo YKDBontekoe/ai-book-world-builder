@@ -106,6 +106,7 @@ Create an engaging, complete chapter that:
 Begin writing the chapter now:`;
 
 	const response = await generateText({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(input.settings.writerModelId),
 		system: systemPrompt,
 		prompt: userPrompt,
@@ -147,6 +148,7 @@ ${input.previousChapterSummary ? `## Previous Chapter\n${input.previousChapterSu
 Target: ~${targetWords} words. Create an engaging, complete chapter.`;
 
 	const stream = streamText({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(input.settings.writerModelId),
 		system: systemPrompt,
 		prompt: userPrompt,
@@ -177,6 +179,7 @@ export async function generatePrologue(
 	const targetWords = Math.min(settings.pagesPerChapter * 250, 2000);
 
 	const response = await generateText({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(settings.writerModelId),
 		system: `You are a professional novelist. ${stylePrompt}
 Write an engaging prologue that hooks the reader and sets up the story.`,
@@ -204,6 +207,7 @@ export async function generateEpilogue(
 	const targetWords = Math.min(settings.pagesPerChapter * 250, 2000);
 
 	const response = await generateText({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(settings.writerModelId),
 		system: `You are a professional novelist. ${stylePrompt}
 Write a satisfying epilogue that provides closure while leaving room for reader imagination.`,

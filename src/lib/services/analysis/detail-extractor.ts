@@ -72,6 +72,7 @@ export class DetailExtractor {
 			.join("\n\n---\n\n");
 
 		const { object } = await generateObject({
+			// @ts-expect-error Version mismatch between ai and provider packages
 			model: openrouter(this.modelId),
 			schema: entityDetailsSchema,
 			prompt: `Based on the following text excerpts, extract detailed information about "${entityName}" (a ${entityKind}).
