@@ -24,5 +24,12 @@ export async function verifyProjectAccessViaScenes(
 	scenes: { projectId: string }[],
 ) {
 	if (scenes.length === 0) return;
-	await ensureProjectAccess(scenes[0].projectId, true);
+
+	const projectId = scenes[0].projectId;
+	const allMatch = scenes.every((s) => s.projectId === projectId);
+	if (!allMatch) {
+		throw new Error("Batch operation requires scenes from the same project");
+	}
+
+	await ensureProjectAccess(projectId, true);
 }
