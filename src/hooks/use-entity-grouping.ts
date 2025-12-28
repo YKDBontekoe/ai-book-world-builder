@@ -31,7 +31,7 @@ export function useEntityGrouping(entities: SerializedEntity[] | undefined) {
 			for (const type of typeOrder) {
 				if (groupedByType[type] && groupedByType[type].length > 0) {
 					const config = entityTypeConfig[type] || {
-						label: type.charAt(0).toUpperCase() + type.slice(1) + "s",
+						label: `${type.charAt(0).toUpperCase() + type.slice(1)}s`,
 						icon: BookOpenIcon,
 						color: "text-gray-500",
 					};
@@ -48,7 +48,7 @@ export function useEntityGrouping(entities: SerializedEntity[] | undefined) {
 				if (!typeOrder.includes(type) && entitiesList.length > 0) {
 					entityGroups.push({
 						type,
-						label: type.charAt(0).toUpperCase() + type.slice(1) + "s",
+						label: `${type.charAt(0).toUpperCase() + type.slice(1)}s`,
 						icon: BookOpenIcon,
 						color: "text-gray-500",
 						entities: entitiesList,

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { entityRepository } from "@/lib/db/repositories/entity-repository";
-import { DatabaseError, NotFoundError, ValidationError } from "@/lib/errors";
+import { ValidationError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
 	const mockChain: any = {
@@ -25,7 +25,7 @@ const mocks = vi.hoisted(() => {
 
 	// Mock the thenable behavior for promise-like chaining
 	// biome-ignore lint/suspicious/noThenProperty: Mocking a promise
-	mockChain.then = async function (resolve: any, reject: any) {
+	mockChain.then = async (resolve: any, reject: any) => {
 		const currentResult =
 			mockChain.results && mockChain.results.length > 0
 				? mockChain.results.shift()

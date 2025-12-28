@@ -145,9 +145,8 @@ export function useWriterState({
 		if (!initialStructure) {
 			fetchStructure();
 		}
-		// biome-ignore lint/correctness/useExhaustiveDependencies: initialStructure is intentionally omitted to prevent re-fetching on optimistic updates.
-	}, [fetchStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
-	// Actually, if initialStructure changes, the other useEffect handles it. This one handles missing initialStructure.
+		// biome-ignore lint/correctness/useExhaustiveDependencies: `initialStructure` is intentionally omitted to prevent re-fetching on optimistic updates. The effect on line 71 handles updates to this prop.
+	}, [fetchStructure, initialStructure]);
 
 	const performSave = async (content: string, id: string, retryCount = 0) => {
 		setIsSaving(true);
@@ -187,7 +186,7 @@ export function useWriterState({
 					});
 				}
 			}
-		} catch (error) {
+		} catch (_error) {
 			setIsSaving(false);
 			if (retryCount < 2) {
 				setTimeout(

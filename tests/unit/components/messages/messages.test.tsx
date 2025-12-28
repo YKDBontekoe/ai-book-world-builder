@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { Messages } from "@/components/organisms/messages/messages";
-import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
 
 // Mock dependencies with relative paths matching the component imports

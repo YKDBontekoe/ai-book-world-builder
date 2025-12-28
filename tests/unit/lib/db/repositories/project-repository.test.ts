@@ -23,7 +23,7 @@ const mocks = vi.hoisted(() => {
 
 	// Mock the thenable behavior for promise-like chaining
 	// biome-ignore lint/suspicious/noThenProperty: Mocking a promise
-	mockChain.then = async function (resolve: any, reject: any) {
+	mockChain.then = async (resolve: any, reject: any) => {
 		if (mockChain.error) {
 			if (reject) {
 				return reject(mockChain.error);

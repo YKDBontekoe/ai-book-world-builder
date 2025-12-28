@@ -62,7 +62,7 @@ function PureSettingsModelSelector({
 
 	const handleSelectModel = useCallback(
 		(value: string) => {
-			const [prefix, ...rest] = value.split("__");
+			const [_prefix, ...rest] = value.split("__");
 			const modelId = rest.join("__");
 			selectModel(modelId);
 		},

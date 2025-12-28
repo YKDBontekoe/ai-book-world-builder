@@ -5,17 +5,14 @@ import {
 	AlertOctagonIcon,
 	AlertTriangleIcon,
 	BookIcon,
-	CheckCircleIcon,
 	CheckIcon,
 	GlobeIcon,
 	InfoIcon,
 	Loader2,
 	RefreshCwIcon,
 	Sparkles,
-	SparklesIcon,
 	TrendingUpIcon,
 	UsersIcon,
-	XCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -205,7 +202,7 @@ export function DiagnosticsPane() {
 
 	const issues = issuesData?.success ? issuesData.issues : [];
 	const openIssues = issues?.filter((i: any) => i.status === "open") || [];
-	const resolvedIssues =
+	const _resolvedIssues =
 		issues?.filter((i: any) => i.status === "resolved") || [];
 
 	const readiness = stats?.readiness ?? {

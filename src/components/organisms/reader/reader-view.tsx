@@ -63,7 +63,7 @@ export function ReaderView({
 		if (saved) {
 			try {
 				setSettings(JSON.parse(saved));
-			} catch (e) {}
+			} catch (_e) {}
 		}
 	}, []);
 
@@ -266,9 +266,8 @@ function PaginatedContent({
 	};
 
 	return (
-		<div
-			role="button"
-			tabIndex={0}
+		<button
+			type="button"
 			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
 			onClick={handleClick}
 			onKeyDown={handleKeyDown}
@@ -292,10 +291,12 @@ function PaginatedContent({
 			>
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
+						// biome-ignore lint/suspicious/noArrayIndexKey: Static content, index is fine
 						<p key={i} className="mb-4 indent-6">
 							{para}
 						</p>
 					) : (
+						// biome-ignore lint/suspicious/noArrayIndexKey: Static content, index is fine
 						<br key={i} />
 					),
 				)}
@@ -309,6 +310,6 @@ function PaginatedContent({
 			>
 				Page {page + 1} of {totalPages}
 			</div>
-		</div>
+		</button>
 	);
 }

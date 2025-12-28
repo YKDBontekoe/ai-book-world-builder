@@ -4,7 +4,6 @@ import type React from "react";
 import { memo, type ReactNode } from "react";
 import { MessageContent } from "@/components/molecules/message";
 import { PreviewAttachment } from "@/components/organisms/chat/preview-attachment";
-import type { Attachment } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const messageBubbleVariants = cva(

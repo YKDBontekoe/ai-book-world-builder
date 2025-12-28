@@ -8,7 +8,7 @@ import {
 } from "@tanstack/react-query";
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
-import { Loader2Icon, MessageSquare, Trash2 } from "lucide-react";
+import { Loader2Icon, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -135,7 +135,7 @@ export function ChatHistoryList({
 		onSuccess: () => {
 			toast.success("Chat deleted successfully");
 		},
-		onError: (error, _, context) => {
+		onError: (_error, _, context) => {
 			toast.error("Failed to delete chat");
 			if (context?.previousHistory) {
 				queryClient.setQueryData(

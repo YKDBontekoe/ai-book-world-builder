@@ -3,13 +3,13 @@ import { expect, userEvent, within } from "@storybook/test";
 import { SettingsDialog } from "@/components/organisms/settings-dialog";
 
 // Mock dependencies
-const availableModels = [
+const _availableModels = [
 	{ id: "gpt-4", name: "GPT-4", provider: "OpenAI" },
 	{ id: "claude-3-opus", name: "Claude 3 Opus", provider: "Anthropic" },
 	{ id: "gemini-pro", name: "Gemini Pro", provider: "Google" },
 ];
 
-const modelPreferences = {
+const _modelPreferences = {
 	light: "gemini-pro",
 	middle: "gpt-4",
 	large: "claude-3-opus",

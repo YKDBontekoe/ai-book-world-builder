@@ -4,7 +4,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	AlertTriangle,
 	BookOpenCheck,
-	ChevronDown,
 	Edit,
 	Expand,
 	Feather,
@@ -17,7 +16,7 @@ import {
 	Undo,
 	X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Separator } from "@/components/atoms/separator";
 import { Textarea } from "@/components/atoms/textarea";
@@ -198,7 +197,7 @@ export function PowerDock() {
 										Result
 									</span>
 									<button
-											type="button"
+										type="button"
 										onClick={() => setResult(null)}
 										className="hover:bg-white/10 p-1 rounded"
 									>

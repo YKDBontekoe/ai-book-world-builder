@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createScene } from "@/lib/db/queries/scene";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 
 const mocks = vi.hoisted(() => {
@@ -25,7 +24,7 @@ const mocks = vi.hoisted(() => {
 
 	// Mock the thenable behavior for promise-like chaining
 	// biome-ignore lint/suspicious/noThenProperty: Mocking a promise
-	mockChain.then = async function (resolve: any, reject: any) {
+	mockChain.then = async (resolve: any, reject: any) => {
 		const currentResult =
 			mockChain.results && mockChain.results.length > 0
 				? mockChain.results.shift()
