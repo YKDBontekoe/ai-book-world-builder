@@ -3,6 +3,12 @@ import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { HistoryItem } from "@/components/organisms/writer/power-dock";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
+import { ToolType } from "@/components/organisms/writer/tools/tool-strategies";
+
+// Hoist mock functions
+const { mockExecute } = vi.hoisted(() => ({
+  mockExecute: vi.fn(),
+}));
 
 // Hoist mock functions
 const {

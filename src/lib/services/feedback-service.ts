@@ -79,6 +79,7 @@ export async function processDailyFeedback() {
 	const modelId = await getSelectedModelId("large");
 
 	const { object } = await generateObject({
+		// @ts-expect-error Version mismatch between ai and provider packages
 		model: myProvider.languageModel(modelId),
 		schema: z.object({
 			groups: z.array(

@@ -180,6 +180,7 @@ export const aiClient = {
 
 		for (let attempt = 1; attempt <= maxRetries; attempt++) {
 			try {
+				// @ts-expect-error Version mismatch between ai and provider packages
 				const result = await generateObject({
 					model: myProvider.languageModel(modelId),
 					system: params.options?.system,
