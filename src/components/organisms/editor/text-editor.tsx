@@ -54,7 +54,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		},
 		ref,
 	) => {
-		const containerRef = useRef<HTMLDivElement>(null);
+		const containerRef = useRef<HTMLDivElement>(null!);
 
 		// Hoist mention state to pass to useProseMirror init
 		const [tempMentionState, setTempMentionState] =

@@ -99,6 +99,7 @@ mocks.queryBuilder.limit.mockImplementation(() => {
 	return Promise.resolve(mockDbState.queryResults.shift() || []);
 });
 // Set up thenable for mocks
+// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for Drizzle
 mocks.queryBuilder.then = (resolve: any) => {
 	resolve(mockDbState.queryResults.shift() || []);
 };

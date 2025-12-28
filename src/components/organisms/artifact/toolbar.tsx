@@ -323,13 +323,13 @@ const PureToolbar = ({
 	setMessages: UseChatHelpers<ChatMessage>["setMessages"];
 	artifactKind: ArtifactKind;
 }) => {
-	const toolbarRef = useRef<HTMLDivElement>(null);
-	const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
+	const toolbarRef = useRef<HTMLDivElement>(null!);
+	const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
 	const [selectedTool, setSelectedTool] = useState<string | null>(null);
 	const [isAnimating, setIsAnimating] = useState(false);
 
-	useOnClickOutside(toolbarRef as any, () => {
+	useOnClickOutside(toolbarRef, () => {
 		setIsToolbarVisible(false);
 		setSelectedTool(null);
 	});

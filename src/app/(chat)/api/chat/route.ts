@@ -157,7 +157,7 @@ export async function POST(request: Request) {
 				const result = streamText({
 					model,
 					system: groundedSystemPrompt,
-					messages: uiMessages,
+					messages: uiMessages as any, // Cast to any to bypass strict Vercel AI SDK type checks that conflict with our internal ChatMessage type
 					stopWhen: stepCountIs(5),
 					experimental_activeTools:
 						selectedChatModel === "chat-model-reasoning" ? [] : toolList,

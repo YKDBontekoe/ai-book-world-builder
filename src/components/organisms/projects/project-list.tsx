@@ -27,7 +27,7 @@ const item = {
 		x: 0,
 		transition: { type: "spring", stiffness: 400, damping: 25 },
 	},
-};
+} as const;
 
 interface ProjectListProps {
 	projects: Project[];
@@ -46,7 +46,7 @@ function ProjectRow({
 	selected?: boolean;
 	onSelect?: (id: string) => void;
 	onDelete?: (id: string) => void;
-}): JSX.Element {
+}) {
 	return (
 		<div className="relative group flex items-center gap-4">
 			{/* Checkbox */}
@@ -127,7 +127,7 @@ export function ProjectList({
 	selectedIds,
 	onSelect,
 	onDeleteProject,
-}: ProjectListProps): JSX.Element {
+}: ProjectListProps) {
 	return (
 		<motion.div
 			variants={container}

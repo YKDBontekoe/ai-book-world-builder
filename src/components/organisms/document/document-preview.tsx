@@ -58,7 +58,7 @@ export function DocumentPreview({
 	});
 
 	const previewDocument = useMemo(() => documents?.[0], [documents]);
-	const hitboxRef = useRef<HTMLDivElement>(null);
+	const hitboxRef = useRef<HTMLDivElement>(null!);
 
 	useEffect(() => {
 		const boundingBox = hitboxRef.current?.getBoundingClientRect();

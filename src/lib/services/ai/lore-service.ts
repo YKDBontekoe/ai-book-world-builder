@@ -43,7 +43,6 @@ export const loreService = {
 		await ensureProjectAccess(projectId);
 
 		const { object } = await generateObject({
-			// @ts-expect-error Version mismatch between ai and provider packages
 			model: openrouter(await getSelectedModelId("large")),
 			schema: loreSchema,
 			prompt: `

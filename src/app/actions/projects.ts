@@ -226,9 +226,9 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 		eq(entity.projectId, originalProjectId),
 	);
 
-	// Limit to reasonable size for synchronous operation (e.g. 5000 entities)
+	// Limit to reasonable size for synchronous operation (e.g. 500 entities)
 	// Larger projects would require a background job queue
-	if (entityCount > 5000) {
+	if (entityCount > 500) {
 		return {
 			error:
 				"Project is too large to fork instantly. Please export and import instead.",

@@ -57,7 +57,7 @@ export function ProjectBrowser({
 	projects,
 }: {
 	projects: Project[];
-}): JSX.Element {
+}) {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortOption, setSortOption] = useState<SortOption>("newest");
 	const [visibilityFilter, setVisibilityFilter] =

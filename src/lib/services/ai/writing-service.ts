@@ -25,6 +25,13 @@ export const writingService = {
 		// Sort by sequence to ensure logical flow
 		const sortedScenes = scenes.sort((a, b) => a.sequence - b.sequence);
 
+		// Limit the number of scenes to prevent timeouts
+		if (sortedScenes.length > 5) {
+			throw new Error(
+				"Batch writing is limited to 5 scenes at a time to prevent timeouts.",
+			);
+		}
+
 		// Concurrency limit to prevent timeouts/rate-limits
 		const CONCURRENCY_LIMIT = 3;
 
