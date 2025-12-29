@@ -49,7 +49,7 @@ export function useWriterState({
 		if (projectId) {
 			setProjectId(projectId);
 		}
-	}, [projectId, setProjectId]);
+	}, [projectId]);
 
 	// Update state if initial props change (e.g. navigation)
 	useEffect(() => {
@@ -107,7 +107,7 @@ export function useWriterState({
 		return () => {
 			isMounted = false;
 		};
-	}, [activeSceneId, activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
+	}, [activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);
@@ -146,7 +146,7 @@ export function useWriterState({
 			fetchStructure();
 		}
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [projectId, fetchStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
+	}, [fetchStructure, initialStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
 	// Actually, if initialStructure changes, the other useEffect handles it. This one handles missing initialStructure.
 
 	const performSave = async (content: string, id: string, retryCount = 0) => {
@@ -266,7 +266,15 @@ export function useWriterState({
 				setActiveSceneId(structure[0].scenes[0].id);
 			}
 		}
-	}, [structure, activeSceneId, lastViewedSceneId, loading, setActiveSceneId]);
+	}, [
+		structure,
+		activeSceneId,
+		lastViewedSceneId,
+		loading,
+		setActiveSceneId,
+		setProjectId,
+		projectId,
+	]);
 
 	return useMemo(
 		() => ({

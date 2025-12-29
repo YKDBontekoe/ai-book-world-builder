@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, ne, or } from "drizzle-orm";
+import { and, desc, eq, ne, or, type SQL } from "drizzle-orm";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { DEFAULT_PROJECT_FOLDERS } from "@/lib/constants";
 import { db } from "@/lib/db/drizzle";
@@ -47,7 +47,7 @@ export async function getProjectsVisibleToUser({
 	filter?: "all" | "mine" | "shared";
 }): Promise<Project[]> {
 	try {
-		let whereClause;
+		let whereClause: SQL | undefined;
 
 		if (filter === "mine") {
 			whereClause = eq(project.userId, userId);
