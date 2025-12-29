@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	BookPlus,
 	ChevronsDown,
@@ -7,10 +8,17 @@ import {
 	Loader2,
 	Plus,
 	Sparkles,
+	Trash2,
+	Undo2,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { createNewChapter, generateScene } from "@/app/actions/writer";
+import {
+	bulkDeleteScenes,
+	createNewChapter,
+	generateScene,
+	restoreScenes,
+} from "@/app/actions/writer";
 import {
 	Accordion,
 	AccordionContent,
@@ -25,8 +33,9 @@ import {
 	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import { GlassCard } from "@/components/molecules/glass-card";
 import { SceneItem } from "@/components/organisms/writer/left-sidebar/scene-item";
-import type { Project } from "@/lib/db/schema";
+import type { Project, Scene } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
 
 interface SceneNavigationProps {
@@ -49,6 +58,10 @@ export function SceneNavigation({
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
+	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
+	const [isDeleting, setIsDeleting] = useState(false);
 
 	// Initialize expanded state when structure loads
 	useEffect(() => {
@@ -65,6 +78,88 @@ export function SceneNavigation({
 
 	const handleCollapseAll = () => {
 		setExpandedChapters([]);
+	};
+
+	const toggleSelection = (id: string, multiSelect: boolean) => {
+		setSelectedSceneIds((prev) => {
+			const next = new Set(multiSelect ? prev : []);
+			if (next.has(id)) {
+				next.delete(id);
+			} else {
+				next.add(id);
+			}
+			return next;
+		});
+	};
+
+	const handleSceneClick = (
+		sceneId: string,
+		e: React.MouseEvent | React.KeyboardEvent,
+	) => {
+		// Check for modifier keys (Cmd/Ctrl for multi-select)
+		const isMultiSelect = e.ctrlKey || e.metaKey;
+
+		if (isMultiSelect) {
+			e.preventDefault();
+			toggleSelection(sceneId, true);
+		} else if (selectedSceneIds.size > 0 && !isMultiSelect) {
+			// If we have selection but click without modifier, clear selection and navigate
+			setSelectedSceneIds(new Set());
+			onSceneSelect(sceneId);
+		} else {
+			// Normal navigation
+			onSceneSelect(sceneId);
+		}
+	};
+
+	const handleBulkDelete = async () => {
+		if (selectedSceneIds.size === 0) return;
+
+		setIsDeleting(true);
+		const count = selectedSceneIds.size;
+		const toastId = toast.loading(`Deleting ${count} scenes...`);
+
+		try {
+			const idsToDelete = Array.from(selectedSceneIds);
+			const result = await bulkDeleteScenes(idsToDelete);
+
+			if (result.success && result.deletedScenes) {
+				toast.success(`${count} scenes deleted`, {
+					id: toastId,
+					action: {
+						label: "Undo",
+						onClick: () => {
+							if (result.deletedScenes) {
+								handleRestore(result.deletedScenes);
+							}
+						},
+					},
+				});
+				setSelectedSceneIds(new Set());
+				if (onStructureUpdate) onStructureUpdate();
+			} else {
+				toast.error(result.error || "Failed to delete scenes", { id: toastId });
+			}
+		} catch (_e) {
+			toast.error("Error deleting scenes", { id: toastId });
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
+	const handleRestore = async (scenesToRestore: Scene[]) => {
+		const toastId = toast.loading("Restoring scenes...");
+		try {
+			const result = await restoreScenes(scenesToRestore);
+			if (result.success) {
+				toast.success("Scenes restored", { id: toastId });
+				if (onStructureUpdate) onStructureUpdate();
+			} else {
+				toast.error("Failed to restore scenes", { id: toastId });
+			}
+		} catch (_e) {
+			toast.error("Error restoring scenes", { id: toastId });
+		}
 	};
 
 	const handleGenerateNextScene = useCallback(
@@ -153,7 +248,7 @@ export function SceneNavigation({
 	}
 
 	return (
-		<div className="flex flex-col h-full">
+		<div className="flex flex-col h-full relative">
 			<div className="flex items-center justify-between px-4 py-2 border-b">
 				<span className="text-xs font-medium text-muted-foreground">
 					{structure.length} Chapters
@@ -179,7 +274,7 @@ export function SceneNavigation({
 					</Button>
 				</div>
 			</div>
-			<ScrollArea className="flex-1">
+			<ScrollArea className="flex-1 pb-16">
 				<Accordion
 					type="multiple"
 					value={expandedChapters}
@@ -220,8 +315,10 @@ export function SceneNavigation({
 											key={scene.id}
 											scene={scene}
 											isActive={activeSceneId === scene.id}
+											isSelected={selectedSceneIds.has(scene.id)}
 											chapterId={chapter.id}
-											onSelect={onSceneSelect}
+											onSelect={(id) => onSceneSelect(id)}
+											onClick={(id, e) => handleSceneClick(id, e)}
 											onGenerateNext={handleGenerateNextScene}
 											isGenerating={isGenerating}
 										/>
@@ -263,6 +360,59 @@ export function SceneNavigation({
 					</div>
 				</Accordion>
 			</ScrollArea>
+
+			{/* Bulk Actions Bar */}
+			<AnimatePresence>
+				{selectedSceneIds.size > 0 && (
+					<motion.div
+						initial={{ y: 100, opacity: 0 }}
+						animate={{ y: 0, opacity: 1 }}
+						exit={{ y: 100, opacity: 0 }}
+						transition={{ type: "spring", stiffness: 300, damping: 30 }}
+						className="absolute bottom-4 left-4 right-4 z-50"
+					>
+						<GlassCard
+							variant="liquid"
+							className="p-2 flex items-center justify-between shadow-xl border-primary/20 bg-background/80 backdrop-blur-xl rounded-full"
+						>
+							<div className="flex items-center gap-3 px-3">
+								<div className="bg-primary/20 text-primary rounded-full px-2 py-0.5 text-xs font-medium">
+									{selectedSceneIds.size}
+								</div>
+								<span className="text-xs font-medium text-muted-foreground">
+									Selected
+								</span>
+							</div>
+							<div className="flex items-center gap-1">
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 rounded-full hover:bg-destructive/10 hover:text-destructive transition-colors"
+									onClick={handleBulkDelete}
+									disabled={isDeleting}
+									title="Delete Selected"
+								>
+									{isDeleting ? (
+										<Loader2 className="h-4 w-4 animate-spin" />
+									) : (
+										<Trash2 className="h-4 w-4" />
+									)}
+								</Button>
+								<div className="w-px h-4 bg-border mx-1" />
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 rounded-full"
+									onClick={() => setSelectedSceneIds(new Set())}
+									title="Cancel Selection"
+								>
+									<Undo2 className="h-4 w-4" />
+								</Button>
+							</div>
+						</GlassCard>
+					</motion.div>
+				)}
+			</AnimatePresence>
 		</div>
 	);
 }

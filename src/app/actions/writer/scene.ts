@@ -265,3 +265,67 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 		return { success: false, error: "Failed to reorder scenes" };
 	}
 }
+
+export async function bulkDeleteScenes(
+	sceneIds: string[],
+): Promise<{ success: boolean; deletedScenes?: typeof scene.$inferSelect[]; error?: string }> {
+	try {
+		if (sceneIds.length === 0) return { success: true, deletedScenes: [] };
+
+		// 1. Fetch scenes to verify ownership and store for undo
+		const scenesToDelete = await db
+			.select()
+			.from(scene)
+			.where(inArray(scene.id, sceneIds));
+
+		if (scenesToDelete.length === 0) {
+			return { success: true, deletedScenes: [] };
+		}
+
+		const projectId = scenesToDelete[0].projectId;
+
+		// Verify all scenes belong to the same project
+		const allSameProject = scenesToDelete.every(
+			(s) => s.projectId === projectId,
+		);
+		if (!allSameProject) {
+			return {
+				success: false,
+				error: "Cannot delete scenes from multiple projects",
+			};
+		}
+
+		await ensureProjectAccess(projectId, true);
+
+		// 2. Delete scenes
+		await db.delete(scene).where(inArray(scene.id, sceneIds));
+
+		await invalidateCache(`project-structure:${projectId}`);
+
+		return { success: true, deletedScenes: scenesToDelete };
+	} catch (error) {
+		console.error("Failed to bulk delete scenes", error);
+		return { success: false, error: "Failed to delete scenes" };
+	}
+}
+
+export async function restoreScenes(
+	scenesToRestore: typeof scene.$inferSelect[],
+): Promise<{ success: boolean; error?: string }> {
+	try {
+		if (scenesToRestore.length === 0) return { success: true };
+
+		const projectId = scenesToRestore[0].projectId;
+		await ensureProjectAccess(projectId, true);
+
+		// 3. Restore scenes (insert with ID)
+		await db.insert(scene).values(scenesToRestore).onConflictDoNothing();
+
+		await invalidateCache(`project-structure:${projectId}`);
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to restore scenes", error);
+		return { success: false, error: "Failed to restore scenes" };
+	}
+}
