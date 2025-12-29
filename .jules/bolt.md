@@ -36,5 +36,6 @@
 **Action:** Instead of querying children in a loop, collect parent IDs and execute a single query: `db.selectDistinctOn([child.parentId]).from(child).where(inArray(child.parentId, ids)).orderBy(child.parentId, desc(child.version))`. This pattern is especially useful for fetching the "latest" version of related entities efficiently.
 
 ## 2025-05-25 - Derived State in Render Loop
+
 **Learning:** Calculating derived state (like filtering/mapping arrays) inside the render loop of a frequently updating component (like a chat message) creates constant garbage collection pressure and breaks shallow memoization of children.
 **Action:** Push derived state logic down into the memoized child component (or use `useMemo`). If the derived data depends on a subset of a changing object (e.g. file attachments from a changing message), use a custom `memo` comparator in the child to ignore irrelevant updates.
