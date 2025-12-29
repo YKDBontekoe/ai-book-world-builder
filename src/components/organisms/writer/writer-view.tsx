@@ -110,11 +110,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				)}
 
 				{/* Center Panel: Editor */}
-				<ResizablePanel
-					defaultSize={50}
-					minSize={30}
-					className="relative z-10"
-				>
+				<ResizablePanel defaultSize={50} minSize={30} className="relative z-10">
 					<WriterEditor />
 					{/* Control Bar lives here, overlaying the editor */}
 					<PowerDock />
