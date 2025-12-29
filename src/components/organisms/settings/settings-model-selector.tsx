@@ -93,7 +93,6 @@ function PureSettingsModelSelector({
 		recentModels,
 		getModelItemValue,
 		selectedModel,
-		optimisticModelId,
 	]);
 
 	const renderModelCard = useCallback(

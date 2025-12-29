@@ -107,7 +107,7 @@ export function useWriterState({
 		return () => {
 			isMounted = false;
 		};
-	}, [activeSceneId, activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
+	}, [activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);
@@ -137,17 +137,15 @@ export function useWriterState({
 			}
 		}
 		setLoading(false);
-	}, [projectId, activeSceneId, setActiveSceneId]);
+	}, [projectId, activeSceneId, lastViewedSceneId, setActiveSceneId]);
 
 	useEffect(() => {
-		// Only fetch if no structure or if we are supposed to (though logic above handles initialStructure updates)
-		// But if we navigate to a new project and initialStructure is NOT provided for some reason, we fetch.
+		// Only fetch if no structure is provided on mount.
+		// The effect at the top handles updates to initialStructure if the prop changes.
 		if (!initialStructure) {
 			fetchStructure();
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [projectId, fetchStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
-	// Actually, if initialStructure changes, the other useEffect handles it. This one handles missing initialStructure.
+	}, [initialStructure, fetchStructure]);
 
 	const performSave = async (content: string, id: string, retryCount = 0) => {
 		setIsSaving(true);

@@ -20,7 +20,7 @@ const mocks = vi.hoisted(() => {
 		execute: vi.fn(),
 		transaction: vi.fn((cb) => cb(mockChain)),
 		// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for Drizzle
-then(onFulfilled: any, onRejected: any) {
+		then(onFulfilled: any, onRejected: any) {
 			const currentResult =
 				mockChain.results && mockChain.results.length > 0
 					? mockChain.results.shift()
