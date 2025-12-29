@@ -95,7 +95,15 @@ export async function getUserDetails(userId: string) {
 	await ensureAdmin();
 
 	const [targetUser] = await db
-		.select()
+		.select({
+			id: userTable.id,
+			name: userTable.name,
+			email: userTable.email,
+			role: userTable.role,
+			bannedAt: userTable.bannedAt,
+			emailVerified: userTable.emailVerified,
+			image: userTable.image,
+		})
 		.from(userTable)
 		.where(eq(userTable.id, userId));
 	if (!targetUser) return null;
