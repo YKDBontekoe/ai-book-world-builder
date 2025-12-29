@@ -30,18 +30,18 @@ export function useWriterLayout(): WriterLayoutState {
 	const sidebarRef = useRef<PanelImperativeHandle>(null!);
 
 	const toggleSidebar = () => {
-		setIsSidebarOpen((prev) => {
-			const newOpen = !prev;
-			const panel = sidebarRef.current;
-			if (panel) {
+		const panel = sidebarRef.current;
+		if (panel) {
+			setIsSidebarOpen((prev) => {
+				const newOpen = !prev;
 				if (newOpen) {
 					panel.expand();
 				} else {
 					panel.collapse();
 				}
-			}
-			return newOpen;
-		});
+				return newOpen;
+			});
+		}
 	};
 
 	const toggleZenMode = () => {

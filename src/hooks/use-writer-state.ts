@@ -107,11 +107,7 @@ export function useWriterState({
 		return () => {
 			isMounted = false;
 		};
-	}, [activeScene]); // The dependency is `activeScene` itself, not just `activeSceneId`.
-	// This is intentional and confirmed by the linter, as the effect's logic
-	// depends on the `activeScene.content` property. If only `activeSceneId` were used,
-	// the effect wouldn't re-run correctly if the scene object was updated elsewhere
-	// (e.g., with prefetched content) without the ID changing.
+	}, [activeSceneId]);
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);

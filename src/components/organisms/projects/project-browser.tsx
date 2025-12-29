@@ -53,7 +53,7 @@ import { cn } from "@/lib/utils";
 type SortOption = "newest" | "oldest" | "a-z" | "z-a";
 type VisibilityFilter = "all" | "public" | "private";
 
-export function ProjectBrowser({ projects }: { projects: Project[] }) {
+export function ProjectBrowser({ projects }: { projects: Project[] }): JSX.Element {
 	const [searchQuery, setSearchQuery] = useState("");
 	const [sortOption, setSortOption] = useState<SortOption>("newest");
 	const [visibilityFilter, setVisibilityFilter] =

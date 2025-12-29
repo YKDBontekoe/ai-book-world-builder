@@ -101,6 +101,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							maxSize={30}
 							collapsible={true}
 							collapsedSize={0}
+							onCollapse={() => actions.setSidebarOpen(false)}
+							onExpand={() => actions.setSidebarOpen(true)}
 							className="bg-muted/10 backdrop-blur-md"
 						>
 							<WriterSidebar />
