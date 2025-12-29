@@ -9,7 +9,7 @@ import {
 	Plus,
 	Sparkles,
 	Trash2,
-	Undo2,
+	X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -368,7 +368,7 @@ export function SceneNavigation({
 						initial={{ y: 100, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 100, opacity: 0 }}
-						transition={{ type: "spring", stiffness: 300, damping: 30 }}
+						transition={{ type: "spring", stiffness: 400, damping: 25 }}
 						className="absolute bottom-4 left-4 right-4 z-50"
 					>
 						<GlassCard
@@ -391,6 +391,7 @@ export function SceneNavigation({
 									onClick={handleBulkDelete}
 									disabled={isDeleting}
 									title="Delete Selected"
+									aria-label={`Delete ${selectedSceneIds.size} selected scenes`}
 								>
 									{isDeleting ? (
 										<Loader2 className="h-4 w-4 animate-spin" />
@@ -405,8 +406,9 @@ export function SceneNavigation({
 									className="h-8 w-8 rounded-full"
 									onClick={() => setSelectedSceneIds(new Set())}
 									title="Cancel Selection"
+									aria-label="Cancel scene selection"
 								>
-									<Undo2 className="h-4 w-4" />
+									<X className="h-4 w-4" />
 								</Button>
 							</div>
 						</GlassCard>

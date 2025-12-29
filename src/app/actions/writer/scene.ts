@@ -266,41 +266,56 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 	}
 }
 
+import { z } from "zod";
+
+const bulkDeleteScenesSchema = z.object({
+	sceneIds: z.array(z.string().uuid()).max(100), // Add reasonable limit
+});
+
 export async function bulkDeleteScenes(
 	sceneIds: string[],
 ): Promise<{ success: boolean; deletedScenes?: typeof scene.$inferSelect[]; error?: string }> {
 	try {
-		if (sceneIds.length === 0) return { success: true, deletedScenes: [] };
-
-		// 1. Fetch scenes to verify ownership and store for undo
-		const scenesToDelete = await db
-			.select()
-			.from(scene)
-			.where(inArray(scene.id, sceneIds));
-
-		if (scenesToDelete.length === 0) {
-			return { success: true, deletedScenes: [] };
+		const parsed = bulkDeleteScenesSchema.safeParse({ sceneIds });
+		if (!parsed.success) {
+			return { success: false, error: "Invalid input" };
 		}
+		if (parsed.data.sceneIds.length === 0) return { success: true, deletedScenes: [] };
 
-		const projectId = scenesToDelete[0].projectId;
+		const { scenesToDelete, projectId } = await db.transaction(async (tx) => {
+			// 1. Fetch scenes to verify ownership and store for undo
+			const scenes = await tx
+				.select()
+				.from(scene)
+				.where(inArray(scene.id, parsed.data.sceneIds));
 
-		// Verify all scenes belong to the same project
-		const allSameProject = scenesToDelete.every(
-			(s) => s.projectId === projectId,
-		);
-		if (!allSameProject) {
-			return {
-				success: false,
-				error: "Cannot delete scenes from multiple projects",
-			};
+			if (scenes.length > 0) {
+				const projId = scenes[0].projectId;
+
+				// Verify all scenes belong to the same project
+				const allSameProject = scenes.every((s) => s.projectId === projId);
+				if (!allSameProject) {
+					tx.rollback();
+					return {
+						scenesToDelete: [],
+						projectId: undefined,
+						error: "Cannot delete scenes from multiple projects",
+					};
+				}
+
+				await ensureProjectAccess(projId, true);
+
+				// 2. Delete scenes
+				await tx.delete(scene).where(inArray(scene.id, parsed.data.sceneIds));
+
+				return { scenesToDelete: scenes, projectId: projId };
+			}
+			return { scenesToDelete: [], projectId: undefined };
+		});
+
+		if (projectId) {
+			await invalidateCache(`project-structure:${projectId}`);
 		}
-
-		await ensureProjectAccess(projectId, true);
-
-		// 2. Delete scenes
-		await db.delete(scene).where(inArray(scene.id, sceneIds));
-
-		await invalidateCache(`project-structure:${projectId}`);
 
 		return { success: true, deletedScenes: scenesToDelete };
 	} catch (error) {
@@ -310,16 +325,51 @@ export async function bulkDeleteScenes(
 }
 
 export async function restoreScenes(
-	scenesToRestore: typeof scene.$inferSelect[],
+	scenesToRestore: (typeof scene.$inferSelect)[],
 ): Promise<{ success: boolean; error?: string }> {
 	try {
 		if (scenesToRestore.length === 0) return { success: true };
 
+		// 1. Verify all scenes belong to the same project
+		const projectIds = new Set(scenesToRestore.map((s) => s.projectId));
+		if (projectIds.size !== 1) {
+			return { success: false, error: "Cannot restore scenes from multiple projects" };
+		}
 		const projectId = scenesToRestore[0].projectId;
+
+		// 2. Verify write access to the project
 		await ensureProjectAccess(projectId, true);
 
-		// 3. Restore scenes (insert with ID)
-		await db.insert(scene).values(scenesToRestore).onConflictDoNothing();
+		// 3. Check for existing scenes to prevent overwrites
+		const existingScenes = await db
+			.select({ id: scene.id })
+			.from(scene)
+			.where(inArray(scene.id, scenesToRestore.map((s) => s.id)));
+
+		if (existingScenes.length > 0) {
+			const existingIds = new Set(existingScenes.map((s) => s.id));
+			const tryingToOverwrite = scenesToRestore.filter((s) => existingIds.has(s.id));
+			console.warn("Attempt to restore existing scenes:", tryingToOverwrite);
+			return { success: false, error: `Scene(s) with ID(s) ${existingScenes.map(s => s.id).join(', ')} already exist.` };
+		}
+
+		// 4. Sanitize input - only use fields from the original object
+		const sanitizedScenes = scenesToRestore.map((s) => ({
+			id: s.id,
+			projectId: s.projectId,
+			chapterId: s.chapterId,
+			prevSceneId: s.prevSceneId,
+			title: s.title,
+			content: s.content,
+			status: s.status,
+			sequence: s.sequence,
+			createdAt: s.createdAt,
+			updatedAt: new Date(), // Set updatedAt to now
+		}));
+
+
+		// 5. Restore scenes (insert with ID)
+		await db.insert(scene).values(sanitizedScenes);
 
 		await invalidateCache(`project-structure:${projectId}`);
 

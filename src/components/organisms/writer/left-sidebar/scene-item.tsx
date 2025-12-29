@@ -19,10 +19,7 @@ interface SceneItemProps {
 	isSelected?: boolean;
 	chapterId: string;
 	onSelect: (sceneId: string) => void;
-	onClick?: (
-		sceneId: string,
-		e: React.MouseEvent | React.KeyboardEvent,
-	) => void;
+	onClick?: (sceneId: string, e: React.MouseEvent) => void;
 	onGenerateNext: (chapterId: string, sceneId: string) => void;
 	isGenerating: boolean;
 }
@@ -44,6 +41,7 @@ export const SceneItem = memo(function SceneItem({
 					<Button
 						variant={isActive ? "secondary" : "ghost"}
 						size="sm"
+						aria-selected={isSelected}
 						className={cn(
 							"justify-start h-8 w-full px-2 text-xs font-normal relative transition-all duration-200",
 							isActive && "bg-secondary/50 font-medium",
@@ -72,7 +70,7 @@ export const SceneItem = memo(function SceneItem({
 
 						{/* Selection Hint (visible on hover) */}
 						<div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] text-muted-foreground font-mono bg-background/50 px-1 rounded backdrop-blur-sm pointer-events-none">
-							⌘
+							{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}
 						</div>
 					</Button>
 				</ContextMenuTrigger>
