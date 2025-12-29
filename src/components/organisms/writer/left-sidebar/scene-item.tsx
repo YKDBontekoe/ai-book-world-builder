@@ -62,7 +62,7 @@ export const SceneItem = memo(function SceneItem({
 		if (e.key === "Enter") {
 			e.preventDefault();
 			// Blur will trigger the save via handleBlur
-			e.currentTarget.blur();
+			(e.currentTarget as HTMLElement).blur();
 		} else if (e.key === "Escape") {
 			e.preventDefault();
 			e.stopPropagation();
