@@ -246,23 +246,19 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" &
     fi
 
     if [[ -n "$COMMENTS_DATA" && "$COMMENTS_DATA" != "" ]]; then
-      SHOULD_INVOKE_JULES="true"
-      JULES_PROMPT="CodeRabbit finished reviewing PR #$NUMBER (Branch: $BRANCH).
+      # Post comments as a new PR comment to trigger Jules via standard @Jules mechanism
+      # This ensures Jules operates on the existing PR context instead of creating a new one
+      log "Posting aggregated CodeRabbit comments to PR #$NUMBER to trigger Jules..."
 
-You MUST address ALL the following code review comments. Each comment may include:
-- A 'Prompt for AI Agents' section with specific instructions
-- A 'Committable suggestion' with exact code to apply
-- A 'Proposed fix' with diff format changes
+      MESSAGE="@Jules Please address the following CodeRabbit review feedback:
 
-## Comments to Address
+$COMMENTS_DATA"
 
-$COMMENTS_DATA
+      gh pr comment "$NUMBER" --body "$MESSAGE" --repo "${GITHUB_REPOSITORY}"
 
-## Instructions
-1. Fix EVERY comment listed above
-2. Run: pnpm lint && pnpm type-check && pnpm test:unit
-3. Commit with message: 'fix: address CodeRabbit review feedback'
-4. Push directly to branch '$BRANCH'"
+      # Do NOT invoke Jules directly in this pass - wait for the issue_comment event trigger
+      SHOULD_INVOKE_JULES="false"
+      log "Comment posted. Jules will be triggered by the resulting issue_comment event."
     else
       log "No CodeRabbit inline comments found for this PR"
     fi
