@@ -195,6 +195,7 @@ describe("PowerDock", () => {
 
 		// Check if "Test command" appears in the history items (DropdownMenuItem)
 		// We added data-testid="history-item" to the mock
+		fireEvent.click(screen.getByLabelText("Command history"));
 		const historyItems = screen.getAllByTestId("history-item");
 		expect(historyItems).toHaveLength(1);
 		expect(historyItems[0]).toHaveTextContent("Test command");
@@ -216,6 +217,7 @@ describe("PowerDock", () => {
 			await waitFor(() => expect(mockExecute).toHaveBeenCalled());
 		}
 
+		fireEvent.click(screen.getByLabelText("Command history"));
 		const historyItems = screen.getAllByTestId("history-item");
 		expect(historyItems).toHaveLength(20);
 	});
@@ -238,6 +240,7 @@ describe("PowerDock", () => {
 		fireEvent.keyDown(input, { key: "Enter" });
 		await waitFor(() => expect(mockExecute).toHaveBeenCalledTimes(2));
 
+		fireEvent.click(screen.getByLabelText("Command history"));
 		const historyItems = screen.getAllByTestId("history-item");
 		expect(historyItems).toHaveLength(1);
 	});
@@ -260,6 +263,7 @@ describe("PowerDock", () => {
 			);
 		});
 
+		fireEvent.click(screen.getByLabelText("Command history"));
 		expect(screen.getAllByTestId("history-item")).toHaveLength(1);
 
 		fireEvent.click(screen.getByLabelText("Clear history for this tool"));
@@ -310,6 +314,7 @@ describe("PowerDock", () => {
 		);
 
 		// Check rewrite history has 1 item
+		fireEvent.click(screen.getByLabelText("Command history"));
 		const rewriteHistoryItems = screen.getAllByTestId("history-item");
 		expect(rewriteHistoryItems).toHaveLength(1);
 		expect(rewriteHistoryItems[0]).toHaveTextContent("Rewrite command");
