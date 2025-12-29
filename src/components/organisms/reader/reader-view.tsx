@@ -183,6 +183,7 @@ function PaginatedContent({
 	const hasRestoredRef = useRef(false);
 
 	// Measure pages
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Dependencies are correct
 	useEffect(() => {
 		if (!containerRef.current) return;
 
@@ -259,8 +260,14 @@ function PaginatedContent({
 
 	return (
 		<div
+			role="button"
+			tabIndex={0}
 			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
 			onClick={handleClick}
+			onKeyDown={(e) => {
+				if (e.key === "ArrowRight") handlePageTurn("next");
+				if (e.key === "ArrowLeft") handlePageTurn("prev");
+			}}
 		>
 			<div
 				ref={containerRef}

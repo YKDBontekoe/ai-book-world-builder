@@ -46,9 +46,6 @@ export function useProseMirror({
 	useEffect(() => {
 		if (!containerRef.current) return;
 
-		// If editor already exists, don't recreate it
-		if (editorRef.current) return;
-
 		const doc = buildDocumentFromContent(content || "");
 
 		const state = EditorState.create({
@@ -95,10 +92,10 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, []); // Empty dependency array to run once on mount
+		// Re-initialize if container, readOnly status, or callbacks change.
+	}, [containerRef, onMentionStateChange, content, readOnly]);
 
 	// Synchronize content when it changes externally
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Editor sync logic
 	useEffect(() => {
 		// Skip if content hasn't changed or editor doesn't exist
 		if (prevContentRef.current === content || !editorRef.current) {
@@ -158,7 +155,13 @@ export function useProseMirror({
 				},
 			});
 		}
-	}, [readOnly, typewriterMode, onSaveContent, onSelectionChange]);
+	}, [
+		readOnly,
+		typewriterMode,
+		onSaveContent,
+		onSelectionChange,
+		containerRef,
+	]);
 
 	return { editorRef, mounted };
 }

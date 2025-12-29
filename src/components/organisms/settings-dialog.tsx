@@ -61,13 +61,6 @@ export function SettingsDialog({
 		isLoading: isAppearanceLoading,
 	} = useAppearance();
 
-	useEffect(() => {
-		if (open) {
-			loadAccounts();
-			loadModelSettings();
-		}
-	}, [open, loadAccounts, loadModelSettings]);
-
 	const loadAccounts = useCallback(async () => {
 		setIsLoading(true);
 		try {
@@ -96,6 +89,13 @@ export function SettingsDialog({
 			toast.error("Failed to load model settings");
 		}
 	}, []);
+
+	useEffect(() => {
+		if (open) {
+			loadAccounts();
+			loadModelSettings();
+		}
+	}, [open, loadAccounts, loadModelSettings]);
 
 	const handleModelChange = async (
 		type: "light" | "middle" | "large",
