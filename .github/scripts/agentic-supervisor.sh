@@ -255,25 +255,40 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" &
 $COMMENTS_DATA"
 
       # GitHub API has a ~65K character limit for comment bodies
-      if [[ ${#MESSAGE} -gt 65000 ]]; then
-        log "WARNING: Aggregated comments exceed GitHub API limit (${#MESSAGE} chars). Truncating..."
+      MESSAGE_BYTES=$(echo -n "$MESSAGE" | wc -c)
+      if [[ $MESSAGE_BYTES -gt 65000 ]]; then
+        log "WARNING: Aggregated comments exceed GitHub API limit ($MESSAGE_BYTES bytes). Truncating..."
+        # Truncate conservatively to account for header and notice
+        TRUNCATED_DATA="${COMMENTS_DATA:0:60000}"
         MESSAGE="@Jules Please address the following CodeRabbit review feedback:
 
-${COMMENTS_DATA:0:64500}
+$TRUNCATED_DATA
 
 ... (truncated due to size - see CodeRabbit review for complete feedback)"
       fi
 
-      if gh pr comment "$NUMBER" --body "$MESSAGE" --repo "${GITHUB_REPOSITORY}" 2>&1; then
+      GH_OUTPUT=$(gh pr comment "$NUMBER" --body "$MESSAGE" --repo "${GITHUB_REPOSITORY}" 2>&1)
+      GH_EXIT_CODE=$?
+      if [[ $GH_EXIT_CODE -eq 0 ]]; then
         # Do NOT invoke Jules directly in this pass - wait for the issue_comment event trigger
         SHOULD_INVOKE_JULES="false"
         log "Comment posted. Jules will be triggered by the resulting issue_comment event."
       else
-        log "ERROR: Failed to post comment to PR. Falling back to direct Jules invocation."
+        log "ERROR: Failed to post comment to PR (exit code $GH_EXIT_CODE): $GH_OUTPUT"
+        log "Falling back to direct Jules invocation."
         SHOULD_INVOKE_JULES="true"
+
+        # Truncate for fallback prompt if needed
+        FALLBACK_DATA="$COMMENTS_DATA"
+        if [[ ${#FALLBACK_DATA} -gt 50000 ]]; then
+          FALLBACK_DATA="${COMMENTS_DATA:0:50000}
+
+... (truncated - see CodeRabbit review for complete feedback)"
+        fi
+
         JULES_PROMPT="CodeRabbit Review on PR #$NUMBER. Please address the following feedback:
 
-$COMMENTS_DATA
+$FALLBACK_DATA
 
 Please commit changes directly to the '$BRANCH' branch."
       fi
