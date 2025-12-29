@@ -42,6 +42,16 @@ const PurePreviewMessage = ({
 }) => {
 	const [mode, setMode] = useState<"view" | "edit">("view");
 
+	const attachmentsFromMessage =
+		message.parts?.filter((part) => part.type === "file") ?? [];
+
+	// Helper to extract attachments correctly typed
+	const attachments = attachmentsFromMessage.map((a) => ({
+		url: a.url,
+		filename: a.filename,
+		mediaType: a.mediaType,
+	}));
+
 	return (
 		<div
 			className="group/message w-full"
@@ -75,7 +85,7 @@ const PurePreviewMessage = ({
 							message.role === "user" && mode !== "edit",
 					})}
 				>
-					<MessageAttachments parts={message.parts} />
+					<MessageAttachments attachments={attachments} />
 
 					{(!message.parts || message.parts.length === 0) &&
 						message.content && (

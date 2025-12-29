@@ -5,12 +5,11 @@ import {
 	BookPlus,
 	ChevronsDown,
 	ChevronsUp,
-	FilePlus2,
 	Loader2,
 	Plus,
 	Sparkles,
 	Trash2,
-	X,
+	Undo2,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -19,9 +18,6 @@ import {
 	createNewChapter,
 	generateScene,
 	restoreScenes,
-	createSceneInChapter,
-	deleteScene,
-	updateSceneTitle,
 } from "@/app/actions/writer";
 import {
 	Accordion,
@@ -45,11 +41,10 @@ import type { ChapterWithScenes } from "@/lib/types";
 interface SceneNavigationProps {
 	project: Project;
 	activeSceneId: string | null;
-	onSceneSelect: (sceneId: string | null) => void;
+	onSceneSelect: (sceneId: string) => void;
 	structure: ChapterWithScenes[] | null;
 	loading: boolean;
 	onStructureUpdate?: () => void;
-	readOnly?: boolean;
 }
 
 export function SceneNavigation({
@@ -59,7 +54,6 @@ export function SceneNavigation({
 	structure,
 	loading,
 	onStructureUpdate,
-	readOnly,
 }: SceneNavigationProps) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
@@ -177,7 +171,11 @@ export function SceneNavigation({
 				const result = await generateScene(chapterId, prevSceneId);
 				if (result.success && result.sceneId) {
 					toast.success("Scene generated!", { id: toastId });
-					onStructureUpdate?.();
+					if (onStructureUpdate) {
+						onStructureUpdate();
+					} else {
+						window.location.reload();
+					}
 				} else {
 					toast.error("Generation failed", { id: toastId });
 				}
@@ -190,69 +188,6 @@ export function SceneNavigation({
 		[onStructureUpdate],
 	);
 
-	const handleCreateSceneManually = useCallback(
-		async (chapterId: string) => {
-			const toastId = toast.loading("Creating scene...");
-			try {
-				const result = await createSceneInChapter(chapterId, "New Scene");
-				if (result.success && result.sceneId) {
-					toast.success("Scene created", { id: toastId });
-					onStructureUpdate?.();
-					// Optionally select the new scene
-					onSceneSelect(result.sceneId);
-				} else {
-					toast.error(result.error || "Failed to create scene", {
-						id: toastId,
-					});
-				}
-			} catch (_e) {
-				toast.error("Error creating scene", { id: toastId });
-			}
-		},
-		[onStructureUpdate, onSceneSelect],
-	);
-
-	const handleRenameScene = useCallback(
-		async (sceneId: string, newTitle: string) => {
-			const toastId = toast.loading("Renaming scene...");
-			try {
-				const result = await updateSceneTitle(sceneId, newTitle);
-				if (result.success) {
-					toast.success("Scene renamed", { id: toastId });
-					onStructureUpdate?.();
-				} else {
-					toast.error("Failed to rename scene", { id: toastId });
-				}
-			} catch (_e) {
-				toast.error("Error renaming scene", { id: toastId });
-			}
-		},
-		[onStructureUpdate],
-	);
-
-	const handleDeleteScene = useCallback(
-		async (sceneId: string) => {
-			const toastId = toast.loading("Deleting scene...");
-			try {
-				const result = await deleteScene(sceneId);
-				if (result.success) {
-					toast.success("Scene deleted", { id: toastId });
-					onStructureUpdate?.();
-					if (activeSceneId === sceneId) {
-						onSceneSelect(null); // Clear selection
-					}
-				} else {
-					toast.error(result.error || "Failed to delete scene", {
-						id: toastId,
-					});
-				}
-			} catch (_e) {
-				toast.error("Error deleting scene", { id: toastId });
-			}
-		},
-		[onStructureUpdate, activeSceneId, onSceneSelect],
-	);
-
 	const handleCreateChapter = async () => {
 		setIsCreatingChapter(true);
 		const toastId = toast.loading("Creating new chapter...");
@@ -260,7 +195,11 @@ export function SceneNavigation({
 			const result = await createNewChapter(project.id);
 			if (result.success) {
 				toast.success("Chapter created!", { id: toastId });
-				onStructureUpdate?.();
+				if (onStructureUpdate) {
+					onStructureUpdate();
+				} else {
+					window.location.reload();
+				}
 			} else {
 				toast.error("Failed to create chapter", { id: toastId });
 			}
@@ -293,7 +232,7 @@ export function SceneNavigation({
 				<p className="text-sm text-muted-foreground">No chapters yet.</p>
 				<Button
 					onClick={handleCreateChapter}
-					disabled={isCreatingChapter || readOnly}
+					disabled={isCreatingChapter}
 					variant="outline"
 					size="sm"
 				>
@@ -349,7 +288,7 @@ export function SceneNavigation({
 							className="border-b-0 px-2"
 						>
 							<ContextMenu>
-								<ContextMenuTrigger disabled={readOnly}>
+								<ContextMenuTrigger>
 									<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
 										<span className="truncate text-left">{chapter.title}</span>
 									</AccordionTrigger>
@@ -362,11 +301,9 @@ export function SceneNavigation({
 										<Sparkles className="mr-2 h-4 w-4" />
 										Generate New Scene
 									</ContextMenuItem>
-									<ContextMenuItem
-										onClick={() => handleCreateSceneManually(chapter.id)}
-									>
-										<FilePlus2 className="mr-2 h-4 w-4" />
-										Add Scene Manually
+									<ContextMenuItem disabled>
+										<Plus className="mr-2 h-4 w-4" />
+										Add Scene Manually (Coming Soon)
 									</ContextMenuItem>
 								</ContextMenuContent>
 							</ContextMenu>
@@ -384,19 +321,20 @@ export function SceneNavigation({
 											onClick={(id, e) => handleSceneClick(id, e)}
 											onGenerateNext={handleGenerateNextScene}
 											isGenerating={isGenerating}
-											onRename={handleRenameScene}
-											onDelete={handleDeleteScene}
-											readOnly={readOnly}
 										/>
 									))}
 									<Button
 										variant="ghost"
 										size="sm"
 										className="justify-start h-8 w-full px-2 text-xs text-muted-foreground italic"
-										onClick={() => handleCreateSceneManually(chapter.id)}
-										disabled={isGenerating || readOnly}
+										onClick={() => handleGenerateNextScene(chapter.id)}
+										disabled={isGenerating}
 									>
-										<Plus className="mr-2 h-3 w-3" />
+										{isGenerating ? (
+											<Loader2 className="mr-2 h-3 w-3 animate-spin" />
+										) : (
+											<Plus className="mr-2 h-3 w-3" />
+										)}
 										Add Scene
 									</Button>
 								</div>
@@ -410,7 +348,7 @@ export function SceneNavigation({
 							size="sm"
 							className="w-full justify-start text-muted-foreground"
 							onClick={handleCreateChapter}
-							disabled={isCreatingChapter || readOnly}
+							disabled={isCreatingChapter}
 						>
 							{isCreatingChapter ? (
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -430,7 +368,7 @@ export function SceneNavigation({
 						initial={{ y: 100, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 100, opacity: 0 }}
-						transition={{ type: "spring", stiffness: 400, damping: 25 }}
+						transition={{ type: "spring", stiffness: 300, damping: 30 }}
 						className="absolute bottom-4 left-4 right-4 z-50"
 					>
 						<GlassCard
@@ -453,7 +391,6 @@ export function SceneNavigation({
 									onClick={handleBulkDelete}
 									disabled={isDeleting}
 									title="Delete Selected"
-									aria-label={`Delete ${selectedSceneIds.size} selected scenes`}
 								>
 									{isDeleting ? (
 										<Loader2 className="h-4 w-4 animate-spin" />
@@ -468,9 +405,8 @@ export function SceneNavigation({
 									className="h-8 w-8 rounded-full"
 									onClick={() => setSelectedSceneIds(new Set())}
 									title="Cancel Selection"
-									aria-label="Cancel scene selection"
 								>
-									<X className="h-4 w-4" />
+									<Undo2 className="h-4 w-4" />
 								</Button>
 							</div>
 						</GlassCard>

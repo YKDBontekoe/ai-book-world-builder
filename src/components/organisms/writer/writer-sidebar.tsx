@@ -93,7 +93,6 @@ export function WriterSidebar() {
 				structure={structure}
 				loading={loading}
 				onStructureUpdate={fetchStructure}
-				readOnly={isReadOnly}
 			/>
 		</div>
 	);

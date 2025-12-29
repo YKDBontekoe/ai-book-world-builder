@@ -315,11 +315,9 @@ describe("PowerDock", () => {
 
 		// Check rewrite history has 1 item
 		fireEvent.click(screen.getByLabelText("Command history"));
-		await waitFor(() => {
-			const rewriteHistoryItems = screen.getAllByTestId("history-item");
-			expect(rewriteHistoryItems).toHaveLength(1);
-			expect(rewriteHistoryItems[0]).toHaveTextContent("Rewrite command");
-		});
+		const rewriteHistoryItems = screen.getAllByTestId("history-item");
+		expect(rewriteHistoryItems).toHaveLength(1);
+		expect(rewriteHistoryItems[0]).toHaveTextContent("Rewrite command");
 
 		// Switch back to "Batch Write"
 		fireEvent.click(screen.getByLabelText("Close"));
@@ -328,10 +326,8 @@ describe("PowerDock", () => {
 
 		// Check write history still has its item
 		fireEvent.click(screen.getByLabelText("Command history"));
-		await waitFor(() => {
-			const writeHistoryItems = screen.getAllByTestId("history-item");
-			expect(writeHistoryItems).toHaveLength(1);
-			expect(writeHistoryItems[0]).toHaveTextContent("Write command");
-		});
+		const writeHistoryItems = screen.getAllByTestId("history-item");
+		expect(writeHistoryItems).toHaveLength(1);
+		expect(writeHistoryItems[0]).toHaveTextContent("Write command");
 	});
 });
