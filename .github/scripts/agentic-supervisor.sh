@@ -254,11 +254,29 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" &
 
 $COMMENTS_DATA"
 
-      gh pr comment "$NUMBER" --body "$MESSAGE" --repo "${GITHUB_REPOSITORY}"
+      # GitHub API has a ~65K character limit for comment bodies
+      if [[ ${#MESSAGE} -gt 65000 ]]; then
+        log "WARNING: Aggregated comments exceed GitHub API limit (${#MESSAGE} chars). Truncating..."
+        MESSAGE="@Jules Please address the following CodeRabbit review feedback:
 
-      # Do NOT invoke Jules directly in this pass - wait for the issue_comment event trigger
-      SHOULD_INVOKE_JULES="false"
-      log "Comment posted. Jules will be triggered by the resulting issue_comment event."
+${COMMENTS_DATA:0:64500}
+
+... (truncated due to size - see CodeRabbit review for complete feedback)"
+      fi
+
+      if gh pr comment "$NUMBER" --body "$MESSAGE" --repo "${GITHUB_REPOSITORY}" 2>&1; then
+        # Do NOT invoke Jules directly in this pass - wait for the issue_comment event trigger
+        SHOULD_INVOKE_JULES="false"
+        log "Comment posted. Jules will be triggered by the resulting issue_comment event."
+      else
+        log "ERROR: Failed to post comment to PR. Falling back to direct Jules invocation."
+        SHOULD_INVOKE_JULES="true"
+        JULES_PROMPT="CodeRabbit Review on PR #$NUMBER. Please address the following feedback:
+
+$COMMENTS_DATA
+
+Please commit changes directly to the '$BRANCH' branch."
+      fi
     else
       log "No CodeRabbit inline comments found for this PR"
     fi
