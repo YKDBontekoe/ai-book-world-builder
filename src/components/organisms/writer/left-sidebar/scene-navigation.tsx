@@ -4,13 +4,20 @@ import {
 	BookPlus,
 	ChevronsDown,
 	ChevronsUp,
+	FilePlus2,
 	Loader2,
 	Plus,
 	Sparkles,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { createNewChapter, generateScene } from "@/app/actions/writer";
+import {
+	createNewChapter,
+	createSceneInChapter,
+	deleteScene,
+	generateScene,
+	updateSceneTitle,
+} from "@/app/actions/writer";
 import {
 	Accordion,
 	AccordionContent,
@@ -36,6 +43,7 @@ interface SceneNavigationProps {
 	structure: ChapterWithScenes[] | null;
 	loading: boolean;
 	onStructureUpdate?: () => void;
+	readOnly?: boolean;
 }
 
 export function SceneNavigation({
@@ -45,6 +53,7 @@ export function SceneNavigation({
 	structure,
 	loading,
 	onStructureUpdate,
+	readOnly,
 }: SceneNavigationProps) {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
@@ -76,11 +85,7 @@ export function SceneNavigation({
 				const result = await generateScene(chapterId, prevSceneId);
 				if (result.success && result.sceneId) {
 					toast.success("Scene generated!", { id: toastId });
-					if (onStructureUpdate) {
-						onStructureUpdate();
-					} else {
-						window.location.reload();
-					}
+					onStructureUpdate?.();
 				} else {
 					toast.error("Generation failed", { id: toastId });
 				}
@@ -93,6 +98,66 @@ export function SceneNavigation({
 		[onStructureUpdate],
 	);
 
+	const handleCreateSceneManually = useCallback(
+		async (chapterId: string) => {
+			const toastId = toast.loading("Creating scene...");
+			try {
+				const result = await createSceneInChapter(chapterId, "New Scene");
+				if (result.success && result.sceneId) {
+					toast.success("Scene created", { id: toastId });
+					onStructureUpdate?.();
+					// Optionally select the new scene
+					onSceneSelect(result.sceneId);
+				} else {
+					toast.error(result.error || "Failed to create scene", { id: toastId });
+				}
+			} catch (_e) {
+				toast.error("Error creating scene", { id: toastId });
+			}
+		},
+		[onStructureUpdate, onSceneSelect],
+	);
+
+	const handleRenameScene = useCallback(
+		async (sceneId: string, newTitle: string) => {
+			try {
+				const result = await updateSceneTitle(sceneId, newTitle);
+				if (result.success) {
+					toast.success("Scene renamed");
+					onStructureUpdate?.();
+				} else {
+					toast.error("Failed to rename scene");
+				}
+			} catch (_e) {
+				toast.error("Error renaming scene");
+			}
+		},
+		[onStructureUpdate],
+	);
+
+	const handleDeleteScene = useCallback(
+		async (sceneId: string) => {
+			const toastId = toast.loading("Deleting scene...");
+			try {
+				const result = await deleteScene(sceneId);
+				if (result.success) {
+					toast.success("Scene deleted", { id: toastId });
+					onStructureUpdate?.();
+					if (activeSceneId === sceneId) {
+						onSceneSelect(""); // Clear selection
+					}
+				} else {
+					toast.error(result.error || "Failed to delete scene", {
+						id: toastId,
+					});
+				}
+			} catch (_e) {
+				toast.error("Error deleting scene", { id: toastId });
+			}
+		},
+		[onStructureUpdate, activeSceneId, onSceneSelect],
+	);
+
 	const handleCreateChapter = async () => {
 		setIsCreatingChapter(true);
 		const toastId = toast.loading("Creating new chapter...");
@@ -100,11 +165,7 @@ export function SceneNavigation({
 			const result = await createNewChapter(project.id);
 			if (result.success) {
 				toast.success("Chapter created!", { id: toastId });
-				if (onStructureUpdate) {
-					onStructureUpdate();
-				} else {
-					window.location.reload();
-				}
+				onStructureUpdate?.();
 			} else {
 				toast.error("Failed to create chapter", { id: toastId });
 			}
@@ -137,7 +198,7 @@ export function SceneNavigation({
 				<p className="text-sm text-muted-foreground">No chapters yet.</p>
 				<Button
 					onClick={handleCreateChapter}
-					disabled={isCreatingChapter}
+					disabled={isCreatingChapter || readOnly}
 					variant="outline"
 					size="sm"
 				>
@@ -193,7 +254,7 @@ export function SceneNavigation({
 							className="border-b-0 px-2"
 						>
 							<ContextMenu>
-								<ContextMenuTrigger>
+								<ContextMenuTrigger disabled={readOnly}>
 									<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
 										<span className="truncate text-left">{chapter.title}</span>
 									</AccordionTrigger>
@@ -206,9 +267,11 @@ export function SceneNavigation({
 										<Sparkles className="mr-2 h-4 w-4" />
 										Generate New Scene
 									</ContextMenuItem>
-									<ContextMenuItem disabled>
-										<Plus className="mr-2 h-4 w-4" />
-										Add Scene Manually (Coming Soon)
+									<ContextMenuItem
+										onClick={() => handleCreateSceneManually(chapter.id)}
+									>
+										<FilePlus2 className="mr-2 h-4 w-4" />
+										Add Scene Manually
 									</ContextMenuItem>
 								</ContextMenuContent>
 							</ContextMenu>
@@ -224,20 +287,19 @@ export function SceneNavigation({
 											onSelect={onSceneSelect}
 											onGenerateNext={handleGenerateNextScene}
 											isGenerating={isGenerating}
+											onRename={handleRenameScene}
+											onDelete={handleDeleteScene}
+											readOnly={readOnly}
 										/>
 									))}
 									<Button
 										variant="ghost"
 										size="sm"
 										className="justify-start h-8 w-full px-2 text-xs text-muted-foreground italic"
-										onClick={() => handleGenerateNextScene(chapter.id)}
-										disabled={isGenerating}
+										onClick={() => handleCreateSceneManually(chapter.id)}
+										disabled={isGenerating || readOnly}
 									>
-										{isGenerating ? (
-											<Loader2 className="mr-2 h-3 w-3 animate-spin" />
-										) : (
-											<Plus className="mr-2 h-3 w-3" />
-										)}
+										<Plus className="mr-2 h-3 w-3" />
 										Add Scene
 									</Button>
 								</div>
@@ -251,7 +313,7 @@ export function SceneNavigation({
 							size="sm"
 							className="w-full justify-start text-muted-foreground"
 							onClick={handleCreateChapter}
-							disabled={isCreatingChapter}
+							disabled={isCreatingChapter || readOnly}
 						>
 							{isCreatingChapter ? (
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
