@@ -82,8 +82,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			}}
 		>
 			<ResizablePanelGroup
-				direction={isMobile ? "vertical" : "horizontal"}
-				autoSaveId={
+				orientation={isMobile ? "vertical" : "horizontal"}
+				id={
 					isMobile
 						? "writer-view-layout-vertical"
 						: "writer-view-layout-horizontal"
@@ -95,16 +95,13 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					<>
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
-							ref={sidebarRef}
+							panelRef={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
 							minSize={15}
 							maxSize={30}
 							collapsible={true}
 							collapsedSize={0}
-							onCollapse={() => actions.setSidebarOpen(false)}
-							onExpand={() => actions.setSidebarOpen(true)}
 							className="bg-muted/10 backdrop-blur-md"
-							order={1}
 						>
 							<WriterSidebar />
 						</ResizablePanel>
@@ -116,7 +113,6 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				<ResizablePanel
 					defaultSize={50}
 					minSize={30}
-					order={2}
 					className="relative z-10"
 				>
 					<WriterEditor />
@@ -134,7 +130,6 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							minSize={20}
 							collapsible={true}
 							collapsedSize={0}
-							order={3}
 						>
 							<BookCanvas variant="embedded" />
 						</ResizablePanel>

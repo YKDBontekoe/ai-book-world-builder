@@ -17,7 +17,7 @@ const mocks = vi.hoisted(() => {
 		set: vi.fn(),
 		delete: vi.fn(),
 		// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for Drizzle
-then: vi.fn((resolve, reject) => {
+		then: vi.fn((resolve, reject) => {
 			if (mockChain.error) {
 				return Promise.reject(mockChain.error).catch(reject);
 			}

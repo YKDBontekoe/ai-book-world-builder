@@ -35,7 +35,12 @@ vi.mock("@/components/organisms/chat/widgets/interactive-widget", () => ({
 // Mock Button
 vi.mock("@/components/atoms/button", () => ({
 	Button: ({ children, onClick, className }: any) => (
-		<button type="button" onClick={onClick} className={className} data-testid="mock-button">
+		<button
+			type="button"
+			onClick={onClick}
+			className={className}
+			data-testid="mock-button"
+		>
 			{children}
 		</button>
 	),
