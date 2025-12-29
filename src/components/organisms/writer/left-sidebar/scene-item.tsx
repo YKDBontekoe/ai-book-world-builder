@@ -19,7 +19,10 @@ interface SceneItemProps {
 	isSelected?: boolean;
 	chapterId: string;
 	onSelect: (sceneId: string) => void;
-	onClick?: (sceneId: string, e: React.MouseEvent) => void;
+	onClick?: (
+		sceneId: string,
+		e: React.MouseEvent | React.KeyboardEvent,
+	) => void;
 	onGenerateNext: (chapterId: string, sceneId: string) => void;
 	isGenerating: boolean;
 }
@@ -70,7 +73,11 @@ export const SceneItem = memo(function SceneItem({
 
 						{/* Selection Hint (visible on hover) */}
 						<div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity text-[9px] text-muted-foreground font-mono bg-background/50 px-1 rounded backdrop-blur-sm pointer-events-none">
-							{typeof navigator !== "undefined" && /Mac|iPhone|iPad/.test(navigator.platform) ? "⌘" : "Ctrl"}
+							{typeof navigator !== "undefined" &&
+							(navigator.userAgentData?.platform === "macOS" ||
+								/Mac|iPhone|iPad/.test(navigator.userAgent))
+								? "⌘"
+								: "Ctrl"}
 						</div>
 					</Button>
 				</ContextMenuTrigger>

@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { and, eq, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
@@ -266,8 +267,6 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 	}
 }
 
-import { z } from "zod";
-
 const bulkDeleteScenesSchema = z.object({
 	sceneIds: z.array(z.string().uuid()).max(100), // Add reasonable limit
 });
@@ -295,12 +294,7 @@ export async function bulkDeleteScenes(
 				// Verify all scenes belong to the same project
 				const allSameProject = scenes.every((s) => s.projectId === projId);
 				if (!allSameProject) {
-					tx.rollback();
-					return {
-						scenesToDelete: [],
-						projectId: undefined,
-						error: "Cannot delete scenes from multiple projects",
-					};
+					throw new Error("Cannot delete scenes from multiple projects");
 				}
 
 				await ensureProjectAccess(projId, true);
@@ -319,8 +313,10 @@ export async function bulkDeleteScenes(
 
 		return { success: true, deletedScenes: scenesToDelete };
 	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : "Failed to delete scenes";
 		console.error("Failed to bulk delete scenes", error);
-		return { success: false, error: "Failed to delete scenes" };
+		return { success: false, error: message };
 	}
 }
 
@@ -340,42 +336,50 @@ export async function restoreScenes(
 		// 2. Verify write access to the project
 		await ensureProjectAccess(projectId, true);
 
-		// 3. Check for existing scenes to prevent overwrites
-		const existingScenes = await db
-			.select({ id: scene.id })
-			.from(scene)
-			.where(inArray(scene.id, scenesToRestore.map((s) => s.id)));
+		await db.transaction(async (tx) => {
+			// 3. Check for existing scenes to prevent overwrites
+			const existingScenes = await tx
+				.select({ id: scene.id })
+				.from(scene)
+				.where(inArray(scene.id, scenesToRestore.map((s) => s.id)));
 
-		if (existingScenes.length > 0) {
-			const existingIds = new Set(existingScenes.map((s) => s.id));
-			const tryingToOverwrite = scenesToRestore.filter((s) => existingIds.has(s.id));
-			console.warn("Attempt to restore existing scenes:", tryingToOverwrite);
-			return { success: false, error: `Scene(s) with ID(s) ${existingScenes.map(s => s.id).join(', ')} already exist.` };
-		}
+			if (existingScenes.length > 0) {
+				const existingIds = new Set(existingScenes.map((s) => s.id));
+				const tryingToOverwrite = scenesToRestore.filter((s) =>
+					existingIds.has(s.id),
+				);
+				console.warn("Attempt to restore existing scenes:", tryingToOverwrite);
+				// Do not leak IDs to the client
+				throw new Error(
+					"One or more scenes already exist and cannot be overwritten.",
+				);
+			}
 
-		// 4. Sanitize input - only use fields from the original object
-		const sanitizedScenes = scenesToRestore.map((s) => ({
-			id: s.id,
-			projectId: s.projectId,
-			chapterId: s.chapterId,
-			prevSceneId: s.prevSceneId,
-			title: s.title,
-			content: s.content,
-			status: s.status,
-			sequence: s.sequence,
-			createdAt: s.createdAt,
-			updatedAt: new Date(), // Set updatedAt to now
-		}));
+			// 4. Sanitize input - only use fields from the original object
+			const sanitizedScenes = scenesToRestore.map((s) => ({
+				id: s.id,
+				projectId: s.projectId,
+				chapterId: s.chapterId,
+				prevSceneId: s.prevSceneId,
+				title: s.title,
+				content: s.content,
+				status: s.status,
+				sequence: s.sequence,
+				createdAt: s.createdAt,
+				updatedAt: new Date(), // Set updatedAt to now
+			}));
 
-
-		// 5. Restore scenes (insert with ID)
-		await db.insert(scene).values(sanitizedScenes);
+			// 5. Restore scenes (insert with ID)
+			await tx.insert(scene).values(sanitizedScenes);
+		});
 
 		await invalidateCache(`project-structure:${projectId}`);
 
 		return { success: true };
 	} catch (error) {
+		const message =
+			error instanceof Error ? error.message : "Failed to restore scenes";
 		console.error("Failed to restore scenes", error);
-		return { success: false, error: "Failed to restore scenes" };
+		return { success: false, error: message };
 	}
 }
