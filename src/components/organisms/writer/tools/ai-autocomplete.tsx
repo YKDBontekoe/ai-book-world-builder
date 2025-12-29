@@ -159,7 +159,7 @@ export function AIAutocomplete({
 						<div className="space-y-1">
 							{suggestions.map((suggestion, index) => (
 								<button
-									key={index}
+									key={suggestion.text}
 									type="button"
 									onClick={() => {
 										onSelect(suggestion.text);
