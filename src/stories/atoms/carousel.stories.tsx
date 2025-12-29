@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import * as React from "react";
 import { Card, CardContent } from "@/components/atoms/card";
 import {
 	Carousel,
@@ -31,7 +32,7 @@ export const Default: Story = {
 	render: (args) => (
 		<Carousel className="w-full max-w-xs" {...args}>
 			<CarouselContent>
-				{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
+			{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
 				{Array.from({ length: 5 }).map((_, index) => (
 					<CarouselItem key={index}>
 						<div className="p-1">
@@ -60,7 +61,7 @@ export const OrientationVertical: Story = {
 	render: (args) => (
 		<Carousel className="w-full max-w-xs" {...args}>
 			<CarouselContent className="-mt-1 h-[200px]">
-				{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
+			{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
 				{Array.from({ length: 5 }).map((_, index) => (
 					<CarouselItem key={index} className="pt-1 md:basis-1/2">
 						<div className="p-1">

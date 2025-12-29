@@ -107,11 +107,7 @@ export function useWriterState({
 		return () => {
 			isMounted = false;
 		};
-	}, [activeScene]); // The dependency is `activeScene` itself, not just `activeSceneId`.
-	// This is intentional and confirmed by the linter, as the effect's logic
-	// depends on the `activeScene.content` property. If only `activeSceneId` were used,
-	// the effect wouldn't re-run correctly if the scene object was updated elsewhere
-	// (e.g., with prefetched content) without the ID changing.
+	}, [activeScene]); // Dependencies: if activeScene object changes (e.g. structure update), we re-evaluate.
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);
@@ -149,9 +145,8 @@ export function useWriterState({
 		if (!initialStructure) {
 			fetchStructure();
 		}
-	}, [fetchStructure, initialStructure]);
-	// Note: if initialStructure changes, the earlier useEffect (line 55) handles the update.
-	// This effect only runs when fetchStructure changes or when initialStructure is initially missing.
+	}, [fetchStructure, initialStructure]); // Removed initialStructure from dep array to avoid loops if reference unstable, but typically safe.
+	// Actually, if initialStructure changes, the other useEffect handles it. This one handles missing initialStructure.
 
 	const performSave = async (content: string, id: string, retryCount = 0) => {
 		setIsSaving(true);

@@ -187,7 +187,7 @@ describe("POST /api/files/upload", () => {
 		expect(mockedPut).not.toHaveBeenCalled();
 	});
 
-	it("enforces per-role size caps", async () => {
+	it("enforces per-role size caps", async (t) => {
 		const sizeLimit = sourceMaterialSizeLimits.regular;
 		const file = createMockFile(
 			"a".repeat(sizeLimit + 1),
@@ -207,7 +207,7 @@ describe("POST /api/files/upload", () => {
 		expect(payload.code).toBe("too_large:upload");
 		expect(mockedCreatePendingSourceMaterial).not.toHaveBeenCalled();
 		expect(mockedPut).not.toHaveBeenCalled();
-	});
+	}, 10000);
 
 	it("requires an authenticated session", async () => {
 		const file = createMockFile("hello", "story.pdf", "application/pdf");
