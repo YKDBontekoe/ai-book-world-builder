@@ -39,7 +39,7 @@ import type { ChapterWithScenes } from "@/lib/types";
 interface SceneNavigationProps {
 	project: Project;
 	activeSceneId: string | null;
-	onSceneSelect: (sceneId: string) => void;
+	onSceneSelect: (sceneId: string | null) => void;
 	structure: ChapterWithScenes[] | null;
 	loading: boolean;
 	onStructureUpdate?: () => void;
@@ -109,7 +109,9 @@ export function SceneNavigation({
 					// Optionally select the new scene
 					onSceneSelect(result.sceneId);
 				} else {
-					toast.error(result.error || "Failed to create scene", { id: toastId });
+					toast.error(result.error || "Failed to create scene", {
+						id: toastId,
+					});
 				}
 			} catch (_e) {
 				toast.error("Error creating scene", { id: toastId });
@@ -120,16 +122,17 @@ export function SceneNavigation({
 
 	const handleRenameScene = useCallback(
 		async (sceneId: string, newTitle: string) => {
+			const toastId = toast.loading("Renaming scene...");
 			try {
 				const result = await updateSceneTitle(sceneId, newTitle);
 				if (result.success) {
-					toast.success("Scene renamed");
+					toast.success("Scene renamed", { id: toastId });
 					onStructureUpdate?.();
 				} else {
-					toast.error("Failed to rename scene");
+					toast.error("Failed to rename scene", { id: toastId });
 				}
 			} catch (_e) {
-				toast.error("Error renaming scene");
+				toast.error("Error renaming scene", { id: toastId });
 			}
 		},
 		[onStructureUpdate],
@@ -144,7 +147,7 @@ export function SceneNavigation({
 					toast.success("Scene deleted", { id: toastId });
 					onStructureUpdate?.();
 					if (activeSceneId === sceneId) {
-						onSceneSelect(""); // Clear selection
+						onSceneSelect(null); // Clear selection
 					}
 				} else {
 					toast.error(result.error || "Failed to delete scene", {

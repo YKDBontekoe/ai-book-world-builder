@@ -61,8 +61,7 @@ export const SceneItem = memo(function SceneItem({
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter") {
 			e.preventDefault();
-			// Blur will trigger the save via handleBlur
-			e.currentTarget.blur();
+			inputRef.current?.blur();
 		} else if (e.key === "Escape") {
 			e.preventDefault();
 			e.stopPropagation();
@@ -98,6 +97,7 @@ export const SceneItem = memo(function SceneItem({
 					onKeyDown={handleKeyDown}
 					onBlur={handleBlur}
 					className="h-6 text-xs px-1"
+					aria-label="Scene title"
 				/>
 			</div>
 		);
