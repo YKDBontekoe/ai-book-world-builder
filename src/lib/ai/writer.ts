@@ -1,8 +1,6 @@
 "use server";
 
-import { type GenerationOptions, generationService } from "./writer-service";
-
-export type { GenerationOptions };
+import { type GenerationOptions, generationService } from "@/lib/ai/services";
 
 /**
  * Continues writing a story based on context and previous content.
