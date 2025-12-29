@@ -41,7 +41,7 @@ export const Success: Story = {
 	},
 };
 
-export const ErrorState: Story = {
+export const ErrorVariant: Story = {
 	args: {
 		variant: "error",
 		children: "An error occurred while processing.",

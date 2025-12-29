@@ -77,10 +77,12 @@ export function UsageChart({ stats }: { stats: TokenStats }) {
 											background: "rgba(0,0,0,0.8)",
 											color: "#fff",
 										}}
-										formatter={(value: number) => [
-											`$${value.toFixed(4)}`,
-											"Cost",
-										]}
+										formatter={(value: number | string | undefined) => {
+											if (typeof value === "number") {
+												return [`$${value.toFixed(4)}`, "Cost"];
+											}
+											return [value, "Cost"];
+										}}
 									/>
 									<Bar
 										dataKey="cost"

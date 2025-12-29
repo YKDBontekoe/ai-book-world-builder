@@ -1,7 +1,4 @@
-import type {
-	UIMessage,
-	UIMessagePart,
-} from "ai";
+import type { UIMessage, UIMessagePart } from "ai";
 import { type ClassValue, clsx } from "clsx";
 import { formatISO } from "date-fns";
 import { twMerge } from "tailwind-merge";

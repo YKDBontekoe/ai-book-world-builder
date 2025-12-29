@@ -2,7 +2,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
 
-
 // Hoist mock functions
 const { mockExecute } = vi.hoisted(() => ({
 	mockExecute: vi.fn(),
@@ -17,8 +16,6 @@ vi.mock("sonner", () => ({
 		dismiss: vi.fn(),
 	},
 }));
-
-
 
 vi.mock("usehooks-ts", () => ({
 	useLocalStorage: <T,>(_key: string, initialValue: T) => {
@@ -311,6 +308,9 @@ describe("PowerDock", () => {
 				"Rewrite command",
 			),
 		);
+
+		// Open history to check content
+		fireEvent.click(screen.getByLabelText("Command history"));
 
 		// Check rewrite history has 1 item
 		const rewriteHistoryItems = screen.getAllByTestId("history-item");
