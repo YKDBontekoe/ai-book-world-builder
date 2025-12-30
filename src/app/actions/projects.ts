@@ -427,7 +427,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 				}
 			}
 
-			// 6. Copy Scenes (Linked to Chapters)
+			// 6. Copy Scenes (Two-Pass Strategy to Fix prevSceneId links)
 			const oldScenes = await tx
 				.select()
 				.from(scene)
@@ -435,14 +435,18 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 
 			const sceneIdMap = new Map<string, string>();
 
+			// Pass 1: Create scenes with null prevSceneId to avoid constraint violations or self-references
 			for (const oldScene of oldScenes) {
-				const { id: _, ...sceneData } = oldScene;
+				const { id: _, prevSceneId: __, ...sceneData } = oldScene;
 				const newChapterId = chapterIdMap.get(oldScene.chapterId);
+
 				if (newChapterId) {
+					// Insert without prevSceneId initially
 					const [newScene] = await tx
 						.insert(scene)
 						.values({
 							...sceneData,
+							prevSceneId: null,
 							chapterId: newChapterId,
 							projectId: newProject.id,
 							createdAt: new Date(),
@@ -450,6 +454,22 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 						})
 						.returning();
 					sceneIdMap.set(oldScene.id, newScene.id);
+				}
+			}
+
+			// Pass 2: Re-link prevSceneId using the map
+			for (const oldScene of oldScenes) {
+				if (oldScene.prevSceneId) {
+					const newSceneId = sceneIdMap.get(oldScene.id);
+					const newPrevSceneId = sceneIdMap.get(oldScene.prevSceneId);
+
+					// Only update if both ends of the link were successfully copied
+					if (newSceneId && newPrevSceneId) {
+						await tx
+							.update(scene)
+							.set({ prevSceneId: newPrevSceneId })
+							.where(eq(scene.id, newSceneId));
+					}
 				}
 			}
 
