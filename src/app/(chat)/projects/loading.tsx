@@ -22,6 +22,23 @@ export default function ProjectsLoading(): React.JSX.Element {
 					<Skeleton className="h-10 w-[240px] rounded-lg bg-muted" />
 				</div>
 
+				{/* ProjectBrowser Toolbar Skeleton */}
+				<div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
+					{/* Search Bar Skeleton */}
+					<Skeleton className="h-10 w-full sm:max-w-md rounded-lg" />
+
+					{/* Actions Skeleton (Visibility, Toggle, Sort) */}
+					<div className="flex items-center gap-2 w-full sm:w-auto">
+						<Skeleton className="h-10 w-full sm:w-[140px] rounded-lg" />
+						<Skeleton className="h-8 w-px mx-1" />
+						<div className="flex items-center gap-1">
+							<Skeleton className="h-7 w-7 rounded-lg" />
+							<Skeleton className="h-7 w-7 rounded-lg" />
+						</div>
+						<Skeleton className="h-10 w-full sm:w-[180px] rounded-lg" />
+					</div>
+				</div>
+
 				{/* Grid Content Skeleton */}
 				<div className="mt-6">
 					<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
