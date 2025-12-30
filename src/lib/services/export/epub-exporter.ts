@@ -49,7 +49,6 @@ export class EpubExporter implements BookExporter {
 			});
 		}
 
-		// @ts-expect-error - types for epub-gen-memory might be loose or missing
 		const epubBuffer = await epub(epubOptions, epubSections);
 		return epubBuffer;
 	}

@@ -47,7 +47,7 @@ export class ProjectLifecycleService {
 				.map((p) => p.id);
 
 			if (ownedProjectIds.length === 0) {
-				return { error: "No valid projects to delete" };
+				return { success: false, error: "No valid projects to delete" };
 			}
 
 			await db.transaction(async (tx) => {
@@ -123,7 +123,7 @@ export class ProjectLifecycleService {
 			return { success: true };
 		} catch (error) {
 			console.error("Delete projects error:", error);
-			return { error: "Failed to delete projects" };
+			return { success: false, error: "Failed to delete projects" };
 		}
 	}
 
