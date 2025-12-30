@@ -246,23 +246,52 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" &
     fi
 
     if [[ -n "$COMMENTS_DATA" && "$COMMENTS_DATA" != "" ]]; then
-      SHOULD_INVOKE_JULES="true"
-      JULES_PROMPT="CodeRabbit finished reviewing PR #$NUMBER (Branch: $BRANCH).
+      # Post comments as a new PR comment to trigger Jules via standard @Jules mechanism
+      # This ensures Jules operates on the existing PR context instead of creating a new one
+      log "Posting aggregated CodeRabbit comments to PR #$NUMBER to trigger Jules..."
 
-You MUST address ALL the following code review comments. Each comment may include:
-- A 'Prompt for AI Agents' section with specific instructions
-- A 'Committable suggestion' with exact code to apply
-- A 'Proposed fix' with diff format changes
+      MESSAGE="@Jules Please address the following CodeRabbit review feedback:
 
-## Comments to Address
+$COMMENTS_DATA"
 
-$COMMENTS_DATA
+      # GitHub API has a ~65K character limit for comment bodies
+      MESSAGE_BYTES=$(echo -n "$MESSAGE" | wc -c)
+      if [[ $MESSAGE_BYTES -gt 65000 ]]; then
+        log "WARNING: Aggregated comments exceed GitHub API limit ($MESSAGE_BYTES bytes). Truncating..."
+        # Truncate conservatively to account for header and notice
+        TRUNCATED_DATA="${COMMENTS_DATA:0:60000}"
+        MESSAGE="@Jules Please address the following CodeRabbit review feedback:
 
-## Instructions
-1. Fix EVERY comment listed above
-2. Run: pnpm lint && pnpm type-check && pnpm test:unit
-3. Commit with message: 'fix: address CodeRabbit review feedback'
-4. Push directly to branch '$BRANCH'"
+$TRUNCATED_DATA
+
+... (truncated due to size - see CodeRabbit review for complete feedback)"
+      fi
+
+      GH_OUTPUT=$(gh pr comment "$NUMBER" --body "$MESSAGE" --repo "${GITHUB_REPOSITORY}" 2>&1)
+      GH_EXIT_CODE=$?
+      if [[ $GH_EXIT_CODE -eq 0 ]]; then
+        # Do NOT invoke Jules directly in this pass - wait for the issue_comment event trigger
+        SHOULD_INVOKE_JULES="false"
+        log "Comment posted. Jules will be triggered by the resulting issue_comment event."
+      else
+        log "ERROR: Failed to post comment to PR (exit code $GH_EXIT_CODE): $GH_OUTPUT"
+        log "Falling back to direct Jules invocation."
+        SHOULD_INVOKE_JULES="true"
+
+        # Truncate for fallback prompt if needed
+        FALLBACK_DATA="$COMMENTS_DATA"
+        if [[ ${#FALLBACK_DATA} -gt 50000 ]]; then
+          FALLBACK_DATA="${COMMENTS_DATA:0:50000}
+
+... (truncated - see CodeRabbit review for complete feedback)"
+        fi
+
+        JULES_PROMPT="CodeRabbit Review on PR #$NUMBER. Please address the following feedback:
+
+$FALLBACK_DATA
+
+Please commit changes directly to the '$BRANCH' branch."
+      fi
     else
       log "No CodeRabbit inline comments found for this PR"
     fi

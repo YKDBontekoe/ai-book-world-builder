@@ -189,7 +189,9 @@ describe("POST /api/files/upload", () => {
 
 	it("enforces per-role size caps", async () => {
 		const sizeLimit = sourceMaterialSizeLimits.regular;
-		const file = createMockFile("a", "oversize.pdf", "application/pdf");
+
+		// Optimization: Mock file size property instead of creating large buffer
+		const file = createMockFile("dummy", "oversize.pdf", "application/pdf");
 		Object.defineProperty(file, "size", { value: sizeLimit + 1 });
 
 		mockedAuth.mockResolvedValue(buildSession("regular-1") as any);

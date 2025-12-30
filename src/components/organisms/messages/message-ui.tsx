@@ -4,8 +4,8 @@ import type React from "react";
 import { memo, type ReactNode } from "react";
 import { MessageContent } from "@/components/molecules/message";
 import { PreviewAttachment } from "@/components/organisms/chat/preview-attachment";
-import type { Attachment } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import type { ChatMessage } from "@/lib/types";
 
 const messageBubbleVariants = cva(
 	"w-fit break-words rounded-[20px] px-5 py-2.5 text-base leading-relaxed text-left shadow-sm",
@@ -63,20 +63,24 @@ export function MessageBubble({
 }
 
 interface MessageAttachmentsProps {
-	attachments: {
-		url: string;
-		filename?: string;
-		mediaType?: string;
-		contentType?: string; // Fallback
-	}[];
+	parts: ChatMessage["parts"];
 }
 
 // Optimization: Memoize MessageAttachments to prevent unnecessary re-renders
 // during streaming when message.parts updates but attachments are stable.
-// Using deep comparison because parent component regenerates the array on every render.
+// We extract file parts and compare them deeply, ignoring text/tool updates.
 export const MessageAttachments = memo(
-	function MessageAttachments({ attachments }: MessageAttachmentsProps) {
-		if (!attachments || attachments.length === 0) return null;
+	function MessageAttachments({ parts }: MessageAttachmentsProps) {
+		const attachments =
+			parts
+				?.filter((part) => part.type === "file")
+				.map((a) => ({
+					url: a.url,
+					filename: a.filename,
+					mediaType: a.mediaType,
+				})) ?? [];
+
+		if (attachments.length === 0) return null;
 
 		return (
 			<div
@@ -87,10 +91,7 @@ export const MessageAttachments = memo(
 					<PreviewAttachment
 						attachment={{
 							name: attachment.filename ?? "file",
-							contentType:
-								attachment.mediaType ??
-								attachment.contentType ??
-								"application/octet-stream",
+							contentType: attachment.mediaType ?? "application/octet-stream",
 							url: attachment.url,
 						}}
 						key={attachment.url}
@@ -99,5 +100,18 @@ export const MessageAttachments = memo(
 			</div>
 		);
 	},
-	(prev, next) => equal(prev.attachments, next.attachments),
+	(prev, next) => {
+		// If reference is same, definitely equal
+		if (prev.parts === next.parts) return true;
+
+		// Filter to only file parts
+		const prevFiles = prev.parts?.filter((p) => p.type === "file") ?? [];
+		const nextFiles = next.parts?.filter((p) => p.type === "file") ?? [];
+
+		// Compare length first for speed
+		if (prevFiles.length !== nextFiles.length) return false;
+
+		// Deep compare only the file parts
+		return equal(prevFiles, nextFiles);
+	},
 );
