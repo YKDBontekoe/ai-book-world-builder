@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import ProjectsLoading from '@/app/(chat)/projects/loading';
 
@@ -16,28 +16,25 @@ vi.mock('@/components/molecules/glass-card', () => ({
 }));
 
 describe('ProjectsLoading', () => {
-	it('renders page header skeleton', () => {
+	it('renders exactly 2 skeletons in the page header', () => {
 		render(<ProjectsLoading />);
-		const skeletons = screen.getAllByTestId('skeleton');
-		// Verify header skeletons for title and action button
-		expect(skeletons.length).toBeGreaterThanOrEqual(2);
+		const header = screen.getByTestId('projects-header-skeleton');
+		const headerSkeletons = within(header).getAllByTestId('skeleton');
+		expect(headerSkeletons.length).toBe(2);
 	});
 
-	it('renders toolbar skeleton with search and actions', () => {
+	it('renders toolbar skeleton with search and 4 action skeletons', () => {
 		render(<ProjectsLoading />);
 
-		const skeletons = screen.getAllByTestId('skeleton');
-		const searchSkeleton = skeletons.find((s) => s.className.includes('max-w-md'));
+		// Verify search skeleton
+		const allSkeletons = screen.getAllByTestId('skeleton');
+		const searchSkeleton = allSkeletons.find((s) => s.className.includes('max-w-md'));
 		expect(searchSkeleton).toBeDefined();
 
-		// Verify action skeletons are present
-		const actionSkeletons = skeletons.filter(
-			(s) =>
-				s.className.includes('w-[140px]') ||
-				s.className.includes('w-[180px]') ||
-				s.className.includes('h-7 w-7'),
-		);
-		expect(actionSkeletons.length).toBeGreaterThanOrEqual(3);
+		// Verify action skeletons
+		const actionsContainer = screen.getByTestId('project-actions-skeleton');
+		const actionSkeletons = within(actionsContainer).getAllByTestId('skeleton');
+		expect(actionSkeletons.length).toBe(4);
 	});
 
 	it('renders exactly 8 project card skeletons', () => {
