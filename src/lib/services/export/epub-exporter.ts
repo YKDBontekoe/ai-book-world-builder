@@ -49,8 +49,8 @@ export class EpubExporter implements BookExporter {
 			});
 		}
 
-		// @ts-expect-error - types for epub-gen-memory might be loose or missing
-		const epubBuffer = await epub(epubOptions, epubSections);
+		// biome-ignore lint/suspicious/noExplicitAny: library types are loose
+		const epubBuffer = await epub(epubOptions, epubSections as any);
 		return epubBuffer;
 	}
 
@@ -78,7 +78,7 @@ export class EpubExporter implements BookExporter {
 			.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
 			.replace(/\*(.+?)\*/g, "<em>$1</em>")
 			.replace(/___(.+?)___/g, "<strong><em>$1</em></strong>")
-			.replace(/__(.+?)__/g, "<strong>$1</strong>")
+			.replace(/_(.+?)__/g, "<strong>$1</strong>")
 			.replace(/_(.+?)_/g, "<em>$1</em>")
 			// Convert horizontal rules
 			.replace(/^[-*_]{3,}$/gm, "<hr/>")

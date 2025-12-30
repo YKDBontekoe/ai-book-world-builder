@@ -47,7 +47,7 @@ export class ProjectLifecycleService {
 				.map((p) => p.id);
 
 			if (ownedProjectIds.length === 0) {
-				return { error: "No valid projects to delete" };
+				return { success: false, error: "No valid projects to delete" };
 			}
 
 			await db.transaction(async (tx) => {
@@ -123,7 +123,7 @@ export class ProjectLifecycleService {
 			return { success: true };
 		} catch (error) {
 			console.error("Delete projects error:", error);
-			return { error: "Failed to delete projects" };
+			return { success: false, error: "Failed to delete projects" };
 		}
 	}
 
@@ -145,6 +145,7 @@ export class ProjectLifecycleService {
 		// Larger projects would require a background job queue
 		if (entityCount > 500) {
 			return {
+				success: false,
 				error:
 					"Project is too large to fork instantly. Please export and import instead.",
 			};
@@ -156,7 +157,7 @@ export class ProjectLifecycleService {
 		);
 
 		if (!originalProject) {
-			return { error: "Project not found or access denied" };
+			return { success: false, error: "Project not found or access denied" };
 		}
 
 		// Validate name length
@@ -394,7 +395,7 @@ export class ProjectLifecycleService {
 			return result;
 		} catch (error) {
 			console.error("Fork project error:", error);
-			return { error: "Failed to fork project" };
+			return { success: false, error: "Failed to fork project" };
 		}
 	}
 }
