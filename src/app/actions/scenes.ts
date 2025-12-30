@@ -54,6 +54,13 @@ export async function updateSceneAction({
 	};
 }
 
+import { z } from "zod";
+
+const deleteScenesSchema = z.object({
+	projectId: z.string().uuid(),
+	sceneIds: z.array(z.string().uuid()),
+});
+
 export async function deleteScenesAction({
 	projectId,
 	sceneIds,
@@ -61,13 +68,18 @@ export async function deleteScenesAction({
 	projectId: string;
 	sceneIds: string[];
 }) {
+	const validated = deleteScenesSchema.parse({ projectId, sceneIds });
+	if (validated.sceneIds.length === 0) {
+		return { success: true };
+	}
+
 	const session = await auth();
 	if (!session?.user?.id) {
 		throw new Error("Unauthorized");
 	}
 
 	const project = await projectRepository.findByIdWithAccess(
-		projectId,
+		validated.projectId,
 		session.user.id,
 	);
 
@@ -75,9 +87,14 @@ export async function deleteScenesAction({
 		throw new Error("Unauthorized");
 	}
 
-	await sceneRepository.deleteMany(sceneIds, projectId);
+	try {
+		await sceneRepository.deleteMany(validated.sceneIds, validated.projectId);
+	} catch (error) {
+		console.error("Failed to delete scenes:", error);
+		throw new Error("Failed to delete scenes");
+	}
 
-	await invalidateCache(`project-structure:${projectId}`);
+	await invalidateCache(`project-structure:${validated.projectId}`);
 
 	return { success: true };
 }

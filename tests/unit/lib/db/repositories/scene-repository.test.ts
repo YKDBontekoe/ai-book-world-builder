@@ -1,5 +1,7 @@
+import { and, eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sceneRepository } from "@/lib/db/repositories/scene-repository";
+import { scene } from "@/lib/db/schema/generation";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
@@ -53,14 +55,16 @@ vi.mock("@/lib/db/drizzle", () => ({
 	db: mocks,
 }));
 
-vi.mock("drizzle-orm", () => ({
+const drizzleMocks = vi.hoisted(() => ({
 	asc: vi.fn(),
 	desc: vi.fn(),
-	eq: vi.fn(),
+	eq: vi.fn((col, val) => ({ column: col, value: val })),
 	sql: vi.fn(),
-	and: vi.fn(),
-	inArray: vi.fn(),
+	and: vi.fn((...args) => ({ type: "and", conditions: args })),
+	inArray: vi.fn((col, val) => ({ column: col, value: val })),
 }));
+
+vi.mock("drizzle-orm", () => drizzleMocks);
 
 describe("SceneRepository", () => {
 	beforeEach(() => {
@@ -140,8 +144,35 @@ describe("SceneRepository", () => {
 			const sceneIds = ["s1", "s2"];
 			const projectId = "p1";
 			await sceneRepository.deleteMany(sceneIds, projectId);
-			expect(mocks.delete).toHaveBeenCalled();
-			expect(mocks.where).toHaveBeenCalled();
+
+			expect(mocks.delete).toHaveBeenCalledWith(
+				expect.objectContaining({
+					[Symbol.for("drizzle:BaseName")]: "Scene",
+				}),
+			);
+			expect(drizzleMocks.inArray).toHaveBeenCalledWith(
+				expect.objectContaining({ name: "id" }),
+				sceneIds,
+			);
+			expect(drizzleMocks.eq).toHaveBeenCalledWith(
+				expect.objectContaining({ name: "projectId" }),
+				projectId,
+			);
+			expect(mocks.where).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "and",
+					conditions: expect.arrayContaining([
+						expect.objectContaining({
+							column: expect.objectContaining({ name: "id" }),
+							value: sceneIds,
+						}),
+						expect.objectContaining({
+							column: expect.objectContaining({ name: "projectId" }),
+							value: projectId,
+						}),
+					]),
+				}),
+			);
 		});
 
 		it("should throw a DatabaseError on failure", async () => {

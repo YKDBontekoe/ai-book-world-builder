@@ -9,7 +9,6 @@ import {
 	Plus,
 	Sparkles,
 	Trash2,
-	Undo2,
 	X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
@@ -93,10 +92,7 @@ export function SceneNavigation({
 		});
 	};
 
-	const handleSceneClick = (
-		sceneId: string,
-		e: React.MouseEvent,
-	) => {
+	const handleSceneClick = (sceneId: string, e: React.MouseEvent) => {
 		// Check for modifier keys (Cmd/Ctrl for multi-select)
 		const isMultiSelect = e.ctrlKey || e.metaKey;
 
