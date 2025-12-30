@@ -273,18 +273,13 @@ const bulkDeleteScenesSchema = z.object({
 
 export async function bulkDeleteScenes(
 	sceneIds: string[],
-): Promise<{
-	success: boolean;
-	deletedScenes?: (typeof scene.$inferSelect)[];
-	error?: string;
-}> {
+): Promise<{ success: boolean; deletedScenes?: typeof scene.$inferSelect[]; error?: string }> {
 	try {
 		const parsed = bulkDeleteScenesSchema.safeParse({ sceneIds });
 		if (!parsed.success) {
 			return { success: false, error: "Invalid input" };
 		}
-		if (parsed.data.sceneIds.length === 0)
-			return { success: true, deletedScenes: [] };
+		if (parsed.data.sceneIds.length === 0) return { success: true, deletedScenes: [] };
 
 		const { scenesToDelete, projectId } = await db.transaction(async (tx) => {
 			// 1. Fetch scenes to verify ownership and store for undo
@@ -300,9 +295,7 @@ export async function bulkDeleteScenes(
 			const projectId = scenesToDelete[0].projectId;
 
 			// Verify all scenes belong to the same project
-			const allSameProject = scenesToDelete.every(
-				(s) => s.projectId === projectId,
-			);
+			const allSameProject = scenesToDelete.every((s) => s.projectId === projectId);
 			if (!allSameProject) {
 				throw new Error("Cannot delete scenes from multiple projects");
 			}
@@ -338,10 +331,7 @@ export async function restoreScenes(
 		// Verify all scenes belong to the same project
 		const projectIds = new Set(scenesToRestore.map((s) => s.projectId));
 		if (projectIds.size !== 1) {
-			return {
-				success: false,
-				error: "Cannot restore scenes from multiple projects",
-			};
+			return { success: false, error: "Cannot restore scenes from multiple projects" };
 		}
 
 		const projectId = scenesToRestore[0].projectId;
@@ -351,12 +341,7 @@ export async function restoreScenes(
 		const existingScenes = await db
 			.select({ id: scene.id })
 			.from(scene)
-			.where(
-				inArray(
-					scene.id,
-					scenesToRestore.map((s) => s.id),
-				),
-			);
+			.where(inArray(scene.id, scenesToRestore.map((s) => s.id)));
 
 		if (existingScenes.length > 0) {
 			console.warn(

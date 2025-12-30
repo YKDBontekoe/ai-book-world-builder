@@ -123,21 +123,18 @@ export function ReaderControls({
 								</div>
 								<div className="flex gap-2">
 									<button
-										type="button"
 										onClick={() => updateSetting("theme", "light")}
 										className={`flex-1 h-10 rounded-md border bg-white text-black ${settings.theme === "light" ? "ring-2 ring-primary" : ""}`}
 									>
 										Aa
 									</button>
 									<button
-										type="button"
 										onClick={() => updateSetting("theme", "sepia")}
 										className={`flex-1 h-10 rounded-md border bg-[#f4ecd8] text-[#5b4636] ${settings.theme === "sepia" ? "ring-2 ring-primary" : ""}`}
 									>
 										Aa
 									</button>
 									<button
-										type="button"
 										onClick={() => updateSetting("theme", "dark")}
 										className={`flex-1 h-10 rounded-md border bg-zinc-900 text-white ${settings.theme === "dark" ? "ring-2 ring-primary" : ""}`}
 									>
