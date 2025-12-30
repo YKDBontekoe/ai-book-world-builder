@@ -31,9 +31,9 @@ const mockedFindByIdWithAccess = vi.mocked(
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
 const mockedInvalidateCache = vi.mocked(invalidateCache);
 
-const userId = "user-123";
-const projectId = "project-123";
-const sceneId = "scene-123";
+const userId = "123e4567-e89b-12d3-a456-426614174000";
+const projectId = "123e4567-e89b-12d3-a456-426614174001";
+const sceneId = "123e4567-e89b-12d3-a456-426614174002";
 
 function buildSession() {
 	return {
@@ -68,7 +68,7 @@ function buildScene(overrides?: Partial<Scene>): Scene {
 		sequence: 1,
 		content: "Scene content",
 		status: "planned",
-		chapterId: "chapter-123",
+		chapterId: "123e4567-e89b-12d3-a456-426614174003",
 		projectId,
 		createdAt: new Date("2024-01-01T00:00:00Z"),
 		updatedAt: new Date("2024-01-02T00:00:00Z"),
