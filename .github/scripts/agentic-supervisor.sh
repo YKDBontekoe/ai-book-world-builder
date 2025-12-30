@@ -233,7 +233,8 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" &
     # Start with the main review body, if it exists
     ALL_FEEDBACK=""
     if [[ -n "$REVIEW_BODY" && "$REVIEW_BODY" != "null" ]]; then
-      ALL_FEEDBACK="### General Feedback\n$REVIEW_BODY"
+      ALL_FEEDBACK="### General Feedback
+$REVIEW_BODY"
     fi
 
     INLINE_COMMENTS=""
@@ -243,16 +244,26 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" &
         --jq '[.[] | select(.user.login == "coderabbitai[bot]")] |
           map("### \(.path):\(.line // .original_line)\n\(.body)") | join("\n\n---\n\n")' 2>/dev/null || echo "")
       
-      COMMENT_COUNT=$(echo "$INLINE_COMMENTS" | grep -c '###' )
+      COMMENT_COUNT=$(echo "$INLINE_COMMENTS" | grep -c '###')
       log "Found $COMMENT_COUNT CodeRabbit inline comments"
     elif [[ -n "$MOCK_GH_CLI" ]]; then
-      INLINE_COMMENTS="### src/main.ts:10\nFix typo\n\n---\n\n### src/utils.ts:5\nOptimize loop"
+      INLINE_COMMENTS="### src/main.ts:10
+Fix typo
+
+---
+
+### src/utils.ts:5
+Optimize loop"
     fi
 
     # Combine general feedback and inline comments
     if [[ -n "$INLINE_COMMENTS" ]]; then
       if [[ -n "$ALL_FEEDBACK" ]]; then
-        ALL_FEEDBACK="$ALL_FEEDBACK\n\n---\n\n$INLINE_COMMENTS"
+        ALL_FEEDBACK="$ALL_FEEDBACK
+
+---
+
+$INLINE_COMMENTS"
       else
         ALL_FEEDBACK="$INLINE_COMMENTS"
       fi
