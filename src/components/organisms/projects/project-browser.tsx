@@ -15,13 +15,8 @@ import {
 	List,
 	Search,
 	Trash2,
-	Undo2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
-import { deleteProjects, forkProject } from "@/app/actions/projects";
 import { Button } from "@/components/atoms/button";
 import {
 	DropdownMenu,
@@ -47,303 +42,61 @@ import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { ProjectGrid } from "@/components/organisms/projects/project-grid";
 import { ProjectList } from "@/components/organisms/projects/project-list";
+import { useProjectActions } from "@/hooks/use-project-actions";
+import {
+	type SortOption,
+	useProjectFiltering,
+	type VisibilityFilter,
+} from "@/hooks/use-project-filtering";
+import { useProjectSelection } from "@/hooks/use-project-selection-logic";
 import type { Project } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
-type SortOption = "newest" | "oldest" | "a-z" | "z-a";
-type VisibilityFilter = "all" | "public" | "private";
-
 export function ProjectBrowser({ projects }: { projects: Project[] }) {
-	const [searchQuery, setSearchQuery] = useState("");
-	const [sortOption, setSortOption] = useState<SortOption>("newest");
-	const [visibilityFilter, setVisibilityFilter] =
-		useState<VisibilityFilter>("all");
 	const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">(
 		"project-view-mode",
 		"grid",
 	);
-	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-	const [isProcessing, setIsProcessing] = useState(false);
 
-	// Optimistic UI state
-	const [optimisticDeletedIds, setOptimisticDeletedIds] = useState<Set<string>>(
-		new Set(),
-	);
-	const pendingDeletionRef = useRef<Set<string> | null>(null);
-	const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-	const router = useRouter();
-
-	const handleSelect = (id: string) => {
-		const newSelected = new Set(selectedIds);
-		if (newSelected.has(id)) {
-			newSelected.delete(id);
-		} else {
-			newSelected.add(id);
-		}
-		setSelectedIds(newSelected);
-	};
-
-	const handleSelectAll = () => {
-		if (selectedIds.size === filteredProjects.length) {
-			setSelectedIds(new Set());
-		} else {
-			setSelectedIds(new Set(filteredProjects.map((p) => p.id)));
-		}
-	};
-
-	const filteredProjects = useMemo(() => {
-		let result = [...projects];
-
-		// Filter out optimistically deleted projects
-		result = result.filter((p) => !optimisticDeletedIds.has(p.id));
-
-		// Filter by Visibility
-		if (visibilityFilter !== "all") {
-			result = result.filter((p) => p.visibility === visibilityFilter);
-		}
-
-		// Filter by Search
-		if (searchQuery) {
-			const query = searchQuery.toLowerCase();
-			result = result.filter(
-				(p) =>
-					p.name.toLowerCase().includes(query) ||
-					p.description?.toLowerCase().includes(query),
-			);
-		}
-
-		// Sort
-		result.sort((a, b) => {
-			switch (sortOption) {
-				case "newest":
-					return (
-						new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-					);
-				case "oldest":
-					return (
-						new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-					);
-				case "a-z":
-					return a.name.localeCompare(b.name);
-				case "z-a":
-					return b.name.localeCompare(a.name);
-				default:
-					return 0;
-			}
-		});
-
-		return result;
-	}, [
-		projects,
+	// Custom Hooks for Logic Separation
+	const {
 		searchQuery,
+		setSearchQuery,
 		sortOption,
-		optimisticDeletedIds,
+		setSortOption,
 		visibilityFilter,
-	]);
+		setVisibilityFilter,
+		optimisticDeletedIds,
+		setOptimisticDeletedIds,
+		filteredProjects,
+	} = useProjectFiltering(projects);
 
-	// Clean up timeout and trigger pending deletions on unmount
-	useEffect(() => {
-		return () => {
-			if (undoTimeoutRef.current) {
-				clearTimeout(undoTimeoutRef.current);
-			}
-			// If there are pending deletions when the component unmounts (e.g. navigation),
-			// we should fire them immediately to avoid "silent cancellation".
-			if (pendingDeletionRef.current && pendingDeletionRef.current.size > 0) {
-				const ids = Array.from(pendingDeletionRef.current);
-				// We use void to fire-and-forget, but catch errors to log them
-				deleteProjects(ids).catch((err) =>
-					console.error("Failed to delete pending projects on unmount", err),
-				);
-				pendingDeletionRef.current = null;
-			}
-		};
-	}, []);
+	const {
+		selectedIds,
+		setSelectedIds,
+		handleSelect,
+		handleSelectAll,
+		clearSelection,
+	} = useProjectSelection(filteredProjects.map((p) => p.id));
 
-	const handleDelete = useCallback(
-		(idsToDelete: string[]) => {
-			if (idsToDelete.length === 0) return;
-
-			// 1. Optimistic Update
-			const newOptimisticDeleted = new Set(optimisticDeletedIds);
-			for (const id of idsToDelete) {
-				newOptimisticDeleted.add(id);
-			}
-			setOptimisticDeletedIds(newOptimisticDeleted);
-
-			// Clear selection if any deleted items were selected
-			setSelectedIds((prev) => {
-				const next = new Set(prev);
-				for (const id of idsToDelete) {
-					next.delete(id);
-				}
-				return next;
-			});
-
-			// Track pending deletion
-			pendingDeletionRef.current = new Set(idsToDelete);
-
-			// 2. Undo Toast
-			toast.custom(
-				(t) => (
-					<GlassCard
-						variant="liquid"
-						className="flex items-center gap-4 p-4 w-full max-w-md mx-auto pointer-events-auto"
-					>
-						<div className="flex-1 text-sm">
-							Deleted {idsToDelete.length} project
-							{idsToDelete.length > 1 ? "s" : ""}
-						</div>
-						<Button
-							size="sm"
-							variant="outline"
-							className="gap-2 h-8"
-							onClick={() => {
-								// Undo logic
-								toast.dismiss(t);
-								if (undoTimeoutRef.current)
-									clearTimeout(undoTimeoutRef.current);
-								setOptimisticDeletedIds((prev) => {
-									const next = new Set(prev);
-									for (const id of idsToDelete) {
-										next.delete(id);
-									}
-									return next;
-								});
-								pendingDeletionRef.current = null; // Clear pending
-							}}
-						>
-							<Undo2 className="h-3.5 w-3.5" />
-							Undo
-						</Button>
-					</GlassCard>
-				),
-				{ duration: 5000 },
-			);
-
-			// 3. Delayed Server Action
-			if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
-
-			undoTimeoutRef.current = setTimeout(async () => {
-				// Execute deletion
-				const result = await deleteProjects(idsToDelete);
-
-				// Clear pending state as we've executed it
-				pendingDeletionRef.current = null;
-				undoTimeoutRef.current = null;
-
-				if (result?.error) {
-					toast.error("Failed to delete projects");
-					// Revert optimistic update
-					setOptimisticDeletedIds((prev) => {
-						const next = new Set(prev);
-						for (const id of idsToDelete) {
-							next.delete(id);
-						}
-						return next;
-					});
-				} else {
-					// Success
-					setOptimisticDeletedIds((prev) => {
-						const next = new Set(prev);
-						for (const id of idsToDelete) {
-							next.delete(id);
-						}
-						return next;
-					});
-				}
-			}, 4500); // Slightly less than toast duration
-		},
-		[optimisticDeletedIds],
+	const {
+		isProcessing,
+		handleDelete,
+		handleBulkDelete,
+		handleBulkExportJson,
+		handleBulkExportCsv,
+		handleBulkDuplicate,
+	} = useProjectActions(
+		projects,
+		selectedIds,
+		setSelectedIds,
+		setOptimisticDeletedIds,
+		optimisticDeletedIds,
 	);
-
-	const handleBulkDelete = () => {
-		handleDelete(Array.from(selectedIds));
-	};
-
-	const handleBulkExportJson = () => {
-		const projectsToExport = projects.filter((p) => selectedIds.has(p.id));
-		const dataStr = JSON.stringify(projectsToExport, null, 2);
-		const blob = new Blob([dataStr], { type: "application/json" });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = `projects_export_${new Date().toISOString().split("T")[0]}.json`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		toast.success(`Exported ${projectsToExport.length} projects to JSON`);
-		setSelectedIds(new Set());
-	};
-
-	const handleBulkExportCsv = () => {
-		const projectsToExport = projects.filter((p) => selectedIds.has(p.id));
-
-		const headers = [
-			"ID",
-			"Name",
-			"Description",
-			"Created At",
-			"Visibility",
-			"Folder Count",
-		];
-
-		const csvContent = [
-			headers.join(","),
-			...projectsToExport.map((p) => {
-				const row = [
-					p.id,
-					`"${(p.name || "").replace(/"/g, '""')}"`,
-					`"${(p.description || "").replace(/"/g, '""')}"`,
-					new Date(p.createdAt).toISOString(),
-					p.visibility,
-					p.folders.length,
-				];
-				return row.join(",");
-			}),
-		].join("\n");
-
-		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-		const url = URL.createObjectURL(blob);
-		const link = document.createElement("a");
-		link.href = url;
-		link.download = `projects_export_${new Date().toISOString().split("T")[0]}.csv`;
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-		toast.success(`Exported ${projectsToExport.length} projects to CSV`);
-		setSelectedIds(new Set());
-	};
-
-	const handleBulkDuplicate = async () => {
-		setIsProcessing(true);
-		const idsToDuplicate = Array.from(selectedIds);
-		toast.info(`Duplicating ${idsToDuplicate.length} projects...`);
-
-		const results = await Promise.allSettled(
-			idsToDuplicate.map((id) => forkProject(id, undefined)),
-		);
-
-		const successCount = results.filter(
-			(r) => r.status === "fulfilled" && !("error" in r.value),
-		).length;
-		const failureCount = idsToDuplicate.length - successCount;
-
-		if (failureCount === 0) {
-			toast.success("All projects duplicated successfully");
-			setSelectedIds(new Set());
-		} else {
-			toast.warning(
-				`Duplicated ${successCount} projects. Failed to duplicate ${failureCount}.`,
-			);
-		}
-
-		router.refresh();
-		setIsProcessing(false);
-	};
 
 	return (
 		<div className="space-y-6 relative pb-20">
+			{/* Toolbar Section */}
 			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
 				<div className="relative w-full sm:max-w-md">
 					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -439,6 +192,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 				</div>
 			</div>
 
+			{/* Project Grid/List View */}
 			<div className="relative min-h-[200px]">
 				{filteredProjects.length === 0 && searchQuery ? (
 					<EmptyState
@@ -507,7 +261,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 									variant="ghost"
 									size="sm"
 									className="h-8 text-muted-foreground hover:text-foreground"
-									onClick={() => setSelectedIds(new Set())}
+									onClick={clearSelection}
 								>
 									Deselect All
 								</Button>
