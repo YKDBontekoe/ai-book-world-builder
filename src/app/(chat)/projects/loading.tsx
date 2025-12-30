@@ -21,7 +21,7 @@ export default function ProjectsLoading(): React.JSX.Element {
 
 			<div className="mt-8">
 				{/* ProjectTabs Skeleton */}
-				<div className="mb-6 inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1">
+				<div className="mb-6 inline-flex h-10 items-center justify-center gap-1 rounded-lg bg-muted p-1">
 					{/* Active Tab Skeleton */}
 					<Skeleton className="h-8 w-[110px] rounded-md" />
 					{/* Inactive Tab Skeleton */}
