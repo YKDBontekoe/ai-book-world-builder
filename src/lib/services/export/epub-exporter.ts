@@ -49,8 +49,7 @@ export class EpubExporter implements BookExporter {
 			});
 		}
 
-		// biome-ignore lint/suspicious/noExplicitAny: library types are loose
-		const epubBuffer = await epub(epubOptions, epubSections as any);
+		const epubBuffer = await epub(epubOptions, epubSections);
 		return epubBuffer;
 	}
 
@@ -79,7 +78,7 @@ export class EpubExporter implements BookExporter {
 			.replace(/\*(.+?)\*/g, "<em>$1</em>")
 			.replace(/___(.+?)___/g, "<strong><em>$1</em></strong>")
 			.replace(/_(.+?)__/g, "<strong>$1</strong>")
-			.replace(/_(.+?)_/g, "<em>$1</em>")
+			.replace(/(?<!\w)_([^_]+)_(?!\w)/g, "<em>$1</em>")
 			// Convert horizontal rules
 			.replace(/^[-*_]{3,}$/gm, "<hr/>")
 			// Convert block quotes

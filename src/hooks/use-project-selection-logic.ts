@@ -19,12 +19,14 @@ export function useProjectSelection(allItemIds: string[]) {
 	);
 
 	const handleSelectAll = useCallback(() => {
-		if (selectedIds.size === allItemIds.length) {
+		const allSelected =
+			allItemIds.length > 0 && allItemIds.every((id) => selectedIds.has(id));
+		if (allSelected) {
 			setSelectedIds(new Set());
 		} else {
 			setSelectedIds(new Set(allItemIds));
 		}
-	}, [selectedIds.size, allItemIds]);
+	}, [selectedIds, allItemIds]);
 
 	const clearSelection = useCallback(() => {
 		setSelectedIds(new Set());

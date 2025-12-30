@@ -5,7 +5,8 @@ import { getFullProjectDataForGeneration } from "@/lib/book-generation";
 import { db } from "@/lib/db/queries";
 import { bookExport } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import { type ExportFormat, exportBook } from "@/lib/services/book-exporter";
+import { exportBook } from "@/lib/services/book-exporter";
+import type { ExportFormat } from "@/lib/services/export/types";
 
 export async function POST(
 	request: Request,

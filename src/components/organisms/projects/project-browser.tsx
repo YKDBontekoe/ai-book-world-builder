@@ -16,6 +16,7 @@ import {
 	Search,
 	Trash2,
 } from "lucide-react";
+import { useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { Button } from "@/components/atoms/button";
 import {
@@ -71,13 +72,18 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 		filteredProjects,
 	} = useProjectFiltering(projects);
 
+	const filteredProjectIds = useMemo(
+		() => filteredProjects.map((p) => p.id),
+		[filteredProjects],
+	);
+
 	const {
 		selectedIds,
 		setSelectedIds,
 		handleSelect,
 		handleSelectAll,
 		clearSelection,
-	} = useProjectSelection(filteredProjects.map((p) => p.id));
+	} = useProjectSelection(filteredProjectIds);
 
 	const {
 		isProcessing,
