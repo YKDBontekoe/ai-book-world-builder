@@ -7,7 +7,10 @@ export default function ProjectsLoading(): React.JSX.Element {
 	return (
 		<PageContainer className="p-8 md:p-12 max-w-[1800px] mx-auto">
 			{/* PageHeader Skeleton */}
-			<div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+			<div
+				className="mb-8 flex flex-wrap items-start justify-between gap-4"
+				data-testid="projects-header-skeleton"
+			>
 				<div className="space-y-1">
 					<Skeleton className="h-8 w-32 rounded-lg" />
 				</div>
@@ -28,7 +31,7 @@ export default function ProjectsLoading(): React.JSX.Element {
 					<Skeleton className="h-10 w-full sm:max-w-md rounded-lg" />
 
 					{/* Actions Skeleton (Visibility, Toggle, Sort) */}
-					<div className="flex items-center gap-2 w-full sm:w-auto">
+					<div className="flex items-center gap-2 w-full sm:w-auto" data-testid="projects-actions-skeleton">
 						<Skeleton className="h-10 w-full sm:w-[140px] rounded-lg" />
 						<div className="h-8 w-px mx-1 bg-border" />
 						<div className="flex items-center gap-1">
