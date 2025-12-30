@@ -10,6 +10,7 @@ import {
 	Sparkles,
 	Trash2,
 	Undo2,
+	X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -94,7 +95,7 @@ export function SceneNavigation({
 
 	const handleSceneClick = (
 		sceneId: string,
-		e: React.MouseEvent | React.KeyboardEvent,
+		e: React.MouseEvent,
 	) => {
 		// Check for modifier keys (Cmd/Ctrl for multi-select)
 		const isMultiSelect = e.ctrlKey || e.metaKey;
@@ -368,11 +369,12 @@ export function SceneNavigation({
 						initial={{ y: 100, opacity: 0 }}
 						animate={{ y: 0, opacity: 1 }}
 						exit={{ y: 100, opacity: 0 }}
-						transition={{ type: "spring", stiffness: 300, damping: 30 }}
+						transition={{ type: "spring", stiffness: 400, damping: 25 }}
 						className="absolute bottom-4 left-4 right-4 z-50"
 					>
 						<GlassCard
 							variant="liquid"
+							// Note: rounded-full is a deliberate design choice for the pill-shaped floating bar
 							className="p-2 flex items-center justify-between shadow-xl border-primary/20 bg-background/80 backdrop-blur-xl rounded-full"
 						>
 							<div className="flex items-center gap-3 px-3">
@@ -391,6 +393,7 @@ export function SceneNavigation({
 									onClick={handleBulkDelete}
 									disabled={isDeleting}
 									title="Delete Selected"
+									aria-label={`Delete ${selectedSceneIds.size} selected scenes`}
 								>
 									{isDeleting ? (
 										<Loader2 className="h-4 w-4 animate-spin" />
@@ -406,7 +409,7 @@ export function SceneNavigation({
 									onClick={() => setSelectedSceneIds(new Set())}
 									title="Cancel Selection"
 								>
-									<Undo2 className="h-4 w-4" />
+									<X className="h-4 w-4" />
 								</Button>
 							</div>
 						</GlassCard>
