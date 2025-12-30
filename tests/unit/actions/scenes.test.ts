@@ -31,9 +31,9 @@ const mockedFindByIdWithAccess = vi.mocked(
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
 const mockedInvalidateCache = vi.mocked(invalidateCache);
 
-const userId = "123e4567-e89b-12d3-a456-426614174000";
-const projectId = "123e4567-e89b-12d3-a456-426614174001";
-const sceneId = "123e4567-e89b-12d3-a456-426614174002";
+const userId = "550e8400-e29b-41d4-a716-446655440000";
+const projectId = "550e8400-e29b-41d4-a716-446655440001";
+const sceneId = "550e8400-e29b-41d4-a716-446655440002";
 
 function buildSession() {
 	return {
