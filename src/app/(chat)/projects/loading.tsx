@@ -28,7 +28,10 @@ export default function ProjectsLoading(): React.JSX.Element {
 				{/* ProjectBrowser Toolbar Skeleton */}
 				<div className="flex flex-col sm:flex-row gap-4 items-center justify-between mb-6">
 					{/* Search Bar Skeleton */}
-					<Skeleton className="h-10 w-full sm:max-w-md rounded-lg" />
+					<Skeleton
+						className="h-10 w-full sm:max-w-md rounded-lg"
+						data-testid="project-search-skeleton"
+					/>
 
 					{/* Actions Skeleton (Visibility, Toggle, Sort) */}
 					<div
