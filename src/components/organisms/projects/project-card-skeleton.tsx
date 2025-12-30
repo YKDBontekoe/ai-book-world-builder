@@ -1,7 +1,7 @@
 import { GlassCard } from "@/components/molecules/glass-card";
 import { Skeleton } from "@/components/atoms/skeleton";
 
-export function ProjectCardSkeleton() {
+export function ProjectCardSkeleton(): React.JSX.Element {
 	return (
 		<GlassCard
 			variant="liquid"

@@ -2,7 +2,7 @@ import { ProjectRowSkeleton } from "@/components/organisms/projects/project-row-
 
 const SKELETON_COUNT = 5;
 
-export function ProjectListSkeleton() {
+export function ProjectListSkeleton(): React.JSX.Element {
 	return (
 		<div className="flex flex-col gap-3">
 			{Array.from({ length: SKELETON_COUNT }).map((_, i) => (

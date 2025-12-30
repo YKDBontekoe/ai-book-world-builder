@@ -3,7 +3,7 @@ import { ProjectCardSkeleton } from "@/components/organisms/projects/project-car
 
 const SKELETON_COUNT = 8;
 
-export function ProjectGridSkeleton() {
+export function ProjectGridSkeleton(): React.JSX.Element {
 	return (
 		<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
 			{Array.from({ length: SKELETON_COUNT }).map((_, i) => (

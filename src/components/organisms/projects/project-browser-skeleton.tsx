@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/atoms/skeleton";
 import { ProjectGridSkeleton } from "@/components/organisms/projects/project-grid-skeleton";
 
-export function ProjectBrowserSkeleton() {
+export function ProjectBrowserSkeleton(): React.JSX.Element {
 	return (
 		<div className="space-y-6">
 			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
