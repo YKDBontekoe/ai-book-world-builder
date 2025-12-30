@@ -111,16 +111,29 @@ export async function deleteProjects(projectIds: string[]) {
 	return result;
 }
 
+const forkProjectSchema = z.object({
+	originalProjectId: z.string().uuid(),
+	newName: z.string().max(100).optional(),
+});
+
 export async function forkProject(originalProjectId: string, newName?: string) {
 	const session = await auth();
 	if (!session?.user?.id) {
 		return { error: "Unauthorized" };
 	}
 
-	const result = await projectLifecycleService.forkProject(
+	const validation = forkProjectSchema.safeParse({
 		originalProjectId,
-		session.user.id,
 		newName,
+	});
+	if (!validation.success) {
+		return { error: validation.error.message };
+	}
+
+	const result = await projectLifecycleService.forkProject(
+		validation.data.originalProjectId,
+		session.user.id,
+		validation.data.newName,
 	);
 
 	if (result.success) {

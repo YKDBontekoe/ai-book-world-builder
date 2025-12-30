@@ -18,7 +18,6 @@ export class BookContentCollector {
 		// If we have an active generation, fetch content from generation steps
 		if (projectData.generation) {
 			const generationId = projectData.generation.id;
-			console.log("[EXPORT DEBUG] Generation found:", generationId);
 
 			// Fetch all completed generation steps
 			const steps = await db
@@ -27,15 +26,11 @@ export class BookContentCollector {
 				.where(eq(bookGenerationStep.generationId, generationId))
 				.orderBy(asc(bookGenerationStep.sequence));
 
-			console.log("[EXPORT DEBUG] Steps found:", steps.length);
-
 			// Fetch all generation assets (prologue, epilogue, etc.)
 			const assets = await db
 				.select()
 				.from(bookGenerationAsset)
 				.where(eq(bookGenerationAsset.generationId, generationId));
-
-			console.log("[EXPORT DEBUG] Assets found:", assets.length);
 
 			// Get prologue from assets
 			const prologueAsset = assets.find((a) => a.assetType === "prologue");
@@ -79,9 +74,6 @@ export class BookContentCollector {
 
 		// If no generation content, fall back to chapter drafts
 		if (chapters.length === 0) {
-			console.log(
-				"[EXPORT DEBUG] No generation chapters found, falling back to drafts",
-			);
 			for (const vol of projectData.volumes) {
 				for (const chap of vol.chapters) {
 					const latestDraft = chap.drafts[0];

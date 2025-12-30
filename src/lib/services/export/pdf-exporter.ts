@@ -1,4 +1,3 @@
-import path from "node:path";
 import PDFDocument from "pdfkit";
 import type { FullProjectData } from "@/lib/book-generation";
 import type { BookContent, BookExporter } from "./types";
@@ -14,18 +13,7 @@ export class PdfExporter implements BookExporter {
 				margins: { top: 72, bottom: 72, left: 72, right: 72 },
 			});
 
-			// Register fonts explicitly to avoid ENOENT issues in Vercel/Next.js
-			// Note: We use process.cwd() to locate fonts relative to the project root
-			const fontPath = path.join(process.cwd(), "lib", "fonts");
-			try {
-				doc.registerFont("Helvetica", path.join(fontPath, "Helvetica.afm"));
-				doc.registerFont(
-					"Helvetica-Bold",
-					path.join(fontPath, "Helvetica-Bold.afm"),
-				);
-			} catch (e) {
-				console.warn("Could not register fonts, falling back to default.", e);
-			}
+			// Helvetica and Helvetica-Bold are standard PDF fonts, no registration needed
 
 			const chunks: Buffer[] = [];
 

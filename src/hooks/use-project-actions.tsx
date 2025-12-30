@@ -149,6 +149,7 @@ export function useProjectActions(
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 		toast.success(`Exported ${projectsToExport.length} projects to JSON`);
 		setSelectedIds(new Set());
 	};
@@ -188,6 +189,7 @@ export function useProjectActions(
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 		toast.success(`Exported ${projectsToExport.length} projects to CSV`);
 		setSelectedIds(new Set());
 	};
