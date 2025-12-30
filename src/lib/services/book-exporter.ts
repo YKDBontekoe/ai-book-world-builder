@@ -31,7 +31,7 @@ export async function uploadToBlob(
  */
 export async function exportBook(
 	projectData: FullProjectData,
-	format: "pdf" | "epub", // Use string literal union directly to avoid runtime reference error
+	format: ExportFormat,
 ): Promise<ExportResult> {
 	const sanitizedTitle = projectData.project.name
 		.replace(/[^a-z0-9]/gi, "_")
