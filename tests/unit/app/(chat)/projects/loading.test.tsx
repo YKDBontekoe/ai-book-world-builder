@@ -4,13 +4,13 @@ import ProjectsLoading from '@/app/(chat)/projects/loading';
 
 // Mock components to simplify testing
 vi.mock('@/components/atoms/skeleton', () => ({
-	Skeleton: ({ className, "data-testid": dataTestId }: { className?: string, "data-testid"?: string }) => (
+	Skeleton: ({ className, "data-testid": dataTestId }: { className?: string, "data-testid"?: string }): React.JSX.Element => (
 		<div data-testid={dataTestId || "skeleton"} className={className} />
 	),
 }));
 
 vi.mock('@/components/molecules/glass-card', () => ({
-	GlassCard: ({ children, className }: { children: React.ReactNode; className?: string; variant?: string }) => (
+	GlassCard: ({ children, className }: { children: React.ReactNode; className?: string; variant?: string }): React.JSX.Element => (
 		<div data-testid="glass-card" className={className}>
 			{children}
 		</div>
