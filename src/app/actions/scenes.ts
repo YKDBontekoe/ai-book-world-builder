@@ -1,16 +1,21 @@
 "use server";
 
+import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { invalidateCache } from "@/lib/cache";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
+import { sceneStatus } from "@/lib/db/schema";
 
-export async function updateSceneAction({
-	id,
-	title,
-	status,
-	content,
-	projectId,
-}: {
+const updateSceneSchema = z.object({
+	id: z.string().uuid(),
+	projectId: z.string().uuid(),
+	title: z.string().max(255, "Title is too long").optional(),
+	status: z.enum(sceneStatus).optional(),
+	// Limit content to 100k characters to prevent DoS/Storage issues
+	content: z.string().max(100000, "Content exceeds maximum limit").optional(),
+});
+
+export async function updateSceneAction(params: {
 	id: string;
 	title?: string;
 	status?: string;
@@ -22,6 +27,16 @@ export async function updateSceneAction({
 	if (!session?.user?.id) {
 		throw new Error("Unauthorized");
 	}
+
+	// Validate inputs
+	const validation = updateSceneSchema.safeParse(params);
+	if (!validation.success) {
+		// Flatten error messages for better DX
+		const errorMsg = validation.error.issues.map((i) => i.message).join(", ");
+		throw new Error(`Validation failed: ${errorMsg}`);
+	}
+
+	const { id, title, status, content, projectId } = validation.data;
 
 	const project = await projectRepository.findByIdWithAccess(
 		projectId,
