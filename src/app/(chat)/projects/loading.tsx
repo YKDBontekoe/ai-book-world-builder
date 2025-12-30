@@ -30,7 +30,7 @@ export default function ProjectsLoading(): React.JSX.Element {
 					{/* Actions Skeleton (Visibility, Toggle, Sort) */}
 					<div className="flex items-center gap-2 w-full sm:w-auto">
 						<Skeleton className="h-10 w-full sm:w-[140px] rounded-lg" />
-						<Skeleton className="h-8 w-px mx-1" />
+						<div className="h-8 w-px mx-1 bg-border" />
 						<div className="flex items-center gap-1">
 							<Skeleton className="h-7 w-7 rounded-lg" />
 							<Skeleton className="h-7 w-7 rounded-lg" />
