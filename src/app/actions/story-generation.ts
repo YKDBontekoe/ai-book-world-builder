@@ -1,7 +1,10 @@
 "use server";
 
+import { Ratelimit } from "@upstash/ratelimit";
+import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { withProjectWriteAccess } from "@/lib/actions-utils";
+import { redis } from "@/lib/redis";
 import {
 	type BookPlan,
 	type StoryStyle,
@@ -10,6 +13,36 @@ import {
 
 export type { BookPlan, StoryStyle };
 
+// Rate limiter configuration (10 requests per 10 minutes)
+const ratelimit = redis
+	? new Ratelimit({
+			redis: redis,
+			limiter: Ratelimit.slidingWindow(10, "10 m"),
+			analytics: true,
+			prefix: "ratelimit:ai-generation",
+		})
+	: null;
+
+// Validation Schemas
+const generatePlanSchema = z.object({
+	prompt: z.string().min(10, "Prompt must be at least 10 characters"),
+	style: z
+		.object({
+			tone: z.string().optional(),
+			pacing: z.string().optional(),
+		})
+		.optional(),
+	modelId: z.string().optional(),
+});
+
+const planChapterSchema = z.object({
+	chapterId: z.string().uuid("Invalid Chapter ID"),
+});
+
+const generateSceneSchema = z.object({
+	sceneId: z.string().uuid("Invalid Scene ID"),
+});
+
 export async function generateBookPlan(
 	prompt: string,
 	style?: StoryStyle,
@@ -17,9 +50,27 @@ export async function generateBookPlan(
 ) {
 	try {
 		const session = await auth();
-		if (!session?.user) {
+		if (!session?.user?.id) {
 			return { success: false, error: "Unauthorized" };
 		}
+
+		// Input Validation
+		const validation = generatePlanSchema.safeParse({ prompt, style, modelId });
+		if (!validation.success) {
+			return { success: false, error: validation.error.message };
+		}
+
+		// Rate Limiting
+		if (ratelimit) {
+			const { success } = await ratelimit.limit(session.user.id);
+			if (!success) {
+				return {
+					success: false,
+					error: "Rate limit exceeded. Please try again later.",
+				};
+			}
+		}
+
 		const result = await storyService.generateBookPlan(prompt, style, modelId);
 		if (result.error || !result.plan) {
 			return {
@@ -41,6 +92,7 @@ export async function createBookFromPlan(
 ) {
 	return withProjectWriteAccess(projectId, async () => {
 		try {
+			// Basic schema validation for plan could be added here if BookPlan schema is available at runtime
 			await storyService.createBookFromPlan(projectId, plan, style);
 			return { success: true };
 		} catch (error) {
@@ -56,14 +108,27 @@ export async function createBookFromPlan(
 
 export async function planChapterScenes(chapterId: string) {
 	try {
-		// Validated internal call or add explicit pre-check here.
-		// Service layer handles authorization (ensureProjectAccess), but strictly speaking
-		// actions should validate too.
-		// For IDOR prevention, we rely on storyService.planChapterScenes calling `getChapterWithScenes`
-		// which returns the project ID, then calling `ensureProjectAccess`.
-		// To be 100% safe against service refactors, we enforce it here:
-		if (!chapterId || typeof chapterId !== "string") {
-			return { success: false, error: "Invalid chapter ID" };
+		const session = await auth();
+		if (!session?.user?.id) {
+			return { success: false, error: "Unauthorized" };
+		}
+
+		const validation = planChapterSchema.safeParse({ chapterId });
+		if (!validation.success) {
+			return { success: false, error: validation.error.message };
+		}
+
+		// Rate Limiting for chapter planning (more lenient? same?)
+		if (ratelimit) {
+			const { success } = await ratelimit.limit(
+				`chapter-plan:${session.user.id}`,
+			);
+			if (!success) {
+				return {
+					success: false,
+					error: "Rate limit exceeded. Please try again later.",
+				};
+			}
 		}
 
 		const sceneIds = await storyService.planChapterScenes(chapterId);
@@ -77,9 +142,29 @@ export async function planChapterScenes(chapterId: string) {
 
 export async function generateSceneText(sceneId: string) {
 	try {
-		if (!sceneId || typeof sceneId !== "string") {
-			return { success: false, error: "Invalid scene ID" };
+		const session = await auth();
+		if (!session?.user?.id) {
+			return { success: false, error: "Unauthorized" };
 		}
+
+		const validation = generateSceneSchema.safeParse({ sceneId });
+		if (!validation.success) {
+			return { success: false, error: validation.error.message };
+		}
+
+		// Rate Limiting for scene generation
+		if (ratelimit) {
+			const { success } = await ratelimit.limit(
+				`scene-gen:${session.user.id}`,
+			);
+			if (!success) {
+				return {
+					success: false,
+					error: "Rate limit exceeded. Please try again later.",
+				};
+			}
+		}
+
 		// Service layer handles ensureProjectAccess via verifySceneAccess inside `generateSceneText`
 		await storyService.generateSceneText(sceneId);
 		return { success: true };
