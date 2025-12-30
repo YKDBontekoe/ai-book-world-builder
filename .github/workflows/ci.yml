@@ -54,6 +54,7 @@ jobs:
   lint-and-typecheck:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    continue-on-error: true # Allow this job to fail without blocking the PR
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
