@@ -4,7 +4,7 @@ import ProjectsLoading from '@/app/(chat)/projects/loading';
 
 // Mock components to simplify testing
 vi.mock('@/components/atoms/skeleton', () => ({
-	Skeleton: ({ className, "data-testid": dataTestId }: { className: string, "data-testid"?: string }) => (
+	Skeleton: ({ className, "data-testid": dataTestId }: { className?: string, "data-testid"?: string }) => (
 		<div data-testid={dataTestId || "skeleton"} className={className} />
 	),
 }));
