@@ -126,59 +126,58 @@ export function ProjectActionsMenu({
 
 	return (
 		<>
-			<div
-				onClick={(e) => e.stopPropagation()}
-				onKeyDown={(e) => e.stopPropagation()}
-			>
-				<DropdownMenu>
-					<DropdownMenuTrigger asChild>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-8 w-8 p-0 hover:bg-muted/50 focus-visible:ring-0 focus-visible:ring-offset-0"
-							onClick={(e) => e.stopPropagation()}
-						>
-							<span className="sr-only">Open menu</span>
-							<MoreHorizontal className="h-4 w-4" />
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent align="end" className="w-[160px]">
-						<DropdownMenuItem
-							onClick={(e) => {
-								e.stopPropagation();
-								setShowRenameDialog(true);
-							}}
-						>
-							<Edit className="mr-2 h-4 w-4" />
-							Rename
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							onClick={(e) => {
-								e.stopPropagation();
-								handleFork();
-							}}
-							disabled={isForking}
-						>
-							<Copy className="mr-2 h-4 w-4" />
-							Duplicate
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							className="text-destructive focus:text-destructive"
-							onClick={(e) => {
-								e.stopPropagation();
-								if (onDelete) {
-									handleDelete();
-								} else {
-									setShowDeleteDialog(true);
-								}
-							}}
-						>
-							<Trash className="mr-2 h-4 w-4" />
-							Delete
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			</div>
+			<DropdownMenu>
+				<DropdownMenuTrigger asChild>
+					<Button
+						variant="ghost"
+						size="icon"
+						className="h-8 w-8 p-0 hover:bg-muted/50 focus-visible:ring-0 focus-visible:ring-offset-0"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<span className="sr-only">Open menu</span>
+						<MoreHorizontal className="h-4 w-4" />
+					</Button>
+				</DropdownMenuTrigger>
+				<DropdownMenuContent
+					align="end"
+					className="w-[160px]"
+					onClick={(e) => e.stopPropagation()}
+				>
+					<DropdownMenuItem
+						onClick={(e) => {
+							e.stopPropagation();
+							setShowRenameDialog(true);
+						}}
+					>
+						<Edit className="mr-2 h-4 w-4" />
+						Rename
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						onClick={(e) => {
+							e.stopPropagation();
+							handleFork();
+						}}
+						disabled={isForking}
+					>
+						<Copy className="mr-2 h-4 w-4" />
+						Duplicate
+					</DropdownMenuItem>
+					<DropdownMenuItem
+						className="text-destructive focus:text-destructive"
+						onClick={(e) => {
+							e.stopPropagation();
+							if (onDelete) {
+								handleDelete();
+							} else {
+								setShowDeleteDialog(true);
+							}
+						}}
+					>
+						<Trash className="mr-2 h-4 w-4" />
+						Delete
+					</DropdownMenuItem>
+				</DropdownMenuContent>
+			</DropdownMenu>
 
 			{/* Only render Alert Dialog if we don't have an optimistic handler */}
 			{!onDelete && (
