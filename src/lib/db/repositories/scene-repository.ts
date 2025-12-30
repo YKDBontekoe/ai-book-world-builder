@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
@@ -238,6 +238,25 @@ export class SceneRepository extends BaseRepository<
 		} catch (error) {
 			console.error("SceneRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete scene");
+		}
+	}
+
+	/**
+	 * Delete multiple scenes by their IDs, scoped to a project.
+	 * @param ids - An array of scene IDs to delete.
+	 * @param projectId - The project ID to scope the deletion to.
+	 */
+	async deleteMany(ids: string[], projectId: string): Promise<void> {
+		if (ids.length === 0) {
+			return;
+		}
+		try {
+			await db
+				.delete(scene)
+				.where(and(inArray(scene.id, ids), eq(scene.projectId, projectId)));
+		} catch (error) {
+			console.error("SceneRepository.deleteMany error:", error);
+			throw new DatabaseError("Failed to delete scenes");
 		}
 	}
 

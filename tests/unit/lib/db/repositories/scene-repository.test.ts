@@ -58,6 +58,8 @@ vi.mock("drizzle-orm", () => ({
 	desc: vi.fn(),
 	eq: vi.fn(),
 	sql: vi.fn(),
+	and: vi.fn(),
+	inArray: vi.fn(),
 }));
 
 describe("SceneRepository", () => {
@@ -125,6 +127,31 @@ describe("SceneRepository", () => {
 			await expect(
 				sceneRepository.update("s1", { title: "Updated" }),
 			).rejects.toThrow(NotFoundError);
+		});
+	});
+
+	describe("deleteMany", () => {
+		it("should not call delete when given an empty array", async () => {
+			await sceneRepository.deleteMany([], "p1");
+			expect(mocks.delete).not.toHaveBeenCalled();
+		});
+
+		it("should call delete with the correct parameters", async () => {
+			const sceneIds = ["s1", "s2"];
+			const projectId = "p1";
+			await sceneRepository.deleteMany(sceneIds, projectId);
+			expect(mocks.delete).toHaveBeenCalled();
+			expect(mocks.where).toHaveBeenCalled();
+		});
+
+		it("should throw a DatabaseError on failure", async () => {
+			const sceneIds = ["s1", "s2"];
+			const projectId = "p1";
+			mocks.error = new Error("DB error");
+
+			await expect(
+				sceneRepository.deleteMany(sceneIds, projectId),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 

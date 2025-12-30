@@ -53,3 +53,31 @@ export async function updateSceneAction({
 		updatedAt: updatedScene.updatedAt.toISOString(),
 	};
 }
+
+export async function deleteScenesAction({
+	projectId,
+	sceneIds,
+}: {
+	projectId: string;
+	sceneIds: string[];
+}) {
+	const session = await auth();
+	if (!session?.user?.id) {
+		throw new Error("Unauthorized");
+	}
+
+	const project = await projectRepository.findByIdWithAccess(
+		projectId,
+		session.user.id,
+	);
+
+	if (!project || project.userId !== session.user.id) {
+		throw new Error("Unauthorized");
+	}
+
+	await sceneRepository.deleteMany(sceneIds, projectId);
+
+	await invalidateCache(`project-structure:${projectId}`);
+
+	return { success: true };
+}
