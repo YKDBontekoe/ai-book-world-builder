@@ -5,9 +5,9 @@ import type { FullProjectData } from "@/lib/book-generation";
 import { BookContentCollector } from "@/lib/services/export/content-collector";
 import { EpubExporter } from "@/lib/services/export/epub-exporter";
 import { PdfExporter } from "@/lib/services/export/pdf-exporter";
-import type { ExportFormat } from "@/lib/services/export/types";
 
-export type { ExportFormat };
+// Define locally to avoid export issues during build
+export type ExportFormat = "pdf" | "epub";
 
 type ExportResult = {
 	url: string;
