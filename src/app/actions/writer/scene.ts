@@ -9,7 +9,7 @@ import { continueWriting } from "@/lib/ai/writer";
 import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
-import { chapter, scene } from "@/lib/db/schema";
+import { chapter, scene, type Scene } from "@/lib/db/schema";
 
 export async function getSceneContent(sceneId: string) {
 	try {
@@ -330,7 +330,7 @@ export async function bulkDeleteScenes(
 }
 
 export async function restoreScenes(
-	scenesToRestore: (typeof scene.$inferSelect)[],
+	scenesToRestore: Scene[],
 ): Promise<{ success: boolean; error?: string }> {
 	try {
 		if (scenesToRestore.length === 0) return { success: true };

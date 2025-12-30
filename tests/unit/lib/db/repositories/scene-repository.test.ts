@@ -1,7 +1,7 @@
 import { and, eq, inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { sceneRepository } from "@/lib/db/repositories/scene-repository";
-import { scene } from "@/lib/db/schema/generation";
+import { scene } from "@/lib/db/schema/scenes";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {

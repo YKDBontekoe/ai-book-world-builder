@@ -207,16 +207,17 @@ function PaginatedContent({
 			clearTimeout(timer);
 		};
 		// biome-ignore lint/correctness/useExhaustiveDependencies: content and settings are crucial for remeasuring
-	}, [content, settings, initialProgress]);
+	}, [initialProgress]);
 
 	// Report progress whenever page changes
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Intentional, only on page change
 	useEffect(() => {
 		if (totalPages > 0) {
 			// Calculate progress (0.0 to 1.0)
 			const p = page / totalPages;
 			onProgressChange(p);
 		}
-	}, [page, totalPages, onProgressChange]);
+	}, [page, totalPages]);
 
 	const handlePageTurn = (direction: "next" | "prev") => {
 		if (direction === "next") {
@@ -258,16 +259,20 @@ function PaginatedContent({
 		}
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "ArrowRight") handlePageTurn("next");
+		if (e.key === "ArrowLeft") handlePageTurn("prev");
+		if (e.key === "Enter" || e.key === " ") onTap();
+	};
+
 	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: complex gesture detection
 		<div
 			role="button"
 			tabIndex={0}
 			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
 			onClick={handleClick}
-			onKeyDown={(e) => {
-				if (e.key === "ArrowRight") handlePageTurn("next");
-				if (e.key === "ArrowLeft") handlePageTurn("prev");
-			}}
+			onKeyDown={handleKeyDown}
 		>
 			<div
 				ref={containerRef}
@@ -289,12 +294,12 @@ function PaginatedContent({
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
 						// biome-ignore lint/suspicious/noArrayIndexKey: For static content, index is fine
-						<p key={i} className="mb-4 indent-6">
+						<p key={`${chapterId}-${i}`} className="mb-4 indent-6">
 							{para}
 						</p>
 					) : (
 						// biome-ignore lint/suspicious/noArrayIndexKey: For static content, index is fine
-						<br key={i} />
+						<br key={`${chapterId}-${i}`} />
 					),
 				)}
 				<div className="break-before-column h-[50vh] flex items-center justify-center text-muted-foreground opacity-50">

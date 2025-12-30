@@ -138,6 +138,7 @@ export function ProjectActionsMenu({
 						<MoreHorizontal className="h-4 w-4" />
 					</Button>
 				</DropdownMenuTrigger>
+				{/* biome-ignore lint/a11y/noStaticElementInteractions: This is to prevent clicks from propagating */}
 				<DropdownMenuContent
 					align="end"
 					className="w-[160px]"
@@ -182,6 +183,7 @@ export function ProjectActionsMenu({
 			{/* Only render Alert Dialog if we don't have an optimistic handler */}
 			{!onDelete && (
 				<AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+					{/* biome-ignore lint/a11y/noStaticElementInteractions: This is to prevent clicks from propagating */}
 					<AlertDialogContent onClick={(e) => e.stopPropagation()}>
 						<AlertDialogHeader>
 							<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -214,6 +216,7 @@ export function ProjectActionsMenu({
 			)}
 
 			<Dialog open={showRenameDialog} onOpenChange={setShowRenameDialog}>
+				{/* biome-ignore lint/a11y/noStaticElementInteractions: This is to prevent clicks from propagating */}
 				<DialogContent onClick={(e) => e.stopPropagation()}>
 					<DialogHeader>
 						<DialogTitle>Rename Project</DialogTitle>

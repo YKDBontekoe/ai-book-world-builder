@@ -43,6 +43,7 @@ export function useProseMirror({
 	const prevContentRef = useRef<string | null>(null);
 
 	// Initialize editor once
+	// biome-ignore lint/correctness/useExhaustiveDependencies: This should only run once
 	useEffect(() => {
 		if (!containerRef.current) return;
 

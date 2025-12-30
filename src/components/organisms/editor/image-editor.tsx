@@ -34,7 +34,6 @@ export function ImageEditor({
 				</div>
 			) : (
 				<picture>
-					{/* biome-ignore lint/a11y/useAltText: Generated image */}
 					<img
 						alt={title}
 						className={cn("h-fit w-full max-w-[800px]", {
