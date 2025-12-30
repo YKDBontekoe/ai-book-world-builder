@@ -3,8 +3,11 @@ import { describe, it, expect, vi } from 'vitest';
 import ProjectsLoading from '@/app/(chat)/projects/loading';
 
 // Mock components to simplify testing
+// The real Skeleton component passes down extra props like data-testid. We replicate that here.
 vi.mock('@/components/atoms/skeleton', () => ({
-	Skeleton: ({ className }: { className: string }) => <div data-testid="skeleton" className={className} />,
+	Skeleton: ({ className, ...props }: { className: string; [key: string]: unknown }) => (
+		<div data-testid="skeleton" className={className} {...props} />
+	),
 }));
 
 vi.mock('@/components/molecules/glass-card', () => ({
@@ -26,9 +29,8 @@ describe('ProjectsLoading', () => {
 	it('renders toolbar skeleton with search and actions', () => {
 		render(<ProjectsLoading />);
 
-		const skeletons = screen.getAllByTestId('skeleton');
-		const searchSkeleton = skeletons.find((s) => s.className.includes('max-w-md'));
-		expect(searchSkeleton).toBeDefined();
+		const searchSkeleton = screen.getByTestId('project-search-skeleton');
+		expect(searchSkeleton).toBeInTheDocument();
 
 		const actions = screen.getByTestId('project-actions-skeleton');
 		const actionSkeletons = within(actions).getAllByTestId('skeleton');
