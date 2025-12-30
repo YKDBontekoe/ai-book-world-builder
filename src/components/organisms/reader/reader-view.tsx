@@ -206,6 +206,7 @@ function PaginatedContent({
 			window.removeEventListener("resize", measure);
 			clearTimeout(timer);
 		};
+		// biome-ignore lint/correctness/useExhaustiveDependencies: content and settings are crucial for remeasuring
 	}, [content, settings, initialProgress]);
 
 	// Report progress whenever page changes
@@ -259,8 +260,14 @@ function PaginatedContent({
 
 	return (
 		<div
-			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
+			role="button"
+			tabIndex={0}
+			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
 			onClick={handleClick}
+			onKeyDown={(e) => {
+				if (e.key === "ArrowRight") handlePageTurn("next");
+				if (e.key === "ArrowLeft") handlePageTurn("prev");
+			}}
 		>
 			<div
 				ref={containerRef}
@@ -281,10 +288,12 @@ function PaginatedContent({
 			>
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
+						// biome-ignore lint/suspicious/noArrayIndexKey: For static content, index is fine
 						<p key={i} className="mb-4 indent-6">
 							{para}
 						</p>
 					) : (
+						// biome-ignore lint/suspicious/noArrayIndexKey: For static content, index is fine
 						<br key={i} />
 					),
 				)}
