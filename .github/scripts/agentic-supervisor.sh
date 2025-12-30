@@ -226,40 +226,53 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" &
     JULES_PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback. Commit changes directly to the '$BRANCH' branch."
   fi
 
-  # D.2 CodeRabbit Batch Review - Collect ALL inline comments
+  # D.2 CodeRabbit Batch Review - Collect ALL feedback
   if [[ "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
-    log "CodeRabbit review submitted - collecting ALL inline comments..."
+    log "CodeRabbit review submitted - collecting ALL feedback..."
 
-    COMMENTS_DATA=""
-    if [[ -n "$GH_TOKEN" ]]; then
-      # Fetch ALL CodeRabbit inline comments on this PR (not just this review)
-      # This ensures we get all actionable feedback
-      COMMENTS_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
-        --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | 
-          map("### \(.path):\(.line // .original_line)\n\(.body)") | join("\n\n---\n\n")' 2>/dev/null || echo "")
-      
-      COMMENT_COUNT=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
-        --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
-      log "Found $COMMENT_COUNT CodeRabbit inline comments"
-    elif [[ -n "$MOCK_GH_CLI" ]]; then
-      COMMENTS_DATA="### src/main.ts:10\nFix typo\n\n---\n\n### src/utils.ts:5\nOptimize loop"
+    # Start with the main review body, if it exists
+    ALL_FEEDBACK=""
+    if [[ -n "$REVIEW_BODY" && "$REVIEW_BODY" != "null" ]]; then
+      ALL_FEEDBACK="### General Feedback\n$REVIEW_BODY"
     fi
 
-    if [[ -n "$COMMENTS_DATA" && "$COMMENTS_DATA" != "" ]]; then
+    INLINE_COMMENTS=""
+    if [[ -n "$GH_TOKEN" ]]; then
+      # Fetch ALL CodeRabbit inline comments on this PR
+      INLINE_COMMENTS=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
+        --jq '[.[] | select(.user.login == "coderabbitai[bot]")] |
+          map("### \(.path):\(.line // .original_line)\n\(.body)") | join("\n\n---\n\n")' 2>/dev/null || echo "")
+      
+      COMMENT_COUNT=$(echo "$INLINE_COMMENTS" | grep -c '###' )
+      log "Found $COMMENT_COUNT CodeRabbit inline comments"
+    elif [[ -n "$MOCK_GH_CLI" ]]; then
+      INLINE_COMMENTS="### src/main.ts:10\nFix typo\n\n---\n\n### src/utils.ts:5\nOptimize loop"
+    fi
+
+    # Combine general feedback and inline comments
+    if [[ -n "$INLINE_COMMENTS" ]]; then
+      if [[ -n "$ALL_FEEDBACK" ]]; then
+        ALL_FEEDBACK="$ALL_FEEDBACK\n\n---\n\n$INLINE_COMMENTS"
+      else
+        ALL_FEEDBACK="$INLINE_COMMENTS"
+      fi
+    fi
+
+    if [[ -n "$ALL_FEEDBACK" ]]; then
       # Post comments as a new PR comment to trigger Jules via standard @Jules mechanism
       # This ensures Jules operates on the existing PR context instead of creating a new one
       log "Posting aggregated CodeRabbit comments to PR #$NUMBER to trigger Jules..."
 
       MESSAGE="@Jules Please address the following CodeRabbit review feedback:
 
-$COMMENTS_DATA"
+$ALL_FEEDBACK"
 
       # GitHub API has a ~65K byte limit for comment bodies. Check byte size.
       MESSAGE_BYTES=$(echo -n "$MESSAGE" | wc -c)
       if [[ $MESSAGE_BYTES -gt 65000 ]]; then
         log "WARNING: Aggregated comments exceed GitHub API limit ($MESSAGE_BYTES bytes). Truncating..."
         # Truncate conservatively to account for header and notice. Using head -c for byte safety.
-        TRUNCATED_DATA=$(echo -n "$COMMENTS_DATA" | head -c 64000)
+        TRUNCATED_DATA=$(echo -n "$ALL_FEEDBACK" | head -c 64000)
         MESSAGE="@Jules Please address the following CodeRabbit review feedback:
 
 $TRUNCATED_DATA
@@ -279,10 +292,10 @@ $TRUNCATED_DATA
         SHOULD_INVOKE_JULES="true"
 
         # Truncate for fallback prompt if needed
-        FALLBACK_DATA="$COMMENTS_DATA"
+        FALLBACK_DATA="$ALL_FEEDBACK"
         if [[ $(echo -n "$FALLBACK_DATA" | wc -c) -gt 50000 ]]; then
             log "Truncating fallback prompt data..."
-            FALLBACK_DATA="$(echo -n "$COMMENTS_DATA" | head -c 50000)
+            FALLBACK_DATA="$(echo -n "$ALL_FEEDBACK" | head -c 50000)
 
 ... (truncated - see CodeRabbit review for complete feedback)"
         fi
@@ -293,7 +306,7 @@ $FALLBACK_DATA
 Please commit changes directly to the '$BRANCH' branch."
       fi
     else
-      log "No CodeRabbit inline comments found for this PR"
+      log "No CodeRabbit feedback (body or inline) found for this PR"
     fi
   fi
 fi
