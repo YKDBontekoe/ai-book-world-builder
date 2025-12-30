@@ -271,9 +271,7 @@ const bulkDeleteScenesSchema = z.object({
 	sceneIds: z.array(z.string().uuid()).max(100), // Add reasonable limit
 });
 
-export async function bulkDeleteScenes(
-	sceneIds: string[],
-): Promise<{
+export async function bulkDeleteScenes(sceneIds: string[]): Promise<{
 	success: boolean;
 	deletedScenes?: (typeof scene.$inferSelect)[];
 	error?: string;
