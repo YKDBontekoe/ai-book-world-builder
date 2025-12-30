@@ -5,14 +5,9 @@ import type { FullProjectData } from "@/lib/book-generation";
 import { BookContentCollector } from "@/lib/services/export/content-collector";
 import { EpubExporter } from "@/lib/services/export/epub-exporter";
 import { PdfExporter } from "@/lib/services/export/pdf-exporter";
-import type { ExportFormat } from "@/lib/services/export/types";
+import type { ExportFormat, ExportResult } from "@/lib/services/export/types";
 
 export type { ExportFormat };
-
-type ExportResult = {
-	url: string;
-	filename: string;
-};
 
 /**
  * Uploads a buffer to Vercel Blob storage.

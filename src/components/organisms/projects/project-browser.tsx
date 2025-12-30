@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowDownAZ,
@@ -71,13 +72,18 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 		filteredProjects,
 	} = useProjectFiltering(projects);
 
+	const filteredProjectIds = useMemo(
+		() => filteredProjects.map((p) => p.id),
+		[filteredProjects],
+	);
+
 	const {
 		selectedIds,
 		setSelectedIds,
 		handleSelect,
 		handleSelectAll,
 		clearSelection,
-	} = useProjectSelection(filteredProjects.map((p) => p.id));
+	} = useProjectSelection(filteredProjectIds);
 
 	const {
 		isProcessing,
