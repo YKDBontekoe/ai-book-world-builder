@@ -193,6 +193,7 @@
 	--color-glass-border: hsl(var(--glass-border));
 
 	--ease-liquid: var(--ease-liquid);
+	--transition-timing-function-spring: var(--ease-spring);
 	--animate-accordion-down: accordion-down 0.2s ease-out;
 	--animate-accordion-up: accordion-up 0.2s ease-out;
 
