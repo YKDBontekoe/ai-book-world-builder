@@ -22,7 +22,10 @@ export default function ProjectsLoading(): React.JSX.Element {
 			<div className="mt-8">
 				{/* ProjectTabs Skeleton */}
 				<div className="mb-6">
-					<Skeleton className="h-10 w-[240px] rounded-lg bg-muted" />
+					<div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1">
+						<Skeleton className="h-8 w-24 rounded-md" />
+						<Skeleton className="h-8 w-20 ml-1 rounded-md" />
+					</div>
 				</div>
 
 				{/* ProjectBrowser Toolbar Skeleton */}
