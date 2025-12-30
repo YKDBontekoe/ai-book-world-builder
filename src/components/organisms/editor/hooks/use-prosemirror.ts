@@ -95,7 +95,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, []); // Empty dependency array to run once on mount
+	}, [content, onMentionStateChange, readOnly, containerRef]);
 
 	// Synchronize content when it changes externally
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Editor sync logic
@@ -158,7 +158,13 @@ export function useProseMirror({
 				},
 			});
 		}
-	}, [readOnly, typewriterMode, onSaveContent, onSelectionChange]);
+	}, [
+		readOnly,
+		typewriterMode,
+		onSaveContent,
+		onSelectionChange,
+		containerRef,
+	]);
 
 	return { editorRef, mounted };
 }
