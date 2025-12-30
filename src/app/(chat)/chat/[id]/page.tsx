@@ -128,16 +128,6 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 	const initialChatModel =
 		modelIdToUse || filteredAvailableModels[0]?.id || DEFAULT_CHAT_MODEL;
 
-	console.log("[ChatPage] Model Selection Debug:", {
-		userId: session.user.id,
-		favorites: userPrefs.favoriteModels,
-		selectedModelPreferences: selectedModelIds,
-		cookie: chatModelFromCookie?.value,
-		resolvedModel: modelIdToUse,
-		finalModel: initialChatModel,
-		filteredCount: filteredAvailableModels.length,
-	});
-
 	const serializedProjects = projects.map(serializeProject);
 
 	return (

@@ -90,8 +90,8 @@ export async function POST(
 				},
 			},
 			callbacks: {
-				onLog: (message, type) => {
-					console.log(`[${type.toUpperCase()}] ${message}`);
+				onLog: (_message, _type) => {
+					// Silent log
 				},
 				onError: (error) => {
 					console.error("Generation error:", error);
