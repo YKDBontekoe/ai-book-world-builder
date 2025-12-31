@@ -175,7 +175,9 @@ describe("Story Generation Actions", () => {
 			const result = await generateBookPlan("A test prompt");
 
 			expect(result.success).toBe(true);
-			expect(result.plan).toEqual(mockPlan);
+			if (result.success) {
+				expect(result.plan).toEqual(mockPlan);
+			}
 		});
 
 		it("should return an error when rate limited", async () => {
@@ -251,8 +253,10 @@ describe("Story Generation Actions", () => {
 				"123e4567-e89b-12d3-a456-426614174000",
 			);
 			expect(result.success).toBe(true);
-			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id");
+			if (result.success) {
+				expect(result.sceneIds).toHaveLength(1);
+				expect(result.sceneIds?.[0]).toBe("mock-id");
+			}
 		});
 	});
 
