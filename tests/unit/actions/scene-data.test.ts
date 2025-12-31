@@ -44,7 +44,6 @@ describe("getScenesData", () => {
 			visibility: "private",
 			folders: [],
 			createdAt: new Date(),
-			updatedAt: new Date(),
 			lastViewedSceneId: null,
 			forkedFromId: null,
 		});
@@ -73,7 +72,6 @@ describe("getScenesData", () => {
 			visibility: "private",
 			folders: [],
 			createdAt: new Date(),
-			updatedAt: new Date(),
 			lastViewedSceneId: null,
 			forkedFromId: null,
 		});

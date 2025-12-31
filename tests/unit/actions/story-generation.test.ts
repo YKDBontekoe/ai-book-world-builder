@@ -249,7 +249,9 @@ describe("Story Generation Actions", () => {
 			(generateObject as any).mockResolvedValue({
 				object: { scenes: [{ title: "Scene 1", beat: "beat" }] },
 			});
-			const result = await planChapterScenes("123e4567-e89b-12d3-a456-426614174000");
+			const result = await planChapterScenes(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
 			expect(result.sceneIds).toHaveLength(1);
 			expect(result.sceneIds?.[0]).toBe("mock-id");
@@ -258,7 +260,9 @@ describe("Story Generation Actions", () => {
 
 	describe("generateSceneText", () => {
 		it("should update scene content", async () => {
-			const result = await generateSceneText("123e4567-e89b-12d3-a456-426614174000");
+			const result = await generateSceneText(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
 			expect(generationService.continueWriting).toHaveBeenCalled();
 			expect(db.update).toHaveBeenCalled();
