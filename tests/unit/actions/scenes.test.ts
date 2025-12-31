@@ -24,6 +24,7 @@ import { updateSceneAction } from "@/app/actions/scenes";
 import { invalidateCache } from "@/lib/cache";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import type { Project, Scene } from "@/lib/db/schema";
+import type { Session } from "next-auth";
 
 const mockedAuth = vi.mocked(auth);
 const mockedFindByIdWithAccess = vi.mocked(
@@ -36,17 +37,16 @@ const userId = randomUUID();
 const projectId = randomUUID();
 const sceneId = randomUUID();
 
-function buildSession() {
+function buildSession(): Session {
 	return {
 		user: {
 			email: null,
 			id: userId,
 			image: null,
 			name: "Test User",
-			type: "regular",
 		},
 		expires: new Date().toISOString(),
-	} as any;
+	};
 }
 
 function buildProject(overrides?: Partial<Project>): Project {
