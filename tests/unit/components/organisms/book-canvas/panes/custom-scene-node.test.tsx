@@ -1,7 +1,45 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { CustomSceneNode } from "../../../../../../src/components/organisms/book-canvas/panes/graph-pane";
+
+interface HandleProps {
+	position: string;
+}
+
+interface ReactFlowProps {
+	nodes?: unknown[];
+	edges?: unknown[];
+	children?: React.ReactNode;
+}
+
+// Mock React Flow to be self-contained and avoid loading the large library
+vi.mock("@xyflow/react", () => ({
+	Background: () => <div>Background</div>,
+	Controls: () => <div>Controls</div>,
+	Handle: (props: HandleProps) => <div data-testid={`handle-${props.position}`} />,
+	MarkerType: {
+		ArrowClosed: "arrow-closed",
+	},
+	Position: {
+		Left: "left",
+		Right: "right",
+	},
+	ReactFlow: ({ nodes, edges, children }: ReactFlowProps) => (
+		<div data-testid="react-flow">
+			Nodes: {nodes?.length}, Edges: {edges?.length}
+			{children}
+		</div>
+	),
+	useEdgesState: <T,>(initial: T[]) => {
+		const [edges, setEdges] = React.useState(initial);
+		return [edges, setEdges, vi.fn()];
+	},
+	useNodesState: <T,>(initial: T[]) => {
+		const [nodes, setNodes] = React.useState(initial);
+		return [nodes, setNodes, vi.fn()];
+	},
+}));
 
 describe("CustomSceneNode", () => {
 	it("renders basic node data correctly", () => {
