@@ -108,6 +108,11 @@ describe("GraphPane", () => {
 	// TODO: This test is skipped due to a persistent out-of-memory error in the CI environment.
 	// The test runs successfully locally, but fails in CI even after extensive mocking.
 	// This suggests an issue with the test runner's configuration or resource limits.
+	// JULES' NOTE: Further investigation confirms the memory leak occurs during the component's
+	// rendering phase. Even a minimal smoke test with an empty project structure fails with a
+	// heap-out-of-memory error, while a placeholder test that only imports the component
+	// and its dependencies passes. This indicates the issue is not with module resolution
+	// but with the component's behavior when rendered in the test environment.
 	it.skip("renders without crashing", async () => {
 		(useBookCanvas as any).mockReturnValue({
 			projectId: "test-project-id",
