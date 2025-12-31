@@ -85,10 +85,12 @@ describe("Cache Utils", () => {
 	describe("invalidateCachePattern", () => {
 		it("scans and deletes keys matching pattern", async () => {
 			mockedRedis.scan
+				// First scan call returns a cursor and some keys
 				.mockResolvedValueOnce({
 					cursor: 1,
 					keys: ["key1", "key2"],
 				})
+				// Second scan call returns the final cursor and more keys
 				.mockResolvedValueOnce({
 					cursor: 0, // End of scan
 					keys: ["key3"],
@@ -96,9 +98,13 @@ describe("Cache Utils", () => {
 
 			await invalidateCachePattern("test-*");
 
+			// Verify that scan was called twice to get all pages
 			expect(mockedRedis.scan).toHaveBeenCalledTimes(2);
+
+			// Verify that del was called with the correct keys from each scan page
 			expect(mockedRedis.del).toHaveBeenCalledWith(["key1", "key2"]);
 			expect(mockedRedis.del).toHaveBeenCalledWith(["key3"]);
+			expect(mockedRedis.del).toHaveBeenCalledTimes(2);
 		});
 	});
 });
