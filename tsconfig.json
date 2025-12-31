@@ -21,7 +21,8 @@
 		"paths": {
 			"@/*": ["./src/*"]
 		},
-		"strictNullChecks": true
+		"strictNullChecks": true,
+		"types": ["vitest/globals"]
 	},
 	"include": [
 		"next-env.d.ts",
@@ -29,7 +30,9 @@
 		"**/*.tsx",
 		".next/types/**/*.ts",
 		"next.config.js",
-		".next/dev/types/**/*.ts"
+		".next/dev/types/**/*.ts",
+		"./vitest.config.ts",
+		"tests/**/*.ts"
 	],
 	"exclude": ["node_modules"]
 }

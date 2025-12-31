@@ -14,5 +14,4 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
 		maxMessagesPerDay: 100,
 		availableChatModelIds: [...chatModelIds],
 	},
-
 };
