@@ -1,10 +1,10 @@
 "use server";
 
 import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { withProjectWriteAccess } from "@/lib/actions-utils";
-import { redis } from "@/lib/redis";
 import {
 	type BookPlan,
 	type StoryStyle,
@@ -14,14 +14,15 @@ import {
 export type { BookPlan, StoryStyle };
 
 // Rate limiter configuration (10 requests per 10 minutes)
-const ratelimit = redis
-	? new Ratelimit({
-			redis: redis,
-			limiter: Ratelimit.slidingWindow(10, "10 m"),
-			analytics: true,
-			prefix: "ratelimit:ai-generation",
-		})
-	: null;
+const ratelimit =
+	process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+		? new Ratelimit({
+				redis: Redis.fromEnv(),
+				limiter: Ratelimit.slidingWindow(10, "10 m"),
+				analytics: true,
+				prefix: "ratelimit:ai-generation",
+			})
+		: null;
 
 // Validation Schemas
 const generatePlanSchema = z.object({
