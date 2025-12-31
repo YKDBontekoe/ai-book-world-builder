@@ -6,8 +6,8 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { storyService } from "@/lib/services/story-service";
 import { db } from "@/lib/db/drizzle";
+import { storyService } from "@/lib/services/story-service";
 
 // Mocks
 vi.mock("@/app/(auth)/auth", () => ({

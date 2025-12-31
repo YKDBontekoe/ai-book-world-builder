@@ -100,9 +100,7 @@ export async function POST(
 				.limit(1);
 
 			const nextVersion =
-				latestVersionResult.length > 0
-					? latestVersionResult[0].version + 1
-					: 1;
+				latestVersionResult.length > 0 ? latestVersionResult[0].version + 1 : 1;
 
 			const [insertedVersion] = await tx
 				.insert(chapterVersion)
