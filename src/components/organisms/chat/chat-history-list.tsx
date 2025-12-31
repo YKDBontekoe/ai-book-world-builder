@@ -236,6 +236,7 @@ export function ChatHistoryList({
 											<span className="truncate">{chat.title}</span>
 										</div>
 										<Button
+											type="button"
 											variant="ghost"
 											size="icon"
 											className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"

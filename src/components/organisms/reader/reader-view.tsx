@@ -183,6 +183,7 @@ function PaginatedContent({
 	const hasRestoredRef = useRef(false);
 
 	// Measure pages
+	// biome-ignore lint/correctness/useExhaustiveDependencies: `content` and `settings` affect the component's dimensions, which this effect measures.
 	useEffect(() => {
 		if (!containerRef.current) return;
 
@@ -257,10 +258,23 @@ function PaginatedContent({
 		}
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" || e.key === " ") {
+			onTap();
+		} else if (e.key === "ArrowRight") {
+			handlePageTurn("next");
+		} else if (e.key === "ArrowLeft") {
+			handlePageTurn("prev");
+		}
+	};
+
 	return (
 		<div
-			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
+			role="button"
+			tabIndex={0}
+			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
 			onClick={handleClick}
+			onKeyDown={handleKeyDown}
 		>
 			<div
 				ref={containerRef}
@@ -281,10 +295,12 @@ function PaginatedContent({
 			>
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
+						// biome-ignore lint/suspicious/noArrayIndexKey: Static content, order will not change
 						<p key={i} className="mb-4 indent-6">
 							{para}
 						</p>
 					) : (
+						// biome-ignore lint/suspicious/noArrayIndexKey: Static content, order will not change
 						<br key={i} />
 					),
 				)}
