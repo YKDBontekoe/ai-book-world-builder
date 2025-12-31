@@ -1,5 +1,3 @@
-import { generateObject } from "ai";
-import { generateObject } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createBookFromPlan,
@@ -7,8 +5,6 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { generationService } from "@/lib/ai/writer-service";
-import { db } from "@/lib/db/drizzle";
 import { storyService } from "@/lib/services/story-service";
 
 // Mocks
@@ -24,11 +20,7 @@ vi.mock("@upstash/redis", () => ({
 
 vi.mock("@upstash/ratelimit", () => {
 	class Ratelimit {
-		constructor() {
-			return {
-				limit: vi.fn().mockResolvedValue({ success: true }),
-			};
-		}
+		limit = vi.fn().mockResolvedValue({ success: true });
 		static slidingWindow = vi.fn();
 	}
 	return { Ratelimit };
@@ -46,31 +38,6 @@ vi.mock("ai", async (importOriginal) => {
 		generateText: vi.fn(() => Promise.resolve({ text: "Generated content" })),
 	};
 });
-
-// Mock DB chain helper
-const mockDbChain = () => {
-	const chain = {
-		values: vi.fn(() => chain),
-		returning: vi.fn(() => Promise.resolve([{ id: "mock-id", sequence: 1 }])),
-		from: vi.fn(() => chain),
-		where: vi.fn(() => chain),
-		orderBy: vi.fn(() => chain), // Return chain for chaining
-		limit: vi.fn(() =>
-			Promise.resolve([
-				{
-					id: "mock-id",
-					title: "Test",
-					notes: "Notes",
-					projectId: "p-1",
-					content: "prev",
-					sequence: 1,
-				},
-			]),
-		),
-		set: vi.fn(() => chain),
-	};
-	return chain;
-};
 
 // Override orderBy for the scenes.filter case where it needs to return an array promise directly
 // IF it's not chained with limit.
@@ -179,7 +146,7 @@ vi.mock("@/lib/ai/providers", () => ({
 
 // Use importOriginal to include non-mocked exports like GenerationService if needed,
 // but for `generationService` instance, we want to mock its methods.
-vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
+vi.mock("@/lib/ai/writer-service", async (_importOriginal) => {
 	// We can't import the actual class if we are mocking the module that exports it
 	// unless we use importOriginal, but here we just want to mock the singleton instance.
 	return {
@@ -264,19 +231,27 @@ describe("Story Generation Actions", () => {
 			(storyService.planChapterScenes as vi.Mock).mockResolvedValue([
 				"scene-1",
 			]);
-			const result = await planChapterScenes("ch-1");
+			const result = await planChapterScenes(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
 			expect(result.sceneIds).toEqual(["scene-1"]);
-			expect(storyService.planChapterScenes).toHaveBeenCalledWith("ch-1");
+			expect(storyService.planChapterScenes).toHaveBeenCalledWith(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 		});
 	});
 
 	describe("generateSceneText", () => {
 		it("should update scene content", async () => {
 			(storyService.generateSceneText as vi.Mock).mockResolvedValue(undefined);
-			const result = await generateSceneText("scene-1");
+			const result = await generateSceneText(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
-			expect(storyService.generateSceneText).toHaveBeenCalledWith("scene-1");
+			expect(storyService.generateSceneText).toHaveBeenCalledWith(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 		});
 	});
 });
