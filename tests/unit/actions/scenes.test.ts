@@ -26,7 +26,7 @@ import { invalidateCache } from "@/lib/cache";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import type { Project, Scene } from "@/lib/db/schema";
 
-const mockedAuth = vi.mocked(auth);
+const mockedAuth = vi.mocked(auth as any);
 const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
