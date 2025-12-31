@@ -29,7 +29,6 @@ export class StepExecutionLogger {
 		type: "writer" | "reviewer" | "orchestrator" = "orchestrator",
 	) {
 		this.callbacks?.onLog?.(msg, type);
-		console.log(`[${type.toUpperCase()}] ${msg}`);
 	}
 
 	async onStepStart(step: BookGenerationStep) {

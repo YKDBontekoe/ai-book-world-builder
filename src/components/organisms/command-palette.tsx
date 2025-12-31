@@ -85,8 +85,7 @@ export function CommandPalette({
 				category: "Settings",
 				keywords: ["help", "keys", "hotkeys"],
 				action: () => {
-					// Will be implemented with shortcuts dialog
-					console.log("Show shortcuts dialog");
+					// TODO: Implement shortcuts dialog
 				},
 				shortcut: "⌘/",
 			},

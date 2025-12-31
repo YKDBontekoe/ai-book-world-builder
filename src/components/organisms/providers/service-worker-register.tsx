@@ -11,7 +11,7 @@ export function ServiceWorkerRegister() {
 				for (const registration of registrations) {
 					registration.unregister().then((success) => {
 						if (success) {
-							console.log("Service Worker successfully unregistered");
+							// Successfully unregistered.
 						}
 					});
 				}

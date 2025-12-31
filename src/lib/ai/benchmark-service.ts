@@ -275,7 +275,6 @@ export async function fetchExternalBenchmarks(): Promise<
 	const apiUrl = process.env.BENCHMARK_API_URL || DEFAULT_BENCHMARK_URL;
 
 	try {
-		console.log(`[Benchmark Service] Fetching benchmarks from ${apiUrl}`);
 		const response = await fetch(apiUrl, { next: { revalidate: 3600 } });
 		if (!response.ok) {
 			throw new Error(
