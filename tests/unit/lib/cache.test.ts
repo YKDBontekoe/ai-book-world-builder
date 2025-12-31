@@ -91,8 +91,8 @@ describe("Cache Utils", () => {
 			await invalidateCachePattern("test-*");
 
 			expect(mockedRedis.scan).toHaveBeenCalledTimes(2);
-			expect(mockedRedis.del).toHaveBeenCalledWith(["key1", "key2"]);
-			expect(mockedRedis.del).toHaveBeenCalledWith(["key3"]);
+			expect(mockedRedis.del).toHaveBeenCalledWith("key1", "key2");
+			expect(mockedRedis.del).toHaveBeenCalledWith("key3");
 		});
 	});
 });
