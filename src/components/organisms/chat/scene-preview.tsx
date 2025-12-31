@@ -82,7 +82,6 @@ export function ScenePreview({ result, projectId }: ScenePreviewProps) {
 
 			{projectId && (
 				<div className="border-t bg-muted/20 px-4 py-2">
-					{/* TODO: Link to actual scene editor when available */}
 					<Link
 						className="flex items-center gap-1.5 text-primary text-xs hover:underline"
 						href={`/projects/${projectId}/drafts`}

@@ -15,7 +15,4 @@ export const entitlementsByUserType: Record<UserType, Entitlements> = {
 		availableChatModelIds: [...chatModelIds],
 	},
 
-	/*
-	 * TODO: For users with an account and a paid membership
-	 */
 };
