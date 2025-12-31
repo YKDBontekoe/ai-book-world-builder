@@ -62,8 +62,9 @@ const generatePlanSchema = z.object({
 	prompt: z.string().min(10, "Prompt must be at least 10 characters"),
 	style: z
 		.object({
+			pov: z.string().optional(),
 			tone: z.string().optional(),
-			pacing: z.string().optional(),
+			genre: z.string().optional(),
 		})
 		.optional(),
 	modelId: z.string().optional(),
@@ -77,11 +78,28 @@ const generateSceneSchema = z.object({
 	sceneId: z.string().uuid("Invalid Scene ID"),
 });
 
+// Return Types
+type GenerateBookPlanResult =
+	| { success: true; plan: BookPlan }
+	| { success: false; error: string };
+
+type CreateBookFromPlanResult =
+	| { success: true }
+	| { success: false; error: string };
+
+type PlanChapterScenesResult =
+	| { success: true; sceneIds: string[] }
+	| { success: false; error: string };
+
+type GenerateSceneTextResult =
+	| { success: true }
+	| { success: false; error: string };
+
 export async function generateBookPlan(
 	prompt: string,
 	style?: StoryStyle,
 	modelId?: string,
-) {
+): Promise<GenerateBookPlanResult> {
 	try {
 		const session = await auth();
 		if (!session?.user?.id) {
@@ -127,7 +145,7 @@ export async function createBookFromPlan(
 	projectId: string,
 	plan: BookPlan,
 	style?: StoryStyle,
-) {
+): Promise<CreateBookFromPlanResult> {
 	return withProjectWriteAccess(projectId, async () => {
 		try {
 			// Basic schema validation for plan could be added here if BookPlan schema is available at runtime
@@ -141,10 +159,12 @@ export async function createBookFromPlan(
 			}
 			return { success: false, error: "Failed to apply plan" };
 		}
-	});
+	}) as Promise<CreateBookFromPlanResult>; // Cast needed because withProjectWriteAccess might return any
 }
 
-export async function planChapterScenes(chapterId: string) {
+export async function planChapterScenes(
+	chapterId: string,
+): Promise<PlanChapterScenesResult> {
 	try {
 		const session = await auth();
 		if (!session?.user?.id) {
@@ -182,7 +202,9 @@ export async function planChapterScenes(chapterId: string) {
 	}
 }
 
-export async function generateSceneText(sceneId: string) {
+export async function generateSceneText(
+	sceneId: string,
+): Promise<GenerateSceneTextResult> {
 	try {
 		const session = await auth();
 		if (!session?.user?.id) {
