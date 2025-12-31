@@ -23,8 +23,22 @@ export async function updateSceneAction({
 		throw new Error("Unauthorized");
 	}
 
+	// First, get the scene to verify ownership from the DB record
+	const sceneToUpdate = await sceneRepository.findById(id);
+	if (!sceneToUpdate) {
+		throw new Error("Scene not found");
+	}
+
+	// Now, verify the scene belongs to the project the user claims
+	if (sceneToUpdate.projectId !== projectId) {
+		// This is a critical security check to prevent IDOR.
+		// The user might have access to `projectId` but the `sceneId` could be from another project.
+		throw new Error("Scene does not belong to the specified project");
+	}
+
+	// Then, check if the user has write access to that project
 	const project = await projectRepository.findByIdWithAccess(
-		projectId,
+		sceneToUpdate.projectId, // Use the verified project ID from the scene record
 		session.user.id,
 	);
 
