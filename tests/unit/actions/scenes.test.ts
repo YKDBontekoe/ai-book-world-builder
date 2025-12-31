@@ -15,12 +15,12 @@ vi.mock("@/lib/db/repositories", () => ({
 }));
 
 vi.mock("@/lib/cache", () => ({
-	invalidateCache: vi.fn(),
+	clearCacheByPrefix: vi.fn(),
 }));
 
 import { auth } from "@/app/(auth)/auth";
 import { updateSceneAction } from "@/app/actions/scenes";
-import { invalidateCache } from "@/lib/cache";
+import { clearCacheByPrefix } from "@/lib/cache";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import type { Project, Scene } from "@/lib/db/schema";
 
@@ -29,7 +29,7 @@ const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
-const mockedInvalidateCache = vi.mocked(invalidateCache);
+const mockedClearCacheByPrefix = vi.mocked(clearCacheByPrefix);
 
 const userId = "user-123";
 const projectId = "project-123";
@@ -104,7 +104,7 @@ describe("scenes server actions", () => {
 			},
 			projectId,
 		);
-		expect(mockedInvalidateCache).toHaveBeenCalledWith(
+		expect(mockedClearCacheByPrefix).toHaveBeenCalledWith(
 			`project-structure:${projectId}`,
 		);
 		expect(result.title).toBe("Updated Title");
@@ -133,7 +133,7 @@ describe("scenes server actions", () => {
 			projectId,
 		);
 		// Should NOT be called because title was not passed
-		expect(mockedInvalidateCache).not.toHaveBeenCalled();
+		expect(mockedClearCacheByPrefix).not.toHaveBeenCalled();
 	});
 
 	it("throws when the project is inaccessible", async () => {
@@ -145,6 +145,6 @@ describe("scenes server actions", () => {
 		);
 
 		expect(mockedUpdateScene).not.toHaveBeenCalled();
-		expect(mockedInvalidateCache).not.toHaveBeenCalled();
+		expect(mockedClearCacheByPrefix).not.toHaveBeenCalled();
 	});
 });
