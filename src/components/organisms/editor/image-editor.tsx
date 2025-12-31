@@ -34,7 +34,7 @@ export function ImageEditor({
 				</div>
 			) : (
 				<picture>
-					{/** biome-ignore lint/nursery/useImageSize: "Generated image without explicit size" */}
+					{/** biome-ignore a11y/useAltText: Alt text is provided by the title prop. */}
 					<img
 						alt={title}
 						className={cn("h-fit w-full max-w-[800px]", {

@@ -42,7 +42,7 @@ export function useProseMirror({
 	const [mounted, setMounted] = useState(false);
 	const prevContentRef = useRef<string | null>(null);
 
-	// Initialize editor once
+	// biome-ignore lint/correctness/useExhaustiveDependencies: This effect should only run once on mount to initialize the editor.
 	useEffect(() => {
 		if (!containerRef.current) return;
 
@@ -158,7 +158,13 @@ export function useProseMirror({
 				},
 			});
 		}
-	}, [readOnly, typewriterMode, onSaveContent, onSelectionChange]);
+	}, [
+		readOnly,
+		typewriterMode,
+		onSaveContent,
+		onSelectionChange,
+		containerRef,
+	]);
 
 	return { editorRef, mounted };
 }

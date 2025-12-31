@@ -127,6 +127,7 @@ export function ProjectActionsMenu({
 	return (
 		<>
 			<div
+				role="button"
 				onClick={(e) => e.stopPropagation()}
 				onKeyDown={(e) => e.stopPropagation()}
 			>
