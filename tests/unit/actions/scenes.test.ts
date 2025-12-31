@@ -37,13 +37,16 @@ const userId = randomUUID();
 const projectId = randomUUID();
 const sceneId = randomUUID();
 
-function buildSession(): Session {
+// biome-ignore lint/suspicious/noExplicitAny: to accommodate extended user properties in test mock
+function buildSession(): any {
 	return {
 		user: {
 			email: null,
 			id: userId,
 			image: null,
 			name: "Test User",
+			type: "regular",
+			role: "user",
 		},
 		expires: new Date().toISOString(),
 	};
@@ -58,6 +61,8 @@ function buildProject(overrides?: Partial<Project>): Project {
 		createdAt: new Date("2024-01-01T00:00:00Z"),
 		visibility: "private",
 		folders: [],
+		forkedFromId: null,
+		lastViewedSceneId: null,
 		...overrides,
 	} as Project;
 }
@@ -73,6 +78,7 @@ function buildScene(overrides?: Partial<Scene>): Scene {
 		projectId,
 		createdAt: new Date("2024-01-01T00:00:00Z"),
 		updatedAt: new Date("2024-01-02T00:00:00Z"),
+		prevSceneId: null,
 		...overrides,
 	} as Scene;
 }
