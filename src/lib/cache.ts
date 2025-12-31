@@ -16,10 +16,13 @@ export async function getCached<T>(
 	}
 
 	try {
-		const cached = await redis.get(key as any);
+		if (!redis) {
+			return fetchFn();
+		}
+		const cached = await redis.get(key);
 		if (cached) {
 			try {
-				return JSON.parse(cached) as T;
+				return JSON.parse(cached as string) as T;
 			} catch (parseError) {
 				console.error(`Failed to parse cache for key ${key}`, parseError);
 				// If parsing fails, delete the corrupted key and fallback to fetch
