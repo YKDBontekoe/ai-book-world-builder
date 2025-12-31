@@ -44,6 +44,7 @@ function buildSession(): Session {
 			id: userId,
 			image: null,
 			name: "Test User",
+			type: "regular",
 		},
 		expires: new Date().toISOString(),
 	};
