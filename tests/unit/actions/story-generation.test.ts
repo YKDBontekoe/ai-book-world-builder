@@ -19,6 +19,26 @@ vi.mock("@/lib/ai/models", () => ({
 	getSelectedModelId: vi.fn(() => Promise.resolve("mock-model")),
 }));
 
+// Mock @upstash/ratelimit
+vi.mock("@upstash/ratelimit", () => {
+	const limitMock = vi.fn().mockResolvedValue({ success: true });
+	return {
+		Ratelimit: class {
+			static slidingWindow = vi.fn();
+			limit = limitMock;
+			constructor() {}
+		},
+	};
+});
+
+// Mock @upstash/redis
+vi.mock("@upstash/redis", () => ({
+	Redis: class {
+		static fromEnv = vi.fn(() => new this());
+		constructor() {}
+	},
+}));
+
 vi.mock("ai", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("ai")>();
 	return {
@@ -29,37 +49,6 @@ vi.mock("ai", async (importOriginal) => {
 });
 
 // Mock DB chain helper
-const mockDbChain = () => {
-	const chain = {
-		values: vi.fn(() => chain),
-		returning: vi.fn(() => Promise.resolve([{ id: "mock-id", sequence: 1 }])),
-		from: vi.fn(() => chain),
-		where: vi.fn(() => chain),
-		orderBy: vi.fn(() => chain), // Return chain for chaining
-		limit: vi.fn(() =>
-			Promise.resolve([
-				{
-					id: "mock-id",
-					title: "Test",
-					notes: "Notes",
-					projectId: "p-1",
-					content: "prev",
-					sequence: 1,
-				},
-			]),
-		),
-		set: vi.fn(() => chain),
-	};
-	return chain;
-};
-
-// Override orderBy for the scenes.filter case where it needs to return an array promise directly
-// IF it's not chained with limit.
-// Actually, `generateSceneText` calls `orderBy(asc(scene.sequence))` and expects a promise that resolves to an array.
-// But `createBookFromPlan` calls `orderBy().limit()`.
-// Drizzle supports both. In our mock, if `orderBy` returns the chain, we can't await it to get the array.
-// We need a mock that acts as both a promise and an object with methods.
-
 const createMockQuery = (resolveValue: any) => {
 	const query: any = Promise.resolve(resolveValue);
 	query.values = vi.fn(() => query);
@@ -83,12 +72,7 @@ const createMockQuery = (resolveValue: any) => {
 	);
 	query.set = vi.fn(() => query);
 
-	// For the filter case, we need the array.
-	// If orderBy is the last call, it should resolve to the array.
-	// Let's explicitly mock the implementation of orderBy to return a new query that resolves to an array
-	// unless limit is called on it.
-
-	// Simpler approach: Just mock `orderBy` to return a Promise that has a `limit` method attached.
+	// Mocking orderBy behavior for arrays
 	query.orderBy = vi.fn(() => {
 		const orderedQuery: any = Promise.resolve([
 			{ id: "s-1", title: "S1", content: "c", sequence: 1, chapterId: "c-1" },
@@ -136,12 +120,7 @@ vi.mock("@/lib/db/queries/scene", () => ({
 // Mock Actions Utils
 vi.mock("@/lib/actions-utils", () => ({
 	ensureProjectAccess: vi.fn(),
-	// Add the missing mock for withProjectWriteAccess
 	withProjectWriteAccess: vi.fn(async (projectId, cb) => {
-		// Mock implementation: just verify access (ensureProjectAccess is called inside usually)
-		// and then call the callback
-		// We can spy that ensureProjectAccess was called if needed, but since we mock the whole wrapper,
-		// we just execute the callback.
 		return await cb({ project: { id: projectId }, user: { id: "user-1" } });
 	}),
 }));
@@ -158,18 +137,11 @@ vi.mock("@/lib/ai/providers", () => ({
 	},
 }));
 
-// Use importOriginal to include non-mocked exports like GenerationService if needed,
-// but for `generationService` instance, we want to mock its methods.
 vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
-	// We can't import the actual class if we are mocking the module that exports it
-	// unless we use importOriginal, but here we just want to mock the singleton instance.
 	return {
-		// Mock standard functions if they are still used (backward compat)
 		continueWriting: vi.fn(() =>
 			Promise.resolve({ text: "Generated scene content" }),
 		),
-
-		// Mock the service instance
 		generationService: {
 			continueWriting: vi.fn(() =>
 				Promise.resolve({ text: "Generated scene content" }),
@@ -181,7 +153,6 @@ vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
 	};
 });
 
-// Test Suite
 describe("Story Generation Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -216,8 +187,6 @@ describe("Story Generation Actions", () => {
 			};
 
 			const result = await createBookFromPlan(projectId, plan);
-			// Since we mocked withProjectWriteAccess to execute callback,
-			// the inner storyService function is called, which calls db.transaction.
 			expect(db.transaction).toHaveBeenCalled();
 			expect(result.success).toBe(true);
 		});
@@ -228,18 +197,17 @@ describe("Story Generation Actions", () => {
 			(generateObject as any).mockResolvedValue({
 				object: { scenes: [{ title: "Scene 1", beat: "beat" }] },
 			});
-			const result = await planChapterScenes("ch-1");
+			const result = await planChapterScenes("123e4567-e89b-12d3-a456-426614174000");
 			expect(result.success).toBe(true);
 			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id"); // Updated from "scene-1" to "mock-id" because we use batch insert which uses the mockQuery returning
+			expect(result.sceneIds?.[0]).toBe("mock-id");
 		});
 	});
 
 	describe("generateSceneText", () => {
 		it("should update scene content", async () => {
-			const result = await generateSceneText("scene-1");
+			const result = await generateSceneText("123e4567-e89b-12d3-a456-426614174000");
 			expect(result.success).toBe(true);
-			// Check if generationService.continueWriting was called
 			expect(generationService.continueWriting).toHaveBeenCalled();
 			expect(db.update).toHaveBeenCalled();
 		});

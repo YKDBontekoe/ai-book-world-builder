@@ -1,10 +1,10 @@
 "use server";
 
 import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { withProjectWriteAccess } from "@/lib/actions-utils";
-import { redis } from "@/lib/redis";
 import {
 	type BookPlan,
 	type StoryStyle,
@@ -14,14 +14,48 @@ import {
 export type { BookPlan, StoryStyle };
 
 // Rate limiter configuration (10 requests per 10 minutes)
-const ratelimit = redis
-	? new Ratelimit({
+// We utilize a dedicated Upstash Redis client for rate limiting to ensure compatibility
+// with @upstash/ratelimit, while the application logic continues to use the existing
+// node-redis client (imported as 'redis' elsewhere).
+// This requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN env vars to be set,
+// or it will fallback to using REDIS_URL if it's an Upstash connection string,
+// but for standard Redis compatibility, we rely on the specific Upstash client.
+
+let ratelimit: Ratelimit | null = null;
+
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL || process.env.REDIS_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+if (redisUrl && redisToken) {
+	try {
+		const redis = new Redis({
+			url: redisUrl,
+			token: redisToken,
+		});
+
+		ratelimit = new Ratelimit({
 			redis: redis,
 			limiter: Ratelimit.slidingWindow(10, "10 m"),
 			analytics: true,
 			prefix: "ratelimit:ai-generation",
-		})
-	: null;
+		});
+	} catch (error) {
+		console.warn("Failed to initialize Upstash rate limiter:", error);
+	}
+} else if (process.env.REDIS_URL && process.env.REDIS_URL.includes("upstash")) {
+	// Fallback: If we only have REDIS_URL and it looks like Upstash, try auto-config
+	try {
+		const redis = Redis.fromEnv();
+		ratelimit = new Ratelimit({
+			redis: redis,
+			limiter: Ratelimit.slidingWindow(10, "10 m"),
+			analytics: true,
+			prefix: "ratelimit:ai-generation",
+		});
+	} catch (error) {
+		console.warn("Failed to initialize Upstash rate limiter from env:", error);
+	}
+}
 
 // Validation Schemas
 const generatePlanSchema = z.object({
@@ -62,12 +96,16 @@ export async function generateBookPlan(
 
 		// Rate Limiting
 		if (ratelimit) {
-			const { success } = await ratelimit.limit(session.user.id);
-			if (!success) {
-				return {
-					success: false,
-					error: "Rate limit exceeded. Please try again later.",
-				};
+			try {
+				const { success } = await ratelimit.limit(session.user.id);
+				if (!success) {
+					return {
+						success: false,
+						error: "Rate limit exceeded. Please try again later.",
+					};
+				}
+			} catch (e) {
+				console.warn("Rate limit check failed, allowing request", e);
 			}
 		}
 
@@ -118,16 +156,20 @@ export async function planChapterScenes(chapterId: string) {
 			return { success: false, error: validation.error.message };
 		}
 
-		// Rate Limiting for chapter planning (more lenient? same?)
+		// Rate Limiting
 		if (ratelimit) {
-			const { success } = await ratelimit.limit(
-				`chapter-plan:${session.user.id}`,
-			);
-			if (!success) {
-				return {
-					success: false,
-					error: "Rate limit exceeded. Please try again later.",
-				};
+			try {
+				const { success } = await ratelimit.limit(
+					`chapter-plan:${session.user.id}`,
+				);
+				if (!success) {
+					return {
+						success: false,
+						error: "Rate limit exceeded. Please try again later.",
+					};
+				}
+			} catch (e) {
+				console.warn("Rate limit check failed, allowing request", e);
 			}
 		}
 
@@ -152,16 +194,20 @@ export async function generateSceneText(sceneId: string) {
 			return { success: false, error: validation.error.message };
 		}
 
-		// Rate Limiting for scene generation
+		// Rate Limiting
 		if (ratelimit) {
-			const { success } = await ratelimit.limit(
-				`scene-gen:${session.user.id}`,
-			);
-			if (!success) {
-				return {
-					success: false,
-					error: "Rate limit exceeded. Please try again later.",
-				};
+			try {
+				const { success } = await ratelimit.limit(
+					`scene-gen:${session.user.id}`,
+				);
+				if (!success) {
+					return {
+						success: false,
+						error: "Rate limit exceeded. Please try again later.",
+					};
+				}
+			} catch (e) {
+				console.warn("Rate limit check failed, allowing request", e);
 			}
 		}
 
