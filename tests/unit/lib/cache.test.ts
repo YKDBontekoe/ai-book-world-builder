@@ -58,7 +58,7 @@ describe("Cache Utils", () => {
 			expect(mockedRedis.set).toHaveBeenCalledWith(
 				"test-key",
 				JSON.stringify(mockData),
-				{ EX: 3600 },
+				{ ex: 3600 },
 			);
 		});
 
