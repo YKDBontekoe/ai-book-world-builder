@@ -271,7 +271,7 @@ function PaginatedContent({
 		<div
 			role="button"
 			tabIndex={0}
-			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
+			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset`}
 			onClick={handleClick}
 			onKeyDown={handleKeyDown}
 		>
