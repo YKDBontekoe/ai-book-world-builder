@@ -108,9 +108,10 @@ export function GraphPane() {
 
 	const structure = result?.structure;
 	const issues =
-		issuesData?.success && Array.isArray(issuesData.issues)
-			? issuesData.issues
-			: [];
+		(issuesData?.success &&
+			Array.isArray(issuesData.issues) &&
+			issuesData.issues) ||
+		[];
 
 	// Transform structure into nodes and edges for graph layout
 	const { initialNodes, initialEdges } = useMemo(() => {
