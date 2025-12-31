@@ -119,12 +119,21 @@ export function GraphPane() {
 
 		if (!structure) return { initialNodes: [], initialEdges: [] };
 
+		// Optimization: Create an issue lookup map for O(1) access instead of filtering O(N) inside the loop
+		const issuesByScene = new Map<string, any[]>();
+		issues.forEach((issue: any) => {
+			if (issue.status === "open" && issue.sceneId) {
+				if (!issuesByScene.has(issue.sceneId)) {
+					issuesByScene.set(issue.sceneId, []);
+				}
+				issuesByScene.get(issue.sceneId)?.push(issue);
+			}
+		});
+
 		// Flatten structure
 		structure.forEach((chapter: any) => {
 			chapter.scenes.forEach((scene: any) => {
-				const sceneIssues = issues.filter(
-					(i: any) => i.sceneId === scene.id && i.status === "open",
-				);
+				const sceneIssues = issuesByScene.get(scene.id) || [];
 
 				nodes.push({
 					id: scene.id,
