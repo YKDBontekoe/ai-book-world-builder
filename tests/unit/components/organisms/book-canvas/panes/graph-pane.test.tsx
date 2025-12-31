@@ -1,5 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
-import * as ReactFlow from "@xyflow/react";
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getProjectIssuesAction } from "../../../../../../src/app/actions/analysis";
@@ -56,29 +55,33 @@ vi.mock("dagre", () => ({
 	},
 }));
 
-// Mock React Flow
-vi.mock("@xyflow/react", async (importOriginal) => {
-	const actual = await importOriginal();
-	return {
-		...(actual as any),
-		ReactFlow: ({ nodes, edges, children }: any) => (
-			<div data-testid="react-flow">
-				Nodes: {nodes?.length}, Edges: {edges?.length}
-				{children}
-			</div>
-		),
-		Background: () => <div>Background</div>,
-		Controls: () => <div>Controls</div>,
-		useNodesState: (initial: any) => {
-			const [nodes, setNodes] = React.useState(initial);
-			return [nodes, setNodes, vi.fn()];
-		},
-		useEdgesState: (initial: any) => {
-			const [edges, setEdges] = React.useState(initial);
-			return [edges, setEdges, vi.fn()];
-		},
-	};
-});
+// Mock React Flow to be self-contained and avoid loading the large library
+vi.mock("@xyflow/react", () => ({
+	Background: () => <div>Background</div>,
+	Controls: () => <div>Controls</div>,
+	Handle: (props: any) => <div data-testid={`handle-${props.position}`} />,
+	MarkerType: {
+		ArrowClosed: "arrow-closed",
+	},
+	Position: {
+		Left: "left",
+		Right: "right",
+	},
+	ReactFlow: ({ nodes, edges, children }: any) => (
+		<div data-testid="react-flow">
+			Nodes: {nodes?.length}, Edges: {edges?.length}
+			{children}
+		</div>
+	),
+	useEdgesState: (initial: any) => {
+		const [edges, setEdges] = React.useState(initial);
+		return [edges, setEdges, vi.fn()];
+	},
+	useNodesState: (initial: any) => {
+		const [nodes, setNodes] = React.useState(initial);
+		return [nodes, setNodes, vi.fn()];
+	},
+}));
 
 describe("GraphPane", () => {
 	beforeEach(() => {

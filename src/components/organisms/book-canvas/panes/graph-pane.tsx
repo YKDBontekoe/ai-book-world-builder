@@ -112,7 +112,7 @@ export function GraphPane() {
 			? issuesData.issues
 			: [];
 
-	// Transform structure into nodes and edges
+	// Transform structure into nodes and edges for graph layout
 	const { initialNodes, initialEdges } = useMemo(() => {
 		const nodes: Node[] = [];
 		const edges: Edge[] = [];
@@ -121,7 +121,6 @@ export function GraphPane() {
 
 		type Issue = NonNullable<typeof issuesData>["issues"][number];
 
-		// Optimization: Create an issue lookup map for O(1) access instead of filtering O(N) inside the loop
 		const issuesByScene = new Map<string, Issue[]>();
 		issues.forEach((issue) => {
 			if (issue.status === "open" && issue.sceneId) {
@@ -132,21 +131,18 @@ export function GraphPane() {
 			}
 		});
 
-		// Flatten structure
 		structure.forEach((chapter) => {
 			chapter.scenes.forEach((scene) => {
 				const sceneIssues = issuesByScene.get(scene.id) || [];
-
 				nodes.push({
 					id: scene.id,
 					type: "scene",
-					position: { x: 0, y: 0 }, // Calculated by dagre
+					position: { x: 0, y: 0 },
 					data: {
 						label: scene.title,
 						chapter: chapter.title,
 						issueCount: sceneIssues.length,
 					},
-					selected: scene.id === activeSceneId,
 				});
 
 				if (scene.prevSceneId) {
@@ -155,9 +151,7 @@ export function GraphPane() {
 						source: scene.prevSceneId,
 						target: scene.id,
 						type: "smoothstep",
-						markerEnd: {
-							type: MarkerType.ArrowClosed,
-						},
+						markerEnd: { type: MarkerType.ArrowClosed },
 						animated: true,
 					});
 				}
@@ -165,16 +159,26 @@ export function GraphPane() {
 		});
 
 		return getLayoutedElements(nodes, edges);
-	}, [structure, activeSceneId, issues]);
+	}, [structure, issues]);
 
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-	// Update nodes when initialNodes change (due to layout or data updates)
+	// Update layout when structure changes
 	useEffect(() => {
 		setNodes(initialNodes);
 		setEdges(initialEdges);
 	}, [initialNodes, initialEdges, setNodes, setEdges]);
+
+	// Update node selection when activeSceneId changes, without re-calculating layout
+	useEffect(() => {
+		setNodes((nds) =>
+			nds.map((node) => ({
+				...node,
+				selected: node.id === activeSceneId,
+			})),
+		);
+	}, [activeSceneId, setNodes]);
 
 	const handleNodeClick = useCallback(
 		(_event: any, node: Node) => {
