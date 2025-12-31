@@ -139,10 +139,6 @@ export async function deleteProjects(projectIds: string[]) {
 			return { error: "Access denied or project not found" };
 		}
 
-		if (ownedProjectIds.length === 0) {
-			return { success: true }; // Nothing to delete
-		}
-
 		await db.transaction(async (tx) => {
 			// 1. Generation related tables (Leaf first)
 			const generations = await tx
