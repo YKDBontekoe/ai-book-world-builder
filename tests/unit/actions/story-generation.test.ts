@@ -141,7 +141,10 @@ describe("Story Generation Actions", () => {
 				summary: "Summary",
 				chapters: [{ title: "Chapter 1", summary: "Intro" }],
 			};
-			vi.mocked(storyService.createBookFromPlan).mockResolvedValue(undefined);
+			vi.mocked(storyService.createBookFromPlan).mockResolvedValue({
+				outlineId: "o-1",
+				volumeId: "v-1",
+			});
 
 			const result = await createBookFromPlan(projectId, plan);
 			expect(storyService.createBookFromPlan).toHaveBeenCalledWith(
