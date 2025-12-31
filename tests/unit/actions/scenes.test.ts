@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Hoist mocks to avoid execution order issues
@@ -26,7 +26,7 @@ import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import type { Project, Scene } from "@/lib/db/schema";
 import type { Session } from "next-auth";
 
-const mockedAuth = vi.mocked(auth);
+const mockedAuth = vi.mocked(auth as () => Promise<Session | null>);
 const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
@@ -45,6 +45,7 @@ function buildSession(): Session {
 			image: null,
 			name: "Test User",
 			type: "regular",
+			role: "user",
 		},
 		expires: new Date().toISOString(),
 	};
