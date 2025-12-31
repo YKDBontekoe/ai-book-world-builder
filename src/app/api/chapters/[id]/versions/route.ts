@@ -90,28 +90,35 @@ export async function POST(
 
 		const { content, generationId, createdBy = "user" } = body;
 
-		// Get the next version number
-		const existingVersions = await db
-			.select()
-			.from(chapterVersion)
-			.where(eq(chapterVersion.chapterId, chapterId))
-			.orderBy(desc(chapterVersion.version));
+		const newVersion = await db.transaction(async (tx) => {
+			// Get the next version number inside the transaction for atomicity
+			const latestVersionResult = await tx
+				.select({ version: chapterVersion.version })
+				.from(chapterVersion)
+				.where(eq(chapterVersion.chapterId, chapterId))
+				.orderBy(desc(chapterVersion.version))
+				.limit(1);
 
-		const nextVersion =
-			existingVersions.length > 0 ? existingVersions[0].version + 1 : 1;
+			const nextVersion =
+				latestVersionResult.length > 0
+					? latestVersionResult[0].version + 1
+					: 1;
 
-		const [newVersion] = await db
-			.insert(chapterVersion)
-			.values({
-				chapterId,
-				generationId,
-				content,
-				wordCount: content.split(/\s+/).length,
-				version: nextVersion,
-				createdBy,
-				createdAt: new Date(),
-			})
-			.returning();
+			const [insertedVersion] = await tx
+				.insert(chapterVersion)
+				.values({
+					chapterId,
+					generationId,
+					content,
+					wordCount: (content.match(/\S+/g) || []).length,
+					version: nextVersion,
+					createdBy,
+					createdAt: new Date(),
+				})
+				.returning();
+
+			return insertedVersion;
+		});
 
 		return NextResponse.json(newVersion);
 	} catch (error) {
