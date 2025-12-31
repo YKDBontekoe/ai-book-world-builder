@@ -68,22 +68,18 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
 		// Scan for keys matching pattern
 		let cursor: number | string = 0;
 		do {
-			// Scan returns { cursor: number, keys: string[] } in node-redis v4+
-			// Use 'any' cast to satisfy strict union type of RedisArgument, as numbers are valid at runtime
-			// but strict types might demand Buffer | string.
-			const reply: { cursor: number; keys: string[] } = await redis.scan(
-				cursor as any,
-				{
-					match: pattern,
-					count: 100,
-				},
-			);
-			cursor = reply.cursor;
-			const keys = reply.keys;
+			// The redis client in use returns a tuple [cursor, keys] from scan.
+			const [newCursor, keys] = (await redis.scan(cursor as any, {
+				match: pattern,
+				count: 100,
+			})) as [string, string[]];
+
+			cursor = newCursor;
+
 			if (keys.length > 0) {
-				await redis.del(keys);
+				// redis.del can take multiple keys as arguments, so we spread the array.
+				await redis.del(...keys);
 			}
-			// Strict check for numeric 0 or string "0" depending on what client returns
 		} while (Number(cursor) !== 0);
 	} catch (error) {
 		console.error(`Failed to invalidate cache pattern ${pattern}:`, error);

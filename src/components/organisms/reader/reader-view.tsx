@@ -182,31 +182,29 @@ function PaginatedContent({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const hasRestoredRef = useRef(false);
 
-	// Measure pages
-	useEffect(() => {
+	const measureContent = useDebounceCallback(() => {
 		if (!containerRef.current) return;
+		const scrollW = containerRef.current?.scrollWidth || 0;
+		const clientW = containerRef.current?.clientWidth || window.innerWidth;
+		const pages = Math.ceil(scrollW / clientW) || 1;
+		setTotalPages(pages);
 
-		const measure = () => {
-			const scrollW = containerRef.current?.scrollWidth || 0;
-			const clientW = containerRef.current?.clientWidth || window.innerWidth;
-			const pages = Math.ceil(scrollW / clientW) || 1;
-			setTotalPages(pages);
+		if (!hasRestoredRef.current && initialProgress > 0) {
+			const targetPage = Math.floor(pages * initialProgress);
+			setPage(Math.min(targetPage, pages - 1));
+			hasRestoredRef.current = true;
+		}
+	}, 100);
 
-			// Restore position if first measurement
-			if (!hasRestoredRef.current && initialProgress > 0) {
-				const target = Math.floor(pages * initialProgress);
-				setPage(Math.min(target, pages - 1));
-				hasRestoredRef.current = true;
-			}
-		};
+	// Measure pages on content/settings change and on resize
+	useEffect(() => {
+		measureContent();
+		window.addEventListener("resize", measureContent);
 
-		const timer = setTimeout(measure, 100);
-		window.addEventListener("resize", measure);
 		return () => {
-			window.removeEventListener("resize", measure);
-			clearTimeout(timer);
+			window.removeEventListener("resize", measureContent);
 		};
-	}, [content, settings, initialProgress]);
+	}, [content, settings, measureContent]);
 
 	// Report progress whenever page changes
 	useEffect(() => {
@@ -259,8 +257,14 @@ function PaginatedContent({
 
 	return (
 		<div
-			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
+			role="button"
+			tabIndex={0}
+			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
 			onClick={handleClick}
+			onKeyDown={(e) => {
+				if (e.key === "ArrowRight") handlePageTurn("next");
+				if (e.key === "ArrowLeft") handlePageTurn("prev");
+			}}
 		>
 			<div
 				ref={containerRef}
@@ -279,6 +283,7 @@ function PaginatedContent({
 					transition: "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
 				}}
 			>
+				{/* biome-ignore lint/suspicious/noArrayIndexKey: Static content, order will not change */}
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
 						<p key={i} className="mb-4 indent-6">

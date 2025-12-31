@@ -216,31 +216,27 @@ export function ChatHistoryList({
 									{label}
 								</h3>
 								{chats.map((chat) => (
-									// biome-ignore lint/a11y/useSemanticElements: Div is used to contain a button, which is not possible with a button element
 									<div
 										key={chat.id}
-										role="button"
-										tabIndex={0}
-										className={cn(
-											"group relative flex cursor-pointer items-center justify-between rounded-lg px-2 py-2 text-sm transition-colors hover:bg-muted/50",
-											chat.id === currentChatId && "bg-muted font-medium",
-										)}
-										onClick={() => onSelectChat(chat.id)}
-										onKeyDown={(e) => {
-											if (e.key === "Enter" || e.key === " ") {
-												onSelectChat(chat.id);
-											}
-										}}
+										className="group relative flex items-center justify-between rounded-lg text-sm"
 									>
-										<div className="flex items-center gap-2 overflow-hidden">
-											<span className="truncate">{chat.title}</span>
-										</div>
+										<button
+											type="button"
+											className={cn(
+												"flex-1 cursor-pointer rounded-lg px-2 py-2 text-left transition-colors hover:bg-muted/50",
+												chat.id === currentChatId && "bg-muted font-medium",
+											)}
+											onClick={() => onSelectChat(chat.id)}
+										>
+											<div className="flex items-center gap-2 overflow-hidden">
+												<span className="truncate">{chat.title}</span>
+											</div>
+										</button>
 										<Button
 											variant="ghost"
 											size="icon"
-											className="h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
-											onClick={(e) => {
-												e.stopPropagation();
+											className="absolute right-1 top-1/2 -translate-y-1/2 h-6 w-6 opacity-0 transition-opacity group-hover:opacity-100"
+											onClick={() => {
 												setDeleteId(chat.id);
 												setShowDeleteDialog(true);
 											}}

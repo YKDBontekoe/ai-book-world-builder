@@ -31,8 +31,8 @@ export const Default: Story = {
 	render: (args) => (
 		<Carousel className="w-full max-w-xs" {...args}>
 			<CarouselContent>
-				{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
 				{Array.from({ length: 5 }).map((_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example
 					<CarouselItem key={index}>
 						<div className="p-1">
 							<Card>
@@ -60,8 +60,8 @@ export const OrientationVertical: Story = {
 	render: (args) => (
 		<Carousel className="w-full max-w-xs" {...args}>
 			<CarouselContent className="-mt-1 h-[200px]">
-				{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
 				{Array.from({ length: 5 }).map((_, index) => (
+					// biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example
 					<CarouselItem key={index} className="pt-1 md:basis-1/2">
 						<div className="p-1">
 							<Card>
