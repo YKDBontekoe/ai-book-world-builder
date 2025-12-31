@@ -81,7 +81,15 @@ export function useWriterState({
 
 				// Fetch content on demand
 				getSceneContent(activeScene.id).then((result) => {
-					if (isMounted && result.success && result.content !== undefined) {
+					if (
+						isMounted &&
+						result &&
+						typeof result === "object" &&
+						"success" in result &&
+						result.success &&
+						"content" in result &&
+						typeof result.content === "string"
+					) {
 						setSceneContent(result.content || "");
 
 						// Update structure to cache the fetched content
@@ -116,27 +124,28 @@ export function useWriterState({
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);
 		const result = await getProjectStructure(projectId);
-		if (result.structure) {
+		if (result && typeof result === "object" && "structure" in result) {
+			const structure = result.structure as ChapterWithScenes[];
 			// Cast the result to our extended type for now
-			setStructure(result.structure as unknown as ChapterWithScenes[]);
-			if (result.structureText) {
+			setStructure(structure);
+			if ("structureText" in result && typeof result.structureText === "string") {
 				setStructureText(result.structureText);
 			}
 			if (
 				!activeSceneId &&
-				result.structure.length > 0 &&
-				result.structure[0].scenes.length > 0
+				structure.length > 0 &&
+				structure[0].scenes.length > 0
 			) {
 				// Check for last viewed scene match
 				const hasLastViewed =
 					lastViewedSceneId &&
-					result.structure.some((c: any) =>
+					structure.some((c: any) =>
 						c.scenes.some((s: any) => s.id === lastViewedSceneId),
 					);
 				if (hasLastViewed && lastViewedSceneId) {
 					setActiveSceneId(lastViewedSceneId);
 				} else {
-					setActiveSceneId(result.structure[0].scenes[0].id);
+					setActiveSceneId(structure[0].scenes[0].id);
 				}
 			}
 		}

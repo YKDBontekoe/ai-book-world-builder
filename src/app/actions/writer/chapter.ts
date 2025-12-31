@@ -2,7 +2,7 @@
 
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { ensureProjectAccess } from "@/lib/actions-utils";
-import { invalidateCache } from "@/lib/cache";
+import { clearCacheByPrefix } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { createOutline, getOutlinesForProject } from "@/lib/db/queries/outline";
 import {
@@ -113,7 +113,7 @@ export async function createNewChapter(projectId: string) {
 			})
 			.returning();
 
-		await invalidateCache(`project-structure:${projectId}`);
+		await clearCacheByPrefix(`project-structure:${projectId}`);
 
 		return { success: true, chapterId: newChapter.id };
 	} catch (error) {
@@ -141,7 +141,7 @@ export async function updateChapterTitle(
 
 		await chapterRepository.update(chapterId, { title });
 
-		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+		await clearCacheByPrefix(`project-structure:${currentChapter.projectId}`);
 
 		return { success: true };
 	} catch (error) {
@@ -166,7 +166,7 @@ export async function deleteChapter(chapterId: string) {
 
 		await chapterRepository.delete(chapterId);
 
-		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+		await clearCacheByPrefix(`project-structure:${currentChapter.projectId}`);
 
 		return { success: true };
 	} catch (error) {
@@ -220,7 +220,7 @@ export async function reorderChapters(chapterIds: string[], volumeId: string) {
 			}
 		});
 
-		await invalidateCache(`project-structure:${projectId}`);
+		await clearCacheByPrefix(`project-structure:${projectId}`);
 
 		return { success: true };
 	} catch (error) {

@@ -2,7 +2,7 @@
 
 import { asc, eq } from "drizzle-orm";
 import { ensureProjectAccess } from "@/lib/actions-utils";
-import { invalidateCache } from "@/lib/cache";
+import { clearCacheByPrefix } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { createOutline, getOutlinesForProject } from "@/lib/db/queries/outline";
 import {
@@ -93,7 +93,7 @@ export async function initializeProject(projectId: string) {
 			sceneId = newScene.id;
 		}
 
-		await invalidateCache(`project-structure:${projectId}`);
+		await clearCacheByPrefix(`project-structure:${projectId}`);
 
 		return { success: true, sceneId };
 	} catch (error) {

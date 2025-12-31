@@ -81,10 +81,10 @@ export async function scanKeys(pattern: string): Promise<string[]> {
 			match: pattern,
 			count: 100,
 		};
-		const [newCursor, foundKeys]: [number, string[]] = await redis.scan(
+		const [newCursor, foundKeys] = (await redis.scan(
 			cursor,
 			options,
-		);
+		)) as unknown as [number, string[]];
 		cursor = newCursor;
 		keys.push(...foundKeys);
 	} while (cursor !== 0);

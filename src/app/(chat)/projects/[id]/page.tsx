@@ -29,20 +29,30 @@ export default async function ProjectPage({
 	const isReadOnly = project.userId !== userId;
 
 	// Pre-fetch data for immediate rendering in parallel
-	const [{ structure, structureText }, defaultModelId, availableModels] =
-		await Promise.all([
-			getProjectStructure(id),
-			// Fetch preferred model for the assistant (using "middle" or "large" as default)
-			getSelectedModelId("middle"),
-			getAvailableModels(),
-		]);
+	const [structureData, defaultModelId, availableModels] = await Promise.all([
+		getProjectStructure(id),
+		// Fetch preferred model for the assistant (using "middle" or "large" as default)
+		getSelectedModelId("middle"),
+		getAvailableModels(),
+	]);
+
+	const structure =
+		structureData && typeof structureData === "object" && "structure" in structureData
+			? structureData.structure
+			: [];
+	const structureText =
+		structureData &&
+		typeof structureData === "object" &&
+		"structureText" in structureData
+			? structureData.structureText
+			: "";
 
 	// The WriterView is now the main interface for a project
 	return (
 		<div className="h-[calc(100vh-theme(spacing.16))] w-full">
 			<WriterView
 				project={project}
-				initialStructure={structure as ChapterWithScenes[]}
+				initialStructure={structure as unknown as ChapterWithScenes[]}
 				initialStructureText={structureText}
 				isReadOnly={isReadOnly}
 				defaultModelId={defaultModelId}
