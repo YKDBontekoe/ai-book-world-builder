@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Hoist mocks to avoid execution order issues
@@ -31,10 +32,9 @@ const mockedFindByIdWithAccess = vi.mocked(
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
 const mockedInvalidateCache = vi.mocked(invalidateCache);
 
-const userId = "user-123";
-// Use valid UUIDs to pass Zod validation
-const projectId = "123e4567-e89b-12d3-a456-426614174000";
-const sceneId = "123e4567-e89b-12d3-a456-426614174001";
+const userId = randomUUID();
+const projectId = randomUUID();
+const sceneId = randomUUID();
 
 function buildSession() {
 	return {

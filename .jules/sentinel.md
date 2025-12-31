@@ -9,10 +9,7 @@
 5.  **Streaming Architecture:** Moved from `useCompletion` (single-shot) to `useChat` (streaming) for the AI Assistant, using `DataStreamProtocol` to send tool logs and intermediate reasoning steps without blocking the final response.
 
 ## 2025-12-31 - [Server Action Input Validation]
+
 **Vulnerability:** Server Actions lacked explicit input validation (length limits), exposing potential DoS risks via large payloads.
 **Learning:** Next.js Server Actions receive raw input; relying solely on TypeScript types is insufficient. Zod schemas must be used to validate constraints at runtime.
-**Prevention:** Always define and use Zod schemas to validate constraints at runtime for Server Action arguments, enforcing length limits on strings and strict types.
-## 2025-12-31 - [Server Action Input Validation]
-**Vulnerability:** Server Actions lacked explicit input validation (length limits), exposing potential DoS risks via large payloads.
-**Learning:** Next.js Server Actions receive raw input; relying solely on TypeScript types is insufficient. Zod schemas must be used to validate constraints at runtime. Tests must use valid data (e.g., real UUIDs) when strict validation is introduced.
 **Prevention:** Always define and use Zod schemas to validate constraints at runtime for Server Action arguments, enforcing length limits on strings and strict types.
