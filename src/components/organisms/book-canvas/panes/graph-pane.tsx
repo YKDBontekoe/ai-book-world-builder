@@ -119,9 +119,11 @@ export function GraphPane() {
 
 		if (!structure) return { initialNodes: [], initialEdges: [] };
 
+		type Issue = NonNullable<typeof issuesData>["issues"][number];
+
 		// Optimization: Create an issue lookup map for O(1) access instead of filtering O(N) inside the loop
-		const issuesByScene = new Map<string, any[]>();
-		issues.forEach((issue: any) => {
+		const issuesByScene = new Map<string, Issue[]>();
+		issues.forEach((issue) => {
 			if (issue.status === "open" && issue.sceneId) {
 				if (!issuesByScene.has(issue.sceneId)) {
 					issuesByScene.set(issue.sceneId, []);
@@ -131,8 +133,8 @@ export function GraphPane() {
 		});
 
 		// Flatten structure
-		structure.forEach((chapter: any) => {
-			chapter.scenes.forEach((scene: any) => {
+		structure.forEach((chapter) => {
+			chapter.scenes.forEach((scene) => {
 				const sceneIssues = issuesByScene.get(scene.id) || [];
 
 				nodes.push({
