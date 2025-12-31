@@ -2,7 +2,7 @@ import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service"; // Use new service
-import { invalidateCache } from "@/lib/cache";
+import { clearCached } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 import type {
 	BookPlan,
@@ -33,7 +33,7 @@ export class StoryService {
 			plan,
 			style,
 		);
-		await invalidateCache(`project-structure:${projectId}`);
+		await clearCached(`project-structure:${projectId}`);
 		return result;
 	}
 
@@ -68,7 +68,7 @@ export class StoryService {
 			scenesToCreate,
 		);
 
-		await invalidateCache(`project-structure:${targetChapter.projectId}`);
+		await clearCached(`project-structure:${targetChapter.projectId}`);
 
 		return createResult;
 	}

@@ -62,9 +62,9 @@ const generatePlanSchema = z.object({
 	prompt: z.string().min(10, "Prompt must be at least 10 characters"),
 	style: z
 		.object({
+			genre: z.string().optional(),
 			pov: z.string().optional(),
 			tone: z.string().optional(),
-			genre: z.string().optional(),
 		})
 		.optional(),
 	modelId: z.string().optional(),
@@ -79,19 +79,19 @@ const generateSceneSchema = z.object({
 });
 
 // Return Types
-type GenerateBookPlanResult =
+export type GenerateBookPlanResult =
 	| { success: true; plan: BookPlan }
 	| { success: false; error: string };
 
-type CreateBookFromPlanResult =
+export type CreateBookFromPlanResult =
 	| { success: true }
 	| { success: false; error: string };
 
-type PlanChapterScenesResult =
+export type PlanChapterScenesResult =
 	| { success: true; sceneIds: string[] }
 	| { success: false; error: string };
 
-type GenerateSceneTextResult =
+export type GenerateSceneTextResult =
 	| { success: true }
 	| { success: false; error: string };
 

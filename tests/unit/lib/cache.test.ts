@@ -1,6 +1,14 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+"use client";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	clearCacheByPrefix,
+	clearCached,
+	getCached,
+	setCached,
+} from "@/lib/cache";
+import { redis as actualRedis } from "@/lib/redis";
 
-// Mock redis client
+// Mock the redis client
 vi.mock("@/lib/redis", () => ({
 	redis: {
 		get: vi.fn(),
@@ -10,26 +18,11 @@ vi.mock("@/lib/redis", () => ({
 	},
 }));
 
-import {
-	getCached,
-	invalidateCache,
-	invalidateCachePattern,
-} from "@/lib/cache";
-import { redis } from "@/lib/redis";
-
-// Define a type for the mocked redis client to satisfy TS
-type MockRedis = {
-	get: ReturnType<typeof vi.fn>;
-	set: ReturnType<typeof vi.fn>;
-	del: ReturnType<typeof vi.fn>;
-	scan: ReturnType<typeof vi.fn>;
-};
-
-const mockedRedis = redis as unknown as MockRedis;
+const mockedRedis = vi.mocked(actualRedis);
 
 describe("Cache Utils", () => {
-	afterEach(() => {
-		vi.clearAllMocks();
+	beforeEach(() => {
+		vi.resetAllMocks();
 	});
 
 	describe("getCached", () => {
@@ -37,68 +30,61 @@ describe("Cache Utils", () => {
 			const mockData = { foo: "bar" };
 			mockedRedis.get.mockResolvedValue(JSON.stringify(mockData));
 
-			const fetchFn = vi.fn();
-			const result = await getCached("test-key", fetchFn);
+			const result = await getCached("test-key");
 
 			expect(result).toEqual(mockData);
 			expect(mockedRedis.get).toHaveBeenCalledWith("test-key");
-			expect(fetchFn).not.toHaveBeenCalled();
 		});
 
-		it("fetches data and sets cache if cache miss", async () => {
+		it("returns null if cache miss", async () => {
 			mockedRedis.get.mockResolvedValue(null);
+			const result = await getCached("test-key");
+			expect(result).toBeNull();
+		});
+
+		it("handles json parse error by deleting key and returning null", async () => {
+			mockedRedis.get.mockResolvedValue("invalid-json");
+			const result = await getCached("test-key");
+
+			expect(mockedRedis.del).toHaveBeenCalledWith("test-key");
+			expect(result).toBeNull();
+		});
+	});
+
+	describe("setCached", () => {
+		it("sets value with TTL in redis", async () => {
 			const mockData = { foo: "bar" };
-			const fetchFn = vi.fn().mockResolvedValue(mockData);
+			await setCached("test-key", mockData, 3600);
 
-			const result = await getCached("test-key", fetchFn);
-
-			expect(result).toEqual(mockData);
-			expect(mockedRedis.get).toHaveBeenCalledWith("test-key");
-			expect(fetchFn).toHaveBeenCalled();
 			expect(mockedRedis.set).toHaveBeenCalledWith(
 				"test-key",
 				JSON.stringify(mockData),
-				{ EX: 3600 },
+				{ ex: 3600 },
 			);
 		});
-
-		it("handles json parse error by deleting key and fetching fresh", async () => {
-			mockedRedis.get.mockResolvedValue("invalid-json");
-			const mockData = { foo: "bar" };
-			const fetchFn = vi.fn().mockResolvedValue(mockData);
-
-			const result = await getCached("test-key", fetchFn);
-
-			expect(mockedRedis.del).toHaveBeenCalledWith("test-key");
-			expect(fetchFn).toHaveBeenCalled();
-			expect(result).toEqual(mockData);
-		});
 	});
 
-	describe("invalidateCache", () => {
+	describe("clearCached", () => {
 		it("deletes key from redis", async () => {
-			await invalidateCache("test-key");
+			await clearCached("test-key");
 			expect(mockedRedis.del).toHaveBeenCalledWith("test-key");
 		});
 	});
 
-	describe("invalidateCachePattern", () => {
+	describe("clearCacheByPrefix", () => {
 		it("scans and deletes keys matching pattern", async () => {
 			mockedRedis.scan
-				.mockResolvedValueOnce({
-					cursor: 1,
-					keys: ["key1", "key2"],
-				})
-				.mockResolvedValueOnce({
-					cursor: 0, // End of scan
-					keys: ["key3"],
-				});
+				.mockResolvedValueOnce([1, ["test:1", "test:2"]])
+				.mockResolvedValueOnce([0, ["test:3"]]);
 
-			await invalidateCachePattern("test-*");
+			await clearCacheByPrefix("test");
 
 			expect(mockedRedis.scan).toHaveBeenCalledTimes(2);
-			expect(mockedRedis.del).toHaveBeenCalledWith(["key1", "key2"]);
-			expect(mockedRedis.del).toHaveBeenCalledWith(["key3"]);
+			expect(mockedRedis.del).toHaveBeenCalledWith(
+				"test:1",
+				"test:2",
+				"test:3",
+			);
 		});
 	});
 });

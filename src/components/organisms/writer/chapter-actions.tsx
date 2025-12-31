@@ -65,9 +65,15 @@ export function ChapterActions({
 				return;
 			}
 
-			if (!planResult.success || !planResult.sceneIds) {
+			if (!planResult.success) {
 				setPhase("error");
 				setError(planResult.error || "Failed to plan scenes");
+				setLoading(false);
+				return;
+			}
+			if (!planResult.sceneIds) {
+				setPhase("error");
+				setError("No scene IDs were returned from planning");
 				setLoading(false);
 				return;
 			}

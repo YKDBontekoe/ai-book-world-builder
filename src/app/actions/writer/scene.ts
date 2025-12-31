@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
-import { invalidateCache } from "@/lib/cache";
+import { clearCached } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
@@ -99,7 +99,7 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 			prevSceneId,
 		});
 
-		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+		await clearCached(`project-structure:${currentChapter.projectId}`);
 
 		return { success: true, sceneId: newScene.id };
 	} catch (error) {
@@ -120,7 +120,7 @@ export async function updateSceneTitle(sceneId: string, title: string) {
 
 		await sceneRepository.update(sceneId, { title });
 
-		await invalidateCache(`project-structure:${targetScene.projectId}`);
+		await clearCached(`project-structure:${targetScene.projectId}`);
 
 		return { success: true };
 	} catch (error) {
@@ -143,7 +143,7 @@ export async function deleteScene(
 
 		await sceneRepository.delete(sceneId);
 
-		await invalidateCache(`project-structure:${targetScene.projectId}`);
+		await clearCached(`project-structure:${targetScene.projectId}`);
 
 		return { success: true };
 	} catch (error) {
@@ -205,7 +205,7 @@ export async function createSceneInChapter(
 			prevSceneId,
 		});
 
-		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+		await clearCached(`project-structure:${currentChapter.projectId}`);
 
 		return { success: true, sceneId: newScene.id };
 	} catch (error) {
@@ -257,7 +257,7 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 			}
 		});
 
-		await invalidateCache(`project-structure:${currentChapter.projectId}`);
+		await clearCached(`project-structure:${currentChapter.projectId}`);
 
 		return { success: true };
 	} catch (error) {
