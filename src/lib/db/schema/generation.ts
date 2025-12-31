@@ -365,6 +365,10 @@ export const chapterVersion = pgTable(
 			table.chapterId,
 			table.version,
 		),
+		chapterVersionUnique: uniqueIndex("chapter_version_unique").on(
+			table.chapterId,
+			table.version,
+		),
 	}),
 );
 

@@ -5,10 +5,12 @@ import postgres from "postgres";
 
 config({
 	path: ".env",
+	override: true,
 });
 
 config({
 	path: ".env.local",
+	override: true,
 });
 
 const runMigrate = async () => {
