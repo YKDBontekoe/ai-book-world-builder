@@ -32,7 +32,7 @@ export async function getScenesData(
 			userId,
 		);
 
-		if (!project) {
+		if (!project || project.userId !== userId) {
 			console.error("Access denied to project:", projectId);
 			return [];
 		}
