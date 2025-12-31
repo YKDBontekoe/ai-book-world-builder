@@ -65,9 +65,16 @@ export function ChapterActions({
 				return;
 			}
 
-			if (!planResult.success || !planResult.sceneIds) {
+			if (!planResult.success) {
 				setPhase("error");
-				setError(planResult.error || "Failed to plan scenes");
+				setError(planResult.error);
+				setLoading(false);
+				return;
+			}
+
+			if (!planResult.sceneIds || planResult.sceneIds.length === 0) {
+				setPhase("error");
+				setError("The AI returned a plan with no scenes. Please try again.");
 				setLoading(false);
 				return;
 			}
