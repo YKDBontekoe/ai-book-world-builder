@@ -8,8 +8,8 @@
 **Vulnerability:** The `getUserDetails` Server Action used `db.select().from(user)` which defaults to selecting *all* columns, including the hashed `password` field. This data was then returned to the client-side admin dashboard.
 **Learning:** ORMs often default to `SELECT *` for convenience. In full-stack TypeScript apps sharing types between DB and Client, this makes it easy to accidentally leak sensitive fields that exist on the schema but shouldn't leave the server.
 **Prevention:** Always use explicit field selection (e.g., `db.select({ id: ..., email: ... })`) when querying users or sensitive entities intended for client consumption. Never return raw DB objects containing secrets.
-## 2025-12-31 - [Server Action Input Validation]\n**Vulnerability:** Server Actions lacked explicit input validation (length limits), exposing potential DoS risks via large payloads.\n**Learning:** Next.js Server Actions receive raw input; relying solely on TypeScript types is insufficient. Zod schemas must be used to validate constraints at runtime.\n**Prevention:** Always define and  a Zod schema for Server Action arguments, enforcing length limits on strings and strict types.
 ## 2025-12-31 - [Server Action Input Validation]
+
 **Vulnerability:** Server Actions lacked explicit input validation (length limits), exposing potential DoS risks via large payloads.
 **Learning:** Next.js Server Actions receive raw input; relying solely on TypeScript types is insufficient. Zod schemas must be used to validate constraints at runtime.
 **Prevention:** Always define and use Zod schemas to validate constraints at runtime for Server Action arguments, enforcing length limits on strings and strict types.

@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Hoist mocks to avoid execution order issues
@@ -31,9 +32,9 @@ const mockedFindByIdWithAccess = vi.mocked(
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
 const mockedInvalidateCache = vi.mocked(invalidateCache);
 
-const userId = "user-123";
-const projectId = "project-123";
-const sceneId = "scene-123";
+const userId = randomUUID();
+const projectId = randomUUID();
+const sceneId = randomUUID();
 
 function buildSession() {
 	return {

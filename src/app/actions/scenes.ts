@@ -27,18 +27,9 @@ export async function updateSceneAction(params: {
 		throw new Error("Unauthorized");
 	}
 
-	// Validate inputs using Zod
-	// We use 'safeParse' but since this is a server action called by client code that expects errors to bubble up
-	// (or handled via try/catch in UI), and the existing code throws Errors, we can use .parse()
-	// or manually throw to maintain signature.
-	// However, usually Server Actions should return discriminated unions for errors.
-	// The existing implementation throws Error("Unauthorized").
-	// I will use parse() which throws ZodError, which is good for strictly invalid data.
-	// Or I can catch ZodError and throw a friendly Error.
-
+	// Validate inputs using Zod schema
 	const validation = updateSceneSchema.safeParse(params);
 	if (!validation.success) {
-		// Flatten errors to a string or throw first error
 		const errorMessage = validation.error.issues.map(i => i.message).join(", ");
 		throw new Error(`Validation failed: ${errorMessage}`);
 	}
