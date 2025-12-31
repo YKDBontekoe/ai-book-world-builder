@@ -10,7 +10,7 @@ export async function getEntitiesForProject(
 ): Promise<{ success: EntityWithDetails[] } | { error: string }> {
 	try {
 		const authResult = await authorizeProjectAccess(projectId);
-		if (authResult.error) {
+		if ("error" in authResult) {
 			return { error: authResult.error };
 		}
 
@@ -24,7 +24,7 @@ export async function getEntitiesForProject(
 
 export async function getEntities(projectId: string) {
 	const authResult = await authorizeProjectAccess(projectId);
-	if (authResult.error) {
+	if ("error" in authResult) {
 		// Throwing error here to align with original function signature
 		throw new Error(authResult.error);
 	}
@@ -69,7 +69,7 @@ export async function updateEntityAction({
 		requiresWrite: true,
 	});
 
-	if (authResult.error) {
+	if ("error" in authResult) {
 		throw new Error(authResult.error);
 	}
 
@@ -100,7 +100,7 @@ export async function deleteEntityAction(id: string) {
 		requiresWrite: true,
 	});
 
-	if (authResult.error) {
+	if ("error" in authResult) {
 		throw new Error(authResult.error);
 	}
 

@@ -82,7 +82,7 @@ export async function renameProject(
 	const authResult = await authorizeProjectAccess(projectId, {
 		requiresWrite: true,
 	});
-	if (authResult.error) {
+	if ("error" in authResult) {
 		return { error: authResult.error };
 	}
 
@@ -204,7 +204,7 @@ export async function deleteProjects(projectIds: string[]) {
 
 export async function forkProject(originalProjectId: string, newName?: string) {
 	const authResult = await authorizeProjectAccess(originalProjectId);
-	if (authResult.error) {
+	if ("error" in authResult) {
 		return { error: authResult.error };
 	}
 	const { project: originalProject, session } = authResult;

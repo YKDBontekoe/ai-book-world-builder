@@ -28,7 +28,7 @@ export async function getProjectPreviewData(
 	projectId: string,
 ): Promise<{ success: true; data: ProjectPreviewData } | { error: string }> {
 	const authResult = await authorizeProjectAccess(projectId);
-	if (authResult.error) {
+	if ("error" in authResult) {
 		return { error: authResult.error };
 	}
 

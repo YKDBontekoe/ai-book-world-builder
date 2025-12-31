@@ -25,7 +25,7 @@ export async function getScenesData(
 ): Promise<SerializedChapterWithScenes[]> {
 	try {
 		const authResult = await authorizeProjectAccess(projectId);
-		if (authResult.error) {
+		if ("error" in authResult) {
 			console.error("Access denied to project:", projectId, authResult.error);
 			return [];
 		}
