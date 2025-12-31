@@ -9,6 +9,9 @@ import {
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { generationService } from "@/lib/ai/writer-service";
 import { db } from "@/lib/db/drizzle";
+// Import the Ratelimit class from the mock (via namespace import or require)
+// We need to access the mock to manipulate it
+import * as upstashRatelimit from "@upstash/ratelimit";
 
 // Mocks
 vi.mock("@/app/(auth)/auth", () => ({
@@ -20,8 +23,9 @@ vi.mock("@/lib/ai/models", () => ({
 }));
 
 // Mock @upstash/ratelimit
+// We create a mock class with a mutable limit method
+const limitMock = vi.fn();
 vi.mock("@upstash/ratelimit", () => {
-	const limitMock = vi.fn().mockResolvedValue({ success: true });
 	return {
 		Ratelimit: class {
 			static slidingWindow = vi.fn();
@@ -72,7 +76,6 @@ const createMockQuery = (resolveValue: any) => {
 	);
 	query.set = vi.fn(() => query);
 
-	// Mocking orderBy behavior for arrays
 	query.orderBy = vi.fn(() => {
 		const orderedQuery: any = Promise.resolve([
 			{ id: "s-1", title: "S1", content: "c", sequence: 1, chapterId: "c-1" },
@@ -156,6 +159,7 @@ vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
 describe("Story Generation Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		limitMock.mockResolvedValue({ success: true }); // Default happy path
 	});
 
 	describe("generateBookPlan", () => {
@@ -172,7 +176,36 @@ describe("Story Generation Actions", () => {
 			const result = await generateBookPlan("A test prompt");
 
 			expect(result.success).toBe(true);
-			expect(result.plan).toEqual(mockPlan);
+			if (result.success) {
+				expect(result.plan).toEqual(mockPlan);
+			}
+		});
+
+		it("should return error when rate limit exceeded", async () => {
+			limitMock.mockResolvedValueOnce({ success: false });
+
+			const result = await generateBookPlan("A test prompt");
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).toContain("Rate limit exceeded");
+			}
+		});
+
+		it("should fail open (allow request) when rate limiter throws", async () => {
+			limitMock.mockRejectedValueOnce(new Error("Redis error"));
+			const mockPlan = {
+				title: "Mock Title",
+				logline: "Mock Logline",
+				summary: "Mock Summary",
+				chapters: [{ title: "Ch 1", summary: "Sum 1" }],
+			};
+			(generateObject as any).mockResolvedValue({ object: mockPlan });
+
+			const result = await generateBookPlan("A test prompt");
+
+			// Should proceed despite redis error
+			expect(result.success).toBe(true);
 		});
 	});
 
@@ -186,7 +219,11 @@ describe("Story Generation Actions", () => {
 				chapters: [{ title: "Chapter 1", summary: "Intro" }],
 			};
 
-			const result = await createBookFromPlan(projectId, plan);
+			const result = await createBookFromPlan(projectId, plan, {
+				pov: "First Person",
+				tone: "Dark",
+				genre: "Horror",
+			});
 			expect(db.transaction).toHaveBeenCalled();
 			expect(result.success).toBe(true);
 		});
@@ -199,8 +236,10 @@ describe("Story Generation Actions", () => {
 			});
 			const result = await planChapterScenes("123e4567-e89b-12d3-a456-426614174000");
 			expect(result.success).toBe(true);
-			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id");
+			if (result.success) {
+				expect(result.sceneIds).toHaveLength(1);
+				expect(result.sceneIds?.[0]).toBe("mock-id");
+			}
 		});
 	});
 

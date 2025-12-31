@@ -65,14 +65,16 @@ export function ChapterActions({
 				return;
 			}
 
-			if (!planResult.success || !planResult.sceneIds) {
+			if (!planResult.success) {
 				setPhase("error");
+				// planResult is discriminated union, if success is false, error exists
 				setError(planResult.error || "Failed to plan scenes");
 				setLoading(false);
 				return;
 			}
 
 			// Initialize scene progress with titles (we'll get titles from the response)
+			// At this point planResult.success is true, so sceneIds exists
 			const initialScenes: SceneProgress[] = planResult.sceneIds.map(
 				(id, index) => ({
 					id,
