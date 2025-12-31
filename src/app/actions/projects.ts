@@ -125,18 +125,22 @@ export async function deleteProjects(projectIds: string[]) {
 	}
 
 	try {
-		// Verify ownership for all projects
-		const projects = await db
-			.select({ id: project.id, userId: project.userId })
+		// Verify ownership for all projects at the database level
+		const ownedProjects = await db
+			.select({ id: project.id })
 			.from(project)
-			.where(inArray(project.id, projectIds));
+			.where(and(inArray(project.id, projectIds), eq(project.userId, userId)));
 
-		const ownedProjectIds = projects
-			.filter((p) => p.userId === userId)
-			.map((p) => p.id);
+		const ownedProjectIds = ownedProjects.map((p) => p.id);
+
+		// If the number of owned projects doesn't match the number of requested IDs,
+		// it means some projects were not found or not owned by the user.
+		if (ownedProjectIds.length !== projectIds.length) {
+			return { error: "Access denied or project not found" };
+		}
 
 		if (ownedProjectIds.length === 0) {
-			return { error: "No valid projects to delete" };
+			return { success: true }; // Nothing to delete
 		}
 
 		await db.transaction(async (tx) => {
