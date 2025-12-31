@@ -62,9 +62,7 @@ vi.mock("@/lib/db/queries/scene", () => ({
 // Mock Actions Utils
 vi.mock("@/lib/actions-utils", () => ({
 	ensureProjectAccess: vi.fn(() => Promise.resolve()),
-	withProjectWriteAccess: vi.fn(async (projectId, cb) => {
-		return await cb({ project: { id: projectId }, user: { id: "user-1" } });
-	}),
+	withProjectWriteAccess: vi.fn((_projectId, cb) => cb),
 }));
 
 vi.mock("next/headers", () => ({
@@ -134,10 +132,14 @@ describe("Story Generation Actions", () => {
 				summary: "Summary",
 				chapters: [{ title: "Chapter 1", summary: "Intro" }],
 			};
+			const authContext = {
+				project: { id: projectId },
+				user: { id: "user-1" },
+			};
 
-			vi.mocked(storyRepository.createBookFromPlan).mockResolvedValue();
+			vi.mocked(storyRepository.createBookFromPlan).mockResolvedValue(undefined);
 
-			const result = await createBookFromPlan(projectId, plan);
+			const result = await createBookFromPlan(authContext)(projectId, plan);
 			expect(storyRepository.createBookFromPlan).toHaveBeenCalledWith(
 				projectId,
 				plan,
@@ -149,6 +151,7 @@ describe("Story Generation Actions", () => {
 
 	describe("planChapterScenes", () => {
 		it("should return scene IDs", async () => {
+			const authContext = { project: { id: "p-1" }, user: { id: "user-1" } };
 			vi.mocked(storyRepository.getChapterWithScenes).mockResolvedValue({
 				id: "ch-1",
 				title: "Chapter 1",
@@ -161,7 +164,7 @@ describe("Story Generation Actions", () => {
 				{ id: "mock-id", sequence: 1 },
 			]);
 
-			const result = await planChapterScenes("ch-1");
+			const result = await planChapterScenes(authContext)("ch-1");
 
 			expect(result.success).toBe(true);
 			expect(result.sceneIds).toHaveLength(1);
@@ -171,6 +174,7 @@ describe("Story Generation Actions", () => {
 
 	describe("generateSceneText", () => {
 		it("should update scene content", async () => {
+			const authContext = { project: { id: "p-1" }, user: { id: "user-1" } };
 			vi.mocked(storyRepository.getSceneContextData).mockResolvedValue({
 				targetScene: {
 					id: "scene-1",
@@ -183,7 +187,7 @@ describe("Story Generation Actions", () => {
 				scenesInChapter: [],
 			} as any);
 
-			const result = await generateSceneText("scene-1");
+			const result = await generateSceneText(authContext)("scene-1");
 			expect(result.success).toBe(true);
 			expect(generationService.continueWriting).toHaveBeenCalled();
 			expect(storyRepository.updateSceneContent).toHaveBeenCalled();
