@@ -1,11 +1,5 @@
 import { generateObject } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	createBookFromPlan,
-	generateBookPlan,
-	generateSceneText,
-	planChapterScenes,
-} from "@/app/actions/story-generation";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { generationService } from "@/lib/ai/writer-service";
 import { db } from "@/lib/db/drizzle";
@@ -20,8 +14,8 @@ vi.mock("@/lib/ai/models", () => ({
 }));
 
 // Mock @upstash/ratelimit
+const limitMock = vi.fn();
 vi.mock("@upstash/ratelimit", () => {
-	const limitMock = vi.fn().mockResolvedValue({ success: true });
 	return {
 		Ratelimit: class {
 			static slidingWindow = vi.fn();
@@ -32,9 +26,11 @@ vi.mock("@upstash/ratelimit", () => {
 });
 
 // Mock @upstash/redis
+const redisDelMock = vi.fn();
 vi.mock("@upstash/redis", () => ({
 	Redis: class {
 		static fromEnv = vi.fn(() => new this());
+		del = redisDelMock;
 		constructor() {}
 	},
 }));
@@ -154,12 +150,28 @@ vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
 });
 
 describe("Story Generation Actions", () => {
-	beforeEach(() => {
+	let createBookFromPlan: typeof import("@/app/actions/story-generation").createBookFromPlan;
+	let generateBookPlan: typeof import("@/app/actions/story-generation").generateBookPlan;
+	let generateSceneText: typeof import("@/app/actions/story-generation").generateSceneText;
+	let planChapterScenes: typeof import("@/app/actions/story-generation").planChapterScenes;
+
+	beforeEach(async () => {
+		vi.resetModules();
+		vi.stubEnv("UPSTASH_REDIS_REST_URL", "test_url");
+		vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", "test_token");
+		const storyGeneration = await import(
+			"@/app/actions/story-generation"
+		);
+		createBookFromPlan = storyGeneration.createBookFromPlan;
+		generateBookPlan = storyGeneration.generateBookPlan;
+		generateSceneText = storyGeneration.generateSceneText;
+		planChapterScenes = storyGeneration.planChapterScenes;
 		vi.clearAllMocks();
 	});
 
 	describe("generateBookPlan", () => {
 		it("should generate a book plan object", async () => {
+			limitMock.mockResolvedValueOnce({ success: true });
 			const mockPlan = {
 				title: "Mock Title",
 				logline: "Mock Logline",
@@ -172,7 +184,33 @@ describe("Story Generation Actions", () => {
 			const result = await generateBookPlan("A test prompt");
 
 			expect(result.success).toBe(true);
-			expect(result.plan).toEqual(mockPlan);
+			if (result.success) {
+				expect(result.plan).toEqual(mockPlan);
+			}
+		});
+
+		it("should return an error if rate limited", async () => {
+			limitMock.mockResolvedValueOnce({ success: false });
+			const result = await generateBookPlan("A test prompt");
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).toContain("Rate limit exceeded");
+			}
+		});
+
+		it("should proceed if rate limit check fails (fail-open)", async () => {
+			limitMock.mockRejectedValueOnce(new Error("Redis error"));
+			const mockPlan = {
+				title: "Mock Title",
+				logline: "Mock Logline",
+				summary: "Mock Summary",
+				chapters: [{ title: "Ch 1", summary: "Sum 1" }],
+			};
+			(generateObject as any).mockResolvedValue({ object: mockPlan });
+
+			const result = await generateBookPlan("A test prompt");
+
+			expect(result.success).toBe(true);
 		});
 	});
 
@@ -194,19 +232,27 @@ describe("Story Generation Actions", () => {
 
 	describe("planChapterScenes", () => {
 		it("should return scene IDs", async () => {
+			limitMock.mockResolvedValueOnce({ success: true });
 			(generateObject as any).mockResolvedValue({
 				object: { scenes: [{ title: "Scene 1", beat: "beat" }] },
 			});
-			const result = await planChapterScenes("123e4567-e89b-12d3-a456-426614174000");
+			const result = await planChapterScenes(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
-			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id");
+			if (result.success) {
+				expect(result.sceneIds).toHaveLength(1);
+				expect(result.sceneIds[0]).toBe("mock-id");
+			}
 		});
 	});
 
 	describe("generateSceneText", () => {
 		it("should update scene content", async () => {
-			const result = await generateSceneText("123e4567-e89b-12d3-a456-426614174000");
+			limitMock.mockResolvedValueOnce({ success: true });
+			const result = await generateSceneText(
+				"1e3e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
 			expect(generationService.continueWriting).toHaveBeenCalled();
 			expect(db.update).toHaveBeenCalled();
