@@ -77,10 +77,8 @@ export class BookAnalysisService {
 		);
 
 		// Pass 1: Detect entities using AnalysisService
-		console.log("[BookAnalysis] Pass 1: Detecting entities...");
 		const detectedEntities =
 			await analysisService.detectEntities(sourceMaterialId);
-		console.log(`[BookAnalysis] Detected ${detectedEntities.length} entities`);
 
 		// Filter out low confidence and duplicates
 		const highConfidenceEntities = detectedEntities.filter(
@@ -88,7 +86,6 @@ export class BookAnalysisService {
 		);
 
 		// Pass 2: Extract details and create entities
-		console.log("[BookAnalysis] Pass 2: Extracting entity details...");
 		const createdEntities: Entity[] = [];
 
 		for (const detected of highConfidenceEntities.slice(0, 20)) {
@@ -129,7 +126,7 @@ export class BookAnalysisService {
 						});
 					} catch (_e) {
 						// Attribute might already exist
-						console.log(`Skipping duplicate attribute ${attr.name}`);
+						// Silent fail for duplicates
 					}
 				}
 
@@ -147,7 +144,6 @@ export class BookAnalysisService {
 		}> = [];
 
 		if (extractRelationships && createdEntities.length >= 2) {
-			console.log("[BookAnalysis] Pass 3: Inferring relationships...");
 			const inferredRelationships = await analysisService.inferRelationships(
 				highConfidenceEntities,
 				sourceMaterialId,
@@ -181,7 +177,7 @@ export class BookAnalysisService {
 						});
 					} catch (_e) {
 						// Relationship might already exist
-						console.log(`Skipping duplicate relationship`);
+						// Silent fail for duplicates
 					}
 				}
 			}

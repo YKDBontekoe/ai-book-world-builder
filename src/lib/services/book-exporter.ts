@@ -34,7 +34,6 @@ async function collectBookContent(projectData: FullProjectData): Promise<{
 	// If we have an active generation, fetch content from generation steps
 	if (projectData.generation) {
 		const generationId = projectData.generation.id;
-		console.log("[EXPORT DEBUG] Generation found:", generationId);
 
 		// Fetch all completed generation steps
 		const steps = await db
@@ -43,31 +42,11 @@ async function collectBookContent(projectData: FullProjectData): Promise<{
 			.where(eq(bookGenerationStep.generationId, generationId))
 			.orderBy(asc(bookGenerationStep.sequence));
 
-		console.log("[EXPORT DEBUG] Steps found:", steps.length);
-		console.log(
-			"[EXPORT DEBUG] Steps with agentOutput:",
-			steps.filter((s) => s.agentOutput).length,
-		);
-		console.log(
-			"[EXPORT DEBUG] Step types:",
-			steps.map((s) => ({
-				type: s.stepType,
-				hasOutput: !!s.agentOutput,
-				status: s.status,
-			})),
-		);
-
 		// Fetch all generation assets (prologue, epilogue, etc.)
 		const assets = await db
 			.select()
 			.from(bookGenerationAsset)
 			.where(eq(bookGenerationAsset.generationId, generationId));
-
-		console.log("[EXPORT DEBUG] Assets found:", assets.length);
-		console.log(
-			"[EXPORT DEBUG] Asset types:",
-			assets.map((a) => ({ type: a.assetType, hasContent: !!a.content })),
-		);
 
 		// Get prologue from assets
 		const prologueAsset = assets.find((a) => a.assetType === "prologue");
@@ -111,23 +90,8 @@ async function collectBookContent(projectData: FullProjectData): Promise<{
 
 	// If no generation content, fall back to chapter drafts
 	if (chapters.length === 0) {
-		console.log(
-			"[EXPORT DEBUG] No generation chapters found, falling back to drafts",
-		);
 		for (const vol of projectData.volumes) {
-			console.log(
-				"[EXPORT DEBUG] Volume:",
-				vol.title,
-				"Chapters:",
-				vol.chapters.length,
-			);
 			for (const chap of vol.chapters) {
-				console.log(
-					"[EXPORT DEBUG] Chapter:",
-					chap.title,
-					"Drafts:",
-					chap.drafts.length,
-				);
 				const latestDraft = chap.drafts[0];
 				if (latestDraft) {
 					chapters.push({
@@ -137,21 +101,6 @@ async function collectBookContent(projectData: FullProjectData): Promise<{
 				}
 			}
 		}
-	}
-
-	console.log(
-		"[EXPORT DEBUG] Final content - Prologue:",
-		!!prologue,
-		"Chapters:",
-		chapters.length,
-		"Epilogue:",
-		!!epilogue,
-	);
-	if (chapters.length > 0) {
-		console.log(
-			"[EXPORT DEBUG] First chapter length:",
-			chapters[0].content?.length || 0,
-		);
 	}
 
 	return {
