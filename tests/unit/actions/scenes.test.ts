@@ -11,6 +11,7 @@ vi.mock("@/lib/db/repositories", () => ({
 	},
 	sceneRepository: {
 		update: vi.fn(),
+		findById: vi.fn(),
 	},
 }));
 
@@ -29,6 +30,7 @@ const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
+const mockedFindSceneById = vi.mocked(sceneRepository.findById);
 const mockedInvalidateCache = vi.mocked(invalidateCache);
 
 const userId = "user-123";
@@ -85,6 +87,7 @@ describe("scenes server actions", () => {
 		const updatedScene = buildScene({ title: "Updated Title" });
 
 		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(buildScene());
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdateScene.mockResolvedValue(updatedScene);
 
@@ -94,6 +97,7 @@ describe("scenes server actions", () => {
 			projectId,
 		});
 
+		expect(mockedFindSceneById).toHaveBeenCalledWith(sceneId);
 		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
 		expect(mockedUpdateScene).toHaveBeenCalledWith(
 			sceneId,
@@ -114,6 +118,7 @@ describe("scenes server actions", () => {
 		const updatedScene = buildScene({ content: "New content" });
 
 		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(buildScene());
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdateScene.mockResolvedValue(updatedScene);
 
@@ -138,6 +143,7 @@ describe("scenes server actions", () => {
 
 	it("throws when the project is inaccessible", async () => {
 		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(buildScene());
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(updateSceneAction({ id: sceneId, projectId })).rejects.toThrow(
@@ -146,5 +152,31 @@ describe("scenes server actions", () => {
 
 		expect(mockedUpdateScene).not.toHaveBeenCalled();
 		expect(mockedInvalidateCache).not.toHaveBeenCalled();
+	});
+
+	it("throws an error if the scene is not found", async () => {
+		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(null);
+
+		await expect(
+			updateSceneAction({ id: sceneId, projectId }),
+		).rejects.toThrow("Scene not found");
+
+		expect(mockedFindByIdWithAccess).not.toHaveBeenCalled();
+		expect(mockedUpdateScene).not.toHaveBeenCalled();
+	});
+
+	it("throws an error if the scene does not belong to the project", async () => {
+		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(
+			buildScene({ projectId: "wrong-project-id" }),
+		);
+
+		await expect(
+			updateSceneAction({ id: sceneId, projectId }),
+		).rejects.toThrow("Scene does not belong to the specified project");
+
+		expect(mockedFindByIdWithAccess).not.toHaveBeenCalled();
+		expect(mockedUpdateScene).not.toHaveBeenCalled();
 	});
 });
