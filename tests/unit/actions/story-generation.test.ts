@@ -6,7 +6,6 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { ensureProjectAccess } from "@/lib/actions-utils";
 import { generationService } from "@/lib/ai/writer-service";
 import { db } from "@/lib/db/drizzle";
 
@@ -30,7 +29,6 @@ vi.mock("@upstash/ratelimit", () => {
 		Ratelimit: class {
 			static slidingWindow = vi.fn();
 			limit = vi_hoisted_limitMock;
-			constructor() {}
 		},
 	};
 });
@@ -140,7 +138,7 @@ vi.mock("@/lib/ai/providers", () => ({
 	},
 }));
 
-vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
+vi.mock("@/lib/ai/writer-service", async (_importOriginal) => {
 	return {
 		continueWriting: vi.fn(() =>
 			Promise.resolve({ text: "Generated scene content" }),
