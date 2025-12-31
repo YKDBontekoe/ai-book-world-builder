@@ -1,22 +1,17 @@
-import { createClient } from "redis";
+import { Redis } from '@upstash/redis';
 
-const redisUrl = process.env.REDIS_URL;
+const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
+const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-if (!redisUrl) {
-	console.warn("REDIS_URL is not set. Redis caching will be disabled.");
+let redisClient: Redis | null = null;
+
+if (upstashUrl && upstashToken) {
+  redisClient = new Redis({
+    url: upstashUrl,
+    token: upstashToken,
+  });
+} else {
+  console.warn('Upstash Redis environment variables are not set. Rate limiting will be disabled.');
 }
 
-const client = redisUrl
-	? createClient({
-			url: redisUrl,
-		})
-	: null;
-
-if (client) {
-	client.on("error", (err) => console.error("Redis Client Error", err));
-	client.connect().catch((err) => {
-		console.error("Failed to connect to Redis", err);
-	});
-}
-
-export const redis = client;
+export const redis = redisClient;

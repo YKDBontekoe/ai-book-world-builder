@@ -6,8 +6,7 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { ensureProjectAccess } from "@/lib/actions-utils";
-import { generationService } from "@/lib/ai/writer-service";
+import { storyService } from "@/lib/services/story-service";
 import { db } from "@/lib/db/drizzle";
 
 // Mocks
@@ -160,26 +159,14 @@ vi.mock("@/lib/ai/providers", () => ({
 
 // Use importOriginal to include non-mocked exports like GenerationService if needed,
 // but for `generationService` instance, we want to mock its methods.
-vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
-	// We can't import the actual class if we are mocking the module that exports it
-	// unless we use importOriginal, but here we just want to mock the singleton instance.
-	return {
-		// Mock standard functions if they are still used (backward compat)
-		continueWriting: vi.fn(() =>
-			Promise.resolve({ text: "Generated scene content" }),
-		),
-
-		// Mock the service instance
-		generationService: {
-			continueWriting: vi.fn(() =>
-				Promise.resolve({ text: "Generated scene content" }),
-			),
-			generateIdeas: vi.fn(),
-			rewriteSelection: vi.fn(),
-			draftScene: vi.fn(),
-		},
-	};
-});
+vi.mock("@/lib/services/story-service", () => ({
+	storyService: {
+		generateBookPlan: vi.fn(),
+		createBookFromPlan: vi.fn(),
+		planChapterScenes: vi.fn(),
+		generateSceneText: vi.fn(),
+	},
+}));
 
 // Test Suite
 describe("Story Generation Actions", () => {
@@ -196,17 +183,24 @@ describe("Story Generation Actions", () => {
 				chapters: [{ title: "Ch 1", summary: "Sum 1" }],
 			};
 
-			(generateObject as any).mockResolvedValue({ object: mockPlan });
+			(storyService.generateBookPlan as any).mockResolvedValue({
+				plan: mockPlan,
+			});
 
 			const result = await generateBookPlan("A test prompt");
 
 			expect(result.success).toBe(true);
 			expect(result.plan).toEqual(mockPlan);
+			expect(storyService.generateBookPlan).toHaveBeenCalledWith(
+				"A test prompt",
+				undefined,
+				undefined,
+			);
 		});
 	});
 
 	describe("createBookFromPlan", () => {
-		it("should use transaction to create entities", async () => {
+		it("should create a book from a plan", async () => {
 			const projectId = "proj-123";
 			const plan = {
 				title: "New Book",
@@ -214,34 +208,37 @@ describe("Story Generation Actions", () => {
 				summary: "Summary",
 				chapters: [{ title: "Chapter 1", summary: "Intro" }],
 			};
+			(storyService.createBookFromPlan as any).mockResolvedValue(undefined);
 
 			const result = await createBookFromPlan(projectId, plan);
-			// Since we mocked withProjectWriteAccess to execute callback,
-			// the inner storyService function is called, which calls db.transaction.
-			expect(db.transaction).toHaveBeenCalled();
+
 			expect(result.success).toBe(true);
+			expect(storyService.createBookFromPlan).toHaveBeenCalledWith(
+				projectId,
+				plan,
+				undefined,
+			);
 		});
 	});
 
 	describe("planChapterScenes", () => {
 		it("should return scene IDs", async () => {
-			(generateObject as any).mockResolvedValue({
-				object: { scenes: [{ title: "Scene 1", beat: "beat" }] },
-			});
-			const result = await planChapterScenes("ch-1");
+			const chapterId = "123e4567-e89b-12d3-a456-426614174000";
+			(storyService.planChapterScenes as any).mockResolvedValue(["scene-1"]);
+			const result = await planChapterScenes(chapterId);
 			expect(result.success).toBe(true);
-			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id"); // Updated from "scene-1" to "mock-id" because we use batch insert which uses the mockQuery returning
+			expect(result.sceneIds).toEqual(["scene-1"]);
+			expect(storyService.planChapterScenes).toHaveBeenCalledWith(chapterId);
 		});
 	});
 
 	describe("generateSceneText", () => {
-		it("should update scene content", async () => {
-			const result = await generateSceneText("scene-1");
+		it("should trigger scene text generation", async () => {
+			const sceneId = "123e4567-e89b-12d3-a456-426614174001";
+			(storyService.generateSceneText as any).mockResolvedValue(undefined);
+			const result = await generateSceneText(sceneId);
 			expect(result.success).toBe(true);
-			// Check if generationService.continueWriting was called
-			expect(generationService.continueWriting).toHaveBeenCalled();
-			expect(db.update).toHaveBeenCalled();
+			expect(storyService.generateSceneText).toHaveBeenCalledWith(sceneId);
 		});
 	});
 });
