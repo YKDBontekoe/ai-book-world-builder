@@ -1,7 +1,7 @@
 import { generateObject } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { db } from "@/lib/db/drizzle";
 import { generationService } from "@/lib/ai/writer-service";
+import { db } from "@/lib/db/drizzle";
 
 // Set mock env vars to ensure the ratelimiter is instantiated
 process.env.UPSTASH_REDIS_REST_URL = "MOCK_URL";
@@ -197,7 +197,9 @@ describe("Story Generation Actions", () => {
 				reset: Date.now() + 60000,
 			});
 
-			const result = await generateBookPlan("A test prompt that is long enough");
+			const result = await generateBookPlan(
+				"A test prompt that is long enough",
+			);
 			expect(result.success).toBe(false);
 			expect(result.error).toContain("Rate limit exceeded");
 		});
@@ -240,7 +242,9 @@ describe("Story Generation Actions", () => {
 			(generateObject as any).mockResolvedValue({
 				object: { scenes: [{ title: "Scene 1", beat: "beat" }] },
 			});
-			const result = await planChapterScenes("123e4567-e89b-12d3-a456-426614174000");
+			const result = await planChapterScenes(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
 			expect(result.sceneIds).toHaveLength(1);
 			expect(result.sceneIds?.[0]).toBe("mock-id");
@@ -249,7 +253,9 @@ describe("Story Generation Actions", () => {
 
 	describe("generateSceneText", () => {
 		it("should update scene content", async () => {
-			const result = await generateSceneText("123e4567-e89b-12d3-a456-426614174000");
+			const result = await generateSceneText(
+				"123e4567-e89b-12d3-a456-426614174000",
+			);
 			expect(result.success).toBe(true);
 			expect(generationService.continueWriting).toHaveBeenCalled();
 			expect(db.update).toHaveBeenCalled();

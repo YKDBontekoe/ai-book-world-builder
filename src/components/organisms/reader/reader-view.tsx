@@ -182,7 +182,7 @@ function PaginatedContent({
 	const containerRef = useRef<HTMLDivElement>(null);
 	const hasRestoredRef = useRef(false);
 
-	// Measure pages
+	// biome-ignore lint/correctness/useExhaustiveDependencies: content and settings affect layout
 	useEffect(() => {
 		if (!containerRef.current) return;
 
@@ -257,10 +257,23 @@ function PaginatedContent({
 		}
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "ArrowRight") {
+			handlePageTurn("next");
+		} else if (e.key === "ArrowLeft") {
+			handlePageTurn("prev");
+		} else if (e.key === "Enter" || e.key === " ") {
+			onTap();
+		}
+	};
+
 	return (
 		<div
-			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
+			role="button"
+			tabIndex={0}
+			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none focus:outline-none`}
 			onClick={handleClick}
+			onKeyDown={handleKeyDown}
 		>
 			<div
 				ref={containerRef}
@@ -281,10 +294,12 @@ function PaginatedContent({
 			>
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
+						// biome-ignore lint/suspicious/noArrayIndexKey: Static list
 						<p key={i} className="mb-4 indent-6">
 							{para}
 						</p>
 					) : (
+						// biome-ignore lint/suspicious/noArrayIndexKey: Static list
 						<br key={i} />
 					),
 				)}

@@ -11,6 +11,7 @@ vi.mock("@/lib/db/repositories", () => ({
 	},
 	sceneRepository: {
 		update: vi.fn(),
+		findById: vi.fn(),
 	},
 }));
 
@@ -28,6 +29,7 @@ const mockedAuth = vi.mocked(auth);
 const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
+const mockedFindSceneById = vi.mocked(sceneRepository.findById);
 const mockedUpdateScene = vi.mocked(sceneRepository.update);
 const mockedInvalidateCache = vi.mocked(invalidateCache);
 
@@ -85,6 +87,7 @@ describe("scenes server actions", () => {
 		const updatedScene = buildScene({ title: "Updated Title" });
 
 		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(buildScene());
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdateScene.mockResolvedValue(updatedScene);
 
@@ -114,6 +117,7 @@ describe("scenes server actions", () => {
 		const updatedScene = buildScene({ content: "New content" });
 
 		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(buildScene());
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdateScene.mockResolvedValue(updatedScene);
 
@@ -138,6 +142,7 @@ describe("scenes server actions", () => {
 
 	it("throws when the project is inaccessible", async () => {
 		mockedAuth.mockResolvedValue(buildSession());
+		mockedFindSceneById.mockResolvedValue(buildScene());
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(updateSceneAction({ id: sceneId, projectId })).rejects.toThrow(
