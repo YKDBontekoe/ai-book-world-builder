@@ -1,14 +1,11 @@
 import { generateObject } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-	createBookFromPlan,
-	generateBookPlan,
-	generateSceneText,
-	planChapterScenes,
-} from "@/app/actions/story-generation";
-import { ensureProjectAccess } from "@/lib/actions-utils";
-import { generationService } from "@/lib/ai/writer-service";
 import { db } from "@/lib/db/drizzle";
+import { generationService } from "@/lib/ai/writer-service";
+
+// Set mock env vars to ensure the ratelimiter is instantiated
+process.env.UPSTASH_REDIS_REST_URL = "MOCK_URL";
+process.env.UPSTASH_REDIS_REST_TOKEN = "MOCK_TOKEN";
 
 // Mocks
 vi.mock("@/app/(auth)/auth", () => ({
@@ -19,9 +16,12 @@ vi.mock("@/lib/ai/models", () => ({
 	getSelectedModelId: vi.fn(() => Promise.resolve("mock-model")),
 }));
 
+const { limitMock } = vi.hoisted(() => {
+	return { limitMock: vi.fn() };
+});
+
 // Mock @upstash/ratelimit
 vi.mock("@upstash/ratelimit", () => {
-	const limitMock = vi.fn().mockResolvedValue({ success: true });
 	return {
 		Ratelimit: class {
 			static slidingWindow = vi.fn();
@@ -154,8 +154,22 @@ vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
 });
 
 describe("Story Generation Actions", () => {
-	beforeEach(() => {
+	let createBookFromPlan: any,
+		generateBookPlan: any,
+		generateSceneText: any,
+		planChapterScenes: any;
+
+	beforeEach(async () => {
+		vi.resetModules();
 		vi.clearAllMocks();
+		limitMock.mockResolvedValue({ success: true }); // Default to success
+
+		// Re-import actions to get fresh instances with new mocks
+		const actions = await import("@/app/actions/story-generation");
+		createBookFromPlan = actions.createBookFromPlan;
+		generateBookPlan = actions.generateBookPlan;
+		generateSceneText = actions.generateSceneText;
+		planChapterScenes = actions.planChapterScenes;
 	});
 
 	describe("generateBookPlan", () => {
@@ -171,6 +185,35 @@ describe("Story Generation Actions", () => {
 
 			const result = await generateBookPlan("A test prompt");
 
+			expect(result.success).toBe(true);
+			expect(result.plan).toEqual(mockPlan);
+		});
+
+		it("should return error when rate limited", async () => {
+			limitMock.mockResolvedValueOnce({
+				success: false,
+				limit: 10,
+				remaining: 0,
+				reset: Date.now() + 60000,
+			});
+
+			const result = await generateBookPlan("A test prompt that is long enough");
+			expect(result.success).toBe(false);
+			expect(result.error).toContain("Rate limit exceeded");
+		});
+
+		it("should fail open and allow request if rate limit check throws", async () => {
+			limitMock.mockRejectedValueOnce(new Error("Redis error"));
+
+			const mockPlan = {
+				title: "Fail-Open Title",
+				logline: "Logline",
+				summary: "Summary",
+				chapters: [],
+			};
+			(generateObject as any).mockResolvedValue({ object: mockPlan });
+
+			const result = await generateBookPlan("A valid prompt for fail-open");
 			expect(result.success).toBe(true);
 			expect(result.plan).toEqual(mockPlan);
 		});
