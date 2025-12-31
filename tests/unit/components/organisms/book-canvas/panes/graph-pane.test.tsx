@@ -55,11 +55,21 @@ vi.mock("dagre", () => ({
 	},
 }));
 
+interface HandleProps {
+	position: string;
+}
+
+interface ReactFlowProps {
+	nodes?: unknown[];
+	edges?: unknown[];
+	children?: React.ReactNode;
+}
+
 // Mock React Flow to be self-contained and avoid loading the large library
 vi.mock("@xyflow/react", () => ({
 	Background: () => <div>Background</div>,
 	Controls: () => <div>Controls</div>,
-	Handle: (props: any) => <div data-testid={`handle-${props.position}`} />,
+	Handle: (props: HandleProps) => <div data-testid={`handle-${props.position}`} />,
 	MarkerType: {
 		ArrowClosed: "arrow-closed",
 	},
@@ -67,17 +77,17 @@ vi.mock("@xyflow/react", () => ({
 		Left: "left",
 		Right: "right",
 	},
-	ReactFlow: ({ nodes, edges, children }: any) => (
+	ReactFlow: ({ nodes, edges, children }: ReactFlowProps) => (
 		<div data-testid="react-flow">
 			Nodes: {nodes?.length}, Edges: {edges?.length}
 			{children}
 		</div>
 	),
-	useEdgesState: (initial: any) => {
+	useEdgesState: <T,>(initial: T[]) => {
 		const [edges, setEdges] = React.useState(initial);
 		return [edges, setEdges, vi.fn()];
 	},
-	useNodesState: (initial: any) => {
+	useNodesState: <T,>(initial: T[]) => {
 		const [nodes, setNodes] = React.useState(initial);
 		return [nodes, setNodes, vi.fn()];
 	},

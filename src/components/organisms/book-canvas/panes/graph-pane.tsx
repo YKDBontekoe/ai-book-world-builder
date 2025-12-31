@@ -27,7 +27,7 @@ import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-co
 import { QUERY_KEYS } from "@/lib/query-options";
 
 // Custom Node Component
-const CustomSceneNode = ({ data, selected }: any) => {
+export const CustomSceneNode = ({ data, selected }: any) => {
 	const hasIssues = data.issueCount > 0;
 
 	return (
@@ -37,7 +37,10 @@ const CustomSceneNode = ({ data, selected }: any) => {
     `}
 		>
 			{hasIssues && (
-				<div className="absolute -top-2 -right-2 bg-amber-500 text-white rounded-full p-0.5 shadow-sm">
+				<div
+					data-testid="issue-indicator"
+					className="absolute -top-2 -right-2 bg-amber-500 text-white rounded-full p-0.5 shadow-sm"
+				>
 					<AlertTriangle className="w-3 h-3" />
 				</div>
 			)}
