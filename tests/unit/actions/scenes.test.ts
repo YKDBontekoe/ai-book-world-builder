@@ -44,6 +44,8 @@ function buildSession(): Session {
 			id: userId,
 			image: null,
 			name: "Test User",
+			type: "regular",
+			role: "user",
 		},
 		expires: new Date().toISOString(),
 	};
@@ -85,7 +87,7 @@ describe("scenes server actions", () => {
 	it("updates a scene when the user owns the project and invalidates cache if title changes", async () => {
 		const updatedScene = buildScene({ title: "Updated Title" });
 
-		mockedAuth.mockResolvedValue(buildSession());
+		mockedAuth.mockResolvedValue(buildSession() as any);
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdateScene.mockResolvedValue(updatedScene);
 
@@ -114,7 +116,7 @@ describe("scenes server actions", () => {
 	it("updates a scene content but does NOT invalidate structure cache", async () => {
 		const updatedScene = buildScene({ content: "New content" });
 
-		mockedAuth.mockResolvedValue(buildSession());
+		mockedAuth.mockResolvedValue(buildSession() as any);
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdateScene.mockResolvedValue(updatedScene);
 
@@ -138,7 +140,7 @@ describe("scenes server actions", () => {
 	});
 
 	it("throws when the project is inaccessible", async () => {
-		mockedAuth.mockResolvedValue(buildSession());
+		mockedAuth.mockResolvedValue(buildSession() as any);
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(updateSceneAction({ id: sceneId, projectId })).rejects.toThrow(
