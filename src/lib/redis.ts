@@ -1,22 +1,16 @@
-import { createClient } from "redis";
+import { Redis } from "@upstash/redis";
 
-const redisUrl = process.env.REDIS_URL;
+const redisUrl = process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-if (!redisUrl) {
-	console.warn("REDIS_URL is not set. Redis caching will be disabled.");
+if (!redisUrl || !redisToken) {
+	console.warn(
+		"UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN is not set. Rate limiting and caching may be disabled.",
+	);
 }
 
-const client = redisUrl
-	? createClient({
-			url: redisUrl,
-		})
-	: null;
-
-if (client) {
-	client.on("error", (err) => console.error("Redis Client Error", err));
-	client.connect().catch((err) => {
-		console.error("Failed to connect to Redis", err);
-	});
-}
-
-export const redis = client;
+// The Redis constructor can handle undefined URL/token, it will just create a disabled client.
+export const redis = new Redis({
+	url: redisUrl!,
+	token: redisToken!,
+});

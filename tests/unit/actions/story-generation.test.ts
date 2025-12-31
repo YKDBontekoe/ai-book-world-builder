@@ -19,23 +19,26 @@ vi.mock("@/lib/ai/models", () => ({
 	getSelectedModelId: vi.fn(() => Promise.resolve("mock-model")),
 }));
 
+// Hoist the mock function so we can manipulate it in tests
+const { vi_hoisted_limitMock } = vi.hoisted(() => {
+	return { vi_hoisted_limitMock: vi.fn().mockResolvedValue({ success: true }) };
+});
+
 // Mock @upstash/ratelimit
 vi.mock("@upstash/ratelimit", () => {
-	const limitMock = vi.fn().mockResolvedValue({ success: true });
 	return {
 		Ratelimit: class {
 			static slidingWindow = vi.fn();
-			limit = limitMock;
+			limit = vi_hoisted_limitMock;
 			constructor() {}
 		},
 	};
 });
 
 // Mock @upstash/redis
-vi.mock("@upstash/redis", () => ({
-	Redis: class {
-		static fromEnv = vi.fn(() => new this());
-		constructor() {}
+vi.mock("@/lib/redis", () => ({
+	redis: {
+		del: vi.fn(),
 	},
 }));
 
@@ -156,6 +159,8 @@ vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
 describe("Story Generation Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Reset the mock to its default successful state before each test
+		vi_hoisted_limitMock.mockResolvedValue({ success: true });
 	});
 
 	describe("generateBookPlan", () => {
@@ -173,6 +178,53 @@ describe("Story Generation Actions", () => {
 
 			expect(result.success).toBe(true);
 			expect(result.plan).toEqual(mockPlan);
+		});
+
+		it("should return an error when rate limited", async () => {
+			vi_hoisted_limitMock.mockResolvedValueOnce({
+				success: false,
+				limit: 10,
+				remaining: 0,
+				reset: Date.now() + 60000,
+			});
+
+			const result = await generateBookPlan(
+				"This is a valid prompt for the test",
+			);
+
+			expect(result.success).toBe(false);
+			if (!result.success) {
+				expect(result.error).toContain("Rate limit exceeded");
+			}
+		});
+
+		it("should fail open and succeed if the rate limit check throws an error", async () => {
+			vi_hoisted_limitMock.mockRejectedValueOnce(
+				new Error("Redis connection failed"),
+			);
+
+			// Mock the actual plan generation since the rate limiter fails open
+			const mockPlan = {
+				title: "Fail-Open Plan",
+				logline: "When a rate limiter fails, a book plan is born.",
+				summary: "A test to ensure the system is resilient.",
+				chapters: [
+					{
+						title: "Chapter 1: The Failure",
+						summary: "The rate limiter fails but the story goes on.",
+					},
+				],
+			};
+			(generateObject as any).mockResolvedValue({ object: mockPlan });
+
+			const result = await generateBookPlan(
+				"This is another valid prompt for the test",
+			);
+
+			expect(result.success).toBe(true);
+			if (result.success) {
+				expect(result.plan).toEqual(mockPlan);
+			}
 		});
 	});
 
