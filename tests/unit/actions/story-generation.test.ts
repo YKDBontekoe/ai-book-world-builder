@@ -5,6 +5,17 @@ import { generationService } from "@/lib/ai/writer-service";
 import { db } from "@/lib/db/drizzle";
 
 // Mocks
+vi.mock("redis", () => ({
+	createClient: vi.fn(() => ({
+		on: vi.fn(),
+		connect: vi.fn().mockResolvedValue(undefined),
+		get: vi.fn().mockResolvedValue(null),
+		set: vi.fn().mockResolvedValue("OK"),
+		del: vi.fn().mockResolvedValue(1),
+		scan: vi.fn().mockResolvedValue([0, []]),
+	})),
+}));
+
 vi.mock("@/app/(auth)/auth", () => ({
 	auth: vi.fn(() => Promise.resolve({ user: { id: "user-1" } })),
 }));
