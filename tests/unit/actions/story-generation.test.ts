@@ -9,28 +9,29 @@ import {
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { generationService } from "@/lib/ai/writer-service";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
+import { storyService } from "@/lib/services/story-service";
 import { db } from "@/lib/db/drizzle";
 
 // Mocks
 vi.mock("@/lib/db/repositories/story-repository");
-
-import { planningService } from "@/lib/ai/services/planning-service";
-vi.mock("@/lib/ai/services/planning-service", () => ({
-	planningService: {
+vi.mock("@/lib/services/story-service", () => ({
+	storyService: {
 		generateBookPlan: vi.fn(),
-		planChapterScenes: vi.fn().mockResolvedValue({
-			plan: { scenes: [{ title: "Scene 1", beat: "beat" }] },
-		}),
+		createBookFromPlan: vi.fn(),
+		planChapterScenes: vi.fn(),
+		generateSceneText: vi.fn(),
 	},
 }));
 
-vi.mock("@upstash/ratelimit", () => {
-	const RatelimitMock = class {
+vi.mock("@upstash/ratelimit", () => ({
+	Ratelimit: class Ratelimit {
+		static slidingWindow = vi.fn().mockReturnValue({
+			limit: vi.fn().mockResolvedValue({ success: true }),
+		});
+
 		limit = vi.fn().mockResolvedValue({ success: true });
-	};
-	RatelimitMock.slidingWindow = vi.fn();
-	return { Ratelimit: RatelimitMock };
-});
+	},
+}));
 
 vi.mock("@/app/(auth)/auth", () => ({
 	auth: vi.fn(() => Promise.resolve({ user: { id: "user-1" } })),
@@ -44,7 +45,13 @@ vi.mock("ai", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("ai")>();
 	return {
 		...actual,
-		generateObject: vi.fn(),
+		generateObject: vi.fn(() =>
+			Promise.resolve({
+				object: {
+					plan: { scenes: [{ title: "Mock Scene", beat: "Mock Beat" }] },
+				},
+			}),
+		),
 		generateText: vi.fn(() => Promise.resolve({ text: "Generated content" })),
 	};
 });
@@ -116,7 +123,7 @@ describe("Story Generation Actions", () => {
 				summary: "Mock Summary",
 				chapters: [{ title: "Ch 1", summary: "Sum 1" }],
 			};
-			vi.mocked(planningService.generateBookPlan).mockResolvedValue({
+			vi.mocked(storyService.generateBookPlan).mockResolvedValue({
 				plan: mockPlan,
 			});
 			const result = await generateBookPlan("A test prompt");
@@ -126,7 +133,7 @@ describe("Story Generation Actions", () => {
 	});
 
 	describe("createBookFromPlan", () => {
-		it("should call the story repository to create the book", async () => {
+		it("should call the story service to create the book", async () => {
 			const projectId = "proj-123";
 			const plan = {
 				title: "New Book",
@@ -134,11 +141,10 @@ describe("Story Generation Actions", () => {
 				summary: "Summary",
 				chapters: [{ title: "Chapter 1", summary: "Intro" }],
 			};
-
-			vi.mocked(storyRepository.createBookFromPlan).mockResolvedValue();
+			vi.mocked(storyService.createBookFromPlan).mockResolvedValue();
 
 			const result = await createBookFromPlan(projectId, plan);
-			expect(storyRepository.createBookFromPlan).toHaveBeenCalledWith(
+			expect(storyService.createBookFromPlan).toHaveBeenCalledWith(
 				projectId,
 				plan,
 				undefined,
@@ -149,44 +155,21 @@ describe("Story Generation Actions", () => {
 
 	describe("planChapterScenes", () => {
 		it("should return scene IDs", async () => {
-			vi.mocked(storyRepository.getChapterWithScenes).mockResolvedValue({
-				id: "ch-1",
-				title: "Chapter 1",
-				projectId: "p-1",
-				scenes: [],
-				notes: "notes",
-			});
-			vi.mocked(storyRepository.getLastSceneInChapter).mockResolvedValue(null);
-			vi.mocked(storyRepository.createScenesBatch).mockResolvedValue([
-				{ id: "mock-id", sequence: 1 },
-			]);
-
-			const result = await planChapterScenes("ch-1");
-
+			const chapterId = "a1b2c3d4-e5f6-7890-1234-567890abcdef";
+			vi.mocked(storyService.planChapterScenes).mockResolvedValue(["mock-id"]);
+			const result = await planChapterScenes(chapterId);
 			expect(result.success).toBe(true);
-			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0].id).toBe("mock-id");
+			expect(result.sceneIds).toEqual(["mock-id"]);
 		});
 	});
 
 	describe("generateSceneText", () => {
-		it("should update scene content", async () => {
-			vi.mocked(storyRepository.getSceneContextData).mockResolvedValue({
-				targetScene: {
-					id: "scene-1",
-					title: "Scene 1",
-					content: "old content",
-					projectId: "p-1",
-				},
-				targetChapter: { id: "ch-1", title: "Chapter 1" },
-				targetOutline: { tone: "dark", pacing: "fast" },
-				scenesInChapter: [],
-			} as any);
-
-			const result = await generateSceneText("scene-1");
+		it("should call the story service to generate text", async () => {
+			const sceneId = "a1b2c3d4-e5f6-7890-1234-567890abcdef";
+			vi.mocked(storyService.generateSceneText).mockResolvedValue();
+			const result = await generateSceneText(sceneId);
 			expect(result.success).toBe(true);
-			expect(generationService.continueWriting).toHaveBeenCalled();
-			expect(storyRepository.updateSceneContent).toHaveBeenCalled();
+			expect(storyService.generateSceneText).toHaveBeenCalledWith(sceneId);
 		});
 	});
 });
