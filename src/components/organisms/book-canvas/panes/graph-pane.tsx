@@ -116,7 +116,7 @@ export function GraphPane() {
 
 		if (!structure) return { initialNodes: [], initialEdges: [] };
 
-		type Issue = NonNullable<typeof issuesData>["issues"][number];
+		type Issue = (typeof issues)[number];
 
 		const issuesByScene = new Map<string, Issue[]>();
 		issues.forEach((issue) => {
