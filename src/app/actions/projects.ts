@@ -235,7 +235,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 		};
 	}
 
-	const originalProject = await projectRepository.findByIdWithAccess(
+	const originalProject = await projectRepository.findByIdWithOwnership(
 		originalProjectId,
 		userId,
 	);
