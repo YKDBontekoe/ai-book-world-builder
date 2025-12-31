@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX "chapter_version_unique" ON "ChapterVersion" USING btree ("chapterId","version");
