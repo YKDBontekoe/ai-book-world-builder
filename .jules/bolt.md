@@ -38,3 +38,7 @@
 ## 2025-05-25 - Derived State in Render Loop
 **Learning:** Calculating derived state (like filtering/mapping arrays) inside the render loop of a frequently updating component (like a chat message) creates constant garbage collection pressure and breaks shallow memoization of children.
 **Action:** Push derived state logic down into the memoized child component (or use `useMemo`). If the derived data depends on a subset of a changing object (e.g. file attachments from a changing message), use a custom `memo` comparator in the child to ignore irrelevant updates.
+
+## 2025-05-26 - Algorithmic Optimization in Visualizations
+**Learning:** In visualization components like node graphs, O(N*M) operations (like filtering issues for every node) inside layout calculations can cause significant lag.
+**Action:** Always pre-compute lookups (Maps) for related data before iterating through the main data set, reducing complexity to O(N).
