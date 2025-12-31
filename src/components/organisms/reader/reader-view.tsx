@@ -206,6 +206,7 @@ function PaginatedContent({
 			window.removeEventListener("resize", measure);
 			clearTimeout(timer);
 		};
+		// biome-ignore lint/correctness/useExhaustiveDependencies: content and settings are dependencies
 	}, [content, settings, initialProgress]);
 
 	// Report progress whenever page changes
@@ -257,10 +258,26 @@ function PaginatedContent({
 		}
 	};
 
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			onTap();
+		} else if (e.key === "ArrowLeft") {
+			handlePageTurn("prev");
+		} else if (e.key === "ArrowRight") {
+			handlePageTurn("next");
+		}
+	};
+
 	return (
+		// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
+		// biome-ignore lint/a11y/noStaticElementInteractions: <explanation>
 		<div
+			role="button"
+			tabIndex={0}
 			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
 			onClick={handleClick}
+			onKeyDown={handleKeyDown}
 		>
 			<div
 				ref={containerRef}
@@ -279,12 +296,14 @@ function PaginatedContent({
 					transition: "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)",
 				}}
 			>
+				{/* biome-ignore lint/suspicious/noArrayIndexKey: Static content */}
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
 						<p key={i} className="mb-4 indent-6">
 							{para}
 						</p>
 					) : (
+						// biome-ignore lint/suspicious/noArrayIndexKey: Static content
 						<br key={i} />
 					),
 				)}

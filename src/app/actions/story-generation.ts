@@ -155,9 +155,7 @@ export async function generateSceneText(sceneId: string) {
 
 		// Rate Limiting for scene generation
 		if (ratelimit) {
-			const { success } = await ratelimit.limit(
-				`scene-gen:${session.user.id}`,
-			);
+			const { success } = await ratelimit.limit(`scene-gen:${session.user.id}`);
 			if (!success) {
 				return {
 					success: false,

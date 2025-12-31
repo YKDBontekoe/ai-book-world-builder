@@ -1,4 +1,3 @@
-import { generateObject } from "ai";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	createBookFromPlan,
@@ -6,11 +5,9 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { ensureProjectAccess } from "@/lib/actions-utils";
-import { generationService } from "@/lib/ai/writer-service";
+import { db } from "@/lib/db/drizzle";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 import { storyService } from "@/lib/services/story-service";
-import { db } from "@/lib/db/drizzle";
 
 // Mocks
 vi.mock("@/lib/db/repositories/story-repository");
@@ -141,7 +138,10 @@ describe("Story Generation Actions", () => {
 				summary: "Summary",
 				chapters: [{ title: "Chapter 1", summary: "Intro" }],
 			};
-			vi.mocked(storyService.createBookFromPlan).mockResolvedValue();
+			vi.mocked(storyService.createBookFromPlan).mockResolvedValue({
+				outlineId: "mock-outline-id",
+				volumeId: "mock-volume-id",
+			});
 
 			const result = await createBookFromPlan(projectId, plan);
 			expect(storyService.createBookFromPlan).toHaveBeenCalledWith(
