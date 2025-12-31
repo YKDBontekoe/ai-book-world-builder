@@ -68,20 +68,17 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
 		// Scan for keys matching pattern
 		let cursor: number | string = 0;
 		do {
-			// Scan returns { cursor: number, keys: string[] } in node-redis v4+
-			// Use 'any' cast to satisfy strict union type of RedisArgument, as numbers are valid at runtime
-			// but strict types might demand Buffer | string.
-			const reply: { cursor: number; keys: string[] } = await redis.scan(
+			// The Upstash redis client's scan method returns a tuple: [cursor: string, keys: string[]]
+			const [newCursor, keys]: [string, string[]] = await redis.scan(
 				cursor as any,
 				{
 					match: pattern,
 					count: 100,
 				},
 			);
-			cursor = reply.cursor;
-			const keys = reply.keys;
+			cursor = newCursor;
 			if (keys.length > 0) {
-				await redis.del(keys);
+				await redis.del(...keys);
 			}
 			// Strict check for numeric 0 or string "0" depending on what client returns
 		} while (Number(cursor) !== 0);
