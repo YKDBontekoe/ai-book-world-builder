@@ -27,7 +27,7 @@ import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import type { Project, Scene } from "@/lib/db/schema";
 import type { Session } from "next-auth";
 
-const mockedAuth = vi.mocked(auth);
+const mockedAuth = vi.mocked(auth as any);
 const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
