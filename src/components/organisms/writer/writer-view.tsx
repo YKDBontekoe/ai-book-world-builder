@@ -97,8 +97,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						<ResizablePanel
 							panelRef={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
-							minSize={20}
-							maxSize={30}
+							minSize={15}
+							maxSize={50}
 							collapsible={true}
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
