@@ -58,6 +58,8 @@ vi.mock("drizzle-orm", () => ({
 	desc: vi.fn(),
 	eq: vi.fn(),
 	sql: vi.fn(),
+	and: vi.fn(),
+	isNull: vi.fn(),
 }));
 
 describe("SceneRepository", () => {

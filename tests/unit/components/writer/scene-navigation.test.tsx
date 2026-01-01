@@ -60,10 +60,10 @@ const mockProject: Project = {
 	userId: "user-1",
 	name: "Test Project",
 	createdAt: new Date(),
-	updatedAt: new Date(),
-	active: true,
-	visibility: "private",
 	description: "",
+	visibility: "private",
+	folders: [],
+	forkedFromId: null,
 	lastViewedSceneId: null,
 };
 
