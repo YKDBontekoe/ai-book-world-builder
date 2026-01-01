@@ -6,15 +6,14 @@ import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service"; // Use new service
 import { invalidateCache } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
-import {
-	type BookPlan,
-	bookPlanSchema,
-	type StoryStyle,
+import type {
+	BookPlan,
+	StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
+import { bookPlanSchema } from "@/lib/services/schemas/story-schemas";
 import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
 
-// Re-export types for backward compatibility
-export type { BookPlan, StoryStyle };
+// Re-export Schema for backward compatibility (but not Types)
 export { bookPlanSchema };
 
 /**

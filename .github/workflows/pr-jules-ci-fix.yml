@@ -182,23 +182,23 @@ jobs:
            echo "$EOF" >> "$GITHUB_OUTPUT"
 
       - name: Invoke Jules API
-        if: false # DISABLED: Enforcing mention-only strategy
-        # if: |
-        #   steps.pr.outputs.has_pr == 'true' && 
-        #   steps.check.outputs.already_fixing != 'true' && 
-        #   steps.method.outputs.method == 'api' &&
-        #   steps.loop_check.outputs.is_loop != 'true'
+        if: |
+          steps.pr.outputs.has_pr == 'true' &&
+          steps.check.outputs.already_fixing != 'true' &&
+          steps.method.outputs.method == 'api' &&
+          steps.loop_check.outputs.is_loop != 'true'
         uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ steps.pr.outputs.branch }}
           prompt: ${{ steps.prompt.outputs.prompt }}
 
-      - name: Add jules-invoked label (Enable Fallback)
+      - name: Add jules-invoked label (for Renovate)
         if: |
           steps.pr.outputs.has_pr == 'true' && 
           steps.check.outputs.already_fixing != 'true' && 
           steps.method.outputs.method == 'api' &&
+          steps.pr.outputs.author == 'renovate[bot]' &&
           steps.loop_check.outputs.is_loop != 'true'
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}

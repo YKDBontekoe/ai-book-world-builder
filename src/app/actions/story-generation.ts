@@ -2,11 +2,11 @@
 
 import { auth } from "@/app/(auth)/auth";
 import { withProjectWriteAccess } from "@/lib/actions-utils";
-import {
-	type BookPlan,
-	type StoryStyle,
-	storyService,
-} from "@/lib/services/story-service";
+import type {
+	BookPlan,
+	StoryStyle,
+} from "@/lib/services/schemas/story-schemas";
+import { storyService } from "@/lib/services/story-service";
 
 export type { BookPlan, StoryStyle };
 

@@ -125,7 +125,8 @@ vi.mock("drizzle-orm", () => ({
 	desc: vi.fn(),
 }));
 
-import { type StoryStyle, storyService } from "@/lib/services/story-service";
+import type { StoryStyle } from "@/lib/services/schemas/story-schemas";
+import { storyService } from "@/lib/services/story-service";
 
 describe("StoryService Smart Features", () => {
 	beforeEach(() => {

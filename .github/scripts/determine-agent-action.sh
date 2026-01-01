@@ -20,12 +20,28 @@ if [[ -z "$AUTHOR" ]]; then
   exit 1
 fi
 
-# FORCE MENTION-ONLY STRATEGY
-# To prevent duplicate sessions, we ALWAYS use @jules mentions.
-# The GitHub App will listen to these mentions.
-METHOD="mention"
-REASON="Enforced mention-only strategy (Jules App)"
+METHOD="none"
+REASON=""
 
+case "$AUTHOR" in
+  "google-labs-jules"*)
+    METHOD="mention"
+    REASON="PR created by Jules"
+    ;;
+  "renovate[bot]")
+    if [[ "$LABELS" == *"jules-invoked"* ]]; then
+      METHOD="mention"
+      REASON="Renovate PR with existing Jules session"
+    else
+      METHOD="api"
+      REASON="First time on Renovate PR"
+    fi
+    ;;
+  *)
+    METHOD="api"
+    REASON="Human-authored PR"
+    ;;
+esac
 
 if [[ -n "$GITHUB_OUTPUT" ]]; then
   echo "method=$METHOD" >> "$GITHUB_OUTPUT"
