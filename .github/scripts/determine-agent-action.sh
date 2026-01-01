@@ -24,7 +24,7 @@ METHOD="none"
 REASON=""
 
 case "$AUTHOR" in
-  "google-labs-jules")
+  "google-labs-jules"*)
     METHOD="mention"
     REASON="PR created by Jules"
     ;;

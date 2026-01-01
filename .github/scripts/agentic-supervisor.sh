@@ -159,11 +159,61 @@ has_jules_invoked_label() {
 }
 
 # Helper: Collect all CodeRabbit inline comments on this PR
+# Helper: Collect all CodeRabbit inline comments on this PR
 collect_coderabbit_comments() {
   if [[ -n "$GH_TOKEN" && -n "$NUMBER" ]]; then
-    gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
-      --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | 
-        map("### \(.path):\(.line // .original_line)\n\(.body)") | join("\n\n---\n\n")' 2>/dev/null || echo ""
+    # Fetch raw comments JSON
+    COMMENTS_JSON=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" 2>/dev/null || echo "[]")
+    
+    # Use Node.js to act as a robust parser for the markdown content
+    # We embed the script to avoid dependency issues
+    node -e '
+      const fs = require("fs");
+      try {
+        const comments = JSON.parse(process.argv[1]);
+        const coderabbitComments = comments.filter(c => 
+          c.user && c.user.login && c.user.login.includes("coderabbitai")
+        );
+
+        const output = coderabbitComments.map(c => {
+          const body = c.body || "";
+          let content = "";
+          
+          // 1. Try to extract "Prompt for AI Agents"
+          // Pattern: <summary>🤖 Prompt for AI Agents</summary> ... ``` ... content ... ```
+          const promptMatch = body.match(/<summary>🤖 Prompt for AI Agents<\/summary>[\s\S]*?```[\w]*\n([\s\S]*?)```/);
+          
+          if (promptMatch && promptMatch[1]) {
+            content = "🤖 **AI Prompt**:\n" + promptMatch[1].trim();
+          } else {
+            // 2. Try to extract "Committable suggestion"
+            // Pattern: <summary>📝 Committable suggestion</summary> ... ```suggestion ... content ... ```
+            // Note: GitHub suggestions use ```suggestion key
+            const suggestionMatch = body.match(/<summary>📝 Committable suggestion<\/summary>[\s\S]*?```suggestion\n([\s\S]*?)```/);
+             
+             if (suggestionMatch && suggestionMatch[1]) {
+                content = "📝 **Suggestion**:\n```typescript\n" + suggestionMatch[1].trim() + "\n```";
+             } else {
+                // 3. Fallback to cleaned body (remove large details blocks if possible, or just take the first few lines?)
+                // For now, let"s just take the whole body but strip the extensive HTML details tags to reduce noise if possible
+                // A simple strip of <details> tags might be too aggressive. 
+                // Let"s just use the body but truncate if too long?
+                // Actually, if it"s a generic comment without those tags, use it as is.
+                content = body;
+             }
+          }
+          
+          const path = c.path || "unknown";
+          const line = c.line || c.original_line || "?";
+          
+          return `### ${path}:${line}\n${content}`;
+        }).join("\n\n---\n\n");
+
+        console.log(output);
+      } catch (e) {
+        console.error("Error parsing comments:", e);
+      }
+    ' "$COMMENTS_JSON"
   else
     echo ""
   fi
@@ -243,8 +293,7 @@ fi
 # ==============================================================================
 # LOGIC C: CodeRabbit Review Completed
 # ==============================================================================
-if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
-  if echo "$REVIEW_BODY" | grep -qi "walkthrough"; then
+if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" == *"coderabbitai"* ]]; then
     log "CodeRabbit review complete - batching comments..."
     
     BATCHED_COMMENTS=$(collect_coderabbit_comments)
@@ -272,7 +321,6 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" == "coderabbita
     else
       log "No CodeRabbit inline comments - skipping"
     fi
-  fi
 fi
 
 # ==============================================================================
@@ -296,13 +344,20 @@ if [[ "$IS_PR" == "true" && "$EVENT_NAME" == "workflow_run" ]]; then
     RECENT_CR="0"
     if [[ -n "$GH_TOKEN" ]]; then
       RECENT_CR=$(gh api "/repos/${GITHUB_REPOSITORY}/issues/comments" \
-        --jq '[.[] | select(.user.login == "coderabbitai[bot]" and
+        --jq '[.[] | select((.user.login | contains("coderabbitai")) and
           ((.created_at | fromdateiso8601) > (now - 900)))] | length' 2>/dev/null || echo "0")
     fi
 
     if [[ "$RECENT_CR" -lt 5 ]]; then
-      SHOULD_TRIGGER_CODERABBIT="true"
-      log "Will trigger CodeRabbit for bot PR (Author: $AUTHOR)"
+      # Make sure the workflow run was actually successful
+      CONCLUSION=$(get_json_val ".workflow_run.conclusion")
+      
+      if [[ "$CONCLUSION" == "success" ]]; then
+        SHOULD_TRIGGER_CODERABBIT="true"
+        log "Will trigger CodeRabbit for bot PR (Author: $AUTHOR)"
+      else
+        log "Skipping CodeRabbit - CI conclusion was '$CONCLUSION' (not success)"
+      fi
     else
       log "Skipping CodeRabbit - rate limit ($RECENT_CR in 15min)"
     fi
