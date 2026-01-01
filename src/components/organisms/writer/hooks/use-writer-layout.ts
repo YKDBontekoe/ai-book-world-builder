@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { PanelImperativeHandle } from "react-resizable-panels";
+import type { ImperativePanelHandle } from "react-resizable-panels";
 import { useMediaQuery } from "usehooks-ts";
 
 export type ViewMode = "standard" | "zen";
@@ -27,21 +27,17 @@ export function useWriterLayout(): WriterLayoutState {
 	const [isTypewriterMode, setIsTypewriterMode] = useState(false);
 	const [isDirectorMode, setIsDirectorMode] = useState(false);
 
-	const sidebarRef = useRef<PanelImperativeHandle>(null!);
+	const sidebarRef = useRef<ImperativePanelHandle>(null!);
 
 	const toggleSidebar = () => {
-		setIsSidebarOpen((prev) => {
-			const newOpen = !prev;
-			const panel = sidebarRef.current;
-			if (panel) {
-				if (newOpen) {
-					panel.expand();
-				} else {
-					panel.collapse();
-				}
+		const panel = sidebarRef.current;
+		if (panel) {
+			if (isSidebarOpen) {
+				panel.collapse();
+			} else {
+				panel.expand();
 			}
-			return newOpen;
-		});
+		}
 	};
 
 	const toggleZenMode = () => {
