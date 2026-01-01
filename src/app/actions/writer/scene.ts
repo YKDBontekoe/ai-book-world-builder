@@ -1,7 +1,8 @@
 "use server";
 
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
@@ -197,17 +198,20 @@ export async function createSceneInChapter(
 			if (insertAfterScene) {
 				newSequence = insertAfterScene.sequence + 1;
 				prevSceneId = insertAfterScene.id;
-				// Shift subsequent scenes
-				await db.transaction(async (tx) => {
-					for (const s of scenes) {
-						if (s.sequence >= newSequence) {
-							await tx
-								.update(scene)
-								.set({ sequence: s.sequence + 1, updatedAt: new Date() })
-								.where(eq(scene.id, s.id));
-						}
-					}
-				});
+
+				// Batch update subsequent scenes
+				await db
+					.update(scene)
+					.set({
+						sequence: sql`${scene.sequence} + 1`,
+						updatedAt: new Date(),
+					})
+					.where(
+						and(
+							eq(scene.chapterId, chapterId),
+							gte(scene.sequence, newSequence),
+						),
+					);
 			}
 		} else if (scenes.length > 0) {
 			prevSceneId = scenes[scenes.length - 1].id;
@@ -308,7 +312,14 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 	}
 }
 
-export async function duplicateScene(sceneId: string) {
+export async function duplicateScene(
+	sceneId: string,
+): Promise<{ success: boolean; error?: string; sceneId?: string }> {
+	const validation = z.string().uuid().safeParse(sceneId);
+	if (!validation.success) {
+		return { success: false, error: "Invalid scene ID" };
+	}
+
 	try {
 		// 1. Get Scene
 		const targetScene = await sceneRepository.findById(sceneId);
@@ -325,15 +336,19 @@ export async function duplicateScene(sceneId: string) {
 
 		// 4. Transaction: Shift others and Insert
 		const newScene = await db.transaction(async (tx) => {
-			// Shift subsequent scenes
-			for (const s of scenes) {
-				if (s.sequence >= newSequence) {
-					await tx
-						.update(scene)
-						.set({ sequence: s.sequence + 1, updatedAt: new Date() })
-						.where(eq(scene.id, s.id));
-				}
-			}
+			// Batch update subsequent scenes
+			await tx
+				.update(scene)
+				.set({
+					sequence: sql`${scene.sequence} + 1`,
+					updatedAt: new Date(),
+				})
+				.where(
+					and(
+						eq(scene.chapterId, targetScene.chapterId),
+						gte(scene.sequence, newSequence),
+					),
+				);
 
 			// Insert duplicate
 			const [created] = await tx
@@ -376,7 +391,17 @@ export async function duplicateScene(sceneId: string) {
 export async function moveSceneToChapter(
 	sceneId: string,
 	targetChapterId: string,
-) {
+): Promise<{ success: boolean; error?: string }> {
+	const schema = z.object({
+		sceneId: z.string().uuid(),
+		targetChapterId: z.string().uuid(),
+	});
+
+	const validation = schema.safeParse({ sceneId, targetChapterId });
+	if (!validation.success) {
+		return { success: false, error: "Invalid input parameters" };
+	}
+
 	try {
 		// 1. Get Scene & Verify
 		const targetScene = await sceneRepository.findById(sceneId);

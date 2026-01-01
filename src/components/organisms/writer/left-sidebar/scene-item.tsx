@@ -1,14 +1,6 @@
 "use client";
 
-import {
-	ArrowRight,
-	BookOpen,
-	Copy,
-	FileText,
-	Pencil,
-	Sparkles,
-	Trash2,
-} from "lucide-react";
+import { FileText, Pencil, Sparkles, Trash2, Copy, ArrowRight, BookOpen } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
@@ -16,13 +8,13 @@ import {
 	ContextMenuContent,
 	ContextMenuItem,
 	ContextMenuSeparator,
+	ContextMenuTrigger,
 	ContextMenuSub,
 	ContextMenuSubContent,
 	ContextMenuSubTrigger,
-	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
 import { Input } from "@/components/atoms/input";
-import type { ChapterWithScenes, SceneWithPrev } from "@/lib/types";
+import type { SceneWithPrev, ChapterWithScenes } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface SceneItemProps {
@@ -156,7 +148,10 @@ export const SceneItem = memo(function SceneItem({
 						Rename
 					</ContextMenuItem>
 
-					<ContextMenuItem onClick={() => onDuplicate?.(scene.id)}>
+					<ContextMenuItem
+						onClick={() => onDuplicate?.(scene.id)}
+						disabled={!onDuplicate}
+					>
 						<Copy className="mr-2 h-4 w-4" />
 						Duplicate
 					</ContextMenuItem>
