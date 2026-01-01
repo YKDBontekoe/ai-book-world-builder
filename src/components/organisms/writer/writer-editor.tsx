@@ -3,8 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Lock, MousePointerClick, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useDebounceCallback } from "usehooks-ts";
+import { useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/atoms/button";
 import { Slider } from "@/components/atoms/slider";
 import { EmptyState } from "@/components/molecules/empty-state";
@@ -22,11 +21,7 @@ import { WriterHeader } from "@/components/organisms/writer/writer-header";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { useAppearance } from "@/components/providers/appearance-provider";
 import { useProjectEntities } from "@/hooks/use-project-entities";
-
-interface HistorySnapshot {
-	content: string;
-	timestamp: number;
-}
+import { useEditorHistory } from "@/hooks/use-editor-history";
 
 export function WriterEditor() {
 	const router = useRouter();
@@ -47,11 +42,23 @@ export function WriterEditor() {
 
 	const hasStructure = structure && structure.length > 0;
 
-	// Time Travel State
-	const [historyStack, setHistoryStack] = useState<HistorySnapshot[]>([]);
-	const [isTimeTraveling, setIsTimeTraveling] = useState(false);
-	const [previewContent, setPreviewContent] = useState<string | null>(null);
-	const [sliderValue, setSliderValue] = useState([0]);
+	// Time Travel Logic Extracted to Hook
+	const {
+		historyStack,
+		isTimeTraveling,
+		previewContent,
+		sliderValue,
+		pushHistory,
+		toggleTimeTravel,
+		handleTimeTravel,
+		cancelTimeTravel,
+		restoreVersion,
+		setIsTimeTraveling,
+		setPreviewContent,
+	} = useEditorHistory({
+		sceneContent,
+		onRestore: handleContentChange,
+	});
 
 	// Register Editor Actions (Undo/Redo/Insert)
 	useEffect(() => {
@@ -65,24 +72,6 @@ export function WriterEditor() {
 		}
 	}, [registerEditorActions]); // Re-register when scene changes
 
-	// Initialize history with initial content
-	useEffect(() => {
-		if (sceneContent && historyStack.length === 0) {
-			setHistoryStack([{ content: sceneContent, timestamp: Date.now() }]);
-		}
-	}, [sceneContent, historyStack.length]);
-
-	// Debounced history pusher
-	const pushHistory = useDebounceCallback((content: string) => {
-		if (!content) return;
-		setHistoryStack((prev) => {
-			// Avoid duplicates
-			if (prev.length > 0 && prev[prev.length - 1].content === content)
-				return prev;
-			return [...prev, { content, timestamp: Date.now() }].slice(-50); // Keep last 50
-		});
-	}, 2000);
-
 	const onEditorContentChange = useCallback(
 		(content: string, _debounce: boolean) => {
 			// Standard save
@@ -92,30 +81,6 @@ export function WriterEditor() {
 		},
 		[handleContentChange, pushHistory],
 	);
-
-	const toggleTimeTravel = () => {
-		if (isTimeTraveling) {
-			// Commit changes if needed? Or just exit.
-			// If we want to restore to the previewed version:
-			if (previewContent && previewContent !== sceneContent) {
-				handleContentChange(previewContent);
-			}
-			setPreviewContent(null);
-		} else {
-			// Enter mode
-			setSliderValue([historyStack.length - 1]);
-		}
-		setIsTimeTraveling(!isTimeTraveling);
-	};
-
-	const handleTimeTravel = (val: number[]) => {
-		const index = val[0];
-		const snapshot = historyStack[index];
-		if (snapshot) {
-			setPreviewContent(snapshot.content);
-		}
-		setSliderValue(val);
-	};
 
 	return (
 		<div className="flex-1 flex flex-col h-full overflow-hidden relative bg-background/50">
@@ -216,24 +181,13 @@ export function WriterEditor() {
 										<Button
 											size="sm"
 											variant="ghost"
-											onClick={() => {
-												setIsTimeTraveling(false);
-												setPreviewContent(null);
-											}}
+											onClick={cancelTimeTravel}
 										>
 											Cancel
 										</Button>
 										<Button
 											size="sm"
-											onClick={() => {
-												if (previewContent) {
-													handleContentChange(previewContent);
-													// Reset stack head? Maybe complex.
-													// For now, it just adds a new entry on next save.
-												}
-												setIsTimeTraveling(false);
-												setPreviewContent(null);
-											}}
+											onClick={restoreVersion}
 										>
 											Restore Version
 										</Button>
