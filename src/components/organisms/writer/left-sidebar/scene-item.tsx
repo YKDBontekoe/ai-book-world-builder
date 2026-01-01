@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { FileText, Pencil, Sparkles, Trash2, Copy, ArrowRight, BookOpen } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
@@ -9,9 +9,12 @@ import {
 	ContextMenuItem,
 	ContextMenuSeparator,
 	ContextMenuTrigger,
+	ContextMenuSub,
+	ContextMenuSubContent,
+	ContextMenuSubTrigger,
 } from "@/components/atoms/context-menu";
 import { Input } from "@/components/atoms/input";
-import type { SceneWithPrev } from "@/lib/types";
+import type { SceneWithPrev, ChapterWithScenes } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface SceneItemProps {
@@ -23,6 +26,9 @@ interface SceneItemProps {
 	isGenerating: boolean;
 	onRename?: (sceneId: string, newTitle: string) => void;
 	onDelete?: (sceneId: string) => void;
+	onDuplicate?: (sceneId: string) => void;
+	onMoveToChapter?: (sceneId: string, targetChapterId: string) => void;
+	chapters?: ChapterWithScenes[];
 	readOnly?: boolean;
 }
 
@@ -35,6 +41,9 @@ export const SceneItem = memo(function SceneItem({
 	isGenerating,
 	onRename,
 	onDelete,
+	onDuplicate,
+	onMoveToChapter,
+	chapters,
 	readOnly,
 }: SceneItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
@@ -103,6 +112,8 @@ export const SceneItem = memo(function SceneItem({
 		);
 	}
 
+	const otherChapters = chapters?.filter((c) => c.id !== chapterId) || [];
+
 	return (
 		<div className="relative">
 			<ContextMenu>
@@ -121,7 +132,7 @@ export const SceneItem = memo(function SceneItem({
 						<span className="truncate">{scene.title}</span>
 					</Button>
 				</ContextMenuTrigger>
-				<ContextMenuContent>
+				<ContextMenuContent className="w-48">
 					<ContextMenuItem
 						onClick={() => onGenerateNext(chapterId, scene.id)}
 						disabled={isGenerating}
@@ -129,11 +140,41 @@ export const SceneItem = memo(function SceneItem({
 						<Sparkles className="mr-2 h-4 w-4" />
 						Generate Continuation
 					</ContextMenuItem>
+
+					<ContextMenuSeparator />
+
 					<ContextMenuItem onClick={() => setIsEditing(true)}>
 						<Pencil className="mr-2 h-4 w-4" />
 						Rename
 					</ContextMenuItem>
+
+					<ContextMenuItem onClick={() => onDuplicate?.(scene.id)}>
+						<Copy className="mr-2 h-4 w-4" />
+						Duplicate
+					</ContextMenuItem>
+
+					{otherChapters.length > 0 && onMoveToChapter && (
+						<ContextMenuSub>
+							<ContextMenuSubTrigger>
+								<ArrowRight className="mr-2 h-4 w-4" />
+								Move to Chapter
+							</ContextMenuSubTrigger>
+							<ContextMenuSubContent className="w-48 max-h-64 overflow-y-auto">
+								{otherChapters.map((chapter) => (
+									<ContextMenuItem
+										key={chapter.id}
+										onClick={() => onMoveToChapter(scene.id, chapter.id)}
+									>
+										<BookOpen className="mr-2 h-4 w-4 opacity-50" />
+										<span className="truncate">{chapter.title}</span>
+									</ContextMenuItem>
+								))}
+							</ContextMenuSubContent>
+						</ContextMenuSub>
+					)}
+
 					<ContextMenuSeparator />
+
 					<ContextMenuItem
 						className="text-destructive focus:text-destructive"
 						onClick={() => onDelete?.(scene.id)}

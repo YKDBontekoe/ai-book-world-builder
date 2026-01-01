@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, desc } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
@@ -141,7 +141,25 @@ export async function deleteScene(
 
 		await ensureProjectAccess(targetScene.projectId, true);
 
-		await sceneRepository.delete(sceneId);
+		// Handle prevSceneId chain in transaction
+		await db.transaction(async (tx) => {
+			// Find scene that points to this one
+			const [nextScene] = await tx
+				.select()
+				.from(scene)
+				.where(eq(scene.prevSceneId, sceneId))
+				.limit(1);
+
+			if (nextScene) {
+				await tx
+					.update(scene)
+					.set({ prevSceneId: targetScene.prevSceneId, updatedAt: new Date() })
+					.where(eq(scene.id, nextScene.id));
+			}
+
+			// Delete the scene
+			await tx.delete(scene).where(eq(scene.id, sceneId));
+		});
 
 		await invalidateCache(`project-structure:${targetScene.projectId}`);
 
@@ -205,6 +223,16 @@ export async function createSceneInChapter(
 			prevSceneId,
 		});
 
+		// If inserted in middle, update the next scene's prevSceneId
+		if (insertAfterSceneId) {
+			const nextScene = scenes.find((s) => s.prevSceneId === insertAfterSceneId);
+			if (nextScene) {
+				await db.update(scene)
+					.set({ prevSceneId: newScene.id, updatedAt: new Date() })
+					.where(eq(scene.id, nextScene.id));
+			}
+		}
+
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
 		return { success: true, sceneId: newScene.id };
@@ -255,6 +283,16 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 						and(eq(scene.id, sceneIds[i]), eq(scene.chapterId, chapterId)),
 					);
 			}
+
+			// Also update prevSceneIds to match the new linear order
+			// This is a simplification but keeps the linked list valid for linear view
+			for (let i = 0; i < sceneIds.length; i++) {
+				const currentId = sceneIds[i];
+				const prevId = i > 0 ? sceneIds[i - 1] : null;
+				await tx.update(scene)
+					.set({ prevSceneId: prevId })
+					.where(eq(scene.id, currentId));
+			}
 		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
@@ -263,5 +301,143 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 	} catch (error) {
 		console.error("Failed to reorder scenes", error);
 		return { success: false, error: "Failed to reorder scenes" };
+	}
+}
+
+export async function duplicateScene(sceneId: string) {
+	try {
+		// 1. Get Scene
+		const targetScene = await sceneRepository.findById(sceneId);
+		if (!targetScene) {
+			return { success: false, error: "Scene not found" };
+		}
+
+		// 2. Verify Access
+		await ensureProjectAccess(targetScene.projectId, true);
+
+		// 3. Prepare new data
+		const scenes = await sceneRepository.findByChapter(targetScene.chapterId);
+		const newSequence = targetScene.sequence + 1;
+
+		// 4. Transaction: Shift others and Insert
+		const newScene = await db.transaction(async (tx) => {
+			// Shift subsequent scenes
+			for (const s of scenes) {
+				if (s.sequence >= newSequence) {
+					await tx
+						.update(scene)
+						.set({ sequence: s.sequence + 1, updatedAt: new Date() })
+						.where(eq(scene.id, s.id));
+				}
+			}
+
+			// Insert duplicate
+			const [created] = await tx.insert(scene).values({
+				projectId: targetScene.projectId,
+				chapterId: targetScene.chapterId,
+				title: `${targetScene.title} (Copy)`,
+				content: targetScene.content,
+				summary: targetScene.summary,
+				sequence: newSequence,
+				status: targetScene.status, // Preserve status
+				prevSceneId: targetScene.id, // Point to original
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			}).returning();
+
+			// Update the scene that used to follow original to point to new duplicate
+			// Find scene where prevSceneId was targetScene.id (in the old state)
+			const nextScene = scenes.find((s) => s.prevSceneId === targetScene.id);
+			if (nextScene) {
+				await tx.update(scene)
+					.set({ prevSceneId: created.id, updatedAt: new Date() })
+					.where(eq(scene.id, nextScene.id));
+			}
+
+			return created;
+		});
+
+		await invalidateCache(`project-structure:${targetScene.projectId}`);
+
+		return { success: true, sceneId: newScene.id };
+	} catch (error) {
+		console.error("Failed to duplicate scene", error);
+		return { success: false, error: "Failed to duplicate scene" };
+	}
+}
+
+export async function moveSceneToChapter(sceneId: string, targetChapterId: string) {
+	try {
+		// 1. Get Scene & Verify
+		const targetScene = await sceneRepository.findById(sceneId);
+		if (!targetScene) return { success: false, error: "Scene not found" };
+
+		// 2. Verify Access (Need write on project)
+		// We assume chapters are in same project for now, but verify targetChapter too
+		const [targetChapter] = await db
+			.select()
+			.from(chapter)
+			.where(eq(chapter.id, targetChapterId))
+			.limit(1);
+
+		if (!targetChapter) return { success: false, error: "Target chapter not found" };
+
+		// Ensure same project (security check)
+		if (targetScene.projectId !== targetChapter.projectId) {
+			return { success: false, error: "Cannot move scene to a different project" };
+		}
+
+		await ensureProjectAccess(targetScene.projectId, true);
+
+		if (targetScene.chapterId === targetChapterId) {
+			return { success: false, error: "Scene is already in this chapter" };
+		}
+
+		// 3. Move Logic
+		await db.transaction(async (tx) => {
+			// A. Heal source chain
+			// Find scene that points to targetScene
+			const [nextInSource] = await tx
+				.select()
+				.from(scene)
+				.where(eq(scene.prevSceneId, sceneId))
+				.limit(1);
+
+			if (nextInSource) {
+				await tx
+					.update(scene)
+					.set({ prevSceneId: targetScene.prevSceneId, updatedAt: new Date() })
+					.where(eq(scene.id, nextInSource.id));
+			}
+
+			// B. Prepare target position (End of list)
+			const [lastInTarget] = await tx
+				.select()
+				.from(scene)
+				.where(eq(scene.chapterId, targetChapterId))
+				.orderBy(desc(scene.sequence))
+				.limit(1);
+
+			const newSequence = (lastInTarget?.sequence ?? 0) + 1;
+			const newPrevSceneId = lastInTarget?.id ?? null;
+
+			// C. Update Scene
+			await tx
+				.update(scene)
+				.set({
+					chapterId: targetChapterId,
+					sequence: newSequence,
+					prevSceneId: newPrevSceneId,
+					updatedAt: new Date()
+				})
+				.where(eq(scene.id, sceneId));
+		});
+
+		await invalidateCache(`project-structure:${targetScene.projectId}`);
+		return { success: true };
+
+	} catch (error) {
+		console.error("Failed to move scene", error);
+		return { success: false, error: "Failed to move scene" };
 	}
 }

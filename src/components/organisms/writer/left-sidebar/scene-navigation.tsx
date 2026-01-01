@@ -17,6 +17,8 @@ import {
 	deleteScene,
 	generateScene,
 	updateSceneTitle,
+	duplicateScene,
+	moveSceneToChapter,
 } from "@/app/actions/writer";
 import {
 	Accordion,
@@ -162,6 +164,46 @@ export function SceneNavigation({
 		[onStructureUpdate, activeSceneId, onSceneSelect],
 	);
 
+	const handleDuplicateScene = useCallback(
+		async (sceneId: string) => {
+			const toastId = toast.loading("Duplicating scene...");
+			try {
+				const result = await duplicateScene(sceneId);
+				if (result.success) {
+					toast.success("Scene duplicated", { id: toastId });
+					onStructureUpdate?.();
+				} else {
+					toast.error(result.error || "Failed to duplicate scene", {
+						id: toastId,
+					});
+				}
+			} catch (_e) {
+				toast.error("Error duplicating scene", { id: toastId });
+			}
+		},
+		[onStructureUpdate],
+	);
+
+	const handleMoveToChapter = useCallback(
+		async (sceneId: string, targetChapterId: string) => {
+			const toastId = toast.loading("Moving scene...");
+			try {
+				const result = await moveSceneToChapter(sceneId, targetChapterId);
+				if (result.success) {
+					toast.success("Scene moved", { id: toastId });
+					onStructureUpdate?.();
+				} else {
+					toast.error(result.error || "Failed to move scene", {
+						id: toastId,
+					});
+				}
+			} catch (_e) {
+				toast.error("Error moving scene", { id: toastId });
+			}
+		},
+		[onStructureUpdate],
+	);
+
 	const handleCreateChapter = async () => {
 		setIsCreatingChapter(true);
 		const toastId = toast.loading("Creating new chapter...");
@@ -302,6 +344,9 @@ export function SceneNavigation({
 											isGenerating={isGenerating}
 											onRename={handleRenameScene}
 											onDelete={handleDeleteScene}
+											onDuplicate={handleDuplicateScene}
+											onMoveToChapter={handleMoveToChapter}
+											chapters={structure}
 											readOnly={readOnly}
 										/>
 									))}
