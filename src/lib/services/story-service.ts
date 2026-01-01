@@ -1,21 +1,21 @@
+import "server-only";
+
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service"; // Use new service
 import { invalidateCache } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
-import type {
-	BookPlan,
-	StoryStyle,
+import {
+	type BookPlan,
+	bookPlanSchema,
+	type StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
 import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
 
 // Re-export types for backward compatibility
-export type {
-	BookPlan,
-	StoryStyle,
-} from "@/lib/services/schemas/story-schemas";
-export { bookPlanSchema } from "@/lib/services/schemas/story-schemas";
+export type { BookPlan, StoryStyle };
+export { bookPlanSchema };
 
 /**
  * StoryService
