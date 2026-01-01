@@ -31,6 +31,8 @@ export function useSceneContent({
 	const hasEditedRef = useRef(false);
 	// Ref to track the current ID to avoid race conditions
 	const activeSceneIdRef = useRef(activeSceneId);
+	// Ref to track pending retry timeouts for cleanup
+	const retryTimeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
 
 	// Use explicit effect for ref updates to avoid render-phase side effects
 	useEffect(() => {
@@ -39,6 +41,14 @@ export function useSceneContent({
 			hasEditedRef.current = false;
 		}
 	}, [activeSceneId]);
+
+	// Cleanup retry timeouts on unmount
+	useEffect(() => {
+		return () => {
+			retryTimeoutsRef.current.forEach(clearTimeout);
+			retryTimeoutsRef.current.clear();
+		};
+	}, []);
 
 	// Load content or sync when active scene changes
 	useEffect(() => {
@@ -87,12 +97,14 @@ export function useSceneContent({
 			} else {
 				// Retry up to 2 times with exponential backoff
 				if (retryCount < 2) {
-					setTimeout(
+					const timeoutId = setTimeout(
 						() => {
+							retryTimeoutsRef.current.delete(timeoutId);
 							performSave(content, id, retryCount + 1);
 						},
 						1000 * 2 ** retryCount,
 					);
+					retryTimeoutsRef.current.add(timeoutId);
 				} else {
 					setIsSaving(false);
 					toast.error("Failed to save changes. Please try again.", {
@@ -108,12 +120,14 @@ export function useSceneContent({
 			}
 		} catch (_error) {
 			if (retryCount < 2) {
-				setTimeout(
+				const timeoutId = setTimeout(
 					() => {
+						retryTimeoutsRef.current.delete(timeoutId);
 						performSave(content, id, retryCount + 1);
 					},
 					1000 * 2 ** retryCount,
 				);
+				retryTimeoutsRef.current.add(timeoutId);
 			} else {
 				setIsSaving(false);
 				toast.error("Failed to save changes. Please check your connection.", {
