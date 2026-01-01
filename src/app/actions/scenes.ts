@@ -1,17 +1,20 @@
 "use server";
 
+import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { invalidateCache } from "@/lib/cache";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import { sceneStatus } from "@/lib/db/schema/scenes";
-import { z } from "zod";
 
 const updateSceneSchema = z.object({
 	id: z.string().uuid(),
 	projectId: z.string().uuid(),
 	title: z.string().max(255, "Title is too long").optional(),
 	status: z.enum(sceneStatus).optional(),
-	content: z.string().max(100000, "Content is too long (max 100k chars)").optional(),
+	content: z
+		.string()
+		.max(100000, "Content is too long (max 100k chars)")
+		.optional(),
 });
 
 export async function updateSceneAction(params: {
@@ -30,7 +33,9 @@ export async function updateSceneAction(params: {
 	// Validate inputs using Zod schema
 	const validation = updateSceneSchema.safeParse(params);
 	if (!validation.success) {
-		const errorMessage = validation.error.issues.map(i => i.message).join(", ");
+		const errorMessage = validation.error.issues
+			.map((i) => i.message)
+			.join(", ");
 		throw new Error(`Validation failed: ${errorMessage}`);
 	}
 

@@ -191,7 +191,7 @@ export function useWriterState({
 					});
 				}
 			}
-		} catch (error) {
+		} catch (_error) {
 			setIsSaving(false);
 			if (retryCount < 2) {
 				setTimeout(
