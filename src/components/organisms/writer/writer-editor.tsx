@@ -20,8 +20,8 @@ import { useWriterControl } from "@/components/organisms/writer/writer-control-c
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { useAppearance } from "@/components/providers/appearance-provider";
-import { useProjectEntities } from "@/hooks/use-project-entities";
 import { useEditorHistory } from "@/hooks/use-editor-history";
+import { useProjectEntities } from "@/hooks/use-project-entities";
 
 export function WriterEditor() {
 	const router = useRouter();
@@ -53,9 +53,8 @@ export function WriterEditor() {
 		handleTimeTravel,
 		cancelTimeTravel,
 		restoreVersion,
-		setIsTimeTraveling,
-		setPreviewContent,
 	} = useEditorHistory({
+		sceneId: activeSceneId || undefined,
 		sceneContent,
 		onRestore: handleContentChange,
 	});
@@ -185,10 +184,7 @@ export function WriterEditor() {
 										>
 											Cancel
 										</Button>
-										<Button
-											size="sm"
-											onClick={restoreVersion}
-										>
+										<Button size="sm" onClick={restoreVersion}>
 											Restore Version
 										</Button>
 									</div>

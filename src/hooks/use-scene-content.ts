@@ -24,15 +24,13 @@ export function useSceneContent({
 	// Ref to track the current ID to avoid race conditions
 	const activeSceneIdRef = useRef(activeSceneId);
 
-	// Reset edited flag and sync ID ref on ID change
-	if (activeSceneIdRef.current !== activeSceneId) {
-		activeSceneIdRef.current = activeSceneId;
-		hasEditedRef.current = false;
-		// If we are switching scenes, we reset the state based on the new initialContent
-		// We do this in the render phase (derived state) pattern or effect?
-		// React docs suggest effect or key-reset. But here we are inside the hook.
-		// Since we use useEffect below, we can let it handle the sync.
-	}
+	// Use explicit effect for ref updates to avoid render-phase side effects
+	useEffect(() => {
+		if (activeSceneIdRef.current !== activeSceneId) {
+			activeSceneIdRef.current = activeSceneId;
+			hasEditedRef.current = false;
+		}
+	}, [activeSceneId]);
 
 	// Load content or sync when active scene changes
 	useEffect(() => {
@@ -68,14 +66,14 @@ export function useSceneContent({
 		return () => {
 			isMounted = false;
 		};
-	}, [activeSceneId, initialContent]); // Dependency on initialContent ensures we update if cache becomes available
+	}, [activeSceneId, initialContent, onContentUpdate]); // Dependency on initialContent ensures we update if cache becomes available
 
 	const performSave = async (content: string, id: string, retryCount = 0) => {
 		setIsSaving(true);
 		try {
 			const result = await updateSceneContent(id, content);
-			setIsSaving(false);
 			if (result.success) {
+				setIsSaving(false);
 				setLastSaved(new Date());
 				onContentUpdate?.(id, content);
 			} else {
@@ -88,6 +86,7 @@ export function useSceneContent({
 						1000 * 2 ** retryCount,
 					);
 				} else {
+					setIsSaving(false);
 					toast.error("Failed to save changes. Please try again.", {
 						duration: 5000,
 						action: {
@@ -99,8 +98,7 @@ export function useSceneContent({
 					});
 				}
 			}
-		} catch (error) {
-			setIsSaving(false);
+		} catch (_error) {
 			if (retryCount < 2) {
 				setTimeout(
 					() => {
@@ -109,6 +107,7 @@ export function useSceneContent({
 					1000 * 2 ** retryCount,
 				);
 			} else {
+				setIsSaving(false);
 				toast.error("Failed to save changes. Please check your connection.", {
 					duration: 5000,
 					action: {
@@ -150,6 +149,6 @@ export function useSceneContent({
 		isSaving,
 		lastSaved,
 		handleContentChange,
-		setContentDirectly
+		setContentDirectly,
 	};
 }

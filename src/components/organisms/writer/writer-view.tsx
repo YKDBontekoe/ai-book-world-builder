@@ -103,7 +103,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
 							onResize={(size) => {
-								const isCollapsed = size.inPixels === 0 && size.asPercentage === 0;
+								const isCollapsed =
+									size.inPixels === 0 && size.asPercentage === 0;
 								actions.setSidebarOpen(!isCollapsed);
 							}}
 						>
