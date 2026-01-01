@@ -2,8 +2,8 @@
 
 import { DragHandleDots2Icon } from "@radix-ui/react-icons";
 import {
-	Group as PanelGroup,
 	Panel,
+	Group as PanelGroup,
 	Separator as PanelResizeHandle,
 } from "react-resizable-panels";
 
