@@ -127,13 +127,11 @@ export async function deleteProjects(projectIds: string[]) {
 	try {
 		// Verify ownership for all projects
 		const projects = await db
-			.select({ id: project.id, userId: project.userId })
+			.select({ id: project.id })
 			.from(project)
-			.where(inArray(project.id, projectIds));
+			.where(and(inArray(project.id, projectIds), eq(project.userId, userId)));
 
-		const ownedProjectIds = projects
-			.filter((p) => p.userId === userId)
-			.map((p) => p.id);
+		const ownedProjectIds = projects.map((p) => p.id);
 
 		if (ownedProjectIds.length === 0) {
 			return { error: "No valid projects to delete" };
