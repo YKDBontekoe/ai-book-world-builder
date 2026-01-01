@@ -36,34 +36,26 @@ export async function updateSceneAction(params: {
 	const { id, title, status, content, projectId } = validation.data;
 
 	return withProjectWriteAccess(projectId, async () => {
-		try {
-			const updatedScene = await sceneRepository.update(
-				id,
-				{
-					title,
-					status,
-					content,
-				},
-				projectId,
-			);
+		const updatedScene = await sceneRepository.update(
+			id,
+			{
+				title,
+				status,
+				content,
+			},
+			projectId,
+		);
 
-			// Invalidate structure cache if title changes, as it's part of the structure view
-			if (title) {
-				await invalidateCache(`project-structure:${projectId}`);
-				revalidatePath(`/projects/${projectId}`);
-			}
-
-			return {
-				success: true,
-				data: {
-					...updatedScene,
-					createdAt: updatedScene.createdAt.toISOString(),
-					updatedAt: updatedScene.updatedAt.toISOString(),
-				},
-			};
-		} catch (error) {
-			console.error("Update scene error:", error);
-			return { success: false, error: "Failed to update scene" };
+		// Invalidate structure cache if title changes, as it's part of the structure view
+		if (title) {
+			await invalidateCache(`project-structure:${projectId}`);
+			revalidatePath(`/projects/${projectId}`);
 		}
+
+		return {
+			...updatedScene,
+			createdAt: updatedScene.createdAt.toISOString(),
+			updatedAt: updatedScene.updatedAt.toISOString(),
+		};
 	});
 }
