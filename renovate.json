@@ -31,6 +31,12 @@
 	},
 	"packageRules": [
 		{
+			"description": "Group all non-major dependencies",
+			"groupName": "all non-major dependencies",
+			"matchUpdateTypes": ["minor", "patch"],
+			"matchPackagePatterns": ["*"]
+		},
+		{
 			"description": "Auto-merge patch and minor updates",
 			"matchUpdateTypes": ["patch", "minor"],
 			"automerge": true,

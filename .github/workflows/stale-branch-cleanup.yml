@@ -1,0 +1,64 @@
+name: Maintenance - Stale Branch Cleanup
+
+on:
+  schedule:
+    # Run every Sunday at 01:00 UTC
+    - cron: '0 1 * * 0'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  cleanup:
+    name: Delete Stale Branches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Identify and Delete Stale Branches
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          DAYS_OLD: 7
+        run: |
+          echo "🔍 Scanning for stale branches (older than $DAYS_OLD days)..."
+          
+          # Calculate cutoff date in seconds
+          CUTOFF=$(date -d "-$DAYS_OLD days" +%s)
+          
+          # List remote branches matching 'jules/'
+          # Format: committerdate:iso8601,refname
+          git fetch origin
+          
+          BRANCHES=$(git for-each-ref --format='%(committerdate:unix) %(refname:short)' refs/remotes/origin/jules/* refs/remotes/origin/agent/* 2>/dev/null || true)
+          
+          if [[ -z "$BRANCHES" ]]; then
+            echo "✅ No target branches found."
+            exit 0
+          fi
+          
+          echo "$BRANCHES" | while read -r TS REF; do
+            # REF will be like origin/jules/foo
+            BRANCH_NAME=${REF#origin/}
+            
+            if [[ "$TS" -lt "$CUTOFF" ]]; then
+              echo "Checking candidate: $BRANCH_NAME (Last commit: $(date -d @$TS))"
+              
+              # Check for Open PRs
+              OPEN_PR=$(gh pr list --head "$BRANCH_NAME" --state open --json number --jq '.[0].number')
+              
+              if [[ -n "$OPEN_PR" ]]; then
+                echo "  ⚠️ Skipping: Active PR #$OPEN_PR exists."
+              else
+                echo "  🗑️ Deleting stale branch: $BRANCH_NAME"
+                # Use --yes to skip confirmation if using gh, or git push origin --delete
+                git push origin --delete "$BRANCH_NAME" || echo "  ❌ Failed to delete $BRANCH_NAME"
+              fi
+            else
+              echo "  ✨ Keeping: $BRANCH_NAME (Active recently)"
+            fi
+          done

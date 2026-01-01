@@ -2,10 +2,14 @@
 set -e
 
 # ==============================================================================
-# Agentic Supervisor Logic
+# Agentic Supervisor Logic (v2.0)
+# ==============================================================================
+# Author-based invocation strategy:
+# - Jules PRs: @jules mention only (free via GitHub integration)
+# - Renovate PRs: API once (first failure), then @jules mentions
+# - Human PRs: API invoke (need full context)
 # ==============================================================================
 
-# ... (Logging and Helper functions remain the same) ...
 log() {
   echo "[Supervisor] $1" >&2
 }
@@ -32,8 +36,9 @@ get_json_val() {
   jq -r "$1 // empty" "$GITHUB_EVENT_PATH"
 }
 
-# 2. Extract Event Data
-# ---------------------
+# ==============================================================================
+# 1. Extract Event Data
+# ==============================================================================
 if [[ ! -f "$GITHUB_EVENT_PATH" ]]; then
   log "Error: Event path not found at $GITHUB_EVENT_PATH"
   exit 1
@@ -70,10 +75,11 @@ elif [[ "$EVENT_NAME" == "issue_comment" ]]; then
   if [[ -n "$PR_URL" ]]; then
     IS_PR="true"
     if [[ -n "$GH_TOKEN" ]]; then
-      PR_DATA=$(gh pr view "$NUMBER" --json headRefName,author --repo "${GITHUB_REPOSITORY}" 2>/dev/null || echo "")
+      PR_DATA=$(gh pr view "$NUMBER" --json headRefName,author,labels --repo "${GITHUB_REPOSITORY}" 2>/dev/null || echo "")
       if [[ -n "$PR_DATA" ]]; then
         BRANCH=$(echo "$PR_DATA" | jq -r ".headRefName")
         AUTHOR=$(echo "$PR_DATA" | jq -r ".author.login")
+        LABELS=$(echo "$PR_DATA" | jq -r '[.labels[].name] | join(",")')
       fi
     elif [[ -n "$MOCK_GH_CLI" ]]; then
       BRANCH="mock-branch"
@@ -96,15 +102,15 @@ elif [[ "$EVENT_NAME" == "issues" ]]; then
 elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
   SHA=$(get_json_val ".workflow_run.head_sha")
   if [[ -n "$GH_TOKEN" && -n "$SHA" ]]; then
-    # Find PR associated with this commit
     PR_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls" \
-      --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, user: .user.login}" 2>/dev/null | head -1)
+      --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, user: .user.login, labels: [.labels[].name]}" 2>/dev/null | head -1)
 
     if [[ -n "$PR_DATA" ]]; then
       IS_PR="true"
       NUMBER=$(echo "$PR_DATA" | jq -r ".number")
       BRANCH=$(echo "$PR_DATA" | jq -r ".headRefName")
       AUTHOR=$(echo "$PR_DATA" | jq -r ".user")
+      LABELS=$(echo "$PR_DATA" | jq -r '.labels | join(",")')
       log "Identified PR #$NUMBER from workflow_run SHA $SHA"
     else
       log "No PR found for workflow_run SHA $SHA"
@@ -116,30 +122,60 @@ elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
   fi
 fi
 
-log "Context Resolved: PR=$IS_PR, #$NUMBER, Branch=$BRANCH, Author=$AUTHOR"
+log "Context: PR=$IS_PR, #$NUMBER, Branch=$BRANCH, Author=$AUTHOR, Labels=$LABELS"
 
-# CRITICAL: Skip ALL Jules API invocations for PRs created by Jules itself
-# Jules PRs should only use the CUSTOM_PAT token for actions, never spawn new Jules sessions
-SKIP_JULES_INVOCATION="false"
-if [[ "$IS_PR" == "true" && "$AUTHOR" == "google-labs-jules" ]]; then
-  SKIP_JULES_INVOCATION="true"
-  log "⚠️ Skipping Jules API invocation - PR was created by Jules. Use CUSTOM_PAT for any actions."
-fi
+# ==============================================================================
+# 2. AUTHOR-BASED INVOCATION STRATEGY
+# ==============================================================================
 
-# 3. Determine Intent
-# -------------------
-SHOULD_INVOKE_JULES="false"
-SHOULD_TRIGGER_CODERABBIT="false"
+INVOCATION_METHOD="none"  # "api" | "mention" | "none"
 JULES_PROMPT=""
+BATCHED_COMMENTS=""
+SHOULD_TRIGGER_CODERABBIT="false"
 
+# Helper: Read and interpolate prompt file
+get_prompt() {
+  local file=$1
+  local prompt=$(cat ".github/prompts/$file" 2>/dev/null || echo "Error: Prompt file .github/prompts/$file not found")
+  
+  # Interpolate variables
+  prompt="${prompt//\$NUMBER/$NUMBER}"
+  prompt="${prompt//\$BRANCH/$BRANCH}"
+  prompt="${prompt//\$AUTHOR/$AUTHOR}"
+  prompt="${prompt//\$COMMENT_AUTHOR/$COMMENT_AUTHOR}"
+  prompt="${prompt//\$COMMENT_BODY/$COMMENT_BODY}"
+  prompt="${prompt//\$ISSUE_TITLE/$ISSUE_TITLE}"
+  prompt="${prompt//\$ISSUE_BODY/$ISSUE_BODY}"
+  prompt="${prompt//\$REVIEW_AUTHOR/$REVIEW_AUTHOR}"
+  prompt="${prompt//\$REVIEW_BODY/$REVIEW_BODY}"
+  prompt="${prompt//\$BATCHED_COMMENTS/$BATCHED_COMMENTS}"
+  
+  echo "$prompt"
+}
+
+# Helper: Check if jules-invoked label exists
+has_jules_invoked_label() {
+  [[ "$LABELS" == *"jules-invoked"* ]]
+}
+
+# Helper: Collect all CodeRabbit inline comments on this PR
+collect_coderabbit_comments() {
+  if [[ -n "$GH_TOKEN" && -n "$NUMBER" ]]; then
+    gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
+      --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | 
+        map("### \(.path):\(.line // .original_line)\n\(.body)") | join("\n\n---\n\n")' 2>/dev/null || echo ""
+  else
+    echo ""
+  fi
+}
+
+# Extract comment/review data
 COMMENT_BODY=""
 COMMENT_AUTHOR=""
 ISSUE_BODY=""
 ISSUE_TITLE=""
 REVIEW_BODY=""
 REVIEW_AUTHOR=""
-REVIEW_STATE=""
-REVIEW_ID=""
 LABEL_NAME=""
 
 if [[ "$EVENT_NAME" == "issue_comment" ]]; then
@@ -152,161 +188,168 @@ elif [[ "$EVENT_NAME" == "issues" ]]; then
 elif [[ "$EVENT_NAME" == "pull_request_review" ]]; then
   REVIEW_BODY=$(get_json_val ".review.body")
   REVIEW_AUTHOR=$(get_json_val ".review.user.login")
-  REVIEW_STATE=$(get_json_val ".review.state")
-  REVIEW_ID=$(get_json_val ".review.id")
 fi
 
-# Logic A: @Jules Mention
-if [[ "$EVENT_NAME" == "issue_comment" && "$SKIP_JULES_INVOCATION" != "true" ]]; then
-  # Skip if comment is from automated bots (prevents double invocation from CI auto-fix notifications)
+# Helper: Determine standard invocation method using shared script
+determine_standard_method() {
+  # Run the shared script and capture variables (AUTHOR and LABELS must be exported or passed)
+  eval $(export AUTHOR="$AUTHOR" LABELS="$LABELS"; .github/scripts/determine-agent-action.sh | grep "=")
+  # Returns METHOD and REASON
+}
+
+# ==============================================================================
+# LOGIC A: Manual @Jules Mention
+# ==============================================================================
+if [[ "$EVENT_NAME" == "issue_comment" ]]; then
+  # Skip bot comments to prevent loops
   if [[ "$COMMENT_AUTHOR" == "github-actions[bot]" || "$COMMENT_AUTHOR" == "google-labs-jules" ]]; then
-    log "Skipping @Jules detection for automated bot comment from $COMMENT_AUTHOR"
+    log "Skipping - comment from bot: $COMMENT_AUTHOR"
   elif echo "$COMMENT_BODY" | grep -qi "@jules"; then
-    SHOULD_INVOKE_JULES="true"
+    log "Manual @jules mention from $COMMENT_AUTHOR"
+    
     if [[ "$IS_PR" == "true" ]]; then
-      JULES_PROMPT="User @$COMMENT_AUTHOR commented on PR #$NUMBER (Branch: $BRANCH): '$COMMENT_BODY'. Please address their request. Commit changes directly to the '$BRANCH' branch."
-    else
-      JULES_PROMPT="User @$COMMENT_AUTHOR commented on Issue #$NUMBER: '$COMMENT_BODY'. Please address their request. If code changes are needed, create a new branch."
-    fi
-  fi
-
-  if [[ "$COMMENT_AUTHOR" == "coderabbitai[bot]" ]]; then
-    if echo "$COMMENT_BODY" | grep -q "Prompt for AI Agents"; then
-      SHOULD_INVOKE_JULES="true"
-      JULES_PROMPT="CodeRabbit Review on PR #$NUMBER. Instructions: $COMMENT_BODY. Please implement these changes directly on branch '$BRANCH'."
-    fi
-  fi
-fi
-
-# Logic B: New Issue Labeled 'jules' (Issues are never from Jules, but keep consistent)
-if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME" == "jules" && "$SKIP_JULES_INVOCATION" != "true" ]]; then
-  SHOULD_INVOKE_JULES="true"
-  JULES_PROMPT="Assigned Issue #$NUMBER: '$ISSUE_TITLE'. Description: $ISSUE_BODY. Please implement a solution on a new branch."
-fi
-
-# Logic C: CodeRabbit Trigger (Bot PRs Only)
-# Explicitly trigger CodeRabbit for bots because the native GitHub App often ignores them.
-# We DO NOT trigger for humans here to avoid duplicate reviews (native app handles humans).
-SHOULD_TRIGGER_CODERABBIT="false"
-
-if [[ "$IS_PR" == "true" ]]; then
-  # Only trigger if author is a known bot
-  if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" || "$AUTHOR" == "renovate[bot]" ]]; then
-
-    # Trigger on:
-    # 1. CI Completed (workflow_run) ONLY
-    # We avoid triggering on 'pull_request' to prevent double-execution if CI is running,
-    # and to ensure we only review code that passes tests (saving tokens).
-    if [[ "$EVENT_NAME" == "workflow_run" ]]; then
-
-      RECENT_CR="0"
-      if [[ -n "$GH_TOKEN" ]]; then
-        # Count CR comments in last 15 min (rate limit: 5 per 15min)
-        RECENT_CR=$(gh api "/repos/${GITHUB_REPOSITORY}/issues/comments" \
-          --jq '[.[] | select(.user.login == "coderabbitai[bot]" and
-            ((.created_at | fromdateiso8601) > (now - 900)))] | length' 2>/dev/null || echo "0")
-      fi
-
-      if [[ "$RECENT_CR" -lt 5 ]]; then
-        SHOULD_TRIGGER_CODERABBIT="true"
-        log "Triggering CodeRabbit review for BOT user $AUTHOR"
-      else
-        log "Skipping CodeRabbit - rate limit reached"
-      fi
-    fi
-  fi
-fi
-
-# Logic D: Review Changes (Human or CodeRabbit)
-if [[ "$EVENT_NAME" == "pull_request_review" && "$EVENT_ACTION" == "submitted" && "$SKIP_JULES_INVOCATION" != "true" ]]; then
-
-  # D.1 Human Review
-  if [[ "$REVIEW_STATE" == "changes_requested" && "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
-    SHOULD_INVOKE_JULES="true"
-    JULES_PROMPT="Reviewer @$REVIEW_AUTHOR requested changes on PR #$NUMBER: '$REVIEW_BODY'. Please address feedback. Commit changes directly to the '$BRANCH' branch."
-  fi
-
-  # D.2 CodeRabbit Batch Review - Collect ALL inline comments
-  if [[ "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
-    log "CodeRabbit review submitted - collecting ALL inline comments..."
-
-    COMMENTS_DATA=""
-    if [[ -n "$GH_TOKEN" ]]; then
-      # Fetch ALL CodeRabbit inline comments on this PR (not just this review)
-      # This ensures we get all actionable feedback
-      COMMENTS_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
-        --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | 
-          map("### \(.path):\(.line // .original_line)\n\(.body)") | join("\n\n---\n\n")' 2>/dev/null || echo "")
+      determine_standard_method
+      INVOCATION_METHOD="$METHOD"
       
-      COMMENT_COUNT=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" \
-        --jq '[.[] | select(.user.login == "coderabbitai[bot]")] | length' 2>/dev/null || echo "0")
-      log "Found $COMMENT_COUNT CodeRabbit inline comments"
-    elif [[ -n "$MOCK_GH_CLI" ]]; then
-      COMMENTS_DATA="### src/main.ts:10\nFix typo\n\n---\n\n### src/utils.ts:5\nOptimize loop"
-    fi
-
-    if [[ -n "$COMMENTS_DATA" && "$COMMENTS_DATA" != "" ]]; then
-      # Post comments as a new PR comment to trigger Jules via standard @Jules mechanism
-      # This ensures Jules operates on the existing PR context instead of creating a new one
-      log "Posting aggregated CodeRabbit comments to PR #$NUMBER to trigger Jules..."
-
-      MESSAGE="@Jules Please address the following CodeRabbit review feedback:
-
-$COMMENTS_DATA"
-
-      # GitHub API has a ~65K character limit for comment bodies
-      MESSAGE_BYTES=$(echo -n "$MESSAGE" | wc -c)
-      if [[ $MESSAGE_BYTES -gt 65000 ]]; then
-        log "WARNING: Aggregated comments exceed GitHub API limit ($MESSAGE_BYTES bytes). Truncating..."
-        # Truncate conservatively to account for header and notice
-        TRUNCATED_DATA="${COMMENTS_DATA:0:60000}"
-        MESSAGE="@Jules Please address the following CodeRabbit review feedback:
-
-$TRUNCATED_DATA
-
-... (truncated due to size - see CodeRabbit review for complete feedback)"
-      fi
-
-      GH_OUTPUT=$(gh pr comment "$NUMBER" --body "$MESSAGE" --repo "${GITHUB_REPOSITORY}" 2>&1)
-      GH_EXIT_CODE=$?
-      if [[ $GH_EXIT_CODE -eq 0 ]]; then
-        # Do NOT invoke Jules directly in this pass - wait for the issue_comment event trigger
-        SHOULD_INVOKE_JULES="false"
-        log "Comment posted. Jules will be triggered by the resulting issue_comment event."
+      # Special handling for Manual Mentions:
+      # If the standard way is "mention", and the user JUST mentioned, we don't need to do anything
+      # (The native GitHub App will see the user's mention).
+      if [[ "$INVOCATION_METHOD" == "mention" ]]; then
+        log "Standard method is 'mention', but trigger was manual mention - letting GitHub App handle it."
+        INVOCATION_METHOD="none"
       else
-        log "ERROR: Failed to post comment to PR (exit code $GH_EXIT_CODE): $GH_OUTPUT"
-        log "Falling back to direct Jules invocation."
-        SHOULD_INVOKE_JULES="true"
-
-        # Truncate for fallback prompt if needed
-        FALLBACK_DATA="$COMMENTS_DATA"
-        if [[ ${#FALLBACK_DATA} -gt 50000 ]]; then
-          FALLBACK_DATA="${COMMENTS_DATA:0:50000}
-
-... (truncated - see CodeRabbit review for complete feedback)"
-        fi
-
-        JULES_PROMPT="CodeRabbit Review on PR #$NUMBER. Please address the following feedback:
-
-$FALLBACK_DATA
-
-Please commit changes directly to the '$BRANCH' branch."
+        # If standard is 'api', we need to invoke it manually
+        JULES_PROMPT=$(get_prompt "manual-pr.md")
       fi
+
+
     else
-      log "No CodeRabbit inline comments found for this PR"
+      # Issues are always API for now
+      INVOCATION_METHOD="api"
+      JULES_PROMPT=$(get_prompt "manual-issue.md")
     fi
   fi
 fi
 
-# 4. Output Results
-# -----------------
+# ==============================================================================
+# LOGIC B: Issue Labeled 'jules'
+# ==============================================================================
+if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME" == "jules" ]]; then
+  INVOCATION_METHOD="api"
+  JULES_PROMPT=$(get_prompt "manual-issue.md")
+  log "Issue labeled 'jules' - will invoke API"
+fi
+
+# ==============================================================================
+# LOGIC C: CodeRabbit Review Completed
+# ==============================================================================
+if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
+  if echo "$REVIEW_BODY" | grep -qi "walkthrough"; then
+    log "CodeRabbit review complete - batching comments..."
+    
+    BATCHED_COMMENTS=$(collect_coderabbit_comments)
+    COMMENT_COUNT=$(echo "$BATCHED_COMMENTS" | grep -c "^###" || echo "0")
+    log "Found $COMMENT_COUNT CodeRabbit inline comments"
+    
+    if [[ -n "$BATCHED_COMMENTS" && "$BATCHED_COMMENTS" != "" ]]; then
+      
+      determine_standard_method
+      INVOCATION_METHOD="$METHOD"
+      log "Determined method: $INVOCATION_METHOD ($REASON)"
+
+      if [[ "$INVOCATION_METHOD" == "api" ]]; then
+         # Select prompt based on author?
+         # If Renovate (API) -> renovate-review.md
+         # If Human (API) -> code-rabbit-review.md
+         if [[ "$AUTHOR" == "renovate[bot]" ]]; then
+            JULES_PROMPT=$(get_prompt "renovate-review.md")
+         else
+            JULES_PROMPT=$(get_prompt "code-rabbit-review.md")
+         fi
+      fi
+      # If mention, we just leave it as "mention", and the workflow step 'jules-mention' handles it.
+      
+    else
+      log "No CodeRabbit inline comments - skipping"
+    fi
+  fi
+fi
+
+# ==============================================================================
+# LOGIC D: Human Review (Changes Requested)
+# ==============================================================================
+if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
+  REVIEW_STATE=$(get_json_val ".review.state")
+  
+  if [[ "$REVIEW_STATE" == "changes_requested" ]]; then
+    INVOCATION_METHOD="api"
+    JULES_PROMPT=$(get_prompt "human-review.md")
+    log "Human requested changes - will invoke API"
+  fi
+fi
+
+# ==============================================================================
+# LOGIC E: CodeRabbit Trigger (Bot PRs Only)
+# ==============================================================================
+if [[ "$IS_PR" == "true" && "$EVENT_NAME" == "workflow_run" ]]; then
+  if [[ "$AUTHOR" == *"bot"* || "$AUTHOR" == "google-labs-jules" || "$AUTHOR" == "renovate[bot]" ]]; then
+    RECENT_CR="0"
+    if [[ -n "$GH_TOKEN" ]]; then
+      RECENT_CR=$(gh api "/repos/${GITHUB_REPOSITORY}/issues/comments" \
+        --jq '[.[] | select(.user.login == "coderabbitai[bot]" and
+          ((.created_at | fromdateiso8601) > (now - 900)))] | length' 2>/dev/null || echo "0")
+    fi
+
+    if [[ "$RECENT_CR" -lt 5 ]]; then
+      SHOULD_TRIGGER_CODERABBIT="true"
+      log "Will trigger CodeRabbit for bot PR (Author: $AUTHOR)"
+    else
+      log "Skipping CodeRabbit - rate limit ($RECENT_CR in 15min)"
+    fi
+  fi
+fi
+
+# ==============================================================================
+# 3. Output Results & Summary
+# ==============================================================================
+
+# Write GitHub Job Summary
+if [[ -n "$GITHUB_STEP_SUMMARY" ]]; then
+  {
+    echo "### 🤖 Jules Supervisor Report"
+    echo ""
+    echo "| Metric | Value |"
+    echo "| :--- | :--- |"
+    echo "| **Context** | $EVENT_NAME |"
+    # Only show PR/Issue if defined
+    if [[ -n "$NUMBER" ]]; then
+      echo "| **PR/Issue** | #$NUMBER |"
+    fi
+    echo "| **Author** | $AUTHOR |"
+    echo "| **Invocation** | \`$INVOCATION_METHOD\` |"
+    if [[ -n "$COMMENT_COUNT" && "$COMMENT_COUNT" != "0" ]]; then
+      echo "| **Batched Comments** | $COMMENT_COUNT |"
+    fi
+  } >> "$GITHUB_STEP_SUMMARY"
+  
+  if [[ "$INVOCATION_METHOD" == "api" ]]; then
+    echo "> **API Triggered**" >> "$GITHUB_STEP_SUMMARY"
+  elif [[ "$INVOCATION_METHOD" == "mention" ]]; then
+     echo "> **Mention Triggered**" >> "$GITHUB_STEP_SUMMARY"
+  else
+     echo "> No Action Taken" >> "$GITHUB_STEP_SUMMARY"
+  fi
+fi
+
 set_output "is_pr" "$IS_PR"
 set_output "number" "$NUMBER"
 set_output "branch" "$BRANCH"
 set_output "author" "$AUTHOR"
 set_output "labels" "$LABELS"
-set_output "should_invoke_jules" "$SHOULD_INVOKE_JULES"
+set_output "invocation_method" "$INVOCATION_METHOD"
 set_output "jules_prompt" "$JULES_PROMPT"
+set_output "batched_comments" "$BATCHED_COMMENTS"
 set_output "should_trigger_coderabbit" "$SHOULD_TRIGGER_CODERABBIT"
 
+log "Final Decision: Method=$INVOCATION_METHOD"
 log "Done."

@@ -64,8 +64,10 @@ jobs:
             REASON="No auto-merge-candidate label"
           elif [[ "$IS_DRAFT" == "true" ]]; then
             REASON="Draft PR"
+          elif [[ "$LABELS" == *"jules-invoked"* ]]; then
+            REASON="Agent active (jules-invoked) - waiting for fix"
           elif [[ "$LABELS" == *"ci-failing"* ]]; then
-            REASON="CI still failing"
+            REASON="CI still failing (labeled)"
           elif [[ "$LABELS" == *"needs-review"* ]]; then
             REASON="Needs human review"
           elif [[ "$LABELS" == *"security"* ]]; then

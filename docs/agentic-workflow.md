@@ -4,34 +4,16 @@ This document describes the fully automated, AI-driven CI/CD and development wor
 
 ## Overview
 
-The agentic workflow automates the entire development lifecycle:
+The agentic workflow automates the entire development lifecycle with **cost-optimized Jules invocations**:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                          AGENTIC DEVELOPMENT LOOP                           │
+│                    AUTHOR-BASED INVOCATION STRATEGY                         │
 ├─────────────────────────────────────────────────────────────────────────────┤
 │                                                                             │
-│  Issue Created ──▶ Auto-Triage ──▶ Jules Works ──▶ PR Created             │
-│                                                          │                  │
-│                                                          ▼                  │
-│                              ┌────────────────────────────────────────┐    │
-│                              │         AUTOMATED PR LIFECYCLE         │    │
-│                              ├────────────────────────────────────────┤    │
-│                              │                                        │    │
-│                              │  CodeRabbit Reviews                    │    │
-│                              │         │                              │    │
-│                              │         ▼                              │    │
-│                              │  Jules Fixes Feedback                  │    │
-│                              │         │                              │    │
-│                              │         ▼                              │    │
-│                              │  CI Runs                               │    │
-│                              │         │                              │    │
-│                              │    Pass─┼─Fail                         │    │
-│                              │         │    │                         │    │
-│                              │         ▼    ▼                         │    │
-│                              │  Merge   Jules Fixes                   │    │
-│                              │                                        │    │
-│                              └────────────────────────────────────────┘    │
+│  PR Author = Jules?     →  @jules mention (FREE via GitHub integration)    │
+│  PR Author = Renovate?  →  API once, then @jules mentions                  │
+│  PR Author = Human?     →  API invoke (full context needed)                │
 │                                                                             │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -40,114 +22,75 @@ The agentic workflow automates the entire development lifecycle:
 
 ### 1. AI Agents
 
-| Agent | Role | Trigger |
-|-------|------|---------|
-| **Jules** (Google) | Implements features, fixes issues, addresses reviews | Issues labeled `jules`, `@jules` mentions, CI failures |
-| **CodeRabbit** | AI code review, security analysis, style checks | PR opened/updated |
-| **Renovate** | Dependency updates, security patches | Scheduled (weekly) |
+| Agent | Role | Cost Strategy |
+|-------|------|---------------|
+| **Jules** (Google) | Implements features, fixes issues | API for new context, @mentions for existing |
+| **CodeRabbit** | AI code review | Free (GitHub App) |
+| **Renovate** | Dependency updates | N/A |
 
 ### 2. Workflow Files
 
-| Workflow | Purpose | Location |
-|----------|---------|----------|
-| `agentic-supervisor.yml` | **Unified Orchestrator**: Handles Issues, PRs, Reviews, and Bot Triage | `.github/workflows/` |
-| `pr-jules-ci-fix.yml` | Jules fixes CI failures (triggered by workflow completion) | `.github/workflows/` |
-| `pr-auto-merge.yml` | Auto-merge rules | `.github/workflows/` |
-| `security-audit.yml` | Nightly security scan + auto-fix | `.github/workflows/` |
-| `ci.yml` | CI checks | `.github/workflows/` |
-
-### 3. Configuration Files
-
-| File | Purpose |
-|------|---------|
-| `.coderabbit.yaml` | CodeRabbit review settings |
-| `renovate.json` | Renovate dependency update settings |
-| `AGENTS.md` | Instructions for AI agents |
+| Workflow | Purpose |
+|----------|---------|
+| `agentic-supervisor.yml` | Central orchestrator with author-based invocation |
+| `pr-jules-ci-fix.yml` | CI failure fixes with same author-based logic |
+| `pr-auto-merge.yml` | Auto-merge rules |
+| `security-audit.yml` | Nightly security scan |
+| `stale-branch-cleanup.yml` | Weekly cleanup of abandoned Jules branches |
+| `ci.yml` | CI checks |
 
 ---
 
-## Agentic Supervisor
+## Author-Based Invocation Strategy
 
-The `agentic-supervisor.yml` is the central brain of the automation. It replaces the old split workflows (`agentic-orchestrator` and `jules-issues`) to provide consistent behavior.
+### Jules PRs (`google-labs-jules`)
+- **NEVER** uses Jules API (prevents recursive sessions)
+- Always uses `@jules` comment mentions
+- GitHub integration handles the mention natively
+- **Cost: $0**
 
-### Capabilities
+### Renovate PRs (`renovate[bot]`)
+- First failure/review: Uses Jules API + adds `jules-invoked` label
+- Subsequent issues: Uses `@jules` mentions
+- **Cost: 1 API call per PR maximum**
 
-1.  **Context Resolution**: Automatically detects if a comment is on a PR or an Issue.
-    *   **PR Comment**: Fetches the correct branch (`head.ref`) so Jules commits to the feature branch.
-    *   **Issue Comment**: Defaults to `main` and instructs Jules to create a new branch.
-2.  **Intent Detection**: Distinguishes between:
-    *   User commands (`@jules fix this`)
-    *   CodeRabbit instructions ("Prompt for AI Agents")
-    *   Human Review Requests ("Changes Requested")
-3.  **Auto-Triage**: Labels new issues based on keywords (bug, enhancement, question).
-4.  **Onboarding**: Posts helpful instructions for "good first issue" labels.
-
-### Triggering Jules
-
-#### 1. On Issues
-
-*   **Label**: Add `jules` label.
-    *   *Result*: Jules creates a new branch and PR.
-*   **Comment**: `@jules please fix this bug`.
-    *   *Result*: Jules creates a new branch and PR.
-
-#### 2. On Pull Requests
-
-*   **Comment**: `@jules update this function`.
-    *   *Result*: Jules pushes a commit to the **current PR branch**.
-*   **CodeRabbit**: Bot asks "Prompt for AI Agents".
-    *   *Result*: Jules implements changes on the **current PR branch**.
-*   **Review**: Human requests changes (Review Status: `Changes Requested`).
-    *   *Result*: Jules reads the review body and pushes fixes to the **current PR branch**.
+### Human PRs
+- Always uses Jules API (needs full codebase context)
+- Standard cost per invocation
 
 ---
 
-## Pull Request Automation
+## Detection: CodeRabbit Review Complete
 
-### Lifecycle Stages
+The supervisor detects a complete CodeRabbit review by:
+1. Listening for `pull_request_review` events from `coderabbitai[bot]`
+2. Checking if the review body contains "Walkthrough"
+3. Batching ALL inline comments into a single prompt
 
-```
-┌──────────────────────────────────────────────────────────────────────────┐
-│ STAGE 1: PR OPENED                                                        │
-├──────────────────────────────────────────────────────────────────────────┤
-│                                                                           │
-│  PR Created ──▶ Supervisor Detects ──▶ Route by Type                     │
-│                     │                                                     │
-│        ┌────────────┼────────────┬────────────────────┐                  │
-│        ▼            ▼            ▼                    ▼                  │
-│   Dependency    Small Docs    Normal PR          Large PR               │
-│   Update        Change        (< 200 lines)      (> 200 lines)          │
-│        │            │            │                    │                  │
-│        ▼            ▼            ▼                    ▼                  │
-│   Auto-Approve  Auto-Approve  CodeRabbit         Request Human          │
-│   + Auto-Merge  + Auto-Merge  Reviews            Review                 │
-│                                                                           │
-└──────────────────────────────────────────────────────────────────────────┘
+```bash
+# From agentic-supervisor.sh
+if [[ "$EVENT_NAME" == "pull_request_review" && 
+      "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
+  if echo "$REVIEW_BODY" | grep -qi "walkthrough"; then
+    BATCHED_COMMENTS=$(collect_coderabbit_comments)
+    # ... batch and invoke
+  fi
+fi
 ```
 
-(Rest of the lifecycle stages remain similar, but coordinated by `agentic-supervisor.yml`)
+---
+
+## Tracking: `jules-invoked` Label
+
+The `jules-invoked` label tracks whether Jules API has been invoked for a PR:
+
+- **Added when:** First Jules API invocation on a Renovate PR
+- **Checked before:** Any subsequent invocation decision
+- **Effect:** Switches from API to @mention for cost savings
 
 ---
 
-## Security Automation
-
-### Safe Input Handling
-The supervisor workflow uses strict **Environment Variable Mapping** to prevent script injection. All user-controlled inputs (comments, bodies, labels) are mapped to `env` variables before being used in shell scripts.
-
-```yaml
-env:
-  COMMENT_BODY: ${{ github.event.comment.body }}
-run: |
-  # Safe usage
-  if [[ "$COMMENT_BODY" == *"@jules"* ]]; then ...
-```
-
-### Nightly Security Audit
-(Unchanged from previous version)
-
----
-
-## Architecture Diagram
+## Architecture
 
 ```
                               ┌─────────────────┐
@@ -166,19 +109,57 @@ run: |
            ▼                           ▼                           ▼
    ┌─────────────────────────────────────────────────────────────────────┐
    │                       AGENTIC SUPERVISOR                            │
-   │                   (.github/workflows/agentic-supervisor.yml)        │
    │                                                                     │
-   │   1. Context Resolution (PR vs Issue)                               │
-   │   2. Intent Analysis (Chat vs Review vs Triage)                     │
-   │   3. Agent Invocation (Jules Action)                                │
-   └─────────────────────────────────────────────────────────────────────┘
-           │                           │                           │
-           ▼                           ▼                           ▼
-   ┌───────────────┐          ┌───────────────┐          ┌───────────────┐
-   │ Jules Fixes   │          │ CodeRabbit    │          │  Auto-Label   │
-   │ (Code Change) │          │ Review        │          │  & Triage     │
-   └───────────────┘          └───────────────┘          └───────────────┘
+   │   1. Context Resolution (PR vs Issue, Author)                       │
+   │   2. Invocation Method Selection (API vs Mention)                   │
+   │   3. Comments Batching                                              │
+   └──────────────────────────────┬──────────────────────────────────────┘
+                                  │
+               ┌──────────────────┼──────────────────┐
+               ▼                  ▼                  ▼
+       ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
+       │ jules-api-    │  │ jules-mention │  │  coderabbit-  │
+       │ invoke        │  │               │  │  trigger      │
+       │ (Human, first │  │ (@jules       │  │               │
+       │  Renovate)    │  │  comment)     │  │               │
+       └───────────────┘  └───────────────┘  └───────────────┘
 ```
+
+---
+
+## Configuration Files
+
+| File | Purpose |
+|------|---------|
+| `.coderabbit.yaml` | CodeRabbit review settings (updated to always @jules for bots) |
+| `renovate.json` | Dependency update settings |
+| `AGENTS.md` | Instructions for AI agents |
+
+---
+
+### 3. Prompt Management
+
+Prompts are externalized in `.github/prompts/` for easier maintenance:
+- `manual-issue.md` & `manual-pr.md`: Human triggers
+- `renovate-review.md`: Enhanced instructions for dependency updates
+- `ci-failure.md`: Context for CI fixes
+- `code-rabbit-review.md`: Code review feedback
+
+### 4. Observability
+
+The `agentic-supervisor` workflow outputs a rich **GitHub Job Summary** table, showing:
+- Context (PR/Issue) and Author
+- Selected Invocation Method
+- Number of batched comments
+- Decision reasoning
+
+---
+
+## Maintenance
+
+### Stale Branch Cleanup
+- **Schedule:** Sundays at 01:00 UTC
+- **Action:** Deletes `jules/*` and `agent/*` branches older than 7 days **if** they have no open PRs.
 
 ---
 
@@ -186,5 +167,7 @@ run: |
 
 | Version | Date | Changes |
 |---------|------|---------|
-| 1.1.0 | 2025-05-20 | Unified Agentic Supervisor, Fixed Context Resolution, Security Hardening |
-| 1.0.0 | 2024-12-27 | Initial agentic workflow implementation |
+| 2.1.0 | 2026-01-01 | Added Stale Branch Cleanup, Job Summaries, External Prompts |
+| 2.0.0 | 2026-01-01 | Author-based invocation strategy, cost optimization |
+| 1.1.0 | 2025-05-20 | Unified Agentic Supervisor |
+| 1.0.0 | 2024-12-27 | Initial agentic workflow |

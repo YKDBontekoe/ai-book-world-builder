@@ -82,7 +82,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			}}
 		>
 			<ResizablePanelGroup
-				orientation={isMobile ? "vertical" : "horizontal"}
+				direction={isMobile ? "vertical" : "horizontal"}
 				id={
 					isMobile
 						? "writer-view-layout-vertical"
@@ -95,7 +95,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					<>
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
-							panelRef={sidebarRef}
+							ref={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
 							minSize={20}
 							maxSize={30}
