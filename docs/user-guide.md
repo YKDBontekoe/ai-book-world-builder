@@ -16,6 +16,69 @@ The Project View is divided into three main panels to help you organize and writ
 2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
 3.  **Canvas (Right)**: A visual board for your world. You can view your entities and their relationships here.
 
+## Writer Tools
+
+The Writer View includes specialized AI tools to assist your creative process. Access these via the **Tools** menu in the control bar at the bottom of the screen.
+
+### 1. Write (Batch Write)
+Automatically drafts prose for scenes.
+-   **Usage**: Select a chapter. The tool will draft content for all empty scenes in that chapter based on their summaries.
+-   **Best For**: Getting a rough draft quickly.
+
+### 2. Rewrite
+Refine existing scene content.
+-   **Usage**: Select a scene and provide instructions (e.g., "Make the dialogue more tense," "Show, don't tell").
+-   **Best For**: Polishing specific passages or changing the tone.
+
+### 3. Expand
+Add depth and detail to a scene.
+-   **Usage**: Select a scene. The AI will elaborate on the existing content, adding sensory details and character introspection.
+-   **Best For**: Fleshng out "thin" scenes.
+
+### 4. Critique
+Get feedback on your chapter.
+-   **Usage**: Select a chapter. The AI analyzes the structure, pacing, and character arcs, providing actionable feedback.
+-   **Best For**: Identifying weaknesses before editing.
+
+### 5. Consistency Check
+Ensure your story aligns with your world.
+-   **Usage**: The AI scans the chapter for contradictions with your defined Entities (Characters, Lore).
+-   **Best For**: catching plot holes or out-of-character behavior.
+
+### 6. Generate Lore
+Create new world entities from your ideas.
+-   **Usage**: Describe a character, location, or item. The AI will generate a structured entity entry in your World Bible.
+
+### 7. Search
+Quickly find information within your project.
+-   **Usage**: Ask a question (e.g., "What color are the protagonist's eyes?"). The AI searches your project data for the answer.
+
+### 8. AI Autocomplete
+Get instant suggestions for what comes next in your story.
+-   **How to use**: simply pause writing for a moment. The AI will analyze your context and automatically popup suggestions.
+-   **What it does**: The AI reads the preceding text and offers a continuation that matches your style.
+-   **Controls**: Use **Arrow Keys** to navigate suggestions and **Enter** to accept. Press **Esc** to dismiss.
+
+### 9. Writing Style Analyzer
+Ensure your writing feels consistent and polished.
+-   **How to use**: Open the **Style** panel. It updates automatically as you write.
+-   **What you get**: A real-time report detailing:
+    -   **Tone**: Is it formal, casual, or neutral?
+    -   **Voice**: Tracks active vs. passive voice usage.
+    -   **Pacing**: A score indicating if the scene is fast-paced or slow-burning.
+    -   **Descriptive Level**: Measures how rich your sensory details are.
+
+### 10. Chapter Actions
+Automate complex tasks for an entire chapter via the Chapter context menu (three dots next to a chapter in the sidebar).
+-   **Plan Scenes**: Generates a beat-by-beat outline of scenes for the chapter based on its summary.
+-   **Batch Write**: Automatically drafts prose for all empty scenes in the chapter (requires "Large" model).
+
+### 11. Session Insights
+Track your productivity and writing habits.
+-   **How to use**: Click the **Session** button in the top bar.
+-   **Metrics**: View your session duration, words written, words per minute (WPM), and edit count.
+-   **Reset**: You can reset the session stats at any time to start fresh (e.g., for a "sprint").
+
 ## Book Generation Wizard
 
 The Book Generation feature is a powerful tool to turn your initial idea into a full story structure.
@@ -37,7 +100,7 @@ You can customize which AI models are used for different tasks in the **Settings
 *   **Middle**: Balanced performance. Used for most writing tasks and analyzing your world.
 *   **Large**: High intelligence. Used for complex reasoning, outlining your story, and orchestration.
 
-By default, the system selects the best available models (e.g., "OpenRouter Auto"), but you can override these if you have specific preferences (like using Claude 3.5 Sonnet for writing).
+By default, the system selects the best available models (e.g., "OpenRouter Auto"), but you can override these if you have a specific preference (like using Claude 3.5 Sonnet for writing).
 
 ## Project-Aware Chat
 
@@ -48,36 +111,6 @@ The chat interface is now integrated into the **Floating Assistant** (Writer Vie
 -   **Drafting**: "Write a scene where [Character A] meets [Character B] for the first time."
 
 > **Pro Tip**: Use the **"@"** key to explicitly reference a specific character or document in your chat.
-
-## Writer Tools
-
-The Writer View includes specialized AI tools to assist your creative process. Access these via the **Tools** menu in the control bar.
-
-### 1. AI Autocomplete
-Get instant suggestions for what comes next in your story.
--   **How to use**: simply pause writing for a moment. The AI will analyze your context and automatically popup suggestions.
--   **What it does**: The AI reads the preceding text and offers a continuation that matches your style.
--   **Controls**: Use **Arrow Keys** to navigate suggestions and **Enter** to accept. Press **Esc** to dismiss.
-
-### 2. Writing Style Analyzer
-Ensure your writing feels consistent and polished.
--   **How to use**: Open the **Style** panel. It updates automatically as you write.
--   **What you get**: A real-time report detailing:
-    -   **Tone**: Is it formal, casual, or neutral?
-    -   **Voice**: Tracks active vs. passive voice usage.
-    -   **Pacing**: A score indicating if the scene is fast-paced or slow-burning.
-    -   **Descriptive Level**: Measures how rich your sensory details are.
-
-### 3. Chapter Actions
-Automate complex tasks for an entire chapter via the Chapter context menu (three dots next to a chapter in the sidebar).
--   **Plan Scenes**: Generates a beat-by-beat outline of scenes for the chapter based on its summary.
--   **Batch Write**: Automatically drafts prose for all empty scenes in the chapter (requires "Large" model).
-
-### 4. Session Insights
-Track your productivity and writing habits.
--   **How to use**: Click the **Session** button in the top bar.
--   **Metrics**: View your session duration, words written, words per minute (WPM), and edit count.
--   **Reset**: You can reset the session stats at any time to start fresh (e.g., for a "sprint").
 
 ## Troubleshooting
 
