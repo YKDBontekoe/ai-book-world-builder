@@ -95,15 +95,13 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					<>
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
-							ref={sidebarRef}
+							panelRef={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
 							minSize={20}
 							maxSize={30}
 							collapsible={true}
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
-							onCollapse={() => actions.setSidebarOpen(false)}
-							onExpand={() => actions.setSidebarOpen(true)}
 						>
 							<WriterSidebar />
 						</ResizablePanel>

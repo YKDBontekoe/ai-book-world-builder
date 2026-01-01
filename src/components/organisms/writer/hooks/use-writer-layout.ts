@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import type { PanelHandle } from "react-resizable-panels";
+import { useRef, useState } from "react";
+import type { PanelImperativeHandle } from "react-resizable-panels";
 import { useMediaQuery } from "usehooks-ts";
 
 export type ViewMode = "standard" | "zen";
@@ -10,7 +10,7 @@ export interface WriterLayoutState {
 	isTypewriterMode: boolean;
 	isDirectorMode: boolean;
 	isMobile: boolean;
-	sidebarRef: React.RefObject<PanelHandle>;
+	sidebarRef: React.RefObject<PanelImperativeHandle>;
 	actions: {
 		toggleSidebar: () => void;
 		toggleZenMode: () => void;
@@ -27,22 +27,22 @@ export function useWriterLayout(): WriterLayoutState {
 	const [isTypewriterMode, setIsTypewriterMode] = useState(false);
 	const [isDirectorMode, setIsDirectorMode] = useState(false);
 
-	const sidebarRef = useRef<PanelHandle>(null!);
+	const sidebarRef = useRef<PanelImperativeHandle>(null!);
 
 	const toggleSidebar = () => {
-		setIsSidebarOpen((prev) => !prev);
-	};
-
-	useEffect(() => {
-		const panel = sidebarRef.current;
-		if (panel) {
-			if (isSidebarOpen) {
-				panel.expand();
-			} else {
-				panel.collapse();
+		setIsSidebarOpen((prev) => {
+			const newOpen = !prev;
+			const panel = sidebarRef.current;
+			if (panel) {
+				if (newOpen) {
+					panel.expand();
+				} else {
+					panel.collapse();
+				}
 			}
-		}
-	}, [isSidebarOpen, sidebarRef]);
+			return newOpen;
+		});
+	};
 
 	const toggleZenMode = () => {
 		setViewMode((prev) => (prev === "standard" ? "zen" : "standard"));
