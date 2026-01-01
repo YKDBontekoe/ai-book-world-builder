@@ -89,6 +89,20 @@ export function useChatController({
 					...prev,
 					{ ...part, timestamp: Date.now() } as ProcessLog,
 				]);
+			} else if (part.type === "data-sources") {
+				setMessages((prevMessages) => {
+					const lastMessage = prevMessages.at(-1);
+					if (lastMessage && lastMessage.role === "assistant") {
+						const newMessages = [...prevMessages];
+						const newSources = [...(lastMessage.sources || []), ...part.data];
+						newMessages[newMessages.length - 1] = {
+							...lastMessage,
+							sources: newSources,
+						};
+						return newMessages;
+					}
+					return prevMessages;
+				});
 			}
 		},
 		onFinish: () => {

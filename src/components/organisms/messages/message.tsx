@@ -105,7 +105,7 @@ const PurePreviewMessage = ({
 
 					{/* Display source citations for assistant messages */}
 					{message.role === "assistant" && isLoading && (
-						<MessageStreamingSources />
+						<MessageStreamingSources sources={message.sources} />
 					)}
 
 					{message.role === "assistant" &&

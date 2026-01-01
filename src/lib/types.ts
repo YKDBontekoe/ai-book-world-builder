@@ -113,6 +113,7 @@ export type ChatMessage = UIMessage<
 	content?: string;
 	toolInvocations?: ToolInvocation[];
 	usage?: AppUsage;
+	sources?: SourceCitation[];
 	createdAt?: string | Date;
 };
 
