@@ -169,4 +169,18 @@ describe("scenes server actions", () => {
 		expect(mockSceneRepository.update).not.toHaveBeenCalled();
 		expect(mockInvalidateCache).not.toHaveBeenCalled();
 	});
+
+	it("returns Unauthorized when not logged in", async () => {
+		mockAuth.mockResolvedValue(null);
+
+		const result = await updateSceneAction({ id: sceneId, projectId });
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).toBe("You must be logged in to perform this action");
+		}
+
+		expect(mockProjectRepository.findByIdWithAccess).not.toHaveBeenCalled();
+		expect(mockSceneRepository.update).not.toHaveBeenCalled();
+	});
 });

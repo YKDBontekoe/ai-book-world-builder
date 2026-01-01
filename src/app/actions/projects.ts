@@ -39,6 +39,19 @@ const renameProjectSchema = z.object({
 	description: z.string().max(500, "Description is too long").optional(),
 });
 
+// Helper for chunked inserts
+async function chunkedInsert<T>(
+	tx: any,
+	table: any,
+	items: T[],
+	chunkSize = 1000,
+) {
+	for (let i = 0; i < items.length; i += chunkSize) {
+		const chunk = items.slice(i, i + chunkSize);
+		await tx.insert(table).values(chunk);
+	}
+}
+
 export async function createProjectAction(params: {
 	name: string;
 	description?: string;
@@ -285,10 +298,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					.select()
 					.from(relationship)
 					.where(eq(relationship.projectId, originalProjectId)),
-				tx
-					.select()
-					.from(outline)
-					.where(eq(outline.projectId, originalProjectId)),
+				tx.select().from(outline).where(eq(outline.projectId, originalProjectId)),
 				tx.select().from(volume).where(eq(volume.projectId, originalProjectId)),
 				tx
 					.select()
@@ -320,7 +330,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 						updatedAt: new Date(),
 					};
 				});
-				await tx.insert(entity).values(newEntities);
+				await chunkedInsert(tx, entity, newEntities);
 			}
 
 			// 4. Batch Insert Attributes
@@ -340,7 +350,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					}
 				}
 				if (newAttributes.length > 0) {
-					await tx.insert(entityAttribute).values(newAttributes);
+					await chunkedInsert(tx, entityAttribute, newAttributes);
 				}
 			}
 
@@ -363,7 +373,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					}
 				}
 				if (newRelationships.length > 0) {
-					await tx.insert(relationship).values(newRelationships);
+					await chunkedInsert(tx, relationship, newRelationships);
 				}
 			}
 
@@ -382,7 +392,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 						updatedAt: new Date(),
 					};
 				});
-				await tx.insert(outline).values(newOutlines);
+				await chunkedInsert(tx, outline, newOutlines);
 			}
 
 			const volumeIdMap = new Map<string, string>();
@@ -402,10 +412,15 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 							createdAt: new Date(),
 							updatedAt: new Date(),
 						});
+					} else {
+						// Log orphaned volumes
+						console.warn(
+							`Orphaned volume skipped during fork. VolumeId: ${old.id}, OutlineId: ${old.outlineId}, SourceProject: ${originalProjectId}, NewProject: ${newProject.id}`,
+						);
 					}
 				}
 				if (newVolumes.length > 0) {
-					await tx.insert(volume).values(newVolumes);
+					await chunkedInsert(tx, volume, newVolumes);
 				}
 			}
 
@@ -431,7 +446,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					}
 				}
 				if (newChapters.length > 0) {
-					await tx.insert(chapter).values(newChapters);
+					await chunkedInsert(tx, chapter, newChapters);
 				}
 			}
 
@@ -457,7 +472,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					}
 				}
 				if (newDrafts.length > 0) {
-					await tx.insert(chapterDraft).values(newDrafts);
+					await chunkedInsert(tx, chapterDraft, newDrafts);
 				}
 			}
 
@@ -497,7 +512,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 			});
 
 			if (resolvedScenes.length > 0) {
-				await tx.insert(scene).values(resolvedScenes);
+				await chunkedInsert(tx, scene, resolvedScenes);
 			}
 
 			// Batch Insert Scene Cards
@@ -518,7 +533,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					}
 				}
 				if (newSceneCards.length > 0) {
-					await tx.insert(sceneCard).values(newSceneCards);
+					await chunkedInsert(tx, sceneCard, newSceneCards);
 				}
 			}
 
