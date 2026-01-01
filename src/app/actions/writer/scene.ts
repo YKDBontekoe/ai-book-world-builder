@@ -199,7 +199,7 @@ export async function createSceneInChapter(
 				newSequence = insertAfterScene.sequence + 1;
 				prevSceneId = insertAfterScene.id;
 
-				// Batch update subsequent scenes
+				// Batch update subsequent scenes using SQL expression
 				await db
 					.update(scene)
 					.set({
@@ -330,13 +330,14 @@ export async function duplicateScene(
 		// 2. Verify Access
 		await ensureProjectAccess(targetScene.projectId, true);
 
-		// 3. Prepare new data
-		const scenes = await sceneRepository.findByChapter(targetScene.chapterId);
+		// 3. Prepare new data - Calculate sequence, no longer fetching all scenes
+		// We still need to know the target sequence.
+		// Since we are inserting *after* targetScene, newSequence = targetScene.sequence + 1.
 		const newSequence = targetScene.sequence + 1;
 
 		// 4. Transaction: Shift others and Insert
 		const newScene = await db.transaction(async (tx) => {
-			// Batch update subsequent scenes
+			// Batch update subsequent scenes: Increment sequence for all scenes >= newSequence in this chapter
 			await tx
 				.update(scene)
 				.set({
@@ -367,9 +368,16 @@ export async function duplicateScene(
 				.returning();
 
 			// Update the scene that used to follow original to point to new duplicate
-			// Find scene where prevSceneId was targetScene.id (in the old state)
-			const nextScene = scenes.find((s) => s.prevSceneId === targetScene.id);
-			if (nextScene) {
+			// Find scene where prevSceneId WAS targetScene.id
+			// Note: This scene might have just been shifted in sequence, but its ID and prevSceneId haven't changed yet.
+			// We need to fetch it to update its prevSceneId.
+			const [nextScene] = await tx
+				.select()
+				.from(scene)
+				.where(eq(scene.prevSceneId, targetScene.id));
+
+			if (nextScene && nextScene.id !== created.id) {
+				// Ensure we don't update the newly created scene itself (it points to targetScene)
 				await tx
 					.update(scene)
 					.set({ prevSceneId: created.id, updatedAt: new Date() })
@@ -448,6 +456,20 @@ export async function moveSceneToChapter(
 					.set({ prevSceneId: targetScene.prevSceneId, updatedAt: new Date() })
 					.where(eq(scene.id, nextInSource.id));
 			}
+
+			// A.1 Normalize Source Chapter Sequences: Decrement sequences of scenes that were *after* the moved scene
+			await tx
+				.update(scene)
+				.set({
+					sequence: sql`${scene.sequence} - 1`,
+					updatedAt: new Date(),
+				})
+				.where(
+					and(
+						eq(scene.chapterId, targetScene.chapterId),
+						sql`${scene.sequence} > ${targetScene.sequence}`,
+					),
+				);
 
 			// B. Prepare target position (End of list)
 			const [lastInTarget] = await tx

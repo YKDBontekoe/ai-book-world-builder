@@ -80,8 +80,23 @@ const mockProjectContext = {
 	},
 };
 
+// Define Transaction type for typing purposes (simplified)
+type TransactionMock = {
+	update: ReturnType<typeof vi.fn>;
+	set: ReturnType<typeof vi.fn>;
+	where: ReturnType<typeof vi.fn>;
+	insert: ReturnType<typeof vi.fn>;
+	values: ReturnType<typeof vi.fn>;
+	returning: ReturnType<typeof vi.fn>;
+	delete: ReturnType<typeof vi.fn>;
+	select: ReturnType<typeof vi.fn>;
+	from: ReturnType<typeof vi.fn>;
+	orderBy: ReturnType<typeof vi.fn>;
+	limit: ReturnType<typeof vi.fn>;
+};
+
 // Helper to create a fully typed TX mock
-const createTxMock = () => ({
+const createTxMock = (): TransactionMock => ({
 	update: vi.fn().mockReturnThis(),
 	set: vi.fn().mockReturnThis(),
 	where: vi.fn().mockReturnThis(),
@@ -114,6 +129,60 @@ describe("writer scene actions", () => {
 			};
 			const txMock = createTxMock();
 			txMock.returning.mockResolvedValue([newScene]);
+			// Mock select query for next scene inside transaction to return empty (no next scene)
+			// The implementation expects an array from the select()...limit(1) chain
+			// BUT, the `from()` mock returns `this`, so `where` is called on it, then `limit`.
+			// The chain is: tx.select().from().where() -> .limit(1) is NOT called for select queries in standard Drizzle unless constructed so.
+			// Wait, in my implementation: `const [nextScene] = await tx.select().from(scene).where(eq(scene.prevSceneId, targetScene.id));`
+			// It does NOT use limit(1) there in the updated `duplicateScene` implementation I wrote in `src/app/actions/writer/scene.ts`.
+			// Let's check `src/app/actions/writer/scene.ts`.
+			// `const [nextScene] = await tx.select().from(scene).where(eq(scene.prevSceneId, targetScene.id));`
+			// It just awaits the chain. `from` returns the query builder which is thenable.
+			// So `where` should return a thenable that resolves to the array.
+
+			// In `createTxMock`:
+			// select: vi.fn().mockReturnThis(),
+			// from: vi.fn().mockReturnThis(),
+			// where: vi.fn().mockReturnThis(),
+			// So awaiting `where(...)` returns `this` (the mock object), which is NOT an array.
+			// The error "TypeError: (intermediate value) is not iterable" happens at `const [nextScene] = ...` because `...` returned the mock object, not an array.
+
+			// We need `where` to be thenable and resolve to data OR strictly mock the chain to return data on the final call.
+			// Since Drizzle queries are promises, we can mock `then`.
+			// Or better, make the mock object a thenable that resolves to the desired data.
+
+			// However, `duplicateScene` calls multiple queries.
+			// 1. update ... where ... (returns result)
+			// 2. insert ... values ... returning ... (returns [created])
+			// 3. select ... where ... (returns [nextScene] or [])
+			// 4. update ... set ... where ... (if nextScene exists)
+
+			// We need specific return values for specific chains.
+			// `tx.update` returns `this`, then `set` returns `this`, then `where` returns promise (void/result).
+			// `tx.insert` returns `this`, `values` returns `this`, `returning` returns promise ([created]).
+			// `tx.select` returns `this`, `from` returns `this`, `where` returns promise ([nextScene]).
+
+			// The current `createTxMock` returns `this` for everything.
+			// We need to differentiate based on the starting point (update vs insert vs select).
+
+			const selectMock = {
+				from: vi.fn().mockReturnThis(),
+				where: vi.fn().mockResolvedValue([]), // Default to empty array for select queries
+			};
+
+			const insertMock = {
+				values: vi.fn().mockReturnThis(),
+				returning: vi.fn().mockResolvedValue([newScene]),
+			};
+
+			const updateMock = {
+				set: vi.fn().mockReturnThis(),
+				where: vi.fn().mockResolvedValue(undefined),
+			};
+
+			txMock.select.mockReturnValue(selectMock as any);
+			txMock.insert.mockReturnValue(insertMock as any);
+			txMock.update.mockReturnValue(updateMock as any);
 
 			const { db } = await import("@/lib/db/drizzle");
 			vi.mocked(db.transaction).mockImplementation(async (cb) => {
@@ -125,14 +194,16 @@ describe("writer scene actions", () => {
 			expect(result.success).toBe(true);
 			expect(result.sceneId).toBe("scene-new");
 
-			// Verify update batch logic
+			// Verify update batch logic (sequence shifting)
 			expect(txMock.update).toHaveBeenCalled();
-			expect(txMock.set).toHaveBeenCalled(); // Should set sequence and updatedAt
-			expect(txMock.where).toHaveBeenCalled(); // Should have where clause
+			// Since we mocked update to return updateMock, assertions should be on updateMock for chained calls
+			expect(updateMock.set).toHaveBeenCalled(); // Should set sequence and updatedAt
+			expect(updateMock.where).toHaveBeenCalled(); // Should have where clause
 
 			// Verify insert arguments
 			expect(txMock.insert).toHaveBeenCalled();
-			expect(txMock.values).toHaveBeenCalledWith(
+			// Since we mocked insert to return insertMock, assertions should be on insertMock for chained calls
+			expect(insertMock.values).toHaveBeenCalledWith(
 				expect.objectContaining({
 					projectId: mockScene.projectId,
 					chapterId: mockScene.chapterId,
@@ -158,15 +229,20 @@ describe("writer scene actions", () => {
 			mockedSceneRepo.findById.mockResolvedValue(mockScene);
 			mockedEnsureAccess.mockResolvedValue(mockProjectContext);
 
+			// Valid UUID for target chapter
+			const validTargetChapterId = "123e4567-e89b-12d3-a456-426614174999";
+
 			const { db } = await import("@/lib/db/drizzle");
 
 			// Mock finding target chapter
 			vi.mocked(db.select).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
-						limit: vi
-							.fn()
-							.mockResolvedValue([{ id: targetChapterId, projectId }]),
+						// Fix: Return correct ID if requested, else empty or matching logic
+						limit: vi.fn().mockImplementation(() => {
+							// Simulating a successful find for the target chapter ID
+							return Promise.resolve([{ id: validTargetChapterId, projectId }]);
+						}),
 					}),
 				}),
 			} as any);
@@ -178,8 +254,6 @@ describe("writer scene actions", () => {
 				return await cb(txMock as any);
 			});
 
-			// Valid UUID for target chapter
-			const validTargetChapterId = "123e4567-e89b-12d3-a456-426614174999";
 			const result = await moveSceneToChapter(sceneId, validTargetChapterId);
 
 			expect(result.success).toBe(true);
@@ -188,6 +262,7 @@ describe("writer scene actions", () => {
 
 		it("fails if target chapter is in different project", async () => {
 			mockedSceneRepo.findById.mockResolvedValue(mockScene);
+			const validTargetChapterId = "123e4567-e89b-12d3-a456-426614174999";
 
 			const { db } = await import("@/lib/db/drizzle");
 			vi.mocked(db.select).mockReturnValue({
@@ -196,13 +271,12 @@ describe("writer scene actions", () => {
 						limit: vi
 							.fn()
 							.mockResolvedValue([
-								{ id: targetChapterId, projectId: "other-project" },
+								{ id: validTargetChapterId, projectId: "other-project" },
 							]),
 					}),
 				}),
 			} as any);
 
-			const validTargetChapterId = "123e4567-e89b-12d3-a456-426614174999";
 			const result = await moveSceneToChapter(sceneId, validTargetChapterId);
 			expect(result.success).toBe(false);
 			expect(result.error).toContain("different project");
@@ -210,6 +284,7 @@ describe("writer scene actions", () => {
 
 		it("fails if target chapter not found", async () => {
 			mockedSceneRepo.findById.mockResolvedValue(mockScene);
+			const validTargetChapterId = "123e4567-e89b-12d3-a456-426614174999";
 
 			const { db } = await import("@/lib/db/drizzle");
 			vi.mocked(db.select).mockReturnValue({
@@ -220,31 +295,23 @@ describe("writer scene actions", () => {
 				}),
 			} as any);
 
-			const validTargetChapterId = "123e4567-e89b-12d3-a456-426614174999";
 			const result = await moveSceneToChapter(sceneId, validTargetChapterId);
 			expect(result.success).toBe(false);
 			expect(result.error).toBe("Target chapter not found");
 		});
 
 		it("fails if scene is already in target chapter", async () => {
-			const sceneInTarget = { ...mockScene, chapterId: targetChapterId };
-			mockedSceneRepo.findById.mockResolvedValue(sceneInTarget);
+			const uuidTarget = "123e4567-e89b-12d3-a456-426614174888";
 
+			// Mock DB select to return the target chapter
 			const { db } = await import("@/lib/db/drizzle");
 			vi.mocked(db.select).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
-						limit: vi
-							.fn()
-							.mockResolvedValue([{ id: targetChapterId, projectId }]),
+						limit: vi.fn().mockResolvedValue([{ id: uuidTarget, projectId }]),
 					}),
 				}),
 			} as any);
-
-			// const validTargetChapterId = targetChapterId; // Same chapter
-			// Need a valid UUID for targetChapterId if schema checks it, but here it's mocked string "chapter-456"
-			// which might fail Zod uuid check. Let's use valid UUIDs.
-			const uuidTarget = "123e4567-e89b-12d3-a456-426614174888";
 
 			// Adjust mock scene to have this chapter ID
 			mockedSceneRepo.findById.mockResolvedValue({
