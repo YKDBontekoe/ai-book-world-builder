@@ -9,11 +9,19 @@ interface UseSceneContentProps {
 	onContentUpdate?: (sceneId: string, content: string) => void;
 }
 
+export interface UseSceneContentReturn {
+	sceneContent: string;
+	isSaving: boolean;
+	lastSaved: Date | null;
+	handleContentChange: (newContent: string) => void;
+	setContentDirectly: (content: string) => void;
+}
+
 export function useSceneContent({
 	activeSceneId,
 	initialContent,
 	onContentUpdate,
-}: UseSceneContentProps) {
+}: UseSceneContentProps): UseSceneContentReturn {
 	// Initialize with initialContent if provided
 	const [sceneContent, setSceneContent] = useState(initialContent ?? "");
 	const [isSaving, setIsSaving] = useState(false);
