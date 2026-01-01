@@ -19,7 +19,6 @@ vi.mock("@/lib/cache", () => ({
 	invalidateCache: vi.fn(),
 }));
 
-import type { Session } from "next-auth";
 import { auth } from "@/app/(auth)/auth";
 import { updateSceneAction } from "@/app/actions/scenes";
 import { invalidateCache } from "@/lib/cache";
@@ -27,7 +26,7 @@ import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import type { Project, Scene } from "@/lib/db/schema";
 import type { Session } from "next-auth";
 
-const mockedAuth = vi.mocked(auth as any);
+const mockedAuth = vi.mocked(auth);
 const mockedFindByIdWithAccess = vi.mocked(
 	projectRepository.findByIdWithAccess,
 );
@@ -38,8 +37,7 @@ const userId = randomUUID();
 const projectId = randomUUID();
 const sceneId = randomUUID();
 
-// biome-ignore lint/suspicious/noExplicitAny: to accommodate extended user properties in test mock
-function buildSession(): any {
+function buildSession(): Session {
 	return {
 		user: {
 			email: null,
@@ -62,8 +60,6 @@ function buildProject(overrides?: Partial<Project>): Project {
 		createdAt: new Date("2024-01-01T00:00:00Z"),
 		visibility: "private",
 		folders: [],
-		forkedFromId: null,
-		lastViewedSceneId: null,
 		...overrides,
 	} as Project;
 }
@@ -79,7 +75,6 @@ function buildScene(overrides?: Partial<Scene>): Scene {
 		projectId,
 		createdAt: new Date("2024-01-01T00:00:00Z"),
 		updatedAt: new Date("2024-01-02T00:00:00Z"),
-		prevSceneId: null,
 		...overrides,
 	} as Scene;
 }
