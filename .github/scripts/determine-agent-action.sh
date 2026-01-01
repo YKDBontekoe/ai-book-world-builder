@@ -23,25 +23,29 @@ fi
 METHOD="none"
 REASON=""
 
-case "$AUTHOR" in
-  "google-labs-jules"*)
-    METHOD="mention"
-    REASON="PR created by Jules"
-    ;;
-  "renovate[bot]")
-    if [[ "$LABELS" == *"jules-invoked"* ]]; then
+# Check label FIRST (Fallback/Override for any author context)
+if [[ "$LABELS" == *"jules-invoked"* ]]; then
+  METHOD="mention"
+  REASON="Existing Jules session detected (label)"
+else
+  # Check Author
+  case "$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')" in
+    *"jules"*)
       METHOD="mention"
-      REASON="Renovate PR with existing Jules session"
-    else
+      REASON="PR created by Jules"
+      ;;
+    "renovate[bot]")
+      # Renovate without label = API (First time)
       METHOD="api"
       REASON="First time on Renovate PR"
-    fi
-    ;;
-  *)
-    METHOD="api"
-    REASON="Human-authored PR"
-    ;;
-esac
+      ;;
+    *)
+      # Human/Other without label = API (First time)
+      METHOD="api"
+      REASON="Human-authored or new context"
+      ;;
+  esac
+fi
 
 if [[ -n "$GITHUB_OUTPUT" ]]; then
   echo "method=$METHOD" >> "$GITHUB_OUTPUT"

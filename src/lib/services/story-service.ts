@@ -1,27 +1,54 @@
+import "server-only";
+
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service"; // Use new service
 import { invalidateCache } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
-import type {
-	BookPlan,
-	StoryStyle,
+import {
+	type BookPlan,
+	bookPlanSchema,
+	type StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
 import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
 
 // Re-export types for backward compatibility
-export type {
-	BookPlan,
-	StoryStyle,
-} from "@/lib/services/schemas/story-schemas";
-export { bookPlanSchema } from "@/lib/services/schemas/story-schemas";
+export type { BookPlan, StoryStyle };
+export { bookPlanSchema };
 
+/**
+ * StoryService
+ *
+ * The primary business logic layer for interactive story management.
+ * It coordinates between the Database (Repository), AI Services (Planning/Generation),
+ * and Access Control.
+ *
+ * Responsibilities:
+ * - Planning books and chapters
+ * - Orchestrating scene text generation
+ * - Managing structure updates (creating scenes/chapters)
+ */
 export class StoryService {
+	/**
+	 * Generates a high-level book plan (Outline + Chapters) based on a prompt.
+	 * Delegates to `planningService` for the actual AI call.
+	 *
+	 * @param prompt User's story idea
+	 * @param style Optional style configuration (tone, pacing)
+	 * @param modelId Optional specific model ID (defaults to 'large')
+	 */
 	async generateBookPlan(prompt: string, style?: StoryStyle, modelId?: string) {
 		return await planningService.generateBookPlan(prompt, style, modelId);
 	}
 
+	/**
+	 * Persists a generated book plan to the database.
+	 *
+	 * @param projectId The target project
+	 * @param plan The generated plan structure
+	 * @param style Style preferences to save with the outline
+	 */
 	async createBookFromPlan(
 		projectId: string,
 		plan: BookPlan,
@@ -37,6 +64,14 @@ export class StoryService {
 		return result;
 	}
 
+	/**
+	 * Generates a list of scenes for a specific chapter based on the chapter's summary and context.
+	 * - Fetches chapter details
+	 * - Calls `planningService.planChapterScenes`
+	 * - Batch creates the new scenes in the database
+	 *
+	 * @param chapterId The chapter to populate with scenes
+	 */
 	async planChapterScenes(chapterId: string) {
 		const targetChapter = await storyRepository.getChapterWithScenes(chapterId);
 
@@ -73,6 +108,17 @@ export class StoryService {
 		return createResult;
 	}
 
+	/**
+	 * Generates prose for a specific scene ("Batch Write" tool).
+	 *
+	 * Workflow:
+	 * 1. Fetches scene context (Chapter info, Outline, Previous scenes)
+	 * 2. Builds a context-flooded prompt using `buildSceneGenerationContext`
+	 * 3. Calls `generationService.continueWriting` (using the 'Large' model)
+	 * 4. Updates the scene content in the database
+	 *
+	 * @param sceneId The ID of the scene to generate text for
+	 */
 	async generateSceneText(sceneId: string) {
 		// 1. Fetch Data
 		const { targetScene, targetChapter, targetOutline, scenesInChapter } =
