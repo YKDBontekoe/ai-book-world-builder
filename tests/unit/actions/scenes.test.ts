@@ -19,6 +19,7 @@ vi.mock("@/lib/cache", () => ({
 	invalidateCache: vi.fn(),
 }));
 
+import type { Session } from "next-auth";
 import { auth } from "@/app/(auth)/auth";
 import { updateSceneAction } from "@/app/actions/scenes";
 import { invalidateCache } from "@/lib/cache";
