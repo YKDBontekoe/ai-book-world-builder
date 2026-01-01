@@ -83,7 +83,7 @@ export function useWriterState({
 		setContentDirectly,
 	} = useSceneContent({
 		activeSceneId: activeSceneId || undefined,
-		initialContent: activeScene?.content,
+		initialContent: activeScene?.content ?? undefined,
 		onContentUpdate,
 	});
 
