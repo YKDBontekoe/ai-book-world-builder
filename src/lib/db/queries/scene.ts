@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, eq, sql } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
@@ -13,7 +13,7 @@ export async function getScenesForChapter({
 		return await db
 			.select()
 			.from(scene)
-			.where(eq(scene.chapterId, chapterId))
+			.where(and(eq(scene.chapterId, chapterId), isNull(scene.deletedAt)))
 			.orderBy(asc(scene.sequence));
 	} catch (error) {
 		console.error(error);
@@ -44,16 +44,19 @@ export async function getScenesForProject({
 					prevSceneId: scene.prevSceneId,
 					chapterId: scene.chapterId,
 					projectId: scene.projectId,
+					deletedAt: scene.deletedAt,
 				})
 				.from(scene)
-				.where(eq(scene.projectId, projectId))
+				.where(
+					and(eq(scene.projectId, projectId), isNull(scene.deletedAt)),
+				)
 				.orderBy(asc(scene.sequence));
 		}
 
 		return await db
 			.select()
 			.from(scene)
-			.where(eq(scene.projectId, projectId))
+			.where(and(eq(scene.projectId, projectId), isNull(scene.deletedAt)))
 			.orderBy(asc(scene.sequence));
 	} catch (error) {
 		console.error(error);

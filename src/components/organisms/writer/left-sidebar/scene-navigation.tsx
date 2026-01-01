@@ -2,15 +2,19 @@
 
 import {
 	BookPlus,
+	CheckSquare,
 	ChevronsDown,
 	ChevronsUp,
 	FilePlus2,
 	Loader2,
 	Plus,
 	Sparkles,
+	Trash2,
+	X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { bulkDeleteScenes, restoreScenes } from "@/app/actions/scene-ops";
 import {
 	createNewChapter,
 	createSceneInChapter,
@@ -59,6 +63,10 @@ export function SceneNavigation({
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
+	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
 
 	// Initialize expanded state when structure loads
 	useEffect(() => {
@@ -66,6 +74,13 @@ export function SceneNavigation({
 			setExpandedChapters(structure.map((c) => c.id));
 		}
 	}, [structure]);
+
+	// Clear selection when exiting selection mode
+	useEffect(() => {
+		if (!isSelectionMode) {
+			setSelectedSceneIds(new Set());
+		}
+	}, [isSelectionMode]);
 
 	const handleExpandAll = () => {
 		if (structure) {
@@ -75,6 +90,62 @@ export function SceneNavigation({
 
 	const handleCollapseAll = () => {
 		setExpandedChapters([]);
+	};
+
+	const toggleSceneSelection = useCallback((sceneId: string) => {
+		setSelectedSceneIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(sceneId)) {
+				next.delete(sceneId);
+			} else {
+				next.add(sceneId);
+			}
+			return next;
+		});
+	}, []);
+
+	const handleBulkDelete = async () => {
+		if (selectedSceneIds.size === 0) return;
+
+		const count = selectedSceneIds.size;
+		const idsToDelete = Array.from(selectedSceneIds);
+		const toastId = toast.loading(`Deleting ${count} scenes...`);
+
+		// Optimistic UI update (optional, but let's rely on server for now to be safe)
+		// Or assume success:
+		setIsSelectionMode(false);
+
+		try {
+			const result = await bulkDeleteScenes(project.id, idsToDelete);
+			if (result.success) {
+				toast.success(`Deleted ${count} scenes`, {
+					id: toastId,
+					action: {
+						label: "Undo",
+						onClick: async () => {
+							const restoreToast = toast.loading("Restoring scenes...");
+							const restoreResult = await restoreScenes(
+								project.id,
+								idsToDelete,
+							);
+							if (restoreResult.success) {
+								toast.success("Scenes restored", { id: restoreToast });
+								onStructureUpdate?.();
+							} else {
+								toast.error("Failed to restore scenes", {
+									id: restoreToast,
+								});
+							}
+						},
+					},
+				});
+				onStructureUpdate?.();
+			} else {
+				toast.error("Failed to delete scenes", { id: toastId });
+			}
+		} catch (_e) {
+			toast.error("Error deleting scenes", { id: toastId });
+		}
 	};
 
 	const handleGenerateNextScene = useCallback(
@@ -229,9 +300,26 @@ export function SceneNavigation({
 	return (
 		<div className="flex flex-col h-full">
 			<div className="flex items-center justify-between px-4 py-2">
-				<span className="text-xs font-medium text-muted-foreground">
-					{structure.length} Chapters
-				</span>
+				<div className="flex items-center gap-2">
+					<span className="text-xs font-medium text-muted-foreground">
+						{structure.length} Chapters
+					</span>
+					{!readOnly && (
+						<Button
+							variant={isSelectionMode ? "secondary" : "ghost"}
+							size="icon"
+							className="h-6 w-6 ml-1"
+							onClick={() => setIsSelectionMode(!isSelectionMode)}
+							title={isSelectionMode ? "Cancel Selection" : "Select Scenes"}
+						>
+							{isSelectionMode ? (
+								<X className="h-3 w-3" />
+							) : (
+								<CheckSquare className="h-3 w-3" />
+							)}
+						</Button>
+					)}
+				</div>
 				<div className="flex gap-1">
 					<Button
 						variant="ghost"
@@ -258,7 +346,7 @@ export function SceneNavigation({
 					type="multiple"
 					value={expandedChapters}
 					onValueChange={setExpandedChapters}
-					className="w-full"
+					className="w-full pb-12"
 				>
 					{structure.map((chapter) => (
 						<AccordionItem
@@ -297,12 +385,16 @@ export function SceneNavigation({
 											scene={scene}
 											isActive={activeSceneId === scene.id}
 											chapterId={chapter.id}
-											onSelect={onSceneSelect}
+											onSelect={
+												isSelectionMode ? toggleSceneSelection : onSceneSelect
+											}
 											onGenerateNext={handleGenerateNextScene}
 											isGenerating={isGenerating}
 											onRename={handleRenameScene}
 											onDelete={handleDeleteScene}
 											readOnly={readOnly}
+											selectionMode={isSelectionMode}
+											isSelected={selectedSceneIds.has(scene.id)}
 										/>
 									))}
 									<Button
@@ -338,6 +430,26 @@ export function SceneNavigation({
 					</div>
 				</Accordion>
 			</ScrollArea>
+
+			{/* Bulk Actions Bar */}
+			{isSelectionMode && selectedSceneIds.size > 0 && (
+				<div className="absolute bottom-4 left-4 right-4 z-20">
+					<div className="bg-destructive/90 backdrop-blur-md text-destructive-foreground px-4 py-2 rounded-xl shadow-lg flex items-center justify-between animate-in slide-in-from-bottom-2 duration-300">
+						<span className="text-sm font-medium">
+							{selectedSceneIds.size} selected
+						</span>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="hover:bg-black/20 text-white h-8"
+							onClick={handleBulkDelete}
+						>
+							<Trash2 className="mr-2 h-4 w-4" />
+							Delete
+						</Button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 }

@@ -3,6 +3,7 @@
 import { FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
+import { Checkbox } from "@/components/atoms/checkbox";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -24,6 +25,8 @@ interface SceneItemProps {
 	onRename?: (sceneId: string, newTitle: string) => void;
 	onDelete?: (sceneId: string) => void;
 	readOnly?: boolean;
+	selectionMode?: boolean;
+	isSelected?: boolean;
 }
 
 export const SceneItem = memo(function SceneItem({
@@ -36,6 +39,8 @@ export const SceneItem = memo(function SceneItem({
 	onRename,
 	onDelete,
 	readOnly,
+	selectionMode,
+	isSelected,
 }: SceneItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(scene.title);
@@ -104,9 +109,19 @@ export const SceneItem = memo(function SceneItem({
 	}
 
 	return (
-		<div className="relative">
+		<div className="relative flex items-center gap-1">
+			{selectionMode && (
+				<div className="pl-2">
+					<Checkbox
+						checked={isSelected}
+						onCheckedChange={() => onSelect(scene.id)}
+						aria-label={`Select scene ${scene.title}`}
+						className="h-3 w-3"
+					/>
+				</div>
+			)}
 			<ContextMenu>
-				<ContextMenuTrigger disabled={readOnly}>
+				<ContextMenuTrigger disabled={readOnly} className="w-full">
 					<Button
 						variant={isActive ? "secondary" : "ghost"}
 						size="sm"
@@ -115,7 +130,9 @@ export const SceneItem = memo(function SceneItem({
 							isActive && "bg-secondary/50 font-medium",
 						)}
 						onClick={() => onSelect(scene.id)}
-						onDoubleClick={() => !readOnly && setIsEditing(true)}
+						onDoubleClick={() =>
+							!readOnly && !selectionMode && setIsEditing(true)
+						}
 					>
 						<FileText className="mr-2 h-3 w-3 opacity-70" />
 						<span className="truncate">{scene.title}</span>

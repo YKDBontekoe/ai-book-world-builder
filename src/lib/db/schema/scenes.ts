@@ -1,5 +1,5 @@
-import type { InferSelectModel } from "drizzle-orm";
 import {
+	boolean,
 	index,
 	integer,
 	jsonb,
@@ -13,6 +13,7 @@ import {
 
 import { chapter } from "@/lib/db/schema/outlines";
 import { project } from "@/lib/db/schema/projects";
+import type { InferSelectModel } from "drizzle-orm";
 
 export const sceneStatus = [
 	"planned",
@@ -40,6 +41,7 @@ export const scene = pgTable(
 		projectId: uuid("projectId")
 			.notNull()
 			.references(() => project.id),
+		deletedAt: timestamp("deletedAt"),
 	},
 	(table) => ({
 		prevSceneIdx: index("scene_prev_scene_idx").on(table.prevSceneId),

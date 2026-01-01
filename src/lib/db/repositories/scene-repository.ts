@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/drizzle";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
@@ -85,7 +85,7 @@ export class SceneRepository extends BaseRepository<
 			return await db
 				.select()
 				.from(scene)
-				.where(eq(scene.chapterId, chapterId))
+				.where(and(eq(scene.chapterId, chapterId), isNull(scene.deletedAt)))
 				.orderBy(asc(scene.sequence));
 		} catch (error) {
 			console.error("SceneRepository.findByChapter error:", error);
@@ -115,16 +115,17 @@ export class SceneRepository extends BaseRepository<
 						prevSceneId: scene.prevSceneId,
 						chapterId: scene.chapterId,
 						projectId: scene.projectId,
+						deletedAt: scene.deletedAt,
 					})
 					.from(scene)
-					.where(eq(scene.projectId, projectId))
+					.where(and(eq(scene.projectId, projectId), isNull(scene.deletedAt)))
 					.orderBy(asc(scene.sequence));
 			}
 
 			return await db
 				.select()
 				.from(scene)
-				.where(eq(scene.projectId, projectId))
+				.where(and(eq(scene.projectId, projectId), isNull(scene.deletedAt)))
 				.orderBy(asc(scene.sequence));
 		} catch (error) {
 			console.error("SceneRepository.findByProject error:", error);
