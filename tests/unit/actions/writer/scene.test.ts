@@ -74,6 +74,25 @@ const mockScene = {
 	updatedAt: new Date(),
 };
 
+// Valid ProjectContext mock
+const mockProjectContext = {
+	project: {
+		id: projectId,
+		name: "Test Project",
+		userId: "user-123",
+		createdAt: new Date(),
+		visibility: "private" as const,
+		description: null,
+		folders: [],
+		forkedFromId: null,
+		lastViewedSceneId: null,
+	},
+	user: {
+		id: "user-123",
+		email: "test@example.com",
+	},
+};
+
 describe("writer scene actions", () => {
 	afterEach(() => {
 		vi.clearAllMocks();
@@ -83,7 +102,7 @@ describe("writer scene actions", () => {
 		it("duplicates a scene successfully", async () => {
 			mockedSceneRepo.findById.mockResolvedValue(mockScene);
 			mockedSceneRepo.findByChapter.mockResolvedValue([mockScene]);
-			mockedEnsureAccess.mockResolvedValue();
+			mockedEnsureAccess.mockResolvedValue(mockProjectContext);
 
 			// Mock transaction result
 			const newScene = { ...mockScene, id: "scene-new", title: "Test Scene (Copy)", sequence: 2 };
@@ -130,7 +149,7 @@ describe("writer scene actions", () => {
 	describe("moveSceneToChapter", () => {
 		it("moves a scene to another chapter", async () => {
 			mockedSceneRepo.findById.mockResolvedValue(mockScene);
-			mockedEnsureAccess.mockResolvedValue();
+			mockedEnsureAccess.mockResolvedValue(mockProjectContext);
 
 			const { db } = await import("@/lib/db/drizzle");
 

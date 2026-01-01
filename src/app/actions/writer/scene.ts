@@ -337,7 +337,6 @@ export async function duplicateScene(sceneId: string) {
 				chapterId: targetScene.chapterId,
 				title: `${targetScene.title} (Copy)`,
 				content: targetScene.content,
-				summary: targetScene.summary,
 				sequence: newSequence,
 				status: targetScene.status, // Preserve status
 				prevSceneId: targetScene.id, // Point to original
