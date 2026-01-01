@@ -1,6 +1,14 @@
 "use client";
 
-import { FileText, Pencil, Sparkles, Trash2, Copy, ArrowRight, BookOpen } from "lucide-react";
+import {
+	ArrowRight,
+	BookOpen,
+	Copy,
+	FileText,
+	Pencil,
+	Sparkles,
+	Trash2,
+} from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
@@ -8,13 +16,13 @@ import {
 	ContextMenuContent,
 	ContextMenuItem,
 	ContextMenuSeparator,
-	ContextMenuTrigger,
 	ContextMenuSub,
 	ContextMenuSubContent,
 	ContextMenuSubTrigger,
+	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
 import { Input } from "@/components/atoms/input";
-import type { SceneWithPrev, ChapterWithScenes } from "@/lib/types";
+import type { ChapterWithScenes, SceneWithPrev } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface SceneItemProps {

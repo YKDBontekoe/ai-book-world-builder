@@ -15,10 +15,10 @@ import {
 	createNewChapter,
 	createSceneInChapter,
 	deleteScene,
-	generateScene,
-	updateSceneTitle,
 	duplicateScene,
+	generateScene,
 	moveSceneToChapter,
+	updateSceneTitle,
 } from "@/app/actions/writer";
 import {
 	Accordion,
