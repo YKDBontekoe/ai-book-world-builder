@@ -1,9 +1,8 @@
 "use server";
 
 import { desc, eq, sql } from "drizzle-orm";
-import { auth } from "@/app/(auth)/auth";
+import { authorizeProjectAccess } from "@/lib/auth/utils";
 import { db } from "@/lib/db/drizzle";
-import { projectRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
 
 export type ProjectPreviewData = {
@@ -28,18 +27,9 @@ export type ProjectPreviewData = {
 export async function getProjectPreviewData(
 	projectId: string,
 ): Promise<{ success: true; data: ProjectPreviewData } | { error: string }> {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
-	}
-
-	// Verify access
-	const projectAccess = await projectRepository.findByIdWithAccess(
-		projectId,
-		session.user.id,
-	);
-	if (!projectAccess) {
-		return { error: "Project not found or access denied" };
+	const authResult = await authorizeProjectAccess(projectId);
+	if ("error" in authResult) {
+		return { error: authResult.error };
 	}
 
 	try {

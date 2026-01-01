@@ -161,7 +161,7 @@ describe("entities server actions", () => {
 
 		await expect(
 			updateEntityAction({ id: entity.id, projectId }),
-		).rejects.toThrow("Access denied to entity");
+		).rejects.toThrow("Project not found or access denied");
 		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
 
@@ -202,7 +202,7 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		await expect(deleteEntityAction(entity.id)).rejects.toThrow(
-			"Access denied to entity",
+			"Project not found or access denied",
 		);
 		expect(mockedDelete).not.toHaveBeenCalled();
 	});
@@ -237,7 +237,7 @@ describe("entities server actions", () => {
 				projectId: entity.projectId,
 				name: "Hacked",
 			}),
-		).rejects.toThrow("Unauthorized");
+		).rejects.toThrow("Write access required");
 
 		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
@@ -266,7 +266,9 @@ describe("entities server actions", () => {
 			}),
 		);
 
-		await expect(deleteEntityAction(entity.id)).rejects.toThrow("Unauthorized");
+		await expect(deleteEntityAction(entity.id)).rejects.toThrow(
+			"Write access required",
+		);
 
 		expect(mockedDelete).not.toHaveBeenCalled();
 	});

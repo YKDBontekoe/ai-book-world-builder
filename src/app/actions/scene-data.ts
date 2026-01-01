@@ -1,9 +1,9 @@
 "use server";
 
 import { asc, eq } from "drizzle-orm";
-import { auth } from "@/app/(auth)/auth";
+import { authorizeProjectAccess } from "@/lib/auth/utils";
 import { db } from "@/lib/db/drizzle";
-import { projectRepository, sceneRepository } from "@/lib/db/repositories";
+import { sceneRepository } from "@/lib/db/repositories";
 import {
 	type Chapter,
 	chapter,
@@ -24,16 +24,9 @@ export async function getScenesData(
 	projectId: string,
 ): Promise<SerializedChapterWithScenes[]> {
 	try {
-		const session = await auth();
-		const userId = session?.user?.id;
-
-		const project = await projectRepository.findByIdWithAccess(
-			projectId,
-			userId,
-		);
-
-		if (!project) {
-			console.error("Access denied to project:", projectId);
+		const authResult = await authorizeProjectAccess(projectId);
+		if ("error" in authResult) {
+			console.error("Access denied to project:", projectId, authResult.error);
 			return [];
 		}
 

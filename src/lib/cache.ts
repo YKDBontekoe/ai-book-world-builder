@@ -16,10 +16,13 @@ export async function getCached<T>(
 	}
 
 	try {
+		if (!redis) {
+			return fetchFn();
+		}
 		const cached = await redis.get(key);
 		if (cached) {
 			try {
-				return JSON.parse(cached) as T;
+				return JSON.parse(cached as string) as T;
 			} catch (parseError) {
 				console.error(`Failed to parse cache for key ${key}`, parseError);
 				// If parsing fails, delete the corrupted key and fallback to fetch
@@ -31,7 +34,7 @@ export async function getCached<T>(
 
 		if (data) {
 			try {
-				await redis.set(key, JSON.stringify(data), { EX: ttlSeconds });
+				await redis.set(key, JSON.stringify(data), { ex: ttlSeconds });
 			} catch (setError) {
 				console.error(`Failed to set cache for key ${key}`, setError);
 			}
@@ -71,14 +74,15 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
 			// Scan returns { cursor: number, keys: string[] } in node-redis v4+
 			// Use 'any' cast to satisfy strict union type of RedisArgument, as numbers are valid at runtime
 			// but strict types might demand Buffer | string.
-			const reply = await redis.scan(cursor as any, {
-				MATCH: pattern,
+			const reply: [string, string[]] = await redis.scan(cursor as any, {
+				match: pattern,
 				COUNT: 100,
 			});
-			cursor = reply.cursor;
-			const keys = reply.keys;
+
+			cursor = Number(reply[0]);
+			const keys = reply[1];
 			if (keys.length > 0) {
-				await redis.del(keys);
+				await redis.del(keys as any);
 			}
 			// Strict check for numeric 0 or string "0" depending on what client returns
 		} while (Number(cursor) !== 0);

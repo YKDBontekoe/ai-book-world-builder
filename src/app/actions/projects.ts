@@ -4,6 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
+import { authorizeProjectAccess } from "@/lib/auth/utils";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { db } from "@/lib/db/drizzle";
 import { projectRepository } from "@/lib/db/repositories";
@@ -73,28 +74,16 @@ export async function renameProject(
 	name: string,
 	description?: string,
 ) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
-	}
-	const userId = session.user.id;
-
 	const validation = renameProjectSchema.safeParse({ name, description });
 	if (!validation.success) {
 		return { error: validation.error.message };
 	}
 
-	const existingProject = await projectRepository.findByIdWithAccess(
-		projectId,
-		userId,
-	);
-
-	if (!existingProject) {
-		return { error: "Project not found or access denied" };
-	}
-
-	if (existingProject.userId !== userId) {
-		return { error: "Only the project owner can rename it." };
+	const authResult = await authorizeProjectAccess(projectId, {
+		requiresWrite: true,
+	});
+	if ("error" in authResult) {
+		return { error: authResult.error };
 	}
 
 	try {
@@ -214,10 +203,11 @@ export async function deleteProjects(projectIds: string[]) {
 }
 
 export async function forkProject(originalProjectId: string, newName?: string) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
+	const authResult = await authorizeProjectAccess(originalProjectId);
+	if ("error" in authResult) {
+		return { error: authResult.error };
 	}
+	const { project: originalProject, session } = authResult;
 	const userId = session.user.id;
 
 	// 1. Pre-flight check for project size to prevent OOM/Timeouts
@@ -233,15 +223,6 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 			error:
 				"Project is too large to fork instantly. Please export and import instead.",
 		};
-	}
-
-	const originalProject = await projectRepository.findByIdWithAccess(
-		originalProjectId,
-		userId,
-	);
-
-	if (!originalProject) {
-		return { error: "Project not found or access denied" };
 	}
 
 	// Validate name length
