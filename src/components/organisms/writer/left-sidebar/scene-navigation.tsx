@@ -32,6 +32,7 @@ import {
 	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { SceneItem } from "@/components/organisms/writer/left-sidebar/scene-item";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -197,21 +198,30 @@ export function SceneNavigation({
 
 	if (structure.length === 0) {
 		return (
-			<div className="p-4 flex flex-col items-center justify-center h-full text-center space-y-4">
-				<p className="text-sm text-muted-foreground">No chapters yet.</p>
-				<Button
-					onClick={handleCreateChapter}
-					disabled={isCreatingChapter || readOnly}
-					variant="outline"
-					size="sm"
-				>
-					{isCreatingChapter ? (
-						<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-					) : (
-						<BookPlus className="mr-2 h-4 w-4" />
-					)}
-					Add Chapter
-				</Button>
+			<div className="h-full flex items-center justify-center p-4">
+				<EmptyState
+					title="No chapters yet"
+					description="Start building your story by adding the first chapter."
+					icon={BookPlus}
+					variant="glass"
+					className="w-full max-w-sm"
+					action={
+						<Button
+							onClick={handleCreateChapter}
+							disabled={isCreatingChapter || readOnly}
+							variant="default"
+							size="sm"
+							className="mt-2"
+						>
+							{isCreatingChapter ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : (
+								<Plus className="mr-2 h-4 w-4" />
+							)}
+							Add First Chapter
+						</Button>
+					}
+				/>
 			</div>
 		);
 	}
