@@ -11,6 +11,7 @@
 
 import "server-only";
 
+import { writerPrompts } from "@/lib/ai/prompts/writer-prompts";
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
 import type { AIGenerationOptions } from "@/lib/ai/services/types";
 
@@ -42,11 +43,11 @@ export class GenerationService extends BaseAIService {
 		previousContent: string,
 		options: GenerationOptions = {},
 	): Promise<{ text?: string; error?: string }> {
-		const systemPrompt = `You are an expert creative writing assistant. Your task is to continue the story seamlessly based on the provided text. Maintain the tone, style, and character voices. ${
-			options.style ? `Use a ${options.style} writing style.` : ""
-		}`;
-
-		const prompt = `Context (Chapter/Scene info):\n${context}\n\nPrevious Text:\n${previousContent}\n\nContinue the story:`;
+		const systemPrompt = writerPrompts.continueWriting.system(options.style);
+		const prompt = writerPrompts.continueWriting.user({
+			context,
+			previousContent,
+		});
 
 		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
 			modelId: options.modelId,
@@ -70,23 +71,16 @@ export class GenerationService extends BaseAIService {
 		instructions?: string,
 		options: GenerationOptions = {},
 	): Promise<{ text?: string; error?: string }> {
-		const systemPrompt = `You are The Writer. Your goal is to write compelling, high-quality prose.
-
-Write the scene based on the scene card and instructions.
-Output ONLY the story prose.`;
-
-		const emotionalBeats = Array.isArray(cardData.emotionalBeats)
-			? cardData.emotionalBeats.join(", ")
-			: cardData.emotionalBeats || "None";
-
-		const prompt = `
-Scene Title: ${sceneTitle}
-Purpose: ${cardData.purpose}
-Setting: ${cardData.setting || "Not specified"}
-Emotional Beats: ${emotionalBeats}
-
-Instructions: ${instructions || "Draft the scene."}
-`;
+		const systemPrompt = writerPrompts.draftScene.system();
+		const prompt = writerPrompts.draftScene.user({
+			sceneTitle,
+			purpose: cardData.purpose,
+			setting: cardData.setting,
+			emotionalBeats: Array.isArray(cardData.emotionalBeats)
+				? cardData.emotionalBeats.join(", ")
+				: cardData.emotionalBeats,
+			instructions,
+		});
 
 		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
 			modelId: options.modelId,
@@ -109,10 +103,8 @@ Instructions: ${instructions || "Draft the scene."}
 		currentText: string,
 		options: GenerationOptions = {},
 	): Promise<{ ideas?: string; error?: string }> {
-		const systemPrompt =
-			"You are a creative writing coach. Provide 3 distinct and interesting options for what could happen next in the story.";
-
-		const prompt = `Context:\n${context}\n\nCurrent Text:\n${currentText}\n\nSuggest 3 plot developments:`;
+		const systemPrompt = writerPrompts.generateIdeas.system();
+		const prompt = writerPrompts.generateIdeas.user({ context, currentText });
 
 		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
 			modelId: options.modelId,
@@ -135,10 +127,11 @@ Instructions: ${instructions || "Draft the scene."}
 		instruction: string,
 		options: GenerationOptions = {},
 	): Promise<{ text?: string; error?: string }> {
-		const systemPrompt =
-			"You are an expert editor. Rewrite the selected text according to the user's instruction. Output ONLY the rewritten text, no explanations.";
-
-		const prompt = `Original Text:\n"${selection}"\n\nInstruction: ${instruction}\n\nRewritten Text:`;
+		const systemPrompt = writerPrompts.rewriteSelection.system();
+		const prompt = writerPrompts.rewriteSelection.user({
+			selection,
+			instruction,
+		});
 
 		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
 			modelId: options.modelId,

@@ -48,6 +48,7 @@ storybook-static
 
 # typescript
 *.tsbuildinfo
+next-env.d.ts
 
 # Python verification
 verification/__pycache__/
