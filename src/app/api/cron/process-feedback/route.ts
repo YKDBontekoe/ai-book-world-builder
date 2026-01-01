@@ -4,12 +4,17 @@ import { processDailyFeedback } from "@/lib/services/feedback-service";
 export const maxDuration = 300; // 5 minutes
 
 export async function GET(request: Request) {
-	// Minimal auth check if CRON_SECRET is set
-	if (process.env.CRON_SECRET) {
-		const authHeader = request.headers.get("authorization");
-		if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-			return new Response("Unauthorized", { status: 401 });
-		}
+	// Secure Auth Check: Fail Close
+	const cronSecret = process.env.CRON_SECRET;
+	if (!cronSecret) {
+		return new Response("Internal Server Error: CRON_SECRET not configured", {
+			status: 500,
+		});
+	}
+
+	const authHeader = request.headers.get("authorization");
+	if (authHeader !== `Bearer ${cronSecret}`) {
+		return new Response("Unauthorized", { status: 401 });
 	}
 
 	try {
