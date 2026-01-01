@@ -6,6 +6,7 @@ import { withProjectWriteAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
 import { sceneRepository } from "@/lib/db/repositories";
 import { sceneStatus } from "@/lib/db/schema/scenes";
+import { err } from "@/lib/result";
 
 const updateSceneSchema = z.object({
 	id: z.string().uuid(),
@@ -30,7 +31,7 @@ export async function updateSceneAction(params: {
 		const errorMessage = validation.error.issues
 			.map((i) => i.message)
 			.join(", ");
-		return { success: false, error: `Validation failed: ${errorMessage}` };
+		return err(`Validation failed: ${errorMessage}`);
 	}
 
 	const { id, title, status, content, projectId } = validation.data;
