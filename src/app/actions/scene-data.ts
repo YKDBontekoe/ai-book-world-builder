@@ -23,68 +23,62 @@ export type SerializedChapterWithScenes = Chapter & {
 export async function getScenesData(
 	projectId: string,
 ): Promise<SerializedChapterWithScenes[]> {
-	try {
-		const session = await auth();
-		const userId = session?.user?.id;
+	const session = await auth();
+	const userId = session?.user?.id;
 
-		const project = await projectRepository.findByIdWithAccess(
-			projectId,
-			userId,
-		);
+	const project = await projectRepository.findByIdWithAccess(
+		projectId,
+		userId,
+	);
 
-		if (!project) {
-			console.error("Access denied to project:", projectId);
-			return [];
-		}
+	if (!project) {
+		throw new Error("Unauthorized");
+	}
 
-		// 1. Fetch all chapters for the project
-		const chapters = await db
-			.select()
-			.from(chapter)
-			.where(eq(chapter.projectId, projectId))
-			.orderBy(asc(chapter.sequence));
+	// 1. Fetch all chapters for the project
+	const chapters = await db
+		.select()
+		.from(chapter)
+		.where(eq(chapter.projectId, projectId))
+		.orderBy(asc(chapter.sequence));
 
-		if (chapters.length === 0) {
-			return [];
-		}
-
-		// 2. Fetch all scenes for the project using repository
-		const scenes = await sceneRepository.findByProject(projectId);
-
-		// 3. Fetch all scene cards
-		const cards = await db
-			.select()
-			.from(sceneCard)
-			.where(eq(sceneCard.projectId, projectId));
-
-		// 4. Map data together
-		const cardMap = new Map<string, SceneCard>();
-		for (const card of cards) {
-			cardMap.set(card.sceneId, card);
-		}
-
-		// Group scenes by chapter
-		const scenesByChapter = new Map<string, SerializedScene[]>();
-		for (const s of scenes) {
-			const sceneWithCard: SerializedScene = {
-				...s,
-				card: cardMap.get(s.id) || null,
-			};
-
-			const chapterScenes = scenesByChapter.get(s.chapterId) || [];
-			chapterScenes.push(sceneWithCard);
-			scenesByChapter.set(s.chapterId, chapterScenes);
-		}
-
-		// 5. Construct result
-		const result: SerializedChapterWithScenes[] = chapters.map((c) => ({
-			...c,
-			scenes: scenesByChapter.get(c.id) || [],
-		}));
-
-		return result;
-	} catch (error) {
-		console.error("Failed to fetch scene data:", error);
+	if (chapters.length === 0) {
 		return [];
 	}
+
+	// 2. Fetch all scenes for the project using repository
+	const scenes = await sceneRepository.findByProject(projectId);
+
+	// 3. Fetch all scene cards
+	const cards = await db
+		.select()
+		.from(sceneCard)
+		.where(eq(sceneCard.projectId, projectId));
+
+	// 4. Map data together
+	const cardMap = new Map<string, SceneCard>();
+	for (const card of cards) {
+		cardMap.set(card.sceneId, card);
+	}
+
+	// Group scenes by chapter
+	const scenesByChapter = new Map<string, SerializedScene[]>();
+	for (const s of scenes) {
+		const sceneWithCard: SerializedScene = {
+			...s,
+			card: cardMap.get(s.id) || null,
+		};
+
+		const chapterScenes = scenesByChapter.get(s.chapterId) || [];
+		chapterScenes.push(sceneWithCard);
+		scenesByChapter.set(s.chapterId, chapterScenes);
+	}
+
+	// 5. Construct result
+	const result: SerializedChapterWithScenes[] = chapters.map((c) => ({
+		...c,
+		scenes: scenesByChapter.get(c.id) || [],
+	}));
+
+	return result;
 }
