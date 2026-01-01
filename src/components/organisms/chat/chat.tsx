@@ -25,6 +25,7 @@ import { ProcessLogs } from "@/components/organisms/chat/process-logs";
 import { SuggestedActions } from "@/components/organisms/chat/suggested-actions";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { Messages } from "@/components/organisms/messages/messages";
+import type { ModelPreferencesState } from "@/hooks/use-model-preferences";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatController } from "@/hooks/use-chat-controller";
@@ -48,6 +49,7 @@ function ChatContent({
 	autoResume,
 	initialLastContext,
 	availableModels,
+	initialPreferences,
 }: {
 	id: string;
 	initialMessages: ChatMessage[];
@@ -57,6 +59,7 @@ function ChatContent({
 	autoResume: boolean;
 	initialLastContext?: AppUsage;
 	availableModels: ChatModel[];
+	initialPreferences?: ModelPreferencesState;
 }) {
 	const {
 		selectedProject,
@@ -190,6 +193,7 @@ function ChatContent({
 									status={status}
 									stop={stop}
 									usage={usage}
+									initialPreferences={initialPreferences}
 								/>
 							</>
 						)}
@@ -243,6 +247,7 @@ export function Chat({
 	autoResume,
 	initialLastContext,
 	availableModels,
+	initialPreferences,
 }: {
 	id: string;
 	initialMessages: ChatMessage[];
@@ -254,6 +259,7 @@ export function Chat({
 	autoResume: boolean;
 	initialLastContext?: AppUsage;
 	availableModels: ChatModel[];
+	initialPreferences?: ModelPreferencesState;
 }) {
 	return (
 		<ChatProvider
@@ -271,6 +277,7 @@ export function Chat({
 				autoResume={autoResume}
 				initialLastContext={initialLastContext}
 				availableModels={availableModels}
+				initialPreferences={initialPreferences}
 			/>
 		</ChatProvider>
 	);
