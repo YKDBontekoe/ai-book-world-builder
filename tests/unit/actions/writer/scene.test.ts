@@ -1,4 +1,3 @@
-
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Hoist mocks to avoid execution order issues
@@ -22,19 +21,21 @@ vi.mock("@/lib/db/repositories", () => ({
 
 vi.mock("@/lib/db/drizzle", () => ({
 	db: {
-		transaction: vi.fn((callback) => callback({
-			update: vi.fn().mockReturnThis(),
-			set: vi.fn().mockReturnThis(),
-			where: vi.fn().mockReturnThis(),
-			insert: vi.fn().mockReturnThis(),
-			values: vi.fn().mockReturnThis(),
-			returning: vi.fn().mockReturnThis(),
-			delete: vi.fn().mockReturnThis(),
-			select: vi.fn().mockReturnThis(),
-			from: vi.fn().mockReturnThis(),
-			orderBy: vi.fn().mockReturnThis(),
-			limit: vi.fn().mockReturnThis(),
-		})),
+		transaction: vi.fn((callback) =>
+			callback({
+				update: vi.fn().mockReturnThis(),
+				set: vi.fn().mockReturnThis(),
+				where: vi.fn().mockReturnThis(),
+				insert: vi.fn().mockReturnThis(),
+				values: vi.fn().mockReturnThis(),
+				returning: vi.fn().mockReturnThis(),
+				delete: vi.fn().mockReturnThis(),
+				select: vi.fn().mockReturnThis(),
+				from: vi.fn().mockReturnThis(),
+				orderBy: vi.fn().mockReturnThis(),
+				limit: vi.fn().mockReturnThis(),
+			}),
+		),
 		select: vi.fn().mockReturnThis(),
 		from: vi.fn().mockReturnThis(),
 		where: vi.fn().mockReturnThis(),
@@ -50,8 +51,8 @@ vi.mock("@/lib/cache", () => ({
 
 // Import implementations to test
 import { duplicateScene, moveSceneToChapter } from "@/app/actions/writer/scene";
-import { sceneRepository } from "@/lib/db/repositories";
 import { ensureProjectAccess } from "@/lib/actions-utils";
+import { sceneRepository } from "@/lib/db/repositories";
 
 const mockedSceneRepo = vi.mocked(sceneRepository);
 const mockedEnsureAccess = vi.mocked(ensureProjectAccess);
@@ -105,7 +106,12 @@ describe("writer scene actions", () => {
 			mockedEnsureAccess.mockResolvedValue(mockProjectContext);
 
 			// Mock transaction result
-			const newScene = { ...mockScene, id: "scene-new", title: "Test Scene (Copy)", sequence: 2 };
+			const newScene = {
+				...mockScene,
+				id: "scene-new",
+				title: "Test Scene (Copy)",
+				sequence: 2,
+			};
 			// We need to mock the db transaction implementation specifically for this test if needed,
 			// but since we mocked the entire db object above, the callback logic in the action is what runs.
 			// However, our db mock above is a bit simplistic for the complex logic inside duplicateScene transaction.
@@ -157,7 +163,9 @@ describe("writer scene actions", () => {
 			vi.mocked(db.select).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
-						limit: vi.fn().mockResolvedValue([{ id: targetChapterId, projectId }]),
+						limit: vi
+							.fn()
+							.mockResolvedValue([{ id: targetChapterId, projectId }]),
 					}),
 				}),
 			} as any);
@@ -189,7 +197,11 @@ describe("writer scene actions", () => {
 			vi.mocked(db.select).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
-						limit: vi.fn().mockResolvedValue([{ id: targetChapterId, projectId: "other-project" }]),
+						limit: vi
+							.fn()
+							.mockResolvedValue([
+								{ id: targetChapterId, projectId: "other-project" },
+							]),
 					}),
 				}),
 			} as any);

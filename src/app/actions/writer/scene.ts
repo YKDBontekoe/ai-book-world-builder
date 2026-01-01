@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, desc } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
@@ -225,9 +225,12 @@ export async function createSceneInChapter(
 
 		// If inserted in middle, update the next scene's prevSceneId
 		if (insertAfterSceneId) {
-			const nextScene = scenes.find((s) => s.prevSceneId === insertAfterSceneId);
+			const nextScene = scenes.find(
+				(s) => s.prevSceneId === insertAfterSceneId,
+			);
 			if (nextScene) {
-				await db.update(scene)
+				await db
+					.update(scene)
 					.set({ prevSceneId: newScene.id, updatedAt: new Date() })
 					.where(eq(scene.id, nextScene.id));
 			}
@@ -289,7 +292,8 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 			for (let i = 0; i < sceneIds.length; i++) {
 				const currentId = sceneIds[i];
 				const prevId = i > 0 ? sceneIds[i - 1] : null;
-				await tx.update(scene)
+				await tx
+					.update(scene)
 					.set({ prevSceneId: prevId })
 					.where(eq(scene.id, currentId));
 			}
@@ -332,23 +336,27 @@ export async function duplicateScene(sceneId: string) {
 			}
 
 			// Insert duplicate
-			const [created] = await tx.insert(scene).values({
-				projectId: targetScene.projectId,
-				chapterId: targetScene.chapterId,
-				title: `${targetScene.title} (Copy)`,
-				content: targetScene.content,
-				sequence: newSequence,
-				status: targetScene.status, // Preserve status
-				prevSceneId: targetScene.id, // Point to original
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			}).returning();
+			const [created] = await tx
+				.insert(scene)
+				.values({
+					projectId: targetScene.projectId,
+					chapterId: targetScene.chapterId,
+					title: `${targetScene.title} (Copy)`,
+					content: targetScene.content,
+					sequence: newSequence,
+					status: targetScene.status, // Preserve status
+					prevSceneId: targetScene.id, // Point to original
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})
+				.returning();
 
 			// Update the scene that used to follow original to point to new duplicate
 			// Find scene where prevSceneId was targetScene.id (in the old state)
 			const nextScene = scenes.find((s) => s.prevSceneId === targetScene.id);
 			if (nextScene) {
-				await tx.update(scene)
+				await tx
+					.update(scene)
 					.set({ prevSceneId: created.id, updatedAt: new Date() })
 					.where(eq(scene.id, nextScene.id));
 			}
@@ -365,7 +373,10 @@ export async function duplicateScene(sceneId: string) {
 	}
 }
 
-export async function moveSceneToChapter(sceneId: string, targetChapterId: string) {
+export async function moveSceneToChapter(
+	sceneId: string,
+	targetChapterId: string,
+) {
 	try {
 		// 1. Get Scene & Verify
 		const targetScene = await sceneRepository.findById(sceneId);
@@ -379,11 +390,15 @@ export async function moveSceneToChapter(sceneId: string, targetChapterId: strin
 			.where(eq(chapter.id, targetChapterId))
 			.limit(1);
 
-		if (!targetChapter) return { success: false, error: "Target chapter not found" };
+		if (!targetChapter)
+			return { success: false, error: "Target chapter not found" };
 
 		// Ensure same project (security check)
 		if (targetScene.projectId !== targetChapter.projectId) {
-			return { success: false, error: "Cannot move scene to a different project" };
+			return {
+				success: false,
+				error: "Cannot move scene to a different project",
+			};
 		}
 
 		await ensureProjectAccess(targetScene.projectId, true);
@@ -427,14 +442,13 @@ export async function moveSceneToChapter(sceneId: string, targetChapterId: strin
 					chapterId: targetChapterId,
 					sequence: newSequence,
 					prevSceneId: newPrevSceneId,
-					updatedAt: new Date()
+					updatedAt: new Date(),
 				})
 				.where(eq(scene.id, sceneId));
 		});
 
 		await invalidateCache(`project-structure:${targetScene.projectId}`);
 		return { success: true };
-
 	} catch (error) {
 		console.error("Failed to move scene", error);
 		return { success: false, error: "Failed to move scene" };
