@@ -1,9 +1,10 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/app/(auth)/auth";
+import { withProjectWriteAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
-import { projectRepository, sceneRepository } from "@/lib/db/repositories";
+import { sceneRepository } from "@/lib/db/repositories";
 import { sceneStatus } from "@/lib/db/schema/scenes";
 
 const updateSceneSchema = z.object({
@@ -24,50 +25,45 @@ export async function updateSceneAction(params: {
 	content?: string;
 	projectId: string;
 }) {
-	const session = await auth();
-
-	if (!session?.user?.id) {
-		throw new Error("Unauthorized");
-	}
-
-	// Validate inputs using Zod schema
 	const validation = updateSceneSchema.safeParse(params);
 	if (!validation.success) {
 		const errorMessage = validation.error.issues
 			.map((i) => i.message)
 			.join(", ");
-		throw new Error(`Validation failed: ${errorMessage}`);
+		return { success: false, error: `Validation failed: ${errorMessage}` };
 	}
 
 	const { id, title, status, content, projectId } = validation.data;
 
-	const project = await projectRepository.findByIdWithAccess(
-		projectId,
-		session.user.id,
-	);
+	return withProjectWriteAccess(projectId, async () => {
+		try {
+			const updatedScene = await sceneRepository.update(
+				id,
+				{
+					title,
+					status,
+					content,
+				},
+				projectId,
+			);
 
-	if (!project || project.userId !== session.user.id) {
-		throw new Error("Unauthorized");
-	}
+			// Invalidate structure cache if title changes, as it's part of the structure view
+			if (title) {
+				await invalidateCache(`project-structure:${projectId}`);
+				revalidatePath(`/projects/${projectId}`);
+			}
 
-	const updatedScene = await sceneRepository.update(
-		id,
-		{
-			title,
-			status,
-			content,
-		},
-		projectId,
-	);
-
-	// Invalidate structure cache if title changes, as it's part of the structure view
-	if (title) {
-		await invalidateCache(`project-structure:${projectId}`);
-	}
-
-	return {
-		...updatedScene,
-		createdAt: updatedScene.createdAt.toISOString(),
-		updatedAt: updatedScene.updatedAt.toISOString(),
-	};
+			return {
+				success: true,
+				data: {
+					...updatedScene,
+					createdAt: updatedScene.createdAt.toISOString(),
+					updatedAt: updatedScene.updatedAt.toISOString(),
+				},
+			};
+		} catch (error) {
+			console.error("Update scene error:", error);
+			return { success: false, error: "Failed to update scene" };
+		}
+	});
 }

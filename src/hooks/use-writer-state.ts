@@ -1,17 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { useDebounceCallback } from "usehooks-ts";
 import {
 	createChapterSnapshot,
 	getProjectStructure,
-	getSceneContent,
 	updateLastViewedScene,
-	updateSceneContent,
 } from "@/app/actions/writer";
 import {
 	useBookCanvasActions,
 	useBookCanvasValue,
 } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useSceneContent } from "@/hooks/use-scene-content";
 import type { ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterStateProps {
@@ -39,10 +37,7 @@ export function useWriterState({
 	const { activeSceneId } = useBookCanvasValue();
 	const { setActiveSceneId, setProjectId } = useBookCanvasActions();
 
-	const [sceneContent, setSceneContent] = useState("");
-	const [isSaving, setIsSaving] = useState(false);
 	const [isSnapshotting, setIsSnapshotting] = useState(false);
-	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
 	// Sync project ID to Book Canvas context
 	useEffect(() => {
@@ -60,58 +55,37 @@ export function useWriterState({
 		}
 	}, [initialStructure, initialStructureText]);
 
-	// Find the active scene object
+	// Callback to sync content updates from useSceneContent back to structure state
+	const onContentUpdate = useCallback((id: string, content: string) => {
+		setStructure((prev) =>
+			prev
+				? prev.map((c) => ({
+						...c,
+						scenes: c.scenes.map((s) => (s.id === id ? { ...s, content } : s)),
+					}))
+				: null,
+		);
+	}, []);
+
+	// Find the active scene object to extract cached content
 	const activeScene = useMemo(
 		() =>
 			structure?.flatMap((c) => c.scenes).find((s) => s.id === activeSceneId),
 		[structure, activeSceneId],
 	);
 
-	// Load content when active scene changes
-	useEffect(() => {
-		let isMounted = true;
-
-		if (activeScene) {
-			// If content is already present (e.g. from optimistic update, previous fetch, or cache), use it
-			if (activeScene.content !== undefined && activeScene.content !== null) {
-				setSceneContent(activeScene.content);
-			} else {
-				// Clear content to prevent showing stale data while fetching
-				setSceneContent("");
-
-				// Fetch content on demand
-				getSceneContent(activeScene.id).then((result) => {
-					if (isMounted && result.success && result.content !== undefined) {
-						setSceneContent(result.content || "");
-
-						// Update structure to cache the fetched content
-						setStructure((prev) =>
-							prev
-								? prev.map((c) => ({
-										...c,
-										scenes: c.scenes.map((s) =>
-											s.id === activeScene.id
-												? { ...s, content: result.content }
-												: s,
-										),
-									}))
-								: null,
-						);
-					}
-				});
-			}
-		} else {
-			setSceneContent("");
-		}
-
-		return () => {
-			isMounted = false;
-		};
-	}, [activeScene]); // The dependency is `activeScene` itself, not just `activeSceneId`.
-	// This is intentional and confirmed by the linter, as the effect's logic
-	// depends on the `activeScene.content` property. If only `activeSceneId` were used,
-	// the effect wouldn't re-run correctly if the scene object was updated elsewhere
-	// (e.g., with prefetched content) without the ID changing.
+	// Use extracted hook for content management
+	const {
+		sceneContent,
+		isSaving,
+		lastSaved,
+		handleContentChange,
+		setContentDirectly,
+	} = useSceneContent({
+		activeSceneId: activeSceneId || undefined,
+		initialContent: activeScene?.content ?? undefined,
+		onContentUpdate,
+	});
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);
@@ -150,83 +124,6 @@ export function useWriterState({
 			fetchStructure();
 		}
 	}, [fetchStructure, initialStructure]);
-	// Note: if initialStructure changes, the earlier useEffect (line 55) handles the update.
-	// This effect only runs when fetchStructure changes or when initialStructure is initially missing.
-
-	const performSave = async (content: string, id: string, retryCount = 0) => {
-		setIsSaving(true);
-		try {
-			const result = await updateSceneContent(id, content);
-			setIsSaving(false);
-			if (result.success) {
-				setLastSaved(new Date());
-				setStructure((prev) =>
-					prev
-						? prev.map((c) => ({
-								...c,
-								scenes: c.scenes.map((s) =>
-									s.id === id ? { ...s, content } : s,
-								),
-							}))
-						: null,
-				);
-			} else {
-				// Retry up to 2 times with exponential backoff
-				if (retryCount < 2) {
-					setTimeout(
-						() => {
-							performSave(content, id, retryCount + 1);
-						},
-						1000 * 2 ** retryCount,
-					);
-				} else {
-					toast.error("Failed to save changes. Please try again.", {
-						duration: 5000,
-						action: {
-							label: "Retry",
-							onClick: () => {
-								performSave(content, id, 0);
-							},
-						},
-					});
-				}
-			}
-		} catch (_error) {
-			setIsSaving(false);
-			if (retryCount < 2) {
-				setTimeout(
-					() => {
-						performSave(content, id, retryCount + 1);
-					},
-					1000 * 2 ** retryCount,
-				);
-			} else {
-				toast.error("Failed to save changes. Please check your connection.", {
-					duration: 5000,
-					action: {
-						label: "Retry",
-						onClick: () => {
-							performSave(content, id, 0);
-						},
-					},
-				});
-			}
-		}
-	};
-
-	const debouncedSave = useDebounceCallback((content: string, id: string) => {
-		performSave(content, id, 0);
-	}, 1000);
-
-	const handleContentChange = useCallback(
-		(newContent: string) => {
-			setSceneContent(newContent);
-			if (activeSceneId) {
-				debouncedSave(newContent, activeSceneId);
-			}
-		},
-		[activeSceneId, debouncedSave],
-	);
 
 	const handleSnapshot = useCallback(async () => {
 		if (!activeScene?.chapterId) return;
