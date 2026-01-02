@@ -105,8 +105,9 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
 							onResize={(size) => {
-								const numericSize = typeof size === "number" ? size : 0;
-								const isCollapsed = numericSize === 0;
+								// react-resizable-panels v4.1+ passes size as number (but types might say PanelSize object)
+								// Casting to any or number to bypass incorrect strict type check if needed
+								const isCollapsed = (size as unknown as number) === 0;
 								actions.setSidebarOpen(!isCollapsed);
 							}}
 						>
