@@ -97,7 +97,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						<ResizablePanel
 							panelRef={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
-							minSize={15}
+							minSize={5}
 							maxSize={50}
 							collapsible={true}
 							collapsedSize={0}

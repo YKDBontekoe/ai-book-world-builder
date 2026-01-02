@@ -29,7 +29,7 @@ export function WriterSidebar() {
 
 	return (
 		<div
-			className="flex flex-col h-full bg-sidebar/30 backdrop-blur-xl transition-all duration-300 ease-in-out"
+			className="flex flex-col h-full bg-sidebar/30 backdrop-blur-xl overflow-hidden"
 			data-testid="writer-sidebar"
 		>
 			<div className="px-3 py-2">
