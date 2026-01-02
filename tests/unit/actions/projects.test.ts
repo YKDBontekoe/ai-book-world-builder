@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted to ensure mocks are initialized before usage in vi.mock
 const { mockDb, mockProjectRepository, mockAuth } = vi.hoisted(() => ({

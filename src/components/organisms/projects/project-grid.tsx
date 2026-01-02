@@ -46,6 +46,8 @@ interface ProjectGridProps {
 	onDeleteProject?: (id: string) => void;
 }
 
+const MotionGlassCard = motion(GlassCard);
+
 function ProjectCard({
 	project,
 	selected,
@@ -90,12 +92,15 @@ function ProjectCard({
 				)}
 
 				<Link href={`/projects/${project.id}`} className="block h-full">
-					<GlassCard
+					<MotionGlassCard
 						variant="liquid"
-						interactive
+						// We handle motion via framer-motion props, not CSS interactive variant
+						whileHover={{ y: -4 }}
+						whileTap={{ scale: 0.98 }}
+						transition={{ type: "spring", stiffness: 400, damping: 25 }}
 						className={cn(
-							"h-full flex flex-col justify-between space-y-6 p-6 transition-all duration-300",
-							selected && "ring-2 ring-primary bg-primary/5 scale-[0.98]",
+							"h-full flex flex-col justify-between space-y-6 p-6 cursor-pointer transition-colors",
+							selected && "ring-2 ring-primary bg-primary/5",
 						)}
 					>
 						<div className="space-y-4">
@@ -126,7 +131,7 @@ function ProjectCard({
 								<Globe className="h-3.5 w-3.5" />
 							)}
 						</div>
-					</GlassCard>
+					</MotionGlassCard>
 				</Link>
 
 				{/* Actions (Top Right) */}
