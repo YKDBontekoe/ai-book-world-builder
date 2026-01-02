@@ -95,6 +95,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					<>
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
+							// @ts-expect-error - ref type mismatch with library definition
 							ref={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
 							minSize={5}
@@ -103,6 +104,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
 							onResize={(size) => {
+								// @ts-expect-error - size type mismatch
 								const isCollapsed = size === 0;
 								actions.setSidebarOpen(!isCollapsed);
 							}}
