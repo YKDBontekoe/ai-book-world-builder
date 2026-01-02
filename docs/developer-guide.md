@@ -22,11 +22,12 @@ src/
 │   └── writer/          # Writer View components (Sidebar, Editor)
 ├── lib/                 # Shared logic
 │   ├── ai/              # AI Service wrappers (models, tools, providers)
-│   │   ├── services/    # AI Service implementations (Generation, Analysis)
 │   │   └── tools/       # AI Tools definition
 │   ├── db/              # Database schema (Drizzle) and queries
 │   ├── generation/      # Book generation pipeline (Orchestrator, WriterAgent)
-│   └── services/        # Business logic services (StoryService, Analysis)
+│   └── services/        # Business logic services
+│       ├── ai/          # AI Service implementations (Writing, Analysis, Lore)
+│       └── story/       # Story logic and context building
 └── tests/               # Test suites
     ├── e2e/             # Playwright E2E tests
     └── unit/            # Vitest unit tests
@@ -67,19 +68,21 @@ We separate controller logic (Server Actions) from business logic (Services):
 ### 4. AI Service Architecture
 The AI layer is structured to separate "AI Logic" from "Business Logic".
 
--   **BaseAIService** (`lib/ai/services/base-ai-service.ts`): The base class handling provider selection, error wrapping, and basic retry logic.
--   **Specialized Services** (`lib/ai/services/`):
-    -   `GenerationService`: Handles interactive text generation (continue writing, rewrite, draft scene). Used by `StoryService`.
-    -   `AnalysisService`: Handles RAG-based analysis (detect entities, extract details). Used by `BookAnalysisService`.
--   **Orchestrator & Agents** (`lib/generation/`):
-    -   `GenerationOrchestrator`: Manages long-running, multi-step batch jobs (The "Book Wizard").
-    -   `WriterAgent`: A specialized agent for the Orchestrator that handles massive context flooding for full chapter generation.
-    -   *Distinction*: `GenerationService` is for fast, interactive tools. `WriterAgent` is for slow, high-quality batch generation.
+-   **Service Implementations** (`lib/services/ai/`):
+    -   `WritingService`: Handles interactive text generation (continue writing, rewrite, draft scene).
+    -   `AnalysisService`: Handles content analysis (entity detection, consistency checks).
+    -   `LoreService`: Manages world-building generation (creating characters, locations).
+-   **Business Logic** (`lib/services/story-service.ts`):
+    -   Orchestrates the flow between the database and AI services.
+    -   Manages high-level operations like `planChapterScenes` and `generateSceneText`.
 
-### 5. Smart Context (Context Flooding)
-To enable the AI to write coherently over long contexts without a Vector DB:
--   **Selection**: The `StoryService` (and `ContextSelection` type) allows selecting relevant entities, outlines, and previous scenes.
--   **Flooding**: We pass the *full text* of the immediately preceding scene and *summaries* of all prior scenes in the chapter to the model context window. This ensures continuity (e.g., characters are in the right room) without exceeding token limits for very long books.
+### 5. Structured Context (Context Builder)
+To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:
+
+-   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene (last ~2000 tokens) to ensure flow.
+-   **Narrative Arc**: We provide *summaries* of all previous scenes in the current chapter to maintain the arc.
+-   **Global Context**: Chapter notes and Outline parameters (POV, Tone) are always included.
+-   *Note*: This replaces the previous "Smart Context" flooding strategy with a more deterministic, token-efficient approach.
 
 ### 6. AI Integration & Models
 

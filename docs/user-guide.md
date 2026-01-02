@@ -18,16 +18,16 @@ The Project View is divided into three main panels to help you organize and writ
 
 ## Writer Tools
 
-The Writer View includes specialized AI tools to assist your creative process. Access these via the **Tools** menu in the control bar at the bottom of the screen.
+The Writer View includes specialized AI tools to assist your creative process. Access these via the **Tools** menu in the control bar at the bottom of the screen or the **Chapter Actions** menu.
 
-### 1. Write (Batch Write)
-Automatically drafts prose for scenes.
--   **Usage**: Select a chapter. The tool will draft content for all empty scenes in that chapter based on their summaries.
--   **Best For**: Getting a rough draft quickly.
+### 1. Generate Scenes (AI)
+Automatically drafts prose for planned scenes.
+-   **Usage**: Click the **Sparkles** icon next to a Chapter in the sidebar, then select **Generate Scenes (AI)**. The AI will draft content for all pending scenes in that chapter based on their summaries.
+-   **Best For**: Rapidly converting a chapter outline into a first draft.
 
 ### 2. Rewrite
 Refine existing scene content.
--   **Usage**: Select a scene and provide instructions (e.g., "Make the dialogue more tense," "Show, don't tell").
+-   **Usage**: Select a scene and provide instructions (e.g., "Make the dialogue more tense," "Show, don't tell") via the Tools menu.
 -   **Best For**: Polishing specific passages or changing the tone.
 
 ### 3. Expand
