@@ -12,20 +12,20 @@ importers:
   .:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: 3.0.1
-        version: 3.0.1(zod@3.25.76)
-      '@ai-sdk/openai':
-        specifier: 3.0.1
-        version: 3.0.1(zod@3.25.76)
-      '@ai-sdk/provider':
-        specifier: 3.0.0
-        version: 3.0.0
-      '@ai-sdk/react':
-        specifier: 3.0.3
-        version: 3.0.3(react@19.2.3)(zod@3.25.76)
-      '@ai-sdk/xai':
         specifier: 3.0.2
         version: 3.0.2(zod@3.25.76)
+      '@ai-sdk/openai':
+        specifier: 3.0.2
+        version: 3.0.2(zod@3.25.76)
+      '@ai-sdk/provider':
+        specifier: 3.0.1
+        version: 3.0.1
+      '@ai-sdk/react':
+        specifier: 3.0.5
+        version: 3.0.5(react@19.2.3)(zod@3.25.76)
+      '@ai-sdk/xai':
+        specifier: 3.0.3
+        version: 3.0.3(zod@3.25.76)
       '@auth/drizzle-adapter':
         specifier: 1.11.1
         version: 1.11.1
@@ -42,8 +42,8 @@ importers:
         specifier: 6.1.3
         version: 6.1.3
       '@codemirror/view':
-        specifier: 6.39.7
-        version: 6.39.7
+        specifier: 6.39.8
+        version: 6.39.8
       '@dnd-kit/core':
         specifier: 6.3.1
         version: 6.3.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -108,14 +108,14 @@ importers:
         specifier: 1.2.4
         version: 1.2.4(@types/react-dom@19.2.3(@types/react@19.2.7))(@types/react@19.2.7)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/query-sync-storage-persister':
-        specifier: 5.90.17
-        version: 5.90.17
+        specifier: 5.90.18
+        version: 5.90.18
       '@tanstack/react-query':
-        specifier: 5.90.15
-        version: 5.90.15(react@19.2.3)
+        specifier: 5.90.16
+        version: 5.90.16(react@19.2.3)
       '@tanstack/react-query-persist-client':
-        specifier: 5.90.17
-        version: 5.90.17(@tanstack/react-query@5.90.15(react@19.2.3))(react@19.2.3)
+        specifier: 5.90.18
+        version: 5.90.18(@tanstack/react-query@5.90.16(react@19.2.3))(react@19.2.3)
       '@types/dagre':
         specifier: 0.7.53
         version: 0.7.53
@@ -444,8 +444,8 @@ packages:
   '@adobe/css-tools@4.4.4':
     resolution: {integrity: sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg==}
 
-  '@ai-sdk/anthropic@3.0.1':
-    resolution: {integrity: sha512-MOiwKs76ilEmau/WRMnGWlheTUoB+cbvXCse+SAtpW5ATLreInsuYlspLABn12Dxu3w1Xzke1dT+tmEnxhy9SA==}
+  '@ai-sdk/anthropic@3.0.2':
+    resolution: {integrity: sha512-D6iSsrOYryBSPsFtOiEDv54jnjVCU/flIuXdjuRY7LdikB0KGjpazN8Dt4ONXzL+ux69ds2nzFNKke/w/fgLAA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -456,14 +456,20 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai-compatible@2.0.1':
-    resolution: {integrity: sha512-6tfF6YAREdECPHqQ4ydZFQyY6AiwRc+MHZPbwx2HGsLBTPQXtImLO+iew/pB9XjD2G8s4un6PSNYK//Y+jWDcQ==}
+  '@ai-sdk/gateway@3.0.4':
+    resolution: {integrity: sha512-OlccjNYZ5+4FaNyvs0kb3N5H6U/QCKlKPTGsgUo8IZkqfMQu8ALI1XD6l/BCuTKto+OO9xUPObT/W7JhbqJ5nA==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai@3.0.1':
-    resolution: {integrity: sha512-P+qxz2diOrh8OrpqLRg+E+XIFVIKM3z2kFjABcCJGHjGbXBK88AJqmuKAi87qLTvTe/xn1fhZBjklZg9bTyigw==}
+  '@ai-sdk/openai-compatible@2.0.2':
+    resolution: {integrity: sha512-9HFztZv9FBC7UxdLaA+gGKKEQjVNnI3nRmc6mRDPW5z5czvVKMrRgoXqjsYGbv+3giOXsVlRITHsrPswGn6O1w==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/openai@3.0.2':
+    resolution: {integrity: sha512-GONwavgSWtcWO+t9+GpGK8l7nIYh+zNtCL/NYDSeHxHiw6ksQS9XMRWrZyE5NpJ0EXNxSAWCHIDmb1WvTqhq9Q==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -474,18 +480,28 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/provider-utils@4.0.2':
+    resolution: {integrity: sha512-KaykkuRBdF/ffpI5bwpL4aSCmO/99p8/ci+VeHwJO8tmvXtiVAb99QeyvvvXmL61e9Zrvv4GBGoajW19xdjkVQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/provider@3.0.0':
     resolution: {integrity: sha512-m9ka3ptkPQbaHHZHqDXDF9C9B5/Mav0KTdky1k2HZ3/nrW2t1AgObxIVPyGDWQNS9FXT/FS6PIoSjpcP/No8rQ==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@3.0.3':
-    resolution: {integrity: sha512-mLIgQuBdIX9gxCYQN3Pv/J8ARoFreIKYr/TVQtI+FwEzejuGFimTyhDln7UIBfrnm3Mpn1xENIWZfDfCRF7wkw==}
+  '@ai-sdk/provider@3.0.1':
+    resolution: {integrity: sha512-2lR4w7mr9XrydzxBSjir4N6YMGdXD+Np1Sh0RXABh7tWdNFFwIeRI1Q+SaYZMbfL8Pg8RRLcrxQm51yxTLhokg==}
+    engines: {node: '>=18'}
+
+  '@ai-sdk/react@3.0.5':
+    resolution: {integrity: sha512-0J9YKeeouG2tg84hEu2p9W6zcv4TRrl0BQq0HmUjqn/Y6arXeX1LNTTG1WhO4y2oPLVGrhzurJIUmMgzJl41yQ==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
-  '@ai-sdk/xai@3.0.2':
-    resolution: {integrity: sha512-hNnSFzxC2j7InrZ6izgkK1lJbkpT2TMiA1uqn4u3t6/e4/Cd1gPxnBOkQoDrQl1GV0dnyG7oMjNZBDhKLIRdOw==}
+  '@ai-sdk/xai@3.0.3':
+    resolution: {integrity: sha512-Ts0RQ2yNlgX/mIj+1cvJvh/GYPZnXLe8Lzr4VFn9QNRjWJmRCQ1TSGymdmSB2dRHyBQU10acuem/bkkxFmL8vQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -708,8 +724,8 @@ packages:
   '@codemirror/theme-one-dark@6.1.3':
     resolution: {integrity: sha512-NzBdIvEJmx6fjeremiGp3t/okrLPYT0d9orIc7AFun8oZcRk58aejkqhv6spnz4MLAevrKNPMQYXEWMg4s+sKA==}
 
-  '@codemirror/view@6.39.7':
-    resolution: {integrity: sha512-3Vif9hnNHJnl2YgOtkR/wzGzhYcQ8gy3LGdUhkLUU8xSBbgsTxrE8he/CMTpeINm5TgxLe2FmzvF6IYQL/BSAg==}
+  '@codemirror/view@6.39.8':
+    resolution: {integrity: sha512-1rASYd9Z/mE3tkbC9wInRlCNyCkSn+nLsiQKZhEDUUJiUfs/5FHDpCUDaQpoTIaNGeDc6/bhaEAyLmeEucEFPw==}
 
   '@csstools/color-helpers@5.1.0':
     resolution: {integrity: sha512-S11EXWJyy0Mz5SYvRmY8nJYTFFd1LCNV+7cXyAgQtOOuzb4EsgfqDufL+9esx72/eLhsRdGZwaldu/h+E4t4BA==}
@@ -2795,23 +2811,23 @@ packages:
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20 || >=4.0.0-beta.1'
 
-  '@tanstack/query-core@5.90.15':
-    resolution: {integrity: sha512-mInIZNUZftbERE+/Hbtswfse49uUQwch46p+27gP9DWJL927UjnaWEF2t3RMOqBcXbfMdcNkPe06VyUIAZTV1g==}
+  '@tanstack/query-core@5.90.16':
+    resolution: {integrity: sha512-MvtWckSVufs/ja463/K4PyJeqT+HMlJWtw6PrCpywznd2NSgO3m4KwO9RqbFqGg6iDE8vVMFWMeQI4Io3eEYww==}
 
-  '@tanstack/query-persist-client-core@5.91.14':
-    resolution: {integrity: sha512-22vWKM2SXU29AUAzCv4pjKWx+mVam5QjPH+XZ1FQeH4DgO9HFPjWN8Bf9NVF2ki8eFGzTy+7FCBylEgV+LZgJw==}
+  '@tanstack/query-persist-client-core@5.91.15':
+    resolution: {integrity: sha512-vnPSfQVo41EKJN8v20nkhWNZPyB1dMJIy5icOvCGzcCJzsmRefYY1owtr63ICOcjOiPPTuNEfPsdjdBhkzYnmA==}
 
-  '@tanstack/query-sync-storage-persister@5.90.17':
-    resolution: {integrity: sha512-Pf7CoKGocswDQzSV9M1mdvUu47Rb2wKr1rIapnmWIiKvyIMN1t6YUpkdt2Og+o7ZKgbTsUoDAt4A2hia2EggEA==}
+  '@tanstack/query-sync-storage-persister@5.90.18':
+    resolution: {integrity: sha512-tKngFopz/TuAe7LBDg7IOhWPh9blxdQ6QG/vVL2dFzRmlPNcSo4WdCSONqSDioJkcyTwh1YCSlcikmJ1WnSb3Q==}
 
-  '@tanstack/react-query-persist-client@5.90.17':
-    resolution: {integrity: sha512-iipmRT7CpW/Is/RKHXPDuWS0FP7RrmJL/KofNb0aKYMl5dH88R0PZ7N0PvJ44SZCwl44p4VG/4ugGDISutCgtQ==}
+  '@tanstack/react-query-persist-client@5.90.18':
+    resolution: {integrity: sha512-ToVRTVpjzTrd9S/p7JIvGdLs+Xtz9aDMM/7+TQGSV9notY8Jt64irfAAAkZ05syftLKS+3KPgyKAnHcVeKVbWQ==}
     peerDependencies:
-      '@tanstack/react-query': ^5.90.15
+      '@tanstack/react-query': ^5.90.16
       react: ^18 || ^19
 
-  '@tanstack/react-query@5.90.15':
-    resolution: {integrity: sha512-uQvnDDcTOgJouNtAyrgRej+Azf0U5WDov3PXmHFUBc+t1INnAYhIlpZtCGNBLwCN41b43yO7dPNZu8xWkUFBwQ==}
+  '@tanstack/react-query@5.90.16':
+    resolution: {integrity: sha512-bpMGOmV4OPmif7TNMteU/Ehf/hoC0Kf98PDc0F4BZkFrEapRMEqI/V6YS0lyzwSV6PQpY1y4xxArUIfBW5LVxQ==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -3276,6 +3292,12 @@ packages:
 
   ai@6.0.3:
     resolution: {integrity: sha512-OOo+/C+sEyscoLnbY3w42vjQDICioVNyS+F+ogwq6O5RJL/vgWGuiLzFwuP7oHTeni/MkmX8tIge48GTdaV7QQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  ai@6.0.5:
+    resolution: {integrity: sha512-CKL3dDHedWskC6EY67LrULonZBU9vL+Bwa+xQEcprBhJfxpogntG3utjiAkYuy5ZQatyWk+SmWG8HLvcnhvbRg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -6165,10 +6187,10 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@ai-sdk/anthropic@3.0.1(zod@3.25.76)':
+  '@ai-sdk/anthropic@3.0.2(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/provider': 3.0.0
-      '@ai-sdk/provider-utils': 4.0.1(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.1
+      '@ai-sdk/provider-utils': 4.0.2(zod@3.25.76)
       zod: 3.25.76
 
   '@ai-sdk/gateway@3.0.2(zod@3.25.76)':
@@ -6178,16 +6200,23 @@ snapshots:
       '@vercel/oidc': 3.0.5
       zod: 3.25.76
 
-  '@ai-sdk/openai-compatible@2.0.1(zod@3.25.76)':
+  '@ai-sdk/gateway@3.0.4(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/provider': 3.0.0
-      '@ai-sdk/provider-utils': 4.0.1(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.1
+      '@ai-sdk/provider-utils': 4.0.2(zod@3.25.76)
+      '@vercel/oidc': 3.0.5
       zod: 3.25.76
 
-  '@ai-sdk/openai@3.0.1(zod@3.25.76)':
+  '@ai-sdk/openai-compatible@2.0.2(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/provider': 3.0.0
-      '@ai-sdk/provider-utils': 4.0.1(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.1
+      '@ai-sdk/provider-utils': 4.0.2(zod@3.25.76)
+      zod: 3.25.76
+
+  '@ai-sdk/openai@3.0.2(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.1
+      '@ai-sdk/provider-utils': 4.0.2(zod@3.25.76)
       zod: 3.25.76
 
   '@ai-sdk/provider-utils@4.0.1(zod@3.25.76)':
@@ -6197,25 +6226,36 @@ snapshots:
       eventsource-parser: 3.0.6
       zod: 3.25.76
 
+  '@ai-sdk/provider-utils@4.0.2(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.1
+      '@standard-schema/spec': 1.1.0
+      eventsource-parser: 3.0.6
+      zod: 3.25.76
+
   '@ai-sdk/provider@3.0.0':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.3(react@19.2.3)(zod@3.25.76)':
+  '@ai-sdk/provider@3.0.1':
     dependencies:
-      '@ai-sdk/provider-utils': 4.0.1(zod@3.25.76)
-      ai: 6.0.3(zod@3.25.76)
+      json-schema: 0.4.0
+
+  '@ai-sdk/react@3.0.5(react@19.2.3)(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider-utils': 4.0.2(zod@3.25.76)
+      ai: 6.0.5(zod@3.25.76)
       react: 19.2.3
       swr: 2.3.8(react@19.2.3)
       throttleit: 2.1.0
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/xai@3.0.2(zod@3.25.76)':
+  '@ai-sdk/xai@3.0.3(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/openai-compatible': 2.0.1(zod@3.25.76)
-      '@ai-sdk/provider': 3.0.0
-      '@ai-sdk/provider-utils': 4.0.1(zod@3.25.76)
+      '@ai-sdk/openai-compatible': 2.0.2(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.1
+      '@ai-sdk/provider-utils': 4.0.2(zod@3.25.76)
       zod: 3.25.76
 
   '@alloc/quick-lru@5.2.0': {}
@@ -6444,14 +6484,14 @@ snapshots:
     dependencies:
       '@codemirror/language': 6.12.1
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
       '@lezer/common': 1.5.0
 
   '@codemirror/commands@6.10.1':
     dependencies:
       '@codemirror/language': 6.12.1
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
       '@lezer/common': 1.5.0
 
   '@codemirror/lang-javascript@6.2.4':
@@ -6460,7 +6500,7 @@ snapshots:
       '@codemirror/language': 6.12.1
       '@codemirror/lint': 6.9.2
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
       '@lezer/common': 1.5.0
       '@lezer/javascript': 1.5.4
 
@@ -6475,7 +6515,7 @@ snapshots:
   '@codemirror/language@6.12.1':
     dependencies:
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
       '@lezer/common': 1.5.0
       '@lezer/highlight': 1.2.3
       '@lezer/lr': 1.4.5
@@ -6484,13 +6524,13 @@ snapshots:
   '@codemirror/lint@6.9.2':
     dependencies:
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
       crelt: 1.0.6
 
   '@codemirror/search@6.5.11':
     dependencies:
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
       crelt: 1.0.6
 
   '@codemirror/state@6.5.3':
@@ -6501,10 +6541,10 @@ snapshots:
     dependencies:
       '@codemirror/language': 6.12.1
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
       '@lezer/highlight': 1.2.3
 
-  '@codemirror/view@6.39.7':
+  '@codemirror/view@6.39.8':
     dependencies:
       '@codemirror/state': 6.5.3
       crelt: 1.0.6
@@ -8317,26 +8357,26 @@ snapshots:
       postcss-selector-parser: 6.0.10
       tailwindcss: 4.1.18
 
-  '@tanstack/query-core@5.90.15': {}
+  '@tanstack/query-core@5.90.16': {}
 
-  '@tanstack/query-persist-client-core@5.91.14':
+  '@tanstack/query-persist-client-core@5.91.15':
     dependencies:
-      '@tanstack/query-core': 5.90.15
+      '@tanstack/query-core': 5.90.16
 
-  '@tanstack/query-sync-storage-persister@5.90.17':
+  '@tanstack/query-sync-storage-persister@5.90.18':
     dependencies:
-      '@tanstack/query-core': 5.90.15
-      '@tanstack/query-persist-client-core': 5.91.14
+      '@tanstack/query-core': 5.90.16
+      '@tanstack/query-persist-client-core': 5.91.15
 
-  '@tanstack/react-query-persist-client@5.90.17(@tanstack/react-query@5.90.15(react@19.2.3))(react@19.2.3)':
+  '@tanstack/react-query-persist-client@5.90.18(@tanstack/react-query@5.90.16(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@tanstack/query-persist-client-core': 5.91.14
-      '@tanstack/react-query': 5.90.15(react@19.2.3)
+      '@tanstack/query-persist-client-core': 5.91.15
+      '@tanstack/react-query': 5.90.16(react@19.2.3)
       react: 19.2.3
 
-  '@tanstack/react-query@5.90.15(react@19.2.3)':
+  '@tanstack/react-query@5.90.16(react@19.2.3)':
     dependencies:
-      '@tanstack/query-core': 5.90.15
+      '@tanstack/query-core': 5.90.16
       react: 19.2.3
 
   '@testing-library/dom@10.4.0':
@@ -8870,6 +8910,14 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 3.25.76
 
+  ai@6.0.5(zod@3.25.76):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.4(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.1
+      '@ai-sdk/provider-utils': 4.0.2(zod@3.25.76)
+      '@opentelemetry/api': 1.9.0
+      zod: 3.25.76
+
   ansi-escapes@7.2.0:
     dependencies:
       environment: 1.1.0
@@ -9065,7 +9113,7 @@ snapshots:
       '@codemirror/lint': 6.9.2
       '@codemirror/search': 6.5.11
       '@codemirror/state': 6.5.3
-      '@codemirror/view': 6.39.7
+      '@codemirror/view': 6.39.8
 
   color-convert@2.0.1:
     dependencies:
