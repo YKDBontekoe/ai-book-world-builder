@@ -12,6 +12,7 @@ interface UseSceneContentProps {
 export interface UseSceneContentReturn {
 	sceneContent: string;
 	isSaving: boolean;
+	isLoading: boolean;
 	lastSaved: Date | null;
 	handleContentChange: (newContent: string) => void;
 	setContentDirectly: (content: string) => void;
@@ -25,6 +26,7 @@ export function useSceneContent({
 	// Initialize with initialContent if provided
 	const [sceneContent, setSceneContent] = useState(initialContent ?? "");
 	const [isSaving, setIsSaving] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
 
 	// Ref to track if we've edited the content locally, to prevent overwriting
@@ -58,15 +60,19 @@ export function useSceneContent({
 			// If we have initial content, use it.
 			if (initialContent !== undefined && initialContent !== null) {
 				setSceneContent(initialContent);
+				setIsLoading(false);
 			} else {
 				// No initial content, clear and fetch.
 				setSceneContent("");
+				setIsLoading(true);
 
 				getSceneContent(activeSceneId).then((result) => {
 					if (!isMounted) return;
 
 					// Race condition check: make sure we are still on the same scene
 					if (activeSceneId !== activeSceneIdRef.current) return;
+
+					setIsLoading(false);
 
 					if (result.success && result.content !== undefined) {
 						// Only update if user hasn't started typing
@@ -79,6 +85,7 @@ export function useSceneContent({
 			}
 		} else {
 			setSceneContent("");
+			setIsLoading(false);
 		}
 
 		return () => {
@@ -169,6 +176,7 @@ export function useSceneContent({
 	return {
 		sceneContent,
 		isSaving,
+		isLoading,
 		lastSaved,
 		handleContentChange,
 		setContentDirectly,

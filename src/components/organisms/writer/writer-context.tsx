@@ -12,6 +12,7 @@ type WriterContextType = UseWriterStateReturnType & {
 	project: Project;
 	isReadOnly: boolean;
 	activeChapterId?: string; // Derived from activeScene
+	isSceneLoading: boolean;
 };
 
 export const WriterContext = createContext<WriterContextType | null>(null);

@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Lock, MousePointerClick, RotateCcw } from "lucide-react";
+import { Loader2, Lock, MousePointerClick, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
 import { Button } from "@/components/atoms/button";
@@ -32,6 +32,7 @@ export function WriterEditor() {
 		handleContentChange,
 		structure,
 		isReadOnly,
+		isSceneLoading,
 	} = useWriterContext();
 
 	const { isTypewriterMode, isDirectorMode } = useWriterLayoutContext();
@@ -87,33 +88,39 @@ export function WriterEditor() {
 
 			<div className="flex-1 overflow-y-auto relative scroll-smooth">
 				{activeSceneId ? (
-					<div
-						className="writer-instance max-w-3xl mx-auto min-h-full py-8 px-8 pb-32 transition-all duration-300"
-						style={{
-							fontFamily:
-								editorFont === "mono"
-									? "var(--font-mono)"
-									: editorFont === "serif"
-										? "serif"
-										: "var(--font-sans)",
-							fontSize: `${editorFontSize}px`,
-							lineHeight: editorLineHeight,
-						}}
-					>
-						<Editor
-							ref={editorRef}
-							key={activeSceneId} // Reset editor when scene changes
-							content={previewContent ?? sceneContent}
-							onSaveContent={onEditorContentChange}
-							status="idle"
-							isCurrentVersion={true}
-							currentVersionIndex={0}
-							suggestions={[]}
-							readOnly={isReadOnly || isTimeTraveling}
-							typewriterMode={isTypewriterMode && !isTimeTraveling}
-							mentionables={entities || []}
-						/>
-					</div>
+					isSceneLoading ? (
+						<div className="flex h-full items-center justify-center">
+							<Loader2 className="h-8 w-8 animate-spin text-muted-foreground/50" />
+						</div>
+					) : (
+						<div
+							className="writer-instance max-w-3xl mx-auto min-h-full py-8 px-8 pb-32 transition-all duration-300"
+							style={{
+								fontFamily:
+									editorFont === "mono"
+										? "var(--font-mono)"
+										: editorFont === "serif"
+											? "serif"
+											: "var(--font-sans)",
+								fontSize: `${editorFontSize}px`,
+								lineHeight: editorLineHeight,
+							}}
+						>
+							<Editor
+								ref={editorRef}
+								key={activeSceneId} // Reset editor when scene changes
+								content={previewContent ?? sceneContent}
+								onSaveContent={onEditorContentChange}
+								status="idle"
+								isCurrentVersion={true}
+								currentVersionIndex={0}
+								suggestions={[]}
+								readOnly={isReadOnly || isTimeTraveling}
+								typewriterMode={isTypewriterMode && !isTimeTraveling}
+								mentionables={entities || []}
+							/>
+						</div>
+					)
 				) : !hasStructure ? (
 					isReadOnly ? (
 						<div className="flex h-full items-center justify-center p-8">

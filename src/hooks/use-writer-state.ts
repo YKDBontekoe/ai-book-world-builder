@@ -78,6 +78,7 @@ export function useWriterState({
 	const {
 		sceneContent,
 		isSaving,
+		isLoading: isSceneLoading,
 		lastSaved,
 		handleContentChange,
 		setContentDirectly,
@@ -179,6 +180,7 @@ export function useWriterState({
 			sceneContent,
 			activeScene,
 			isSaving,
+			isSceneLoading,
 			lastSaved,
 			isSnapshotting,
 			handleContentChange,
@@ -194,6 +196,7 @@ export function useWriterState({
 			sceneContent,
 			activeScene,
 			isSaving,
+			isSceneLoading,
 			lastSaved,
 			isSnapshotting,
 			handleContentChange,
