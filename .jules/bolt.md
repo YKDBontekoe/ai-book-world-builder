@@ -42,3 +42,7 @@
 ## 2025-05-26 - Algorithmic Optimization in Visualizations
 **Learning:** In visualization components like node graphs, O(N*M) operations (like filtering issues for every node) inside layout calculations can cause significant lag.
 **Action:** Always pre-compute lookups (Maps) for related data before iterating through the main data set, reducing complexity to O(N).
+
+## 2025-06-15 - Callback Instability Breaking Memoization
+**Learning:** Passing a callback that depends on a changing value (e.g., `activeId`) to a list of memoized items breaks the memoization for *all* items, causing O(N) re-renders on every selection change.
+**Action:** Use `useRef` to store the changing value and access `ref.current` inside the callback. This keeps the callback stable (same function reference) and allows `React.memo` to work correctly, reducing re-renders to O(1) (only the changing items).

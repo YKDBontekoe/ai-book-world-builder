@@ -9,7 +9,7 @@ import {
 	Plus,
 	Sparkles,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
 	createNewChapter,
@@ -59,6 +59,13 @@ export function SceneNavigation({
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
+
+	// ⚡ Bolt: Store activeSceneId in ref to prevent prop instability in onDelete
+	// This prevents all SceneItems from re-rendering when selection changes
+	const activeSceneIdRef = useRef(activeSceneId);
+	useEffect(() => {
+		activeSceneIdRef.current = activeSceneId;
+	}, [activeSceneId]);
 
 	// Initialize expanded state when structure loads
 	useEffect(() => {
@@ -147,7 +154,8 @@ export function SceneNavigation({
 				if (result.success) {
 					toast.success("Scene deleted", { id: toastId });
 					onStructureUpdate?.();
-					if (activeSceneId === sceneId) {
+					// Use ref to check current selection without invalidating callback
+					if (activeSceneIdRef.current === sceneId) {
 						onSceneSelect(null); // Clear selection
 					}
 				} else {
@@ -159,7 +167,7 @@ export function SceneNavigation({
 				toast.error("Error deleting scene", { id: toastId });
 			}
 		},
-		[onStructureUpdate, activeSceneId, onSceneSelect],
+		[onStructureUpdate, onSceneSelect],
 	);
 
 	const handleCreateChapter = async () => {
