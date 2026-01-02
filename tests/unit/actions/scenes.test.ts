@@ -1,38 +1,51 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-// Hoist mocks to avoid execution order issues
-vi.mock("@/app/(auth)/auth", () => ({
-	auth: vi.fn(),
-}));
-
-vi.mock("@/lib/db/repositories", () => ({
-	projectRepository: {
+// Use vi.hoisted to share mock state across different imports
+const { mockProjectRepository, mockSceneRepository, mockInvalidateCache, mockRevalidatePath, mockAuth } = vi.hoisted(() => ({
+	mockProjectRepository: {
 		findByIdWithAccess: vi.fn(),
 	},
-	sceneRepository: {
+	mockSceneRepository: {
 		update: vi.fn(),
 	},
+	mockInvalidateCache: vi.fn(),
+	mockRevalidatePath: vi.fn(),
+	mockAuth: vi.fn(),
+}));
+
+// Mock specific repository files
+vi.mock("@/lib/db/repositories/project-repository", () => ({
+	projectRepository: mockProjectRepository,
+}));
+
+vi.mock("@/lib/db/repositories/scene-repository", () => ({
+	sceneRepository: mockSceneRepository,
+}));
+
+// Mock the index
+vi.mock("@/lib/db/repositories", () => ({
+	projectRepository: mockProjectRepository,
+	sceneRepository: mockSceneRepository,
+}));
+
+vi.mock("@/app/(auth)/auth", () => ({
+	auth: mockAuth,
 }));
 
 vi.mock("@/lib/cache", () => ({
-	invalidateCache: vi.fn(),
+	invalidateCache: mockInvalidateCache,
 }));
 
-import { auth } from "@/app/(auth)/auth";
-import { updateSceneAction } from "@/app/actions/scenes";
-import { invalidateCache } from "@/lib/cache";
-import { projectRepository, sceneRepository } from "@/lib/db/repositories";
-import type { Project, Scene } from "@/lib/db/schema";
+vi.mock("next/cache", () => ({
+	revalidatePath: mockRevalidatePath,
+}));
 
-const mockedAuth = vi.mocked(auth);
-const mockedFindByIdWithAccess = vi.mocked(
-	projectRepository.findByIdWithAccess,
-);
-const mockedUpdateScene = vi.mocked(sceneRepository.update);
-const mockedInvalidateCache = vi.mocked(invalidateCache);
+// Import the action under test
+import { updateSceneAction } from "@/app/actions/scenes";
+import type { Project, Scene } from "@/lib/db/schema";
+import { isOk } from "@/lib/result";
 
 const userId = "user-123";
-// Use valid UUIDs to pass Zod validation
 const projectId = "123e4567-e89b-12d3-a456-426614174000";
 const sceneId = "123e4567-e89b-12d3-a456-426614174001";
 
@@ -85,9 +98,9 @@ describe("scenes server actions", () => {
 	it("updates a scene when the user owns the project and invalidates cache if title changes", async () => {
 		const updatedScene = buildScene({ title: "Updated Title" });
 
-		mockedAuth.mockResolvedValue(buildSession());
-		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
-		mockedUpdateScene.mockResolvedValue(updatedScene);
+		mockAuth.mockResolvedValue(buildSession());
+		mockProjectRepository.findByIdWithAccess.mockResolvedValue(buildProject());
+		mockSceneRepository.update.mockResolvedValue(updatedScene);
 
 		const result = await updateSceneAction({
 			id: sceneId,
@@ -95,8 +108,8 @@ describe("scenes server actions", () => {
 			projectId,
 		});
 
-		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
-		expect(mockedUpdateScene).toHaveBeenCalledWith(
+		expect(mockProjectRepository.findByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
+		expect(mockSceneRepository.update).toHaveBeenCalledWith(
 			sceneId,
 			{
 				title: "Updated Title",
@@ -105,26 +118,31 @@ describe("scenes server actions", () => {
 			},
 			projectId,
 		);
-		expect(mockedInvalidateCache).toHaveBeenCalledWith(
+		expect(mockInvalidateCache).toHaveBeenCalledWith(
 			`project-structure:${projectId}`,
 		);
-		expect(result.title).toBe("Updated Title");
+		expect(mockRevalidatePath).toHaveBeenCalledWith(`/projects/${projectId}`);
+
+		expect(result.success).toBe(true);
+		if (isOk(result)) {
+			expect(result.data.title).toBe("Updated Title");
+		}
 	});
 
 	it("updates a scene content but does NOT invalidate structure cache", async () => {
 		const updatedScene = buildScene({ content: "New content" });
 
-		mockedAuth.mockResolvedValue(buildSession());
-		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
-		mockedUpdateScene.mockResolvedValue(updatedScene);
+		mockAuth.mockResolvedValue(buildSession());
+		mockProjectRepository.findByIdWithAccess.mockResolvedValue(buildProject());
+		mockSceneRepository.update.mockResolvedValue(updatedScene);
 
-		await updateSceneAction({
+		const result = await updateSceneAction({
 			id: sceneId,
 			content: "New content",
 			projectId,
 		});
 
-		expect(mockedUpdateScene).toHaveBeenCalledWith(
+		expect(mockSceneRepository.update).toHaveBeenCalledWith(
 			sceneId,
 			{
 				title: undefined,
@@ -133,19 +151,36 @@ describe("scenes server actions", () => {
 			},
 			projectId,
 		);
-		// Should NOT be called because title was not passed
-		expect(mockedInvalidateCache).not.toHaveBeenCalled();
+		expect(mockInvalidateCache).not.toHaveBeenCalled();
+		expect(result.success).toBe(true);
 	});
 
-	it("throws when the project is inaccessible", async () => {
-		mockedAuth.mockResolvedValue(buildSession());
-		mockedFindByIdWithAccess.mockResolvedValue(null);
+	it("returns error when the project is inaccessible", async () => {
+		mockAuth.mockResolvedValue(buildSession());
+		mockProjectRepository.findByIdWithAccess.mockResolvedValue(null);
 
-		await expect(updateSceneAction({ id: sceneId, projectId })).rejects.toThrow(
-			"Unauthorized",
-		);
+		const result = await updateSceneAction({ id: sceneId, projectId });
 
-		expect(mockedUpdateScene).not.toHaveBeenCalled();
-		expect(mockedInvalidateCache).not.toHaveBeenCalled();
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).toContain("Project not found");
+		}
+
+		expect(mockSceneRepository.update).not.toHaveBeenCalled();
+		expect(mockInvalidateCache).not.toHaveBeenCalled();
+	});
+
+	it("returns Unauthorized when not logged in", async () => {
+		mockAuth.mockResolvedValue(null);
+
+		const result = await updateSceneAction({ id: sceneId, projectId });
+
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).toBe("You must be logged in to perform this action");
+		}
+
+		expect(mockProjectRepository.findByIdWithAccess).not.toHaveBeenCalled();
+		expect(mockSceneRepository.update).not.toHaveBeenCalled();
 	});
 });
