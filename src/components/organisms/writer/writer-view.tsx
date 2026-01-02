@@ -95,6 +95,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					<>
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
+							// TODO: Remove this suppression once react-resizable-panels types are fixed or wrapper is updated
 							// @ts-expect-error ref is available in v4.1 but types might be outdated or mismatched with wrapper
 							ref={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
