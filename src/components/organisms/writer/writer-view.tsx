@@ -82,7 +82,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			}}
 		>
 			<ResizablePanelGroup
-				direction={isMobile ? "vertical" : "horizontal"}
+				orientation={isMobile ? "vertical" : "horizontal"}
 				id={
 					isMobile
 						? "writer-view-layout-vertical"
