@@ -1,0 +1,10 @@
+
+> ai-book-world-builder@3.1.0 type-check /app
+> tsc --noEmit
+
+src/components/organisms/writer/writer-view.tsx(85,5): error TS2322: Type '{ children: (false | Element)[]; direction: string; id: string; className: string; }' is not assignable to type 'IntrinsicAttributes & HTMLAttributes<HTMLDivElement> & { children?: ReactNode; className?: string | undefined; ... 8 more ...; style?: CSSProperties | undefined; }'.
+  Property 'direction' does not exist on type 'IntrinsicAttributes & HTMLAttributes<HTMLDivElement> & { children?: ReactNode; className?: string | undefined; ... 8 more ...; style?: CSSProperties | undefined; }'.
+src/components/organisms/writer/writer-view.tsx(98,8): error TS2322: Type '{ children: Element; ref: RefObject<PanelImperativeHandle | null>; defaultSize: number; minSize: number; maxSize: number; collapsible: true; collapsedSize: number; className: string; onResize: (size: PanelSize) => void; }' is not assignable to type 'IntrinsicAttributes & HTMLAttributes<HTMLDivElement> & { className?: string | undefined; collapsedSize?: string | number | undefined; ... 8 more ...; style?: CSSProperties | undefined; }'.
+  Property 'ref' does not exist on type 'IntrinsicAttributes & HTMLAttributes<HTMLDivElement> & { className?: string | undefined; collapsedSize?: string | number | undefined; ... 8 more ...; style?: CSSProperties | undefined; }'.
+src/components/organisms/writer/writer-view.tsx(106,29): error TS2367: This comparison appears to be unintentional because the types 'PanelSize' and 'number' have no overlap.
+ ELIFECYCLE  Command failed with exit code 1.
