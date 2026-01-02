@@ -298,7 +298,10 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 					.select()
 					.from(relationship)
 					.where(eq(relationship.projectId, originalProjectId)),
-				tx.select().from(outline).where(eq(outline.projectId, originalProjectId)),
+				tx
+					.select()
+					.from(outline)
+					.where(eq(outline.projectId, originalProjectId)),
 				tx.select().from(volume).where(eq(volume.projectId, originalProjectId)),
 				tx
 					.select()

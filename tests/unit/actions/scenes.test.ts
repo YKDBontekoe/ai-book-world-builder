@@ -1,7 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted to share mock state across different imports
-const { mockProjectRepository, mockSceneRepository, mockInvalidateCache, mockRevalidatePath, mockAuth } = vi.hoisted(() => ({
+const {
+	mockProjectRepository,
+	mockSceneRepository,
+	mockInvalidateCache,
+	mockRevalidatePath,
+	mockAuth,
+} = vi.hoisted(() => ({
 	mockProjectRepository: {
 		findByIdWithAccess: vi.fn(),
 	},
@@ -108,7 +114,10 @@ describe("scenes server actions", () => {
 			projectId,
 		});
 
-		expect(mockProjectRepository.findByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
+		expect(mockProjectRepository.findByIdWithAccess).toHaveBeenCalledWith(
+			projectId,
+			userId,
+		);
 		expect(mockSceneRepository.update).toHaveBeenCalledWith(
 			sceneId,
 			{

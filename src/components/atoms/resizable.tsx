@@ -1,11 +1,7 @@
 "use client";
 
 import { DragHandleDots2Icon } from "@radix-ui/react-icons";
-import {
-	Group,
-	Panel,
-	Separator,
-} from "react-resizable-panels";
+import { Group, Panel, Separator } from "react-resizable-panels";
 
 import { cn } from "@/lib/utils";
 
