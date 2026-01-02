@@ -17,8 +17,13 @@ import { cn } from "@/lib/utils";
 interface SceneItemProps {
 	scene: SceneWithPrev;
 	isActive: boolean;
+	isSelected?: boolean;
 	chapterId: string;
-	onSelect: (sceneId: string) => void;
+	onSelect: (
+		sceneId: string,
+		multiSelect: boolean,
+		rangeSelect: boolean,
+	) => void;
 	onGenerateNext: (chapterId: string, sceneId: string) => void;
 	isGenerating: boolean;
 	onRename?: (sceneId: string, newTitle: string) => void;
@@ -29,6 +34,7 @@ interface SceneItemProps {
 export const SceneItem = memo(function SceneItem({
 	scene,
 	isActive,
+	isSelected,
 	chapterId,
 	onSelect,
 	onGenerateNext,
@@ -87,6 +93,12 @@ export const SceneItem = memo(function SceneItem({
 		}
 	};
 
+	const handleClick = (e: React.MouseEvent) => {
+		const isMulti = e.metaKey || e.ctrlKey;
+		const isRange = e.shiftKey;
+		onSelect(scene.id, isMulti, isRange);
+	};
+
 	if (isEditing) {
 		return (
 			<div className="px-2 h-8 flex items-center">
@@ -108,16 +120,34 @@ export const SceneItem = memo(function SceneItem({
 			<ContextMenu>
 				<ContextMenuTrigger disabled={readOnly}>
 					<Button
-						variant={isActive ? "secondary" : "ghost"}
+						variant="ghost"
 						size="sm"
 						className={cn(
-							"justify-start h-8 w-full px-2 text-xs font-normal",
-							isActive && "bg-secondary/50 font-medium",
+							"justify-start h-8 w-full px-2 text-xs font-normal transition-colors relative",
+							// Active (viewing) state
+							isActive &&
+								!isSelected &&
+								"bg-secondary/50 font-medium text-foreground",
+							// Selected (bulk) state
+							isSelected &&
+								"bg-primary/20 hover:bg-primary/30 text-primary font-medium",
+							// Overrides
+							!isActive && !isSelected && "text-muted-foreground",
 						)}
-						onClick={() => onSelect(scene.id)}
+						onClick={handleClick}
 						onDoubleClick={() => !readOnly && setIsEditing(true)}
 					>
-						<FileText className="mr-2 h-3 w-3 opacity-70" />
+						{/* Selection Indicator Line */}
+						{isSelected && (
+							<div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary rounded-l-md" />
+						)}
+
+						<FileText
+							className={cn(
+								"mr-2 h-3 w-3 transition-colors",
+								isSelected ? "opacity-100" : "opacity-70",
+							)}
+						/>
 						<span className="truncate">{scene.title}</span>
 					</Button>
 				</ContextMenuTrigger>

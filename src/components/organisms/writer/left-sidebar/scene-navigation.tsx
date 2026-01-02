@@ -1,15 +1,20 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	BookPlus,
 	ChevronsDown,
 	ChevronsUp,
 	FilePlus2,
+	FolderInput,
 	Loader2,
 	Plus,
+	Search,
 	Sparkles,
+	Trash2,
+	X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
 	createNewChapter,
@@ -18,6 +23,10 @@ import {
 	generateScene,
 	updateSceneTitle,
 } from "@/app/actions/writer";
+import {
+	deleteScenes,
+	moveScenesToChapter,
+} from "@/app/actions/writer/scene-ops";
 import {
 	Accordion,
 	AccordionContent,
@@ -31,8 +40,25 @@ import {
 	ContextMenuItem,
 	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/atoms/dialog";
+import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/atoms/select";
 import { EmptyState } from "@/components/molecules/empty-state";
+import { GlassCard } from "@/components/molecules/glass-card";
 import { SceneItem } from "@/components/organisms/writer/left-sidebar/scene-item";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -60,6 +86,17 @@ export function SceneNavigation({
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
 
+	// Search & Selection State
+	const [searchQuery, setSearchQuery] = useState("");
+	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
+	const [isProcessingBulk, setIsProcessingBulk] = useState(false);
+
+	// Move Dialog State
+	const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
+	const [moveTargetChapterId, setMoveTargetChapterId] = useState<string>("");
+
 	// Initialize expanded state when structure loads
 	useEffect(() => {
 		if (structure) {
@@ -76,6 +113,112 @@ export function SceneNavigation({
 	const handleCollapseAll = () => {
 		setExpandedChapters([]);
 	};
+
+	// --- Selection Logic ---
+	const handleSelectScene = useCallback(
+		(sceneId: string, multiSelect: boolean, rangeSelect: boolean) => {
+			if (!structure) return;
+
+			if (rangeSelect && selectedSceneIds.size > 0) {
+				// Simple range select: Find all scenes between last selected and current
+				// Flatten structure to find indices
+				const flatScenes = structure.flatMap((c) => c.scenes);
+				const lastSelectedId = Array.from(selectedSceneIds).pop(); // Naive last
+				const startIdx = flatScenes.findIndex((s) => s.id === lastSelectedId);
+				const endIdx = flatScenes.findIndex((s) => s.id === sceneId);
+
+				if (startIdx !== -1 && endIdx !== -1) {
+					const [min, max] = [
+						Math.min(startIdx, endIdx),
+						Math.max(startIdx, endIdx),
+					];
+					const rangeIds = flatScenes.slice(min, max + 1).map((s) => s.id);
+					setSelectedSceneIds((prev) => {
+						const next = new Set(prev);
+						for (const id of rangeIds) next.add(id);
+						return next;
+					});
+				}
+			} else if (multiSelect) {
+				setSelectedSceneIds((prev) => {
+					const next = new Set(prev);
+					if (next.has(sceneId)) next.delete(sceneId);
+					else next.add(sceneId);
+					return next;
+				});
+			} else {
+				// Standard click: Select exclusively or just set active if not in selection mode?
+				// Existing behavior: Clicking a scene sets it as active.
+				// We should probably clear selection if clicking without modifiers.
+				setSelectedSceneIds(new Set());
+				onSceneSelect(sceneId);
+			}
+		},
+		[structure, selectedSceneIds, onSceneSelect],
+	);
+
+	const handleBulkDelete = async () => {
+		if (selectedSceneIds.size === 0) return;
+		if (
+			!confirm(
+				`Are you sure you want to delete ${selectedSceneIds.size} scenes?`,
+			)
+		)
+			return;
+
+		setIsProcessingBulk(true);
+		const toastId = toast.loading(
+			`Deleting ${selectedSceneIds.size} scenes...`,
+		);
+
+		try {
+			const result = await deleteScenes(Array.from(selectedSceneIds));
+			if (result.success) {
+				toast.success("Scenes deleted", { id: toastId });
+				setSelectedSceneIds(new Set());
+				onStructureUpdate?.();
+				// If active scene was deleted, deselect it
+				if (activeSceneId && selectedSceneIds.has(activeSceneId)) {
+					onSceneSelect(null);
+				}
+			} else {
+				toast.error(result.error || "Failed to delete scenes", { id: toastId });
+			}
+		} catch (_e) {
+			toast.error("Error deleting scenes", { id: toastId });
+		} finally {
+			setIsProcessingBulk(false);
+		}
+	};
+
+	const handleBulkMove = async () => {
+		if (!moveTargetChapterId || selectedSceneIds.size === 0) return;
+
+		setIsProcessingBulk(true);
+		const toastId = toast.loading("Moving scenes...");
+
+		try {
+			const result = await moveScenesToChapter(
+				Array.from(selectedSceneIds),
+				moveTargetChapterId,
+			);
+			if (result.success) {
+				toast.success("Scenes moved successfully", { id: toastId });
+				setSelectedSceneIds(new Set());
+				setIsMoveDialogOpen(false);
+				setMoveTargetChapterId("");
+				onStructureUpdate?.();
+			} else {
+				toast.error(result.error || "Failed to move scenes", { id: toastId });
+			}
+		} catch (_e) {
+			toast.error("Error moving scenes", { id: toastId });
+		} finally {
+			setIsProcessingBulk(false);
+		}
+	};
+
+	// --- Existing Logic ---
 
 	const handleGenerateNextScene = useCallback(
 		async (chapterId: string, prevSceneId?: string) => {
@@ -107,7 +250,6 @@ export function SceneNavigation({
 				if (result.success && result.sceneId) {
 					toast.success("Scene created", { id: toastId });
 					onStructureUpdate?.();
-					// Optionally select the new scene
 					onSceneSelect(result.sceneId);
 				} else {
 					toast.error(result.error || "Failed to create scene", {
@@ -148,7 +290,7 @@ export function SceneNavigation({
 					toast.success("Scene deleted", { id: toastId });
 					onStructureUpdate?.();
 					if (activeSceneId === sceneId) {
-						onSceneSelect(null); // Clear selection
+						onSceneSelect(null);
 					}
 				} else {
 					toast.error(result.error || "Failed to delete scene", {
@@ -179,6 +321,33 @@ export function SceneNavigation({
 			setIsCreatingChapter(false);
 		}
 	};
+
+	// --- Filtering ---
+	const filteredStructure = useMemo(() => {
+		if (!structure) return [];
+		if (!searchQuery) return structure;
+
+		const query = searchQuery.toLowerCase();
+		return structure
+			.map((chapter) => ({
+				...chapter,
+				scenes: chapter.scenes.filter((scene) =>
+					scene.title.toLowerCase().includes(query),
+				),
+			}))
+			.filter(
+				(chapter) =>
+					chapter.title.toLowerCase().includes(query) ||
+					chapter.scenes.length > 0,
+			);
+	}, [structure, searchQuery]);
+
+	// Auto-expand on search
+	useEffect(() => {
+		if (searchQuery && filteredStructure.length > 0) {
+			setExpandedChapters(filteredStructure.map((c) => c.id));
+		}
+	}, [searchQuery, filteredStructure]);
 
 	if (loading) {
 		return (
@@ -227,32 +396,46 @@ export function SceneNavigation({
 	}
 
 	return (
-		<div className="flex flex-col h-full">
-			<div className="flex items-center justify-between px-4 py-2">
-				<span className="text-xs font-medium text-muted-foreground">
-					{structure.length} Chapters
-				</span>
-				<div className="flex gap-1">
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-6 w-6"
-						onClick={handleExpandAll}
-						title="Expand All"
-					>
-						<ChevronsDown className="h-3 w-3" />
-					</Button>
-					<Button
-						variant="ghost"
-						size="icon"
-						className="h-6 w-6"
-						onClick={handleCollapseAll}
-						title="Collapse All"
-					>
-						<ChevronsUp className="h-3 w-3" />
-					</Button>
+		<div className="flex flex-col h-full relative">
+			{/* Search & Filter Bar */}
+			<div className="px-4 py-2 space-y-2 border-b border-border/20">
+				<div className="relative">
+					<Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+					<Input
+						placeholder="Search scenes..."
+						value={searchQuery}
+						onChange={(e) => setSearchQuery(e.target.value)}
+						onClear={() => setSearchQuery("")}
+						className="pl-8 h-8 text-xs bg-secondary/50 border-transparent focus:border-primary/20"
+					/>
+				</div>
+				<div className="flex items-center justify-between text-xs text-muted-foreground">
+					<span>
+						{structure.reduce((acc, c) => acc + c.scenes.length, 0)} Scenes
+					</span>
+					<div className="flex gap-1">
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-5 w-5"
+							onClick={handleExpandAll}
+							title="Expand All"
+						>
+							<ChevronsDown className="h-3 w-3" />
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon"
+							className="h-5 w-5"
+							onClick={handleCollapseAll}
+							title="Collapse All"
+						>
+							<ChevronsUp className="h-3 w-3" />
+						</Button>
+					</div>
 				</div>
 			</div>
+
 			<ScrollArea className="flex-1">
 				<Accordion
 					type="multiple"
@@ -260,7 +443,7 @@ export function SceneNavigation({
 					onValueChange={setExpandedChapters}
 					className="w-full"
 				>
-					{structure.map((chapter) => (
+					{filteredStructure.map((chapter) => (
 						<AccordionItem
 							key={chapter.id}
 							value={chapter.id}
@@ -268,8 +451,15 @@ export function SceneNavigation({
 						>
 							<ContextMenu>
 								<ContextMenuTrigger disabled={readOnly}>
-									<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-										<span className="truncate text-left">{chapter.title}</span>
+									<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium group">
+										<span className="truncate text-left flex-1 group-hover:text-foreground transition-colors">
+											{chapter.title}
+										</span>
+										{searchQuery && (
+											<span className="text-[10px] text-muted-foreground mr-2 bg-secondary px-1.5 py-0.5 rounded-full">
+												{chapter.scenes.length}
+											</span>
+										)}
 									</AccordionTrigger>
 								</ContextMenuTrigger>
 								<ContextMenuContent>
@@ -296,8 +486,9 @@ export function SceneNavigation({
 											key={scene.id}
 											scene={scene}
 											isActive={activeSceneId === scene.id}
+											isSelected={selectedSceneIds.has(scene.id)}
 											chapterId={chapter.id}
-											onSelect={onSceneSelect}
+											onSelect={handleSelectScene}
 											onGenerateNext={handleGenerateNextScene}
 											isGenerating={isGenerating}
 											onRename={handleRenameScene}
@@ -305,39 +496,147 @@ export function SceneNavigation({
 											readOnly={readOnly}
 										/>
 									))}
-									<Button
-										variant="ghost"
-										size="sm"
-										className="justify-start h-8 w-full px-2 text-xs text-muted-foreground italic"
-										onClick={() => handleCreateSceneManually(chapter.id)}
-										disabled={isGenerating || readOnly}
-									>
-										<Plus className="mr-2 h-3 w-3" />
-										Add Scene
-									</Button>
+									{!searchQuery && (
+										<Button
+											variant="ghost"
+											size="sm"
+											className="justify-start h-8 w-full px-2 text-xs text-muted-foreground italic opacity-50 hover:opacity-100"
+											onClick={() => handleCreateSceneManually(chapter.id)}
+											disabled={isGenerating || readOnly}
+										>
+											<Plus className="mr-2 h-3 w-3" />
+											Add Scene
+										</Button>
+									)}
 								</div>
 							</AccordionContent>
 						</AccordionItem>
 					))}
 					{/* Always allow adding a new chapter at the bottom */}
-					<div className="p-2">
-						<Button
-							variant="ghost"
-							size="sm"
-							className="w-full justify-start text-muted-foreground"
-							onClick={handleCreateChapter}
-							disabled={isCreatingChapter || readOnly}
-						>
-							{isCreatingChapter ? (
-								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-							) : (
-								<Plus className="mr-2 h-4 w-4" />
-							)}
-							Add Chapter
-						</Button>
-					</div>
+					{!searchQuery && (
+						<div className="p-2">
+							<Button
+								variant="ghost"
+								size="sm"
+								className="w-full justify-start text-muted-foreground"
+								onClick={handleCreateChapter}
+								disabled={isCreatingChapter || readOnly}
+							>
+								{isCreatingChapter ? (
+									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+								) : (
+									<Plus className="mr-2 h-4 w-4" />
+								)}
+								Add Chapter
+							</Button>
+						</div>
+					)}
 				</Accordion>
 			</ScrollArea>
+
+			{/* Bulk Action Bar */}
+			<AnimatePresence>
+				{selectedSceneIds.size > 0 && !readOnly && (
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						exit={{ opacity: 0, y: 20 }}
+						className="absolute bottom-4 left-1/2 -translate-x-1/2 w-[90%] z-20"
+					>
+						<GlassCard
+							variant="liquid"
+							className="p-2 pl-4 flex items-center justify-between shadow-2xl border-primary/20 backdrop-blur-xl bg-background/80"
+						>
+							<div className="flex items-center gap-2 text-xs font-medium">
+								<div className="bg-primary/10 text-primary px-2 py-0.5 rounded-full">
+									{selectedSceneIds.size}
+								</div>
+								<span className="hidden sm:inline">Selected</span>
+							</div>
+
+							<div className="flex items-center gap-1">
+								<Button
+									size="icon"
+									variant="ghost"
+									className="h-7 w-7 text-muted-foreground hover:text-foreground"
+									onClick={() => setSelectedSceneIds(new Set())}
+									title="Clear Selection"
+								>
+									<X className="h-4 w-4" />
+								</Button>
+								<div className="h-4 w-px bg-border/50 mx-1" />
+								<Button
+									size="icon"
+									variant="ghost"
+									className="h-7 w-7 text-muted-foreground hover:text-primary"
+									onClick={() => setIsMoveDialogOpen(true)}
+									title="Move to Chapter"
+								>
+									<FolderInput className="h-4 w-4" />
+								</Button>
+								<Button
+									size="icon"
+									variant="ghost"
+									className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
+									onClick={handleBulkDelete}
+									title="Delete Selected"
+								>
+									<Trash2 className="h-4 w-4" />
+								</Button>
+							</div>
+						</GlassCard>
+					</motion.div>
+				)}
+			</AnimatePresence>
+
+			{/* Move Scenes Dialog */}
+			<Dialog open={isMoveDialogOpen} onOpenChange={setIsMoveDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Move {selectedSceneIds.size} Scenes</DialogTitle>
+						<DialogDescription>
+							Select a destination chapter for the selected scenes.
+						</DialogDescription>
+					</DialogHeader>
+					<div className="py-4">
+						<Select
+							value={moveTargetChapterId}
+							onValueChange={setMoveTargetChapterId}
+						>
+							<SelectTrigger>
+								<SelectValue placeholder="Select a chapter..." />
+							</SelectTrigger>
+							<SelectContent>
+								{structure?.map((chapter) => (
+									<SelectItem key={chapter.id} value={chapter.id}>
+										{chapter.title}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setIsMoveDialogOpen(false)}
+							disabled={isProcessingBulk}
+						>
+							Cancel
+						</Button>
+						<Button
+							onClick={handleBulkMove}
+							disabled={!moveTargetChapterId || isProcessingBulk}
+						>
+							{isProcessingBulk ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : (
+								<FolderInput className="mr-2 h-4 w-4" />
+							)}
+							Move Scenes
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
 		</div>
 	);
 }
