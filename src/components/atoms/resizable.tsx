@@ -19,6 +19,9 @@ const ResizablePanelGroup = ({
 );
 
 const ResizablePanel = Panel;
+// Ensure types are preserved for forwardRef
+// biome-ignore lint/suspicious/noExplicitAny: library type workaround
+(ResizablePanel as any).displayName = "ResizablePanel";
 
 const ResizableHandle = ({
 	withHandle,

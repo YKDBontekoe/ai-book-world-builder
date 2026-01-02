@@ -4,9 +4,12 @@ import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 import {
 	ResizableHandle,
-	ResizablePanel,
-	ResizablePanelGroup,
 } from "@/components/atoms/resizable";
+import {
+	Panel as ResizablePanel,
+	Group as ResizablePanelGroup,
+	type PanelImperativeHandle
+} from "react-resizable-panels";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
@@ -82,7 +85,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			}}
 		>
 			<ResizablePanelGroup
-				direction={isMobile ? "vertical" : "horizontal"}
+				orientation={isMobile ? "vertical" : "horizontal"}
 				id={
 					isMobile
 						? "writer-view-layout-vertical"
@@ -95,15 +98,16 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					<>
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
-							ref={sidebarRef}
+							panelRef={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
 							minSize={15}
 							maxSize={50}
 							collapsible={true}
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
-							onResize={(size) => {
-								const isCollapsed = size === 0;
+							onResize={(size, _prev) => {
+								const sizeValue = typeof size === "number" ? size : size.asPercentage;
+								const isCollapsed = sizeValue === 0;
 								actions.setSidebarOpen(!isCollapsed);
 							}}
 						>
