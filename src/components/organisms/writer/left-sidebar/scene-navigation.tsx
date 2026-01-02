@@ -14,7 +14,7 @@ import {
 	Trash2,
 	X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
 	createNewChapter,
@@ -91,11 +91,13 @@ export function SceneNavigation({
 	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
 		new Set(),
 	);
+	const lastSelectedSceneIdRef = useRef<string | null>(null);
 	const [isProcessingBulk, setIsProcessingBulk] = useState(false);
 
-	// Move Dialog State
+	// Dialog States
 	const [isMoveDialogOpen, setIsMoveDialogOpen] = useState(false);
 	const [moveTargetChapterId, setMoveTargetChapterId] = useState<string>("");
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 	// Initialize expanded state when structure loads
 	useEffect(() => {
@@ -119,52 +121,52 @@ export function SceneNavigation({
 		(sceneId: string, multiSelect: boolean, rangeSelect: boolean) => {
 			if (!structure) return;
 
-			if (rangeSelect && selectedSceneIds.size > 0) {
-				// Simple range select: Find all scenes between last selected and current
-				// Flatten structure to find indices
-				const flatScenes = structure.flatMap((c) => c.scenes);
-				const lastSelectedId = Array.from(selectedSceneIds).pop(); // Naive last
-				const startIdx = flatScenes.findIndex((s) => s.id === lastSelectedId);
-				const endIdx = flatScenes.findIndex((s) => s.id === sceneId);
+			if (rangeSelect) {
+				const lastSelectedId = lastSelectedSceneIdRef.current;
+				if (lastSelectedId) {
+					// Range select logic
+					const flatScenes = structure.flatMap((c) => c.scenes);
+					const startIdx = flatScenes.findIndex((s) => s.id === lastSelectedId);
+					const endIdx = flatScenes.findIndex((s) => s.id === sceneId);
 
-				if (startIdx !== -1 && endIdx !== -1) {
-					const [min, max] = [
-						Math.min(startIdx, endIdx),
-						Math.max(startIdx, endIdx),
-					];
-					const rangeIds = flatScenes.slice(min, max + 1).map((s) => s.id);
-					setSelectedSceneIds((prev) => {
-						const next = new Set(prev);
-						for (const id of rangeIds) next.add(id);
-						return next;
-					});
+					if (startIdx !== -1 && endIdx !== -1) {
+						const [min, max] = [
+							Math.min(startIdx, endIdx),
+							Math.max(startIdx, endIdx),
+						];
+						const rangeIds = flatScenes.slice(min, max + 1).map((s) => s.id);
+						setSelectedSceneIds((prev) => {
+							const next = new Set(prev);
+							for (const id of rangeIds) next.add(id);
+							return next;
+						});
+						// Don't update lastSelectedSceneIdRef for range selection expansion, usually
+						return;
+					}
 				}
-			} else if (multiSelect) {
+			}
+
+			// Update ref for next potential range select
+			lastSelectedSceneIdRef.current = sceneId;
+
+			if (multiSelect) {
 				setSelectedSceneIds((prev) => {
 					const next = new Set(prev);
 					if (next.has(sceneId)) next.delete(sceneId);
 					else next.add(sceneId);
 					return next;
 				});
-			} else {
-				// Standard click: Select exclusively or just set active if not in selection mode?
-				// Existing behavior: Clicking a scene sets it as active.
-				// We should probably clear selection if clicking without modifiers.
+			} else if (!rangeSelect) {
+				// Single click (no modifiers)
 				setSelectedSceneIds(new Set());
 				onSceneSelect(sceneId);
 			}
 		},
-		[structure, selectedSceneIds, onSceneSelect],
+		[structure, onSceneSelect],
 	);
 
-	const handleBulkDelete = async () => {
+	const confirmBulkDelete = async () => {
 		if (selectedSceneIds.size === 0) return;
-		if (
-			!confirm(
-				`Are you sure you want to delete ${selectedSceneIds.size} scenes?`,
-			)
-		)
-			return;
 
 		setIsProcessingBulk(true);
 		const toastId = toast.loading(
@@ -174,8 +176,11 @@ export function SceneNavigation({
 		try {
 			const result = await deleteScenes(Array.from(selectedSceneIds));
 			if (result.success) {
-				toast.success("Scenes deleted", { id: toastId });
+				toast.success(`Deleted ${result.data?.count ?? 0} scenes`, {
+					id: toastId,
+				});
 				setSelectedSceneIds(new Set());
+				lastSelectedSceneIdRef.current = null;
 				onStructureUpdate?.();
 				// If active scene was deleted, deselect it
 				if (activeSceneId && selectedSceneIds.has(activeSceneId)) {
@@ -188,6 +193,7 @@ export function SceneNavigation({
 			toast.error("Error deleting scenes", { id: toastId });
 		} finally {
 			setIsProcessingBulk(false);
+			setIsDeleteDialogOpen(false);
 		}
 	};
 
@@ -205,6 +211,7 @@ export function SceneNavigation({
 			if (result.success) {
 				toast.success("Scenes moved successfully", { id: toastId });
 				setSelectedSceneIds(new Set());
+				lastSelectedSceneIdRef.current = null;
 				setIsMoveDialogOpen(false);
 				setMoveTargetChapterId("");
 				onStructureUpdate?.();
@@ -561,6 +568,7 @@ export function SceneNavigation({
 									className="h-7 w-7 text-muted-foreground hover:text-foreground"
 									onClick={() => setSelectedSceneIds(new Set())}
 									title="Clear Selection"
+									aria-label="Clear selection"
 								>
 									<X className="h-4 w-4" />
 								</Button>
@@ -571,6 +579,7 @@ export function SceneNavigation({
 									className="h-7 w-7 text-muted-foreground hover:text-primary"
 									onClick={() => setIsMoveDialogOpen(true)}
 									title="Move to Chapter"
+									aria-label="Move to chapter"
 								>
 									<FolderInput className="h-4 w-4" />
 								</Button>
@@ -578,8 +587,9 @@ export function SceneNavigation({
 									size="icon"
 									variant="ghost"
 									className="h-7 w-7 text-destructive/70 hover:text-destructive hover:bg-destructive/10"
-									onClick={handleBulkDelete}
+									onClick={() => setIsDeleteDialogOpen(true)}
 									title="Delete Selected"
+									aria-label="Delete selected scenes"
 								>
 									<Trash2 className="h-4 w-4" />
 								</Button>
@@ -633,6 +643,41 @@ export function SceneNavigation({
 								<FolderInput className="mr-2 h-4 w-4" />
 							)}
 							Move Scenes
+						</Button>
+					</DialogFooter>
+				</DialogContent>
+			</Dialog>
+
+			{/* Delete Confirmation Dialog */}
+			<Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+				<DialogContent>
+					<DialogHeader>
+						<DialogTitle>Delete {selectedSceneIds.size} Scenes?</DialogTitle>
+						<DialogDescription>
+							Are you sure you want to delete these scenes? This action cannot be
+							undone.
+						</DialogDescription>
+					</DialogHeader>
+					<DialogFooter>
+						<Button
+							variant="outline"
+							onClick={() => setIsDeleteDialogOpen(false)}
+							disabled={isProcessingBulk}
+						>
+							Cancel
+						</Button>
+						<Button
+							variant="destructive"
+							onClick={confirmBulkDelete}
+							disabled={isProcessingBulk}
+							autoFocus
+						>
+							{isProcessingBulk ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : (
+								<Trash2 className="mr-2 h-4 w-4" />
+							)}
+							Delete Scenes
 						</Button>
 					</DialogFooter>
 				</DialogContent>

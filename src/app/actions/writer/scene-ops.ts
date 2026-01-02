@@ -1,17 +1,31 @@
 "use server";
 
 import { eq, inArray, sql } from "drizzle-orm";
+import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { chapter, scene } from "@/lib/db/schema";
-import { err, ok } from "@/lib/result";
+import { type Result, err, ok } from "@/lib/result";
+
+const deleteScenesSchema = z.array(z.string().uuid());
+const moveScenesSchema = z.object({
+	sceneIds: z.array(z.string().uuid()),
+	targetChapterId: z.string().uuid(),
+});
 
 /**
  * Deletes multiple scenes at once.
  * @param sceneIds Array of scene IDs to delete.
  */
-export async function deleteScenes(sceneIds: string[]) {
+export async function deleteScenes(
+	sceneIds: string[],
+): Promise<Result<{ count: number }>> {
+	const validation = deleteScenesSchema.safeParse(sceneIds);
+	if (!validation.success) {
+		return err("Invalid scene IDs");
+	}
+
 	if (!sceneIds.length) {
 		return ok({ count: 0 });
 	}
@@ -38,20 +52,17 @@ export async function deleteScenes(sceneIds: string[]) {
 		await ensureProjectAccess(projectId, true);
 
 		// 3. Delete scenes in transaction
-		// Note: We're not actively fixing the linked list (prevSceneId) here because
-		// it might be complex if scenes are non-contiguous.
-		// However, standard scene rendering often relies on `sequence` or `prevSceneId`.
-		// If the app relies heavily on `prevSceneId` for ordering, this might break the chain.
-		// But looking at `SceneNavigation`, it maps `chapter.scenes` which is ordered by sequence.
-		// So purely deleting rows is mostly fine, though it leaves gaps in sequence.
-		// A full "healing" would require re-sequencing the whole chapter, which we can skip for now
-		// or handle if users report issues. `reorderScenes` exists for manual fixing.
-
-		await db.delete(scene).where(inArray(scene.id, sceneIds));
+		const count = await db.transaction(async (tx) => {
+			const result = await tx
+				.delete(scene)
+				.where(inArray(scene.id, sceneIds))
+				.returning({ id: scene.id });
+			return result.length;
+		});
 
 		await invalidateCache(`project-structure:${projectId}`);
 
-		return ok({ count: sceneIds.length });
+		return ok({ count });
 	} catch (error) {
 		console.error("Failed to delete scenes", error);
 		return err("Failed to delete scenes");
@@ -66,7 +77,12 @@ export async function deleteScenes(sceneIds: string[]) {
 export async function moveScenesToChapter(
 	sceneIds: string[],
 	targetChapterId: string,
-) {
+): Promise<Result<{ count: number }>> {
+	const validation = moveScenesSchema.safeParse({ sceneIds, targetChapterId });
+	if (!validation.success) {
+		return err("Invalid input");
+	}
+
 	if (!sceneIds.length) {
 		return ok({ count: 0 });
 	}

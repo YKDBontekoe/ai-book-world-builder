@@ -136,6 +136,7 @@ export const SceneItem = memo(function SceneItem({
 						)}
 						onClick={handleClick}
 						onDoubleClick={() => !readOnly && setIsEditing(true)}
+						aria-selected={isSelected}
 					>
 						{/* Selection Indicator Line */}
 						{isSelected && (
