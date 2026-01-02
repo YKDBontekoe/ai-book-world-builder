@@ -427,6 +427,7 @@ export function SceneNavigation({
 							className="h-5 w-5"
 							onClick={handleExpandAll}
 							title="Expand All"
+							aria-label="Expand All"
 						>
 							<ChevronsDown className="h-3 w-3" />
 						</Button>
@@ -436,6 +437,7 @@ export function SceneNavigation({
 							className="h-5 w-5"
 							onClick={handleCollapseAll}
 							title="Collapse All"
+							aria-label="Collapse All"
 						>
 							<ChevronsUp className="h-3 w-3" />
 						</Button>

@@ -132,9 +132,10 @@ export async function moveScenesToChapter(
 		let nextSequence = (lastScene?.sequence ?? 0) + 1;
 		let prevId = lastScene?.id ?? undefined; // The last scene becomes the "prev" for the first moved scene
 
+		let movedCount = 0;
 		await db.transaction(async (tx) => {
 			for (const sceneId of sceneIds) {
-				await tx
+				const result = await tx
 					.update(scene)
 					.set({
 						chapterId: targetChapterId,
@@ -142,7 +143,10 @@ export async function moveScenesToChapter(
 						prevSceneId: prevId || null, // Ensure explicit null if undefined
 						updatedAt: new Date(),
 					})
-					.where(eq(scene.id, sceneId));
+					.where(eq(scene.id, sceneId))
+					.returning({ id: scene.id });
+
+				movedCount += result.length;
 
 				prevId = sceneId;
 				nextSequence++;
@@ -151,7 +155,7 @@ export async function moveScenesToChapter(
 
 		await invalidateCache(`project-structure:${projectId}`);
 
-		return ok({ count: sceneIds.length });
+		return ok({ count: movedCount });
 	} catch (error) {
 		console.error("Failed to move scenes", error);
 		return err("Failed to move scenes");
