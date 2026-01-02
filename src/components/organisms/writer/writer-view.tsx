@@ -82,7 +82,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			}}
 		>
 			<ResizablePanelGroup
-				orientation={isMobile ? "vertical" : "horizontal"}
+				// @ts-expect-error react-resizable-panels types are slightly inconsistent between versions for direction/orientation alias
+				direction={isMobile ? "vertical" : "horizontal"}
 				id={
 					isMobile
 						? "writer-view-layout-vertical"
