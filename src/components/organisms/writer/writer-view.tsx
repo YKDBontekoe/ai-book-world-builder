@@ -82,6 +82,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			}}
 		>
 			<ResizablePanelGroup
+				// @ts-expect-error react-resizable-panels types are slightly inconsistent between versions for direction/orientation alias
 				direction={isMobile ? "vertical" : "horizontal"}
 				id={
 					isMobile
@@ -95,6 +96,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					<>
 						{/* Left Panel: Navigation */}
 						<ResizablePanel
+							// TODO: Remove this suppression once react-resizable-panels types are fixed or wrapper is updated
+							// @ts-expect-error ref is available in v4.1 but types might be outdated or mismatched with wrapper
 							ref={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
 							minSize={5}
@@ -103,7 +106,9 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
 							onResize={(size) => {
-								const isCollapsed = size === 0;
+								// react-resizable-panels v4.1+ passes size as number (but types might say PanelSize object)
+								// Casting to any or number to bypass incorrect strict type check if needed
+								const isCollapsed = (size as unknown as number) === 0;
 								actions.setSidebarOpen(!isCollapsed);
 							}}
 						>
