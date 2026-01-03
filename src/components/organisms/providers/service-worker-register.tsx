@@ -9,11 +9,7 @@ export function ServiceWorkerRegister() {
 		if ("serviceWorker" in navigator && window.location.protocol === "https:") {
 			navigator.serviceWorker.getRegistrations().then((registrations) => {
 				for (const registration of registrations) {
-					registration.unregister().then((success) => {
-						if (success) {
-							console.log("Service Worker successfully unregistered");
-						}
-					});
+					registration.unregister();
 				}
 			});
 		}
