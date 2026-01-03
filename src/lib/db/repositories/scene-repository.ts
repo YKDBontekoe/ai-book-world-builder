@@ -111,6 +111,7 @@ export class SceneRepository extends BaseRepository<
 						title: scene.title,
 						sequence: scene.sequence,
 						content: sql<string | null>`NULL`.as("content"),
+						wordCount: scene.wordCount,
 						status: scene.status,
 						prevSceneId: scene.prevSceneId,
 						chapterId: scene.chapterId,

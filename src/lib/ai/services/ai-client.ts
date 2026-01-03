@@ -148,7 +148,7 @@ export const aiClient = {
 				maxOutputTokens: params.options?.maxTokens,
 			});
 
-			return aiSuccess({ text: result.text });
+			return aiSuccess({ text: result.text }, result.usage, modelId);
 		} catch (error) {
 			console.error("[AIClient] Text generation failed:", error);
 			return aiError(
@@ -189,7 +189,7 @@ export const aiClient = {
 					maxOutputTokens: params.options?.maxTokens,
 				});
 
-				return aiSuccess({ object: result.object });
+				return aiSuccess({ object: result.object }, result.usage, modelId);
 			} catch (error) {
 				lastError = error instanceof Error ? error : new Error(String(error));
 				const isParseError =
@@ -267,7 +267,10 @@ export const aiClient = {
 				params.onChunk?.(chunk);
 			}
 
-			return aiSuccess({ text: fullText });
+			// Capture usage from stream
+			const usage = await result.usage;
+
+			return aiSuccess({ text: fullText }, usage, modelId);
 		} catch (error) {
 			console.error("[AIClient] Stream generation failed:", error);
 			return aiError(

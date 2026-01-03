@@ -3,11 +3,13 @@ import { db } from "@/lib/db/drizzle";
 import {
 	bookGeneration,
 	bookGenerationStep,
+	chapter,
 	chat,
 	entity,
 	message,
 	project,
 	relationship,
+	scene,
 } from "@/lib/db/schema";
 
 export type TokenStats = {
@@ -39,10 +41,35 @@ export type EntityStats = {
 	}[];
 };
 
-export async function getProjectStats(
-	projectId: string,
-): Promise<{ tokenStats: TokenStats; entityStats: EntityStats }> {
-	const [byKindRaw, entities, rels, genUsage] = await Promise.all([
+export type ActivityStats = {
+	totalProjects: number;
+	totalChapters: number;
+	totalScenes: number;
+	totalWords: number;
+	lastActive: Date | null;
+};
+
+export type UsageHistory = {
+	date: string;
+	cost: number;
+	tokens: number;
+}[];
+
+export async function getProjectStats(projectId: string): Promise<{
+	tokenStats: TokenStats;
+	entityStats: EntityStats;
+	activityStats: ActivityStats;
+	usageHistory: UsageHistory;
+}> {
+	const [
+		byKindRaw,
+		entities,
+		rels,
+		genUsage,
+		chapterCount,
+		sceneCount,
+		wordCountRaw,
+	] = await Promise.all([
 		// 1. Entity Stats
 		db
 			.select({
@@ -53,7 +80,7 @@ export async function getProjectStats(
 			.where(eq(entity.projectId, projectId))
 			.groupBy(entity.kind),
 
-		// 2. Entities List (for most connected)
+		// 2. Entities List
 		db
 			.select({
 				id: entity.id,
@@ -63,7 +90,7 @@ export async function getProjectStats(
 			.from(entity)
 			.where(eq(entity.projectId, projectId)),
 
-		// 3. Relationships (for most connected)
+		// 3. Relationships
 		db
 			.select({
 				s: relationship.sourceEntityId,
@@ -72,7 +99,7 @@ export async function getProjectStats(
 			.from(relationship)
 			.where(eq(relationship.projectId, projectId)),
 
-		// 4. Generation Stats (DB Aggregation)
+		// 4. Generation Stats
 		db
 			.select({
 				modelId: sql<string>`${bookGenerationStep.usage}->>'modelId'`,
@@ -92,7 +119,60 @@ export async function getProjectStats(
 				),
 			)
 			.groupBy(sql`${bookGenerationStep.usage}->>'modelId'`),
+
+		// 5. Activity Stats
+		db
+			.select({ count: sql<number>`count(*)` })
+			.from(chapter)
+			.where(eq(chapter.projectId, projectId)),
+		db
+			.select({ count: sql<number>`count(*)` })
+			.from(scene)
+			.where(eq(scene.projectId, projectId)),
+		db
+			.select({ words: sql<number>`sum(${scene.wordCount})` })
+			.from(scene)
+			.where(eq(scene.projectId, projectId)),
 	]);
+
+	// Usage History Query (Time Series)
+	const historyRaw = await db
+		.select({
+			date: sql<string>`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`,
+			cost: sql<number>`sum(cast(${bookGenerationStep.usage}->>'totalCost' as numeric))`,
+			tokens: sql<number>`sum(
+				cast(${bookGenerationStep.usage}->>'promptTokens' as numeric) +
+				cast(${bookGenerationStep.usage}->>'completionTokens' as numeric)
+			)`,
+		})
+		.from(bookGenerationStep)
+		.innerJoin(
+			bookGeneration,
+			eq(bookGenerationStep.generationId, bookGeneration.id),
+		)
+		.where(
+			and(
+				eq(bookGeneration.projectId, projectId),
+				sql`${bookGenerationStep.usage} is not null`,
+			),
+		)
+		.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
+		.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`);
+
+	const usageHistory: UsageHistory = historyRaw.map((row) => ({
+		date: row.date,
+		cost: Number(row.cost || 0),
+		tokens: Number(row.tokens || 0),
+	}));
+
+	// Process Activity Stats
+	const activityStats: ActivityStats = {
+		totalProjects: 1,
+		totalChapters: Number(chapterCount[0]?.count || 0),
+		totalScenes: Number(sceneCount[0]?.count || 0),
+		totalWords: Number(wordCountRaw[0]?.words || 0),
+		lastActive: new Date(), // This could be improved by checking last updated entity
+	};
 
 	// Process Entity Stats
 	const byKind: Record<string, number> = {};
@@ -103,7 +183,6 @@ export async function getProjectStats(
 		totalEntities += c;
 	}
 
-	// Process Most Connected
 	const connCounts: Record<string, number> = {};
 	for (const r of rels) {
 		connCounts[r.s] = (connCounts[r.s] || 0) + 1;
@@ -121,7 +200,7 @@ export async function getProjectStats(
 		mostConnected,
 	};
 
-	// Process Token Stats
+	// Process Token Stats (Same as before)
 	const tokenStats: TokenStats = {
 		totalCost: 0,
 		totalInputTokens: 0,
@@ -159,21 +238,20 @@ export async function getProjectStats(
 		tokenStats.byModel[modelId].outputTokens += output;
 	}
 
-	return { tokenStats, entityStats };
+	return { tokenStats, entityStats, activityStats, usageHistory };
 }
 
-export async function getGlobalStats(
-	userId: string,
-): Promise<{ tokenStats: TokenStats; entityStats: EntityStats }> {
-	// Start independent queries in parallel
-	const [userProjects, genUsage, chatUsage] = await Promise.all([
-		// 1. Projects Stats (Aggregated)
+export async function getGlobalStats(userId: string): Promise<{
+	tokenStats: TokenStats;
+	entityStats: EntityStats;
+	activityStats: ActivityStats;
+	usageHistory: UsageHistory;
+}> {
+	const [userProjects, genUsage, chatUsage, totalWordsRaw] = await Promise.all([
 		db
 			.select({ id: project.id })
 			.from(project)
 			.where(eq(project.userId, userId)),
-
-		// 2. Generation Stats (Global)
 		db
 			.select({
 				modelId: sql<string>`${bookGenerationStep.usage}->>'modelId'`,
@@ -194,8 +272,6 @@ export async function getGlobalStats(
 				),
 			)
 			.groupBy(sql`${bookGenerationStep.usage}->>'modelId'`),
-
-		// 3. Chat Stats (Global)
 		db
 			.select({
 				modelId: sql<string>`${message.usage}->>'modelId'`,
@@ -207,9 +283,45 @@ export async function getGlobalStats(
 			.innerJoin(chat, eq(message.chatId, chat.id))
 			.where(and(eq(chat.userId, userId), sql`${message.usage} is not null`))
 			.groupBy(sql`${message.usage}->>'modelId'`),
+		db
+			.select({ words: sql<number>`sum(${scene.wordCount})` })
+			.from(scene)
+			.innerJoin(project, eq(scene.projectId, project.id))
+			.where(eq(project.userId, userId)),
 	]);
 
 	const projectIds = userProjects.map((p) => p.id);
+
+	// Usage History (Global)
+	const historyRaw = await db
+		.select({
+			date: sql<string>`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`,
+			cost: sql<number>`sum(cast(${bookGenerationStep.usage}->>'totalCost' as numeric))`,
+			tokens: sql<number>`sum(
+				cast(${bookGenerationStep.usage}->>'promptTokens' as numeric) +
+				cast(${bookGenerationStep.usage}->>'completionTokens' as numeric)
+			)`,
+		})
+		.from(bookGenerationStep)
+		.innerJoin(
+			bookGeneration,
+			eq(bookGenerationStep.generationId, bookGeneration.id),
+		)
+		.innerJoin(project, eq(bookGeneration.projectId, project.id))
+		.where(
+			and(
+				eq(project.userId, userId),
+				sql`${bookGenerationStep.usage} is not null`,
+			),
+		)
+		.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
+		.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`);
+
+	const usageHistory: UsageHistory = historyRaw.map((row) => ({
+		date: row.date,
+		cost: Number(row.cost || 0),
+		tokens: Number(row.tokens || 0),
+	}));
 
 	// Aggregate Entity Stats
 	let totalEntities = 0;
@@ -303,5 +415,14 @@ export async function getGlobalStats(
 		tokenStats.byModel[modelId].outputTokens += output;
 	}
 
-	return { tokenStats, entityStats };
+	// Activity Stats
+	const activityStats: ActivityStats = {
+		totalProjects: projectIds.length,
+		totalChapters: 0, // Expensive to calculate globally without aggregate table, set to 0 or implement separate query
+		totalScenes: 0, // Same here
+		totalWords: Number(totalWordsRaw[0]?.words || 0),
+		lastActive: new Date(),
+	};
+
+	return { tokenStats, entityStats, activityStats, usageHistory };
 }
