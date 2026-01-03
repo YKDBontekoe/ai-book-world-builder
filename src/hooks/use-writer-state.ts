@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
 	createChapterSnapshot,
@@ -36,6 +36,14 @@ export function useWriterState({
 	// Use context for active scene to sync with Book Canvas
 	const { activeSceneId } = useBookCanvasValue();
 	const { setActiveSceneId, setProjectId } = useBookCanvasActions();
+
+	// ⚡ Bolt: Store activeSceneId in a ref to access it in fetchStructure
+	// without adding it to the dependency array. This stabilizes fetchStructure
+	// and prevents unnecessary context updates/re-renders during navigation.
+	const activeSceneIdRef = useRef(activeSceneId);
+	useEffect(() => {
+		activeSceneIdRef.current = activeSceneId;
+	}, [activeSceneId]);
 
 	const [isSnapshotting, setIsSnapshotting] = useState(false);
 
@@ -96,8 +104,12 @@ export function useWriterState({
 			if (result.structureText) {
 				setStructureText(result.structureText);
 			}
+
+			// Use the ref here instead of the dependency
+			const currentActiveId = activeSceneIdRef.current;
+
 			if (
-				!activeSceneId &&
+				!currentActiveId &&
 				result.structure.length > 0 &&
 				result.structure[0].scenes.length > 0
 			) {
@@ -115,7 +127,7 @@ export function useWriterState({
 			}
 		}
 		setLoading(false);
-	}, [projectId, activeSceneId, lastViewedSceneId, setActiveSceneId]);
+	}, [projectId, lastViewedSceneId, setActiveSceneId]);
 
 	useEffect(() => {
 		// Only fetch if no structure or if we are supposed to (though logic above handles initialStructure updates)
