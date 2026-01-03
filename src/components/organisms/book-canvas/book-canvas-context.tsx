@@ -18,7 +18,10 @@ export type CanvasPane =
 	| "draft"
 	| "diagnostics"
 	| "bible"
-	| "changes";
+	| "changes"
+	| "arc"
+	| "context"
+	| "map";
 
 export type ChatAction = {
 	type: "send_message";
