@@ -5,13 +5,16 @@ import {
 	ActivityIcon,
 	BookOpenIcon,
 	ChevronRightIcon,
+	ClockIcon,
 	FileTextIcon,
 	HistoryIcon,
 	LayoutIcon,
 	LibraryIcon,
 	type LucideIcon,
+	MapIcon,
 	NetworkIcon,
 	SparklesIcon,
+	TrendingUpIcon,
 	XIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -71,10 +74,38 @@ const ScenePane = dynamic(
 		),
 	{ loading: LoadingPane },
 );
-const GraphPane = dynamic(
+const NetworkPane = dynamic(
 	() =>
-		import("@/components/organisms/book-canvas/panes/graph-pane").then(
-			(mod) => mod.GraphPane,
+		import("@/components/organisms/book-canvas/panes/network-pane").then(
+			(mod) => mod.NetworkPane,
+		),
+	{ loading: LoadingPane },
+);
+const ArcPane = dynamic(
+	() =>
+		import("@/components/organisms/book-canvas/panes/arc-pane").then(
+			(mod) => mod.ArcPane,
+		),
+	{ loading: LoadingPane },
+);
+const TimelinePane = dynamic(
+	() =>
+		import("@/components/organisms/book-canvas/panes/timeline-pane").then(
+			(mod) => mod.TimelinePane,
+		),
+	{ loading: LoadingPane },
+);
+const ContextPane = dynamic(
+	() =>
+		import("@/components/organisms/book-canvas/panes/context-pane").then(
+			(mod) => mod.ContextPane,
+		),
+	{ loading: LoadingPane },
+);
+const MapPane = dynamic(
+	() =>
+		import("@/components/organisms/book-canvas/panes/map-pane").then(
+			(mod) => mod.MapPane,
 		),
 	{ loading: LoadingPane },
 );
@@ -94,7 +125,15 @@ export function BookCanvas({
 			case "outline":
 				return <OutlinePane />;
 			case "graph":
-				return <GraphPane />;
+				return <NetworkPane />;
+			case "arc":
+				return <ArcPane />;
+			case "timeline":
+				return <TimelinePane />;
+			case "context":
+				return <ContextPane />;
+			case "map":
+				return <MapPane />;
 			case "scenes":
 				return <ScenePane />;
 			case "draft":
@@ -113,6 +152,10 @@ export function BookCanvas({
 	const tabs: { id: CanvasPane; label: string; icon: LucideIcon }[] = [
 		{ id: "outline", label: "Outline", icon: LayoutIcon },
 		{ id: "graph", label: "Graph", icon: NetworkIcon },
+		{ id: "arc", label: "Arc", icon: TrendingUpIcon },
+		{ id: "timeline", label: "Timeline", icon: ClockIcon },
+		{ id: "context", label: "Context", icon: SparklesIcon },
+		{ id: "map", label: "Map", icon: MapIcon },
 		{ id: "scenes", label: "Scenes", icon: LibraryIcon },
 		{ id: "draft", label: "Draft", icon: FileTextIcon },
 		{ id: "diagnostics", label: "Readiness", icon: ActivityIcon },
@@ -133,7 +176,7 @@ export function BookCanvas({
 					<ChevronRightIcon className="h-5 w-5 rotate-180 text-foreground/70" />
 				</Button>
 				<div className="mt-4 flex flex-1 flex-col items-center gap-3">
-					{tabs.slice(0, 4).map((tab) => (
+					{tabs.slice(0, 5).map((tab) => (
 						<Button
 							className={cn(
 								"h-9 w-9 rounded-xl transition-all duration-300",
@@ -210,7 +253,7 @@ export function BookCanvas({
 						return (
 							<button
 								className={cn(
-									"relative flex flex-1 flex-col items-center justify-center gap-1.5 rounded-md px-1 py-1.5 font-medium text-[11px] transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
+									"relative flex flex-1 flex-col items-center justify-center gap-1.5 rounded-md px-1 py-1.5 font-medium text-[11px] transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary/50 min-w-[50px]",
 									isActive
 										? "text-foreground"
 										: "text-muted-foreground hover:text-foreground/80",
@@ -228,7 +271,7 @@ export function BookCanvas({
 								)}
 								<span className="relative z-10 flex flex-col items-center gap-1">
 									<tab.icon className="h-4 w-4" />
-									<span className="leading-none tracking-tight">
+									<span className="leading-none tracking-tight whitespace-nowrap">
 										{tab.label}
 									</span>
 								</span>

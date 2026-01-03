@@ -259,3 +259,48 @@ export async function getSceneById({
 		throw new ChatSDKError("bad_request:database", "Failed to load scene");
 	}
 }
+
+export async function updateSceneCard({
+	sceneId,
+	purpose,
+	setting,
+	atmosphere,
+	emotionalBeats,
+	characterGoals,
+	constraints,
+	plannedReveal,
+	chronologicalSequence,
+	timeSetting,
+}: Partial<SceneCard> & { sceneId: string }): Promise<SceneCard> {
+	try {
+		const [updated] = await db
+			.update(sceneCard)
+			.set({
+				...(purpose ? { purpose } : {}),
+				...(setting ? { setting } : {}),
+				...(atmosphere ? { atmosphere } : {}),
+				...(emotionalBeats ? { emotionalBeats } : {}),
+				...(characterGoals ? { characterGoals } : {}),
+				...(constraints ? { constraints } : {}),
+				...(plannedReveal ? { plannedReveal } : {}),
+				...(chronologicalSequence !== undefined
+					? { chronologicalSequence }
+					: {}),
+				...(timeSetting ? { timeSetting } : {}),
+				updatedAt: new Date(),
+			})
+			.where(eq(sceneCard.sceneId, sceneId))
+			.returning();
+
+		if (!updated) {
+			throw new ChatSDKError("not_found:database", "Scene card not found");
+		}
+		return updated;
+	} catch (error) {
+		console.error(error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update scene card",
+		);
+	}
+}
