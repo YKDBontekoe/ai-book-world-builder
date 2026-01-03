@@ -209,3 +209,8 @@ export interface TextGenerationResult {
 export interface ObjectGenerationResult<T> {
 	object: T;
 }
+
+export interface AIGenerationResult {
+	usage?: LanguageModelUsage;
+	modelId?: string;
+}

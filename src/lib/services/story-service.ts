@@ -93,6 +93,7 @@ export class StoryService {
 			usage: result.usage,
 			modelId: result.modelId,
 			context: {
+				projectId: targetChapter.projectId,
 				generationType: "planning",
 				stepType: "plan_chapter_scenes",
 				chapterId: chapterId,
@@ -178,6 +179,7 @@ export class StoryService {
 			usage: result.usage,
 			modelId: result.modelId,
 			context: {
+				projectId: targetScene.projectId,
 				generationType: "story_generation",
 				stepType: "generate_scene_text",
 				chapterId: targetScene.chapterId || undefined,
