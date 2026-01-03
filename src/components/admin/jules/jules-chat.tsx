@@ -29,7 +29,11 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["jules", "session", sessionId],
-		queryFn: () => getJulesSessionDetailsAction(sessionId),
+		queryFn: async () => {
+			const result = await getJulesSessionDetailsAction(sessionId);
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
 		refetchInterval: 5000,
 	});
 
@@ -73,7 +77,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 		if (scrollRef.current) {
 			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 		}
-	}, [data?.data?.activities]);
+	}, [data?.activities]);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -89,12 +93,12 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 		);
 	}
 
-	const session = data?.data?.session;
-	const activities = data?.data?.activities || [];
+	const session = data?.session;
+	const activities = data?.activities || [];
 
 	const displayableActivities = activities
 		.filter(
-			(a) =>
+			(a: JulesActivity) =>
 				a.planGenerated ||
 				a.planApproved ||
 				a.userMessaged ||
@@ -104,7 +108,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 				a.sessionCompleted,
 		)
 		.sort(
-			(a, b) =>
+			(a: JulesActivity, b: JulesActivity) =>
 				new Date(a.createTime).getTime() - new Date(b.createTime).getTime(),
 		);
 

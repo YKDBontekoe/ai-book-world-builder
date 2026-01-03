@@ -13,14 +13,18 @@ export function JulesDashboard() {
 	);
 
 	// Fetch sources to find the default one for the current repo
-	const { data: sourcesData } = useQuery({
+	const { data: sources } = useQuery({
 		queryKey: ["jules", "sources"],
-		queryFn: () => listJulesSourcesAction(),
+		queryFn: async () => {
+			const result = await listJulesSourcesAction();
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
 	});
 
 	// Simple heuristic: pick the first source as default for now,
 	// or match against env vars if we had them available client-side.
-	const defaultSource = sourcesData?.data?.[0]?.name;
+	const defaultSource = sources?.[0]?.name;
 
 	if (selectedSessionId) {
 		return (

@@ -19,12 +19,22 @@ import {
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Textarea } from "@/components/atoms/textarea";
+import type { JSX } from "react";
 
+export interface CreateSessionDialogProps {
+	/**
+	 * The default source repository (resource name) to pre-select or use.
+	 */
+	defaultSource?: string;
+}
+
+/**
+ * Dialog component for starting a new Jules session.
+ * Collects prompt, title, and configuration options.
+ */
 export function CreateSessionDialog({
 	defaultSource,
-}: {
-	defaultSource?: string;
-}) {
+}: CreateSessionDialogProps): JSX.Element {
 	const [open, setOpen] = useState(false);
 	const [prompt, setPrompt] = useState("");
 	const [title, setTitle] = useState("");
