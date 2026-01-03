@@ -75,6 +75,8 @@ export const sceneCard = pgTable(
 		> | null>(),
 		constraints: jsonb("constraints").$type<string[] | null>(),
 		plannedReveal: text("plannedReveal"),
+		chronologicalSequence: integer("chronologicalSequence"),
+		timeSetting: text("timeSetting"),
 		sceneId: uuid("sceneId")
 			.notNull()
 			.references(() => scene.id),
