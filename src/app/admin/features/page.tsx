@@ -64,8 +64,8 @@ export default function FeaturesPage() {
 								System Connected
 							</span>
 						</div>
-						<Button className="w-full" variant="outline">
-							Manage Sync Settings
+						<Button className="w-full" variant="outline" asChild>
+							<Link href="/admin/github">Manage Repository</Link>
 						</Button>
 					</CardContent>
 				</GlassCard>
