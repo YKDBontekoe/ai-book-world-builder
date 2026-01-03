@@ -100,7 +100,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							// @ts-expect-error ref is available in v4.1 but types might be outdated or mismatched with wrapper
 							ref={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}
-							minSize={5}
+							minSize={15}
 							maxSize={50}
 							collapsible={true}
 							collapsedSize={0}
