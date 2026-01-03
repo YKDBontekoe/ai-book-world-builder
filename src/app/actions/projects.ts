@@ -137,6 +137,10 @@ export async function deleteProjects(projectIds: string[]) {
 		return { success: true };
 	}
 
+	if (projectIds.length > 50) {
+		return { error: "Cannot delete more than 50 projects at once." };
+	}
+
 	try {
 		// Verify ownership for all projects
 		const projects = await db
@@ -239,8 +243,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 		db.$count(scene, eq(scene.projectId, originalProjectId)),
 	]);
 
-	// Limit to reasonable size for synchronous operation (e.g. 2000 total items)
-	// Larger projects would require a background job queue
+	// Limit to reasonable size (2000 total items)
 	if (entityCount + sceneCount > 2000) {
 		return {
 			error:
@@ -277,266 +280,286 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 				})
 				.returning();
 
-			// 2. Fetch all source data in parallel
-			const [
-				oldEntities,
-				oldAttributes,
-				oldRelationships,
-				oldOutlines,
-				oldVolumes,
-				oldChapters,
-				oldChapterDrafts,
-				oldScenes,
-				oldSceneCards,
-			] = await Promise.all([
-				tx.select().from(entity).where(eq(entity.projectId, originalProjectId)),
-				tx
+			// --- Refactored for sequential processing to save memory ---
+
+			// Map IDs
+			const entityIdMap = new Map<string, string>();
+			const outlineIdMap = new Map<string, string>();
+			const volumeIdMap = new Map<string, string>();
+			const chapterIdMap = new Map<string, string>();
+			const sceneIdMap = new Map<string, string>();
+
+			// 2. Entities (Fetch & Insert)
+			{
+				const oldEntities = await tx
+					.select()
+					.from(entity)
+					.where(eq(entity.projectId, originalProjectId));
+
+				if (oldEntities.length > 0) {
+					const newEntities = oldEntities.map((old) => {
+						const newId = crypto.randomUUID();
+						entityIdMap.set(old.id, newId);
+						const { id: _id, ...data } = old;
+						return {
+							...data,
+							id: newId,
+							projectId: newProject.id,
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						};
+					});
+					await chunkedInsert(tx, entity, newEntities);
+				}
+			} // oldEntities scope ends
+
+			// 3. Attributes (Fetch & Insert)
+			{
+				const oldAttributes = await tx
 					.select()
 					.from(entityAttribute)
-					.where(eq(entityAttribute.projectId, originalProjectId)),
-				tx
+					.where(eq(entityAttribute.projectId, originalProjectId));
+
+				if (oldAttributes.length > 0) {
+					const newAttributes = [];
+					for (const old of oldAttributes) {
+						const newEntityId = entityIdMap.get(old.entityId);
+						if (newEntityId) {
+							const { id: _id, ...data } = old;
+							newAttributes.push({
+								...data,
+								id: crypto.randomUUID(),
+								entityId: newEntityId,
+								projectId: newProject.id,
+								createdAt: new Date(),
+							});
+						}
+					}
+					if (newAttributes.length > 0) {
+						await chunkedInsert(tx, entityAttribute, newAttributes);
+					}
+				}
+			}
+
+			// 4. Relationships (Fetch & Insert)
+			{
+				const oldRelationships = await tx
 					.select()
 					.from(relationship)
-					.where(eq(relationship.projectId, originalProjectId)),
-				tx
+					.where(eq(relationship.projectId, originalProjectId));
+
+				if (oldRelationships.length > 0) {
+					const newRelationships = [];
+					for (const old of oldRelationships) {
+						const sourceId = entityIdMap.get(old.sourceEntityId);
+						const targetId = entityIdMap.get(old.targetEntityId);
+						if (sourceId && targetId) {
+							const { id: _id, ...data } = old;
+							newRelationships.push({
+								...data,
+								id: crypto.randomUUID(),
+								sourceEntityId: sourceId,
+								targetEntityId: targetId,
+								projectId: newProject.id,
+								createdAt: new Date(),
+							});
+						}
+					}
+					if (newRelationships.length > 0) {
+						await chunkedInsert(tx, relationship, newRelationships);
+					}
+				}
+			}
+
+			// 5. Outline (Fetch & Insert)
+			{
+				const oldOutlines = await tx
 					.select()
 					.from(outline)
-					.where(eq(outline.projectId, originalProjectId)),
-				tx.select().from(volume).where(eq(volume.projectId, originalProjectId)),
-				tx
+					.where(eq(outline.projectId, originalProjectId));
+
+				if (oldOutlines.length > 0) {
+					const newOutlines = oldOutlines.map((old) => {
+						const newId = crypto.randomUUID();
+						outlineIdMap.set(old.id, newId);
+						const { id: _id, ...data } = old;
+						return {
+							...data,
+							id: newId,
+							projectId: newProject.id,
+							createdAt: new Date(),
+							updatedAt: new Date(),
+						};
+					});
+					await chunkedInsert(tx, outline, newOutlines);
+				}
+			}
+
+			// 6. Volume (Fetch & Insert)
+			{
+				const oldVolumes = await tx
+					.select()
+					.from(volume)
+					.where(eq(volume.projectId, originalProjectId));
+
+				if (oldVolumes.length > 0) {
+					const newVolumes = [];
+					for (const old of oldVolumes) {
+						const newOutlineId = outlineIdMap.get(old.outlineId);
+						if (newOutlineId) {
+							const newId = crypto.randomUUID();
+							volumeIdMap.set(old.id, newId);
+							const { id: _id, ...data } = old;
+							newVolumes.push({
+								...data,
+								id: newId,
+								outlineId: newOutlineId,
+								projectId: newProject.id,
+								createdAt: new Date(),
+								updatedAt: new Date(),
+							});
+						}
+					}
+					if (newVolumes.length > 0) {
+						await chunkedInsert(tx, volume, newVolumes);
+					}
+				}
+			}
+
+			// 7. Chapter (Fetch & Insert)
+			{
+				const oldChapters = await tx
 					.select()
 					.from(chapter)
-					.where(eq(chapter.projectId, originalProjectId)),
-				tx
+					.where(eq(chapter.projectId, originalProjectId));
+
+				if (oldChapters.length > 0) {
+					const newChapters = [];
+					for (const old of oldChapters) {
+						const newVolumeId = volumeIdMap.get(old.volumeId);
+						const newOutlineId = outlineIdMap.get(old.outlineId);
+						if (newVolumeId && newOutlineId) {
+							const newId = crypto.randomUUID();
+							chapterIdMap.set(old.id, newId);
+							const { id: _id, ...data } = old;
+							newChapters.push({
+								...data,
+								id: newId,
+								volumeId: newVolumeId,
+								outlineId: newOutlineId,
+								projectId: newProject.id,
+								createdAt: new Date(),
+								updatedAt: new Date(),
+							});
+						}
+					}
+					if (newChapters.length > 0) {
+						await chunkedInsert(tx, chapter, newChapters);
+					}
+				}
+			}
+
+			// 8. Chapter Drafts (Fetch & Insert)
+			{
+				const oldChapterDrafts = await tx
 					.select()
 					.from(chapterDraft)
-					.where(eq(chapterDraft.projectId, originalProjectId)),
-				tx.select().from(scene).where(eq(scene.projectId, originalProjectId)),
-				tx
+					.where(eq(chapterDraft.projectId, originalProjectId));
+
+				if (oldChapterDrafts.length > 0) {
+					const newDrafts = [];
+					for (const old of oldChapterDrafts) {
+						const newChapterId = chapterIdMap.get(old.chapterId);
+						const newVolumeId = volumeIdMap.get(old.volumeId);
+						const newOutlineId = outlineIdMap.get(old.outlineId);
+						if (newChapterId && newVolumeId && newOutlineId) {
+							const { id: _id, ...data } = old;
+							newDrafts.push({
+								...data,
+								id: crypto.randomUUID(),
+								chapterId: newChapterId,
+								volumeId: newVolumeId,
+								outlineId: newOutlineId,
+								projectId: newProject.id,
+								createdAt: new Date(),
+								updatedAt: new Date(),
+							});
+						}
+					}
+					if (newDrafts.length > 0) {
+						await chunkedInsert(tx, chapterDraft, newDrafts);
+					}
+				}
+			}
+
+			// 9. Scenes (Fetch, Map, Insert)
+			{
+				const oldScenes = await tx
+					.select()
+					.from(scene)
+					.where(eq(scene.projectId, originalProjectId));
+
+				if (oldScenes.length > 0) {
+					const newScenesToInsert = [];
+					// First pass: Generate IDs and basic mapping
+					for (const old of oldScenes) {
+						const newChapterId = chapterIdMap.get(old.chapterId);
+						if (newChapterId) {
+							const newId = crypto.randomUUID();
+							sceneIdMap.set(old.id, newId);
+							const { id: _id, ...data } = old;
+							newScenesToInsert.push({
+								...data,
+								id: newId,
+								chapterId: newChapterId,
+								projectId: newProject.id,
+								createdAt: new Date(),
+								updatedAt: new Date(),
+							});
+						}
+					}
+
+					// Second pass: Resolve prevSceneId
+					const resolvedScenes = newScenesToInsert.map((s) => {
+						const oldPrev = s.prevSceneId;
+						if (oldPrev && sceneIdMap.has(oldPrev)) {
+							return { ...s, prevSceneId: sceneIdMap.get(oldPrev) };
+						}
+						return { ...s, prevSceneId: null };
+					});
+
+					if (resolvedScenes.length > 0) {
+						await chunkedInsert(tx, scene, resolvedScenes);
+					}
+				}
+			}
+
+			// 10. Scene Cards (Fetch & Insert)
+			{
+				const oldSceneCards = await tx
 					.select()
 					.from(sceneCard)
-					.where(eq(sceneCard.projectId, originalProjectId)),
-			]);
+					.where(eq(sceneCard.projectId, originalProjectId));
 
-			// 3. Batch Insert Entities
-			const entityIdMap = new Map<string, string>();
-			if (oldEntities.length > 0) {
-				const newEntities = oldEntities.map((old) => {
-					const newId = crypto.randomUUID();
-					entityIdMap.set(old.id, newId);
-					const { id: _id, ...data } = old;
-					return {
-						...data,
-						id: newId,
-						projectId: newProject.id,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					};
-				});
-				await chunkedInsert(tx, entity, newEntities);
-			}
-
-			// 4. Batch Insert Attributes
-			if (oldAttributes.length > 0) {
-				const newAttributes = [];
-				for (const old of oldAttributes) {
-					const newEntityId = entityIdMap.get(old.entityId);
-					if (newEntityId) {
-						const { id: _id, ...data } = old;
-						newAttributes.push({
-							...data,
-							id: crypto.randomUUID(),
-							entityId: newEntityId,
-							projectId: newProject.id,
-							createdAt: new Date(),
-						});
+				if (oldSceneCards.length > 0) {
+					const newSceneCards = [];
+					for (const old of oldSceneCards) {
+						const newSceneId = sceneIdMap.get(old.sceneId);
+						if (newSceneId) {
+							const { id: _id, ...data } = old;
+							newSceneCards.push({
+								...data,
+								id: crypto.randomUUID(),
+								sceneId: newSceneId,
+								projectId: newProject.id,
+								createdAt: new Date(),
+								updatedAt: new Date(),
+							});
+						}
 					}
-				}
-				if (newAttributes.length > 0) {
-					await chunkedInsert(tx, entityAttribute, newAttributes);
-				}
-			}
-
-			// 5. Batch Insert Relationships
-			if (oldRelationships.length > 0) {
-				const newRelationships = [];
-				for (const old of oldRelationships) {
-					const sourceId = entityIdMap.get(old.sourceEntityId);
-					const targetId = entityIdMap.get(old.targetEntityId);
-					if (sourceId && targetId) {
-						const { id: _id, ...data } = old;
-						newRelationships.push({
-							...data,
-							id: crypto.randomUUID(),
-							sourceEntityId: sourceId,
-							targetEntityId: targetId,
-							projectId: newProject.id,
-							createdAt: new Date(),
-						});
+					if (newSceneCards.length > 0) {
+						await chunkedInsert(tx, sceneCard, newSceneCards);
 					}
-				}
-				if (newRelationships.length > 0) {
-					await chunkedInsert(tx, relationship, newRelationships);
-				}
-			}
-
-			// 6. Structure Hierarchy (Outline -> Volume -> Chapter -> Scene)
-			const outlineIdMap = new Map<string, string>();
-			if (oldOutlines.length > 0) {
-				const newOutlines = oldOutlines.map((old) => {
-					const newId = crypto.randomUUID();
-					outlineIdMap.set(old.id, newId);
-					const { id: _id, ...data } = old;
-					return {
-						...data,
-						id: newId,
-						projectId: newProject.id,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					};
-				});
-				await chunkedInsert(tx, outline, newOutlines);
-			}
-
-			const volumeIdMap = new Map<string, string>();
-			if (oldVolumes.length > 0) {
-				const newVolumes = [];
-				for (const old of oldVolumes) {
-					const newOutlineId = outlineIdMap.get(old.outlineId);
-					if (newOutlineId) {
-						const newId = crypto.randomUUID();
-						volumeIdMap.set(old.id, newId);
-						const { id: _id, ...data } = old;
-						newVolumes.push({
-							...data,
-							id: newId,
-							outlineId: newOutlineId,
-							projectId: newProject.id,
-							createdAt: new Date(),
-							updatedAt: new Date(),
-						});
-					} else {
-						// Log orphaned volumes
-						console.warn(
-							`Orphaned volume skipped during fork. VolumeId: ${old.id}, OutlineId: ${old.outlineId}, SourceProject: ${originalProjectId}, NewProject: ${newProject.id}`,
-						);
-					}
-				}
-				if (newVolumes.length > 0) {
-					await chunkedInsert(tx, volume, newVolumes);
-				}
-			}
-
-			const chapterIdMap = new Map<string, string>();
-			if (oldChapters.length > 0) {
-				const newChapters = [];
-				for (const old of oldChapters) {
-					const newVolumeId = volumeIdMap.get(old.volumeId);
-					const newOutlineId = outlineIdMap.get(old.outlineId);
-					if (newVolumeId && newOutlineId) {
-						const newId = crypto.randomUUID();
-						chapterIdMap.set(old.id, newId);
-						const { id: _id, ...data } = old;
-						newChapters.push({
-							...data,
-							id: newId,
-							volumeId: newVolumeId,
-							outlineId: newOutlineId,
-							projectId: newProject.id,
-							createdAt: new Date(),
-							updatedAt: new Date(),
-						});
-					}
-				}
-				if (newChapters.length > 0) {
-					await chunkedInsert(tx, chapter, newChapters);
-				}
-			}
-
-			// Batch Insert Chapter Drafts
-			if (oldChapterDrafts.length > 0) {
-				const newDrafts = [];
-				for (const old of oldChapterDrafts) {
-					const newChapterId = chapterIdMap.get(old.chapterId);
-					const newVolumeId = volumeIdMap.get(old.volumeId);
-					const newOutlineId = outlineIdMap.get(old.outlineId);
-					if (newChapterId && newVolumeId && newOutlineId) {
-						const { id: _id, ...data } = old;
-						newDrafts.push({
-							...data,
-							id: crypto.randomUUID(),
-							chapterId: newChapterId,
-							volumeId: newVolumeId,
-							outlineId: newOutlineId,
-							projectId: newProject.id,
-							createdAt: new Date(),
-							updatedAt: new Date(),
-						});
-					}
-				}
-				if (newDrafts.length > 0) {
-					await chunkedInsert(tx, chapterDraft, newDrafts);
-				}
-			}
-
-			// Batch Insert Scenes (and remap prevSceneId)
-			const sceneIdMap = new Map<string, string>();
-			// First pass: Generate IDs and basic mapping
-			const newScenesToInsert = [];
-			for (const old of oldScenes) {
-				const newChapterId = chapterIdMap.get(old.chapterId);
-				if (newChapterId) {
-					const newId = crypto.randomUUID();
-					sceneIdMap.set(old.id, newId);
-					const { id: _id, ...data } = old;
-					newScenesToInsert.push({
-						...data,
-						id: newId,
-						chapterId: newChapterId,
-						projectId: newProject.id,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						// We'll update prevSceneId in a second pass/logic if needed,
-						// but since we have the full map, we can try to resolve it now if the map is complete?
-						// Actually, we can't resolve prevSceneId until we know all IDs.
-						// BUT, since we process all old scenes and generate new IDs for them,
-						// we can do a lookup on sceneIdMap.
-					});
-				}
-			}
-
-			// Second pass: Resolve prevSceneId (in memory)
-			const resolvedScenes = newScenesToInsert.map((s) => {
-				const oldPrev = s.prevSceneId;
-				if (oldPrev && sceneIdMap.has(oldPrev)) {
-					return { ...s, prevSceneId: sceneIdMap.get(oldPrev) };
-				}
-				return { ...s, prevSceneId: null };
-			});
-
-			if (resolvedScenes.length > 0) {
-				await chunkedInsert(tx, scene, resolvedScenes);
-			}
-
-			// Batch Insert Scene Cards
-			if (oldSceneCards.length > 0) {
-				const newSceneCards = [];
-				for (const old of oldSceneCards) {
-					const newSceneId = sceneIdMap.get(old.sceneId);
-					if (newSceneId) {
-						const { id: _id, ...data } = old;
-						newSceneCards.push({
-							...data,
-							id: crypto.randomUUID(),
-							sceneId: newSceneId,
-							projectId: newProject.id,
-							createdAt: new Date(),
-							updatedAt: new Date(),
-						});
-					}
-				}
-				if (newSceneCards.length > 0) {
-					await chunkedInsert(tx, sceneCard, newSceneCards);
 				}
 			}
 

@@ -1,5 +1,6 @@
 "use server";
 
+import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { withProjectWriteAccess } from "@/lib/actions-utils";
 import {
@@ -7,6 +8,22 @@ import {
 	type StoryStyle,
 	storyService,
 } from "@/lib/services/story-service";
+
+// Define schema for validation
+const generateBookPlanSchema = z.object({
+	prompt: z
+		.string()
+		.min(1, "Prompt is required")
+		.max(5000, "Prompt is too long (max 5000 chars)"),
+	style: z
+		.object({
+			pov: z.string().optional(),
+			tone: z.string().optional(),
+			genre: z.string().optional(),
+		})
+		.optional(),
+	modelId: z.string().optional(),
+});
 
 export async function generateBookPlan(
 	prompt: string,
@@ -18,6 +35,18 @@ export async function generateBookPlan(
 		if (!session?.user) {
 			return { success: false, error: "Unauthorized" };
 		}
+
+		// Validate Input
+		const validation = generateBookPlanSchema.safeParse({
+			prompt,
+			style,
+			modelId,
+		});
+
+		if (!validation.success) {
+			return { success: false, error: validation.error.message };
+		}
+
 		const result = await storyService.generateBookPlan(prompt, style, modelId);
 		if (result.error || !result.plan) {
 			return {

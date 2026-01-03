@@ -187,6 +187,9 @@ export const MultimodalInput = memo(
 		if (prevProps.projectId !== nextProps.projectId) {
 			return false;
 		}
+		if (prevProps.usage !== nextProps.usage) {
+			return false;
+		}
 
 		return true;
 	},
