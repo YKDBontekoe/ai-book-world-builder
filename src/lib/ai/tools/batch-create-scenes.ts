@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { createProtectedTool } from "@/lib/ai/tool-utils";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
-import { sceneRepository } from "@/lib/db/repositories";
+import { chapterRepository, sceneRepository } from "@/lib/db/repositories";
 
 const batchCreateScenesSchema = z.object({
 	chapterId: z
@@ -47,6 +47,20 @@ export const batchCreateScenes = createProtectedTool({
 		if (!project || project.userId !== session.user.id) {
 			return {
 				error: "Unauthorized: You do not have write access to this project.",
+			};
+		}
+
+		// Verify chapter existence and ownership (via projectId match)
+		const targetChapter = await chapterRepository.findById(chapterId);
+		if (!targetChapter) {
+			return {
+				error: `Chapter with ID '${chapterId}' not found.`,
+			};
+		}
+
+		if (targetChapter.projectId !== finalProjectId) {
+			return {
+				error: "Chapter does not belong to the specified project.",
 			};
 		}
 
