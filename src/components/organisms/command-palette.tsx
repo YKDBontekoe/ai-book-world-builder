@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { Dialog, DialogContent } from "@/components/atoms/dialog";
 import { springs } from "@/lib/animations";
 import { cn } from "@/lib/utils";
@@ -86,7 +87,7 @@ export function CommandPalette({
 				keywords: ["help", "keys", "hotkeys"],
 				action: () => {
 					// Will be implemented with shortcuts dialog
-					console.log("Show shortcuts dialog");
+					toast.info("Shortcuts dialog coming soon!");
 				},
 				shortcut: "⌘/",
 			},
