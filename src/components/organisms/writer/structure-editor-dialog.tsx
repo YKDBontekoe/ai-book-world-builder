@@ -74,7 +74,7 @@ export function StructureEditorDialog({
 			setOpen(false);
 			onSave();
 		} else {
-			toast.error("Failed to update structure");
+			toast.error(result.error || "Failed to update structure");
 		}
 	};
 
@@ -124,7 +124,9 @@ export function StructureEditorDialog({
 					.replace(/:$/, "");
 				if (!title) title = "Untitled Chapter";
 
-				formattedLines.push(formattedLines.length > 0 ? "" : ""); // Add spacing
+				if (formattedLines.length > 0) {
+					formattedLines.push("");
+				}
 				formattedLines.push(`Chapter ${chapterCount}: ${title}`);
 			}
 			// Detect Scene
@@ -362,7 +364,7 @@ Chapter 2: The Journey
 				<DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/20">
 					<div className="mr-auto flex items-center gap-2 text-xs text-muted-foreground opacity-70">
 						<Keyboard className="h-3 w-3" />
-						<span>Cmd + Enter to save</span>
+						<span>Cmd/Ctrl + Enter to save</span>
 					</div>
 					<Button variant="ghost" onClick={() => setOpen(false)}>
 						Cancel

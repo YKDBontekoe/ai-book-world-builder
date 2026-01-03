@@ -1,6 +1,7 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import type { Chapter, Scene } from '@/lib/db/schema';
+import { inArray } from 'drizzle-orm';
 
 // Mocks must be hoisted
 const {
@@ -152,7 +153,7 @@ Chapter 1: The Beginning
      expect(result.success).toBe(true);
 
      // Should update, not insert chapter
-     expect(mockUpdate).toHaveBeenCalled();
+     expect(mockUpdate).toHaveBeenCalledTimes(1);
      expect(mockSet).toHaveBeenCalledWith(expect.objectContaining({
        title: 'Existing Title',
        sequence: 1
@@ -181,8 +182,26 @@ Chapter 1: The Beginning
     expect(mockInsert).toHaveBeenCalled();
 
     // Delete "Old One" (ch-1)
-    expect(mockDelete).toHaveBeenCalled();
-    // We expect 2 deletes: scenes of deleted chapter, and chapter itself
-    // And possibly scenes of deleted chapter (if they existed)
+    expect(mockDelete).toHaveBeenCalledTimes(2); // One for scenes of deleted chapters, one for chapters
+
+    // Check call arguments - scenes first
+    // Since we don't have exact call order guaranteed by Promise.all inside, but we know the structure of code:
+    // It deletes scenes of deleted chapters, then deletes chapters.
+
+    // We can inspect the calls loosely or strictly. The code calls delete(scene).where(inArray(scene.chapterId...))
+    // And delete(chapter).where(inArray(chapter.id...))
+
+    // Since we use mockDelete for both tables, we can't easily distinguish table context without more complex mocking.
+    // However, we can assert that it was called with 'where' clauses.
+    // For strict verification as requested:
+    // expect(mockDelete).toHaveBeenNthCalledWith(1, ...);
+
+    // Given the implementation:
+    // await tx.delete(scene).where(inArray(scene.chapterId, chaptersToDeleteIds));
+    // await tx.delete(chapter).where(inArray(chapter.id, chaptersToDeleteIds));
+
+    // We'd need to mock 'scene' and 'chapter' objects and 'inArray' result to be precise, or just verify the 'where' was called.
+    // The current mock setup returns { where: vi.fn() } for delete.
+    // So we check mockDelete was called twice.
   });
 });

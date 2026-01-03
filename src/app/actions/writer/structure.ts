@@ -13,6 +13,7 @@ import {
 	volume,
 } from "@/lib/db/schema";
 import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 export async function getProjectStructure(projectId: string) {
 	try {
@@ -149,18 +150,27 @@ function parseStructureText(text: string): ParsedChapter[] {
 	return chapters;
 }
 
+const structureSchema = z.string().trim().min(1, "Structure text cannot be empty");
+
 export async function saveProjectStructure(
 	projectId: string,
 	structureText: string,
 ) {
 	try {
-		// 1. Verify Access (Write)
+		// 1. Validation
+		const validation = structureSchema.safeParse(structureText);
+		if (!validation.success) {
+			return { success: false, error: validation.error.message };
+		}
+		const validText = validation.data;
+
+		// 2. Verify Access (Write)
 		await ensureProjectAccess(projectId, true);
 
-		// 2. Parse Text
-		const newStructure = parseStructureText(structureText);
+		// 3. Parse Text
+		const newStructure = parseStructureText(validText);
 
-		// 3. Sync with DB (Smart Sync)
+		// 4. Sync with DB (Smart Sync)
 		// Strategy:
 		// - Match Chapters by Title (normalized) to preserve IDs.
 		// - If unmatched, Create new Chapter.
@@ -194,8 +204,13 @@ export async function saveProjectStructure(
 				{} as Record<string, Scene[]>,
 			);
 
-			// Helper to normalize titles for matching
-			const normalize = (s: string) => s.toLowerCase().trim();
+			// Helper to normalize titles for matching: Lowercase, collapse whitespace, strip diacritics
+			const normalize = (s: string) =>
+				s.toLowerCase()
+				 .normalize("NFKD")
+				 .replace(/[\u0300-\u036f]/g, "")
+				 .replace(/\s+/g, " ")
+				 .trim();
 
 			// Prepare Outline/Volume IDs (Assuming single default Outline/Volume for now)
 			// In a real app, we might need to fetch or create them.
@@ -268,6 +283,10 @@ export async function saveProjectStructure(
 			const chapterIdsToKeep = new Set<string>();
 			const sceneIdsToKeep = new Set<string>();
 
+			// Batching Promises for Parallel Execution
+			const updatePromises: Promise<unknown>[] = [];
+			const insertPromises: Promise<unknown>[] = [];
+
 			// B. Process Chapters
 			for (const newCh of newStructure) {
 				// Try to find match by Title
@@ -278,23 +297,26 @@ export async function saveProjectStructure(
 				);
 
 				let currentChapterId: string;
+				let isNewChapter = false;
 
 				if (match) {
 					// Update existing
 					currentChapterId = match.id;
 					chapterIdsToKeep.add(match.id);
-					await tx
+					updatePromises.push(
+						tx
 						.update(chapter)
 						.set({
 							sequence: newCh.sequence,
 							updatedAt: new Date(),
-							// We keep the title as is in DB (preserving case) or update it?
-							// Let's update it to match text exactly, as user might have fixed a typo
 							title: newCh.title,
 						})
-						.where(eq(chapter.id, match.id));
+						.where(eq(chapter.id, match.id))
+					);
 				} else {
-					// Create new
+					// Create new (must await to get ID for scenes)
+					// We cannot batch this easily if we need the ID for child scenes immediately.
+					// So we keep this sequential for inserts.
 					const [created] = await tx
 						.insert(chapter)
 						.values({
@@ -309,10 +331,11 @@ export async function saveProjectStructure(
 						})
 						.returning();
 					currentChapterId = created.id;
+					isNewChapter = true;
 				}
 
 				// C. Process Scenes for this Chapter
-				const existingChScenes = match ? dbScenesByChapter[match.id] || [] : [];
+				const existingChScenes = !isNewChapter && match ? dbScenesByChapter[match.id] || [] : [];
 
 				for (const newSc of newCh.scenes) {
 					// Try to find match by Title within this Chapter
@@ -325,27 +348,31 @@ export async function saveProjectStructure(
 					if (scMatch) {
 						// Update
 						sceneIdsToKeep.add(scMatch.id);
-						await tx
+						updatePromises.push(
+							tx
 							.update(scene)
 							.set({
 								sequence: newSc.sequence,
 								updatedAt: new Date(),
 								title: newSc.title,
-								chapterId: currentChapterId, // Should be same, but just in case
+								chapterId: currentChapterId, // Should be same
 							})
-							.where(eq(scene.id, scMatch.id));
+							.where(eq(scene.id, scMatch.id))
+						);
 					} else {
 						// Create new
-						await tx.insert(scene).values({
-							projectId,
-							chapterId: currentChapterId,
-							title: newSc.title,
-							sequence: newSc.sequence,
-							status: "planned",
-							content: "",
-							createdAt: new Date(),
-							updatedAt: new Date(),
-						});
+						insertPromises.push(
+							tx.insert(scene).values({
+								projectId,
+								chapterId: currentChapterId,
+								title: newSc.title,
+								sequence: newSc.sequence,
+								status: "planned",
+								content: "",
+								createdAt: new Date(),
+								updatedAt: new Date(),
+							})
+						);
 					}
 				}
 			}
@@ -370,9 +397,10 @@ export async function saveProjectStructure(
 				}
 			}
 
+			// Wait for all updates and inserts (inserts that didn't need parent ID wait)
+			await Promise.all([...updatePromises, ...insertPromises]);
+
 			// We also need to delete scenes belonging to deleted chapters (cascade usually handles this, but explicit is safer)
-			// Actually, let's rely on standard delete.
-			// But if we want to be safe:
 			if (scenesToDeleteIds.length > 0) {
 				await tx.delete(scene).where(inArray(scene.id, scenesToDeleteIds));
 			}
@@ -394,6 +422,9 @@ export async function saveProjectStructure(
 		return { success: true };
 	} catch (error) {
 		console.error("Failed to save project structure", error);
+		if (error instanceof z.ZodError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to save structure" };
 	}
 }
