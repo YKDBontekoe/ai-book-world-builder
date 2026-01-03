@@ -1,4 +1,5 @@
 import { Bot, Github, Settings2, Terminal } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/atoms/button";
 import {
 	CardContent,
@@ -64,8 +65,8 @@ export default function FeaturesPage() {
 								System Connected
 							</span>
 						</div>
-						<Button className="w-full" variant="outline">
-							Manage Sync Settings
+						<Button className="w-full" variant="outline" asChild>
+							<Link href="/admin/github">Manage Repository</Link>
 						</Button>
 					</CardContent>
 				</GlassCard>

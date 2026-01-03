@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, LayoutDashboard, Settings2, Users } from "lucide-react";
+import { Github, Home, LayoutDashboard, Settings2, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -30,6 +30,11 @@ const items = [
 		title: "Features",
 		url: "/admin/features",
 		icon: Settings2,
+	},
+	{
+		title: "GitHub",
+		url: "/admin/github",
+		icon: Github,
 	},
 ];
 
