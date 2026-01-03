@@ -110,6 +110,7 @@ PRs with these characteristics are auto-merged:
 - [React Patterns](.agent/guidelines/react-patterns.md): Hooks, composition, state management.
 - [Database Patterns](.agent/guidelines/database-patterns.md): Drizzle ORM, schema design.
 - [AI Integration](.agent/guidelines/ai-integration.md): Vercel AI SDK, streaming, tools.
+- [Testing Standards](.agent/guidelines/testing-standards.md): MSW, Vitest, Storybook interaction testing.
 
 ### 🛠 Workflows
 - [Setup Dev Environment](.agent/workflows/setup-dev.md)
