@@ -1,6 +1,7 @@
 import "server-only";
 
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
+import type { AIGenerationResult } from "@/lib/ai/services/types";
 import {
 	type BookPlan,
 	bookPlanSchema,
@@ -17,7 +18,7 @@ export class PlanningService extends BaseAIService {
 		prompt: string,
 		style?: StoryStyle,
 		modelId?: string,
-	): Promise<{ plan?: BookPlan; error?: string }> {
+	): Promise<{ plan?: BookPlan; error?: string } & AIGenerationResult> {
 		const systemPrompt = `You are an expert story architect. Your task is to create a comprehensive book plan based on a user's prompt.
 
 REQUIREMENTS:
@@ -50,7 +51,11 @@ OUTPUT FORMAT: You must respond with valid JSON only. No markdown, no code block
 			return { error: result.error };
 		}
 
-		return { plan: result.data.object };
+		return {
+			plan: result.data.object,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
 	}
 
 	/**
@@ -60,7 +65,7 @@ OUTPUT FORMAT: You must respond with valid JSON only. No markdown, no code block
 		chapterTitle: string,
 		chapterSummary: string,
 		modelId?: string,
-	): Promise<{ plan?: ScenePlan; error?: string }> {
+	): Promise<{ plan?: ScenePlan; error?: string } & AIGenerationResult> {
 		const systemPrompt = `You are an expert story architect. Your task is to break down a chapter into a logical sequence of scenes.
 
 REQUIREMENTS:
@@ -94,7 +99,11 @@ Create a list of scenes with titles and beats.`;
 			return { error: result.error };
 		}
 
-		return { plan: result.data.object };
+		return {
+			plan: result.data.object,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
 	}
 }
 

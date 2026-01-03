@@ -11,6 +11,7 @@ import {
 	bookPlanSchema,
 	type StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
+import { logGenerationUsage } from "@/lib/services/usage-logger";
 import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
 
 // Re-export types for backward compatibility
@@ -86,6 +87,18 @@ export class StoryService {
 			throw new Error(result.error || "Failed to plan scenes");
 		}
 
+		// Log Usage
+		await logGenerationUsage({
+			projectId: targetChapter.projectId,
+			usage: result.usage,
+			modelId: result.modelId,
+			context: {
+				generationType: "planning",
+				stepType: "plan_chapter_scenes",
+				chapterId: chapterId,
+			},
+		});
+
 		const scenePlan = result.plan;
 
 		const lastScene = await storyRepository.getLastSceneInChapter(chapterId);
@@ -158,6 +171,18 @@ export class StoryService {
 
 		// 5. Update DB
 		await storyRepository.updateSceneContent(sceneId, result.text);
+
+		// 6. Log Usage
+		await logGenerationUsage({
+			projectId: targetScene.projectId,
+			usage: result.usage,
+			modelId: result.modelId,
+			context: {
+				generationType: "story_generation",
+				stepType: "generate_scene_text",
+				chapterId: targetScene.chapterId || undefined,
+			},
+		});
 	}
 }
 

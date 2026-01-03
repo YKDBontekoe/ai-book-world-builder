@@ -13,7 +13,10 @@ import "server-only";
 
 import { writerPrompts } from "@/lib/ai/prompts/writer-prompts";
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
-import type { AIGenerationOptions } from "@/lib/ai/services/types";
+import type {
+	AIGenerationOptions,
+	AIGenerationResult,
+} from "@/lib/ai/services/types";
 
 // =============================================================================
 // Types
@@ -42,7 +45,7 @@ export class GenerationService extends BaseAIService {
 		context: string,
 		previousContent: string,
 		options: GenerationOptions = {},
-	): Promise<{ text?: string; error?: string }> {
+	): Promise<{ text?: string; error?: string } & AIGenerationResult> {
 		const systemPrompt = writerPrompts.continueWriting.system(options.style);
 		const prompt = writerPrompts.continueWriting.user({
 			context,
@@ -59,7 +62,11 @@ export class GenerationService extends BaseAIService {
 			return { error: result.error };
 		}
 
-		return { text: result.data.text };
+		return {
+			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
 	}
 
 	/**
@@ -70,7 +77,7 @@ export class GenerationService extends BaseAIService {
 		cardData: SceneCardData,
 		instructions?: string,
 		options: GenerationOptions = {},
-	): Promise<{ text?: string; error?: string }> {
+	): Promise<{ text?: string; error?: string } & AIGenerationResult> {
 		const systemPrompt = writerPrompts.draftScene.system();
 		const prompt = writerPrompts.draftScene.user({
 			sceneTitle,
@@ -92,7 +99,11 @@ export class GenerationService extends BaseAIService {
 			return { error: result.error };
 		}
 
-		return { text: result.data.text };
+		return {
+			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
 	}
 
 	/**
@@ -102,7 +113,7 @@ export class GenerationService extends BaseAIService {
 		context: string,
 		currentText: string,
 		options: GenerationOptions = {},
-	): Promise<{ ideas?: string; error?: string }> {
+	): Promise<{ ideas?: string; error?: string } & AIGenerationResult> {
 		const systemPrompt = writerPrompts.generateIdeas.system();
 		const prompt = writerPrompts.generateIdeas.user({ context, currentText });
 
@@ -116,7 +127,11 @@ export class GenerationService extends BaseAIService {
 			return { error: result.error };
 		}
 
-		return { ideas: result.data.text };
+		return {
+			ideas: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
 	}
 
 	/**
@@ -126,7 +141,7 @@ export class GenerationService extends BaseAIService {
 		selection: string,
 		instruction: string,
 		options: GenerationOptions = {},
-	): Promise<{ text?: string; error?: string }> {
+	): Promise<{ text?: string; error?: string } & AIGenerationResult> {
 		const systemPrompt = writerPrompts.rewriteSelection.system();
 		const prompt = writerPrompts.rewriteSelection.user({
 			selection,
@@ -143,7 +158,11 @@ export class GenerationService extends BaseAIService {
 			return { error: result.error };
 		}
 
-		return { text: result.data.text };
+		return {
+			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
 	}
 }
 

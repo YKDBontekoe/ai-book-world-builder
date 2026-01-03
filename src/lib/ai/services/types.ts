@@ -4,6 +4,7 @@
  * Shared types for all AI generation services.
  */
 
+import type { LanguageModelUsage } from "ai";
 import type { z } from "zod";
 
 // =============================================================================
@@ -153,6 +154,8 @@ export interface AIObjectOptions<T extends z.ZodType>
 export interface AISuccess<T> {
 	success: true;
 	data: T;
+	usage?: LanguageModelUsage;
+	modelId?: string;
 }
 
 /**
@@ -183,8 +186,12 @@ export type AIResult<T> = AISuccess<T> | AIError;
 // Helper Functions
 // =============================================================================
 
-export function aiSuccess<T>(data: T): AISuccess<T> {
-	return { success: true, data };
+export function aiSuccess<T>(
+	data: T,
+	usage?: LanguageModelUsage,
+	modelId?: string,
+): AISuccess<T> {
+	return { success: true, data, usage, modelId };
 }
 
 export function aiError(error: string): AIError {
