@@ -1,5 +1,6 @@
 
 import { describe, expect, it, vi, beforeEach } from 'vitest';
+import type { Chapter, Scene } from '@/lib/db/schema';
 
 // Mocks must be hoisted
 const {
@@ -140,8 +141,8 @@ Chapter 1: The Beginning
      const text = `Chapter 1: Existing Title`;
 
      // Mock existing data
-     const existingChapters = [{ id: 'ch-1', title: 'Existing Title', sequence: 1, outlineId: 'o1', volumeId: 'v1' }];
-     const existingScenes = [];
+     const existingChapters: Partial<Chapter>[] = [{ id: 'ch-1', title: 'Existing Title', sequence: 1, outlineId: 'o1', volumeId: 'v1' }];
+     const existingScenes: Partial<Scene>[] = [];
 
      mockOrderBy.mockResolvedValueOnce(existingChapters);
      mockOrderBy.mockResolvedValueOnce(existingScenes);
@@ -164,7 +165,7 @@ Chapter 1: The Beginning
     const text = `Chapter 1: New One`;
 
     // Existing "Old One"
-    const existingChapters = [{ id: 'ch-1', title: 'Old One', sequence: 1, outlineId: 'o1', volumeId: 'v1' }];
+    const existingChapters: Partial<Chapter>[] = [{ id: 'ch-1', title: 'Old One', sequence: 1, outlineId: 'o1', volumeId: 'v1' }];
 
     mockOrderBy.mockResolvedValueOnce(existingChapters);
     mockOrderBy.mockResolvedValueOnce([]); // No scenes
