@@ -10,6 +10,7 @@ import {
 	Trash2,
 	Wand2,
 } from "lucide-react";
+import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -45,7 +46,10 @@ const DEFAULT_STYLE: StoryStyle = {
 	tone: "Neutral",
 };
 
-export function StoryWizard({ projectId, onComplete }: StoryWizardProps) {
+export function StoryWizard({
+	projectId,
+	onComplete,
+}: StoryWizardProps): React.JSX.Element {
 	const [step, setStep] = useState<
 		"input" | "generating" | "review" | "creating"
 	>("input");
