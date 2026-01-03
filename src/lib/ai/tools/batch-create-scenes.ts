@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { createProtectedTool } from "@/lib/ai/tool-utils";
+import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import { sceneRepository } from "@/lib/db/repositories";
 
 const batchCreateScenesSchema = z.object({
@@ -32,10 +33,22 @@ export const batchCreateScenes = createProtectedTool({
 	description: "Create multiple new scenes in a chapter.",
 	inputSchema: batchCreateScenesSchema,
 	requireProjectId: true,
-	execute: async (args, { projectId }) => {
+	execute: async (args, { session, projectId }) => {
 		// projectId is guaranteed to be defined because requireProjectId is true
 		const finalProjectId = projectId as string;
 		const { chapterId, scenes } = args;
+
+		// Verify ownership
+		const project = await getProjectByIdWithAccess({
+			id: finalProjectId,
+			userId: session.user.id, // createProtectedTool guarantees session.user
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return {
+				error: "Unauthorized: You do not have write access to this project.",
+			};
+		}
 
 		const results = [];
 
