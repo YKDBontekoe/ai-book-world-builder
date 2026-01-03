@@ -8,6 +8,18 @@ Welcome to the AI Book World Builder! This guide will help you navigate the feat
 2.  **Add Entities**: Go to the **"World"** tab (inside the Writer View). Here you can add Characters, Locations, and Lore. The more you add here, the smarter the AI becomes about your world.
 3.  **Create an Outline**: In the **"Story"** tab, start planning your chapters. You don't need to write the prose yet—just the high-level beats.
 
+## Project Dashboard
+
+The dashboard provides a high-level overview of your project's health and usage.
+
+*   **Total Cost**: An estimate of the AI generation costs for this project.
+*   **Total Entities**: The total number of world-building elements (Characters, Locations, etc.) you've created.
+*   **Input/Output Tokens**: Tracks the volume of text sent to and received from the AI.
+
+**Charts & Insights:**
+*   **Usage Chart**: Visualizes your AI usage over time, helping you track activity spikes.
+*   **Entity Insights**: A breakdown of your world-building elements (e.g., how many Characters vs. Locations) and a "Top Connected" list showing which entities have the most relationships.
+
 ## Writer View Interface
 
 The Project View is divided into three main panels to help you organize and write your story:
@@ -23,6 +35,7 @@ The Writer View includes specialized AI tools to assist your creative process. A
 ### 1. Generate Scenes (AI)
 Automatically drafts prose for planned scenes.
 -   **Usage**: Click the **Sparkles** icon next to a Chapter in the sidebar, then select **Generate Scenes (AI)**. The AI will draft content for all pending scenes in that chapter based on their summaries.
+-   **Note**: This tool processes a maximum of **5 scenes** at a time to ensure high-quality output and prevent network timeouts.
 -   **Best For**: Rapidly converting a chapter outline into a first draft.
 
 ### 2. Rewrite
@@ -68,13 +81,19 @@ The Book Generation feature is a powerful tool to turn your initial idea into a 
 
 ## Model Settings
 
-You can customize which AI models are used for different tasks in the **Settings > Models** menu. We categorize models into three tiers:
+You can customize which AI models are used for different tasks in the **Settings > Models** menu.
 
+### Model Tiers
+We categorize models into three roles:
 *   **Light**: Fast and efficient. Used for simple chat questions and quick suggestions.
 *   **Middle**: Balanced performance. Used for most writing tasks and analyzing your world.
 *   **Large**: High intelligence. Used for complex reasoning, outlining your story, and orchestration.
 
-By default, the system selects the best available models (e.g., "OpenRouter Auto"), but you can override these if you have specific preferences (like using Claude 3.5 Sonnet for writing).
+### Model Selector
+The new model selector organizes available models to help you find the best fit:
+*   **Favorites**: Pin your most-used models to the top for quick access.
+*   **Recents**: Quickly switch back to models you've used recently.
+*   **By Provider**: Browse models grouped by their provider (e.g., OpenAI, Anthropic, Google).
 
 ## Project-Aware Chat
 

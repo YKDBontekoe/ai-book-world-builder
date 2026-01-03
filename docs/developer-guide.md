@@ -68,15 +68,25 @@ We separate controller logic (Server Actions) from business logic (Services):
 ### 4. AI Service Architecture
 The AI layer is structured to separate "AI Logic" from "Business Logic".
 
--   **Service Implementations** (`lib/services/ai/`):
-    -   `WritingService`: Handles interactive text generation (continue writing, rewrite, draft scene).
-    -   `AnalysisService`: Handles content analysis (entity detection, consistency checks).
-    -   `LoreService`: Manages world-building generation (creating characters, locations).
--   **Business Logic** (`lib/services/story-service.ts`):
-    -   Orchestrates the flow between the database and AI services.
-    -   Manages high-level operations like `planChapterScenes` and `generateSceneText`.
+**Core Components**:
+-   **GenerationService** (`lib/ai/services/generation-service.ts`): The low-level abstraction for LLM interaction. It handles prompt construction, system message formatting, and calling the Vercel AI SDK. It is agnostic to the business domain (stories, analysis).
+-   **WritingService** (`lib/services/ai/writing-service.ts`): The domain-specific service that orchestrates generation. It calls `GenerationService` but adds business rules like batch processing, scene fetching, and access control.
 
-### 5. Structured Context (Context Builder)
+**Batch Processing Strategy**:
+Long-running AI tasks (like "Generate All Scenes") are handled in `WritingService.batchWriteChapter` using a concurrency pattern to avoid Vercel Serverless Function timeouts (usually 10-60s):
+1.  **Batch Limit**: Processes a maximum of 5 scenes per request.
+2.  **Concurrency Limit**: Runs strictly 3 generations in parallel to balance speed vs. rate limits.
+3.  **Chunking**: Breaks the task into chunks (e.g., `tasks.slice(i, i + CONCURRENCY_LIMIT)`), awaiting each chunk before proceeding.
+
+### 5. Project Analytics
+Analytics are calculated on-the-fly to provide real-time insights without a heavy ETL process.
+
+-   **ProjectAnalyticsService** (`lib/services/project-analytics.ts`): Aggregates data from `Project`, `Entity`, and `Scene` tables.
+-   **Readiness Score**: A weighted metric (0-100) indicating how "ready" a project is for generation.
+    -   Characters (30%), Locations (20%), Outline (30%), Chapters (20%).
+    -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
+
+### 6. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:
 
 -   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene (last ~2000 tokens) to ensure flow.
