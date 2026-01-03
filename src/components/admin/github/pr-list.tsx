@@ -36,10 +36,13 @@ export function PRList({ onSelect, state = "open" }: PRListProps) {
 			</div>
 		);
 
-	if (error || !result?.success) {
+	if (error || !result || !result.success) {
+		const errorMessage =
+			error?.message ||
+			(result && !result.success ? result.error : "Unknown error");
 		return (
 			<div className="p-4 text-red-500 bg-red-500/10 rounded-lg">
-				Error loading pull requests: {error?.message || result?.error}
+				Error loading pull requests: {errorMessage}
 			</div>
 		);
 	}

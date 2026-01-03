@@ -72,10 +72,14 @@ export function ItemDetail({ number, type, onBack }: ItemDetailProps) {
 
 	if (isLoading)
 		return <div className="p-8 text-center">Loading details...</div>;
-	if (error || !result?.success) {
+
+	if (error || !result || !result.success) {
+		const errorMessage =
+			error?.message ||
+			(result && !result.success ? result.error : "Unknown error");
 		return (
 			<div className="p-8 text-center text-red-500">
-				Failed to load details: {error?.message || result?.error}
+				Failed to load details: {errorMessage}
 			</div>
 		);
 	}

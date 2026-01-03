@@ -1,4 +1,5 @@
 import { Bot, Github, Settings2, Terminal } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/atoms/button";
 import {
 	CardContent,

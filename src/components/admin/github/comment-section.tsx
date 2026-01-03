@@ -47,10 +47,15 @@ export function CommentSection({ issueNumber }: CommentSectionProps) {
 
 	if (isLoading)
 		return <div className="p-4 text-center">Loading comments...</div>;
-	if (error || !result?.success) {
+
+	// Explicit type narrowing for Result<T> to satisfy TypeScript
+	if (error || !result || !result.success) {
+		const errorMessage =
+			error?.message ||
+			(result && !result.success ? result.error : "Unknown error");
 		return (
 			<div className="p-4 text-red-500">
-				Failed to load comments: {error?.message || result?.error}
+				Failed to load comments: {errorMessage}
 			</div>
 		);
 	}

@@ -4,8 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle, GitFork, GitPullRequest, Star } from "lucide-react";
 import { useState } from "react";
 import { getRepoStats } from "@/app/actions/github";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@/components/atoms/tabs";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { IssueList } from "./issue-list";
 import { ItemDetail } from "./item-detail";
 import { PRList } from "./pr-list";
@@ -42,6 +47,15 @@ export function GitHubDashboard() {
 		}
 	};
 
+	const renderStats = () => {
+		if (!stats?.success) {
+			return { stars: "-", forks: "-", openIssues: "-" };
+		}
+		return stats.data;
+	};
+
+	const currentStats = renderStats();
+
 	return (
 		<div className="space-y-6">
 			{/* Header Stats */}
@@ -49,27 +63,21 @@ export function GitHubDashboard() {
 				<GlassCard className="p-4 flex items-center justify-between">
 					<div>
 						<p className="text-sm text-muted-foreground">Stars</p>
-						<p className="text-2xl font-bold">
-							{stats?.success ? stats.data.stars : "-"}
-						</p>
+						<p className="text-2xl font-bold">{currentStats.stars}</p>
 					</div>
 					<Star className="h-5 w-5 text-yellow-500" />
 				</GlassCard>
 				<GlassCard className="p-4 flex items-center justify-between">
 					<div>
 						<p className="text-sm text-muted-foreground">Forks</p>
-						<p className="text-2xl font-bold">
-							{stats?.success ? stats.data.forks : "-"}
-						</p>
+						<p className="text-2xl font-bold">{currentStats.forks}</p>
 					</div>
 					<GitFork className="h-5 w-5 text-blue-500" />
 				</GlassCard>
 				<GlassCard className="p-4 flex items-center justify-between">
 					<div>
 						<p className="text-sm text-muted-foreground">Open Issues</p>
-						<p className="text-2xl font-bold">
-							{stats?.success ? stats.data.openIssues : "-"}
-						</p>
+						<p className="text-2xl font-bold">{currentStats.openIssues}</p>
 					</div>
 					<AlertCircle className="h-5 w-5 text-green-500" />
 				</GlassCard>

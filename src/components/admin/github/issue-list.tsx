@@ -30,10 +30,14 @@ export function IssueList({ onSelect, state = "open" }: IssueListProps) {
 			</div>
 		);
 
-	if (error || !result?.success) {
+	// Explicit check for success
+	if (error || !result || !result.success) {
+		const errorMessage =
+			error?.message ||
+			(result && !result.success ? result.error : "Unknown error");
 		return (
 			<div className="p-4 text-red-500 bg-red-500/10 rounded-lg">
-				Error loading issues: {error?.message || result?.error}
+				Error loading issues: {errorMessage}
 			</div>
 		);
 	}
