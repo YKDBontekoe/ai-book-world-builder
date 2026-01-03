@@ -1,0 +1,1 @@
+ALTER TABLE "Scene" ADD COLUMN "wordCount" integer DEFAULT 0;
