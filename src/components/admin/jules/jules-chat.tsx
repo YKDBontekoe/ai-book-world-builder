@@ -2,7 +2,16 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { ArrowLeft, Check, ExternalLink, Loader2, Send } from "lucide-react";
+import {
+	ArrowLeft,
+	Check,
+	ExternalLink,
+	Loader2,
+	Send,
+	Shield,
+	ShieldAlert,
+	ShieldCheck,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -10,12 +19,15 @@ import {
 	getJulesSessionDetailsAction,
 	sendJulesMessageAction,
 } from "@/app/actions/jules";
-import { GlassCard } from "@/components/molecules/glass-card";
+import { reviewJulesPlanAction } from "@/app/actions/jules-ai";
+import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
-import type { JulesActivity } from "@/lib/jules-client";
+import { GlassCard } from "@/components/molecules/glass-card";
+import type { JulesActivity, JulesPlan } from "@/lib/jules-client";
+import { ArtifactRenderer } from "./artifact-renderer";
 
 interface JulesChatProps {
 	sessionId: string;
@@ -69,6 +81,27 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 		},
 		onError: () => {
 			toast.error("Failed to approve plan");
+		},
+	});
+
+	const [reviewData, setReviewData] = useState<{
+		riskLevel: string;
+		analysis: string;
+		recommendations: string[];
+	} | null>(null);
+
+	const { mutate: reviewPlan, isPending: isReviewing } = useMutation({
+		mutationFn: async (plan: JulesPlan) => {
+			const result = await reviewJulesPlanAction(plan);
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
+		onSuccess: (data) => {
+			setReviewData(data);
+			toast.success("Plan reviewed by AI");
+		},
+		onError: () => {
+			toast.error("Failed to review plan");
 		},
 	});
 
@@ -142,24 +175,79 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 
 			{/* Plan Approval Banner */}
 			{session?.state === "AWAITING_PLAN_APPROVAL" && (
-				<GlassCard className="p-4 bg-yellow-500/10 border-yellow-500/20 flex items-center justify-between">
-					<div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
-						<Loader2 className="h-4 w-4 animate-spin" />
-						<span className="font-medium">Plan requires approval</span>
-					</div>
-					<Button
-						onClick={() => approvePlan()}
-						disabled={isApproving}
-						className="gap-2"
-					>
-						{isApproving ? (
+				<div className="space-y-4">
+					{reviewData && (
+						<Alert
+							variant={
+								reviewData.riskLevel === "LOW" ? "default" : "destructive"
+							}
+							className="bg-background/80 backdrop-blur-md"
+						>
+							{reviewData.riskLevel === "LOW" ? (
+								<ShieldCheck className="h-4 w-4 text-green-500" />
+							) : (
+								<ShieldAlert className="h-4 w-4" />
+							)}
+							<AlertTitle>
+								AI Security Review: {reviewData.riskLevel} Risk
+							</AlertTitle>
+							<AlertDescription className="mt-2 text-xs">
+								<p className="mb-2">{reviewData.analysis}</p>
+								<ul className="list-disc list-inside">
+									{reviewData.recommendations.map((rec, i) => (
+										// biome-ignore lint/suspicious/noArrayIndexKey: stable
+										<li key={i}>{rec}</li>
+									))}
+								</ul>
+							</AlertDescription>
+						</Alert>
+					)}
+
+					<GlassCard className="p-4 bg-yellow-500/10 border-yellow-500/20 flex flex-wrap items-center justify-between gap-4">
+						<div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
 							<Loader2 className="h-4 w-4 animate-spin" />
-						) : (
-							<Check className="h-4 w-4" />
-						)}
-						Approve Plan
-					</Button>
-				</GlassCard>
+							<span className="font-medium">Plan requires approval</span>
+						</div>
+						<div className="flex items-center gap-2">
+							{!reviewData && activities.find((a) => a.planGenerated) && (
+								<Button
+									variant="secondary"
+									size="sm"
+									onClick={() => {
+										const planActivity = activities.find(
+											(a) => a.planGenerated,
+										);
+										if (planActivity?.planGenerated?.plan) {
+											reviewPlan(planActivity.planGenerated.plan);
+										}
+									}}
+									disabled={isReviewing}
+									className="gap-2"
+								>
+									{isReviewing ? (
+										<Loader2 className="h-4 w-4 animate-spin" />
+									) : (
+										<Shield className="h-4 w-4" />
+									)}
+									AI Review
+								</Button>
+							)}
+							<Button
+								onClick={() => approvePlan()}
+								disabled={isApproving}
+								className="gap-2"
+								aria-label={isApproving ? "Approving plan" : "Approve plan"}
+							>
+								{isApproving ? (
+									<Loader2 className="h-4 w-4 animate-spin" />
+								) : (
+									<Check className="h-4 w-4" />
+								)}
+								{isApproving ? "Approving..." : "Approve Plan"}
+							</Button>
+						</div>
+					</GlassCard>
+				</div>
 			)}
 
 			{/* PR Status */}
@@ -324,6 +412,11 @@ function ActivityItem({ activity }: { activity: JulesActivity }) {
 					<div className="text-sm text-green-600 font-medium">
 						🎉 Session Completed
 					</div>
+				)}
+
+				{/* Artifacts */}
+				{activity.artifacts && activity.artifacts.length > 0 && (
+					<ArtifactRenderer artifacts={activity.artifacts} />
 				)}
 			</div>
 			<span className="text-[10px] text-muted-foreground">

@@ -9,6 +9,7 @@ import {
 	type JulesSource,
 } from "@/lib/jules-client";
 import type { Result } from "@/lib/result";
+import { generateSessionTitleAction } from "./jules-ai";
 
 const jules = new JulesClient();
 
@@ -95,9 +96,14 @@ export async function createJulesSessionAction(params: {
 		}
 		const validated = validation.data;
 
+		let title = validated.title;
+		if (!title || title.trim() === "") {
+			title = await generateSessionTitleAction(validated.prompt);
+		}
+
 		const session = await jules.createSession({
 			prompt: validated.prompt,
-			title: validated.title,
+			title: title,
 			sourceName: validated.sourceName,
 			automationMode: "AUTO_CREATE_PR",
 			requirePlanApproval: validated.requirePlanApproval,
