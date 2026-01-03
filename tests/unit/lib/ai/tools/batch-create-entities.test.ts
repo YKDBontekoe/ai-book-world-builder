@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { batchCreateEntities } from "@/lib/ai/tools/batch-create-entities";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import { entityRepository } from "@/lib/db/repositories";
+import type { Session } from "next-auth";
 
 // Mock dependencies
 vi.mock("@/lib/db/queries", () => ({
@@ -18,16 +19,33 @@ vi.mock("@/lib/db/repositories", () => ({
 
 describe("batchCreateEntities", () => {
 	const mockSession = {
-		user: { id: "user-1", email: "test@example.com" },
+		user: {
+			id: "user-1",
+			email: "test@example.com",
+			type: "regular",
+			role: "user",
+		},
 		expires: "2024-01-01",
-	};
+	} as Session;
+
 	const projectId = "project-1";
+
+    // Mock tool options required by ai sdk 3.4+
+    const mockToolOptions = {
+        toolCallId: "call-1",
+        messages: []
+    };
 
 	it("should return error if not authenticated", async () => {
 		const tool = batchCreateEntities({ session: null, projectId });
-		const result = await tool.execute({
-			entities: [{ name: "Test Entity", kind: "character" }],
-		});
+		if (!tool.execute) throw new Error("Tool execute method is undefined");
+
+		const result = await tool.execute(
+			{
+				entities: [{ name: "Test Entity", kind: "character" }],
+			},
+            mockToolOptions
+		);
 		expect(result).toEqual({ error: "Authentication required." });
 	});
 
@@ -40,9 +58,14 @@ describe("batchCreateEntities", () => {
 		} as any);
 
 		const tool = batchCreateEntities({ session: mockSession, projectId });
-		const result = await tool.execute({
-			entities: [{ name: "Test Entity", kind: "character" }],
-		});
+		if (!tool.execute) throw new Error("Tool execute method is undefined");
+
+		const result = await tool.execute(
+			{
+				entities: [{ name: "Test Entity", kind: "character" }],
+			},
+            mockToolOptions
+		);
 
 		expect(result).toEqual({
 			error: "Unauthorized: You do not have write access to this project.",
@@ -53,9 +76,14 @@ describe("batchCreateEntities", () => {
 		vi.mocked(getProjectByIdWithAccess).mockResolvedValue(null);
 
 		const tool = batchCreateEntities({ session: mockSession, projectId });
-		const result = await tool.execute({
-			entities: [{ name: "Test Entity", kind: "character" }],
-		});
+		if (!tool.execute) throw new Error("Tool execute method is undefined");
+
+		const result = await tool.execute(
+			{
+				entities: [{ name: "Test Entity", kind: "character" }],
+			},
+            mockToolOptions
+		);
 
 		expect(result).toEqual({
 			error: "Unauthorized: You do not have write access to this project.",
@@ -78,9 +106,14 @@ describe("batchCreateEntities", () => {
 		} as any);
 
 		const tool = batchCreateEntities({ session: mockSession, projectId });
-		const result = await tool.execute({
-			entities: [{ name: "Test Entity", kind: "character" }],
-		});
+		if (!tool.execute) throw new Error("Tool execute method is undefined");
+
+		const result = await tool.execute(
+			{
+				entities: [{ name: "Test Entity", kind: "character" }],
+			},
+            mockToolOptions
+		);
 
 		expect(result).toMatchObject({
 			message: expect.stringContaining("Processed 1 entities"),
