@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as githubActions from '@/app/actions/github';
+import { UnauthorizedError, ForbiddenError } from "@/lib/errors";
 
 // Mock Octokit instance methods
 const mockOctokit = {
@@ -33,19 +34,54 @@ vi.mock('octokit', () => {
   };
 });
 
+// Mock auth
+vi.mock('@/app/(auth)/auth', () => ({
+  auth: vi.fn(),
+}));
+
+import { auth } from '@/app/(auth)/auth';
+
 describe('GitHub Actions', () => {
   const originalEnv = process.env;
 
   beforeEach(() => {
     vi.clearAllMocks();
     process.env = { ...originalEnv, GITHUB_TOKEN: 'mock-token' };
-    // Optionally set owner/repo to ensure they are used
     process.env.GITHUB_OWNER = 'TestOwner';
     process.env.GITHUB_REPO = 'TestRepo';
+
+    // Default to authorized admin
+    (auth as any).mockResolvedValue({
+      user: { role: 'admin' }
+    });
   });
 
   afterEach(() => {
     process.env = originalEnv;
+  });
+
+  describe('Authorization', () => {
+    it('should fail if user is not logged in', async () => {
+      (auth as any).mockResolvedValue({ user: null });
+
+      const result = await githubActions.getRepoStats();
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe("You must be logged in to perform this action");
+      }
+    });
+
+    it('should fail if user is not admin', async () => {
+      (auth as any).mockResolvedValue({ user: { role: 'user' } });
+
+      const result = await githubActions.getRepoStats();
+
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        expect(result.error).toBe("You do not have permission to perform this action");
+      }
+    });
   });
 
   describe('getRepoStats', () => {

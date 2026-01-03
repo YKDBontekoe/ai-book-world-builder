@@ -1,6 +1,8 @@
 "use server";
 
 import { Octokit } from "octokit";
+import { auth } from "@/app/(auth)/auth";
+import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
 import type { Result } from "@/lib/result";
 
 // Initialize Octokit with the token from environment
@@ -17,6 +19,19 @@ const getRepoDetails = () => {
 	const repo = process.env.GITHUB_REPO || "ai-book-world-builder";
 	return { owner, repo };
 };
+
+// Helper to ensure the user is an admin
+async function requireAdmin() {
+	const session = await auth();
+
+	if (!session?.user) {
+		throw new UnauthorizedError("You must be logged in to perform this action");
+	}
+
+	if (session.user.role !== "admin") {
+		throw new ForbiddenError("You do not have permission to perform this action");
+	}
+}
 
 export type GitHubIssue = {
 	number: number;
@@ -60,6 +75,7 @@ export async function getRepoStats(): Promise<
 	Result<{ stars: number; forks: number; openIssues: number }>
 > {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		const { data } = await octokit.rest.repos.get({
@@ -77,6 +93,9 @@ export async function getRepoStats(): Promise<
 		};
 	} catch (error) {
 		console.error("Failed to fetch repo stats:", error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to fetch repository statistics" };
 	}
 }
@@ -85,6 +104,7 @@ export async function getIssues(
 	state: "open" | "closed" | "all" = "open",
 ): Promise<Result<GitHubIssue[]>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		// The issues endpoint returns both issues and PRs.
@@ -102,6 +122,9 @@ export async function getIssues(
 		return { success: true, data: issues };
 	} catch (error) {
 		console.error("Failed to fetch issues:", error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to fetch issues" };
 	}
 }
@@ -110,6 +133,7 @@ export async function getPullRequests(
 	state: "open" | "closed" | "all" = "open",
 ): Promise<Result<GitHubPR[]>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		const { data } = await octokit.rest.pulls.list({
@@ -124,6 +148,9 @@ export async function getPullRequests(
 		return { success: true, data: data as unknown as GitHubPR[] };
 	} catch (error) {
 		console.error("Failed to fetch pull requests:", error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to fetch pull requests" };
 	}
 }
@@ -132,6 +159,7 @@ export async function getIssueDetails(
 	number: number,
 ): Promise<Result<GitHubIssue>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		const { data } = await octokit.rest.issues.get({
@@ -142,6 +170,9 @@ export async function getIssueDetails(
 		return { success: true, data: data as GitHubIssue };
 	} catch (error) {
 		console.error(`Failed to fetch issue #${number}:`, error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to fetch issue details" };
 	}
 }
@@ -150,6 +181,7 @@ export async function getPullRequestDetails(
 	number: number,
 ): Promise<Result<GitHubPR>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		const { data } = await octokit.rest.pulls.get({
@@ -160,6 +192,9 @@ export async function getPullRequestDetails(
 		return { success: true, data: data as unknown as GitHubPR };
 	} catch (error) {
 		console.error(`Failed to fetch PR #${number}:`, error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to fetch pull request details" };
 	}
 }
@@ -168,6 +203,7 @@ export async function getComments(
 	number: number,
 ): Promise<Result<GitHubComment[]>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		// For PRs, we might want review comments too, but starting with issue comments
@@ -181,6 +217,9 @@ export async function getComments(
 		return { success: true, data: data as GitHubComment[] };
 	} catch (error) {
 		console.error(`Failed to fetch comments for #${number}:`, error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to fetch comments" };
 	}
 }
@@ -190,6 +229,7 @@ export async function postComment(
 	body: string,
 ): Promise<Result<GitHubComment>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		const { data } = await octokit.rest.issues.createComment({
@@ -201,12 +241,16 @@ export async function postComment(
 		return { success: true, data: data as GitHubComment };
 	} catch (error) {
 		console.error(`Failed to post comment on #${number}:`, error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to post comment" };
 	}
 }
 
 export async function closeIssueOrPR(number: number): Promise<Result<void>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		await octokit.rest.issues.update({
@@ -218,6 +262,9 @@ export async function closeIssueOrPR(number: number): Promise<Result<void>> {
 		return { success: true, data: undefined };
 	} catch (error) {
 		console.error(`Failed to close #${number}:`, error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to close item" };
 	}
 }
@@ -227,6 +274,7 @@ export async function mergePullRequest(
 	method: "merge" | "squash" | "rebase" = "merge",
 ): Promise<Result<void>> {
 	try {
+		await requireAdmin();
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
 		await octokit.rest.pulls.merge({
@@ -238,6 +286,9 @@ export async function mergePullRequest(
 		return { success: true, data: undefined };
 	} catch (error) {
 		console.error(`Failed to merge PR #${number}:`, error);
+		if (error instanceof UnauthorizedError || error instanceof ForbiddenError) {
+			return { success: false, error: error.message };
+		}
 		return { success: false, error: "Failed to merge pull request" };
 	}
 }
