@@ -39,8 +39,8 @@ export async function createFeedback(data: {
 
 async function triggerCrashHandler(feedbackItem: Feedback) {
 	try {
-		const sources = await jules.listSources();
-		const source = sources[0];
+		const sourcesResult = await jules.listSources();
+		const source = sourcesResult.sources[0];
 		if (!source) {
 			console.error("No sources found for Jules");
 			return;
@@ -96,8 +96,8 @@ export async function processDailyFeedback() {
         `,
 	});
 
-	const sources = await jules.listSources();
-	const source = sources[0];
+	const sourcesResult = await jules.listSources();
+	const source = sourcesResult.sources[0];
 
 	if (!source) {
 		console.error("No source found");
