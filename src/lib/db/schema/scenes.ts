@@ -32,7 +32,7 @@ export const scene = pgTable(
 		title: text("title").notNull(),
 		sequence: integer("sequence").notNull(),
 		content: text("content"),
-		wordCount: integer("wordCount").default(0),
+		wordCount: integer("wordCount").notNull().default(0),
 		status: varchar("status", { length: 32 }).notNull().default("planned"),
 		prevSceneId: uuid("prevSceneId"),
 		chapterId: uuid("chapterId")
