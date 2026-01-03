@@ -137,6 +137,8 @@ describe("StoryService", () => {
 					summary: "Summary",
 					chapters: [],
 				},
+				usage: undefined,
+				modelId: "mock-model-id",
 			});
 		});
 
@@ -180,7 +182,8 @@ describe("StoryService", () => {
 
 			expect(mocks.ensureProjectAccess).toHaveBeenCalled();
 			expect(mocks.generateObject).toHaveBeenCalled();
-			expect(mocks.insert).toHaveBeenCalled(); // Should call batch insert
+			// LogUsage calls insert too, so we expect more calls potentially
+			expect(mocks.insert).toHaveBeenCalled();
 			expect(result).toEqual(["mock-id"]); // Returns mock-id from mocks.returning
 		});
 	});
