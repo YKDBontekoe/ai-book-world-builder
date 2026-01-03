@@ -1,10 +1,11 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
+import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import { entityRepository } from "@/lib/db/repositories";
 
 export const batchCreateEntities = ({
-	session: _session,
+	session,
 	projectId,
 }: {
 	session: Session | null;
@@ -64,8 +65,24 @@ export const batchCreateEntities = ({
 			const { entities, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
+			if (!session?.user?.id) {
+				return { error: "Authentication required." };
+			}
+
 			if (!finalProjectId) {
 				return { error: "Project ID is required to create entities." };
+			}
+
+			// Verify ownership
+			const project = await getProjectByIdWithAccess({
+				id: finalProjectId,
+				userId: session.user.id,
+			});
+
+			if (!project || project.userId !== session.user.id) {
+				return {
+					error: "Unauthorized: You do not have write access to this project.",
+				};
 			}
 
 			try {

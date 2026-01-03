@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createProtectedTool } from "@/lib/ai/tool-utils";
-import { sceneRepository } from "@/lib/db/repositories";
+import { getProjectByIdWithAccess } from "@/lib/db/queries";
+import { chapterRepository, sceneRepository } from "@/lib/db/repositories";
 
 const batchCreateScenesSchema = z.object({
 	chapterId: z
@@ -32,10 +33,36 @@ export const batchCreateScenes = createProtectedTool({
 	description: "Create multiple new scenes in a chapter.",
 	inputSchema: batchCreateScenesSchema,
 	requireProjectId: true,
-	execute: async (args, { projectId }) => {
+	execute: async (args, { session, projectId }) => {
 		// projectId is guaranteed to be defined because requireProjectId is true
 		const finalProjectId = projectId as string;
 		const { chapterId, scenes } = args;
+
+		// Verify ownership
+		const project = await getProjectByIdWithAccess({
+			id: finalProjectId,
+			userId: session.user.id, // createProtectedTool guarantees session.user
+		});
+
+		if (!project || project.userId !== session.user.id) {
+			return {
+				error: "Unauthorized: You do not have write access to this project.",
+			};
+		}
+
+		// Verify chapter existence and ownership (via projectId match)
+		const targetChapter = await chapterRepository.findById(chapterId);
+		if (!targetChapter) {
+			return {
+				error: `Chapter with ID '${chapterId}' not found.`,
+			};
+		}
+
+		if (targetChapter.projectId !== finalProjectId) {
+			return {
+				error: "Chapter does not belong to the specified project.",
+			};
+		}
 
 		const results = [];
 

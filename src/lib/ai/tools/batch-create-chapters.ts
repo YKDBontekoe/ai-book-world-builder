@@ -1,8 +1,7 @@
 import { tool } from "ai";
-import { inArray } from "drizzle-orm"; // Might need this if we do bulk fetching, but singular is fine for now.
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { db, getVolumePlanById } from "@/lib/db/queries";
+import { db, getProjectByIdWithAccess, getVolumePlanById } from "@/lib/db/queries";
 import { chapter } from "@/lib/db/schema";
 
 export const batchCreateChapters = ({
@@ -38,7 +37,7 @@ export const batchCreateChapters = ({
 			const { volumeId, chapters, projectId: projectIdInput } = args;
 			const finalProjectId = projectIdInput || projectId;
 
-			if (!session?.user) {
+			if (!session?.user?.id) {
 				return { error: "Authentication required to create chapters." };
 			}
 
@@ -53,11 +52,23 @@ export const batchCreateChapters = ({
 					};
 				}
 
-				const projectMatches =
-					!finalProjectId || volumePlan.projectId === finalProjectId;
-				if (!projectMatches) {
-					// Warning or soft error? Strict for now.
-					// actually getVolumePlanById might not check projectId, so good to check.
+				// If projectId was provided, verify it matches the volume's project
+				if (finalProjectId && volumePlan.projectId !== finalProjectId) {
+					return {
+						error: "Volume does not belong to the specified project.",
+					};
+				}
+
+				// Verify ownership of the project (using the volume's projectId)
+				const project = await getProjectByIdWithAccess({
+					id: volumePlan.projectId,
+					userId: session.user.id,
+				});
+
+				if (!project || project.userId !== session.user.id) {
+					return {
+						error: "Unauthorized: You do not have write access to this project.",
+					};
 				}
 
 				const results: Array<{
