@@ -1,7 +1,7 @@
 import { Skeleton } from "@/components/atoms/skeleton";
 import { GlassCard } from "@/components/molecules/glass-card";
 
-export default function DashboardLoading() {
+export default function DashboardLoading(): React.JSX.Element {
 	return (
 		<div className="flex-1 h-full overflow-y-auto p-8 space-y-8">
 			{/* Header Skeleton */}
@@ -37,8 +37,8 @@ export default function DashboardLoading() {
 					<div className="space-y-6">
 						{/* Tabs Skeleton */}
 						<div className="grid grid-cols-2 gap-2 mb-4">
-							<Skeleton className="h-9 rounded-md bg-muted/50" />
-							<Skeleton className="h-9 rounded-md bg-muted/50" />
+							<Skeleton className="h-9 rounded-lg bg-muted/50" />
+							<Skeleton className="h-9 rounded-lg bg-muted/50" />
 						</div>
 						{/* Chart Area */}
 						<Skeleton className="h-[240px] w-full rounded-lg" />
