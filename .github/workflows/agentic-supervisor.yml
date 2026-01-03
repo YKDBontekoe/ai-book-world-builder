@@ -187,7 +187,7 @@ jobs:
           
           CI passed for bot PR (Author: \`$AUTHOR\`). Triggering full code review.
           
-          @coderabbitai full review" --repo "${{ github.repository }}"
+          @coderabbitai review" --repo "${{ github.repository }}"
 
   # ==========================================================================
   # 4. TRIAGE: Auto-Label Issues
