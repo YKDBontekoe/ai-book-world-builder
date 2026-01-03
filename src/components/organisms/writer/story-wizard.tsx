@@ -10,13 +10,12 @@ import {
 	Trash2,
 	Wand2,
 } from "lucide-react";
+import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
-	type BookPlan,
 	createBookFromPlan,
 	generateBookPlan,
-	type StoryStyle,
 } from "@/app/actions/story-generation";
 import { Button } from "@/components/atoms/button";
 import { Card } from "@/components/atoms/card";
@@ -31,6 +30,10 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
+import type {
+	BookPlan,
+	StoryStyle,
+} from "@/lib/services/schemas/story-schemas";
 
 interface StoryWizardProps {
 	projectId: string;
@@ -43,7 +46,10 @@ const DEFAULT_STYLE: StoryStyle = {
 	tone: "Neutral",
 };
 
-export function StoryWizard({ projectId, onComplete }: StoryWizardProps) {
+export function StoryWizard({
+	projectId,
+	onComplete,
+}: StoryWizardProps): React.JSX.Element {
 	const [step, setStep] = useState<
 		"input" | "generating" | "review" | "creating"
 	>("input");

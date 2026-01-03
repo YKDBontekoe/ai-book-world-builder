@@ -8,8 +8,6 @@ import {
 	storyService,
 } from "@/lib/services/story-service";
 
-export type { BookPlan, StoryStyle };
-
 export async function generateBookPlan(
 	prompt: string,
 	style?: StoryStyle,
