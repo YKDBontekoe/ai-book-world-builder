@@ -213,7 +213,7 @@ importers:
         specifier: 0.3.0
         version: 0.3.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       octokit:
-        specifier: ^5.0.5
+        specifier: 5.0.5
         version: 5.0.5
       orderedmap:
         specifier: 2.1.1
