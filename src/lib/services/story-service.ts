@@ -87,8 +87,9 @@ export class StoryService {
 			throw new Error(result.error || "Failed to plan scenes");
 		}
 
-		// Log Usage
-		await logGenerationUsage({
+		// Log Usage (Fire and forget)
+		// biome-ignore lint/suspicious/noExplicitAny: Allowing any for catch to simplify logging
+		logGenerationUsage({
 			projectId: targetChapter.projectId,
 			usage: result.usage,
 			modelId: result.modelId,
@@ -98,7 +99,9 @@ export class StoryService {
 				stepType: "plan_chapter_scenes",
 				chapterId: chapterId,
 			},
-		});
+		}).catch((err: any) =>
+			console.error("Failed to log generation usage:", err),
+		);
 
 		const scenePlan = result.plan;
 
@@ -173,8 +176,9 @@ export class StoryService {
 		// 5. Update DB
 		await storyRepository.updateSceneContent(sceneId, result.text);
 
-		// 6. Log Usage
-		await logGenerationUsage({
+		// 6. Log Usage (Fire and forget)
+		// biome-ignore lint/suspicious/noExplicitAny: Allowing any for catch to simplify logging
+		logGenerationUsage({
 			projectId: targetScene.projectId,
 			usage: result.usage,
 			modelId: result.modelId,
@@ -184,7 +188,9 @@ export class StoryService {
 				stepType: "generate_scene_text",
 				chapterId: targetScene.chapterId || undefined,
 			},
-		});
+		}).catch((err: any) =>
+			console.error("Failed to log generation usage:", err),
+		);
 	}
 }
 

@@ -20,11 +20,13 @@ export async function logGenerationUsage({
 	projectId,
 	usage,
 	modelId,
+	isDynamicModel = false,
 	context,
 }: {
 	projectId: string;
 	usage?: LanguageModelUsage;
 	modelId?: string;
+	isDynamicModel?: boolean;
 	context: UsageLogContext;
 }) {
 	if (!usage || !modelId) {
@@ -37,7 +39,7 @@ export async function logGenerationUsage({
 		const enrichedUsage = await enrichUsage({
 			usage,
 			selectedChatModel: modelId,
-			isDynamicModel: false,
+			isDynamicModel,
 		});
 
 		// 2. Create a "BookGeneration" record (acting as the session/parent)
