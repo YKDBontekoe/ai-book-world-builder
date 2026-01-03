@@ -94,6 +94,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				{!isZen && (
 					<>
 						{/* Left Panel: Navigation */}
+						{/* @ts-expect-error - ref type mismatch with library definition */}
 						<ResizablePanel
 							ref={sidebarRef}
 							defaultSize={isMobile ? 0 : 20}

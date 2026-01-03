@@ -1,13 +1,7 @@
 "use client";
 
 import { DragHandleDots2Icon } from "@radix-ui/react-icons";
-import React, { forwardRef } from "react";
-import {
-	Group,
-	Panel,
-	type PanelImperativeHandle,
-	Separator,
-} from "react-resizable-panels";
+import { Group, Panel, Separator } from "react-resizable-panels";
 
 import { cn } from "@/lib/utils";
 
@@ -24,11 +18,7 @@ const ResizablePanelGroup = ({
 	/>
 );
 
-const ResizablePanel = forwardRef<
-	PanelImperativeHandle,
-	React.ComponentProps<typeof Panel>
->((props, ref) => <Panel {...props} ref={ref} />);
-ResizablePanel.displayName = "ResizablePanel";
+const ResizablePanel = Panel;
 
 const ResizableHandle = ({
 	withHandle,
