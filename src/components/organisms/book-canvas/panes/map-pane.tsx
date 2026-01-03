@@ -143,7 +143,7 @@ export function MapPane() {
 		);
 	}
 
-	const entities = data?.success ? data.data : [];
+	const entities = data?.success && data.data ? data.data : [];
 	const filteredEntities = entities.filter((e) => e.kind === filter);
 
 	// Count by kind

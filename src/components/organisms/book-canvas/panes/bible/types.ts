@@ -4,9 +4,36 @@ import {
 	CalendarIcon,
 	MapPinIcon,
 	PackageIcon,
+	UserIcon,
 	UsersIcon,
 } from "lucide-react";
 import type { ElementType } from "react";
+
+export type EntityType = "character" | "location" | "event" | "lore" | "item";
+
+export interface Entity {
+	id: string;
+	name: string;
+	type: EntityType;
+	description?: string;
+	tags?: string[];
+	relationships?: EntityRelationship[];
+}
+
+export interface EntityRelationship {
+	targetId: string;
+	type: string;
+	description?: string;
+}
+
+export const ENTITY_ICONS: Record<string, React.ElementType> = {
+	character: UserIcon,
+	location: MapPinIcon,
+	event: CalendarIcon,
+	lore: BookOpenIcon,
+	item: PackageIcon,
+	organization: BuildingIcon,
+};
 
 export type SerializedEntity = {
 	id: string;
