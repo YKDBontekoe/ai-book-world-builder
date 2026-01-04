@@ -1,7 +1,7 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
-import { generationService } from "@/lib/ai/services/generation-service";
+import { generationService } from "@/lib/ai/writer-service";
 import { db, getScenesForChapter, updateSceneContent } from "@/lib/db/queries";
 import { scene } from "@/lib/db/schema";
 import { verifyProjectAccessViaScenes, verifySceneAccess } from "./utils";

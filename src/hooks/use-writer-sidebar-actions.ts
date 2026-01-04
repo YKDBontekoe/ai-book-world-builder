@@ -112,8 +112,8 @@ export function useWriterSidebarActions() {
 			if (result.success) {
 				toast.success("Scene created", { id: toastId });
 				fetchStructure();
-				if (result.data?.sceneId) {
-					setActiveSceneId(result.data.sceneId);
+				if (result.sceneId) {
+					setActiveSceneId(result.sceneId);
 				}
 			} else {
 				toast.error(result.error || "Failed to create scene", {

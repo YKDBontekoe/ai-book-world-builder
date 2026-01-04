@@ -34,11 +34,6 @@ vi.mock("lucide-react", () => ({
 	Copy: () => <svg data-testid="icon-copy" />,
 	Trash2: () => <svg data-testid="icon-trash" />,
 	Undo2: () => <svg data-testid="icon-undo" />,
-	Filter: () => <svg data-testid="icon-filter" />,
-	CheckSquare: () => <svg data-testid="icon-check-square" />,
-	FileJson: () => <svg data-testid="icon-file-json" />,
-	FileText: () => <svg data-testid="icon-file-text" />,
-	Calendar: () => <svg data-testid="icon-calendar" />,
 }));
 
 const mockProjects: Project[] = [

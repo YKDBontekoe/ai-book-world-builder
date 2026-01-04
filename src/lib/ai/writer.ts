@@ -67,3 +67,5 @@ export async function rewriteSelection(
 // If it's only consumed by other server modules, it doesn't need "use server".
 // But since Client Components DO import this file, we must strictly adhere to the async function rule.
 // Non-function exports will cause the "Only async functions are allowed" error.
+
+// We'll keep generationService in writer-service.ts for other server modules to use directly.

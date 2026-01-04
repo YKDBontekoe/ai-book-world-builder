@@ -2,11 +2,9 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
-import { CalendarIcon, Copy, Eye, FolderIcon, Globe } from "lucide-react";
+import { CalendarIcon, Eye, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { toast } from "sonner";
-import { forkProject } from "@/app/actions/projects";
 import { Button } from "@/components/atoms/button";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { GridList } from "@/components/atoms/grid-list";
@@ -154,37 +152,6 @@ function ProjectCard({
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent side="left">Quick Preview</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 shadow-sm rounded-full"
-									aria-label="Duplicate project"
-									onClick={async (e) => {
-										e.stopPropagation();
-										toast.info("Duplicating project...");
-										try {
-											const result = await forkProject(project.id);
-											if (result && "error" in result) {
-												toast.error(result.error);
-											} else {
-												toast.success("Project duplicated");
-											}
-										} catch (err) {
-											console.error("Failed to duplicate project", err);
-											toast.error("Failed to duplicate project");
-										}
-									}}
-								>
-									<Copy className="h-3.5 w-3.5 text-muted-foreground" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent side="left">Duplicate</TooltipContent>
 						</Tooltip>
 					</TooltipProvider>
 

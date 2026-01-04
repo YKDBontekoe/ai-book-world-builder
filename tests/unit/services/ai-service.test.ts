@@ -80,7 +80,7 @@ vi.mock("@/lib/ai/providers", () => ({
 }));
 
 // Mock Writer Service
-vi.mock("@/lib/ai/services/generation-service", () => ({
+vi.mock("@/lib/ai/writer-service", () => ({
 	generationService: mocks.generationService,
 }));
 
