@@ -7,6 +7,7 @@ import { startFixSessionAction } from "@/app/actions/builder";
 import type { GitHubIssue } from "@/app/actions/github";
 import { getIssues, getPullRequests } from "@/app/actions/github";
 import {
+	approveJulesPlanAction,
 	getJulesSessionsAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
@@ -95,11 +96,24 @@ export function TaskBoard(): JSX.Element {
 		onSuccess: (_newSession) => {
 			toast.success("Jules is working on the fix!");
 			queryClient.invalidateQueries({ queryKey: ["jules", "sessions"] });
-			// Optionally switch to the new session immediately?
-			// For now, let it appear in "In Progress"
 		},
 		onError: (err) => {
 			toast.error(`Failed to start fix: ${err.message}`);
+		},
+	});
+
+	const { mutate: approvePlan, isPending: isApproving } = useMutation({
+		mutationFn: async (sessionId: string) => {
+			const res = await approveJulesPlanAction({ sessionId });
+			if (!res.success) throw new Error(res.error);
+			return res;
+		},
+		onSuccess: () => {
+			toast.success("Plan approved");
+			queryClient.invalidateQueries({ queryKey: ["jules", "sessions"] });
+		},
+		onError: (err) => {
+			toast.error(`Failed to approve plan: ${err.message}`);
 		},
 	});
 
@@ -122,10 +136,12 @@ export function TaskBoard(): JSX.Element {
 			)
 			.map((s) => ({ type: "session", data: s }));
 
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map((p) => ({
-			type: "pr",
-			data: p,
-		}));
+		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map(
+			(p) => ({
+				type: "pr",
+				data: p,
+			}),
+		);
 
 		const doneItems: TaskItem[] = [
 			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
@@ -156,6 +172,10 @@ export function TaskBoard(): JSX.Element {
 		if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
 			startFix(issue);
 		}
+	};
+
+	const handleApprove = (sessionId: string) => {
+		approvePlan(sessionId);
 	};
 
 	if (selectedItem) {
@@ -207,6 +227,10 @@ export function TaskBoard(): JSX.Element {
 										item={item}
 										onSelect={setSelectedItem}
 										onFix={item.type === "issue" ? handleFix : undefined}
+										onApprove={
+											item.type === "session" ? handleApprove : undefined
+										}
+										isApproving={isApproving}
 									/>
 								))
 							)}
