@@ -1,9 +1,9 @@
 "use client";
 
+import type { ToolInvocation } from "ai";
 import equal from "fast-deep-equal";
 import { memo } from "react";
 import { ToolRenderer } from "@/components/organisms/messages/tool-renderer";
-import type { ToolInvocation } from "@/lib/types";
 
 interface ToolPartProps {
 	part: ToolInvocation;

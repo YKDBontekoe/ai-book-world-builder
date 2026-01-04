@@ -1,9 +1,9 @@
+import type { ToolInvocation } from "ai";
 import { render, screen } from "@testing-library/react";
 import { Profiler } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { ToolPart } from "@/components/organisms/messages/parts/tool-part";
-import type { ToolInvocation } from "@/lib/types";
 
 // Mock ToolRenderer
 vi.mock("@/components/organisms/messages/tool-renderer", () => ({
