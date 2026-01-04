@@ -107,10 +107,12 @@ export function TaskBoard(): JSX.Element {
 
 	const { mutate: approvePlan } = useMutation({
 		mutationFn: async (sessionId: string) => {
-			setApprovingSessionId(sessionId);
 			const res = await approveJulesPlanAction({ sessionId });
 			if (!res.success) throw new Error(res.error);
 			return res;
+		},
+		onMutate: (sessionId) => {
+			setApprovingSessionId(sessionId);
 		},
 		onSuccess: () => {
 			toast.success("Plan approved");

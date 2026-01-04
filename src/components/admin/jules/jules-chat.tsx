@@ -133,8 +133,10 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: data dependency for scroll
 	useEffect(() => {
-		if (scrollRef.current) {
-			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        // Target the actual viewport element inside ScrollArea
+        const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+		if (viewport) {
+			viewport.scrollTop = viewport.scrollHeight;
 		}
 	}, [data?.activities]);
 
