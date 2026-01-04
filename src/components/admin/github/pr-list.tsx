@@ -19,12 +19,16 @@ interface PRListProps {
 
 export function PRList({ onSelect, state = "open" }: PRListProps) {
 	const {
-		data: result,
+		data: prs,
 		isLoading,
 		error,
 	} = useQuery({
 		queryKey: ["github", "prs", state],
-		queryFn: () => getPullRequests(state),
+		queryFn: async () => {
+			const res = await getPullRequests(state);
+			if (!res.success) throw new Error(res.error);
+			return res.data;
+		},
 	});
 
 	if (isLoading)
@@ -36,20 +40,15 @@ export function PRList({ onSelect, state = "open" }: PRListProps) {
 			</div>
 		);
 
-	if (error || !result || !result.success) {
-		const errorMessage =
-			error?.message ||
-			(result && !result.success ? result.error : "Unknown error");
+	if (error) {
 		return (
 			<div className="p-4 text-red-500 bg-red-500/10 rounded-lg">
-				Error loading pull requests: {errorMessage}
+				Error loading pull requests: {error.message}
 			</div>
 		);
 	}
 
-	const prs = result.data || [];
-
-	if (prs.length === 0) {
+	if (!prs || prs.length === 0) {
 		return (
 			<div className="text-center p-8 text-muted-foreground">
 				No pull requests found.

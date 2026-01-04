@@ -13,12 +13,16 @@ interface IssueListProps {
 
 export function IssueList({ onSelect, state = "open" }: IssueListProps) {
 	const {
-		data: result,
+		data: issues,
 		isLoading,
 		error,
 	} = useQuery({
 		queryKey: ["github", "issues", state],
-		queryFn: () => getIssues(state),
+		queryFn: async () => {
+			const res = await getIssues(state);
+			if (!res.success) throw new Error(res.error);
+			return res.data;
+		},
 	});
 
 	if (isLoading)
@@ -30,21 +34,15 @@ export function IssueList({ onSelect, state = "open" }: IssueListProps) {
 			</div>
 		);
 
-	// Explicit check for success
-	if (error || !result || !result.success) {
-		const errorMessage =
-			error?.message ||
-			(result && !result.success ? result.error : "Unknown error");
+	if (error) {
 		return (
 			<div className="p-4 text-red-500 bg-red-500/10 rounded-lg">
-				Error loading issues: {errorMessage}
+				Error loading issues: {error.message}
 			</div>
 		);
 	}
 
-	const issues = result.data || [];
-
-	if (issues.length === 0) {
+	if (!issues || issues.length === 0) {
 		return (
 			<div className="text-center p-8 text-muted-foreground">
 				No issues found.

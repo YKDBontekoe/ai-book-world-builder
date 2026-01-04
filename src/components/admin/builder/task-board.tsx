@@ -45,7 +45,8 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
-			return res.success ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return res.data;
 		},
 	});
 
@@ -53,7 +54,8 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
 			const res = await getIssues("closed");
-			return res.success ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return res.data;
 		},
 	});
 
@@ -61,7 +63,8 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
 			const res = await getPullRequests("open");
-			return res.success ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return res.data;
 		},
 	});
 
@@ -69,7 +72,8 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
 			const res = await getPullRequests("closed");
-			return res.success ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return res.data;
 		},
 	});
 
@@ -77,7 +81,8 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["jules", "sessions"],
 		queryFn: async () => {
 			const res = await getJulesSessionsAction({ pageSize: 50 });
-			return res.success ? res.data.sessions : [];
+			if (!res.success) throw new Error(res.error);
+			return res.data.sessions;
 		},
 		refetchInterval: 10000, // Poll for session updates
 	});
