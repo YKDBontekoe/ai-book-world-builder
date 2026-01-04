@@ -44,7 +44,7 @@ export function CreateProjectDialog({
 
 	const isControlled = controlledOpen !== undefined;
 	const open = isControlled ? controlledOpen : internalOpen;
-	const setOpen = isControlled ? onOpenChange! : setInternalOpen;
+	const setOpen = isControlled && onOpenChange ? onOpenChange : setInternalOpen;
 
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
@@ -80,7 +80,7 @@ export function CreateProjectDialog({
 				setOpen(false);
 				router.push(`/projects/${result.projectId}`);
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to create project");
 		} finally {
 			setIsLoading(false);
