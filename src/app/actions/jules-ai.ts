@@ -7,11 +7,18 @@ import { myProvider } from "@/lib/ai/providers";
 import type { JulesPlan } from "@/lib/jules-client";
 import type { Result } from "@/lib/result";
 
+import { requireAuth } from "@/lib/actions-utils";
+
 // --- Actions ---
 
 export async function enhanceJulesPromptAction(
 	draft: string,
 ): Promise<Result<string>> {
+	const authResult = await requireAuth();
+	if (!authResult.success) {
+		return { success: false, error: "Authentication required" };
+	}
+
 	try {
 		if (!draft || draft.length < 5) {
 			return { success: false, error: "Prompt is too short to enhance." };
@@ -45,6 +52,11 @@ export async function reviewJulesPlanAction(
 ): Promise<
 	Result<{ riskLevel: string; analysis: string; recommendations: string[] }>
 > {
+	const authResult = await requireAuth();
+	if (!authResult.success) {
+		return { success: false, error: "Authentication required" };
+	}
+
 	try {
 		const modelId = await getSelectedModelId("large"); // Use 'large' for reasoning
 
@@ -69,9 +81,19 @@ export async function reviewJulesPlanAction(
 	}
 }
 
+/**
+ * Generates a title for a session based on the user's prompt.
+ * @param prompt The user's task prompt.
+ * @returns A promise that resolves to the generated title, or "Untitled Session" on failure.
+ */
 export async function generateSessionTitleAction(
 	prompt: string,
 ): Promise<string> {
+	const authResult = await requireAuth();
+	if (!authResult.success) {
+		return "Untitled Session";
+	}
+
 	try {
 		const modelId = await getSelectedModelId("light");
 		const { text } = await generateText({

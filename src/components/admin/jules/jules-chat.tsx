@@ -12,7 +12,7 @@ import {
 	ShieldAlert,
 	ShieldCheck,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { type JSX, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
 	approveJulesPlanAction,
@@ -29,12 +29,20 @@ import { GlassCard } from "@/components/molecules/glass-card";
 import type { JulesActivity, JulesPlan } from "@/lib/jules-client";
 import { ArtifactRenderer } from "./artifact-renderer";
 
+/**
+ * Props for the JulesChat component.
+ */
 interface JulesChatProps {
+	/** By ID of the session to display. */
 	sessionId: string;
+	/** Callback when the back button is clicked. */
 	onBack: () => void;
 }
 
-export function JulesChat({ sessionId, onBack }: JulesChatProps) {
+/**
+ * Chat interface for interacting with a Jules session.
+ */
+export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 	const queryClient = useQueryClient();
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [input, setInput] = useState("");
@@ -150,7 +158,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 			{/* Header */}
 			<div className="flex items-center justify-between pb-4 border-b">
 				<div className="flex items-center gap-3">
-					<Button variant="ghost" size="icon" onClick={onBack}>
+					<Button variant="ghost" size="icon" onClick={onBack} aria-label="Go back">
 						<ArrowLeft className="h-4 w-4" />
 					</Button>
 					<div>
@@ -315,6 +323,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 							disabled={
 								isSending || !input.trim() || session?.state === "COMPLETED"
 							}
+							aria-label={isSending ? "Sending message" : "Send message"}
 						>
 							{isSending ? (
 								<Loader2 className="h-4 w-4 animate-spin" />
@@ -329,7 +338,10 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps) {
 	);
 }
 
-function ActivityItem({ activity }: { activity: JulesActivity }) {
+/**
+ * Renders a single activity item (message, plan, progress, etc.)
+ */
+function ActivityItem({ activity }: { activity: JulesActivity }): JSX.Element {
 	const isUser = activity.userMessaged !== undefined;
 
 	if (isUser) {

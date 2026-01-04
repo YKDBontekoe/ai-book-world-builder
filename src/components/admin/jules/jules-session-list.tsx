@@ -3,16 +3,31 @@
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Clock, GitPullRequest, Loader2 } from "lucide-react";
+import type { JSX } from "react";
 import { getJulesSessionsAction } from "@/app/actions/jules";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 
+/**
+ * Props for the JulesSessionList component.
+ */
 interface JulesSessionListProps {
+	/**
+	 * Callback when a session is selected.
+	 * @param sessionId The ID (name) of the selected session.
+	 */
 	onSelectSession: (sessionId: string) => void;
 }
 
-export function JulesSessionList({ onSelectSession }: JulesSessionListProps) {
+/**
+ * Lists active Jules sessions with status indicators.
+ * @param props Component props.
+ * @returns The JulesSessionList component.
+ */
+export function JulesSessionList({
+	onSelectSession,
+}: JulesSessionListProps): JSX.Element {
 	const { data, isLoading, error } = useQuery({
 		queryKey: ["jules", "sessions"],
 		queryFn: () => getJulesSessionsAction(),
@@ -52,6 +67,15 @@ export function JulesSessionList({ onSelectSession }: JulesSessionListProps) {
 					variant="liquid"
 					className="p-4 cursor-pointer hover:bg-muted/50 transition-colors group"
 					onClick={() => onSelectSession(session.name)}
+					role="button"
+					tabIndex={0}
+					aria-label={`Open session: ${session.title || "Untitled Session"}`}
+					onKeyDown={(e) => {
+						if (e.key === "Enter" || e.key === " ") {
+							e.preventDefault();
+							onSelectSession(session.name);
+						}
+					}}
 				>
 					<div className="flex items-start justify-between">
 						<div className="space-y-1">
@@ -85,6 +109,8 @@ export function JulesSessionList({ onSelectSession }: JulesSessionListProps) {
 							variant="ghost"
 							size="icon"
 							className="opacity-0 group-hover:opacity-100 transition-opacity"
+							tabIndex={-1} // Prevent double focus since card is clickable
+							aria-hidden="true"
 						>
 							<ArrowRight className="h-4 w-4" />
 						</Button>

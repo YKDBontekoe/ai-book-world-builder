@@ -19,7 +19,14 @@ const alertVariants = cva(
 	},
 );
 
-const Alert = React.forwardRef<
+/**
+ * Alert component for displaying diverse messages.
+ */
+const Alert: React.ForwardRefExoticComponent<
+	React.HTMLAttributes<HTMLDivElement> &
+		React.RefAttributes<HTMLDivElement> &
+		VariantProps<typeof alertVariants>
+> = React.forwardRef<
 	HTMLDivElement,
 	React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof alertVariants>
 >(({ className, variant, ...props }, ref) => (
@@ -32,8 +39,15 @@ const Alert = React.forwardRef<
 ));
 Alert.displayName = "Alert";
 
-const AlertTitle = React.forwardRef<
-	HTMLParagraphElement,
+/**
+ * Title component for the Alert.
+ * Renders as an h5.
+ */
+const AlertTitle: React.ForwardRefExoticComponent<
+	React.HTMLAttributes<HTMLHeadingElement> &
+		React.RefAttributes<HTMLHeadingElement>
+> = React.forwardRef<
+	HTMLHeadingElement,
 	React.HTMLAttributes<HTMLHeadingElement>
 >(({ className, ...props }, ref) => (
 	<h5
@@ -44,7 +58,13 @@ const AlertTitle = React.forwardRef<
 ));
 AlertTitle.displayName = "AlertTitle";
 
-const AlertDescription = React.forwardRef<
+/**
+ * Description component for the Alert.
+ */
+const AlertDescription: React.ForwardRefExoticComponent<
+	React.HTMLAttributes<HTMLParagraphElement> &
+		React.RefAttributes<HTMLParagraphElement>
+> = React.forwardRef<
 	HTMLParagraphElement,
 	React.HTMLAttributes<HTMLParagraphElement>
 >(({ className, ...props }, ref) => (

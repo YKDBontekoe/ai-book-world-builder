@@ -97,37 +97,57 @@ export interface JulesArtifact {
 	};
 }
 
+/**
+ * Represents a single activity or event within a Jules session.
+ * Activities are the immutable history of what happened.
+ */
 export interface JulesActivity {
+	/** resource name of the activity. */
 	name: string;
+	/** Short ID. */
 	id: string;
+	/** Who caused this activity. */
 	originator: "ORIGINATOR_UNSPECIFIED" | "USER" | "AGENT" | "SYSTEM";
+	/** Text summary of the activity. */
 	description: string;
+	/** ISO timestamp when it happened. */
 	createTime: string;
+	/** Any artifacts (files, patches, etc.) produced by this activity. */
 	artifacts?: JulesArtifact[];
 
-	// Event Types
+	// Event Types - Mutually exclusive payloads
+
+	/** Present if this activity represents the agent generating a plan. */
 	planGenerated?: {
 		plan: JulesPlan;
 	};
+	/** Present if the user approved a plan. */
 	planApproved?: {
 		planId: string;
 	};
+	/** Present if the user sent a message. */
 	userMessaged?: {
 		userMessage: string;
 	};
+	/** Present if the agent replied with a message. */
 	agentMessaged?: {
 		agentMessage: string;
 	};
+	/** Present if the agent updated progress on a step. */
 	progressUpdated?: {
 		title: string;
 		description: string;
 	};
+	/** Present if the session finished successfully. */
 	sessionCompleted?: Record<string, never>;
+	/** Present if the session failed or was aborted. */
 	sessionFailed?: {
 		reason: string;
 	};
-	// Legacy/Helper fields for our UI mapping if needed,
-	// but we should strictly use the doc fields now.
+	/**
+	 * Legacy/Helper fields for UI mapping.
+	 * Prefer using the event payloads above.
+	 */
 }
 
 // --- Client ---

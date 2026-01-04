@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, ChevronDown, ChevronRight, Terminal } from "lucide-react";
+import { ChevronDown, ChevronRight, Terminal } from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
@@ -18,8 +18,15 @@ interface ArtifactRendererProps {
 
 import type { JSX } from "react";
 
-export function ArtifactRenderer({ artifacts }: ArtifactRendererProps): JSX.Element {
-	if (!artifacts || artifacts.length === 0) return <></>;
+/**
+ * Renders a list of artifacts (patches, command outputs, etc.) produced by Jules.
+ * @param artifacts List of artifacts to display.
+ * @returns The ArtifactRenderer component or null if no artifacts.
+ */
+export function ArtifactRenderer({
+	artifacts,
+}: ArtifactRendererProps): JSX.Element | null {
+	if (!artifacts || artifacts.length === 0) return null;
 
 	return (
 		<div className="flex flex-col gap-2 w-full mt-2">
@@ -98,7 +105,12 @@ function ArtifactItem({ artifact }: { artifact: JulesArtifact }) {
 							</span>
 						</div>
 						<CollapsibleTrigger asChild>
-							<Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+							<Button
+								variant="ghost"
+								size="sm"
+								className="h-6 w-6 p-0"
+								aria-label={isOpen ? "Collapse details" : "Expand details"}
+							>
 								{isOpen ? (
 									<ChevronDown className="h-4 w-4" />
 								) : (
@@ -111,7 +123,7 @@ function ArtifactItem({ artifact }: { artifact: JulesArtifact }) {
 						<ScrollArea className="h-64 w-full bg-background">
 							<div className="p-3">
 								<div className="text-muted-foreground mb-2">
-									// {gitPatch.suggestedCommitMessage}
+									{"// "}{gitPatch.suggestedCommitMessage}
 								</div>
 								<pre className="whitespace-pre-wrap text-[10px] leading-relaxed">
 									{gitPatch.unidiffPatch}

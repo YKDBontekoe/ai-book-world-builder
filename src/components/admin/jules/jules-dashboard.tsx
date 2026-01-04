@@ -1,13 +1,17 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { type JSX, useState } from "react";
 import { listJulesSourcesAction } from "@/app/actions/jules";
 import { CreateSessionDialog } from "./create-session-dialog";
 import { JulesChat } from "./jules-chat";
 import { JulesSessionList } from "./jules-session-list";
 
-export function JulesDashboard() {
+/**
+ * Dashboard component for managing Jules agent sessions and sources.
+ * @returns The JulesDashboard component.
+ */
+export function JulesDashboard(): JSX.Element {
 	const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
 		null,
 	);

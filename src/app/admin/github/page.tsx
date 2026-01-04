@@ -1,4 +1,5 @@
 import { Bot, Github } from "lucide-react";
+import type { JSX } from "react";
 import { GitHubDashboard } from "@/components/admin/github/github-dashboard";
 import { JulesDashboard } from "@/components/admin/jules/jules-dashboard";
 import {
@@ -8,7 +9,11 @@ import {
 	TabsTrigger,
 } from "@/components/atoms/tabs";
 
-export default function GitHubAdminPage() {
+/**
+ * Admin page for managing GitHub integration and Jules agent sessions.
+ * @returns The GitHubAdminPage component.
+ */
+export default function GitHubAdminPage(): JSX.Element {
 	return (
 		<div className="space-y-6">
 			<div>
