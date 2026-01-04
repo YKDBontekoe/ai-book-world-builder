@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowDownAZ,
 	ArrowUpAZ,
+	CheckSquare,
 	ChevronDown,
 	Clock,
 	Copy,
@@ -11,6 +12,7 @@ import {
 	Eye,
 	FileJson,
 	FileText,
+	Filter,
 	LayoutGrid,
 	List,
 	Search,
@@ -58,6 +60,8 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 	const [sortOption, setSortOption] = useState<SortOption>("newest");
 	const [visibilityFilter, setVisibilityFilter] =
 		useState<VisibilityFilter>("all");
+	const [dateRange, setDateRange] = useState<DateRangePreset>("all");
+	const [showFilters, setShowFilters] = useState(false);
 	const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">(
 		"project-view-mode",
 		"grid",
@@ -91,11 +95,26 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 		}
 	};
 
+	const handleInvertSelection = () => {
+		const newSelected = new Set<string>();
+		for (const project of filteredProjects) {
+			if (!selectedIds.has(project.id)) {
+				newSelected.add(project.id);
+			}
+		}
+		setSelectedIds(newSelected);
+	};
+
 	const filteredProjects = useMemo(() => {
 		let result = [...projects];
 
 		// Filter out optimistically deleted projects
 		result = result.filter((p) => !optimisticDeletedIds.has(p.id));
+
+		// Filter by Date Range
+		if (dateRange !== "all") {
+			result = result.filter((p) => filterByDateRange(p.createdAt, dateRange));
+		}
 
 		// Filter by Visibility
 		if (visibilityFilter !== "all") {
@@ -139,6 +158,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 		sortOption,
 		optimisticDeletedIds,
 		visibilityFilter,
+		dateRange,
 	]);
 
 	// Clean up timeout and trigger pending deletions on unmount
@@ -344,99 +364,177 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 
 	return (
 		<div className="space-y-6 relative pb-20">
-			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-				<div className="relative w-full sm:max-w-md">
-					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-					<Input
-						placeholder="Search projects..."
-						value={searchQuery}
-						onChange={(e) => setSearchQuery(e.target.value)}
-						onClear={() => setSearchQuery("")}
-						className="pl-9 bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50 transition-colors"
-					/>
-				</div>
-				<div className="flex items-center gap-2 w-full sm:w-auto">
-					<Select
-						value={visibilityFilter}
-						onValueChange={(value) =>
-							setVisibilityFilter(value as VisibilityFilter)
-						}
-					>
-						<SelectTrigger className="w-full sm:w-[140px] bg-background/50 backdrop-blur-sm border-border/50">
-							<div className="flex items-center gap-2 text-muted-foreground">
-								<Eye className="h-4 w-4" />
-								<SelectValue placeholder="Visibility" />
-							</div>
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="all">All</SelectItem>
-							<SelectItem value="private">Private</SelectItem>
-							<SelectItem value="public">Public</SelectItem>
-						</SelectContent>
-					</Select>
-
-					<div className="h-8 w-px bg-border/50 mx-1" />
-
-					<div className="flex items-center bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg p-1 mr-2">
-						<TooltipProvider>
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Button
-										variant="ghost"
-										size="icon"
-										className={cn(
-											"h-7 w-7 rounded-lg transition-all",
-											viewMode === "grid"
-												? "bg-background shadow-sm text-primary"
-												: "text-muted-foreground hover:text-foreground",
-										)}
-										onClick={() => setViewMode("grid")}
-									>
-										<LayoutGrid className="h-4 w-4" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>Grid view</TooltipContent>
-							</Tooltip>
-
-							<Tooltip>
-								<TooltipTrigger asChild>
-									<Button
-										variant="ghost"
-										size="icon"
-										className={cn(
-											"h-7 w-7 rounded-lg transition-all",
-											viewMode === "list"
-												? "bg-background shadow-sm text-primary"
-												: "text-muted-foreground hover:text-foreground",
-										)}
-										onClick={() => setViewMode("list")}
-									>
-										<List className="h-4 w-4" />
-									</Button>
-								</TooltipTrigger>
-								<TooltipContent>List view</TooltipContent>
-							</Tooltip>
-						</TooltipProvider>
+			<div className="flex flex-col gap-4">
+				<div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+					<div className="relative w-full sm:max-w-md flex items-center gap-2">
+						<div className="relative flex-1">
+							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+							<Input
+								placeholder="Search projects..."
+								value={searchQuery}
+								onChange={(e) => setSearchQuery(e.target.value)}
+								onClear={() => setSearchQuery("")}
+								className="pl-9 bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50 transition-colors"
+							/>
+						</div>
+						<Button
+							variant={showFilters ? "secondary" : "outline"}
+							size="icon"
+							onClick={() => setShowFilters(!showFilters)}
+							className={cn(
+								"shrink-0",
+								(dateRange !== "all" || visibilityFilter !== "all") &&
+									"border-primary/50 text-primary",
+							)}
+						>
+							<Filter className="h-4 w-4" />
+						</Button>
 					</div>
+					<div className="flex items-center gap-2 w-full sm:w-auto">
+						{/* Desktop Filters (Hidden on Mobile if Collapsed) */}
+						<div
+							className={cn(
+								"hidden sm:flex items-center gap-2",
+								showFilters && "flex",
+							)}
+						>
+							<AnimatePresence>
+								{showFilters && (
+									<motion.div
+										initial={{ opacity: 0, width: 0 }}
+										animate={{ opacity: 1, width: "auto" }}
+										exit={{ opacity: 0, width: 0 }}
+										className="flex items-center gap-2 overflow-hidden"
+									>
+										<DateFilter value={dateRange} onChange={setDateRange} />
 
-					<Select
-						value={sortOption}
-						onValueChange={(value) => setSortOption(value as SortOption)}
-					>
-						<SelectTrigger className="w-full sm:w-[180px] bg-background/50 backdrop-blur-sm border-border/50">
-							<div className="flex items-center gap-2 text-muted-foreground">
-								<SortIcon sort={sortOption} />
-								<SelectValue placeholder="Sort by" />
-							</div>
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value="newest">Newest First</SelectItem>
-							<SelectItem value="oldest">Oldest First</SelectItem>
-							<SelectItem value="a-z">Name (A-Z)</SelectItem>
-							<SelectItem value="z-a">Name (Z-A)</SelectItem>
-						</SelectContent>
-					</Select>
+										<Select
+											value={visibilityFilter}
+											onValueChange={(value) =>
+												setVisibilityFilter(value as VisibilityFilter)
+											}
+										>
+											<SelectTrigger className="w-[130px] h-9 bg-background/50 backdrop-blur-sm border-border/50">
+												<div className="flex items-center gap-2 text-muted-foreground">
+													<Eye className="h-3.5 w-3.5" />
+													<SelectValue placeholder="Visibility" />
+												</div>
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="all">All Visibility</SelectItem>
+												<SelectItem value="private">Private Only</SelectItem>
+												<SelectItem value="public">Public Only</SelectItem>
+											</SelectContent>
+										</Select>
+									</motion.div>
+								)}
+							</AnimatePresence>
+						</div>
+
+						<div className="hidden sm:block h-8 w-px bg-border/50 mx-1" />
+
+						<div className="flex items-center bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg p-1 mr-2">
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											variant="ghost"
+											size="icon"
+											className={cn(
+												"h-7 w-7 rounded-lg transition-all",
+												viewMode === "grid"
+													? "bg-background shadow-sm text-primary"
+													: "text-muted-foreground hover:text-foreground",
+											)}
+											onClick={() => setViewMode("grid")}
+										>
+											<LayoutGrid className="h-4 w-4" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Grid view</TooltipContent>
+								</Tooltip>
+
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											variant="ghost"
+											size="icon"
+											className={cn(
+												"h-7 w-7 rounded-lg transition-all",
+												viewMode === "list"
+													? "bg-background shadow-sm text-primary"
+													: "text-muted-foreground hover:text-foreground",
+											)}
+											onClick={() => setViewMode("list")}
+										>
+											<List className="h-4 w-4" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>List view</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						</div>
+
+						<Select
+							value={sortOption}
+							onValueChange={(value) => setSortOption(value as SortOption)}
+						>
+							<SelectTrigger className="w-full sm:w-[160px] h-9 bg-background/50 backdrop-blur-sm border-border/50">
+								<div className="flex items-center gap-2 text-muted-foreground">
+									<SortIcon sort={sortOption} />
+									<SelectValue placeholder="Sort by" />
+								</div>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="newest">Newest First</SelectItem>
+								<SelectItem value="oldest">Oldest First</SelectItem>
+								<SelectItem value="a-z">Name (A-Z)</SelectItem>
+								<SelectItem value="z-a">Name (Z-A)</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
 				</div>
+
+				{/* Mobile Filters Area */}
+				<AnimatePresence>
+					{showFilters && (
+						<motion.div
+							initial={{ height: 0, opacity: 0 }}
+							animate={{ height: "auto", opacity: 1 }}
+							exit={{ height: 0, opacity: 0 }}
+							className="sm:hidden overflow-hidden"
+						>
+							<div className="flex flex-col gap-2 p-4 bg-muted/20 rounded-lg border border-border/50">
+								<span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+									Filters
+								</span>
+								<DateFilter
+									value={dateRange}
+									onChange={setDateRange}
+									className="w-full justify-start"
+								/>
+								<Select
+									value={visibilityFilter}
+									onValueChange={(value) =>
+										setVisibilityFilter(value as VisibilityFilter)
+									}
+								>
+									<SelectTrigger className="w-full h-9 bg-background">
+										<div className="flex items-center gap-2 text-muted-foreground">
+											<Eye className="h-3.5 w-3.5" />
+											<SelectValue placeholder="Visibility" />
+										</div>
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">All Visibility</SelectItem>
+										<SelectItem value="private">Private Only</SelectItem>
+										<SelectItem value="public">Public Only</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+						</motion.div>
+					)}
+				</AnimatePresence>
 			</div>
 
 			<div className="relative min-h-[200px]">
@@ -499,26 +597,37 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 							className="flex items-center justify-between p-3 pl-5 pr-3 shadow-xl border-primary/20 backdrop-blur-xl"
 						>
 							<div className="flex items-center gap-4">
-								<div className="text-sm font-medium">
+								<div className="text-sm font-medium whitespace-nowrap">
 									{selectedIds.size} selected
 								</div>
-								<div className="h-4 w-px bg-border" />
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-8 text-muted-foreground hover:text-foreground"
-									onClick={() => setSelectedIds(new Set())}
-								>
-									Deselect All
-								</Button>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-8 text-muted-foreground hover:text-foreground"
-									onClick={handleSelectAll}
-								>
-									Select All
-								</Button>
+								<div className="h-4 w-px bg-border hidden sm:block" />
+								<div className="flex items-center gap-1">
+									<Button
+										variant="ghost"
+										size="sm"
+										className="h-8 text-muted-foreground hover:text-foreground px-2"
+										onClick={() => setSelectedIds(new Set())}
+									>
+										None
+									</Button>
+									<Button
+										variant="ghost"
+										size="sm"
+										className="h-8 text-muted-foreground hover:text-foreground px-2"
+										onClick={handleSelectAll}
+									>
+										All
+									</Button>
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-8 w-8 text-muted-foreground hover:text-foreground"
+										onClick={handleInvertSelection}
+										title="Invert Selection"
+									>
+										<CheckSquare className="h-4 w-4" />
+									</Button>
+								</div>
 							</div>
 							<div className="flex items-center gap-2 border-r border-border pr-2 mr-2">
 								<DropdownMenu>
