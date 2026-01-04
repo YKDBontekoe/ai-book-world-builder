@@ -2,6 +2,7 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
@@ -29,7 +30,17 @@ export async function getSceneContent(sceneId: string) {
 	}
 }
 
+const updateSceneContentSchema = z.object({
+	sceneId: z.string().uuid(),
+	content: z.string().max(200000, "Content is too long (max 200k chars)"),
+});
+
 export async function updateSceneContent(sceneId: string, content: string) {
+	const validation = updateSceneContentSchema.safeParse({ sceneId, content });
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		// 1. Get Scene using repository
 		const targetScene = await sceneRepository.findById(sceneId);
@@ -108,7 +119,17 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 	}
 }
 
+const updateSceneTitleSchema = z.object({
+	sceneId: z.string().uuid(),
+	title: z.string().max(255, "Title is too long"),
+});
+
 export async function updateSceneTitle(sceneId: string, title: string) {
+	const validation = updateSceneTitleSchema.safeParse({ sceneId, title });
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		const targetScene = await sceneRepository.findById(sceneId);
 
@@ -152,11 +173,27 @@ export async function deleteScene(
 	}
 }
 
+const createSceneSchema = z.object({
+	chapterId: z.string().uuid(),
+	title: z.string().max(255, "Title is too long"),
+	insertAfterSceneId: z.string().uuid().optional(),
+});
+
 export async function createSceneInChapter(
 	chapterId: string,
 	title: string,
 	insertAfterSceneId?: string,
 ) {
+	const validation = createSceneSchema.safeParse({
+		chapterId,
+		title,
+		insertAfterSceneId,
+	});
+
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		const [currentChapter] = await db
 			.select()
@@ -214,7 +251,17 @@ export async function createSceneInChapter(
 	}
 }
 
+const reorderScenesSchema = z.object({
+	sceneIds: z.array(z.string().uuid()).max(500, "Too many scenes to reorder"),
+	chapterId: z.string().uuid(),
+});
+
 export async function reorderScenes(sceneIds: string[], chapterId: string) {
+	const validation = reorderScenesSchema.safeParse({ sceneIds, chapterId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		const [currentChapter] = await db
 			.select()
