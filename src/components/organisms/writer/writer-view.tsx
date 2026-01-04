@@ -2,14 +2,12 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { type PanelImperativeHandle } from "react-resizable-panels";
 import {
 	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
 } from "@/components/atoms/resizable";
-import {
-	Panel as ResizablePanel,
-	Group as ResizablePanelGroup,
-	type PanelImperativeHandle
-} from "react-resizable-panels";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
