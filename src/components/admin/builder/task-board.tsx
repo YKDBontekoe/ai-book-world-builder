@@ -45,7 +45,7 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
-			return res.success ? res.data : [];
+			return res.success && Array.isArray(res.data) ? res.data : [];
 		},
 	});
 
@@ -53,7 +53,7 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
 			const res = await getIssues("closed");
-			return res.success ? res.data : [];
+			return res.success && Array.isArray(res.data) ? res.data : [];
 		},
 	});
 
@@ -61,7 +61,7 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
 			const res = await getPullRequests("open");
-			return res.success ? res.data : [];
+			return res.success && Array.isArray(res.data) ? res.data : [];
 		},
 	});
 
@@ -69,7 +69,7 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
 			const res = await getPullRequests("closed");
-			return res.success ? res.data : [];
+			return res.success && Array.isArray(res.data) ? res.data : [];
 		},
 	});
 
@@ -77,7 +77,9 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["jules", "sessions"],
 		queryFn: async () => {
 			const res = await getJulesSessionsAction({ pageSize: 50 });
-			return res.success ? res.data.sessions : [];
+			return res.success && res.data && Array.isArray(res.data.sessions)
+				? res.data.sessions
+				: [];
 		},
 		refetchInterval: 10000, // Poll for session updates
 	});
@@ -104,12 +106,14 @@ export function TaskBoard(): JSX.Element {
 	// --- Data Organization ---
 
 	const columns: Column[] = useMemo(() => {
-		const backlogItems: TaskItem[] = (issues || []).map((i) => ({
-			type: "issue",
-			data: i,
-		}));
+		const backlogItems: TaskItem[] = (Array.isArray(issues) ? issues : []).map(
+			(i) => ({
+				type: "issue",
+				data: i,
+			}),
+		);
 
-		const sessionItems: TaskItem[] = (sessions || [])
+		const sessionItems: TaskItem[] = (Array.isArray(sessions) ? sessions : [])
 			.filter(
 				(s) =>
 					s.state !== "COMPLETED" &&
@@ -118,14 +122,20 @@ export function TaskBoard(): JSX.Element {
 			)
 			.map((s) => ({ type: "session", data: s }));
 
-		const reviewItems: TaskItem[] = (prs || []).map((p) => ({
+		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map((p) => ({
 			type: "pr",
 			data: p,
 		}));
 
 		const doneItems: TaskItem[] = [
-			...(closedPrs || []).map((p) => ({ type: "pr" as const, data: p })),
-			...(closedIssues || []).map((i) => ({ type: "issue" as const, data: i })),
+			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
+				type: "pr" as const,
+				data: p,
+			})),
+			...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
+				type: "issue" as const,
+				data: i,
+			})),
 		].sort(
 			(a, b) =>
 				new Date(b.data.updated_at).getTime() -
