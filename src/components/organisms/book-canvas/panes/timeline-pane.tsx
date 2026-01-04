@@ -133,11 +133,11 @@ export function TimelinePane() {
 			? ["project-structure", projectId]
 			: ["structure", "null"],
 		queryFn: () =>
-			projectId ? getProjectStructure(projectId) : Promise.resolve(null),
+			projectId ? getProjectStructure({ projectId }) : Promise.resolve(null),
 		enabled: !!projectId,
 	});
 
-	const structure = result?.structure;
+	const structure = result?.success ? result.data.structure : undefined;
 
 	// Initial Load: Flatten structure and sort by chronologicalSequence
 	useEffect(() => {

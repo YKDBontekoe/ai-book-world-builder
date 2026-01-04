@@ -46,6 +46,10 @@ vi.mock("@/components/atoms/dialog", () => ({
 	DialogContent: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock("usehooks-ts", () => ({
+	useDebounceValue: (value: any) => [value, vi.fn()],
+}));
+
 import { WriterSpotlight } from "@/components/organisms/writer/tools/writer-spotlight";
 
 describe("WriterSpotlight", () => {

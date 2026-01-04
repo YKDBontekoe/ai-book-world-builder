@@ -64,10 +64,15 @@ export function useModelPreferences(
 		async function loadPreferences() {
 			setIsLoading(true);
 			try {
-				const prefs = await getModelPreferences();
+				const result = await getModelPreferences();
 				if (isActive) {
-					setPreferences(prefs);
-					setError(null);
+					if (result.success) {
+						setPreferences(result.data);
+						setError(null);
+					} else {
+						setPreferences(DEFAULT_PREFERENCES);
+						setError(result.error);
+					}
 				}
 			} catch (err) {
 				if (isActive) {
@@ -105,11 +110,15 @@ export function useModelPreferences(
 
 			startTransition(async () => {
 				try {
-					const result = await toggleFavoriteModelAction(modelId);
-					setPreferences((current) => ({
-						...current,
-						favoriteModels: result.favoriteModels,
-					}));
+					const result = await toggleFavoriteModelAction({ modelId });
+					if (result.success) {
+						setPreferences((current) => ({
+							...current,
+							favoriteModels: result.data.favoriteModels,
+						}));
+					} else {
+						throw new Error(result.error);
+					}
 				} catch (err) {
 					setError(
 						err instanceof Error ? err.message : "Unable to update favorites.",
@@ -147,7 +156,10 @@ export function useModelPreferences(
 
 			startTransition(async () => {
 				try {
-					await updateFavoriteModelsAction(updatedFavorites);
+					const result = await updateFavoriteModelsAction({
+						modelIds: updatedFavorites,
+					});
+					if (!result.success) throw new Error(result.error);
 					setError(null);
 				} catch (err) {
 					setError(
@@ -174,7 +186,8 @@ export function useModelPreferences(
 
 			startTransition(async () => {
 				try {
-					await trackRecentModel(modelId);
+					const result = await trackRecentModel({ modelId });
+					if (!result.success) throw new Error(result.error);
 					setError(null);
 				} catch (err) {
 					setError(

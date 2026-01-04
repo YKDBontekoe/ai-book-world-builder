@@ -24,9 +24,12 @@ export function ArcPane() {
 	const { projectId, activePane } = useBookCanvas();
 	const { theme } = useTheme();
 
-	const { data, isLoading } = useQuery({
+	const { data: pacingResult, isLoading } = useQuery({
 		queryKey: ["pacing", projectId],
-		queryFn: () => (projectId ? analyzeProjectPacingAction(projectId) : null),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return analyzeProjectPacingAction({ projectId });
+		},
 		enabled: !!projectId && activePane === "arc",
 	});
 
@@ -49,7 +52,7 @@ export function ArcPane() {
 		);
 	}
 
-	const chartData = data?.success ? data.data : [];
+	const chartData = pacingResult?.success ? pacingResult.data : [];
 
 	if (!chartData || chartData.length === 0) {
 		return (

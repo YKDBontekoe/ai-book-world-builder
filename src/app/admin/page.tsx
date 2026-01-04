@@ -3,7 +3,17 @@ import { getAdminStats } from "@/app/actions/admin";
 import { GlassCard } from "@/components/molecules/glass-card";
 
 export default async function AdminDashboard() {
-	const stats = await getAdminStats();
+	const result = await getAdminStats();
+
+	if (!result.success) {
+		return (
+			<div className="p-8 text-destructive">
+				Error loading stats: {result.error}
+			</div>
+		);
+	}
+
+	const stats = result.data;
 
 	return (
 		<div className="space-y-8">

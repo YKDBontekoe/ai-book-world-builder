@@ -18,7 +18,12 @@ export function BiblePane() {
 
 	const { data: entities, isLoading: entitiesLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.entities(projectId) : ["entities", "null"],
-		queryFn: () => (projectId ? getEntities(projectId) : Promise.resolve([])),
+		queryFn: async () => {
+			if (!projectId) return [];
+			const result = await getEntities({ projectId });
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
 		enabled: !!projectId,
 		refetchInterval: 3000,
 	});
@@ -27,8 +32,12 @@ export function BiblePane() {
 		queryKey: projectId
 			? QUERY_KEYS.relationships(projectId)
 			: ["relationships", "null"],
-		queryFn: () =>
-			projectId ? getRelationships(projectId) : Promise.resolve([]),
+		queryFn: async () => {
+			if (!projectId) return [];
+			const result = await getRelationships({ projectId });
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});

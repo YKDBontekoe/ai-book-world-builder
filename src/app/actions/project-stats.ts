@@ -1,7 +1,8 @@
 "use server";
 
 import { desc, eq } from "drizzle-orm";
-import { auth } from "@/app/(auth)/auth";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import {
 	db,
 	getBookGenerationForProject,
@@ -13,7 +14,6 @@ import {
 import {
 	chapterDraft,
 	type Entity,
-	type GenerationTaskLog,
 	type Relationship,
 } from "@/lib/db/schema";
 
@@ -140,16 +140,9 @@ function calculateReadiness(
 /**
  * Get aggregated project statistics for the book canvas
  */
-export async function getProjectStats(
-	projectId: string,
-): Promise<ProjectStats | null> {
-	const session = await auth();
-
-	if (!session) {
-		throw new Error("Unauthorized");
-	}
-
-	try {
+export const getProjectStats = createUserAction({
+	input: z.object({ projectId: z.string().uuid() }),
+	handler: async ({ input: { projectId } }) => {
 		const [entities, relationships, outlines, chapters] = await Promise.all([
 			getEntitiesForProject({ projectId }),
 			getRelationshipsForProject({ projectId }),
@@ -223,11 +216,8 @@ export async function getProjectStats(
 			chapterCounts,
 			readiness,
 		};
-	} catch (error) {
-		console.error("Error fetching project stats:", error);
-		return null;
-	}
-}
+	},
+});
 
 export type SerializedRelationship = {
 	id: string;
@@ -244,24 +234,19 @@ export type SerializedRelationship = {
 /**
  * Get relationships for a project
  */
-export async function getRelationships(
-	projectId: string,
-): Promise<SerializedRelationship[]> {
-	const session = await auth();
+export const getRelationships = createUserAction({
+	input: z.object({ projectId: z.string().uuid() }),
+	handler: async ({ input: { projectId } }) => {
+		const relationships = await getRelationshipsForProject({ projectId });
 
-	if (!session) {
-		throw new Error("Unauthorized");
-	}
-
-	const relationships = await getRelationshipsForProject({ projectId });
-
-	return relationships.map((r) => ({
-		...r,
-		createdAt: r.createdAt.toISOString(),
-		startDate: r.startDate?.toISOString() ?? null,
-		endDate: r.endDate?.toISOString() ?? null,
-	}));
-}
+		return relationships.map((r) => ({
+			...r,
+			createdAt: r.createdAt.toISOString(),
+			startDate: r.startDate?.toISOString() ?? null,
+			endDate: r.endDate?.toISOString() ?? null,
+		}));
+	},
+});
 
 export type SerializedChapter = {
 	id: string;
@@ -285,16 +270,9 @@ export type SerializedOutline = {
 /**
  * Get outline data with chapters for the Outline pane
  */
-export async function getOutlineData(
-	projectId: string,
-): Promise<SerializedOutline | null> {
-	const session = await auth();
-
-	if (!session) {
-		throw new Error("Unauthorized");
-	}
-
-	try {
+export const getOutlineData = createUserAction({
+	input: z.object({ projectId: z.string().uuid() }),
+	handler: async ({ input: { projectId } }) => {
 		const [outlines, chapters] = await Promise.all([
 			getOutlinesForProject({ projectId }),
 			getChaptersForProject({ projectId }),
@@ -326,11 +304,8 @@ export async function getOutlineData(
 			beats: currentOutline.beats,
 			chapters: serializedChapters,
 		};
-	} catch (error) {
-		console.error("Error fetching outline data:", error);
-		return null;
-	}
-}
+	},
+});
 
 export type TimelineEvent = {
 	id: string;
@@ -344,45 +319,39 @@ export type TimelineEvent = {
 /**
  * Get timeline events sorted by date
  */
-export async function getTimelineEvents(
-	projectId: string,
-): Promise<TimelineEvent[]> {
-	const session = await auth();
-	if (!session) throw new Error("Unauthorized");
+export const getTimelineEvents = createUserAction({
+	input: z.object({ projectId: z.string().uuid() }),
+	handler: async ({ input: { projectId } }) => {
+		const entities = await getEntitiesForProject({ projectId });
 
-	const entities = await getEntitiesForProject({ projectId });
+		// Filter for events or entities with dates
+		const events = entities.filter((e) => e.kind === "event" || e.startDate);
 
-	// Filter for events or entities with dates
-	const events = entities.filter((e) => e.kind === "event" || e.startDate);
-
-	return events
-		.map((e) => ({
-			id: e.id,
-			name: e.name,
-			summary: e.summary,
-			startDate: e.startDate?.toISOString() ?? null,
-			endDate: e.endDate?.toISOString() ?? null,
-			kind: e.kind,
-		}))
-		.sort((a, b) => {
-			// Sort by start date, undated last
-			if (!a.startDate && !b.startDate) return 0;
-			if (!a.startDate) return 1;
-			if (!b.startDate) return -1;
-			return a.startDate.localeCompare(b.startDate);
-		});
-}
+		return events
+			.map((e) => ({
+				id: e.id,
+				name: e.name,
+				summary: e.summary,
+				startDate: e.startDate?.toISOString() ?? null,
+				endDate: e.endDate?.toISOString() ?? null,
+				kind: e.kind,
+			}))
+			.sort((a, b) => {
+				// Sort by start date, undated last
+				if (!a.startDate && !b.startDate) return 0;
+				if (!a.startDate) return 1;
+				if (!b.startDate) return -1;
+				return a.startDate.localeCompare(b.startDate);
+			});
+	},
+});
 
 /**
  * Get the latest content for a chapter draft
  */
-export async function getChapterDraft(
-	chapterId: string,
-): Promise<string | null> {
-	const session = await auth();
-	if (!session) throw new Error("Unauthorized");
-
-	try {
+export const getChapterDraft = createUserAction({
+	input: z.object({ chapterId: z.string().uuid() }),
+	handler: async ({ input: { chapterId } }) => {
 		const drafts = await db
 			.select()
 			.from(chapterDraft)
@@ -392,28 +361,18 @@ export async function getChapterDraft(
 
 		if (drafts.length === 0) return null;
 		return drafts[0].content;
-	} catch (error) {
-		console.error("Error fetching chapter draft:", error);
-		return null;
-	}
-}
+	},
+});
 
 /**
  * Get the generation log for a project
  */
-export async function getGenerationLog(
-	projectId: string,
-): Promise<GenerationTaskLog | null> {
-	const session = await auth();
-	if (!session) throw new Error("Unauthorized");
-
-	try {
+export const getGenerationLog = createUserAction({
+	input: z.object({ projectId: z.string().uuid() }),
+	handler: async ({ input: { projectId } }) => {
 		const generation = await getBookGenerationForProject({ projectId });
 		if (!generation) return null;
 
 		return generation.taskLog;
-	} catch (error) {
-		console.error("Error fetching generation log:", error);
-		return null;
-	}
-}
+	},
+});

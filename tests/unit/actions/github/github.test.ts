@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as githubActions from "@/app/actions/github";
-import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
 
 // Mock Octokit instance methods
 const mockOctokit = {
@@ -26,11 +25,9 @@ const mockOctokit = {
 // Mock Octokit constructor as a class
 vi.mock("octokit", () => {
 	return {
-		Octokit: class {
-			constructor() {
-				return mockOctokit;
-			}
-		},
+		Octokit: vi.fn().mockImplementation(function () {
+			return mockOctokit;
+		}),
 	};
 });
 
@@ -49,10 +46,11 @@ describe("GitHub Actions", () => {
 		process.env = { ...originalEnv, GITHUB_TOKEN: "mock-token" };
 		process.env.GITHUB_OWNER = "TestOwner";
 		process.env.GITHUB_REPO = "TestRepo";
+		process.env.GITHUB_TOKEN = "test-token";
 
 		// Default to authorized admin
 		(auth as any).mockResolvedValue({
-			user: { role: "admin" },
+			user: { id: "admin-id", role: "admin" },
 		});
 	});
 
@@ -75,15 +73,15 @@ describe("GitHub Actions", () => {
 		});
 
 		it("should fail if user is not admin", async () => {
-			(auth as any).mockResolvedValue({ user: { role: "user" } });
+			(auth as any).mockResolvedValue({
+				user: { id: "user-id", role: "user" },
+			});
 
 			const result = await githubActions.getRepoStats();
 
 			expect(result.success).toBe(false);
 			if (!result.success) {
-				expect(result.error).toBe(
-					"You do not have permission to perform this action",
-				);
+				expect(result.error).toBe("Admin access required");
 			}
 		});
 	});
@@ -172,7 +170,10 @@ describe("GitHub Actions", () => {
 				data: { id: 123, body: "Test comment" },
 			});
 
-			const result = await githubActions.postComment(1, "Test comment");
+			const result = await githubActions.postComment({
+				number: 1,
+				body: "Test comment",
+			});
 
 			expect(result.success).toBe(true);
 			if (result.success) {

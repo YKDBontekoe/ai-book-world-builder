@@ -92,6 +92,12 @@ vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
 
+vi.mock("@/app/(auth)/auth", () => ({
+	auth: vi.fn().mockResolvedValue({
+		user: { id: "user-123", role: "user" },
+	}),
+}));
+
 // Import the function under test
 import { saveProjectStructure } from "@/app/actions/writer/structure";
 
@@ -119,7 +125,7 @@ Chapter 1: The Beginning
 			.mockResolvedValueOnce([{ id: "volume-1" }]) // New Volume
 			.mockResolvedValueOnce([{ id: "chapter-1" }]); // New Chapter
 
-		const result = await saveProjectStructure(projectId, text);
+		const result = await saveProjectStructure({ projectId, structureText: text });
 
 		expect(result.success).toBe(true);
 
@@ -161,7 +167,7 @@ Chapter 1: The Beginning
 		mockOrderBy.mockResolvedValueOnce(existingChapters);
 		mockOrderBy.mockResolvedValueOnce(existingScenes);
 
-		const result = await saveProjectStructure(projectId, text);
+		const result = await saveProjectStructure({ projectId, structureText: text });
 
 		expect(result.success).toBe(true);
 
@@ -197,7 +203,7 @@ Chapter 1: The Beginning
 		// Mock insert for new chapter
 		mockReturning.mockResolvedValueOnce([{ id: "ch-2" }]);
 
-		const result = await saveProjectStructure(projectId, text);
+		const result = await saveProjectStructure({ projectId, structureText: text });
 
 		expect(result.success).toBe(true);
 

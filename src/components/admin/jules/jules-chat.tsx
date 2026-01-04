@@ -103,7 +103,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	const { mutate: reviewPlan, isPending: isReviewing } = useMutation({
 		mutationFn: async (plan: JulesPlan) => {
-			const result = await reviewJulesPlanAction(plan);
+			const result = await reviewJulesPlanAction({ plan });
 			if (!result.success) throw new Error(result.error);
 			return result.data;
 		},

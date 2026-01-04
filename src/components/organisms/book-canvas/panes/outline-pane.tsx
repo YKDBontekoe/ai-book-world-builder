@@ -141,10 +141,12 @@ function OutlineHeader({ outline }: { outline: SerializedOutline }) {
 export function OutlinePane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: outline, isLoading } = useQuery({
+	const { data: outlineResult, isLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],
-		queryFn: () =>
-			projectId ? getOutlineData(projectId) : Promise.resolve(null),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return getOutlineData({ projectId });
+		},
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});
@@ -160,7 +162,7 @@ export function OutlinePane() {
 		);
 	}
 
-	if (isLoading && !outline) {
+	if (isLoading && !outlineResult) {
 		return (
 			<div className="flex h-full flex-col items-center justify-center p-8">
 				<LoadingSpinner size="lg" variant="muted" />
@@ -169,7 +171,7 @@ export function OutlinePane() {
 		);
 	}
 
-	if (!outline) {
+	if (!outlineResult || !outlineResult.success || !outlineResult.data) {
 		return (
 			<EmptyState
 				icon={PenIcon}
@@ -182,9 +184,13 @@ export function OutlinePane() {
 		);
 	}
 
+	const outline = outlineResult.data;
+
 	// Calculate chapter progress
-	const completed = outline.chapters.filter((c) => c.status === "final").length;
-	const inProgress = outline.chapters.filter((c) =>
+	const completed = outline.chapters.filter(
+		(c: { status: string }) => c.status === "final",
+	).length;
+	const inProgress = outline.chapters.filter((c: { status: string }) =>
 		["drafting", "drafted", "review"].includes(c.status),
 	).length;
 

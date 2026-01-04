@@ -36,21 +36,30 @@ describe("useModelPreferences", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		mockGetPreferences.mockResolvedValue({
-			favoriteModels: [],
-			recentModels: [],
+			success: true,
+			data: {
+				favoriteModels: [],
+				recentModels: [],
+			},
 		});
 		mockToggleFavorite.mockResolvedValue({
-			favoriteModels: [],
-			isFavorite: true,
+			success: true,
+			data: {
+				favoriteModels: [],
+				isFavorite: true,
+			},
 		});
-		mockTrackRecent.mockResolvedValue(undefined);
-		mockUpdateFavorites.mockResolvedValue([]);
+		mockTrackRecent.mockResolvedValue({ success: true, data: undefined });
+		mockUpdateFavorites.mockResolvedValue({ success: true, data: [] });
 	});
 
 	it("loads preferences on mount", async () => {
 		mockGetPreferences.mockResolvedValue({
-			favoriteModels: ["model-1"],
-			recentModels: ["recent-1"],
+			success: true,
+			data: {
+				favoriteModels: ["model-1"],
+				recentModels: ["recent-1"],
+			},
 		});
 
 		const { result } = renderHook(() => useModelPreferences());
@@ -61,10 +70,7 @@ describe("useModelPreferences", () => {
 	});
 
 	it("optimistically toggles favorites and updates from the server", async () => {
-		const toggleDeferred = createDeferred<{
-			favoriteModels: string[];
-			isFavorite: boolean;
-		}>();
+		const toggleDeferred = createDeferred<any>();
 		mockToggleFavorite.mockReturnValue(toggleDeferred.promise);
 
 		const { result } = renderHook(() => useModelPreferences());
@@ -79,12 +85,15 @@ describe("useModelPreferences", () => {
 		);
 
 		await act(async () => {
-			toggleDeferred.resolve({ favoriteModels: ["model-2"], isFavorite: true });
+			toggleDeferred.resolve({
+				success: true,
+				data: { favoriteModels: ["model-2"], isFavorite: true },
+			});
 			await toggleDeferred.promise;
 		});
 
 		expect(result.current.favoriteModels).toEqual(["model-2"]);
-		expect(mockToggleFavorite).toHaveBeenCalledWith("model-2");
+		expect(mockToggleFavorite).toHaveBeenCalledWith({ modelId: "model-2" });
 	});
 
 	it("tracks recent models and enforces the max size", async () => {
@@ -99,7 +108,7 @@ describe("useModelPreferences", () => {
 			expect(result.current.recentModels).toEqual(["model-c", "model-b"]),
 		);
 		await waitFor(() =>
-			expect(mockTrackRecent).toHaveBeenCalledWith("model-c"),
+			expect(mockTrackRecent).toHaveBeenCalledWith({ modelId: "model-c" }),
 		);
 	});
 });

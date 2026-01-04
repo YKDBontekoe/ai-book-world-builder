@@ -12,8 +12,21 @@ import {
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, project } from "@/lib/db/schema";
 
-export async function initializeProject(projectId: string) {
-	try {
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
+
+const projectIdSchema = z.object({
+	projectId: z.string().uuid(),
+});
+
+const lastViewedSchema = z.object({
+	projectId: z.string().uuid(),
+	sceneId: z.string().uuid(),
+});
+
+export const initializeProject = createUserAction({
+	input: projectIdSchema,
+	handler: async ({ input: { projectId } }) => {
 		await ensureProjectAccess(projectId, true);
 
 		// 1. Check/Create Structure
@@ -95,18 +108,13 @@ export async function initializeProject(projectId: string) {
 
 		await invalidateCache(`project-structure:${projectId}`);
 
-		return { success: true, sceneId };
-	} catch (error) {
-		console.error("Failed to initialize project", error);
-		return { success: false, error: "Initialization failed" };
-	}
-}
+		return { sceneId };
+	},
+});
 
-export async function updateLastViewedScene(
-	projectId: string,
-	sceneId: string,
-) {
-	try {
+export const updateLastViewedScene = createUserAction({
+	input: lastViewedSchema,
+	handler: async ({ input: { projectId, sceneId } }) => {
 		await ensureProjectAccess(projectId, true);
 
 		await db
@@ -114,11 +122,6 @@ export async function updateLastViewedScene(
 			.set({ lastViewedSceneId: sceneId })
 			.where(eq(project.id, projectId));
 
-		// Does not affect structure
-
 		return { success: true };
-	} catch (error) {
-		console.error("Failed to update last viewed scene", error);
-		return { success: false };
-	}
-}
+	},
+});

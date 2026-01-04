@@ -32,6 +32,7 @@ import {
 } from "@/app/actions/entities";
 import { entityRepository, projectRepository } from "@/lib/db/repositories";
 import type { Entity, Project } from "@/lib/db/schema";
+import { unwrap } from "@/lib/result";
 
 const mockedAuth = vi.mocked(auth);
 const mockedFindByIdWithAccess = vi.mocked(
@@ -43,8 +44,8 @@ const mockedUpdate = vi.mocked(entityRepository.update);
 const mockedDelete = vi.mocked(entityRepository.delete);
 const mockedRevalidatePath = vi.mocked(revalidatePath);
 
-const userId = "user-123";
-const projectId = "project-123";
+const userId = "550e8400-e29b-41d4-a716-446655440000";
+const projectId = "550e8400-e29b-41d4-a716-446655440001";
 
 function buildSession() {
 	return {
@@ -74,7 +75,7 @@ function buildProject(overrides?: Partial<Project>): Project {
 
 function buildEntity(overrides?: Partial<Entity>): Entity {
 	return {
-		id: "entity-123",
+		id: "550e8400-e29b-41d4-a716-446655440002",
 		name: "Entity Name",
 		kind: "character",
 		summary: null,
@@ -99,7 +100,7 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedFindByProject.mockResolvedValue([entity]);
 
-		const result = await getEntities(projectId);
+		const result = unwrap(await getEntities({ projectId }));
 
 		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
 		expect(result).toEqual([
@@ -117,9 +118,11 @@ describe("entities server actions", () => {
 		mockedAuth.mockResolvedValue(buildSession());
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
-		await expect(getEntities(projectId)).rejects.toThrow(
-			"Project not found or access denied",
-		);
+		const result = await getEntities({ projectId });
+		expect(result).toEqual({
+			success: false,
+			error: `Project not found: ${projectId}`,
+		});
 		expect(mockedFindByProject).not.toHaveBeenCalled();
 	});
 
@@ -132,11 +135,13 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedUpdate.mockResolvedValue(updatedEntity);
 
-		const result = await updateEntityAction({
-			id: entity.id,
-			name: updatedEntity.name,
-			projectId,
-		});
+		const result = unwrap(
+			await updateEntityAction({
+				id: entity.id,
+				name: updatedEntity.name,
+				projectId,
+			}),
+		);
 
 		expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(
 			entity.projectId,
@@ -159,9 +164,8 @@ describe("entities server actions", () => {
 		mockedFindById.mockResolvedValue(entity);
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
-		await expect(
-			updateEntityAction({ id: entity.id, projectId }),
-		).rejects.toThrow("Access denied to entity");
+		const result = await updateEntityAction({ id: entity.id, projectId });
+		expect(result).toEqual({ success: false, error: "Access denied to entity" });
 		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
 
@@ -174,9 +178,11 @@ describe("entities server actions", () => {
 			buildProject({ id: entity.projectId }),
 		);
 
-		await expect(
-			updateEntityAction({ id: entity.id, projectId }),
-		).rejects.toThrow("Entity does not belong to the provided project");
+		const result = await updateEntityAction({ id: entity.id, projectId });
+		expect(result).toEqual({
+			success: false,
+			error: "Entity does not belong to the provided project",
+		});
 		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
 
@@ -188,7 +194,7 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 		mockedDelete.mockResolvedValue();
 
-		await deleteEntityAction(entity.id);
+		unwrap(await deleteEntityAction({ id: entity.id }));
 
 		expect(mockedDelete).toHaveBeenCalledWith(entity.id);
 		expect(mockedRevalidatePath).toHaveBeenCalledWith("/(chat)", "page");
@@ -201,9 +207,8 @@ describe("entities server actions", () => {
 		mockedFindById.mockResolvedValue(entity);
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
-		await expect(deleteEntityAction(entity.id)).rejects.toThrow(
-			"Access denied to entity",
-		);
+		const result = await deleteEntityAction({ id: entity.id });
+		expect(result).toEqual({ success: false, error: "Access denied to entity" });
 		expect(mockedDelete).not.toHaveBeenCalled();
 	});
 
@@ -231,13 +236,15 @@ describe("entities server actions", () => {
 			}),
 		);
 
-		await expect(
-			updateEntityAction({
-				id: entity.id,
-				projectId: entity.projectId,
-				name: "Hacked",
-			}),
-		).rejects.toThrow("Unauthorized");
+		const result = await updateEntityAction({
+			id: entity.id,
+			projectId: entity.projectId,
+			name: "Hacked",
+		});
+		expect(result).toEqual({
+			success: false,
+			error: "Only project owner can modify entities",
+		});
 
 		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
@@ -266,7 +273,11 @@ describe("entities server actions", () => {
 			}),
 		);
 
-		await expect(deleteEntityAction(entity.id)).rejects.toThrow("Unauthorized");
+		const result = await deleteEntityAction({ id: entity.id });
+		expect(result).toEqual({
+			success: false,
+			error: "Only project owner can delete entities",
+		});
 
 		expect(mockedDelete).not.toHaveBeenCalled();
 	});
