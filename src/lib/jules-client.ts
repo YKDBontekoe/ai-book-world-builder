@@ -2,27 +2,155 @@ import "server-only";
 
 const JULES_API_BASE = "https://jules.googleapis.com/v1alpha";
 
+// --- Types ---
+
+export type JulesSessionState =
+	| "STATE_UNSPECIFIED"
+	| "QUEUED"
+	| "PLANNING"
+	| "AWAITING_PLAN_APPROVAL"
+	| "AWAITING_USER_FEEDBACK"
+	| "IN_PROGRESS"
+	| "PAUSED"
+	| "FAILED"
+	| "COMPLETED";
+
+export type JulesAutomationMode =
+	| "AUTOMATION_MODE_UNSPECIFIED"
+	| "AUTO_CREATE_PR";
+
 export interface JulesSource {
-	name: string;
+	name: string; // full resource name
 	id: string;
 	githubRepo: {
 		owner: string;
 		repo: string;
+		isPrivate: boolean;
+		defaultBranch: { displayName: string };
+		branches: Array<{ displayName: string }>;
 	};
 }
 
 export interface JulesSession {
-	name: string;
+	name: string; // full resource name e.g. sessions/abc
 	id: string;
-	title: string;
 	prompt: string;
+	title: string;
+	state: JulesSessionState;
+	url: string;
+	sourceContext: {
+		source: string;
+		githubRepoContext: {
+			startingBranch: string;
+		};
+	};
+	requirePlanApproval?: boolean;
+	automationMode?: JulesAutomationMode;
 	outputs?: Array<{
 		pullRequest?: {
 			url: string;
 			title: string;
+			description: string;
 		};
 	}>;
+	createTime: string;
+	updateTime: string;
 }
+
+export interface JulesPlanStep {
+	id: string;
+	index: number;
+	title: string;
+	description: string;
+	state?:
+		| "STATE_UNSPECIFIED"
+		| "PENDING"
+		| "IN_PROGRESS"
+		| "COMPLETED"
+		| "FAILED"
+		| "SKIPPED";
+}
+
+export interface JulesPlan {
+	id: string;
+	steps: JulesPlanStep[];
+	createTime: string;
+}
+
+export interface JulesArtifact {
+	changeSet?: {
+		source: string;
+		gitPatch: {
+			baseCommitId: string;
+			unidiffPatch: string;
+			suggestedCommitMessage: string;
+		};
+	};
+	bashOutput?: {
+		command: string;
+		output: string;
+		exitCode: number;
+	};
+	media?: {
+		mimeType: string;
+		data: string; // base64
+	};
+}
+
+/**
+ * Represents a single activity or event within a Jules session.
+ * Activities are the immutable history of what happened.
+ */
+export interface JulesActivity {
+	/** resource name of the activity. */
+	name: string;
+	/** Short ID. */
+	id: string;
+	/** Who caused this activity. */
+	originator: "ORIGINATOR_UNSPECIFIED" | "USER" | "AGENT" | "SYSTEM";
+	/** Text summary of the activity. */
+	description: string;
+	/** ISO timestamp when it happened. */
+	createTime: string;
+	/** Any artifacts (files, patches, etc.) produced by this activity. */
+	artifacts?: JulesArtifact[];
+
+	// Event Types - Mutually exclusive payloads
+
+	/** Present if this activity represents the agent generating a plan. */
+	planGenerated?: {
+		plan: JulesPlan;
+	};
+	/** Present if the user approved a plan. */
+	planApproved?: {
+		planId: string;
+	};
+	/** Present if the user sent a message. */
+	userMessaged?: {
+		userMessage: string;
+	};
+	/** Present if the agent replied with a message. */
+	agentMessaged?: {
+		agentMessage: string;
+	};
+	/** Present if the agent updated progress on a step. */
+	progressUpdated?: {
+		title: string;
+		description: string;
+	};
+	/** Present if the session finished successfully. */
+	sessionCompleted?: Record<string, never>;
+	/** Present if the session failed or was aborted. */
+	sessionFailed?: {
+		reason: string;
+	};
+	/**
+	 * Legacy/Helper fields for UI mapping.
+	 * Prefer using the event payloads above.
+	 */
+}
+
+// --- Client ---
 
 export class JulesClient {
 	private apiKey: string;
@@ -52,20 +180,77 @@ export class JulesClient {
 				`Jules API Error: ${response.status} ${response.statusText} - ${text}`,
 			);
 		}
-		return response.json() as Promise<T>;
+		// Some endpoints return empty bodies (like approvePlan)
+		if (
+			response.status === 204 ||
+			response.headers.get("content-length") === "0"
+		) {
+			return {} as T;
+		}
+		// Safely handle empty JSON responses
+		try {
+			return (await response.json()) as T;
+		} catch {
+			return {} as T;
+		}
 	}
 
-	async listSources(): Promise<JulesSource[]> {
-		const data = await this.request<{ sources: JulesSource[] }>("/sources");
-		return data.sources || [];
+	// --- Sources ---
+
+	async listSources(
+		pageSize = 20,
+		pageToken?: string,
+	): Promise<{ sources: JulesSource[]; nextPageToken?: string }> {
+		const params = new URLSearchParams({ pageSize: pageSize.toString() });
+		if (pageToken) params.append("pageToken", pageToken);
+
+		const data = await this.request<{
+			sources: JulesSource[];
+			nextPageToken?: string;
+		}>(`/sources?${params.toString()}`);
+		return { sources: data.sources || [], nextPageToken: data.nextPageToken };
+	}
+
+	async getSource(sourceName: string): Promise<JulesSource> {
+		// sourceName should be 'sources/{id}'
+		// If only id is passed, we might need to handle it, but API expects full name usually
+		// but let's assume strict usage or simple prepend if missing
+		const path = sourceName.startsWith("sources/")
+			? sourceName
+			: `sources/${sourceName}`;
+		return this.request<JulesSource>(`/${path}`);
+	}
+
+	// --- Sessions ---
+
+	async listSessions(
+		pageSize = 20,
+		pageToken?: string,
+	): Promise<{ sessions: JulesSession[]; nextPageToken?: string }> {
+		const params = new URLSearchParams({ pageSize: pageSize.toString() });
+		if (pageToken) params.append("pageToken", pageToken);
+
+		const data = await this.request<{
+			sessions: JulesSession[];
+			nextPageToken?: string;
+		}>(`/sessions?${params.toString()}`);
+		return { sessions: data.sessions || [], nextPageToken: data.nextPageToken };
+	}
+
+	async getSession(sessionId: string): Promise<JulesSession> {
+		const name = sessionId.startsWith("sessions/")
+			? sessionId
+			: `sessions/${sessionId}`;
+		return this.request<JulesSession>(`/${name}`);
 	}
 
 	async createSession(params: {
 		prompt: string;
 		sourceName: string;
 		startingBranch?: string;
-		automationMode?: "AUTO_CREATE_PR" | "AUTOMATION_MODE_UNSPECIFIED";
+		automationMode?: JulesAutomationMode;
 		title?: string;
+		requirePlanApproval?: boolean;
 	}): Promise<JulesSession> {
 		const body = {
 			prompt: params.prompt,
@@ -77,11 +262,56 @@ export class JulesClient {
 			},
 			automationMode: params.automationMode || "AUTOMATION_MODE_UNSPECIFIED",
 			title: params.title,
+			requirePlanApproval: params.requirePlanApproval,
 		};
 
 		return this.request<JulesSession>("/sessions", {
 			method: "POST",
 			body: JSON.stringify(body),
 		});
+	}
+
+	async approvePlan(sessionId: string): Promise<void> {
+		const name = sessionId.startsWith("sessions/")
+			? sessionId
+			: `sessions/${sessionId}`;
+		await this.request(`/${name}:approvePlan`, {
+			method: "POST",
+			body: JSON.stringify({}),
+		});
+	}
+
+	async sendMessage(sessionId: string, prompt: string): Promise<void> {
+		const name = sessionId.startsWith("sessions/")
+			? sessionId
+			: `sessions/${sessionId}`;
+		await this.request(`/${name}:sendMessage`, {
+			method: "POST",
+			body: JSON.stringify({ prompt }),
+		});
+	}
+
+	// --- Activities ---
+
+	async listActivities(
+		sessionId: string,
+		pageSize = 50,
+		pageToken?: string,
+	): Promise<{ activities: JulesActivity[]; nextPageToken?: string }> {
+		const name = sessionId.startsWith("sessions/")
+			? sessionId
+			: `sessions/${sessionId}`;
+
+		const params = new URLSearchParams({ pageSize: pageSize.toString() });
+		if (pageToken) params.append("pageToken", pageToken);
+
+		const data = await this.request<{
+			activities: JulesActivity[];
+			nextPageToken?: string;
+		}>(`/${name}/activities?${params.toString()}`);
+		return {
+			activities: data.activities || [],
+			nextPageToken: data.nextPageToken,
+		};
 	}
 }
