@@ -8,7 +8,7 @@ import {
 	ResizablePanelGroup,
 } from "@/components/atoms/resizable";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
-import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useCanvasSync } from "@/components/organisms/writer/hooks/use-canvas-sync";
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
 import { WriterSpotlight } from "@/components/organisms/writer/tools/writer-spotlight";
@@ -153,25 +153,14 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 	);
 }
 
-function CanvasSync({
+function CanvasSyncWrapper({
 	projectId,
 	isReadOnly,
 }: {
 	projectId: string;
 	isReadOnly: boolean;
 }) {
-	const { setProjectId, setIsReadOnly } = useBookCanvasActions();
-
-	useEffect(() => {
-		setProjectId(projectId);
-		setIsReadOnly(isReadOnly);
-		// Reset when unmounting (optional, but good for cleanup)
-		return () => {
-			setProjectId(null);
-			setIsReadOnly(false);
-		};
-	}, [projectId, isReadOnly, setProjectId, setIsReadOnly]);
-
+	useCanvasSync(projectId, isReadOnly);
 	return null;
 }
 
@@ -182,7 +171,7 @@ export function WriterView(props: WriterViewProps) {
 		<div className="h-full w-full overflow-hidden flex flex-col">
 			<WriterProvider {...props}>
 				<WriterControlProvider>
-					<CanvasSync projectId={project.id} isReadOnly={isReadOnly} />
+					<CanvasSyncWrapper projectId={project.id} isReadOnly={isReadOnly} />
 					<WriterViewContent props={props} />
 				</WriterControlProvider>
 			</WriterProvider>
