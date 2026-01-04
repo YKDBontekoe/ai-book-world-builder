@@ -15,6 +15,8 @@ import {
 import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminDashboard() {
 	await connection();
 	const [statsResult, usersResult] = await Promise.all([

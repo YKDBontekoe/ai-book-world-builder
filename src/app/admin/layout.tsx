@@ -5,6 +5,8 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
 import { isAdmin } from "@/lib/auth/utils";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
 	children,
 }: {
