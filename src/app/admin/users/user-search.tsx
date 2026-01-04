@@ -3,8 +3,8 @@
 import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type JSX, useEffect, useState } from "react";
-import { useDebouncedCallback } from "use-debounce";
 import { Input } from "@/components/atoms/input";
+import { useDebouncedCallback } from "@/hooks/use-debounce";
 
 /**
  * UserSearch component providing a debounced search input that updates URL search params.
