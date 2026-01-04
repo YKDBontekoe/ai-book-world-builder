@@ -162,15 +162,18 @@ has_jules_invoked_label() {
 # Helper: Collect all CodeRabbit inline comments on this PR
 collect_coderabbit_comments() {
   if [[ -n "$GH_TOKEN" && -n "$NUMBER" ]]; then
-    # Fetch raw comments JSON
-    COMMENTS_JSON=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" 2>/dev/null || echo "[]")
+    # Create temp file for comments to avoid argument list too long errors
+    local comments_file=$(mktemp)
+    
+    # Fetch raw comments JSON directly to file
+    gh api "/repos/${GITHUB_REPOSITORY}/pulls/${NUMBER}/comments" > "$comments_file" 2>/dev/null || echo "[]" > "$comments_file"
     
     # Use Node.js to act as a robust parser for the markdown content
     # We embed the script to avoid dependency issues
     node -e '
       const fs = require("fs");
       try {
-        const comments = JSON.parse(process.argv[1]);
+        const comments = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
         const coderabbitComments = comments.filter(c => 
           c.user && c.user.login && c.user.login.includes("coderabbitai")
         );
@@ -213,7 +216,10 @@ collect_coderabbit_comments() {
       } catch (e) {
         console.error("Error parsing comments:", e);
       }
-    ' "$COMMENTS_JSON"
+    ' "$comments_file"
+    
+    # Cleanup
+    rm -f "$comments_file"
   else
     echo ""
   fi
