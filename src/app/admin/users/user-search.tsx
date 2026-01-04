@@ -2,9 +2,9 @@
 
 import { Search } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type JSX, useEffect, useState } from "react";
+import { type JSX, useCallback, useEffect, useState } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 import { Input } from "@/components/atoms/input";
-import { useDebouncedCallback } from "@/hooks/use-debounce";
 
 /**
  * UserSearch component providing a debounced search input that updates URL search params.
@@ -22,16 +22,22 @@ export function UserSearch(): JSX.Element {
 		setValue(searchParams.get("search") ?? "");
 	}, [searchParams]);
 
-	const handleSearch = useDebouncedCallback((term: string) => {
-		const params = new URLSearchParams(searchParams);
-		params.set("page", "1");
-		if (term) {
-			params.set("search", term);
-		} else {
-			params.delete("search");
-		}
-		replace(`${pathname}?${params.toString()}`);
-	}, 300);
+	const handleSearch = useDebounceCallback(
+		useCallback(
+			(term: string) => {
+				const params = new URLSearchParams(searchParams);
+				params.set("page", "1");
+				if (term) {
+					params.set("search", term);
+				} else {
+					params.delete("search");
+				}
+				replace(`${pathname}?${params.toString()}`);
+			},
+			[pathname, replace, searchParams],
+		),
+		300,
+	);
 
 	return (
 		<div className="relative w-full max-w-sm">
