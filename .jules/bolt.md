@@ -1,3 +1,4 @@
-## 2025-06-25 - Selective Memoization for View/Edit Modes
+## 2026-01-04 - Selective Memoization for View/Edit Modes
+
 **Learning:** Components that switch between 'view' and 'edit' modes often have different memoization needs. In 'view' mode, shallow comparison of specific fields (like `role` or `content`) is sufficient, but 'edit' mode may require full object integrity. Standard `React.memo` (shallow equal) fails to optimize the 'view' path if the parent passes a new object reference on every render.
 **Action:** Implement a custom `memo` comparison function that explicitly checks the `mode` prop. If in 'view' mode, perform selective field comparison (ignoring the unstable object reference). If in 'edit' mode, fall back to strict reference equality or deep comparison as needed to ensure data consistency.

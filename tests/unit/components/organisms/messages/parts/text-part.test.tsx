@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { Profiler } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { TextPart } from "@/components/organisms/messages/parts/text-part";
@@ -56,13 +57,50 @@ describe("TextPart", () => {
 	});
 
 	it("does not re-render if props are stable in view mode", () => {
-		const { rerender } = render(<TextPart {...defaultProps} />);
+		let renderCount = 0;
+		const onRender = () => {
+			renderCount++;
+		};
 
-		// Rerender with identical props (new object refs but same values)
-		rerender(<TextPart {...defaultProps} message={{ ...mockMessage }} />);
+		const { rerender } = render(
+			<Profiler id="TextPart" onRender={onRender}>
+				<TextPart {...defaultProps} />
+			</Profiler>,
+		);
 
-		// Ideally we would check render counts, but React Testing Library doesn't expose that easily.
-		// However, the test passes if no error occurs, ensuring the component handles updates.
+		const initialRenderCount = renderCount;
+
+		// Rerender with new message reference but identical text/role
+		rerender(
+			<Profiler id="TextPart" onRender={onRender}>
+				<TextPart {...defaultProps} message={{ ...mockMessage }} />
+			</Profiler>,
+		);
+
+		expect(renderCount).toBe(initialRenderCount); // Should not re-render
 		expect(screen.getByTestId("message-bubble")).toBeDefined();
+	});
+
+	it("re-renders when text changes in view mode", () => {
+		let renderCount = 0;
+		const onRender = () => {
+			renderCount++;
+		};
+
+		const { rerender } = render(
+			<Profiler id="TextPart" onRender={onRender}>
+				<TextPart {...defaultProps} />
+			</Profiler>,
+		);
+
+		const initialRenderCount = renderCount;
+
+		rerender(
+			<Profiler id="TextPart" onRender={onRender}>
+				<TextPart {...defaultProps} text="Different text" />
+			</Profiler>,
+		);
+
+		expect(renderCount).toBeGreaterThan(initialRenderCount); // Should re-render
 	});
 });

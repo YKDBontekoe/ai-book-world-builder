@@ -52,6 +52,21 @@ function PureTextPart({
 	return null;
 }
 
+/**
+ * A memoized component that renders the text content of a message.
+ *
+ * Uses a custom comparison function to optimize re-renders in 'view' mode by ignoring
+ * unstable `message` object references if the relevant fields (text, role) haven't changed.
+ *
+ * @param props - The component properties.
+ * @param props.message - The full chat message object.
+ * @param props.text - The text content to display.
+ * @param props.mode - The display mode ('view' or 'edit').
+ * @param props.setMode - State setter for the mode.
+ * @param props.setMessages - Function to update the message list.
+ * @param props.regenerate - Function to regenerate the message.
+ * @returns The rendered text part component.
+ */
 export const TextPart = memo(PureTextPart, (prev, next) => {
 	// 1. Check simple props first
 	if (prev.mode !== next.mode) return false;
