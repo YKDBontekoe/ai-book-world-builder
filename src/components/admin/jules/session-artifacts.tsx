@@ -17,6 +17,12 @@ interface SessionArtifactsProps {
 	activities: JulesActivity[];
 }
 
+/**
+ * Aggregates and displays artifacts (code changes, bash outputs) generated during a Jules session.
+ *
+ * @param activities - The list of session activities to extract artifacts from.
+ * @returns The SessionArtifacts component.
+ */
 export function SessionArtifacts({
 	activities,
 }: SessionArtifactsProps): JSX.Element {

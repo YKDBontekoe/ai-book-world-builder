@@ -11,11 +11,19 @@ interface GlobalActivityFeedProps {
 	activeSessions: JulesSession[];
 }
 
+/**
+ * A real-time activity feed component that displays the latest updates from active Jules sessions.
+ *
+ * @param activeSessions - The list of active Jules sessions to monitor.
+ * @returns The GlobalActivityFeed component or null if no active sessions.
+ */
 export function GlobalActivityFeed({
 	activeSessions,
 }: GlobalActivityFeedProps): JSX.Element | null {
 	// Only track the top 3 most recent active sessions to avoid API spam
+	// Use slice to create a shallow copy before sorting to avoid mutating props
 	const targetSessions = activeSessions
+		.slice()
 		.sort(
 			(a, b) =>
 				new Date(b.updateTime).getTime() - new Date(a.updateTime).getTime(),

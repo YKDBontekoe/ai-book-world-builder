@@ -9,6 +9,12 @@ interface PlanProgressProps {
 	activities: JulesActivity[];
 }
 
+/**
+ * Visualizes the progress of a Jules plan, showing steps and their statuses.
+ *
+ * @param activities - The list of activities from the Jules session containing plan updates.
+ * @returns The PlanProgress component or null if no plan is found.
+ */
 export function PlanProgress({
 	activities,
 }: PlanProgressProps): JSX.Element | null {
@@ -94,7 +100,7 @@ function PlanStepItem({ step }: { step: JulesPlanStep }) {
 					</h4>
 					{step.state && step.state !== "STATE_UNSPECIFIED" && (
 						<span className="text-[10px] font-mono uppercase text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">
-							{step.state.replace("_", " ")}
+							{step.state.replace(/_/g, " ")}
 						</span>
 					)}
 				</div>

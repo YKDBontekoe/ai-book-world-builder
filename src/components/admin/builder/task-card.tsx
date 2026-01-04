@@ -122,6 +122,7 @@ export function TaskCard({
 										onApprove(item.data.id);
 									}}
 									disabled={isApproving}
+									aria-label={isApproving ? "Approving plan" : "Approve plan"}
 								>
 									{isApproving ? (
 										<Loader2 className="h-3 w-3 animate-spin mr-1" />

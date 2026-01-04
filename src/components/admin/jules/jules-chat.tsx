@@ -275,6 +275,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 														}}
 														disabled={isReviewing}
 														className="gap-2"
+														aria-label="AI Review plan"
 													>
 														{isReviewing ? (
 															<Loader2 className="h-4 w-4 animate-spin" />

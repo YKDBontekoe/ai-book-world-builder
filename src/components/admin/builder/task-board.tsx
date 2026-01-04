@@ -26,6 +26,9 @@ interface Column {
 
 export function TaskBoard(): JSX.Element {
 	const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
+	const [approvingSessionId, setApprovingSessionId] = useState<string | null>(
+		null,
+	);
 	const queryClient = useQueryClient();
 
 	// --- Data Fetching ---
@@ -102,8 +105,9 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { mutate: approvePlan, isPending: isApproving } = useMutation({
+	const { mutate: approvePlan } = useMutation({
 		mutationFn: async (sessionId: string) => {
+			setApprovingSessionId(sessionId);
 			const res = await approveJulesPlanAction({ sessionId });
 			if (!res.success) throw new Error(res.error);
 			return res;
@@ -114,6 +118,9 @@ export function TaskBoard(): JSX.Element {
 		},
 		onError: (err) => {
 			toast.error(`Failed to approve plan: ${err.message}`);
+		},
+		onSettled: () => {
+			setApprovingSessionId(null);
 		},
 	});
 
@@ -230,7 +237,11 @@ export function TaskBoard(): JSX.Element {
 										onApprove={
 											item.type === "session" ? handleApprove : undefined
 										}
-										isApproving={isApproving}
+										isApproving={
+											item.type === "session"
+												? approvingSessionId === item.data.id
+												: false
+										}
 									/>
 								))
 							)}
