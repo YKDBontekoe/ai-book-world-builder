@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { MessageReasoning } from "@/components/organisms/messages/message-reasoning";
 
 interface ReasoningPartProps {
@@ -7,8 +8,10 @@ interface ReasoningPartProps {
 	reasoning: string;
 }
 
-export function ReasoningPart({ isLoading, reasoning }: ReasoningPartProps) {
+function PureReasoningPart({ isLoading, reasoning }: ReasoningPartProps) {
 	if (!reasoning.trim()) return null;
 
 	return <MessageReasoning isLoading={isLoading} reasoning={reasoning} />;
 }
+
+export const ReasoningPart = memo(PureReasoningPart);
