@@ -1,28 +1,34 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// Define mocks inside or use hoistable variables if supported, but simpler to define inline for mocks
+// Define valid UUIDs for testing using vi.hoisted so they are available in mocks
+const { VALID_CHAPTER_ID, VALID_PROJECT_ID, VALID_SCENE_ID, NEW_SCENE_ID } = vi.hoisted(() => ({
+	VALID_CHAPTER_ID: "123e4567-e89b-12d3-a456-426614174000",
+	VALID_PROJECT_ID: "123e4567-e89b-12d3-a456-426614174001",
+	VALID_SCENE_ID: "123e4567-e89b-12d3-a456-426614174002",
+	NEW_SCENE_ID: "123e4567-e89b-12d3-a456-426614174003",
+}));
 
 vi.mock("@/lib/db/drizzle", () => {
 	const mockChapter = {
-		id: "ch-1",
-		projectId: "proj-1",
+		id: VALID_CHAPTER_ID,
+		projectId: VALID_PROJECT_ID,
 		title: "Chapter 1",
 		notes: "Notes",
 	};
 	const mockScenes = [
 		{
-			id: "scene-1",
+			id: VALID_SCENE_ID,
 			title: "Scene 1",
 			content: "Content",
 			sequence: 1,
-			chapterId: "ch-1",
+			chapterId: VALID_CHAPTER_ID,
 		},
 	];
 	const mockNewScene = {
-		id: "new-scene-1",
+		id: NEW_SCENE_ID,
 		title: "AI Generated Scene",
 		sequence: 2,
-		chapterId: "ch-1",
+		chapterId: VALID_CHAPTER_ID,
 	};
 
 	return {
@@ -66,7 +72,7 @@ vi.mock("@/lib/ai/writer", () => ({
 // Mock @/lib/db/queries/scene
 vi.mock("@/lib/db/queries/scene", () => ({
 	createScene: vi.fn().mockResolvedValue({
-		id: "new-scene-1",
+		id: NEW_SCENE_ID,
 		title: "AI Generated Scene",
 		sequence: 2,
 	}),
@@ -80,7 +86,7 @@ vi.mock("@/app/(auth)/auth", () => ({
 
 vi.mock("@/lib/db/queries/project", () => ({
 	getProjectByIdWithAccess: vi.fn().mockResolvedValue({
-		id: "proj-1",
+		id: VALID_PROJECT_ID,
 		userId: "user-1",
 		visibility: "private",
 	}),
@@ -90,7 +96,7 @@ vi.mock("@/lib/db/queries/project", () => ({
 vi.mock("@/lib/db/repositories/project-repository", () => ({
 	projectRepository: {
 		findByIdWithAccess: vi.fn().mockResolvedValue({
-			id: "proj-1",
+			id: VALID_PROJECT_ID,
 			userId: "user-1",
 			visibility: "private",
 		}),
@@ -108,11 +114,8 @@ import { generateScene } from "@/app/actions/writer";
 
 describe("generateScene", () => {
 	it("should generate a scene successfully", async () => {
-		const result = await generateScene("ch-1");
-		if (result.success) {
-			expect(result.data?.sceneId).toBe("new-scene-1");
-		} else {
-			throw new Error(result.error);
-		}
+		const result = await generateScene(VALID_CHAPTER_ID);
+		expect(result.success).toBe(true);
+		expect(result.sceneId).toBe(NEW_SCENE_ID);
 	});
 });

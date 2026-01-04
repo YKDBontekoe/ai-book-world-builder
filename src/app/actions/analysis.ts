@@ -1,13 +1,12 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { ensureProjectAccess } from "@/lib/actions-utils";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db/drizzle";
 import { getIssuesForProject, resolveIssue } from "@/lib/db/queries/issues";
 import { scene, sceneCard } from "@/lib/db/schema";
 import { consistencyService } from "@/lib/services/analysis/consistency-service";
-import { z } from "zod";
-import { createUserAction } from "@/lib/action-middleware";
 
 export type ScenePacingData = {
 	sceneId: string;
