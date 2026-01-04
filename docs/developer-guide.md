@@ -96,6 +96,12 @@ To enable the AI to write coherently over long contexts without a Vector DB, we 
 
 ### 6. AI Integration & Models
 
+**Jules Agent Integration**:
+The project integrates with the Google Jules API to provide an autonomous software engineering agent. This allows the system to self-repair and implement features.
+-   **Client**: `src/lib/jules-client.ts` wraps the Jules API.
+-   **Admin UI**: `src/app/admin/github` provides a dashboard for managing Jules sessions.
+-   **Documentation**: See [docs/jules-integration.md](jules-integration.md) for full details.
+
 **Role-Based Routing**:
 We do not hardcode model IDs. Instead, we use a role-based system defined in `lib/ai/model-routing.ts`:
 - `light`: Fast, cheap (e.g., Haiku, Flash). Used for UI labeling.
