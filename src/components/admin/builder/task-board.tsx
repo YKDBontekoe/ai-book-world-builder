@@ -10,6 +10,7 @@ import {
 	getJulesSessionsAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { ItemDetail } from "../github/item-detail";
 import { JulesChat } from "../jules/jules-chat";
 import { CreateFeatureDialog } from "./create-feature-dialog";
@@ -122,10 +123,12 @@ export function TaskBoard(): JSX.Element {
 			)
 			.map((s) => ({ type: "session", data: s }));
 
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map((p) => ({
-			type: "pr",
-			data: p,
-		}));
+		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map(
+			(p) => ({
+				type: "pr",
+				data: p,
+			}),
+		);
 
 		const doneItems: TaskItem[] = [
 			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
@@ -195,9 +198,11 @@ export function TaskBoard(): JSX.Element {
 
 						<div className="flex-1 overflow-y-auto pr-2 space-y-3">
 							{col.items.length === 0 ? (
-								<div className="text-center py-8 text-xs text-muted-foreground border-2 border-dashed rounded-lg">
-									No items
-								</div>
+								<EmptyState
+									title="No items"
+									className="py-8 min-h-[100px]"
+									variant="dashed"
+								/>
 							) : (
 								col.items.map((item) => (
 									<TaskCard
