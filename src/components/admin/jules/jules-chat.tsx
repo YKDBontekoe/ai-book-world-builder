@@ -26,14 +26,19 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
-import { ScrollArea } from "@/components/atoms/scroll-area";
-import { GlassCard } from "@/components/molecules/glass-card";
 import {
 	ResizableHandle,
 	ResizablePanel,
 	ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@/components/atoms/resizable";
+import { ScrollArea } from "@/components/atoms/scroll-area";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@/components/atoms/tabs";
+import { GlassCard } from "@/components/molecules/glass-card";
 import type { JulesActivity, JulesPlan } from "@/lib/jules-client";
 import { PlanProgress } from "./plan-progress";
 import { SessionArtifacts } from "./session-artifacts";

@@ -4,7 +4,12 @@ import { FileText } from "lucide-react";
 import type { JSX } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { ScrollArea } from "@/components/atoms/scroll-area";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+	Tabs,
+	TabsContent,
+	TabsList,
+	TabsTrigger,
+} from "@/components/atoms/tabs";
 import type { JulesActivity } from "@/lib/jules-client";
 import { ArtifactRenderer } from "./artifact-renderer";
 
