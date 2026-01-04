@@ -29,7 +29,6 @@ export default async function AdminDashboard() {
 	}
 
 	const stats = statsResult.data;
-	const recentUsers = usersResult.success ? usersResult.data.users : [];
 
 	return (
 		<div className="space-y-8">
@@ -88,7 +87,15 @@ export default async function AdminDashboard() {
 					</Button>
 				</div>
 
-				{recentUsers.length === 0 ? (
+				{!usersResult.success ? (
+					<EmptyState
+						title="Error loading users"
+						description={usersResult.error}
+						icon={Users}
+						className="text-destructive"
+						variant="glass"
+					/>
+				) : usersResult.data.users.length === 0 ? (
 					<EmptyState
 						title="No users found"
 						description="There are no users in the system yet."
@@ -108,7 +115,7 @@ export default async function AdminDashboard() {
 								</TableRow>
 							</TableHeader>
 							<TableBody>
-								{recentUsers.map((user) => (
+								{usersResult.data.users.map((user) => (
 									<TableRow key={user.id}>
 										<TableCell className="font-medium">
 											{user.name || "N/A"}

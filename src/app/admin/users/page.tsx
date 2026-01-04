@@ -1,5 +1,6 @@
 import { Users as UsersIcon } from "lucide-react";
 import Link from "next/link";
+import type { JSX } from "react";
 import { getUsers } from "@/app/actions/admin";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
@@ -15,11 +16,17 @@ import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { UserSearch } from "./user-search";
 
+/**
+ * UsersPage is a server component that renders a paginated, searchable list of users.
+ *
+ * @param props.searchParams - The URL search parameters (page, search).
+ * @returns A promise resolving to the JSX element for the users page.
+ */
 export default async function UsersPage({
 	searchParams,
 }: {
 	searchParams: Promise<{ page?: string; search?: string }>;
-}) {
+}): Promise<JSX.Element> {
 	const params = await searchParams;
 	const page = Number(params.page) || 1;
 	const search = params.search || "";
@@ -48,8 +55,12 @@ export default async function UsersPage({
 
 			{users.length === 0 ? (
 				<EmptyState
-					title="No users found"
-					description="There are no users in the system yet."
+					title={search ? "No users match your search" : "No users found"}
+					description={
+						search
+							? `No users found matching "${search}". Try a different search term.`
+							: "There are no users in the system yet."
+					}
 					icon={UsersIcon}
 					variant="glass"
 				/>
@@ -107,7 +118,11 @@ export default async function UsersPage({
 			{users.length > 0 && (
 				<div className="flex items-center justify-end space-x-2">
 					<Button variant="outline" size="sm" disabled={page <= 1} asChild>
-						<Link href={`/admin/users?page=${page - 1}`}>Previous</Link>
+						<Link
+							href={`/admin/users?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+						>
+							Previous
+						</Link>
 					</Button>
 					<span className="text-sm text-muted-foreground">
 						Page {page} of {totalPages}
@@ -118,7 +133,11 @@ export default async function UsersPage({
 						disabled={page >= totalPages}
 						asChild
 					>
-						<Link href={`/admin/users?page=${page + 1}`}>Next</Link>
+						<Link
+							href={`/admin/users?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+						>
+							Next
+						</Link>
 					</Button>
 				</div>
 			)}
