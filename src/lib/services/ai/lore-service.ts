@@ -5,7 +5,7 @@ import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { openrouter } from "@/lib/ai/providers";
-import { generationService } from "@/lib/ai/writer-service";
+import { generationService } from "@/lib/ai/services/generation-service";
 import {
 	createEntity,
 	createEntityAttribute,

@@ -1,4 +1,6 @@
+import { Users as UsersIcon } from "lucide-react";
 import Link from "next/link";
+import type { JSX } from "react";
 import { getUsers } from "@/app/actions/admin";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
@@ -9,27 +11,35 @@ import {
 	TableHead,
 	TableHeader,
 	TableRow,
-} from "@/components/atoms/table"; // Assuming table component exists in atoms or ui, need to verify
+} from "@/components/atoms/table";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { UserSearch } from "./user-search";
 
-// Note: Table component might not exist in atoms. Checking file structure...
-// list_files didn't show table.tsx in atoms.
-// I'll assume standard HTML table or check if there's a Shadcn Table.
-// If missing, I'll use standard HTML with Tailwind classes for now to be safe.
-
+/**
+ * UsersPage is a server component that renders a paginated, searchable list of users.
+ *
+ * @param props.searchParams - The URL search parameters (page, search).
+ * @returns A promise resolving to the JSX element for the users page.
+ */
 export default async function UsersPage({
 	searchParams,
 }: {
-	searchParams: Promise<{ page?: string }>;
-}) {
-	const page = Number((await searchParams).page) || 1;
-	const result = await getUsers({ page });
+	searchParams: Promise<{ page?: string; search?: string }>;
+}): Promise<JSX.Element> {
+	const params = await searchParams;
+	const page = Number(params.page) || 1;
+	const search = params.search || "";
+	const result = await getUsers({ page, search });
 
 	if (!result.success) {
 		return (
-			<div className="p-8 text-destructive">
-				Error loading users: {result.error}
-			</div>
+			<EmptyState
+				title="Error loading users"
+				description={result.error}
+				icon={UsersIcon}
+				className="text-destructive"
+			/>
 		);
 	}
 
@@ -40,48 +50,47 @@ export default async function UsersPage({
 		<div className="space-y-8">
 			<div className="flex items-center justify-between">
 				<h1 className="text-3xl font-bold tracking-tight">Users</h1>
+				<UserSearch />
 			</div>
 
-			<GlassCard className="p-0 overflow-hidden">
-				<div className="w-full overflow-auto">
-					<table className="w-full caption-bottom text-sm">
-						<thead className="[&_tr]:border-b">
-							<tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-								<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-									Name
-								</th>
-								<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-									Email
-								</th>
-								<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-									Role
-								</th>
-								<th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-									Status
-								</th>
-								<th className="h-12 px-4 text-right align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0">
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody className="[&_tr:last-child]:border-0">
+			{users.length === 0 ? (
+				<EmptyState
+					title={search ? "No users match your search" : "No users found"}
+					description={
+						search
+							? `No users found matching "${search}". Try a different search term.`
+							: "There are no users in the system yet."
+					}
+					icon={UsersIcon}
+					variant="glass"
+				/>
+			) : (
+				<GlassCard className="p-0 overflow-hidden">
+					<Table>
+						<TableHeader>
+							<TableRow>
+								<TableHead>Name</TableHead>
+								<TableHead>Email</TableHead>
+								<TableHead>Role</TableHead>
+								<TableHead>Status</TableHead>
+								<TableHead className="text-right">Actions</TableHead>
+							</TableRow>
+						</TableHeader>
+						<TableBody>
 							{users.map((user) => (
-								<tr
-									key={user.id}
-									className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-								>
-									<td className="p-4 align-middle font-medium">
+								<TableRow key={user.id}>
+									<TableCell className="font-medium">
 										{user.name || "N/A"}
-									</td>
-									<td className="p-4 align-middle">{user.email}</td>
-									<td className="p-4 align-middle">
+									</TableCell>
+									<TableCell>{user.email}</TableCell>
+									<TableCell>
 										<Badge
 											variant={user.role === "admin" ? "default" : "secondary"}
 										>
 											{user.role}
 										</Badge>
-									</td>
-									<td className="p-4 align-middle">
+									</TableCell>
+									<TableCell>
 										{user.bannedAt ? (
 											<Badge variant="destructive">Banned</Badge>
 										) : (
@@ -92,36 +101,46 @@ export default async function UsersPage({
 												Active
 											</Badge>
 										)}
-									</td>
-									<td className="p-4 align-middle text-right">
+									</TableCell>
+									<TableCell className="text-right">
 										<Button asChild variant="ghost" size="sm">
 											<Link href={`/admin/users/${user.id}`}>View Details</Link>
 										</Button>
-									</td>
-								</tr>
+									</TableCell>
+								</TableRow>
 							))}
-						</tbody>
-					</table>
-				</div>
-			</GlassCard>
+						</TableBody>
+					</Table>
+				</GlassCard>
+			)}
 
 			{/* Pagination (Simple) */}
-			<div className="flex items-center justify-end space-x-2">
-				<Button variant="outline" size="sm" disabled={page <= 1} asChild>
-					<Link href={`/admin/users?page=${page - 1}`}>Previous</Link>
-				</Button>
-				<span className="text-sm text-muted-foreground">
-					Page {page} of {totalPages}
-				</span>
-				<Button
-					variant="outline"
-					size="sm"
-					disabled={page >= totalPages}
-					asChild
-				>
-					<Link href={`/admin/users?page=${page + 1}`}>Next</Link>
-				</Button>
-			</div>
+			{users.length > 0 && (
+				<div className="flex items-center justify-end space-x-2">
+					<Button variant="outline" size="sm" disabled={page <= 1} asChild>
+						<Link
+							href={`/admin/users?page=${page - 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+						>
+							Previous
+						</Link>
+					</Button>
+					<span className="text-sm text-muted-foreground">
+						Page {page} of {totalPages}
+					</span>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={page >= totalPages}
+						asChild
+					>
+						<Link
+							href={`/admin/users?page=${page + 1}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
+						>
+							Next
+						</Link>
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 }

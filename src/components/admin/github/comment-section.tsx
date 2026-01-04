@@ -9,6 +9,7 @@ import { getComments, postComment } from "@/app/actions/github";
 import { Button } from "@/components/atoms/button";
 import { Textarea } from "@/components/atoms/textarea";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { Response } from "@/components/molecules/response";
 
 interface CommentSectionProps {
 	issueNumber: number;
@@ -99,8 +100,8 @@ export function CommentSection({ issueNumber }: CommentSectionProps) {
 									})}
 								</span>
 							</div>
-							<div className="prose dark:prose-invert max-w-none text-sm whitespace-pre-wrap">
-								{comment.body}
+							<div className="prose dark:prose-invert max-w-none text-sm">
+								<Response>{comment.body}</Response>
 							</div>
 						</GlassCard>
 					))

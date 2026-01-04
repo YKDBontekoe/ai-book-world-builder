@@ -1,15 +1,17 @@
 "use client";
 
 import { DragHandleDots2Icon } from "@radix-ui/react-icons";
-import { Group, Panel, Separator } from "react-resizable-panels";
+import * as ResizablePrimitive from "react-resizable-panels";
 
 import { cn } from "@/lib/utils";
 
 const ResizablePanelGroup = ({
 	className,
 	...props
-}: React.ComponentProps<typeof Group>) => (
-	<Group
+}: React.ComponentProps<typeof ResizablePrimitive.Group> & {
+	direction: "horizontal" | "vertical";
+}) => (
+	<ResizablePrimitive.Group
 		className={cn(
 			"flex h-full w-full data-[panel-group-direction=vertical]:flex-col",
 			className,
@@ -18,16 +20,16 @@ const ResizablePanelGroup = ({
 	/>
 );
 
-const ResizablePanel = Panel;
+const ResizablePanel = ResizablePrimitive.Panel;
 
 const ResizableHandle = ({
 	withHandle,
 	className,
 	...props
-}: React.ComponentProps<typeof Separator> & {
+}: React.ComponentProps<typeof ResizablePrimitive.Separator> & {
 	withHandle?: boolean;
 }) => (
-	<Separator
+	<ResizablePrimitive.Separator
 		className={cn(
 			"relative flex w-px items-center justify-center bg-transparent hover:bg-primary/50 active:bg-primary transition-colors duration-300 ease-spring after:absolute after:inset-y-0 after:left-1/2 after:w-4 after:-translate-x-1/2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1 data-[panel-group-direction=vertical]:h-px data-[panel-group-direction=vertical]:w-full data-[panel-group-direction=vertical]:after:left-0 data-[panel-group-direction=vertical]:after:h-4 data-[panel-group-direction=vertical]:after:w-full data-[panel-group-direction=vertical]:after:-translate-y-1/2 data-[panel-group-direction=vertical]:after:translate-x-0 [&[data-panel-group-direction=vertical]>div]:rotate-90",
 			className,
@@ -39,7 +41,7 @@ const ResizableHandle = ({
 				<DragHandleDots2Icon className="h-3 w-3 text-muted-foreground" />
 			</div>
 		)}
-	</Separator>
+	</ResizablePrimitive.Separator>
 );
 
 export { ResizablePanelGroup, ResizablePanel, ResizableHandle };

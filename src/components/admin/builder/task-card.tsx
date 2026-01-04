@@ -1,8 +1,16 @@
 "use client";
 
-import { AlertCircle, Bot, GitPullRequest } from "lucide-react";
+import {
+	AlertCircle,
+	Bot,
+	Check,
+	GitBranch,
+	GitPullRequest,
+	Loader2,
+} from "lucide-react";
 import type { JSX } from "react";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
+import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
 import type { JulesSession } from "@/lib/jules-client";
 
@@ -15,12 +23,16 @@ interface TaskCardProps {
 	item: TaskItem;
 	onSelect: (item: TaskItem) => void;
 	onFix?: (issue: GitHubIssue) => void;
+	onApprove?: (sessionId: string) => void;
+	isApproving?: boolean;
 }
 
 export function TaskCard({
 	item,
 	onSelect,
 	onFix,
+	onApprove,
+	isApproving,
 }: TaskCardProps): JSX.Element {
 	const renderContent = () => {
 		switch (item.type) {
@@ -68,7 +80,11 @@ export function TaskCard({
 					</>
 				);
 
-			case "session":
+			case "session": {
+				const isAwaitingApproval = item.data.state === "AWAITING_PLAN_APPROVAL";
+				const branch =
+					item.data.sourceContext?.githubRepoContext?.startingBranch;
+
 				return (
 					<>
 						<div className="flex items-start justify-between gap-2">
@@ -78,18 +94,48 @@ export function TaskCard({
 									{item.data.id.split("/").pop()}
 								</span>
 							</div>
-							<span className="text-[10px] text-muted-foreground">
+							<span
+								className={`text-[10px] px-1.5 py-0.5 rounded ${isAwaitingApproval ? "bg-yellow-500/20 text-yellow-600" : "text-muted-foreground bg-muted"}`}
+							>
 								{item.data.state.replace("STATE_", "").replace("_", " ")}
 							</span>
 						</div>
-						<h4 className="font-medium text-sm mt-1 line-clamp-2">
+
+						<h4 className="font-medium text-sm mt-2 line-clamp-2">
 							{item.data.title || item.data.prompt}
 						</h4>
-						<div className="mt-3 text-xs text-muted-foreground">
-							Active Session
-						</div>
+
+						{branch && (
+							<div className="flex items-center gap-1 mt-2 text-xs text-muted-foreground">
+								<GitBranch className="h-3 w-3" />
+								<span>{branch}</span>
+							</div>
+						)}
+
+						{isAwaitingApproval && onApprove && (
+							<div className="mt-3 pt-3 border-t">
+								<Button
+									size="sm"
+									className="w-full h-7 text-xs"
+									onClick={(e) => {
+										e.stopPropagation();
+										onApprove(item.data.id);
+									}}
+									disabled={isApproving}
+									aria-label={isApproving ? "Approving plan" : "Approve plan"}
+								>
+									{isApproving ? (
+										<Loader2 className="h-3 w-3 animate-spin mr-1" />
+									) : (
+										<Check className="h-3 w-3 mr-1" />
+									)}
+									Approve Plan
+								</Button>
+							</div>
+						)}
 					</>
 				);
+			}
 
 			case "pr":
 				return (

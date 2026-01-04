@@ -2,6 +2,7 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
@@ -9,6 +10,10 @@ import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
+
+export type ActionResult<T = void> = Promise<
+	{ success: true; data?: T } | { success: false; error: string }
+>;
 
 export async function getSceneContent(sceneId: string) {
 	try {
@@ -29,31 +34,48 @@ export async function getSceneContent(sceneId: string) {
 	}
 }
 
-export async function updateSceneContent(sceneId: string, content: string) {
-	try {
-		// 1. Get Scene using repository
-		const targetScene = await sceneRepository.findById(sceneId);
+const updateSceneContentSchema = z.object({
+	sceneId: z.string().uuid(),
+	content: z
+		.string()
+		.min(1, "Content cannot be empty")
+		.max(200000, "Content is too long (max 200k chars)"),
+});
 
+export async function updateSceneContent(
+	sceneId: string,
+	content: string,
+): ActionResult {
+	try {
+		// 1. Get Scene first for auth check (Repository handles basic access)
+		const targetScene = await sceneRepository.findById(sceneId);
 		if (!targetScene) {
-			throw new Error("Scene not found");
+			return { success: false, error: "Scene not found" };
 		}
 
 		// 2. Verify Access (Write requires ownership)
 		await ensureProjectAccess(targetScene.projectId, true);
 
-		// 3. Update using repository
-		await sceneRepository.updateContent(sceneId, content, "drafting");
+		// 3. Validate Inputs
+		const validation = updateSceneContentSchema.safeParse({ sceneId, content });
+		if (!validation.success) {
+			return { success: false, error: validation.error.errors[0].message };
+		}
 
-		// Note: Content updates do not invalidate structure, only titles/ordering do.
+		// 4. Update using repository
+		await sceneRepository.updateContent(sceneId, content, "drafting");
 
 		return { success: true };
 	} catch (error) {
 		console.error("Failed to update scene content", error);
-		return { success: false };
+		return { success: false, error: "Failed to update scene content" };
 	}
 }
 
-export async function generateScene(chapterId: string, prevSceneId?: string) {
+export async function generateScene(
+	chapterId: string,
+	prevSceneId?: string,
+): ActionResult<{ sceneId: string }> {
 	try {
 		// 1. Fetch Context & Verify Access
 		const [currentChapter] = await db
@@ -101,25 +123,40 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newScene.id };
+		return { success: true, data: { sceneId: newScene.id } };
 	} catch (error) {
 		console.error("Failed to generate scene", error);
 		return { success: false, error: "Generation failed" };
 	}
 }
 
-export async function updateSceneTitle(sceneId: string, title: string) {
-	try {
-		const targetScene = await sceneRepository.findById(sceneId);
+const updateSceneTitleSchema = z.object({
+	sceneId: z.string().uuid(),
+	title: z.string().min(1, "Title is required").max(255, "Title is too long"),
+});
 
+export async function updateSceneTitle(
+	sceneId: string,
+	title: string,
+): ActionResult {
+	try {
+		// 1. Get Scene for Auth
+		const targetScene = await sceneRepository.findById(sceneId);
 		if (!targetScene) {
 			return { success: false, error: "Scene not found" };
 		}
 
+		// 2. Verify Access
 		await ensureProjectAccess(targetScene.projectId, true);
 
-		await sceneRepository.update(sceneId, { title });
+		// 3. Validate
+		const validation = updateSceneTitleSchema.safeParse({ sceneId, title });
+		if (!validation.success) {
+			return { success: false, error: validation.error.errors[0].message };
+		}
 
+		// 4. Update
+		await sceneRepository.update(sceneId, { title });
 		await invalidateCache(`project-structure:${targetScene.projectId}`);
 
 		return { success: true };
@@ -129,9 +166,7 @@ export async function updateSceneTitle(sceneId: string, title: string) {
 	}
 }
 
-export async function deleteScene(
-	sceneId: string,
-): Promise<{ success: boolean; error?: string }> {
+export async function deleteScene(sceneId: string): ActionResult {
 	try {
 		const targetScene = await sceneRepository.findById(sceneId);
 
@@ -152,12 +187,19 @@ export async function deleteScene(
 	}
 }
 
+const createSceneSchema = z.object({
+	chapterId: z.string().uuid(),
+	title: z.string().min(1, "Title is required").max(255, "Title is too long"),
+	insertAfterSceneId: z.string().uuid().optional(),
+});
+
 export async function createSceneInChapter(
 	chapterId: string,
 	title: string,
 	insertAfterSceneId?: string,
-) {
+): ActionResult<{ sceneId: string }> {
 	try {
+		// 1. Fetch Chapter for Auth
 		const [currentChapter] = await db
 			.select()
 			.from(chapter)
@@ -168,7 +210,19 @@ export async function createSceneInChapter(
 			return { success: false, error: "Chapter not found" };
 		}
 
+		// 2. Auth Check
 		await ensureProjectAccess(currentChapter.projectId, true);
+
+		// 3. Validation
+		const validation = createSceneSchema.safeParse({
+			chapterId,
+			title,
+			insertAfterSceneId,
+		});
+
+		if (!validation.success) {
+			return { success: false, error: validation.error.errors[0].message };
+		}
 
 		const scenes = await sceneRepository.findByChapter(chapterId);
 		let newSequence = scenes.length + 1;
@@ -207,15 +261,24 @@ export async function createSceneInChapter(
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newScene.id };
+		return { success: true, data: { sceneId: newScene.id } };
 	} catch (error) {
 		console.error("Failed to create scene", error);
 		return { success: false, error: "Failed to create scene" };
 	}
 }
 
-export async function reorderScenes(sceneIds: string[], chapterId: string) {
+const reorderScenesSchema = z.object({
+	sceneIds: z.array(z.string().uuid()).max(500, "Too many scenes to reorder"),
+	chapterId: z.string().uuid(),
+});
+
+export async function reorderScenes(
+	sceneIds: string[],
+	chapterId: string,
+): ActionResult {
 	try {
+		// 1. Fetch Chapter for Auth
 		const [currentChapter] = await db
 			.select()
 			.from(chapter)
@@ -226,7 +289,14 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 			return { success: false, error: "Chapter not found" };
 		}
 
+		// 2. Auth Check
 		await ensureProjectAccess(currentChapter.projectId, true);
+
+		// 3. Validation
+		const validation = reorderScenesSchema.safeParse({ sceneIds, chapterId });
+		if (!validation.success) {
+			return { success: false, error: validation.error.errors[0].message };
+		}
 
 		// Verify all scenes belong to this chapter
 		if (sceneIds.length > 0) {
