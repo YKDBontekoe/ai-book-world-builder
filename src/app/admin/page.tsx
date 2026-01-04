@@ -1,5 +1,6 @@
 import { BookOpen, Cpu, Users } from "lucide-react";
 import Link from "next/link";
+import { connection } from "next/server";
 import { getAdminStats, getUsers } from "@/app/actions/admin";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
@@ -15,6 +16,7 @@ import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
 
 export default async function AdminDashboard() {
+	await connection();
 	const [statsResult, usersResult] = await Promise.all([
 		getAdminStats(),
 		getUsers({ page: 1, pageSize: 5 }), // Fetch top 5 recent users
