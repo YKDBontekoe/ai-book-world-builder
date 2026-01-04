@@ -1,43 +1,84 @@
 "use server";
 
 import { and, eq } from "drizzle-orm";
-import { ensureProjectAccess } from "@/lib/actions-utils";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db/drizzle";
 import {
 	getAttributesForProject,
 	getEntitiesForProject,
 } from "@/lib/db/queries/entity";
+import { projectRepository } from "@/lib/db/repositories";
 import { entityAttribute } from "@/lib/db/schema";
+import { ForbiddenError, NotFoundError } from "@/lib/errors";
 
-export async function getEntitiesWithImagesAction(projectId: string) {
-	try {
-		await ensureProjectAccess(projectId, false);
+// ============================================================================
+// Validation Schemas
+// ============================================================================
+
+const projectIdSchema = z.object({
+	projectId: z.string().uuid("Invalid project ID"),
+});
+
+const setImageSchema = z.object({
+	entityId: z.string().uuid("Invalid entity ID"),
+	imageUrl: z.string().url("Invalid image URL"),
+	projectId: z.string().uuid("Invalid project ID"),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * Get entities with their images for a project
+ */
+export const getEntitiesWithImagesAction = createUserAction({
+	input: projectIdSchema,
+	handler: async ({ user, input }) => {
+		const project = await projectRepository.findByIdWithAccess(
+			input.projectId,
+			user.id,
+		);
+
+		if (!project) {
+			throw NotFoundError.forResource("Project", input.projectId);
+		}
+
 		const [entities, attributes] = await Promise.all([
-			getEntitiesForProject({ projectId }),
-			getAttributesForProject({ projectId }),
+			getEntitiesForProject({ projectId: input.projectId }),
+			getAttributesForProject({ projectId: input.projectId }),
 		]);
 
-		return {
-			success: true,
-			data: entities.map((e) => ({
-				...e,
-				imageUrl: attributes.find(
-					(a) => a.entityId === e.id && a.name === "image_url",
-				)?.value,
-			})),
-		};
-	} catch (_error) {
-		return { success: false, error: "Failed to fetch entities" };
-	}
-}
+		return entities.map((e) => ({
+			...e,
+			imageUrl: attributes.find(
+				(a) => a.entityId === e.id && a.name === "image_url",
+			)?.value,
+		}));
+	},
+});
 
-export async function setEntityImageAction(
-	entityId: string,
-	imageUrl: string,
-	projectId: string,
-) {
-	try {
-		await ensureProjectAccess(projectId, true);
+/**
+ * Set an image for an entity
+ */
+export const setEntityImageAction = createUserAction({
+	input: setImageSchema,
+	handler: async ({ user, input }) => {
+		const project = await projectRepository.findByIdWithAccess(
+			input.projectId,
+			user.id,
+		);
+
+		if (!project) {
+			throw NotFoundError.forResource("Project", input.projectId);
+		}
+
+		if (project.userId !== user.id) {
+			throw new ForbiddenError(
+				"Only the project owner can modify entity images",
+			);
+		}
 
 		// Check if attribute exists
 		const [existing] = await db
@@ -45,7 +86,7 @@ export async function setEntityImageAction(
 			.from(entityAttribute)
 			.where(
 				and(
-					eq(entityAttribute.entityId, entityId),
+					eq(entityAttribute.entityId, input.entityId),
 					eq(entityAttribute.name, "image_url"),
 				),
 			);
@@ -53,22 +94,19 @@ export async function setEntityImageAction(
 		if (existing) {
 			await db
 				.update(entityAttribute)
-				.set({ value: imageUrl, updatedAt: new Date() } as any) // Cast if updatedAt missing in schema
+				.set({ value: input.imageUrl } as any)
 				.where(eq(entityAttribute.id, existing.id));
 		} else {
 			await db.insert(entityAttribute).values({
-				projectId,
-				entityId,
+				projectId: input.projectId,
+				entityId: input.entityId,
 				name: "image_url",
-				value: imageUrl,
+				value: input.imageUrl,
 				dataType: "url",
 				createdAt: new Date(),
 			});
 		}
 
 		return { success: true };
-	} catch (error) {
-		console.error("Failed to set entity image:", error);
-		return { success: false, error: "Failed to save image" };
-	}
-}
+	},
+});

@@ -1,27 +1,16 @@
 "use server";
 
 import { z } from "zod";
-import { auth } from "@/app/(auth)/auth";
-import {
-	type JulesActivity,
-	JulesClient,
-	type JulesSession,
-	type JulesSource,
-} from "@/lib/jules-client";
-import type { Result } from "@/lib/result";
+import { createAdminAction } from "@/lib/action-middleware";
+import { JulesClient } from "@/lib/jules-client";
 import { generateSessionTitleAction } from "./jules-ai";
 
 const jules = new JulesClient();
 
-// Helper to check admin
-async function requireAdmin() {
-	const session = await auth();
-	if (!session?.user || session.user.role !== "admin") {
-		throw new Error("Unauthorized: Admin access required");
-	}
-}
+// ============================================================================
+// Validation Schemas
+// ============================================================================
 
-// Validation schemas
 const createSessionSchema = z.object({
 	prompt: z.string().min(1, "Prompt is required"),
 	title: z.string().optional(),
@@ -38,128 +27,93 @@ const sendMessageSchema = z.object({
 		.max(10000, "Message too long"),
 });
 
-// --- Actions ---
+const paginationSchema = z.object({
+	pageSize: z.number().int().positive().default(20),
+	pageToken: z.string().optional(),
+});
 
-export async function getJulesSessionsAction(
-	pageSize = 20,
-	pageToken?: string,
-): Promise<Result<{ sessions: JulesSession[]; nextPageToken?: string }>> {
-	try {
-		await requireAdmin();
-		const result = await jules.listSessions(pageSize, pageToken);
-		return { success: true, data: result };
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error("Failed to list Jules sessions:", error);
-		return { success: false, error: `Failed to fetch sessions: ${message}` };
-	}
-}
+const sessionIdSchema = z.object({
+	sessionId: z.string().min(1, "Session ID is required"),
+});
 
-export async function getJulesSessionDetailsAction(
-	sessionId: string,
-): Promise<Result<{ session: JulesSession; activities: JulesActivity[] }>> {
-	try {
-		await requireAdmin();
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * List all Jules sessions with pagination
+ */
+export const getJulesSessionsAction = createAdminAction({
+	input: paginationSchema,
+	handler: async ({ input }) => {
+		return await jules.listSessions(input.pageSize, input.pageToken);
+	},
+});
+
+/**
+ * Get details of a specific Jules session
+ */
+export const getJulesSessionDetailsAction = createAdminAction({
+	input: sessionIdSchema,
+	handler: async ({ input }) => {
 		const [session, activitiesResult] = await Promise.all([
-			jules.getSession(sessionId),
-			jules.listActivities(sessionId),
+			jules.getSession(input.sessionId),
+			jules.listActivities(input.sessionId),
 		]);
 		return {
-			success: true,
-			data: {
-				session,
-				activities: activitiesResult.activities,
-			},
+			session,
+			activities: activitiesResult.activities,
 		};
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error("Failed to get Jules session details:", error);
-		return {
-			success: false,
-			error: `Failed to fetch session details: ${message}`,
-		};
-	}
-}
+	},
+});
 
-export async function createJulesSessionAction(params: {
-	prompt: string;
-	title?: string;
-	sourceName: string;
-	requirePlanApproval?: boolean;
-}): Promise<Result<JulesSession>> {
-	try {
-		await requireAdmin();
-
-		const validation = createSessionSchema.safeParse(params);
-		if (!validation.success) {
-			return { success: false, error: validation.error.errors[0].message };
-		}
-		const validated = validation.data;
-
-		let title = validated.title;
+/**
+ * Create a new Jules session
+ */
+export const createJulesSessionAction = createAdminAction({
+	input: createSessionSchema,
+	handler: async ({ input }) => {
+		let title = input.title;
 		if (!title || title.trim() === "") {
-			title = await generateSessionTitleAction(validated.prompt);
+			title = await generateSessionTitleAction(input.prompt);
 		}
 
-		const session = await jules.createSession({
-			prompt: validated.prompt,
+		return await jules.createSession({
+			prompt: input.prompt,
 			title: title,
-			sourceName: validated.sourceName,
+			sourceName: input.sourceName,
 			automationMode: "AUTO_CREATE_PR",
-			requirePlanApproval: validated.requirePlanApproval,
+			requirePlanApproval: input.requirePlanApproval,
 		});
-		return { success: true, data: session };
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error("Failed to create Jules session:", error);
-		return { success: false, error: `Failed to create session: ${message}` };
-	}
-}
+	},
+});
 
-export async function sendJulesMessageAction(
-	sessionId: string,
-	prompt: string,
-): Promise<Result<void>> {
-	try {
-		await requireAdmin();
+/**
+ * Send a message to a Jules session
+ */
+export const sendJulesMessageAction = createAdminAction({
+	input: sendMessageSchema,
+	handler: async ({ input }) => {
+		await jules.sendMessage(input.sessionId, input.prompt);
+	},
+});
 
-		const validation = sendMessageSchema.safeParse({ sessionId, prompt });
-		if (!validation.success) {
-			return { success: false, error: validation.error.errors[0].message };
-		}
-		const validated = validation.data;
+/**
+ * Approve the plan for a Jules session
+ */
+export const approveJulesPlanAction = createAdminAction({
+	input: sessionIdSchema,
+	handler: async ({ input }) => {
+		await jules.approvePlan(input.sessionId);
+	},
+});
 
-		await jules.sendMessage(validated.sessionId, validated.prompt);
-		return { success: true, data: undefined };
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error("Failed to send message to Jules:", error);
-		return { success: false, error: `Failed to send message: ${message}` };
-	}
-}
-
-export async function approveJulesPlanAction(
-	sessionId: string,
-): Promise<Result<void>> {
-	try {
-		await requireAdmin();
-		await jules.approvePlan(sessionId);
-		return { success: true, data: undefined };
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error("Failed to approve Jules plan:", error);
-		return { success: false, error: `Failed to approve plan: ${message}` };
-	}
-}
-
-export async function listJulesSourcesAction(): Promise<Result<JulesSource[]>> {
-	try {
-		await requireAdmin();
+/**
+ * List all available Jules sources
+ */
+export const listJulesSourcesAction = createAdminAction({
+	handler: async () => {
 		const result = await jules.listSources();
-		return { success: true, data: result.sources };
-	} catch (error) {
-		const message = error instanceof Error ? error.message : String(error);
-		console.error("Failed to list Jules sources:", error);
-		return { success: false, error: `Failed to list sources: ${message}` };
-	}
-}
+		return result.sources;
+	},
+});

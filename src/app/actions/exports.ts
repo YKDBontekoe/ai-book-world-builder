@@ -2,18 +2,30 @@
 
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { auth } from "@/app/(auth)/auth";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db/drizzle";
 import { bookExport } from "@/lib/db/schema";
 
-export async function deleteBulkExports(exportIds: string[]) {
-	try {
-		const session = await auth();
-		if (!session?.user?.id) {
-			return { success: false, error: "Unauthorized" };
-		}
+// ============================================================================
+// Validation Schemas
+// ============================================================================
 
-		if (exportIds.length === 0) {
+const bulkDeleteSchema = z.object({
+	exportIds: z.array(z.string().uuid()),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * Delete multiple exports owned by the current user
+ */
+export const deleteBulkExports = createUserAction({
+	input: bulkDeleteSchema,
+	handler: async ({ user, input }) => {
+		if (input.exportIds.length === 0) {
 			return { success: true };
 		}
 
@@ -22,15 +34,12 @@ export async function deleteBulkExports(exportIds: string[]) {
 			.delete(bookExport)
 			.where(
 				and(
-					eq(bookExport.userId, session.user.id),
-					inArray(bookExport.id, exportIds),
+					eq(bookExport.userId, user.id),
+					inArray(bookExport.id, input.exportIds),
 				),
 			);
 
 		revalidatePath("/exports");
 		return { success: true };
-	} catch (error) {
-		console.error("Failed to delete bulk exports", error);
-		return { success: false, error: "Failed to delete exports" };
-	}
-}
+	},
+});

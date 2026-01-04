@@ -1,19 +1,13 @@
 "use server";
 
 import { asc, eq, inArray } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getCached, invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
-import {
-	type Scene,
-	chapter,
-	outline,
-	scene,
-	volume,
-} from "@/lib/db/schema";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
+import { chapter, outline, type Scene, scene, volume } from "@/lib/db/schema";
 
 export async function getProjectStructure(projectId: string) {
 	try {
@@ -150,7 +144,10 @@ function parseStructureText(text: string): ParsedChapter[] {
 	return chapters;
 }
 
-const structureSchema = z.string().trim().min(1, "Structure text cannot be empty");
+const structureSchema = z
+	.string()
+	.trim()
+	.min(1, "Structure text cannot be empty");
 
 export async function saveProjectStructure(
 	projectId: string,
@@ -206,11 +203,12 @@ export async function saveProjectStructure(
 
 			// Helper to normalize titles for matching: Lowercase, collapse whitespace, strip diacritics
 			const normalize = (s: string) =>
-				s.toLowerCase()
-				 .normalize("NFKD")
-				 .replace(/[\u0300-\u036f]/g, "")
-				 .replace(/\s+/g, " ")
-				 .trim();
+				s
+					.toLowerCase()
+					.normalize("NFKD")
+					.replace(/[\u0300-\u036f]/g, "")
+					.replace(/\s+/g, " ")
+					.trim();
 
 			// Prepare Outline/Volume IDs (Assuming single default Outline/Volume for now)
 			// In a real app, we might need to fetch or create them.
@@ -305,13 +303,13 @@ export async function saveProjectStructure(
 					chapterIdsToKeep.add(match.id);
 					updatePromises.push(
 						tx
-						.update(chapter)
-						.set({
-							sequence: newCh.sequence,
-							updatedAt: new Date(),
-							title: newCh.title,
-						})
-						.where(eq(chapter.id, match.id))
+							.update(chapter)
+							.set({
+								sequence: newCh.sequence,
+								updatedAt: new Date(),
+								title: newCh.title,
+							})
+							.where(eq(chapter.id, match.id)),
 					);
 				} else {
 					// Create new (must await to get ID for scenes)
@@ -335,7 +333,8 @@ export async function saveProjectStructure(
 				}
 
 				// C. Process Scenes for this Chapter
-				const existingChScenes = !isNewChapter && match ? dbScenesByChapter[match.id] || [] : [];
+				const existingChScenes =
+					!isNewChapter && match ? dbScenesByChapter[match.id] || [] : [];
 
 				for (const newSc of newCh.scenes) {
 					// Try to find match by Title within this Chapter
@@ -350,14 +349,14 @@ export async function saveProjectStructure(
 						sceneIdsToKeep.add(scMatch.id);
 						updatePromises.push(
 							tx
-							.update(scene)
-							.set({
-								sequence: newSc.sequence,
-								updatedAt: new Date(),
-								title: newSc.title,
-								chapterId: currentChapterId, // Should be same
-							})
-							.where(eq(scene.id, scMatch.id))
+								.update(scene)
+								.set({
+									sequence: newSc.sequence,
+									updatedAt: new Date(),
+									title: newSc.title,
+									chapterId: currentChapterId, // Should be same
+								})
+								.where(eq(scene.id, scMatch.id)),
 						);
 					} else {
 						// Create new
@@ -371,7 +370,7 @@ export async function saveProjectStructure(
 								content: "",
 								createdAt: new Date(),
 								updatedAt: new Date(),
-							})
+							}),
 						);
 					}
 				}

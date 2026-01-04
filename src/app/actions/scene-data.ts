@@ -1,7 +1,8 @@
 "use server";
 
 import { asc, eq } from "drizzle-orm";
-import { auth } from "@/app/(auth)/auth";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db/drizzle";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import {
@@ -12,6 +13,10 @@ import {
 	sceneCard,
 } from "@/lib/db/schema";
 
+// ============================================================================
+// Types
+// ============================================================================
+
 export type SerializedScene = Scene & {
 	card: SceneCard | null;
 };
@@ -20,20 +25,31 @@ export type SerializedChapterWithScenes = Chapter & {
 	scenes: SerializedScene[];
 };
 
-export async function getScenesData(
-	projectId: string,
-): Promise<SerializedChapterWithScenes[]> {
-	try {
-		const session = await auth();
-		const userId = session?.user?.id;
+// ============================================================================
+// Validation Schemas
+// ============================================================================
 
+const projectIdSchema = z.object({
+	projectId: z.string().uuid("Invalid project ID"),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * Get all scenes with their cards grouped by chapter
+ */
+export const getScenesData = createUserAction({
+	input: projectIdSchema,
+	handler: async ({ user, input }) => {
 		const project = await projectRepository.findByIdWithAccess(
-			projectId,
-			userId,
+			input.projectId,
+			user.id,
 		);
 
 		if (!project) {
-			console.error("Access denied to project:", projectId);
+			// Return empty array for non-existent/inaccessible projects
 			return [];
 		}
 
@@ -41,7 +57,7 @@ export async function getScenesData(
 		const chapters = await db
 			.select()
 			.from(chapter)
-			.where(eq(chapter.projectId, projectId))
+			.where(eq(chapter.projectId, input.projectId))
 			.orderBy(asc(chapter.sequence));
 
 		if (chapters.length === 0) {
@@ -49,13 +65,13 @@ export async function getScenesData(
 		}
 
 		// 2. Fetch all scenes for the project using repository
-		const scenes = await sceneRepository.findByProject(projectId);
+		const scenes = await sceneRepository.findByProject(input.projectId);
 
 		// 3. Fetch all scene cards
 		const cards = await db
 			.select()
 			.from(sceneCard)
-			.where(eq(sceneCard.projectId, projectId));
+			.where(eq(sceneCard.projectId, input.projectId));
 
 		// 4. Map data together
 		const cardMap = new Map<string, SceneCard>();
@@ -83,8 +99,5 @@ export async function getScenesData(
 		}));
 
 		return result;
-	} catch (error) {
-		console.error("Failed to fetch scene data:", error);
-		return [];
-	}
-}
+	},
+});

@@ -29,7 +29,9 @@ async function requireAdmin() {
 	}
 
 	if (session.user.role !== "admin") {
-		throw new ForbiddenError("You do not have permission to perform this action");
+		throw new ForbiddenError(
+			"You do not have permission to perform this action",
+		);
 	}
 }
 

@@ -1,33 +1,45 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import { getGlobalStats, getProjectStats } from "@/lib/dashboard-queries";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
+import { NotFoundError } from "@/lib/errors";
 
-export async function getDashboardStatsAction(projectId?: string) {
-	const session = await auth();
-	if (!session?.user?.id) return { error: "Unauthorized" };
+// ============================================================================
+// Validation Schemas
+// ============================================================================
 
-	try {
-		if (projectId) {
+const dashboardStatsSchema = z.object({
+	projectId: z.string().uuid().optional(),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * Get dashboard statistics for a project or globally
+ */
+export const getDashboardStatsAction = createUserAction({
+	input: dashboardStatsSchema,
+	handler: async ({ user, input }) => {
+		if (input.projectId) {
 			const project = await getProjectByIdWithAccess({
-				id: projectId,
-				userId: session.user.id,
+				id: input.projectId,
+				userId: user.id,
 			});
 
 			if (!project) {
-				return { error: "Project not found or access denied" };
+				throw NotFoundError.forResource("Project", input.projectId);
 			}
 
-			const stats = await getProjectStats(projectId);
-			return { stats };
-		} else {
-			// Global Scope
-			const stats = await getGlobalStats(session.user.id);
+			const stats = await getProjectStats(input.projectId);
 			return { stats };
 		}
-	} catch (error) {
-		console.error("Dashboard stats error:", error);
-		return { error: "Failed to fetch stats" };
-	}
-}
+
+		// Global Scope
+		const stats = await getGlobalStats(user.id);
+		return { stats };
+	},
+});

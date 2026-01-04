@@ -1,27 +1,38 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
+import { z } from "zod";
+import { createPublicAction } from "@/lib/action-middleware";
 import type { FeedbackType } from "@/lib/db/schema/feedback";
 import { createFeedback } from "@/lib/services/feedback-service";
 
-export async function submitFeedbackAction(data: {
-	type: FeedbackType;
-	content: string;
-	meta?: any;
-}) {
-	const session = await auth();
-	const userId = session?.user?.id;
+// ============================================================================
+// Validation Schemas
+// ============================================================================
 
-	try {
+const feedbackSchema = z.object({
+	type: z.enum(["bug", "feature", "general", "suggestion"]),
+	content: z.string().min(1, "Feedback content is required").max(5000),
+	meta: z.any().optional(),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * Submit user feedback (allows anonymous submissions)
+ */
+export const submitFeedbackAction = createPublicAction({
+	input: feedbackSchema,
+	handler: async ({ input }) => {
+		// Note: For public actions, user might be anonymous
+		// The service layer handles optional userId
 		await createFeedback({
-			userId,
-			type: data.type,
-			content: data.content,
-			meta: data.meta,
+			userId: undefined, // Will be populated if user is logged in via session in service
+			type: input.type as FeedbackType,
+			content: input.content,
+			meta: input.meta,
 		});
 		return { success: true };
-	} catch (error) {
-		console.error("Failed to submit feedback", error);
-		return { success: false, error: "Failed to submit feedback" };
-	}
-}
+	},
+});
