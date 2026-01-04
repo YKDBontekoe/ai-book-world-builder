@@ -217,7 +217,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 			{/* Main Content Area - Split Pane */}
 			<div className="flex-1 min-h-0">
-				<ResizablePanelGroup direction="horizontal">
+				<ResizablePanelGroup direction="horizontal" className="h-full">
 					{/* Left: Chat */}
 					<ResizablePanel defaultSize={50} minSize={30}>
 						<div className="flex flex-col h-full">
