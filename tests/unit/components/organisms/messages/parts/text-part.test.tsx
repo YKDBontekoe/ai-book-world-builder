@@ -32,6 +32,7 @@ describe("TextPart", () => {
 		role: "assistant",
 		content: "Hello",
 		createdAt: new Date(),
+		parts: [],
 	};
 
 	const defaultProps = {
