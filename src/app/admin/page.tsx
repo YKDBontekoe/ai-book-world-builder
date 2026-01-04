@@ -1,6 +1,7 @@
 import { BookOpen, Cpu, Users } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
+import type { JSX } from "react";
 import { getAdminStats, getUsers } from "@/app/actions/admin";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
@@ -17,7 +18,12 @@ import { GlassCard } from "@/components/molecules/glass-card";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDashboard() {
+/**
+ * AdminDashboard is the main page for the admin interface, displaying statistics and recent activity.
+ *
+ * @returns A promise resolving to the JSX element for the dashboard.
+ */
+export default async function AdminDashboard(): Promise<JSX.Element> {
 	await connection();
 	const [statsResult, usersResult] = await Promise.all([
 		getAdminStats(),

@@ -35,11 +35,25 @@ export function useDebounce<T>(value: T, delay: number): T {
  * @param delay - The delay in milliseconds.
  * @returns A debounced version of the callback.
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: unknown[]) => unknown>(
 	callback: T,
 	delay: number,
 ) {
 	const timerRef = useRef<NodeJS.Timeout | null>(null);
+	const callbackRef = useRef<T>(callback);
+
+	useEffect(() => {
+		callbackRef.current = callback;
+	}, [callback]);
+
+	// Clean up timer on unmount
+	useEffect(() => {
+		return () => {
+			if (timerRef.current) {
+				clearTimeout(timerRef.current);
+			}
+		};
+	}, []);
 
 	return (...args: Parameters<T>) => {
 		if (timerRef.current) {
@@ -47,7 +61,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
 		}
 
 		timerRef.current = setTimeout(() => {
-			callback(...args);
+			callbackRef.current(...args);
 		}, delay);
 	};
 }
