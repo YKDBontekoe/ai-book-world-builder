@@ -1,7 +1,8 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, gte, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { z } from "zod";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
@@ -9,6 +10,28 @@ import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
+
+// Validation Schemas
+const updateContentSchema = z.object({
+	sceneId: z.string().uuid(),
+	content: z.string().max(200000, "Scene content exceeds 200k characters"),
+});
+
+const updateTitleSchema = z.object({
+	sceneId: z.string().uuid(),
+	title: z.string().min(1).max(255, "Title exceeds 255 characters"),
+});
+
+const createSceneSchema = z.object({
+	chapterId: z.string().uuid(),
+	title: z.string().min(1).max(255),
+	insertAfterSceneId: z.string().uuid().optional(),
+});
+
+const generateSceneSchema = z.object({
+	chapterId: z.string().uuid(),
+	prevSceneId: z.string().uuid().optional(),
+});
 
 export async function getSceneContent(sceneId: string) {
 	try {
@@ -30,6 +53,11 @@ export async function getSceneContent(sceneId: string) {
 }
 
 export async function updateSceneContent(sceneId: string, content: string) {
+	const validation = updateContentSchema.safeParse({ sceneId, content });
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		// 1. Get Scene using repository
 		const targetScene = await sceneRepository.findById(sceneId);
@@ -44,16 +72,19 @@ export async function updateSceneContent(sceneId: string, content: string) {
 		// 3. Update using repository
 		await sceneRepository.updateContent(sceneId, content, "drafting");
 
-		// Note: Content updates do not invalidate structure, only titles/ordering do.
-
 		return { success: true };
 	} catch (error) {
 		console.error("Failed to update scene content", error);
-		return { success: false };
+		return { success: false, error: "Failed to update content" };
 	}
 }
 
 export async function generateScene(chapterId: string, prevSceneId?: string) {
+	const validation = generateSceneSchema.safeParse({ chapterId, prevSceneId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		// 1. Fetch Context & Verify Access
 		const [currentChapter] = await db
@@ -109,6 +140,11 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 }
 
 export async function updateSceneTitle(sceneId: string, title: string) {
+	const validation = updateTitleSchema.safeParse({ sceneId, title });
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		const targetScene = await sceneRepository.findById(sceneId);
 
@@ -132,6 +168,11 @@ export async function updateSceneTitle(sceneId: string, title: string) {
 export async function deleteScene(
 	sceneId: string,
 ): Promise<{ success: boolean; error?: string }> {
+	// Simple UUID check is implicitly handled by DB query, but good to have
+	if (!z.string().uuid().safeParse(sceneId).success) {
+		return { success: false, error: "Invalid ID format" };
+	}
+
 	try {
 		const targetScene = await sceneRepository.findById(sceneId);
 
@@ -157,6 +198,15 @@ export async function createSceneInChapter(
 	title: string,
 	insertAfterSceneId?: string,
 ) {
+	const validation = createSceneSchema.safeParse({
+		chapterId,
+		title,
+		insertAfterSceneId,
+	});
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	try {
 		const [currentChapter] = await db
 			.select()
@@ -170,44 +220,75 @@ export async function createSceneInChapter(
 
 		await ensureProjectAccess(currentChapter.projectId, true);
 
-		const scenes = await sceneRepository.findByChapter(chapterId);
-		let newSequence = scenes.length + 1;
+		let newSequence = 1;
 		let prevSceneId: string | undefined;
 
-		if (insertAfterSceneId) {
-			const insertAfterScene = scenes.find((s) => s.id === insertAfterSceneId);
-			if (insertAfterScene) {
-				newSequence = insertAfterScene.sequence + 1;
-				prevSceneId = insertAfterScene.id;
-				// Shift subsequent scenes
-				await db.transaction(async (tx) => {
-					for (const s of scenes) {
-						if (s.sequence >= newSequence) {
-							await tx
-								.update(scene)
-								.set({ sequence: s.sequence + 1, updatedAt: new Date() })
-								.where(eq(scene.id, s.id));
-						}
-					}
-				});
-			}
-		} else if (scenes.length > 0) {
-			prevSceneId = scenes[scenes.length - 1].id;
-		}
+		const result = await db.transaction(async (tx) => {
+			// Find insertion point
+			if (insertAfterSceneId) {
+				const [insertAfterScene] = await tx
+					.select()
+					.from(scene)
+					.where(eq(scene.id, insertAfterSceneId))
+					.limit(1);
 
-		const newScene = await sceneRepository.create({
-			projectId: currentChapter.projectId,
-			chapterId,
-			title,
-			sequence: newSequence,
-			content: "",
-			status: "planned",
-			prevSceneId,
+				if (insertAfterScene) {
+					newSequence = insertAfterScene.sequence + 1;
+					prevSceneId = insertAfterScene.id;
+
+					// Atomic Shift: Increment sequence for all subsequent scenes in this chapter
+					await tx
+						.update(scene)
+						.set({
+							sequence: sql`${scene.sequence} + 1`,
+							updatedAt: new Date(),
+						})
+						.where(
+							and(
+								eq(scene.chapterId, chapterId),
+								gte(scene.sequence, newSequence),
+							),
+						);
+				} else {
+					// Fallback if ID invalid: append to end
+					const scenes = await sceneRepository.findByChapter(chapterId);
+					if (scenes.length > 0) {
+						newSequence = scenes.length + 1;
+						prevSceneId = scenes[scenes.length - 1].id;
+					}
+				}
+			} else {
+				// Append to end
+				const scenes = await sceneRepository.findByChapter(chapterId);
+				if (scenes.length > 0) {
+					newSequence = scenes.length + 1;
+					prevSceneId = scenes[scenes.length - 1].id;
+				}
+			}
+
+			// Create the new scene
+			const [newScene] = await tx
+				.insert(scene)
+				.values({
+					id: crypto.randomUUID(),
+					projectId: currentChapter.projectId,
+					chapterId,
+					title,
+					sequence: newSequence,
+					content: "",
+					status: "planned",
+					prevSceneId,
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})
+				.returning();
+
+			return newScene;
 		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newScene.id };
+		return { success: true, sceneId: result.id };
 	} catch (error) {
 		console.error("Failed to create scene", error);
 		return { success: false, error: "Failed to create scene" };
@@ -215,6 +296,10 @@ export async function createSceneInChapter(
 }
 
 export async function reorderScenes(sceneIds: string[], chapterId: string) {
+	if (!z.array(z.string().uuid()).safeParse(sceneIds).success) {
+		return { success: false, error: "Invalid input" };
+	}
+
 	try {
 		const [currentChapter] = await db
 			.select()

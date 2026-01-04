@@ -492,23 +492,36 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 				}
 			}
 
-			// 9. Scenes (Fetch, Map, Insert)
+			// 9. Scenes (Batch Fetch, Map, Insert)
 			{
-				const oldScenes = await tx
-					.select()
-					.from(scene)
-					.where(eq(scene.projectId, originalProjectId));
+				const BATCH_SIZE = 500;
+				let offset = 0;
+				let hasMore = true;
+				const allNewScenes = []; // Keep mapped metadata in memory, but process fetching in chunks to avoid DB timeout
 
-				if (oldScenes.length > 0) {
-					const newScenesToInsert = [];
-					// First pass: Generate IDs and basic mapping
-					for (const old of oldScenes) {
+				// First pass: Fetch all scenes in batches to map IDs and build insertion array
+				// We still need all IDs for the linked list resolution, but we fetch in chunks to be kind to the DB
+				while (hasMore) {
+					const batch = await tx
+						.select()
+						.from(scene)
+						.where(eq(scene.projectId, originalProjectId))
+						.limit(BATCH_SIZE)
+						.offset(offset);
+
+					if (batch.length < BATCH_SIZE) {
+						hasMore = false;
+					}
+					offset += BATCH_SIZE;
+
+					for (const old of batch) {
 						const newChapterId = chapterIdMap.get(old.chapterId);
 						if (newChapterId) {
 							const newId = crypto.randomUUID();
 							sceneIdMap.set(old.id, newId);
 							const { id: _id, ...data } = old;
-							newScenesToInsert.push({
+							// Store lightweight object for second pass
+							allNewScenes.push({
 								...data,
 								id: newId,
 								chapterId: newChapterId,
@@ -518,9 +531,12 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 							});
 						}
 					}
+				}
 
-					// Second pass: Resolve prevSceneId
-					const resolvedScenes = newScenesToInsert.map((s) => {
+				// Second pass: Resolve prevSceneId and Insert
+				// This is done in memory, but we insertion is chunked
+				if (allNewScenes.length > 0) {
+					const resolvedScenes = allNewScenes.map((s) => {
 						const oldPrev = s.prevSceneId;
 						if (oldPrev && sceneIdMap.has(oldPrev)) {
 							return { ...s, prevSceneId: sceneIdMap.get(oldPrev) };
@@ -528,9 +544,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 						return { ...s, prevSceneId: null };
 					});
 
-					if (resolvedScenes.length > 0) {
-						await chunkedInsert(tx, scene, resolvedScenes);
-					}
+					await chunkedInsert(tx, scene, resolvedScenes);
 				}
 			}
 

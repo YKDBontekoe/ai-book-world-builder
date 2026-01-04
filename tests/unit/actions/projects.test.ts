@@ -8,9 +8,13 @@ const { mockDb, mockProjectRepository, mockAuth } = vi.hoisted(() => ({
 		select: vi.fn().mockReturnThis(),
 		from: vi.fn().mockReturnThis(),
 		where: vi.fn().mockReturnThis(),
+		limit: vi.fn().mockReturnThis(),
+		offset: vi.fn().mockReturnThis(),
 		insert: vi.fn().mockReturnThis(),
 		values: vi.fn().mockReturnThis(),
 		returning: vi.fn().mockReturnThis(),
+		update: vi.fn().mockReturnThis(),
+		set: vi.fn().mockReturnThis(),
 	},
 	mockProjectRepository: {
 		findByIdWithAccess: vi.fn(),
@@ -45,6 +49,8 @@ describe("forkProject Action", () => {
 		mockDb.select.mockReturnThis();
 		mockDb.from.mockReturnThis();
 		mockDb.where.mockReturnThis();
+		mockDb.limit.mockReturnThis();
+		mockDb.offset.mockReturnThis();
 		mockDb.insert.mockReturnThis();
 		mockDb.values.mockReturnThis();
 		mockDb.returning.mockReturnThis();
@@ -76,9 +82,38 @@ describe("forkProject Action", () => {
 			return callback(mockDb);
 		});
 
-		// Mock DB selects for parallel fetch
-		// We need to return empty arrays for the 9 queries in Promise.all
-		mockDb.where.mockResolvedValue([]);
+		// Mock DB selects for sequential fetch
+
+		// For the non-chunked selects (entities, attributes, etc.), we want them to return []
+		// to skip the loops and focus on the structure.
+		// However, "where" is called for everything.
+
+		// We can mock `where` to return `this` (default), and verify based on subsequent calls?
+		// No, we need it to resolve to [] for most calls, BUT for scenes it calls .limit().offset().
+
+		// Strategy: Make `where` return `this`. Make `limit` return `this`. Make `offset` return `this`.
+		// Make `this` (mockDb) then-able? No, that's messy.
+
+		// Alternative: Drizzle query builders are promises.
+		// If we chain .where().limit().offset(), we need the final call to be awaitable.
+
+		// Let's implement a specific mock for `offset` to return [].
+		mockDb.offset.mockResolvedValue([]);
+
+		// For the other tables (entities, etc.), the code calls `await tx.select()...where(...)`.
+		// So `where` must be awaitable (return a Promise).
+		// BUT if `where` returns a Promise, we can't chain `.limit()` on it (unless the Promise object also has properties).
+
+		// Solution: Mock `where` to return a "QueryBuilder" object that has `limit`, `offset`, AND is then-able.
+		const queryBuilder = {
+			limit: vi.fn().mockReturnThis(),
+			offset: vi.fn().mockResolvedValue([]), // End of chain for scenes
+			then: (resolve: any) => resolve([]), // End of chain for others
+		};
+		// Bind methods to return the builder
+		queryBuilder.limit = vi.fn().mockReturnValue(queryBuilder);
+
+		mockDb.where.mockReturnValue(queryBuilder);
 
 		// Mock insert returning
 		mockDb.returning.mockResolvedValue([{ id: "new-proj-id" }]);
