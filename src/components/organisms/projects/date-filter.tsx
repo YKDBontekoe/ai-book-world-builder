@@ -1,12 +1,11 @@
 "use client";
 
 import { differenceInDays } from "date-fns";
-import { Calendar, ChevronDown, X } from "lucide-react";
+import { Calendar, Check, X } from "lucide-react";
 import * as React from "react";
 import { Button } from "@/components/atoms/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -23,6 +22,13 @@ interface DateFilterProps {
   className?: string;
 }
 
+/**
+ * A dropdown component for filtering items by date range.
+ *
+ * @param value - The current selected date range preset.
+ * @param onChange - Callback function when the date range changes.
+ * @param className - Optional CSS class for the trigger button.
+ */
 export function DateFilter({ value, onChange, className }: DateFilterProps) {
   const getLabel = () => {
     switch (value) {
@@ -63,9 +69,10 @@ export function DateFilter({ value, onChange, className }: DateFilterProps) {
                 onChange("all");
               }}
               onKeyDown={(e) => {
-                if(e.key === 'Enter') {
-                   e.stopPropagation();
-                   onChange("all");
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  onChange("all");
                 }
               }}
             >
@@ -81,60 +88,54 @@ export function DateFilter({ value, onChange, className }: DateFilterProps) {
           <span className={cn("flex-1", value === "all" && "font-medium")}>
             All time
           </span>
-          {value === "all" && <CheckIcon className="ml-2 h-4 w-4" />}
+          {value === "all" && <Check className="ml-2 h-4 w-4" />}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onChange("7d")}>
           <span className={cn("flex-1", value === "7d" && "font-medium")}>
             Last 7 days
           </span>
-          {value === "7d" && <CheckIcon className="ml-2 h-4 w-4" />}
+          {value === "7d" && <Check className="ml-2 h-4 w-4" />}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onChange("30d")}>
           <span className={cn("flex-1", value === "30d" && "font-medium")}>
             Last 30 days
           </span>
-          {value === "30d" && <CheckIcon className="ml-2 h-4 w-4" />}
+          {value === "30d" && <Check className="ml-2 h-4 w-4" />}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => onChange("90d")}>
           <span className={cn("flex-1", value === "90d" && "font-medium")}>
             Last 3 months
           </span>
-          {value === "90d" && <CheckIcon className="ml-2 h-4 w-4" />}
+          {value === "90d" && <Check className="ml-2 h-4 w-4" />}
         </DropdownMenuItem>
-         <DropdownMenuItem onClick={() => onChange("year")}>
+        <DropdownMenuItem onClick={() => onChange("year")}>
           <span className={cn("flex-1", value === "year" && "font-medium")}>
             Last year
           </span>
-          {value === "year" && <CheckIcon className="ml-2 h-4 w-4" />}
+          {value === "year" && <Check className="ml-2 h-4 w-4" />}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
 }
 
-function CheckIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
+/**
+ * Checks if a date falls within a specific range relative to now.
+ *
+ * @param date - The date to check.
+ * @param range - The date range preset to filter by.
+ * @returns True if the date is within the range, false otherwise.
+ */
 export function filterByDateRange(date: Date, range: DateRangePreset): boolean {
   if (range === "all") return true;
 
   const now = new Date();
   const targetDate = new Date(date);
   const diff = differenceInDays(now, targetDate);
+
+  // Defensive check: don't include future dates if the logic implies "past X days"
+  // Assuming strict past filtering.
+  if (diff < 0) return false;
 
   switch (range) {
     case "7d":

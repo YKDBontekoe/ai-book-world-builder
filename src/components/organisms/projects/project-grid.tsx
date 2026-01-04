@@ -164,6 +164,7 @@ function ProjectCard({
 									variant="ghost"
 									size="icon"
 									className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 shadow-sm rounded-full"
+									aria-label="Duplicate project"
 									onClick={async (e) => {
 										e.stopPropagation();
 										toast.info("Duplicating project...");
@@ -175,6 +176,7 @@ function ProjectCard({
 												toast.success("Project duplicated");
 											}
 										} catch (err) {
+											console.error("Failed to duplicate project", err);
 											toast.error("Failed to duplicate project");
 										}
 									}}
