@@ -32,7 +32,16 @@ interface ItemDetailProps {
 	onBack: () => void;
 }
 
-export function ItemDetail({ number, type, onBack }: ItemDetailProps) {
+/**
+ * Displays detailed information about a GitHub PR or issue.
+ * @param props - The PR/issue number, type, and back callback
+ * @returns The rendered item detail component
+ */
+export function ItemDetail({
+	number,
+	type,
+	onBack,
+}: ItemDetailProps): React.JSX.Element {
 	const queryClient = useQueryClient();
 
 	const {
