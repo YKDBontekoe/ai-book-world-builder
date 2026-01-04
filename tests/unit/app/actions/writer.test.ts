@@ -109,7 +109,10 @@ import { generateScene } from "@/app/actions/writer";
 describe("generateScene", () => {
 	it("should generate a scene successfully", async () => {
 		const result = await generateScene("ch-1");
-		expect(result.success).toBe(true);
-		expect(result.sceneId).toBe("new-scene-1");
+		if (result.success) {
+			expect(result.data?.sceneId).toBe("new-scene-1");
+		} else {
+			throw new Error(result.error);
+		}
 	});
 });

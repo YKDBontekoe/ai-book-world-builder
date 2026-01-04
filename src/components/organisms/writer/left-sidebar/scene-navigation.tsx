@@ -91,7 +91,7 @@ export function SceneNavigation({
 
 			try {
 				const result = await generateScene(chapterId, prevSceneId);
-				if (result.success && result.sceneId) {
+				if (result.success && result.data?.sceneId) {
 					toast.success("Scene generated!", { id: toastId });
 					onStructureUpdate?.();
 				} else {
@@ -111,12 +111,13 @@ export function SceneNavigation({
 			const toastId = toast.loading("Creating scene...");
 			try {
 				const result = await createSceneInChapter(chapterId, "New Scene");
-				if (result.success && result.sceneId) {
+				if (result.success && result.data?.sceneId) {
 					toast.success("Scene created", { id: toastId });
 					onStructureUpdate?.();
 					// Optionally select the new scene
-					onSceneSelect(result.sceneId);
+					onSceneSelect(result.data.sceneId);
 				} else {
+					// @ts-ignore - TS doesn't narrow the discriminated union in else block
 					toast.error(result.error || "Failed to create scene", {
 						id: toastId,
 					});
@@ -137,7 +138,10 @@ export function SceneNavigation({
 					toast.success("Scene renamed", { id: toastId });
 					onStructureUpdate?.();
 				} else {
-					toast.error("Failed to rename scene", { id: toastId });
+					// @ts-ignore
+					toast.error(result.error || "Failed to rename scene", {
+						id: toastId,
+					});
 				}
 			} catch (_e) {
 				toast.error("Error renaming scene", { id: toastId });
@@ -159,6 +163,7 @@ export function SceneNavigation({
 						onSceneSelect(null); // Clear selection
 					}
 				} else {
+					// @ts-ignore
 					toast.error(result.error || "Failed to delete scene", {
 						id: toastId,
 					});

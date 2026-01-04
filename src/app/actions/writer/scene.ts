@@ -123,7 +123,7 @@ export async function generateScene(
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newScene.id };
+		return { success: true, data: { sceneId: newScene.id } };
 	} catch (error) {
 		console.error("Failed to generate scene", error);
 		return { success: false, error: "Generation failed" };
@@ -261,7 +261,7 @@ export async function createSceneInChapter(
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newScene.id };
+		return { success: true, data: { sceneId: newScene.id } };
 	} catch (error) {
 		console.error("Failed to create scene", error);
 		return { success: false, error: "Failed to create scene" };
