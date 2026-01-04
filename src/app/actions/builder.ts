@@ -25,7 +25,7 @@ export const startFixSessionAction = createAdminAction({
 	input: startFixSchema,
 	handler: async ({ input: { issueNumber } }) => {
 		// 1. Fetch Issue Details
-		const issueResult = await getIssueDetails({ input: issueNumber });
+		const issueResult = await getIssueDetails(issueNumber);
 		if (!issueResult.success) {
 			throw new Error(
 				`Failed to fetch issue #${issueNumber}: ${issueResult.error}`,
@@ -56,12 +56,10 @@ Please analyze this issue, plan a solution, and create a Pull Request to fix it.
 
 		// 4. Create Session
 		return await createJulesSessionAction({
-			input: {
-				prompt,
-				title: `Fix #${issue.number}: ${issue.title}`,
-				sourceName: defaultSource,
-				requirePlanApproval: true,
-			},
+			prompt,
+			title: `Fix #${issue.number}: ${issue.title}`,
+			sourceName: defaultSource,
+			requirePlanApproval: true,
 		});
 	},
 });

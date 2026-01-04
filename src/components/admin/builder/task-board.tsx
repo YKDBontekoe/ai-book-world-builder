@@ -44,7 +44,7 @@ export function TaskBoard(): JSX.Element {
 	const { data: issues } = useQuery({
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
-			const res = await getIssues({ input: "open" });
+			const res = await getIssues("open");
 			return res.success ? res.data : [];
 		},
 	});
@@ -52,7 +52,7 @@ export function TaskBoard(): JSX.Element {
 	const { data: closedIssues } = useQuery({
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
-			const res = await getIssues({ input: "closed" });
+			const res = await getIssues("closed");
 			return res.success ? res.data : [];
 		},
 	});
@@ -60,7 +60,7 @@ export function TaskBoard(): JSX.Element {
 	const { data: prs } = useQuery({
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
-			const res = await getPullRequests({ input: "open" });
+			const res = await getPullRequests("open");
 			return res.success ? res.data : [];
 		},
 	});
@@ -68,7 +68,7 @@ export function TaskBoard(): JSX.Element {
 	const { data: closedPrs } = useQuery({
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
-			const res = await getPullRequests({ input: "closed" });
+			const res = await getPullRequests("closed");
 			return res.success ? res.data : [];
 		},
 	});
@@ -76,7 +76,7 @@ export function TaskBoard(): JSX.Element {
 	const { data: sessions } = useQuery({
 		queryKey: ["jules", "sessions"],
 		queryFn: async () => {
-			const res = await getJulesSessionsAction({ input: { pageSize: 50 } });
+			const res = await getJulesSessionsAction({ pageSize: 50 });
 			return res.success ? res.data.sessions : [];
 		},
 		refetchInterval: 10000, // Poll for session updates
