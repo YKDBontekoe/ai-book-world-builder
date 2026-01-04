@@ -23,6 +23,7 @@ import {
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { Response } from "@/components/molecules/response";
 import { CommentSection } from "./comment-section";
 
 interface ItemDetailProps {
@@ -175,9 +176,9 @@ export function ItemDetail({ number, type, onBack }: ItemDetailProps) {
 
 					<div className="border-t border-border/50 pt-4 mt-2">
 						{item.body ? (
-							<div className="prose dark:prose-invert max-w-none whitespace-pre-wrap">
+							<Response className="prose dark:prose-invert max-w-none">
 								{item.body}
-							</div>
+							</Response>
 						) : (
 							<p className="text-muted-foreground italic">
 								No description provided.
