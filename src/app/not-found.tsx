@@ -17,7 +17,7 @@ export default function NotFound(): React.JSX.Element {
 		<div className="flex min-h-screen items-center justify-center bg-background p-4">
 			<div className="relative w-full max-w-md">
 				{/* Background glow effect */}
-				<div className="absolute inset-0 -z-10 bg-primary/20 blur-3xl rounded-full opacity-20 transform scale-150" />
+				<div className="absolute inset-0 -z-10 bg-primary/20 blur-3xl rounded-full opacity-20 scale-150" />
 
 				<EmptyState
 					variant="glass"
@@ -25,20 +25,19 @@ export default function NotFound(): React.JSX.Element {
 					title="Page Not Found"
 					description="The page you are looking for doesn't exist or has been moved."
 					action={
-						<Link href="/">
-							<motion.div
-								whileHover={{ scale: 1.05 }}
-								whileTap={{ scale: 0.95 }}
-								transition={{ type: "spring", stiffness: 400, damping: 25 }}
+						<motion.div
+							whileHover={{ scale: 1.05 }}
+							whileTap={{ scale: 0.95 }}
+							transition={{ type: "spring", stiffness: 400, damping: 25 }}
+						>
+							<Button
+								variant="default"
+								className="shadow-lg hover:shadow-primary/25"
+								asChild
 							>
-								<Button
-									variant="default"
-									className="shadow-lg hover:shadow-primary/25"
-								>
-									Return Home
-								</Button>
-							</motion.div>
-						</Link>
+								<Link href="/">Return Home</Link>
+							</Button>
+						</motion.div>
 					}
 				/>
 			</div>
