@@ -18,19 +18,20 @@ import { cn } from "@/lib/utils";
 export function ChangeLogPane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: log, isLoading } = useQuery({
+	const { data: logResult, isLoading } = useQuery({
 		queryKey: projectId
 			? QUERY_KEYS.changelog(projectId)
 			: ["changelog", "null"],
-		queryFn: () =>
-			projectId ? getGenerationLog(projectId) : Promise.resolve(null),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return getGenerationLog({ projectId });
+		},
 		enabled: !!projectId,
 		refetchInterval: 3000,
 	});
 
 	// Safely parse log if needed, but schema says it's typed.
-	// However, Drizzle returns JSON fields as `unknown` or typed object if asserted.
-	// We'll treat it as GenerationTaskLog (array of entries).
+	const log = logResult?.success ? logResult.data : null;
 	const entries = Array.isArray(log) ? (log as GenerationTaskLog) : [];
 
 	if (!projectId) {

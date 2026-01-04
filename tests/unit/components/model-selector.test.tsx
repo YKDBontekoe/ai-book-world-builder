@@ -96,29 +96,32 @@ describe("ModelSelectorCompact", () => {
 	beforeEach(() => {
 		vi.resetAllMocks();
 		mockGetPreferences.mockResolvedValue({
-			favoriteModels: [],
-			recentModels: [],
-			modelPreferences: {
-				light: "fast-model",
-				middle: "vision-model",
-				large: "budget-model",
+			success: true,
+			data: {
+				favoriteModels: [],
+				recentModels: [],
+				modelPreferences: {
+					light: "fast-model",
+					middle: "vision-model",
+					large: "budget-model",
+				},
 			},
 		});
 		mockToggleFavorite.mockResolvedValue({
-			favoriteModels: [],
-			isFavorite: true,
+			success: true,
+			data: {
+				favoriteModels: [],
+				isFavorite: true,
+			},
 		});
-		mockTrackRecent.mockResolvedValue(undefined);
-		mockUpdateFavorites.mockResolvedValue([]);
+		mockTrackRecent.mockResolvedValue({ success: true, data: undefined });
+		mockUpdateFavorites.mockResolvedValue({ success: true, data: [] });
 		(saveChatModelAsCookie as unknown as Mock).mockResolvedValue(undefined);
 	});
 
 	it("shows favorite toggle state optimistically", async () => {
 		const user = createUser();
-		const toggleDeferred = createDeferred<{
-			favoriteModels: string[];
-			isFavorite: boolean;
-		}>();
+		const toggleDeferred = createDeferred<any>();
 		mockToggleFavorite.mockReturnValue(toggleDeferred.promise);
 
 		render(
@@ -144,8 +147,11 @@ describe("ModelSelectorCompact", () => {
 
 		await act(async () => {
 			toggleDeferred.resolve({
-				favoriteModels: ["fast-model"],
-				isFavorite: true,
+				success: true,
+				data: {
+					favoriteModels: ["fast-model"],
+					isFavorite: true,
+				},
 			});
 			await toggleDeferred.promise;
 		});
@@ -155,9 +161,12 @@ describe("ModelSelectorCompact", () => {
 		const user = createUser();
 		// Mock preferences with specific models
 		mockGetPreferences.mockResolvedValue({
-			favoriteModels: [],
-			recentModels: [],
-			modelPreferences: { light: "vision-model", middle: null, large: null },
+			success: true,
+			data: {
+				favoriteModels: [],
+				recentModels: [],
+				modelPreferences: { light: "vision-model", middle: null, large: null },
+			},
 		});
 
 		render(
@@ -170,6 +179,8 @@ describe("ModelSelectorCompact", () => {
 		await openSelector(user);
 
 		// Should see vision-model because it is in modelPreferences
-		expect(screen.getByTestId("model-card-vision-model")).toBeTruthy();
+		await waitFor(() => {
+			expect(screen.getByTestId("model-card-vision-model")).toBeTruthy();
+		});
 	});
 });

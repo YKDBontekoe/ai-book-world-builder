@@ -13,13 +13,20 @@ export default async function UserDetailsPage({
 	params: Promise<{ id: string }>;
 }) {
 	const { id } = await params;
-	const data = await getUserDetails(id);
+	const result = await getUserDetails({ userId: id });
 
-	if (!data) {
+	if (!result.success) {
+		// If the action itself failed (e.g., network error, server error)
+		// We can render an error message or redirect. For now, we'll use notFound.
 		notFound();
 	}
 
-	const { user, projects, usage } = data;
+	if (!result.data) {
+		// If the action succeeded but returned no data (e.g., user not found)
+		notFound();
+	}
+
+	const { user, projects, usage } = result.data;
 
 	return (
 		<div className="space-y-8">

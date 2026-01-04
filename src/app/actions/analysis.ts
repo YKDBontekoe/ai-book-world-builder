@@ -6,6 +6,8 @@ import { db } from "@/lib/db/drizzle";
 import { getIssuesForProject, resolveIssue } from "@/lib/db/queries/issues";
 import { scene, sceneCard } from "@/lib/db/schema";
 import { consistencyService } from "@/lib/services/analysis/consistency-service";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 
 export type ScenePacingData = {
 	sceneId: string;
@@ -17,12 +19,18 @@ export type ScenePacingData = {
 	chapterId: string;
 };
 
-export async function analyzeProjectPacingAction(
-	projectId: string,
-): Promise<{ success: boolean; data?: ScenePacingData[]; error?: string }> {
-	try {
-		await ensureProjectAccess(projectId, false);
+const projectIdSchema = z.object({
+	projectId: z.string().uuid(),
+});
 
+const resolveIssueSchema = z.object({
+	projectId: z.string().uuid(),
+	issueId: z.string().uuid(),
+});
+
+export const analyzeProjectPacingAction = createUserAction({
+	input: projectIdSchema,
+	handler: async ({ input: { projectId } }) => {
 		// Fetch scenes and their cards
 		// Using a left join to get all scenes even if they don't have a card
 		const scenesData = await db
@@ -73,6 +81,7 @@ export async function analyzeProjectPacingAction(
 					"safe",
 					"joy",
 					"happy",
+					"peace",
 				];
 
 				const atmosphereLower = s.atmosphere.toLowerCase();
@@ -82,7 +91,7 @@ export async function analyzeProjectPacingAction(
 					tension -= 1;
 			}
 
-			// Boost from emotional beats count (more beats = more emotional shift = potential tension)
+			// Boost from emotional beats count
 			if (s.emotionalBeats && Array.isArray(s.emotionalBeats)) {
 				tension += Math.min(3, s.emotionalBeats.length * 0.5);
 			}
@@ -96,7 +105,7 @@ export async function analyzeProjectPacingAction(
 				else if (wordCount > 2000) pacing -= 2;
 			}
 
-			// Heuristic: If content has many short paragraphs (dialogue), it's faster
+			// Dialogue/Description heuristic
 			if (s.content) {
 				const paragraphs = s.content.split("\n").filter((p) => p.trim());
 				const avgParaLength = wordCount / (paragraphs.length || 1);
@@ -115,42 +124,30 @@ export async function analyzeProjectPacingAction(
 			};
 		});
 
-		return { success: true, data: pacingData };
-	} catch (error) {
-		console.error("Failed to analyze pacing:", error);
-		return { success: false, error: "Failed to analyze pacing" };
-	}
-}
+		return pacingData;
+	},
+});
 
-export async function analyzeProjectAction(projectId: string) {
-	try {
-		await ensureProjectAccess(projectId, true); // read-write check
+export const analyzeProjectAction = createUserAction({
+	input: projectIdSchema,
+	handler: async ({ input: { projectId } }) => {
 		const issues = await consistencyService.analyzeProject(projectId);
-		return { success: true, count: issues.length };
-	} catch (error) {
-		console.error("Analysis failed:", error);
-		return { success: false, error: "Failed to analyze project" };
-	}
-}
+		return { count: issues.length };
+	},
+});
 
-export async function getProjectIssuesAction(projectId: string) {
-	try {
-		await ensureProjectAccess(projectId, false); // read-only check
+export const getProjectIssuesAction = createUserAction({
+	input: projectIdSchema,
+	handler: async ({ input: { projectId } }) => {
 		const issues = await getIssuesForProject(projectId);
-		return { success: true, issues };
-	} catch (error) {
-		console.error("Failed to fetch issues:", error);
-		return { success: false, error: "Failed to fetch issues" };
-	}
-}
+		return issues;
+	},
+});
 
-export async function resolveIssueAction(projectId: string, issueId: string) {
-	try {
-		await ensureProjectAccess(projectId, true);
+export const resolveIssueAction = createUserAction({
+	input: resolveIssueSchema,
+	handler: async ({ input: { projectId, issueId } }) => {
 		await resolveIssue(projectId, issueId);
 		return { success: true };
-	} catch (error) {
-		console.error("Failed to resolve issue:", error);
-		return { success: false, error: "Failed to resolve issue" };
-	}
-}
+	},
+});

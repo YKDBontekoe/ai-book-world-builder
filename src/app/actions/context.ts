@@ -1,44 +1,73 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { ensureProjectAccess } from "@/lib/actions-utils";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db/drizzle";
+import { projectRepository } from "@/lib/db/repositories";
 import { type Entity, entity, scene, sceneCard } from "@/lib/db/schema";
+import { NotFoundError } from "@/lib/errors";
+
+// ============================================================================
+// Types
+// ============================================================================
 
 export type ContextEntity = Entity & {
 	matchType: "explicit" | "mentioned";
 	relevance: string;
 };
 
-export async function getSceneContextAction(
-	sceneId: string,
-	projectId: string,
-): Promise<{ success: boolean; data?: ContextEntity[]; error?: string }> {
-	try {
-		await ensureProjectAccess(projectId, false);
+// ============================================================================
+// Validation Schemas
+// ============================================================================
+
+const sceneContextSchema = z.object({
+	sceneId: z.string().uuid("Invalid scene ID"),
+	projectId: z.string().uuid("Invalid project ID"),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * Get contextual entities for a scene
+ */
+export const getSceneContextAction = createUserAction({
+	input: sceneContextSchema,
+	handler: async ({ user, input }) => {
+		// Verify project access
+		const project = await projectRepository.findByIdWithAccess(
+			input.projectId,
+			user.id,
+		);
+
+		if (!project) {
+			throw NotFoundError.forResource("Project", input.projectId);
+		}
 
 		// 1. Fetch Scene and SceneCard
 		const [sceneData] = await db
 			.select()
 			.from(scene)
-			.where(eq(scene.id, sceneId))
+			.where(eq(scene.id, input.sceneId))
 			.limit(1);
 
 		if (!sceneData) {
-			return { success: false, error: "Scene not found" };
+			throw NotFoundError.forResource("Scene", input.sceneId);
 		}
 
 		const [cardData] = await db
 			.select()
 			.from(sceneCard)
-			.where(eq(sceneCard.sceneId, sceneId))
+			.where(eq(sceneCard.sceneId, input.sceneId))
 			.limit(1);
 
 		// 2. Fetch all project entities
 		const allEntities = await db
 			.select()
 			.from(entity)
-			.where(eq(entity.projectId, projectId));
+			.where(eq(entity.projectId, input.projectId));
 
 		// 3. Match Entities
 		const contextEntities: ContextEntity[] = [];
@@ -50,9 +79,9 @@ export async function getSceneContextAction(
 		// Check explicit character goals
 		const explicitCharacters = new Set<string>();
 		if (cardData?.characterGoals) {
-			Object.keys(cardData.characterGoals).forEach((name) => {
+			for (const name of Object.keys(cardData.characterGoals)) {
 				explicitCharacters.add(name.toLowerCase());
-			});
+			}
 		}
 
 		for (const ent of allEntities) {
@@ -96,9 +125,6 @@ export async function getSceneContextAction(
 			return a.name.localeCompare(b.name);
 		});
 
-		return { success: true, data: contextEntities };
-	} catch (error) {
-		console.error("Failed to get scene context:", error);
-		return { success: false, error: "Failed to fetch context" };
-	}
-}
+		return contextEntities;
+	},
+});

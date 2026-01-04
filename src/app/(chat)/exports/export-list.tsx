@@ -49,7 +49,9 @@ export function ExportList({ exports }: ExportListProps) {
 
 	const { mutate: handleBulkDelete, isPending: isDeleting } = useMutation({
 		mutationFn: async () => {
-			const result = await deleteBulkExports(Array.from(selectedIds));
+			const result = await deleteBulkExports({
+				exportIds: Array.from(selectedIds),
+			});
 			if (!result.success) throw new Error(result.error);
 			return result;
 		},

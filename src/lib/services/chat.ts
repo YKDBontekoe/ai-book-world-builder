@@ -60,7 +60,11 @@ export async function initializeChatSession({
 	}
 
 	// 2. Model Validation
-	const availableModels = await getAvailableModels();
+	const availableModelsResult = await getAvailableModels();
+	const availableModels = availableModelsResult.success
+		? availableModelsResult.data
+		: [];
+
 	const isDynamicModel = availableModels.some(
 		(m: any) => m.id === selectedChatModel,
 	);

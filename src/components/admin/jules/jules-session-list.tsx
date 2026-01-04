@@ -5,9 +5,9 @@ import { formatDistanceToNow } from "date-fns";
 import { ArrowRight, Clock, GitPullRequest, Loader2 } from "lucide-react";
 import type { JSX } from "react";
 import { getJulesSessionsAction } from "@/app/actions/jules";
-import { GlassCard } from "@/components/molecules/glass-card";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
+import { GlassCard } from "@/components/molecules/glass-card";
 
 /**
  * Props for the JulesSessionList component.
@@ -30,7 +30,7 @@ export function JulesSessionList({
 }: JulesSessionListProps): JSX.Element {
 	const { data, isLoading, error } = useQuery({
 		queryKey: ["jules", "sessions"],
-		queryFn: () => getJulesSessionsAction(),
+		queryFn: () => getJulesSessionsAction({ pageSize: 20 }),
 	});
 
 	if (isLoading) {

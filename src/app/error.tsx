@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { submitFeedbackAction } from "@/app/actions/feedback";
 import { Button } from "@/components/atoms/button";
 
-export default function Error({
+export default function PageError({
 	error,
 	reset,
 }: {
@@ -13,7 +13,7 @@ export default function Error({
 }) {
 	useEffect(() => {
 		submitFeedbackAction({
-			type: "crash",
+			type: "bug",
 			content: `${error.name}: ${error.message}\n\nStack:\n${error.stack}\n\nDigest: ${error.digest}`,
 			meta: {
 				url:

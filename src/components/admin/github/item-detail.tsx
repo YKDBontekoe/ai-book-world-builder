@@ -46,7 +46,7 @@ export function ItemDetail({ number, type, onBack }: ItemDetailProps) {
 
 	const mergeMutation = useMutation({
 		mutationFn: async () => {
-			const res = await mergePullRequest(number);
+			const res = await mergePullRequest({ number });
 			if (!res.success) throw new Error(res.error);
 			return res.data;
 		},

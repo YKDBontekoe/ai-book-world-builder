@@ -86,13 +86,15 @@ function ChapterSection({ chapter }: { chapter: SerializedChapterWithScenes }) {
 export function ScenePane() {
 	const { projectId } = useBookCanvas();
 
-	const { data: chapters, isLoading } = useQuery({
+	const { data: chaptersResult, isLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.scenes(projectId) : ["scenes", "null"],
-		queryFn: () =>
-			projectId ? getScenesData(projectId) : Promise.resolve(null),
+		queryFn: () => (projectId ? getScenesData({ projectId }) : null),
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});
+
+	const chapters =
+		chaptersResult?.success && chaptersResult.data ? chaptersResult.data : [];
 
 	if (!projectId) {
 		return (

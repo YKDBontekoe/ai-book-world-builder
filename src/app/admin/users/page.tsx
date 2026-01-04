@@ -23,8 +23,18 @@ export default async function UsersPage({
 	searchParams: Promise<{ page?: string }>;
 }) {
 	const page = Number((await searchParams).page) || 1;
-	const { users, total, pageSize } = await getUsers(page);
-	const totalPages = Math.ceil(total / pageSize);
+	const result = await getUsers({ page });
+
+	if (!result.success) {
+		return (
+			<div className="p-8 text-destructive">
+				Error loading users: {result.error}
+			</div>
+		);
+	}
+
+	const { users, total, pageSize } = result.data;
+	const totalPages = Math.ceil(total / (pageSize || 10));
 
 	return (
 		<div className="space-y-8">

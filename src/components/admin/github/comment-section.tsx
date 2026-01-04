@@ -29,7 +29,7 @@ export function CommentSection({ issueNumber }: CommentSectionProps) {
 
 	const mutation = useMutation({
 		mutationFn: async (body: string) => {
-			const res = await postComment(issueNumber, body);
+			const res = await postComment({ number: issueNumber, body });
 			if (!res.success) throw new Error(res.error);
 			return res.data;
 		},

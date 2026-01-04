@@ -95,18 +95,22 @@ export function NetworkPane() {
 
 	const { data: entitiesResult, isLoading: isLoadingEntities } = useQuery({
 		queryKey: ["entities", projectId],
-		queryFn: () => (projectId ? getEntitiesWithImagesAction(projectId) : null),
+		queryFn: () =>
+			projectId ? getEntitiesWithImagesAction({ projectId }) : null,
 		enabled: !!projectId && activePane === "graph",
 	});
 
-	const { data: relationships = [], isLoading: isLoadingRelationships } =
+	const { data: relationshipsResult, isLoading: isLoadingRelationships } =
 		useQuery({
 			queryKey: ["relationships", projectId],
-			queryFn: () => (projectId ? getRelationships(projectId) : []),
+			queryFn: () => (projectId ? getRelationships({ projectId }) : null),
 			enabled: !!projectId && activePane === "graph",
 		});
 
 	const entities = entitiesResult?.success ? entitiesResult.data : [];
+	const relationships = relationshipsResult?.success
+		? (relationshipsResult.data as SerializedRelationship[])
+		: [];
 
 	const { initialNodes, initialEdges } = useMemo(() => {
 		const nodes: Node[] = [];

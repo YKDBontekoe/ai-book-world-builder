@@ -55,7 +55,8 @@ function EntityActions({
 
 	const { mutate: handleDelete, isPending: isDeleting } = useMutation({
 		mutationFn: async () => {
-			await deleteEntityAction(entityId);
+			const result = await deleteEntityAction({ id: entityId });
+			if (!result.success) throw new Error(result.error);
 		},
 		onSuccess: () => {
 			// Invalidate queries to refresh the list

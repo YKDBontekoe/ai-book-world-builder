@@ -100,23 +100,27 @@ describe("GraphPane", () => {
 		});
 
 		// Mock return values
-		const mockStructure = {
-			structure: [
-				{
-					title: "Chapter 1",
-					scenes: [
-						{ id: "s1", title: "Scene 1", prevSceneId: null },
-						{ id: "s2", title: "Scene 2", prevSceneId: "s1" },
-					],
-				},
-			],
+		const mockStructureResult = {
+			success: true,
+			data: {
+				structure: [
+					{
+						title: "Chapter 1",
+						scenes: [
+							{ id: "s1", title: "Scene 1", prevSceneId: null },
+							{ id: "s2", title: "Scene 2", prevSceneId: "s1" },
+						],
+					},
+				],
+				structureText: "...",
+			},
 		};
 
-		(getProjectStructure as any).mockResolvedValue(mockStructure);
+		(getProjectStructure as any).mockResolvedValue(mockStructureResult);
 
 		(getProjectIssuesAction as any).mockResolvedValue({
 			success: true,
-			issues: [],
+			data: [],
 		});
 
 		const useQuery = await import("@tanstack/react-query").then(
@@ -125,13 +129,13 @@ describe("GraphPane", () => {
 		(useQuery as any).mockImplementation(({ queryKey }: any) => {
 			if (queryKey[0] === "project-structure") {
 				return {
-					data: mockStructure,
+					data: mockStructureResult,
 					isLoading: false,
 				};
 			}
 			if (queryKey[0] === "issues") {
 				return {
-					data: { success: true, issues: [] },
+					data: { success: true, data: [] },
 					isLoading: false,
 				};
 			}

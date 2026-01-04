@@ -1,80 +1,74 @@
 "use server";
 
-import { auth } from "@/app/(auth)/auth";
-
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import {
 	addToRecentModels,
 	getUserPreferences,
 	toggleFavoriteModel,
 	updateFavoriteModels,
 } from "@/lib/db/queries/user-preferences";
-import type { ModelPreferences } from "@/lib/db/schema/auth";
+
+// ============================================================================
+// Validation Schemas
+// ============================================================================
+
+const modelIdSchema = z.object({
+	modelId: z.string().min(1, "Model ID is required"),
+});
+
+const modelIdsSchema = z.object({
+	modelIds: z.array(z.string()),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
 
 /**
  * Get the current user's model preferences (favorites and recent)
  */
-export async function getModelPreferences(): Promise<{
-	favoriteModels: string[];
-	recentModels: string[];
-	modelPreferences: ModelPreferences;
-}> {
-	const session = await auth();
-	if (!session?.user?.id) {
+export const getModelPreferences = createUserAction({
+	handler: async ({ user }) => {
+		const prefs = await getUserPreferences(user.id);
 		return {
-			favoriteModels: [],
-			recentModels: [],
-			modelPreferences: { light: null, middle: null, large: null },
+			favoriteModels: prefs.favoriteModels || [],
+			recentModels: prefs.recentModels || [],
+			modelPreferences: prefs.modelPreferences || {
+				light: null,
+				middle: null,
+				large: null,
+			},
 		};
-	}
-
-	const prefs = await getUserPreferences(session.user.id);
-	return {
-		favoriteModels: prefs.favoriteModels || [],
-		recentModels: prefs.recentModels || [],
-		modelPreferences: prefs.modelPreferences || {
-			light: null,
-			middle: null,
-			large: null,
-		},
-	};
-}
+	},
+});
 
 /**
  * Toggle a model as favorite
  */
-export async function toggleFavoriteModelAction(
-	modelId: string,
-): Promise<{ favoriteModels: string[]; isFavorite: boolean }> {
-	const session = await auth();
-	if (!session?.user?.id) {
-		throw new Error("Unauthorized");
-	}
-
-	return toggleFavoriteModel(session.user.id, modelId);
-}
+export const toggleFavoriteModelAction = createUserAction({
+	input: modelIdSchema,
+	handler: async ({ user, input }) => {
+		return toggleFavoriteModel(user.id, input.modelId);
+	},
+});
 
 /**
  * Track a model as recently used
  */
-export async function trackRecentModel(modelId: string): Promise<void> {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return;
-	}
-
-	await addToRecentModels(session.user.id, modelId);
-}
+export const trackRecentModel = createUserAction({
+	input: modelIdSchema,
+	handler: async ({ user, input }) => {
+		await addToRecentModels(user.id, input.modelId);
+	},
+});
 
 /**
  * Update the order of favorite models
  */
-export async function updateFavoriteModelsAction(
-	modelIds: string[],
-): Promise<string[]> {
-	const session = await auth();
-	if (!session?.user?.id) {
-		throw new Error("Unauthorized");
-	}
-
-	return updateFavoriteModels(session.user.id, modelIds);
-}
+export const updateFavoriteModelsAction = createUserAction({
+	input: modelIdsSchema,
+	handler: async ({ user, input }) => {
+		return updateFavoriteModels(user.id, input.modelIds);
+	},
+});

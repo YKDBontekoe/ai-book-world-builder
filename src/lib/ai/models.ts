@@ -43,7 +43,11 @@ export const getValidChatModelId = (candidate?: string): ChatModelId =>
 export async function getSelectedModelId(
 	type: "light" | "middle" | "large",
 ): Promise<string> {
-	const preferences = await getModelPreferences();
+	const result = await getModelPreferences();
+	if (!result.success) {
+		return DEFAULT_MODELS[type];
+	}
+	const preferences = result.data;
 	return preferences[type] || DEFAULT_MODELS[type];
 }
 
@@ -64,7 +68,10 @@ export async function getChatModelById(
 ): Promise<ChatModel | undefined> {
 	if (!id) return undefined;
 
-	const models = await getAvailableModels();
+	const result = await getAvailableModels();
+	if (!result.success) return undefined;
+
+	const models = result.data;
 	const model = models.find((m) => m.id === id);
 
 	if (model) {

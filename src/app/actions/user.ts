@@ -1,25 +1,26 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { auth } from "@/app/(auth)/auth";
+import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db/drizzle";
 import { account } from "@/lib/db/schema";
 
-export async function getConnectedAccounts() {
-	const session = await auth();
-	if (!session?.user?.id) return [];
+// ============================================================================
+// Actions
+// ============================================================================
 
-	try {
+/**
+ * Get connected OAuth accounts for the current user
+ */
+export const getConnectedAccounts = createUserAction({
+	handler: async ({ user }) => {
 		const accounts = await db
 			.select({
 				provider: account.provider,
 			})
 			.from(account)
-			.where(eq(account.userId, session.user.id));
+			.where(eq(account.userId, user.id));
 
 		return accounts;
-	} catch (error) {
-		console.error("Failed to fetch connected accounts:", error);
-		return [];
-	}
-}
+	},
+});

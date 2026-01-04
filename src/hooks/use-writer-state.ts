@@ -88,7 +88,6 @@ export function useWriterState({
 		isSaving,
 		lastSaved,
 		handleContentChange,
-		setContentDirectly,
 	} = useSceneContent({
 		activeSceneId: activeSceneId || undefined,
 		initialContent: activeScene?.content ?? undefined,
@@ -97,12 +96,13 @@ export function useWriterState({
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);
-		const result = await getProjectStructure(projectId);
-		if (result.structure) {
+		const result = await getProjectStructure({ projectId });
+		if (result.success && result.data.structure) {
+			const { structure, structureText } = result.data;
 			// Cast the result to our extended type for now
-			setStructure(result.structure as unknown as ChapterWithScenes[]);
-			if (result.structureText) {
-				setStructureText(result.structureText);
+			setStructure(structure as unknown as ChapterWithScenes[]);
+			if (structureText) {
+				setStructureText(structureText);
 			}
 
 			// Use the ref here instead of the dependency
@@ -110,19 +110,19 @@ export function useWriterState({
 
 			if (
 				!currentActiveId &&
-				result.structure.length > 0 &&
-				result.structure[0].scenes.length > 0
+				structure.length > 0 &&
+				structure[0].scenes.length > 0
 			) {
 				// Check for last viewed scene match
 				const hasLastViewed =
 					lastViewedSceneId &&
-					result.structure.some((c: any) =>
+					structure.some((c: any) =>
 						c.scenes.some((s: any) => s.id === lastViewedSceneId),
 					);
 				if (hasLastViewed && lastViewedSceneId) {
 					setActiveSceneId(lastViewedSceneId);
 				} else {
-					setActiveSceneId(result.structure[0].scenes[0].id);
+					setActiveSceneId(structure[0].scenes[0].id);
 				}
 			}
 		}
@@ -153,7 +153,7 @@ export function useWriterState({
 	useEffect(() => {
 		if (activeSceneId && projectId) {
 			const timer = setTimeout(() => {
-				updateLastViewedScene(projectId, activeSceneId);
+				updateLastViewedScene({ projectId, sceneId: activeSceneId });
 			}, 1000);
 			return () => clearTimeout(timer);
 		}

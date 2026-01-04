@@ -34,14 +34,24 @@ export function AppearanceProvider({
 }) {
 	const queryClient = useQueryClient();
 
-	const { data: preferences, isLoading } = useQuery({
+	const { data: result, isLoading } = useQuery({
 		queryKey: ["appearance-preferences"],
-		queryFn: () => getAppearancePreferences(),
-		staleTime: Infinity, // Fetch once per session ideally, or user refresh
+		queryFn: async () => {
+			const res = await getAppearancePreferences();
+			if (!res.success) throw new Error(res.error);
+			return res.data;
+		},
+		staleTime: Infinity,
 	});
 
+	const preferences = result;
+
 	const mutation = useMutation({
-		mutationFn: saveAppearancePreferences,
+		mutationFn: async (updates: Partial<AppearancePreferences>) => {
+			const res = await saveAppearancePreferences(updates);
+			if (!res.success) throw new Error(res.error);
+			return res.data;
+		},
 		onMutate: async (newPrefs) => {
 			await queryClient.cancelQueries({ queryKey: ["appearance-preferences"] });
 			const previousPrefs = queryClient.getQueryData<AppearancePreferences>([
@@ -75,12 +85,11 @@ export function AppearanceProvider({
 		},
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: mutation is stable
 	const updatePreferences = React.useCallback(
 		async (updates: Partial<AppearancePreferences>) => {
 			await mutation.mutateAsync(updates);
 		},
-		[],
+		[mutation],
 	);
 
 	// Apply Theme Side Effect
@@ -89,12 +98,8 @@ export function AppearanceProvider({
 			const root = document.documentElement;
 			const hsl = THEME_COLORS[preferences.theme] || THEME_COLORS.violet;
 
-			// Update CSS variables
 			root.style.setProperty("--primary", hsl);
 			root.style.setProperty("--sidebar-primary", hsl);
-
-			// Also update darker/lighter variants if needed, or rely on HSL manipulation in CSS
-			// For simplicity, we assume Tailwind using <alpha-value> works with this
 		}
 	}, [preferences?.theme]);
 

@@ -64,8 +64,10 @@ export function SettingsDialog({
 	const loadAccounts = useCallback(async () => {
 		setIsLoading(true);
 		try {
-			const accounts = await getConnectedAccounts();
-			setConnectedAccounts(accounts.map((a) => a.provider));
+			const result = await getConnectedAccounts();
+			if (result.success) {
+				setConnectedAccounts(result.data.map((a) => a.provider));
+			}
 		} catch (error) {
 			toast.error("Failed to load account settings");
 		} finally {
@@ -75,16 +77,20 @@ export function SettingsDialog({
 
 	const loadModelSettings = useCallback(async () => {
 		try {
-			const [models, prefs] = await Promise.all([
+			const [modelsResult, prefsResult] = await Promise.all([
 				getAvailableModels(),
 				getModelPreferences(),
 			]);
-			setAvailableModels(models);
-			setModelPreferences({
-				light: prefs.light || "",
-				middle: prefs.middle || "",
-				large: prefs.large || "",
-			});
+			if (modelsResult.success) {
+				setAvailableModels(modelsResult.data);
+			}
+			if (prefsResult.success) {
+				setModelPreferences({
+					light: prefsResult.data.light || "",
+					middle: prefsResult.data.middle || "",
+					large: prefsResult.data.large || "",
+				});
+			}
 		} catch (error) {
 			toast.error("Failed to load model settings");
 		}

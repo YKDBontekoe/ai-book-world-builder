@@ -28,7 +28,7 @@ export class GlobalErrorBoundary extends React.Component<Props, State> {
 		console.error("GlobalErrorBoundary caught an error:", error, errorInfo);
 		// Automatically submit crash report
 		submitFeedbackAction({
-			type: "crash",
+			type: "bug",
 			content: `${error.name}: ${error.message}\n\nStack:\n${error.stack}\n\nComponent Stack:\n${errorInfo.componentStack}`,
 			meta: {
 				url: typeof window !== "undefined" ? window.location.href : "server",

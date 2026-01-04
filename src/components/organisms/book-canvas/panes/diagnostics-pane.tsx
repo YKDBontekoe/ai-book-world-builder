@@ -142,31 +142,35 @@ export function DiagnosticsPane() {
 	const { projectId, triggerChatAction } = useBookCanvas();
 	const queryClient = useQueryClient();
 
-	const { data: stats, isLoading: isLoadingStats } = useQuery({
+	const { data: statsResult, isLoading: isLoadingStats } = useQuery({
 		queryKey: projectId
 			? QUERY_KEYS.diagnostics(projectId)
 			: ["diagnostics", "null"],
-		queryFn: () =>
-			projectId ? getProjectStats(projectId) : Promise.resolve(null),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return getProjectStats({ projectId });
+		},
 		enabled: !!projectId,
 		refetchInterval: 5000,
 	});
 
-	const { data: issuesData, isLoading: isLoadingIssues } = useQuery({
+	const stats = statsResult?.success ? statsResult.data : null;
+
+	const { data: issuesResult, isLoading: isLoadingIssues } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
-		queryFn: () =>
-			projectId
-				? getProjectIssuesAction(projectId)
-				: Promise.resolve({ success: false, issues: [] }),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return getProjectIssuesAction({ projectId });
+		},
 		enabled: !!projectId,
 	});
 
 	const { mutate: analyze, isPending: isAnalyzing } = useMutation({
 		mutationFn: async () => {
 			if (!projectId) return;
-			const res = await analyzeProjectAction(projectId);
+			const res = await analyzeProjectAction({ projectId });
 			if (!res.success) throw new Error(res.error);
-			return res;
+			return res.data;
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -182,7 +186,8 @@ export function DiagnosticsPane() {
 	const { mutate: resolve } = useMutation({
 		mutationFn: async (issueId: string) => {
 			if (!projectId) return;
-			await resolveIssueAction(projectId, issueId);
+			const res = await resolveIssueAction({ projectId, issueId });
+			if (!res.success) throw new Error(res.error);
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({
@@ -203,10 +208,11 @@ export function DiagnosticsPane() {
 		);
 	}
 
-	const issues = issuesData?.success ? issuesData.issues : [];
-	const openIssues = issues?.filter((i: any) => i.status === "open") || [];
+	const issues = issuesResult?.success ? issuesResult.data : [];
+	const openIssues =
+		issues?.filter((i: ConsistencyIssue) => i.status === "open") || [];
 	const resolvedIssues =
-		issues?.filter((i: any) => i.status === "resolved") || [];
+		issues?.filter((i: ConsistencyIssue) => i.status === "resolved") || [];
 
 	const readiness = stats?.readiness ?? {
 		characters: { score: 0, feedback: "Add characters to get started" },

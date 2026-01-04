@@ -93,25 +93,24 @@ export function GraphPane() {
 		queryKey: projectId
 			? ["project-structure", projectId]
 			: ["structure", "null"],
-		queryFn: () =>
-			projectId ? getProjectStructure(projectId) : Promise.resolve(null),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return getProjectStructure({ projectId });
+		},
 		enabled: !!projectId,
 	});
 
-	const { data: issuesData } = useQuery({
+	const { data: issuesResult } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
-		queryFn: () =>
-			projectId
-				? getProjectIssuesAction(projectId)
-				: Promise.resolve({ success: false, issues: [] }),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return getProjectIssuesAction({ projectId });
+		},
 		enabled: !!projectId,
 	});
 
-	const structure = result?.structure;
-	const issues =
-		issuesData?.success && Array.isArray(issuesData.issues)
-			? issuesData.issues
-			: [];
+	const structure = result?.success ? result.data.structure : undefined;
+	const issues = issuesResult?.success ? issuesResult.data : [];
 
 	// Transform structure into nodes and edges
 	const { initialNodes, initialEdges } = useMemo(() => {

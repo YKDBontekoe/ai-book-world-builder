@@ -8,6 +8,7 @@
 import { auth } from "@/app/(auth)/auth";
 import { projectRepository } from "@/lib/db/repositories/project-repository";
 import type { Project } from "@/lib/db/schema";
+import type { UserRole } from "@/lib/db/schema/auth";
 import {
 	type AppError,
 	ForbiddenError,
@@ -26,6 +27,7 @@ export interface AuthenticatedUser {
 	id: string;
 	email?: string;
 	type?: string;
+	role?: UserRole;
 }
 
 export interface ProjectContext {
@@ -54,6 +56,7 @@ export async function getAuthenticatedUser(): Promise<AuthenticatedUser> {
 		id: session.user.id,
 		email: session.user.email ?? undefined,
 		type: (session.user as { type?: string }).type,
+		role: session.user.role,
 	};
 }
 
@@ -67,6 +70,33 @@ export async function requireAuth(): Promise<Result<AuthenticatedUser>> {
 	} catch {
 		return err("You must be logged in to perform this action");
 	}
+}
+
+// ============================================================================
+// Admin Access Helpers
+// ============================================================================
+
+/**
+ * Ensure admin access - throws on failure
+ */
+export async function ensureAdminAccess(): Promise<AuthenticatedUser> {
+	const user = await getAuthenticatedUser();
+	if (user.role !== "admin") {
+		throw new ForbiddenError("Admin access required");
+	}
+	return user;
+}
+
+/**
+ * Execute a callback with admin access
+ */
+export async function withAdminAccess<T>(
+	callback: (user: AuthenticatedUser) => Promise<T>,
+): Promise<Result<T>> {
+	return withErrorHandling(async () => {
+		const user = await ensureAdminAccess();
+		return callback(user);
+	});
 }
 
 // ============================================================================

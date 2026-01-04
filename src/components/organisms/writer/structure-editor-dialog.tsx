@@ -66,7 +66,7 @@ export function StructureEditorDialog({
 
 	const handleSave = async () => {
 		setIsSaving(true);
-		const result = await saveProjectStructure(projectId, text);
+		const result = await saveProjectStructure({ projectId, structureText: text });
 		setIsSaving(false);
 
 		if (result.success) {

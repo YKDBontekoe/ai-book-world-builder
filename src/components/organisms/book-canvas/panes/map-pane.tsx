@@ -106,14 +106,19 @@ export function MapPane() {
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["entities-images", projectId],
-		queryFn: () => (projectId ? getEntitiesWithImagesAction(projectId) : null),
+		queryFn: () =>
+			projectId ? getEntitiesWithImagesAction({ projectId }) : null,
 		enabled: !!projectId && activePane === "map",
 	});
 
 	const { mutate: saveImage } = useMutation({
 		mutationFn: async ({ id, url }: { id: string; url: string }) => {
 			if (!projectId) return;
-			return setEntityImageAction(id, url, projectId);
+			return setEntityImageAction({
+				entityId: id,
+				imageUrl: url,
+				projectId,
+			});
 		},
 		onSuccess: () => {
 			queryClient.invalidateQueries({

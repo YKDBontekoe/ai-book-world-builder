@@ -44,7 +44,7 @@ export function CreateSessionDialog({
 
 	const { mutate: enhancePrompt, isPending: isEnhancing } = useMutation({
 		mutationFn: async (draft: string) => {
-			const result = await enhanceJulesPromptAction(draft);
+			const result = await enhanceJulesPromptAction({ draft });
 			if (!result.success) throw new Error(result.error);
 			return result.data;
 		},

@@ -20,7 +20,7 @@ export function ContextPane() {
 		queryKey: ["context", projectId, activeSceneId],
 		queryFn: () =>
 			projectId && activeSceneId
-				? getSceneContextAction(activeSceneId, projectId)
+				? getSceneContextAction({ sceneId: activeSceneId, projectId })
 				: null,
 		enabled: !!projectId && !!activeSceneId,
 	});

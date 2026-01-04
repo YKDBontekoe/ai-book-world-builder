@@ -28,7 +28,7 @@ export function FeedbackDialog({ open, onOpenChange }: FeedbackDialogProps) {
 		if (!content.trim()) return;
 		setIsSubmitting(true);
 		const result = await submitFeedbackAction({
-			type: "feedback",
+			type: "general",
 			content,
 			meta: { url: window.location.href },
 		});

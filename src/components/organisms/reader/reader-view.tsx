@@ -76,7 +76,11 @@ export function ReaderView({
 	const debouncedSave = useDebounceCallback(
 		async (chapterId: string, progress: number) => {
 			if (!userId) return; // Don't save for guests
-			await saveReadingProgress(project.id, chapterId, progress);
+			await saveReadingProgress({
+				projectId: project.id,
+				chapterId,
+				progress: progress * 100, // Convert 0-1 to 0-100
+			});
 		},
 		1000,
 	);

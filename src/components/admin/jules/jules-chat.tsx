@@ -50,7 +50,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 	const { data, isLoading } = useQuery({
 		queryKey: ["jules", "session", sessionId],
 		queryFn: async () => {
-			const result = await getJulesSessionDetailsAction(sessionId);
+			const result = await getJulesSessionDetailsAction({ sessionId });
 			if (!result.success) throw new Error(result.error);
 			return result.data;
 		},
@@ -59,7 +59,10 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	const { mutate: sendMessage, isPending: isSending } = useMutation({
 		mutationFn: async (message: string) => {
-			const result = await sendJulesMessageAction(sessionId, message);
+			const result = await sendJulesMessageAction({
+				sessionId,
+				prompt: message,
+			});
 			if (!result.success) throw new Error(result.error);
 			return result;
 		},
@@ -77,7 +80,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	const { mutate: approvePlan, isPending: isApproving } = useMutation({
 		mutationFn: async () => {
-			const result = await approveJulesPlanAction(sessionId);
+			const result = await approveJulesPlanAction({ sessionId });
 			if (!result.success) throw new Error(result.error);
 			return result;
 		},
@@ -100,7 +103,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	const { mutate: reviewPlan, isPending: isReviewing } = useMutation({
 		mutationFn: async (plan: JulesPlan) => {
-			const result = await reviewJulesPlanAction(plan);
+			const result = await reviewJulesPlanAction({ plan });
 			if (!result.success) throw new Error(result.error);
 			return result.data;
 		},
@@ -158,7 +161,12 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 			{/* Header */}
 			<div className="flex items-center justify-between pb-4 border-b">
 				<div className="flex items-center gap-3">
-					<Button variant="ghost" size="icon" onClick={onBack} aria-label="Go back">
+					<Button
+						variant="ghost"
+						size="icon"
+						onClick={onBack}
+						aria-label="Go back"
+					>
 						<ArrowLeft className="h-4 w-4" />
 					</Button>
 					<div>

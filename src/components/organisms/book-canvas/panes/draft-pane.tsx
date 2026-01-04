@@ -37,24 +37,30 @@ export function DraftPane() {
 	const router = useRouter();
 
 	// Fetch chapters
-	const { data: outline } = useQuery({
+	const { data: outlineResult } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],
-		queryFn: () =>
-			projectId ? getOutlineData(projectId) : Promise.resolve(null),
+		queryFn: async () => {
+			if (!projectId) return null;
+			return getOutlineData({ projectId });
+		},
 		enabled: !!projectId,
 	});
 
+	const outline = outlineResult?.success ? outlineResult.data : null;
+
 	// Fetch draft content when chapter is selected
-	const { data: draftContent, isLoading: isLoadingDraft } = useQuery({
+	const { data: draftResult, isLoading: isLoadingDraft } = useQuery({
 		queryKey: selectedChapterId
 			? QUERY_KEYS.draft(selectedChapterId)
 			: ["draft", "null"],
-		queryFn: () =>
-			selectedChapterId
-				? getChapterDraft(selectedChapterId)
-				: Promise.resolve(null),
+		queryFn: async () => {
+			if (!selectedChapterId) return null;
+			return getChapterDraft({ chapterId: selectedChapterId });
+		},
 		enabled: !!selectedChapterId,
 	});
+
+	const draftContent = draftResult?.success ? draftResult.data : null;
 
 	// Auto-select first chapter if none selected
 	useEffect(() => {

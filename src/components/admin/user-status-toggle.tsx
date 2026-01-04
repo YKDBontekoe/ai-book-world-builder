@@ -19,12 +19,12 @@ export function UserStatusToggle({
 	const handleToggle = async () => {
 		try {
 			setIsLoading(true);
-			const result = await toggleUserStatus(userId);
+			const result = await toggleUserStatus({ userId });
 			if (result.success) {
-				toast.success(result.banned ? "User banned" : "User activated");
+				toast.success(result.data.banned ? "User banned" : "User activated");
 				router.refresh();
 			}
-		} catch (error) {
+		} catch {
 			toast.error("Failed to update user status");
 		} finally {
 			setIsLoading(false);

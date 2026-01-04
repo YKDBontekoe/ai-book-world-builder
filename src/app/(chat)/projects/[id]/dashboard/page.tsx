@@ -14,9 +14,9 @@ export default async function ProjectDashboardPage({
 	params: { id: string };
 }) {
 	const { id } = await params;
-	const result = await getDashboardStatsAction(id);
+	const result = await getDashboardStatsAction({ projectId: id });
 
-	if (result.error) {
+	if (!result.success) {
 		return (
 			<div className="flex flex-col items-center justify-center h-full text-muted-foreground">
 				<p>Failed to load dashboard: {result.error}</p>
@@ -24,11 +24,13 @@ export default async function ProjectDashboardPage({
 		);
 	}
 
-	if (!result.stats) {
+	const { stats } = result.data;
+
+	if (!stats) {
 		notFound();
 	}
 
-	const { tokenStats, entityStats } = result.stats;
+	const { tokenStats, entityStats } = stats;
 
 	return (
 		<div className="flex-1 h-full overflow-y-auto p-8 space-y-8 animate-in fade-in duration-500">
