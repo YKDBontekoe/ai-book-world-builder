@@ -1,17 +1,17 @@
 import { redirect } from "next/navigation";
-import { connection } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { SidebarProvider, SidebarTrigger } from "@/components/atoms/sidebar";
 import { isAdmin } from "@/lib/auth/utils";
+
+export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
-	await connection(); // Force dynamic for the entire layout
-	const session = await auth(); // Check auth at layout level safely now
+	const session = await auth();
 
 	if (!session?.user || !isAdmin(session.user.role)) {
 		redirect("/");
