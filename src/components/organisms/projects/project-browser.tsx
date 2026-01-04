@@ -47,6 +47,11 @@ import {
 } from "@/components/atoms/tooltip";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
+import {
+	DateFilter,
+	type DateRangePreset,
+	filterByDateRange,
+} from "@/components/organisms/projects/date-filter";
 import { ProjectGrid } from "@/components/organisms/projects/project-grid";
 import { ProjectList } from "@/components/organisms/projects/project-list";
 import type { Project } from "@/lib/db/schema";
