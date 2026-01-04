@@ -6,8 +6,6 @@ import {
 	ArrowLeft,
 	Check,
 	ExternalLink,
-	LayoutDashboard,
-	ListTodo,
 	Loader2,
 	Send,
 	Shield,
@@ -26,22 +24,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
-import {
-	ResizableHandle,
-	ResizablePanel,
-	ResizablePanelGroup,
-} from "@/components/atoms/resizable";
 import { ScrollArea } from "@/components/atoms/scroll-area";
-import {
-	Tabs,
-	TabsContent,
-	TabsList,
-	TabsTrigger,
-} from "@/components/atoms/tabs";
 import { GlassCard } from "@/components/molecules/glass-card";
 import type { JulesActivity, JulesPlan } from "@/lib/jules-client";
-import { PlanProgress } from "./plan-progress";
-import { SessionArtifacts } from "./session-artifacts";
+import { ArtifactRenderer } from "./artifact-renderer";
 
 /**
  * Props for the JulesChat component.
@@ -60,7 +46,6 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 	const queryClient = useQueryClient();
 	const scrollRef = useRef<HTMLDivElement>(null);
 	const [input, setInput] = useState("");
-	const [activeTab, setActiveTab] = useState("plan");
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["jules", "session", sessionId],
@@ -133,12 +118,8 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: data dependency for scroll
 	useEffect(() => {
-		// Target the actual viewport element inside ScrollArea
-		const viewport = scrollRef.current?.querySelector(
-			"[data-radix-scroll-area-viewport]",
-		) as HTMLElement;
-		if (viewport) {
-			viewport.scrollTop = viewport.scrollHeight;
+		if (scrollRef.current) {
+			scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 		}
 	}, [data?.activities]);
 
@@ -176,9 +157,9 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 		);
 
 	return (
-		<div className="flex flex-col h-[800px] bg-background border rounded-lg overflow-hidden shadow-sm">
+		<div className="flex flex-col h-[700px] gap-4">
 			{/* Header */}
-			<div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
+			<div className="flex items-center justify-between pb-4 border-b">
 				<div className="flex items-center gap-3">
 					<Button
 						variant="ghost"
@@ -190,251 +171,177 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 					</Button>
 					<div>
 						<div className="flex items-center gap-2">
-							<h2 className="font-semibold text-lg leading-tight">
+							<h2 className="font-semibold text-lg">
 								{session?.title || "Session Details"}
 							</h2>
-							<Badge variant="outline" className="text-[10px] h-5">
-								{session?.state}
-							</Badge>
+							<Badge variant="outline">{session?.state}</Badge>
 						</div>
-						<div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-							<span className="font-mono">{sessionId.split("/").pop()}</span>
-							<span>•</span>
-							<span>
-								{session?.sourceContext?.githubRepoContext?.startingBranch ||
-									"main"}
-							</span>
-						</div>
+						<p className="text-xs text-muted-foreground">ID: {sessionId}</p>
 					</div>
 				</div>
-				<div className="flex items-center gap-2">
-					{session?.url && (
-						<Button variant="ghost" size="sm" asChild>
-							<a href={session.url} target="_blank" rel="noopener noreferrer">
-								Console
-								<ExternalLink className="ml-2 h-3 w-3" />
+				{session?.url && (
+					<Button variant="outline" size="sm" asChild>
+						<a href={session.url} target="_blank" rel="noopener noreferrer">
+							View in Console
+							<ExternalLink className="ml-2 h-3 w-3" />
+						</a>
+					</Button>
+				)}
+			</div>
+
+			{/* Plan Approval Banner */}
+			{session?.state === "AWAITING_PLAN_APPROVAL" && (
+				<div className="space-y-4">
+					{reviewData && (
+						<Alert
+							variant={
+								reviewData.riskLevel === "LOW" ? "default" : "destructive"
+							}
+							className="bg-background/80 backdrop-blur-md"
+						>
+							{reviewData.riskLevel === "LOW" ? (
+								<ShieldCheck className="h-4 w-4 text-green-500" />
+							) : (
+								<ShieldAlert className="h-4 w-4" />
+							)}
+							<AlertTitle>
+								AI Security Review: {reviewData.riskLevel} Risk
+							</AlertTitle>
+							<AlertDescription className="mt-2 text-xs">
+								<p className="mb-2">{reviewData.analysis}</p>
+								<ul className="list-disc list-inside">
+									{reviewData.recommendations.map((rec, i) => (
+										// biome-ignore lint/suspicious/noArrayIndexKey: stable
+										<li key={i}>{rec}</li>
+									))}
+								</ul>
+							</AlertDescription>
+						</Alert>
+					)}
+
+					<GlassCard className="p-4 bg-yellow-500/10 border-yellow-500/20 flex flex-wrap items-center justify-between gap-4">
+						<div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
+							<Loader2 className="h-4 w-4 animate-spin" />
+							<span className="font-medium">Plan requires approval</span>
+						</div>
+						<div className="flex items-center gap-2">
+							{!reviewData && activities.find((a) => a.planGenerated) && (
+								<Button
+									variant="secondary"
+									size="sm"
+									onClick={() => {
+										const planActivity = activities.find(
+											(a) => a.planGenerated,
+										);
+										if (planActivity?.planGenerated?.plan) {
+											reviewPlan(planActivity.planGenerated.plan);
+										}
+									}}
+									disabled={isReviewing}
+									className="gap-2"
+								>
+									{isReviewing ? (
+										<Loader2 className="h-4 w-4 animate-spin" />
+									) : (
+										<Shield className="h-4 w-4" />
+									)}
+									AI Review
+								</Button>
+							)}
+							<Button
+								onClick={() => approvePlan()}
+								disabled={isApproving}
+								className="gap-2"
+								aria-label={isApproving ? "Approving plan" : "Approve plan"}
+							>
+								{isApproving ? (
+									<Loader2 className="h-4 w-4 animate-spin" />
+								) : (
+									<Check className="h-4 w-4" />
+								)}
+								{isApproving ? "Approving..." : "Approve Plan"}
+							</Button>
+						</div>
+					</GlassCard>
+				</div>
+			)}
+
+			{/* PR Status */}
+			{session?.outputs?.map((output, i) =>
+				output.pullRequest ? (
+					<GlassCard
+						// biome-ignore lint/suspicious/noArrayIndexKey: no stable id
+						key={i}
+						className="p-3 bg-green-500/10 border-green-500/20 flex items-center justify-between"
+					>
+						<span className="text-sm font-medium text-green-600">
+							Pull Request: {output.pullRequest.title}
+						</span>
+						<Button size="sm" variant="ghost" asChild>
+							<a
+								href={output.pullRequest.url}
+								target="_blank"
+								rel="noopener noreferrer"
+							>
+								View PR <ExternalLink className="ml-2 h-3 w-3" />
 							</a>
 						</Button>
-					)}
-				</div>
-			</div>
+					</GlassCard>
+				) : null,
+			)}
 
-			{/* Main Content Area - Split Pane */}
-			<div className="flex-1 min-h-0">
-				<ResizablePanelGroup direction="horizontal" className="h-full">
-					{/* Left: Chat */}
-					<ResizablePanel defaultSize={50} minSize={30}>
-						<div className="flex flex-col h-full">
-							{/* Status Banners */}
-							{session?.state === "AWAITING_PLAN_APPROVAL" && (
-								<div className="p-4 pb-0 space-y-4">
-									{reviewData && (
-										<Alert
-											variant={
-												reviewData.riskLevel === "LOW"
-													? "default"
-													: "destructive"
-											}
-										>
-											{reviewData.riskLevel === "LOW" ? (
-												<ShieldCheck className="h-4 w-4 text-green-500" />
-											) : (
-												<ShieldAlert className="h-4 w-4" />
-											)}
-											<AlertTitle>
-												AI Security Review: {reviewData.riskLevel} Risk
-											</AlertTitle>
-											<AlertDescription className="mt-2 text-xs">
-												<p className="mb-2">{reviewData.analysis}</p>
-												<ul className="list-disc list-inside">
-													{reviewData.recommendations.map((rec, i) => (
-														// biome-ignore lint/suspicious/noArrayIndexKey: stable
-														<li key={i}>{rec}</li>
-													))}
-												</ul>
-											</AlertDescription>
-										</Alert>
-									)}
-
-									<GlassCard className="p-4 bg-yellow-500/10 border-yellow-500/20 flex flex-wrap items-center justify-between gap-4">
-										<div className="flex items-center gap-2 text-yellow-600 dark:text-yellow-400">
-											<Loader2 className="h-4 w-4 animate-spin" />
-											<span className="font-medium">
-												Plan requires approval
-											</span>
-										</div>
-										<div className="flex items-center gap-2">
-											{!reviewData &&
-												activities.find((a) => a.planGenerated) && (
-													<Button
-														variant="secondary"
-														size="sm"
-														onClick={() => {
-															const planActivity = activities.find(
-																(a) => a.planGenerated,
-															);
-															if (planActivity?.planGenerated?.plan) {
-																reviewPlan(planActivity.planGenerated.plan);
-															}
-														}}
-														disabled={isReviewing}
-														className="gap-2"
-														aria-label="AI Review plan"
-													>
-														{isReviewing ? (
-															<Loader2 className="h-4 w-4 animate-spin" />
-														) : (
-															<Shield className="h-4 w-4" />
-														)}
-														AI Review
-													</Button>
-												)}
-											<Button
-												onClick={() => approvePlan()}
-												disabled={isApproving}
-												className="gap-2"
-												aria-label={
-													isApproving ? "Approving plan" : "Approve plan"
-												}
-											>
-												{isApproving ? (
-													<Loader2 className="h-4 w-4 animate-spin" />
-												) : (
-													<Check className="h-4 w-4" />
-												)}
-												{isApproving ? "Approving..." : "Approve Plan"}
-											</Button>
-										</div>
-									</GlassCard>
+			{/* Chat Area */}
+			<GlassCard className="flex-1 overflow-hidden flex flex-col p-0">
+				<ScrollArea className="flex-1 p-4" ref={scrollRef}>
+					<div className="space-y-6">
+						{session?.prompt && (
+							<div className="flex flex-col gap-1 items-end">
+								<div className="bg-primary text-primary-foreground px-4 py-2 rounded-2xl rounded-tr-sm max-w-[80%]">
+									{session.prompt}
 								</div>
-							)}
-
-							{/* PR Status */}
-							{session?.outputs?.map((output, i) =>
-								output.pullRequest ? (
-									// biome-ignore lint/suspicious/noArrayIndexKey: stable enough
-									<div className="px-4 pt-4" key={i}>
-										<GlassCard className="p-3 bg-green-500/10 border-green-500/20 flex items-center justify-between">
-											<span className="text-sm font-medium text-green-600">
-												PR Created: {output.pullRequest.title}
-											</span>
-											<Button size="sm" variant="ghost" asChild>
-												<a
-													href={output.pullRequest.url}
-													target="_blank"
-													rel="noopener noreferrer"
-													aria-label={`View pull request: ${output.pullRequest.title}`}
-												>
-													View <ExternalLink className="ml-2 h-3 w-3" />
-												</a>
-											</Button>
-										</GlassCard>
-									</div>
-								) : null,
-							)}
-
-							<ScrollArea className="flex-1 p-4" ref={scrollRef}>
-								<div className="space-y-6">
-									{session?.prompt && (
-										<div className="flex flex-col gap-1 items-end">
-											<div className="bg-primary text-primary-foreground px-4 py-2 rounded-2xl rounded-tr-sm max-w-[90%]">
-												{session.prompt}
-											</div>
-											<span className="text-[10px] text-muted-foreground">
-												Start
-											</span>
-										</div>
-									)}
-
-									{displayableActivities.map((activity, idx) => (
-										<ActivityItem
-											// biome-ignore lint/suspicious/noArrayIndexKey: no stable id
-											key={idx}
-											activity={activity}
-										/>
-									))}
-								</div>
-							</ScrollArea>
-
-							{/* Input */}
-							<div className="p-4 border-t bg-muted/20">
-								<form onSubmit={handleSubmit} className="flex gap-2">
-									<Input
-										value={input}
-										onChange={(e) => setInput(e.target.value)}
-										placeholder={
-											session?.state === "COMPLETED"
-												? "Session completed"
-												: "Reply to Jules..."
-										}
-										disabled={isSending || session?.state === "COMPLETED"}
-										className="flex-1"
-										aria-label={
-											session?.state === "COMPLETED"
-												? "Session completed"
-												: "Reply to Jules"
-										}
-									/>
-									<Button
-										type="submit"
-										size="icon"
-										disabled={
-											isSending ||
-											!input.trim() ||
-											session?.state === "COMPLETED"
-										}
-										aria-label={isSending ? "Sending message" : "Send message"}
-									>
-										{isSending ? (
-											<Loader2 className="h-4 w-4 animate-spin" />
-										) : (
-											<Send className="h-4 w-4" />
-										)}
-									</Button>
-								</form>
+								<span className="text-[10px] text-muted-foreground">Start</span>
 							</div>
-						</div>
-					</ResizablePanel>
+						)}
 
-					<ResizableHandle withHandle />
+						{displayableActivities.map((activity, idx) => (
+							<ActivityItem
+								// biome-ignore lint/suspicious/noArrayIndexKey: no stable id
+								key={idx}
+								activity={activity}
+							/>
+						))}
+					</div>
+				</ScrollArea>
 
-					{/* Right: Context (Plan/Files) */}
-					<ResizablePanel defaultSize={50} minSize={30}>
-						<Tabs
-							value={activeTab}
-							onValueChange={setActiveTab}
-							className="h-full flex flex-col"
+				{/* Input */}
+				<div className="p-4 border-t bg-muted/20">
+					<form onSubmit={handleSubmit} className="flex gap-2">
+						<Input
+							value={input}
+							onChange={(e) => setInput(e.target.value)}
+							placeholder={
+								session?.state === "COMPLETED"
+									? "Session completed"
+									: "Reply to Jules..."
+							}
+							disabled={isSending || session?.state === "COMPLETED"}
+						/>
+						<Button
+							type="submit"
+							disabled={
+								isSending || !input.trim() || session?.state === "COMPLETED"
+							}
+							aria-label={isSending ? "Sending message" : "Send message"}
 						>
-							<div className="border-b px-2 bg-muted/10">
-								<TabsList className="w-full justify-start h-12 bg-transparent p-0 gap-4">
-									<TabsTrigger
-										value="plan"
-										className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-2"
-									>
-										<ListTodo className="h-4 w-4 mr-2" />
-										Live Plan
-									</TabsTrigger>
-									<TabsTrigger
-										value="artifacts"
-										className="h-12 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:shadow-none px-2"
-									>
-										<LayoutDashboard className="h-4 w-4 mr-2" />
-										Artifacts & Diffs
-									</TabsTrigger>
-								</TabsList>
-							</div>
-
-							<TabsContent value="plan" className="flex-1 min-h-0 m-0">
-								<PlanProgress activities={activities} />
-							</TabsContent>
-
-							<TabsContent value="artifacts" className="flex-1 min-h-0 m-0">
-								<SessionArtifacts activities={activities} />
-							</TabsContent>
-						</Tabs>
-					</ResizablePanel>
-				</ResizablePanelGroup>
-			</div>
+							{isSending ? (
+								<Loader2 className="h-4 w-4 animate-spin" />
+							) : (
+								<Send className="h-4 w-4" />
+							)}
+						</Button>
+					</form>
+				</div>
+			</GlassCard>
 		</div>
 	);
 }
@@ -448,7 +355,7 @@ function ActivityItem({ activity }: { activity: JulesActivity }): JSX.Element {
 	if (isUser) {
 		return (
 			<div className="flex flex-col gap-1 items-end">
-				<div className="bg-primary text-primary-foreground px-4 py-2 rounded-2xl rounded-tr-sm max-w-[90%]">
+				<div className="bg-primary text-primary-foreground px-4 py-2 rounded-2xl rounded-tr-sm max-w-[80%]">
 					{activity.userMessaged?.userMessage}
 				</div>
 				<span className="text-[10px] text-muted-foreground">
@@ -459,8 +366,8 @@ function ActivityItem({ activity }: { activity: JulesActivity }): JSX.Element {
 	}
 
 	return (
-		<div className="flex flex-col gap-1 items-start max-w-[90%]">
-			<div className="bg-muted px-4 py-2 rounded-2xl rounded-tl-sm w-full space-y-2">
+		<div className="flex flex-col gap-1 items-start">
+			<div className="bg-muted px-4 py-2 rounded-2xl rounded-tl-sm max-w-[80%] space-y-2">
 				{/* Agent Message */}
 				{activity.agentMessaged && (
 					<div className="whitespace-pre-wrap">
@@ -468,29 +375,41 @@ function ActivityItem({ activity }: { activity: JulesActivity }): JSX.Element {
 					</div>
 				)}
 
-				{/* Plan Generated - Short Summary since we have the full panel now */}
+				{/* Plan Generated */}
 				{activity.planGenerated && (
-					<div className="text-sm font-mono bg-background/50 p-2 rounded border opacity-70">
-						<div className="font-semibold mb-1 text-xs uppercase text-muted-foreground flex items-center gap-2">
-							<ListTodo className="h-3 w-3" /> Plan Generated
+					<div className="text-sm font-mono bg-background/50 p-2 rounded border">
+						<div className="font-semibold mb-1 text-xs uppercase text-muted-foreground">
+							Plan Generated
 						</div>
-						<p className="text-xs">
-							{activity.planGenerated.plan.steps.length} steps created. See
-							"Live Plan" for details.
-						</p>
+						<ul className="list-disc list-inside space-y-1">
+							{activity.planGenerated.plan.steps.map((step, i) => (
+								// biome-ignore lint/suspicious/noArrayIndexKey: stable enough
+								<li key={i} className="text-xs">
+									<span
+										className={
+											step.state === "COMPLETED"
+												? "text-green-500"
+												: step.state === "IN_PROGRESS"
+													? "text-blue-500"
+													: ""
+										}
+									>
+										{step.state === "COMPLETED" ? "✅ " : "○ "}
+									</span>
+									{step.description}
+								</li>
+							))}
+						</ul>
 					</div>
 				)}
 
 				{/* Progress Update */}
 				{activity.progressUpdated && (
-					<div className="text-xs italic text-muted-foreground flex items-center gap-2">
-						<Loader2 className="h-3 w-3 animate-spin" />
-						<span>
-							<span className="font-semibold">
-								{activity.progressUpdated.title}:
-							</span>{" "}
-							{activity.progressUpdated.description}
-						</span>
+					<div className="text-xs italic text-muted-foreground">
+						<span className="font-semibold">
+							{activity.progressUpdated.title}:
+						</span>{" "}
+						{activity.progressUpdated.description}
 					</div>
 				)}
 
@@ -513,6 +432,11 @@ function ActivityItem({ activity }: { activity: JulesActivity }): JSX.Element {
 					<div className="text-sm text-green-600 font-medium">
 						🎉 Session Completed
 					</div>
+				)}
+
+				{/* Artifacts */}
+				{activity.artifacts && activity.artifacts.length > 0 && (
+					<ArtifactRenderer artifacts={activity.artifacts} />
 				)}
 			</div>
 			<span className="text-[10px] text-muted-foreground">

@@ -1,6 +1,6 @@
 "use server";
 
-import { count, desc, eq, ilike, or, sql, sum } from "drizzle-orm";
+import { count, desc, eq, sql, sum } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
@@ -21,7 +21,6 @@ import {
 const paginationSchema = z.object({
 	page: z.number().int().positive().optional(),
 	pageSize: z.number().int().positive().max(100).optional(),
-	search: z.string().optional(),
 });
 
 const userIdSchema = z.object({
@@ -83,29 +82,6 @@ export const getUsers = createAdminAction({
 		const page = input?.page ?? 1;
 		const pageSize = input?.pageSize ?? 20;
 		const offset = (page - 1) * pageSize;
-		const search = input?.search?.trim();
-
-		const whereClause = search
-			? (() => {
-					// Escape special characters for SQL LIKE pattern
-					// We use backslash as the escape character
-					const escapedSearch = search.replace(/[\\%_]/g, "\\$&");
-					const pattern = `%${escapedSearch}%`;
-					// NOTE: We assume default behavior of ilike handling escapes or strict raw usage.
-					// Drizzle's ilike usually takes a string literal.
-					// Standard SQL requires `LIKE pattern ESCAPE '\'`.
-					// However, Drizzle abstractions vary.
-					// Since we can't easily add ESCAPE clause in simple `ilike` helper,
-					// we just escape the content and hope for standard behavior or no collision.
-					// Re-reading prompt: "use the escaped pattern with ilike and specify an ESCAPE character (or use the ORM/driver's escape helper if available)"
-					// Drizzle's `ilike` doesn't seem to support ESCAPE argument directly in simple call.
-					// We'll trust the prompt's request to "implement escaping... then pass... into ilike".
-					return or(
-						ilike(userTable.name, pattern),
-						ilike(userTable.email, pattern),
-					);
-				})()
-			: undefined;
 
 		const users = await db
 			.select({
@@ -116,21 +92,18 @@ export const getUsers = createAdminAction({
 				bannedAt: userTable.bannedAt,
 			})
 			.from(userTable)
-			.where(whereClause)
-			.orderBy(desc(userTable.bannedAt), desc(userTable.email)) // Fallback sort since createdAt is missing
 			.limit(pageSize)
 			.offset(offset);
 
 		const totalUsersResult = await db
 			.select({ count: count() })
-			.from(userTable)
-			.where(whereClause);
+			.from(userTable);
 
 		return {
 			users,
 			total: totalUsersResult[0].count,
-			page,
-			pageSize,
+			page: input.page,
+			pageSize: input.pageSize,
 		};
 	},
 });

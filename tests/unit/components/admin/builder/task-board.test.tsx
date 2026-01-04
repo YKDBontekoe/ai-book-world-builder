@@ -32,18 +32,11 @@ vi.mock("sonner", () => ({
 }));
 
 // Mock lucide-react to avoid SVG complexity in tests
-vi.mock("lucide-react", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("lucide-react")>();
-	return {
-		...actual,
-		AlertCircle: () => <span data-testid="icon-alert" />,
-		Bot: () => <span data-testid="icon-bot" />,
-		GitPullRequest: () => <span data-testid="icon-pr" />,
-		GitBranch: () => <span data-testid="icon-branch" />,
-		Check: () => <span data-testid="icon-check" />,
-		Loader2: () => <span data-testid="icon-loader" />,
-	};
-});
+vi.mock("lucide-react", () => ({
+	AlertCircle: () => <span data-testid="icon-alert" />,
+	Bot: () => <span data-testid="icon-bot" />,
+	GitPullRequest: () => <span data-testid="icon-pr" />,
+}));
 
 // Mock GlassCard to forward onClick
 vi.mock("@/components/molecules/glass-card", () => ({

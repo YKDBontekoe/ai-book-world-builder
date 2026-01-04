@@ -18,14 +18,6 @@ The application uses a **Role-Based Routing** system defined in `lib/ai/model-ro
 ### Configuration
 While these defaults are hardcoded in `ROLE_MODEL_MAP`, the system is designed to check for user-configured overrides (persisted in cookies or user settings) before falling back to the defaults.
 
-## Benchmark Service (`lib/ai/benchmark-service.ts`)
-
-The Benchmark Service provides dynamic performance and quality metrics to help users select the right model for their task.
-
--   **Hybrid Data Source**: Combines static benchmarks (EQ-Bench, Chatbot Arena) with dynamic pricing data.
--   **Caching**: Caches results for 24 hours to prevent API rate limits.
--   **Recommendation Logic**: Algorithms to suggest the best "Budget" or "Quality" model for a specific task (Writing vs. Reviewing).
-
 ## Retrieval-Augmented Generation (RAG)
 
 The project currently employs a **Session-Scoped In-Memory RAG** implemented in `lib/ai/rag.ts`.
