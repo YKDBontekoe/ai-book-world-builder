@@ -24,6 +24,13 @@ interface Column {
 	items: TaskItem[];
 }
 
+/**
+ * The TaskBoard component displays and manages the workflow of issues, pull requests, and Jules sessions.
+ * It periodically polls for session updates (every 10 seconds) to provide real-time status.
+ *
+ * @component
+ * @returns {JSX.Element} The TaskBoard interface.
+ */
 export function TaskBoard(): JSX.Element {
 	const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
 	const [approvingSessionId, setApprovingSessionId] = useState<string | null>(

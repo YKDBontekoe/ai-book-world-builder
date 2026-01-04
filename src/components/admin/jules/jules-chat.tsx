@@ -133,8 +133,10 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: data dependency for scroll
 	useEffect(() => {
-        // Target the actual viewport element inside ScrollArea
-        const viewport = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]') as HTMLElement;
+		// Target the actual viewport element inside ScrollArea
+		const viewport = scrollRef.current?.querySelector(
+			"[data-radix-scroll-area-viewport]",
+		) as HTMLElement;
 		if (viewport) {
 			viewport.scrollTop = viewport.scrollHeight;
 		}
@@ -321,6 +323,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 													href={output.pullRequest.url}
 													target="_blank"
 													rel="noopener noreferrer"
+													aria-label={`View pull request: ${output.pullRequest.title}`}
 												>
 													View <ExternalLink className="ml-2 h-3 w-3" />
 												</a>
@@ -366,6 +369,11 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 										}
 										disabled={isSending || session?.state === "COMPLETED"}
 										className="flex-1"
+										aria-label={
+											session?.state === "COMPLETED"
+												? "Session completed"
+												: "Reply to Jules"
+										}
 									/>
 									<Button
 										type="submit"
@@ -393,7 +401,6 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 					{/* Right: Context (Plan/Files) */}
 					<ResizablePanel defaultSize={50} minSize={30}>
 						<Tabs
-							defaultValue="plan"
 							value={activeTab}
 							onValueChange={setActiveTab}
 							className="h-full flex flex-col"
