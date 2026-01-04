@@ -1,6 +1,9 @@
 import { cleanup } from "@testing-library/react";
 import React from "react";
-import { afterEach, vi } from "vitest";
+import { afterAll, afterEach, beforeAll, vi } from "vitest";
+
+// Import MSW server - use relative path or alias if supported, but relative is safer for setup
+import { server } from "../src/mocks/server";
 
 process.env.NEXT_RUNTIME = process.env.NEXT_RUNTIME ?? "nodejs";
 process.env.POSTGRES_URL = "postgres://localhost:5432/test";
@@ -17,6 +20,14 @@ vi.mock("next/server", () => ({
 		constructor(input: any, init?: any) {}
 	},
 }));
+
+// MSW Setup
+beforeAll(() => server.listen());
+afterEach(() => {
+	server.resetHandlers();
+	cleanup();
+});
+afterAll(() => server.close());
 
 if (typeof window !== "undefined" && typeof document !== "undefined") {
 	await import("@testing-library/jest-dom/vitest");
@@ -110,7 +121,3 @@ vi.mock("next/navigation", () => ({
 	useSearchParams: () => new URLSearchParams(),
 	useParams: () => ({}),
 }));
-
-afterEach(() => {
-	cleanup();
-});
