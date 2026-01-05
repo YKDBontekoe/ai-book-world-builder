@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { render, screen } from "@testing-library/react";
-import { type MockedFunction, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import {
 	useBookCanvasActions,
@@ -15,12 +15,8 @@ vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
 	useBookCanvasActions: vi.fn(),
 }));
 
-const mockedUseBookCanvasLayout = useBookCanvasLayout as MockedFunction<
-	typeof useBookCanvasLayout
->;
-const mockedUseBookCanvasActions = useBookCanvasActions as MockedFunction<
-	typeof useBookCanvasActions
->;
+const mockedUseBookCanvasLayout = vi.mocked(useBookCanvasLayout);
+const mockedUseBookCanvasActions = vi.mocked(useBookCanvasActions);
 
 // Mock the panes to avoid complex rendering
 vi.mock("@/components/organisms/book-canvas/panes/outline-pane", () => ({
