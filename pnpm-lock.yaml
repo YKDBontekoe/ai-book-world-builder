@@ -412,7 +412,7 @@ importers:
         specifier: 16.2.7
         version: 16.2.7
       msw:
-        specifier: ^2.12.7
+        specifier: 2.12.7
         version: 2.12.7(@types/node@24.10.4)(typescript@5.9.3)
       playwright:
         specifier: 1.57.0
