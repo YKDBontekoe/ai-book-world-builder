@@ -40,8 +40,11 @@ vi.mock("@/components/organisms/book-canvas/panes/changelog-pane", () => ({
 	ChangeLogPane: () => <div>ChangeLog</div>,
 }));
 
+import { beforeEach } from "vitest";
+
 describe("BookCanvas", () => {
-	it("renders with fixed positioning when open", () => {
+	beforeEach(() => {
+		// Default mock implementation
 		mockedUseBookCanvasLayout.mockReturnValue({
 			isOpen: true,
 			activePane: "outline",
@@ -61,7 +64,9 @@ describe("BookCanvas", () => {
 			setActiveSceneId: vi.fn(),
 			setIsReadOnly: vi.fn(),
 		});
+	});
 
+	it("renders with fixed positioning when open", () => {
 		const { container } = render(<BookCanvas />);
 		const canvasDiv = container.firstChild as HTMLElement;
 
@@ -75,23 +80,8 @@ describe("BookCanvas", () => {
 
 	it("renders collapsed state correctly", () => {
 		mockedUseBookCanvasLayout.mockReturnValue({
+			...mockedUseBookCanvasLayout.mock.results[0]?.value,
 			isOpen: false,
-			activePane: "outline",
-			overallStatus: "idle",
-			projectId: "test-project",
-			generationId: null,
-			isReadOnly: false,
-		});
-		mockedUseBookCanvasActions.mockReturnValue({
-			setIsOpen: vi.fn(),
-			togglePanel: vi.fn(),
-			setActivePane: vi.fn(),
-			setOverallStatus: vi.fn(),
-			setProjectId: vi.fn(),
-			setGenerationId: vi.fn(),
-			triggerChatAction: vi.fn(),
-			setActiveSceneId: vi.fn(),
-			setIsReadOnly: vi.fn(),
 		});
 
 		const { container } = render(<BookCanvas />);
