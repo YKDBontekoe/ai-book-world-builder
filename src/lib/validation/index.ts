@@ -90,7 +90,9 @@ export const sceneIdSchema = z.object({
 
 export const updateSceneContentSchema = z.object({
 	sceneId: uuidSchema,
-	content: z.string(),
+	content: z.string().max(200000, {
+		message: "Scene content must be 200,000 characters or less",
+	}),
 });
 
 export type UpdateSceneContentInput = z.infer<typeof updateSceneContentSchema>;
