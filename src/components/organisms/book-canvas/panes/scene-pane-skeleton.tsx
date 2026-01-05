@@ -1,6 +1,12 @@
 import { Skeleton } from "@/components/atoms/skeleton";
 
-export function ScenePaneSkeleton() {
+/**
+ * Skeleton loader for the Scene Pane.
+ * Mimics the layout of chapter sections and scene cards to reduce layout shift during loading.
+ *
+ * @returns The skeletal representation of the scene pane.
+ */
+export function ScenePaneSkeleton(): JSX.Element {
 	return (
 		<div className="p-4 space-y-6">
 			{/* Header Skeleton */}
