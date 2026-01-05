@@ -16,7 +16,16 @@ import {
 	type EntityType,
 } from "@/components/organisms/book-canvas/panes/bible/types";
 
-export function ContextPane() {
+/**
+ * Renders the Context Pane, displaying entities relevant to the currently active scene.
+ *
+ * This component relies on `useBookCanvasLayout` for project context and
+ * `useBookCanvasSelection` to react to scene selection changes without triggering
+ * re-renders in the main BookCanvas shell.
+ *
+ * @returns {JSX.Element} The rendered Context Pane component.
+ */
+export function ContextPane(): JSX.Element {
 	const { projectId } = useBookCanvasLayout();
 	const { activeSceneId } = useBookCanvasSelection();
 
