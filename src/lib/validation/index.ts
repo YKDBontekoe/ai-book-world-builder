@@ -109,6 +109,23 @@ export const createSceneSchema = z.object({
 
 export type CreateSceneInput = z.infer<typeof createSceneSchema>;
 
+export const updateSceneTitleSchema = z.object({
+	sceneId: uuidSchema,
+	title: z
+		.string()
+		.min(1, { message: "Scene title is required" })
+		.max(200, { message: "Scene title must be 200 characters or less" }),
+});
+
+export const createSceneInChapterSchema = z.object({
+	chapterId: uuidSchema,
+	title: z
+		.string()
+		.min(1, { message: "Scene title is required" })
+		.max(200, { message: "Scene title must be 200 characters or less" }),
+	insertAfterSceneId: uuidSchema.optional(),
+});
+
 // ============================================================================
 // Chapter Schemas
 // ============================================================================

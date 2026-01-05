@@ -9,6 +9,11 @@ import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
+import {
+	createSceneInChapterSchema,
+	updateSceneContentSchema,
+	updateSceneTitleSchema,
+} from "@/lib/validation";
 
 export async function getSceneContent(sceneId: string) {
 	try {
@@ -30,6 +35,11 @@ export async function getSceneContent(sceneId: string) {
 }
 
 export async function updateSceneContent(sceneId: string, content: string) {
+	const validation = updateSceneContentSchema.safeParse({ sceneId, content });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		// 1. Get Scene using repository
 		const targetScene = await sceneRepository.findById(sceneId);
@@ -109,6 +119,11 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 }
 
 export async function updateSceneTitle(sceneId: string, title: string) {
+	const validation = updateSceneTitleSchema.safeParse({ sceneId, title });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		const targetScene = await sceneRepository.findById(sceneId);
 
@@ -157,6 +172,15 @@ export async function createSceneInChapter(
 	title: string,
 	insertAfterSceneId?: string,
 ) {
+	const validation = createSceneInChapterSchema.safeParse({
+		chapterId,
+		title,
+		insertAfterSceneId,
+	});
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		const [currentChapter] = await db
 			.select()
