@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Sparkles } from "lucide-react";
+import type { JSX } from "react";
 
 import { getSceneContextAction } from "@/app/actions/context";
 import { Badge } from "@/components/atoms/badge";
