@@ -1,3 +1,4 @@
+import type React from "react";
 import { Skeleton } from "@/components/atoms/skeleton";
 
 /**
@@ -6,7 +7,7 @@ import { Skeleton } from "@/components/atoms/skeleton";
  *
  * @returns The skeletal representation of the scene pane.
  */
-export function ScenePaneSkeleton(): JSX.Element {
+export function ScenePaneSkeleton(): React.JSX.Element {
 	return (
 		<div className="p-4 space-y-6">
 			{/* Header Skeleton */}
