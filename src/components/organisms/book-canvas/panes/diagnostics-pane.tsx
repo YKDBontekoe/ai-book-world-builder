@@ -26,7 +26,7 @@ import {
 } from "@/app/actions/analysis";
 import { getProjectStats } from "@/app/actions/project-stats";
 import { Button } from "@/components/atoms/button";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { ConsistencyIssue } from "@/lib/db/schema/issues";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
@@ -139,7 +139,7 @@ function IssueCard({
 }
 
 export function DiagnosticsPane() {
-	const { projectId, triggerChatAction } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
 	const queryClient = useQueryClient();
 
 	const { data: statsResult, isLoading: isLoadingStats } = useQuery({

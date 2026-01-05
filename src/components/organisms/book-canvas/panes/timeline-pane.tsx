@@ -19,7 +19,11 @@ import { updateSceneChronology } from "@/app/actions/writer/timeline";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { ScrollArea, ScrollBar } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	useBookCanvasActions,
+	useBookCanvasLayout,
+	useBookCanvasSelection,
+} from "@/components/organisms/book-canvas/book-canvas-context";
 import { cn } from "@/lib/utils";
 
 type TimelineEvent = {
@@ -124,7 +128,9 @@ function TimelineItem({
 }
 
 export function TimelinePane() {
-	const { projectId, activeSceneId, setActiveSceneId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
+	const { activeSceneId } = useBookCanvasSelection();
+	const { setActiveSceneId } = useBookCanvasActions();
 	const [activeDragId, setActiveDragId] = useState<string | null>(null);
 	const [localEvents, setLocalEvents] = useState<TimelineEvent[]>([]);
 

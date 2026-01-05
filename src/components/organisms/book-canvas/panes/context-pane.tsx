@@ -7,14 +7,18 @@ import { getSceneContextAction } from "@/app/actions/context";
 import { Badge } from "@/components/atoms/badge";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	useBookCanvasLayout,
+	useBookCanvasSelection,
+} from "@/components/organisms/book-canvas/book-canvas-context";
 import {
 	ENTITY_ICONS,
 	type EntityType,
 } from "@/components/organisms/book-canvas/panes/bible/types";
 
 export function ContextPane() {
-	const { projectId, activeSceneId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
+	const { activeSceneId } = useBookCanvasSelection();
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["context", projectId, activeSceneId],

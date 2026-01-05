@@ -7,14 +7,14 @@ import { getRelationships } from "@/app/actions/project-stats";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import { EntityGroupSection } from "@/components/organisms/book-canvas/panes/bible/entity-group-section";
 import { SourceMaterialsSection } from "@/components/organisms/book-canvas/panes/bible/source-materials-section";
 import { useEntityGrouping } from "@/hooks/use-entity-grouping";
 import { QUERY_KEYS } from "@/lib/query-options";
 
 export function BiblePane() {
-	const { projectId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
 
 	const { data: entities, isLoading: entitiesLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.entities(projectId) : ["entities", "null"],

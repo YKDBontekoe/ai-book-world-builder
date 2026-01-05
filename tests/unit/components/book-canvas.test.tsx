@@ -3,11 +3,16 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	useBookCanvasActions,
+	useBookCanvasLayout,
+} from "@/components/organisms/book-canvas/book-canvas-context";
 
 // Mock the context hook
 vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
 	useBookCanvas: vi.fn(),
+	useBookCanvasLayout: vi.fn(),
+	useBookCanvasActions: vi.fn(),
 }));
 
 // Mock the panes to avoid complex rendering
@@ -35,12 +40,14 @@ vi.mock("@/components/organisms/book-canvas/panes/changelog-pane", () => ({
 
 describe("BookCanvas", () => {
 	it("renders with fixed positioning when open", () => {
-		(useBookCanvas as any).mockReturnValue({
+		(useBookCanvasLayout as any).mockReturnValue({
 			isOpen: true,
 			activePane: "outline",
+			overallStatus: "idle",
+		});
+		(useBookCanvasActions as any).mockReturnValue({
 			setIsOpen: vi.fn(),
 			setActivePane: vi.fn(),
-			overallStatus: "idle",
 		});
 
 		const { container } = render(<BookCanvas />);
@@ -55,12 +62,14 @@ describe("BookCanvas", () => {
 	});
 
 	it("renders collapsed state correctly", () => {
-		(useBookCanvas as any).mockReturnValue({
+		(useBookCanvasLayout as any).mockReturnValue({
 			isOpen: false,
 			activePane: "outline",
+			overallStatus: "idle",
+		});
+		(useBookCanvasActions as any).mockReturnValue({
 			setIsOpen: vi.fn(),
 			setActivePane: vi.fn(),
-			overallStatus: "idle",
 		});
 
 		const { container } = render(<BookCanvas />);

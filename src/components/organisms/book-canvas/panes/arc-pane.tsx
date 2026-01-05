@@ -18,10 +18,10 @@ import {
 import { analyzeProjectPacingAction } from "@/app/actions/analysis";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 
 export function ArcPane() {
-	const { projectId, activePane } = useBookCanvas();
+	const { projectId, activePane } = useBookCanvasLayout();
 	const { theme } = useTheme();
 
 	const { data: pacingResult, isLoading } = useQuery({

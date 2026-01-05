@@ -22,7 +22,8 @@ import { Button } from "@/components/atoms/button";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import {
 	type CanvasPane,
-	useBookCanvas,
+	useBookCanvasActions,
+	useBookCanvasLayout,
 } from "@/components/organisms/book-canvas/book-canvas-context";
 import { cn } from "@/lib/utils";
 
@@ -117,8 +118,8 @@ export function BookCanvas({
 	variant?: "sidebar" | "embedded";
 	className?: string;
 }) {
-	const { isOpen, setIsOpen, activePane, setActivePane, overallStatus } =
-		useBookCanvas();
+	const { isOpen, activePane, overallStatus } = useBookCanvasLayout();
+	const { setIsOpen, setActivePane } = useBookCanvasActions();
 
 	const renderContent = () => {
 		switch (activePane) {

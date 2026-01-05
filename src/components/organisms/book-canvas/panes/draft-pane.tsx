@@ -25,12 +25,12 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import { api } from "@/lib/api-client";
 import { QUERY_KEYS } from "@/lib/query-options";
 
 export function DraftPane() {
-	const { projectId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
 	const [selectedChapterId, setSelectedChapterId] = useState<string | null>(
 		null,
 	);

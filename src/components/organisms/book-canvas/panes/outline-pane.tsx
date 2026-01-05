@@ -16,7 +16,7 @@ import {
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 
@@ -139,7 +139,7 @@ function OutlineHeader({ outline }: { outline: SerializedOutline }) {
 }
 
 export function OutlinePane() {
-	const { projectId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
 
 	const { data: outlineResult, isLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],

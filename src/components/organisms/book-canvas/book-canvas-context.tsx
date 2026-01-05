@@ -39,6 +39,21 @@ type BookCanvasState = {
 	isReadOnly: boolean;
 };
 
+// Split state into stable layout/config and volatile selection
+type BookCanvasLayoutState = {
+	isOpen: boolean;
+	activePane: CanvasPane;
+	overallStatus: GenerationStatus;
+	projectId: string | null;
+	generationId: string | null;
+	isReadOnly: boolean;
+};
+
+type BookCanvasSelectionState = {
+	chatAction: ChatAction;
+	activeSceneId: string | null;
+};
+
 type BookCanvasActions = {
 	setIsOpen: (open: boolean) => void;
 	togglePanel: () => void;
@@ -54,27 +69,57 @@ type BookCanvasActions = {
 // Kept for backward compatibility
 export type BookCanvasContextType = BookCanvasState & BookCanvasActions;
 
-const BookCanvasValueContext = createContext<BookCanvasState | null>(null);
+const BookCanvasLayoutContext = createContext<BookCanvasLayoutState | null>(
+	null,
+);
+const BookCanvasSelectionContext = createContext<BookCanvasSelectionState | null>(
+	null,
+);
 const BookCanvasActionsContext = createContext<BookCanvasActions | null>(null);
 
+// Legacy hook that subscribes to EVERYTHING (heavy!)
 export function useBookCanvas() {
-	const state = useContext(BookCanvasValueContext);
+	const layout = useContext(BookCanvasLayoutContext);
+	const selection = useContext(BookCanvasSelectionContext);
 	const actions = useContext(BookCanvasActionsContext);
 
-	if (!state || !actions) {
+	if (!layout || !selection || !actions) {
 		throw new Error("useBookCanvas must be used within a BookCanvasProvider");
 	}
-	return { ...state, ...actions };
+	return { ...layout, ...selection, ...actions };
 }
 
-export function useBookCanvasValue() {
-	const context = useContext(BookCanvasValueContext);
+// Optimized hooks
+export function useBookCanvasLayout() {
+	const context = useContext(BookCanvasLayoutContext);
 	if (!context) {
+		throw new Error(
+			"useBookCanvasLayout must be used within a BookCanvasProvider",
+		);
+	}
+	return context;
+}
+
+export function useBookCanvasSelection() {
+	const context = useContext(BookCanvasSelectionContext);
+	if (!context) {
+		throw new Error(
+			"useBookCanvasSelection must be used within a BookCanvasProvider",
+		);
+	}
+	return context;
+}
+
+// Legacy value hook
+export function useBookCanvasValue() {
+	const layout = useContext(BookCanvasLayoutContext);
+	const selection = useContext(BookCanvasSelectionContext);
+	if (!layout || !selection) {
 		throw new Error(
 			"useBookCanvasValue must be used within a BookCanvasProvider",
 		);
 	}
-	return context;
+	return { ...layout, ...selection };
 }
 
 export function useBookCanvasActions() {
@@ -116,34 +161,33 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 		[togglePanel],
 	);
 
-	const state = useMemo(
+	const layoutState = useMemo(
 		() => ({
 			isOpen,
 			activePane,
 			overallStatus,
 			projectId,
 			generationId,
-			chatAction,
-			activeSceneId,
 			isReadOnly,
 		}),
-		[
-			isOpen,
-			activePane,
-			overallStatus,
-			projectId,
-			generationId,
+		[isOpen, activePane, overallStatus, projectId, generationId, isReadOnly],
+	);
+
+	const selectionState = useMemo(
+		() => ({
 			chatAction,
 			activeSceneId,
-			isReadOnly,
-		],
+		}),
+		[chatAction, activeSceneId],
 	);
 
 	return (
-		<BookCanvasValueContext.Provider value={state}>
-			<BookCanvasActionsContext.Provider value={actions}>
-				{children}
-			</BookCanvasActionsContext.Provider>
-		</BookCanvasValueContext.Provider>
+		<BookCanvasLayoutContext.Provider value={layoutState}>
+			<BookCanvasSelectionContext.Provider value={selectionState}>
+				<BookCanvasActionsContext.Provider value={actions}>
+					{children}
+				</BookCanvasActionsContext.Provider>
+			</BookCanvasSelectionContext.Provider>
+		</BookCanvasLayoutContext.Provider>
 	);
 }

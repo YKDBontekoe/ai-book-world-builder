@@ -26,7 +26,7 @@ import {
 } from "@/app/actions/project-stats";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import { ENTITY_ICONS, type EntityType } from "./bible/types";
 
 // Custom Entity Node
@@ -90,7 +90,7 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 };
 
 export function NetworkPane() {
-	const { projectId, activePane } = useBookCanvas();
+	const { projectId, activePane } = useBookCanvasLayout();
 	const { theme } = useTheme();
 
 	const { data: entitiesResult, isLoading: isLoadingEntities } = useQuery({

@@ -14,7 +14,7 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 
 function LocationCard({
 	entity,
@@ -100,7 +100,7 @@ function LocationCard({
 }
 
 export function MapPane() {
-	const { projectId, activePane } = useBookCanvas();
+	const { projectId, activePane } = useBookCanvasLayout();
 	const queryClient = useQueryClient();
 	const [filter, setFilter] = useState<string>("location");
 
