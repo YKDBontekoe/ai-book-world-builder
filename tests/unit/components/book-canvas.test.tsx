@@ -10,7 +10,6 @@ import {
 
 // Mock the context hook
 vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
-	useBookCanvas: vi.fn(),
 	useBookCanvasLayout: vi.fn(),
 	useBookCanvasActions: vi.fn(),
 }));
