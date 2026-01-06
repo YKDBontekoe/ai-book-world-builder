@@ -105,12 +105,14 @@ PRs with these characteristics are auto-merged:
 
 ## Agent Resources
 
+### 🤖 Personas
+- [Testing Agent](.agent/personas/testing-agent.md): Senior SDET, Testing Trophy, MSW/Vitest/Storybook focus.
+
 ### 📚 Guidelines
 - [Next.js Patterns](.agent/guidelines/nextjs-patterns.md): Server vs Client components, Route Handlers.
 - [React Patterns](.agent/guidelines/react-patterns.md): Hooks, composition, state management.
 - [Database Patterns](.agent/guidelines/database-patterns.md): Drizzle ORM, schema design.
 - [AI Integration](.agent/guidelines/ai-integration.md): Vercel AI SDK, streaming, tools.
-- [Testing Standards](.agent/guidelines/testing-standards.md): MSW, Vitest, Storybook interaction testing.
 
 ### 🛠 Workflows
 - [Setup Dev Environment](.agent/workflows/setup-dev.md)
