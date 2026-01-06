@@ -1,10 +1,13 @@
 
-import { db } from "@/lib/db/drizzle";
-// Placeholder for quota checking logic
+/**
+ * Placeholder for quota checking logic.
+ *
+ * @param userId - The user ID to check quota for.
+ * @returns A promise that resolves to true if the user has quota, false otherwise.
+ * @todo Implement actual quota logic by querying 'subscription' or 'usage_limits' tables.
+ */
 export async function checkUsageQuota(userId: string): Promise<boolean> {
-  // TODO: Implement actual quota logic (e.g. verify against subscription plan)
-  // For now, we assume everyone has access to basic generation.
-  // In a real app, this would query a 'subscription' or 'usage_limits' table.
-  if (!userId) return false;
-  return true;
+	if (!userId) return false;
+	// For now, we assume everyone has access to basic generation.
+	return true;
 }
