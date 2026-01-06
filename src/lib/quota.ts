@@ -17,6 +17,16 @@ export async function checkUsageQuota(userId: string): Promise<boolean> {
 		return false;
 	}
 
+	// Warn if bypass is active in production
+	if (
+		process.env.NODE_ENV === "production" &&
+		process.env.ALLOW_UNIMPLEMENTED_QUOTA === "true"
+	) {
+		console.warn(
+			"⚠️ ALLOW_UNIMPLEMENTED_QUOTA bypass active - quota enforcement disabled",
+		);
+	}
+
 	// For dev/test, allow access
 	return true;
 }
