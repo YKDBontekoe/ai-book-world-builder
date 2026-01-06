@@ -106,7 +106,7 @@ function ProjectRow({
 									"absolute inset-0 flex items-center justify-center transition-all duration-200",
 									selected
 										? "opacity-100 scale-100"
-										: "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100",
+										: "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 focus-within:opacity-100 focus-within:scale-100",
 								)}
 							>
 								{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation only */}
