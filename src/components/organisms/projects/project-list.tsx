@@ -75,27 +75,25 @@ function ProjectRow({
 							{/* Checkbox Overlay */}
 							{onSelect && (
 								<div
-									// biome-ignore lint/a11y/useSemanticElements: overlay wrapper
 									className={cn(
 										"absolute inset-0 flex items-center justify-center transition-all duration-200",
 										selected
 											? "opacity-100 scale-100"
 											: "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100",
 									)}
-									onClick={(e) => e.stopPropagation()}
-									onKeyDown={(e) => {
-										if (e.key === "Enter" || e.key === " ") {
-											e.stopPropagation();
-										}
-									}}
-									role="button"
-									tabIndex={0}
 								>
-									<Checkbox
-										checked={selected}
-										onCheckedChange={() => onSelect(project.id)}
-										className="h-5 w-5 border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground bg-background/80 backdrop-blur-sm shadow-sm"
-									/>
+									{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation only */}
+									<div
+										onClick={(e) => e.stopPropagation()}
+										onKeyDown={(e) => e.stopPropagation()}
+										className="flex items-center justify-center"
+									>
+										<Checkbox
+											checked={selected}
+											onCheckedChange={() => onSelect(project.id)}
+											className="h-5 w-5 border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground bg-background/80 backdrop-blur-sm shadow-sm"
+										/>
+									</div>
 								</div>
 							)}
 						</div>
