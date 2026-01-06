@@ -551,6 +551,12 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 						const newChapterId = chapterIdMap.get(old.chapterId);
 						if (newChapterId) {
 							const newId = sceneIdMap.get(old.id);
+							if (!newId) {
+								console.error(`Missing ID mapping for scene ${old.id}`);
+								// Continue or throw? Throwing is safer for integrity.
+								throw new Error(`Failed to map scene ID for ${old.id}`);
+							}
+
 							// Resolve prevSceneId using the pre-filled map
 							const newPrevId = old.prevSceneId
 								? sceneIdMap.get(old.prevSceneId) ?? null
@@ -559,7 +565,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 							const { id: _id, ...data } = old;
 							newScenesToInsert.push({
 								...data,
-								id: newId!,
+								id: newId,
 								chapterId: newChapterId,
 								prevSceneId: newPrevId,
 								projectId: newProject.id,

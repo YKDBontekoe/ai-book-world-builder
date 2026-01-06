@@ -25,7 +25,8 @@ const { mockDb, mockProjectRepository, mockAuth } = vi.hoisted(() => {
 	db.returning.mockReturnValue(db);
 
 	// Default .then to resolve with empty array (simulating query execution)
-	db.then = (resolve: any) => resolve([]);
+	// We use vi.fn() so it's tracked by Vitest
+	db.then = vi.fn((resolve: any) => resolve([]));
 
 	return {
 		mockDb: db,
@@ -70,7 +71,8 @@ describe("forkProject Action", () => {
 		mockDb.returning.mockReturnValue(mockDb);
 
 		// Reset thenable behavior
-		mockDb.then = (resolve: any) => resolve([]);
+		mockDb.then.mockReset();
+		mockDb.then.mockImplementation((resolve: any) => resolve([]));
 	});
 
 	it("should fail if project is too large", async () => {
@@ -99,23 +101,26 @@ describe("forkProject Action", () => {
 			return callback(mockDb);
 		});
 
-		// Custom thenable to handle return values based on call history
-		mockDb.then = (resolve: any) => {
-			// Determine if we are in an INSERT or SELECT chain based on call order
-			const selectOrder = mockDb.select.mock.invocationCallOrder;
-			const insertOrder = mockDb.insert.mock.invocationCallOrder;
+		// Deterministic query responses
+		const responses = [
+			[{ id: "new-proj-id" }], // 1. Insert Project
+			[], // 2. Select Entities Batch 1 (empty stops loop)
+			[], // 3. Select Attributes
+			[], // 4. Select Relationships
+			[], // 5. Select Outline
+			[], // 6. Select Volumes
+			[], // 7. Select Chapters
+			[], // 8. Select Drafts
+			[], // 9. Select Scene Metadata (ID Map)
+			[], // 10. Select Scenes Batch 1 (empty stops loop)
+			[], // 11. Select Scene Cards
+		];
+		let queryIndex = 0;
 
-			const lastSelect = selectOrder.length > 0 ? Math.max(...selectOrder) : 0;
-			const lastInsert = insertOrder.length > 0 ? Math.max(...insertOrder) : 0;
-
-			if (lastInsert > lastSelect) {
-				// It's an insert
-				return resolve([{ id: "new-proj-id" }]);
-			}
-
-			// It's a select - return empty to stop loops
-			return resolve([]);
-		};
+		mockDb.then.mockImplementation((resolve: any) => {
+			const response = responses[queryIndex++] || [];
+			return resolve(response);
+		});
 
 		const result = await forkProject("proj-123");
 
