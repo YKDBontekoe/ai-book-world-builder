@@ -1,83 +1,87 @@
 # Testing expectations
 
-This project expects every user-visible change to be covered by fast unit tests, realistic integration flows, and targeted accessibility checks. The guidance below describes the required tooling, where tests live, and which suites must succeed in CI before a pull request can merge.
+This project follows the **Testing Trophy** methodology, prioritizing integration testing of components with mocked data (MSW) and visual verification via Storybook.
+
+## The Hierarchy
+
+1.  **Integration (Highest Priority)**: Vitest + MSW. Tests the interaction between multiple components/hooks.
+2.  **Unit**: Vitest. For complex utility functions or isolated logic.
+3.  **Visual/Interaction**: Storybook. Visual documentation and interaction tests (via play functions).
+4.  **E2E**: Playwright. Critical user journeys (Login, Checkout, Onboarding).
 
 ## Folder structure
 
 ```
 tests/
-  unit/               # Vitest + React Testing Library component hooks and utilities
-  integration/        # Playwright flows that exercise multiple components without touching external services
-  accessibility/      # Playwright + axe-core a11y audits scoped to key pages and widgets
-  e2e/                # Full-stack Playwright scenarios (login, chat flows, document uploads)
-  routes/             # Playwright route-level assertions for server responses
+  unit/               # Vitest: Unit and Integration (MSW) tests
+  e2e/                # Playwright: Critical user journeys
+  verification/       # Python: Visual verification scripts
+src/
+  mocks/              # MSW handlers
+  **/*.stories.tsx    # Storybook stories (co-located with components)
 ```
 
-## Unit testing (Vitest + React Testing Library)
+## Integration & Unit (Vitest + MSW)
 
-- Write isolated component, hook, and utility tests with **Vitest** and **React Testing Library**. Favor real DOM assertions over snapshots, and stub network calls or timers as close to the component as possible.
-- Co-locate helpers inside `tests/unit` (for example, `tests/unit/components` or `tests/unit/hooks`) and reuse shared render utilities instead of re-creating providers per test.
-- Keep tests deterministic—avoid timeouts and random inputs unless they are fixed via seeds.
-- Sample commands:
+- **Tooling**: Vitest + React Testing Library + MSW (Mock Service Worker).
+- **Strategy**:
+    - Favor **Integration** tests that render a component tree and mock network requests using MSW handlers.
+    - Avoid `vi.mock` for `fetch` or network calls. Use `src/mocks/handlers.ts` or local test handlers.
+    - Test the "Happy Path" and at least two edge cases (e.g., Error 500, Empty State).
+- **Accessibility**: Use `screen.getByRole` or `screen.getByLabelText`. Never use class selectors.
+- **Commands**:
 
 ```bash
-# Run the whole unit suite once with coverage
-pnpm exec vitest run --coverage
+# Run unit/integration tests
+pnpm test:unit
 
-# Re-run a specific file while developing
-pnpm exec vitest tests/unit/components/chat-input.test.tsx --watch
+# Run specific test file
+pnpm test:unit tests/unit/path/to/test.test.tsx
 ```
 
-## Integration and end-to-end testing (Playwright)
+## Visual & Interaction (Storybook)
 
-- Use **Playwright** for user journeys that span multiple components or services. Target happy paths and critical error handling (e.g., auth failures, network hiccups) instead of duplicating exhaustive unit coverage.
-- Place browser-driven flows under `tests/integration` and production-like journeys under `tests/e2e`. Route-level assertions (for example, checking status codes or headers) live in `tests/routes` and share the same Playwright configuration.
-- Prefer the shared fixtures in `tests/fixtures.ts` and helper utilities in `tests/helpers.ts` to keep tests concise and consistent.
-- Sample commands:
+- **Tooling**: Storybook + Vitest Browser Mode (via plugin).
+- **Strategy**:
+    - Every new component must have a `.stories.tsx` file.
+    - Use **play functions** in Storybook to simulate user interactions.
+    - These stories are automatically tested via Vitest.
+- **Commands**:
 
 ```bash
-# Run the full Playwright suite (headless)
-pnpm exec playwright test
+# Start Storybook
+pnpm storybook
 
-# Focus on a single project (e2e) or file
-pnpm exec playwright test --project=e2e tests/e2e/chat.test.ts
-
-# Inspect interactions in a headed browser while iterating
-pnpm exec playwright test --project=e2e tests/e2e/chat.test.ts --headed --debug
+# Run Storybook tests via Vitest
+pnpm exec vitest run --project storybook
 ```
 
-## Visual Verification (Python)
+## End-to-End (Playwright)
 
-- Use **Python Playwright scripts** to generate screenshots for visual verification. This is separate from the CI/Logic tests and focuses on the "Native macOS" aesthetic.
-- Scripts live in `verification/`.
-- Use the provided utilities in `verification/utils.py` to handle authentication and screenshots.
-- See `verification/README.md` for detailed instructions.
-- Sample commands:
+- **Tooling**: Playwright.
+- **Strategy**:
+    - Focus on critical user journeys that span full pages and auth flows.
+    - Avoid duplicating coverage already provided by Vitest/MSW integration tests.
+- **Commands**:
 
 ```bash
-# Run all visual verification scripts
+# Run E2E tests
+pnpm test:e2e
+```
+
+## Verification (Python)
+
+- **Tooling**: Python Playwright scripts.
+- **Strategy**: Visual verification of "Native macOS" aesthetic.
+- **Commands**:
+
+```bash
 pnpm test:visual
-
-# Run a specific script
-python verification/verify_my_feature.py
 ```
 
-## Accessibility testing
+## CI Requirements
 
-- Automate accessibility checks alongside Playwright flows by injecting **axe-core** (for example, via `@axe-core/playwright`) into key screens. Capture and fail on WCAG violations instead of relying solely on manual audits. Add the axe dependency to `devDependencies` if it is not already present.
-- Scope tests to user-critical paths (chat composition, document upload, navigation menus) and ensure interactive elements have discernible names, focus order, and role semantics.
-- Store accessibility-specific specs in `tests/accessibility` and reuse shared Playwright fixtures to keep setup minimal.
-- Sample commands:
-
-```bash
-# Run only the accessibility specs (uses the shared Playwright config)
-pnpm exec playwright test tests/accessibility
-```
-
-## What must run in CI before merge
-
-- **Unit suite:** `pnpm exec vitest run --coverage` must pass on CI to merge. Add it to your pipeline once Vitest is configured in the repository.
-- **Integration/end-to-end suite:** `pnpm exec playwright test` (all projects) must be green. Pull requests should not merge with any Playwright failures or skipped tests unless explicitly justified.
-- **Accessibility checks:** Include the `tests/accessibility` Playwright jobs in CI; treat any reported violations as blocking until triaged or justified.
-
-When adding new tests, update CI workflows to ensure the relevant suite runs automatically. Document any temporary skips in the pull request description and add a follow-up issue to restore coverage.
+- **Unit/Integration**: `pnpm test:unit` must pass.
+- **Storybook**: `pnpm exec vitest run --project storybook` must pass.
+- **E2E**: `pnpm test:e2e` must pass.
+- **Type Check**: `pnpm type-check` must pass.
