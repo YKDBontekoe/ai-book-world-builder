@@ -12,6 +12,7 @@ src/
 │   ├── (auth)/          # Authentication routes (login, register)
 │   ├── (chat)/          # Main application (Projects, Writer View)
 │   ├── (reader)/        # Standalone Reader Mode application
+│   ├── admin/           # Admin Dashboard (Jules, GitHub)
 │   ├── actions/         # Server Actions (mutations)
 │   └── api/             # API Routes (webhooks, streaming)
 ├── components/          # React components
@@ -52,11 +53,17 @@ The Writer uses a context stack to manage its state without prop drilling:
 To optimize TTI (Time to Interactive), heavy components are lazy-loaded:
 -   `FloatingAssistant` (The chat interface)
 -   `BookCanvas` (The entity graph/bible)
+-   `StructureEditorDialog` (The power editor)
 
-### 2. Reader Mode Architecture
-Reader Mode (`app/(reader)`) is intentionally isolated from the main Writer app to provide a focused reading experience.
--   **Client-Side Pagination**: We avoid server-side splitting. Instead, we use `column-width: 100vw` in CSS to reflow text into horizontal "pages". `ReaderView` calculates the total width to determine the page count.
--   **Persistence**: Reading progress (chapter + percentage) is debounced and saved via `saveReadingProgress` Server Action. Local settings (theme, font) are stored in `localStorage`.
+### 2. Smart Sync (Structure Editor)
+The `saveProjectStructure` Server Action (`app/actions/writer/structure.ts`) implements a **Smart Sync** algorithm to allow plain-text editing of the database structure:
+1.  **Parse**: Converts the text input into a hierarchical tree (Chapters -> Scenes).
+2.  **Normalize**: Converts titles to lowercase and removes accents for fuzzy matching.
+3.  **Match**: Queries existing DB records and attempts to match them by title.
+    *   *Match Found*: Updates the sequence and title (preserves ID and content).
+    *   *No Match*: Creates a new record.
+    *   *Missing*: Deletes records that are no longer in the text input.
+4.  **Transaction**: All operations occur within a single Drizzle transaction to ensure atomicity.
 
 ### 3. Server Actions & Services
 We separate controller logic (Server Actions) from business logic (Services):
@@ -68,7 +75,7 @@ We separate controller logic (Server Actions) from business logic (Services):
 ### 4. Software Builder (Jules Agent)
 We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
 
--   **Admin Dashboard**: Located at `/admin/github` (See [Admin Guide](./admin-guide.md)).
+-   **Admin Dashboard**: Located at `/admin/github`. It wraps the `TaskBoard` component to visualize Issues, Plans, and PRs.
 -   **Jules Client**: `lib/jules-client.ts` wraps the Google Jules API.
 -   **Workflow**:
     1.  **Session**: A long-lived interaction with the agent (`JulesSession`).
@@ -90,20 +97,19 @@ Long-running AI tasks (like "Generate All Scenes") are handled in `WritingServic
 3.  **Chunking**: Breaks the task into chunks (e.g., `tasks.slice(i, i + CONCURRENCY_LIMIT)`), awaiting each chunk before proceeding.
 
 ### 6. Project Analytics
-Analytics are calculated on-the-fly to provide real-time insights without a heavy ETL process.
+Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services/project-analytics.ts`).
 
--   **ProjectAnalyticsService** (`lib/services/project-analytics.ts`): Aggregates data from `Project`, `Entity`, and `Scene` tables.
 -   **Readiness Score**: A weighted metric (0-100) indicating how "ready" a project is for generation.
-    -   Characters (30%), Locations (20%), Outline (30%), Chapters (20%).
-    -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
+    -   Formula: `min(Chars*20, 100)*0.3 + min(Locs*25, 100)*0.2 + (HasOutline?100:0)*0.3 + min(Chaps*10, 100)*0.2`
+-   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
 ### 7. Structured Context (Context Builder)
-To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:
+To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/ai/context-builder.ts`:
 
--   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene (last ~2000 tokens) to ensure flow.
--   **Narrative Arc**: We provide *summaries* of all previous scenes in the current chapter to maintain the arc.
+-   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene to ensure flow.
+-   **Narrative Arc**: We provide summaries (first ~200 chars) of *all* previous scenes in the current chapter to maintain the arc.
 -   **Global Context**: Chapter notes and Outline parameters (POV, Tone) are always included.
--   *Note*: This replaces the previous "Smart Context" flooding strategy with a more deterministic, token-efficient approach.
+-   *Note*: This replaces the previous "Smart Context" flooding strategy with a more deterministic approach.
 
 ### 8. AI Integration & Models
 
@@ -133,7 +139,9 @@ We employ a **Dual Verification Strategy** (`AGENTS.md`) to ensure quality:
 ### 1. Functional Verification (Vitest)
 -   Located in `tests/unit/`.
 -   Run: `pnpm test:unit`
--   Mocking: We use `vi.mock` heavily. Note that `server-only` imports must be mocked.
+-   **Mocking Tips**:
+    -   **Server-Only**: Imports like `lib/ai/models` must be mocked.
+    -   **Drizzle Chains**: When mocking DB updates, you must return a builder object that supports chaining (e.g., `.set().where().returning()`).
     ```typescript
     vi.mock("@/lib/ai/models", () => ({
       getSelectedModelId: vi.fn().mockResolvedValue("mock-model"),

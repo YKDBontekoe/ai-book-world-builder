@@ -74,12 +74,7 @@ We use **Playwright** and **Vitest** for logic and regression testing.
 - Run Unit Tests: `pnpm exec vitest run`
 - Run E2E Tests: `pnpm exec playwright test`
 
-### 2. Visual Verification (Python)
-We use Python scripts with Playwright to perform visual verification, ensuring the UI matches the design system.
-- Scripts are located in the `verification/` directory.
-- These scripts capture screenshots to verify layout and styling.
-
-> **Note**: Both functional and visual checks must pass before merging changes. See [`AGENTS.md`](AGENTS.md) for the contributor workflow.
+> **Note**: Functional checks must pass before merging changes. See [`AGENTS.md`](AGENTS.md) for the contributor workflow.
 
 ## Getting Started
 
