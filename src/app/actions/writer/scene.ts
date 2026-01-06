@@ -1,14 +1,82 @@
 "use server";
 
 import { and, eq, inArray } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
-import { ensureProjectAccess } from "@/lib/actions-utils";
+import { z } from "zod";
+import { ensureProjectAccess, withProjectWriteAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
-import { continueWriting } from "@/lib/ai/writer";
+import { continueWriting } from "@/app/actions/ai/generation";
 import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
+import { sceneStatus } from "@/lib/db/schema/scenes";
+import { err } from "@/lib/result";
+
+// ============================================================================
+// Schemas
+// ============================================================================
+
+const updateSceneSchema = z.object({
+	id: z.string().uuid(),
+	projectId: z.string().uuid(),
+	title: z.string().max(255, "Title is too long").optional(),
+	status: z.enum(sceneStatus).optional(),
+	content: z
+		.string()
+		.max(100000, "Content is too long (max 100k chars)")
+		.optional(),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
+
+/**
+ * Update a scene's properties (title, status, content) with validation
+ */
+export async function updateScene(params: {
+	id: string;
+	projectId: string;
+	title?: string;
+	status?: string;
+	content?: string;
+}) {
+	const validation = updateSceneSchema.safeParse(params);
+	if (!validation.success) {
+		const errorMessage = validation.error.issues
+			.map((i) => i.message)
+			.join(", ");
+		return err(`Validation failed: ${errorMessage}`);
+	}
+
+	const { id, title, status, content, projectId } = validation.data;
+
+	return withProjectWriteAccess(projectId, async () => {
+		const updatedScene = await sceneRepository.update(
+			id,
+			{
+				title,
+				status,
+				content,
+			},
+			projectId,
+		);
+
+		// Invalidate structure cache if title changes, as it's part of the structure view
+		if (title) {
+			await invalidateCache(`project-structure:${projectId}`);
+			revalidatePath(`/projects/${projectId}`);
+		}
+
+		return {
+			...updatedScene,
+			createdAt: updatedScene.createdAt.toISOString(),
+			updatedAt: updatedScene.updatedAt.toISOString(),
+		};
+	});
+}
 
 export async function getSceneContent(sceneId: string) {
 	try {

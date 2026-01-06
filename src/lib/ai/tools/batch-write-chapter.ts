@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { writingService } from "@/lib/services/ai/writing-service";
 
 export const batchWriteChapter = () =>
 	tool({
@@ -13,7 +13,7 @@ export const batchWriteChapter = () =>
 				.describe("Overall instructions for the chapter."),
 		}),
 		execute: async (args: any) => {
-			return await aiService.batchWriteChapter(
+			return await writingService.batchWriteChapter(
 				args.chapterId,
 				args.instructions,
 			);

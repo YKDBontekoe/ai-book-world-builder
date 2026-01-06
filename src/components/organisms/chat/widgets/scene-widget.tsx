@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { useId, useState } from "react";
 import { toast } from "sonner";
-import { updateSceneAction } from "@/app/actions/scenes";
+import { updateScene } from "@/app/actions/writer/scene";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
@@ -63,14 +63,18 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 
 		setIsSaving(true);
 		try {
-			await updateSceneAction({
+			const result = await updateScene({
 				id: scene.id,
 				projectId: projectId ?? scene.projectId!,
 				title,
 				status,
 			});
-			setIsEditing(false);
-			toast.success("Scene updated");
+			if (result.success) {
+				setIsEditing(false);
+				toast.success("Scene updated");
+			} else {
+				throw new Error(result.error);
+			}
 		} catch (error) {
 			toast.error("Failed to update scene");
 			console.error(error);

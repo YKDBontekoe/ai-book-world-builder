@@ -47,7 +47,7 @@ vi.mock("next/cache", () => ({
 }));
 
 // Import the action under test
-import { updateSceneAction } from "@/app/actions/scenes";
+import { updateScene } from "@/app/actions/writer/scene";
 import type { Project, Scene } from "@/lib/db/schema";
 import { isOk } from "@/lib/result";
 
@@ -108,7 +108,7 @@ describe("scenes server actions", () => {
 		mockProjectRepository.findByIdWithAccess.mockResolvedValue(buildProject());
 		mockSceneRepository.update.mockResolvedValue(updatedScene);
 
-		const result = await updateSceneAction({
+		const result = await updateScene({
 			id: sceneId,
 			title: "Updated Title",
 			projectId,
@@ -145,7 +145,7 @@ describe("scenes server actions", () => {
 		mockProjectRepository.findByIdWithAccess.mockResolvedValue(buildProject());
 		mockSceneRepository.update.mockResolvedValue(updatedScene);
 
-		const result = await updateSceneAction({
+		const result = await updateScene({
 			id: sceneId,
 			content: "New content",
 			projectId,
@@ -168,7 +168,7 @@ describe("scenes server actions", () => {
 		mockAuth.mockResolvedValue(buildSession());
 		mockProjectRepository.findByIdWithAccess.mockResolvedValue(null);
 
-		const result = await updateSceneAction({ id: sceneId, projectId });
+		const result = await updateScene({ id: sceneId, projectId });
 
 		expect(result.success).toBe(false);
 		if (!result.success) {
@@ -182,7 +182,7 @@ describe("scenes server actions", () => {
 	it("returns Unauthorized when not logged in", async () => {
 		mockAuth.mockResolvedValue(null);
 
-		const result = await updateSceneAction({ id: sceneId, projectId });
+		const result = await updateScene({ id: sceneId, projectId });
 
 		expect(result.success).toBe(false);
 		if (!result.success) {

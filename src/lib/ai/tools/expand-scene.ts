@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { writingService } from "@/lib/services/ai/writing-service";
 
 export const expandScene = () =>
 	tool({
@@ -10,6 +10,6 @@ export const expandScene = () =>
 			notes: z.string().describe("The notes or skeleton to expand."),
 		}),
 		execute: async (args: any) => {
-			return await aiService.expandScene(args.sceneId, args.notes);
+			return await writingService.expandScene(args.sceneId, args.notes);
 		},
 	});

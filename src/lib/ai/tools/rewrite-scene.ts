@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { writingService } from "@/lib/services/ai/writing-service";
 
 export const rewriteScene = () =>
 	tool({
@@ -12,6 +12,6 @@ export const rewriteScene = () =>
 				.describe("How to rewrite the scene (e.g. 'Change POV')."),
 		}),
 		execute: async (args: any) => {
-			return await aiService.rewriteScene(args.sceneId, args.instructions);
+			return await writingService.rewriteScene(args.sceneId, args.instructions);
 		},
 	});

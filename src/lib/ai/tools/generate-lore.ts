@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { loreService } from "@/lib/services/ai/lore-service";
 
 export const generateLore = () =>
 	tool({
@@ -15,7 +15,7 @@ export const generateLore = () =>
 				.describe("Category (character, location, etc.)."),
 		}),
 		execute: async (args: any) => {
-			return await aiService.generateLore(
+			return await loreService.generateLore(
 				args.projectId,
 				args.prompt,
 				args.category,

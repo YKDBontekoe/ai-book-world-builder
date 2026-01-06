@@ -22,7 +22,7 @@ import {
 	PopoverTrigger,
 } from "@/components/atoms/popover";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { rewriteSelection } from "@/lib/ai/writer";
+import { rewriteSelection } from "@/app/actions/ai/generation";
 import { cn } from "@/lib/utils";
 
 interface EditorBubbleMenuProps {

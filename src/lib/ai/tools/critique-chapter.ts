@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { analysisService } from "@/lib/services/ai/analysis-service";
 
 export const critiqueChapter = () =>
 	tool({
@@ -10,6 +10,6 @@ export const critiqueChapter = () =>
 			chapterId: z.string().describe("The ID of the chapter."),
 		}),
 		execute: async (args: any) => {
-			return await aiService.critiqueChapter(args.chapterId);
+			return await analysisService.critiqueChapter(args.chapterId);
 		},
 	});

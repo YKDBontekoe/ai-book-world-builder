@@ -2,7 +2,7 @@ import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { getGatewayIdForRole } from "@/lib/ai/model-routing";
-import { generationService } from "@/lib/ai/writer-service";
+import { generationService } from "@/lib/ai/services/generation-service";
 import {
 	addTaskLogEntry,
 	getBookGenerationForProject,
