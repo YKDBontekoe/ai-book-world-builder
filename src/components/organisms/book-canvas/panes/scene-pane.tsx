@@ -8,11 +8,11 @@ import {
 	type SerializedChapterWithScenes,
 } from "@/app/actions/scene-data";
 import { Button } from "@/components/atoms/button";
-import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
 import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import { SceneCard } from "@/components/organisms/book-canvas/cards/scene-card";
+import { ScenePaneSkeleton } from "@/components/organisms/book-canvas/panes/scene-pane-skeleton";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 
@@ -108,14 +108,7 @@ export function ScenePane() {
 	}
 
 	if (isLoading && !chapters) {
-		return (
-			<div className="flex h-full flex-col items-center justify-center p-8">
-				<LoadingSpinner size="lg" variant="muted" />
-				<p className="mt-2 text-sm text-muted-foreground">
-					Loading specific details...
-				</p>
-			</div>
-		);
+		return <ScenePaneSkeleton />;
 	}
 
 	if (!chapters || chapters.length === 0) {
