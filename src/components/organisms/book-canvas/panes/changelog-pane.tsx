@@ -10,13 +10,13 @@ import {
 } from "lucide-react";
 import { getGenerationLog } from "@/app/actions/project-stats";
 import { ScrollArea } from "@/components/atoms/scroll-area";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { GenerationTaskLog } from "@/lib/db/schema";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 
 export function ChangeLogPane() {
-	const { projectId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
 
 	const { data: logResult, isLoading } = useQuery({
 		queryKey: projectId

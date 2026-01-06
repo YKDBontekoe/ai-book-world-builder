@@ -2,19 +2,33 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Sparkles } from "lucide-react";
+import type { JSX } from "react";
 
 import { getSceneContextAction } from "@/app/actions/context";
 import { Badge } from "@/components/atoms/badge";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	useBookCanvasLayout,
+	useBookCanvasSelection,
+} from "@/components/organisms/book-canvas/book-canvas-context";
 import {
 	ENTITY_ICONS,
 	type EntityType,
 } from "@/components/organisms/book-canvas/panes/bible/types";
 
-export function ContextPane() {
-	const { projectId, activeSceneId } = useBookCanvas();
+/**
+ * Renders the Context Pane, displaying entities relevant to the currently active scene.
+ *
+ * This component relies on `useBookCanvasLayout` for project context and
+ * `useBookCanvasSelection` to react to scene selection changes without triggering
+ * re-renders in the main BookCanvas shell.
+ *
+ * @returns {JSX.Element} The rendered Context Pane component.
+ */
+export function ContextPane(): JSX.Element {
+	const { projectId } = useBookCanvasLayout();
+	const { activeSceneId } = useBookCanvasSelection();
 
 	const { data, isLoading } = useQuery({
 		queryKey: ["context", projectId, activeSceneId],

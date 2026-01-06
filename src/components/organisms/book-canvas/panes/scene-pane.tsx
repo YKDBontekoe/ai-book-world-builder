@@ -11,7 +11,7 @@ import { Button } from "@/components/atoms/button";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import { SceneCard } from "@/components/organisms/book-canvas/cards/scene-card";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
@@ -84,7 +84,7 @@ function ChapterSection({ chapter }: { chapter: SerializedChapterWithScenes }) {
 }
 
 export function ScenePane() {
-	const { projectId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
 
 	const { data: chaptersResult, isLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.scenes(projectId) : ["scenes", "null"],

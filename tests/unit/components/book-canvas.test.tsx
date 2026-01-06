@@ -3,12 +3,19 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	useBookCanvasActions,
+	useBookCanvasLayout,
+} from "@/components/organisms/book-canvas/book-canvas-context";
 
 // Mock the context hook
 vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
-	useBookCanvas: vi.fn(),
+	useBookCanvasLayout: vi.fn(),
+	useBookCanvasActions: vi.fn(),
 }));
+
+const mockedUseBookCanvasLayout = vi.mocked(useBookCanvasLayout);
+const mockedUseBookCanvasActions = vi.mocked(useBookCanvasActions);
 
 // Mock the panes to avoid complex rendering
 vi.mock("@/components/organisms/book-canvas/panes/outline-pane", () => ({
@@ -33,16 +40,33 @@ vi.mock("@/components/organisms/book-canvas/panes/changelog-pane", () => ({
 	ChangeLogPane: () => <div>ChangeLog</div>,
 }));
 
+import { beforeEach } from "vitest";
+
 describe("BookCanvas", () => {
-	it("renders with fixed positioning when open", () => {
-		(useBookCanvas as any).mockReturnValue({
+	beforeEach(() => {
+		// Default mock implementation
+		mockedUseBookCanvasLayout.mockReturnValue({
 			isOpen: true,
 			activePane: "outline",
-			setIsOpen: vi.fn(),
-			setActivePane: vi.fn(),
 			overallStatus: "idle",
+			projectId: "test-project",
+			generationId: null,
+			isReadOnly: false,
 		});
+		mockedUseBookCanvasActions.mockReturnValue({
+			setIsOpen: vi.fn(),
+			togglePanel: vi.fn(),
+			setActivePane: vi.fn(),
+			setOverallStatus: vi.fn(),
+			setProjectId: vi.fn(),
+			setGenerationId: vi.fn(),
+			triggerChatAction: vi.fn(),
+			setActiveSceneId: vi.fn(),
+			setIsReadOnly: vi.fn(),
+		});
+	});
 
+	it("renders with fixed positioning when open", () => {
 		const { container } = render(<BookCanvas />);
 		const canvasDiv = container.firstChild as HTMLElement;
 
@@ -55,12 +79,9 @@ describe("BookCanvas", () => {
 	});
 
 	it("renders collapsed state correctly", () => {
-		(useBookCanvas as any).mockReturnValue({
+		mockedUseBookCanvasLayout.mockReturnValue({
+			...mockedUseBookCanvasLayout.mock.results[0]?.value,
 			isOpen: false,
-			activePane: "outline",
-			setIsOpen: vi.fn(),
-			setActivePane: vi.fn(),
-			overallStatus: "idle",
 		});
 
 		const { container } = render(<BookCanvas />);
