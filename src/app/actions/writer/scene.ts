@@ -91,6 +91,9 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 		const cookieStore = await cookies();
 		const modelId = cookieStore.get("chat-model")?.value;
 
+		// TODO: Implement rate limiting or quota check here to prevent abuse
+		// e.g., checkUsageQuota(currentChapter.userId)
+
 		// 2. Generate Content
 		const generation = await continueWriting(context, prevContent, { modelId });
 
@@ -269,13 +272,8 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 			}
 		}
 
-		// Update sequences in a transaction using a single query case statement if possible,
-		// but since Drizzle CASE support is complex, we will stick to sequential but optimized updates.
-		// A better approach for many items is to use a SQL CTE or just accept the batch update.
-		// However, for < 50 items, sequential inside transaction is acceptable if connection pool allows.
-		// To truly fix N+1, we would use sql`` helper.
-		// Implementing SQL CASE update:
-
+		// Update sequences using a single SQL UPDATE with CASE statement
+		// This avoids N+1 database round-trips.
 		const sqlChunks = [];
 		const ids = [];
 		sqlChunks.push(sql`(case`);
