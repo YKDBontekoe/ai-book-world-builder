@@ -8,6 +8,15 @@
  */
 export async function checkUsageQuota(userId: string): Promise<boolean> {
 	if (!userId) return false;
-	// For now, we assume everyone has access to basic generation.
+
+	// Safe default: Deny in production unless specifically allowed
+	if (
+		process.env.NODE_ENV === "production" &&
+		process.env.ALLOW_UNIMPLEMENTED_QUOTA !== "true"
+	) {
+		return false;
+	}
+
+	// For dev/test, allow access
 	return true;
 }
