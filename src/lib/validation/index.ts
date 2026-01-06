@@ -162,6 +162,14 @@ export const createChapterSchema = z.object({
 
 export type CreateChapterInput = z.infer<typeof createChapterSchema>;
 
+export const updateChapterTitleSchema = z.object({
+	chapterId: uuidSchema,
+	title: z
+		.string()
+		.min(1, { message: "Chapter title is required" })
+		.max(200, { message: "Chapter title must be 200 characters or less" }),
+});
+
 export const generateSceneSchema = z.object({
 	chapterId: uuidSchema,
 	prevSceneId: uuidSchema.optional(),

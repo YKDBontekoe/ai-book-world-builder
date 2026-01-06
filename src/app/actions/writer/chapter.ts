@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/queries/volume";
 import { chapterRepository, sceneRepository } from "@/lib/db/repositories";
 import { chapter, chapterVersion } from "@/lib/db/schema";
+import { updateChapterTitleSchema } from "@/lib/validation";
 
 export async function createChapterSnapshot(chapterId: string) {
 	try {
@@ -126,6 +127,11 @@ export async function updateChapterTitle(
 	chapterId: string,
 	title: string,
 ): Promise<{ success: boolean; error?: string }> {
+	const validation = updateChapterTitleSchema.safeParse({ chapterId, title });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		const [currentChapter] = await db
 			.select()
