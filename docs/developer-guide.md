@@ -65,7 +65,18 @@ We separate controller logic (Server Actions) from business logic (Services):
     -   `StoryService`: Handles scene planning and text generation.
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
 
-### 4. AI Service Architecture
+### 4. Software Builder (Jules Agent)
+We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
+
+-   **Admin Dashboard**: Located at `/admin/github` (See [Admin Guide](./admin-guide.md)).
+-   **Jules Client**: `lib/jules-client.ts` wraps the Google Jules API.
+-   **Workflow**:
+    1.  **Session**: A long-lived interaction with the agent (`JulesSession`).
+    2.  **Planning**: The agent proposes a `JulesPlan` (steps to solve the task).
+    3.  **Execution**: The agent generates `JulesArtifact`s (Git patches, bash commands).
+    4.  **PR**: The agent opens a Pull Request via the configured GitHub credentials.
+
+### 5. AI Service Architecture
 The AI layer is structured to separate "AI Logic" from "Business Logic".
 
 **Core Components**:
@@ -78,7 +89,7 @@ Long-running AI tasks (like "Generate All Scenes") are handled in `WritingServic
 2.  **Concurrency Limit**: Runs strictly 3 generations in parallel to balance speed vs. rate limits.
 3.  **Chunking**: Breaks the task into chunks (e.g., `tasks.slice(i, i + CONCURRENCY_LIMIT)`), awaiting each chunk before proceeding.
 
-### 5. Project Analytics
+### 6. Project Analytics
 Analytics are calculated on-the-fly to provide real-time insights without a heavy ETL process.
 
 -   **ProjectAnalyticsService** (`lib/services/project-analytics.ts`): Aggregates data from `Project`, `Entity`, and `Scene` tables.
@@ -86,7 +97,7 @@ Analytics are calculated on-the-fly to provide real-time insights without a heav
     -   Characters (30%), Locations (20%), Outline (30%), Chapters (20%).
     -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
-### 6. Structured Context (Context Builder)
+### 7. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:
 
 -   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene (last ~2000 tokens) to ensure flow.
@@ -94,7 +105,7 @@ To enable the AI to write coherently over long contexts without a Vector DB, we 
 -   **Global Context**: Chapter notes and Outline parameters (POV, Tone) are always included.
 -   *Note*: This replaces the previous "Smart Context" flooding strategy with a more deterministic, token-efficient approach.
 
-### 6. AI Integration & Models
+### 8. AI Integration & Models
 
 **Role-Based Routing**:
 We do not hardcode model IDs. Instead, we use a role-based system defined in `lib/ai/model-routing.ts`:
