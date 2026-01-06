@@ -1,5 +1,0 @@
-import{S as e}from"./slider-B1vFqPKh.js";import"./jsx-runtime-CVqCZBBI.js";import"./iframe-Dv6gOV-t.js";import"./preload-helper-PPVm8Dsz.js";import"./index-BdQq_4o_.js";import"./index-Dc_FVRD7.js";import"./index-DQmcGOtT.js";import"./index-C1l8BAVS.js";import"./index-CpqMuLH1.js";import"./index-B0OlJG9R.js";import"./index-BfqpbVgM.js";import"./index-DMu-zZai.js";import"./index-DnFWGGd7.js";import"./index-BgB4IHgC.js";import"./index-DAzMip35.js";import"./index-BKPiHqBM.js";import"./utils-CDN07tui.js";const R={title:"Design System/Atoms/Slider",component:e,tags:["autodocs"],args:{defaultValue:[50],max:100,step:1,className:"w-[60%]"}},r={},t={args:{defaultValue:[25,75]}};r.parameters={...r.parameters,docs:{...r.parameters?.docs,source:{originalSource:"{}",...r.parameters?.docs?.source}}};t.parameters={...t.parameters,docs:{...t.parameters?.docs,source:{originalSource:`{
-  args: {
-    defaultValue: [25, 75]
-  }
-}`,...t.parameters?.docs?.source}}};const _=["Default","Range"];export{r as Default,t as Range,_ as __namedExportsOrder,R as default};
