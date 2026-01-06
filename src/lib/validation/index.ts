@@ -84,13 +84,23 @@ export const forkProjectSchema = z.object({
 // Scene Schemas
 // ============================================================================
 
+/**
+ * Shared validator for scene titles to ensure consistency.
+ */
+export const sceneTitleSchema = z
+	.string()
+	.min(1, { message: "Scene title is required" })
+	.max(200, { message: "Scene title must be 200 characters or less" });
+
 export const sceneIdSchema = z.object({
 	sceneId: uuidSchema,
 });
 
 export const updateSceneContentSchema = z.object({
 	sceneId: uuidSchema,
-	content: z.string(),
+	content: z.string().max(200000, {
+		message: "Scene content must be 200,000 characters or less",
+	}),
 });
 
 export type UpdateSceneContentInput = z.infer<typeof updateSceneContentSchema>;
@@ -98,16 +108,36 @@ export type UpdateSceneContentInput = z.infer<typeof updateSceneContentSchema>;
 export const createSceneSchema = z.object({
 	projectId: uuidSchema,
 	chapterId: uuidSchema,
-	title: z
-		.string()
-		.min(1, { message: "Scene title is required" })
-		.max(200, { message: "Scene title must be 200 characters or less" }),
+	title: sceneTitleSchema,
 	sequence: z.number().int().positive(),
 	content: z.string().optional(),
 	status: z.enum(["planned", "drafting", "drafted", "revised"]).optional(),
 });
 
 export type CreateSceneInput = z.infer<typeof createSceneSchema>;
+
+/**
+ * Schema for updating a scene's title.
+ */
+export const updateSceneTitleSchema = z.object({
+	sceneId: uuidSchema,
+	title: sceneTitleSchema,
+});
+
+export type UpdateSceneTitleInput = z.infer<typeof updateSceneTitleSchema>;
+
+/**
+ * Schema for creating a new scene within a chapter.
+ */
+export const createSceneInChapterSchema = z.object({
+	chapterId: uuidSchema,
+	title: sceneTitleSchema,
+	insertAfterSceneId: uuidSchema.optional(),
+});
+
+export type CreateSceneInChapterInput = z.infer<
+	typeof createSceneInChapterSchema
+>;
 
 // ============================================================================
 // Chapter Schemas
