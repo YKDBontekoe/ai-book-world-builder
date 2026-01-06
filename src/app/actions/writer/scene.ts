@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
@@ -269,17 +269,28 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 			}
 		}
 
-		// Update sequences in a transaction
-		await db.transaction(async (tx) => {
-			for (let i = 0; i < sceneIds.length; i++) {
-				await tx
-					.update(scene)
-					.set({ sequence: i + 1, updatedAt: new Date() })
-					.where(
-						and(eq(scene.id, sceneIds[i]), eq(scene.chapterId, chapterId)),
-					);
-			}
-		});
+		// Update sequences in a transaction using a single query case statement if possible,
+		// but since Drizzle CASE support is complex, we will stick to sequential but optimized updates.
+		// A better approach for many items is to use a SQL CTE or just accept the batch update.
+		// However, for < 50 items, sequential inside transaction is acceptable if connection pool allows.
+		// To truly fix N+1, we would use sql`` helper.
+		// Implementing SQL CASE update:
+
+		const sqlChunks = [];
+		const ids = [];
+		sqlChunks.push(sql`(case`);
+		for (let i = 0; i < sceneIds.length; i++) {
+			sqlChunks.push(sql`when ${scene.id} = ${sceneIds[i]} then ${i + 1}`);
+			ids.push(sceneIds[i]);
+		}
+		sqlChunks.push(sql`else ${scene.sequence} end)`);
+
+		const finalSql = sql.join(sqlChunks, sql` `);
+
+		await db
+			.update(scene)
+			.set({ sequence: finalSql, updatedAt: new Date() })
+			.where(and(eq(scene.chapterId, chapterId), inArray(scene.id, ids)));
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
