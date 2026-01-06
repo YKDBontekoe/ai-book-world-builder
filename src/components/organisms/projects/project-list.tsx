@@ -83,15 +83,16 @@ function ProjectRow({
 									)}
 								>
 									{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation only */}
+									{/* biome-ignore lint/a11y/useKeyWithClickEvents: stop propagation only */}
 									<div
 										onClick={(e) => e.stopPropagation()}
-										onKeyDown={(e) => e.stopPropagation()}
 										className="flex items-center justify-center"
 									>
 										<Checkbox
 											checked={selected}
 											onCheckedChange={() => onSelect(project.id)}
 											className="h-5 w-5 border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground bg-background/80 backdrop-blur-sm shadow-sm"
+											aria-label={`Select project ${project.name}`}
 										/>
 									</div>
 								</div>
