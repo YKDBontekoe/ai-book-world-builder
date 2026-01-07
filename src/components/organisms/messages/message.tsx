@@ -164,8 +164,27 @@ export const PreviewMessage = memo(
 			return true;
 		}
 
-		if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+		// Check cheap primitives first
+		if (prevProps.message.content !== nextProps.message.content) {
 			return false;
+		}
+
+		// Check parts (array/deep) - First compare references (O(1)) to short-circuit the expensive
+		// deep comparison (O(N)). Only perform deep check if references differ, preventing
+		// unnecessary work when the parts array is referentially stable.
+		if (prevProps.message.parts !== nextProps.message.parts) {
+			if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+				return false;
+			}
+		}
+
+		// Check usage (object) - First compare references (O(1)) to short-circuit the expensive
+		// deep comparison (O(N)). Only perform deep check if references differ, preventing
+		// unnecessary work when the usage object is referentially stable.
+		if (prevProps.message.usage !== nextProps.message.usage) {
+			if (!equal(prevProps.message.usage, nextProps.message.usage)) {
+				return false;
+			}
 		}
 
 		return true;
