@@ -56,8 +56,11 @@ describe("PreviewMessage Memoization", () => {
 		const { rerender } = render(<PreviewMessage {...defaultProps} />);
 		vi.clearAllMocks();
 
-		// Rerender with NEW object reference but SAME content
-		const newMessage = { ...defaultProps.message };
+		// Rerender with NEW object reference AND NEW parts reference but SAME content
+		const newMessage = {
+			...defaultProps.message,
+			parts: [...defaultProps.message.parts], // New array reference
+		};
 		rerender(<PreviewMessage {...defaultProps} message={newMessage} />);
 
 		// Expect fast-deep-equal to be called for parts (since ref changed)
@@ -67,27 +70,24 @@ describe("PreviewMessage Memoization", () => {
 		);
 	});
 
-	it("OPTIMIZED: Should NOT check parts deep equality when message references are same", () => {
+	it("OPTIMIZED: Should NOT check parts deep equality when parts references are same", () => {
 		const { rerender } = render(<PreviewMessage {...defaultProps} />);
 		vi.clearAllMocks();
 
-		// Rerender with SAME object reference
-		rerender(<PreviewMessage {...defaultProps} />);
+		// Rerender with NEW message object but SAME parts reference
+		// This simulates typical React state updates where some props change but deeply nested stable objects don't
+		const newMessage = { ...defaultProps.message };
+		rerender(<PreviewMessage {...defaultProps} message={newMessage} />);
 
-		// Should be called for vote check (maybe), but definitely NOT for parts
+		// Should NOT be called for parts because references match
+		// It WILL be called for 'vote' which is undefined/undefined
 		expect(equal).not.toHaveBeenCalledWith(
 			defaultProps.message.parts,
-			defaultProps.message.parts,
+			newMessage.parts,
 		);
 	});
 
 	it("BUG FIX: Should check isLast property", () => {
-		// We can't verify re-render directly easily without spy, but we can verify that
-		// the memo function handles isLast diffs.
-		// Given we are testing the component, we trust the code change.
-		// But we can verify `equal` is NOT called if we change isLast,
-		// because `prev.isLast !== next.isLast` returns false immediately.
-
 		const { rerender } = render(<PreviewMessage {...defaultProps} />);
 		vi.clearAllMocks();
 
@@ -96,5 +96,21 @@ describe("PreviewMessage Memoization", () => {
 
 		// Because isLast check fails early, equal should NOT be called at all
 		expect(equal).not.toHaveBeenCalled();
+	});
+
+	it("OPTIMIZED: Should check content equality early", () => {
+		const { rerender } = render(<PreviewMessage {...defaultProps} />);
+		vi.clearAllMocks();
+
+		// Rerender with changed content
+		const newMessage = { ...defaultProps.message, content: "New Content" };
+		rerender(<PreviewMessage {...defaultProps} message={newMessage} />);
+
+		// Content check is strict equality, so it returns false early.
+		// equal() for parts should NOT be called because content changed first.
+		expect(equal).not.toHaveBeenCalledWith(
+			defaultProps.message.parts,
+			newMessage.parts,
+		);
 	});
 });

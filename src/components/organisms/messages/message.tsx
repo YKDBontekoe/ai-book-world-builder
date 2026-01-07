@@ -164,8 +164,23 @@ export const PreviewMessage = memo(
 			return true;
 		}
 
-		if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+		// Check cheap primitives first
+		if (prevProps.message.content !== nextProps.message.content) {
 			return false;
+		}
+
+		// Check parts (array/deep) - check reference first to avoid O(N) deep compare
+		if (prevProps.message.parts !== nextProps.message.parts) {
+			if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+				return false;
+			}
+		}
+
+		// Check usage (object) - check reference first
+		if (prevProps.message.usage !== nextProps.message.usage) {
+			if (!equal(prevProps.message.usage, nextProps.message.usage)) {
+				return false;
+			}
 		}
 
 		return true;
