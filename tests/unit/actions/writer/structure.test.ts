@@ -125,7 +125,10 @@ Chapter 1: The Beginning
 			.mockResolvedValueOnce([{ id: "volume-1" }]) // New Volume
 			.mockResolvedValueOnce([{ id: "chapter-1" }]); // New Chapter
 
-		const result = await saveProjectStructure({ projectId, structureText: text });
+		const result = await saveProjectStructure({
+			projectId,
+			structureText: text,
+		});
 
 		expect(result.success).toBe(true);
 
@@ -167,7 +170,10 @@ Chapter 1: The Beginning
 		mockOrderBy.mockResolvedValueOnce(existingChapters);
 		mockOrderBy.mockResolvedValueOnce(existingScenes);
 
-		const result = await saveProjectStructure({ projectId, structureText: text });
+		const result = await saveProjectStructure({
+			projectId,
+			structureText: text,
+		});
 
 		expect(result.success).toBe(true);
 
@@ -203,7 +209,10 @@ Chapter 1: The Beginning
 		// Mock insert for new chapter
 		mockReturning.mockResolvedValueOnce([{ id: "ch-2" }]);
 
-		const result = await saveProjectStructure({ projectId, structureText: text });
+		const result = await saveProjectStructure({
+			projectId,
+			structureText: text,
+		});
 
 		expect(result.success).toBe(true);
 

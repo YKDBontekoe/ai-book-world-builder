@@ -2,7 +2,7 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
-import { BookOpen, Download, FileText, Trash2 } from "lucide-react";
+import { BookOpen, Download, FileText, Trash2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -27,6 +27,7 @@ interface ExportListProps {
 
 export function ExportList({ exports }: ExportListProps) {
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	const [showConfirmation, setShowConfirmation] = useState(false);
 	const router = useRouter();
 
 	const toggleSelection = (id: string) => {
@@ -37,6 +38,7 @@ export function ExportList({ exports }: ExportListProps) {
 			newSelection.add(id);
 		}
 		setSelectedIds(newSelection);
+		setShowConfirmation(false); // Reset confirmation if selection changes
 	};
 
 	const toggleAll = () => {
@@ -45,6 +47,7 @@ export function ExportList({ exports }: ExportListProps) {
 		} else {
 			setSelectedIds(new Set(exports.map((e) => e.id)));
 		}
+		setShowConfirmation(false);
 	};
 
 	const { mutate: handleBulkDelete, isPending: isDeleting } = useMutation({
@@ -58,6 +61,7 @@ export function ExportList({ exports }: ExportListProps) {
 		onSuccess: () => {
 			toast.success(`Deleted ${selectedIds.size} exports`);
 			setSelectedIds(new Set());
+			setShowConfirmation(false);
 			router.refresh();
 		},
 		onError: () => {
@@ -82,7 +86,7 @@ export function ExportList({ exports }: ExportListProps) {
 	}
 
 	return (
-		<div className="relative grid gap-4">
+		<div className="relative grid gap-4 pb-24">
 			<div className="flex items-center justify-between mb-2 px-2">
 				<div className="flex items-center gap-2">
 					<Checkbox
@@ -121,12 +125,12 @@ export function ExportList({ exports }: ExportListProps) {
 								onClick={(e) => e.stopPropagation()}
 							/>
 							{exportItem.format === "pdf" ? (
-								<div className="p-2 rounded-lg bg-red-500/10 text-red-500">
-									<FileText className="size-6" />
+								<div className="p-2.5 rounded-xl bg-red-500/10 text-red-500">
+									<FileText size={24} />
 								</div>
 							) : (
-								<div className="p-2 rounded-lg bg-blue-500/10 text-blue-500">
-									<BookOpen className="size-6" />
+								<div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500">
+									<BookOpen size={24} />
 								</div>
 							)}
 							<div>
@@ -191,37 +195,60 @@ export function ExportList({ exports }: ExportListProps) {
 					>
 						<GlassCard
 							variant="liquid"
-							className="p-4 flex items-center justify-between shadow-xl border-primary/20 bg-background/80 backdrop-blur-xl"
+							className="p-4 flex items-center justify-between shadow-xl border-primary/20 bg-background/80 backdrop-blur-xl rounded-2xl"
 						>
-							<span className="font-medium text-sm">
-								{selectedIds.size} item{selectedIds.size !== 1 ? "s" : ""}{" "}
-								selected
-							</span>
 							<div className="flex items-center gap-2">
 								<Button
 									variant="ghost"
-									size="sm"
-									onClick={() => setSelectedIds(new Set())}
-								>
-									Cancel
-								</Button>
-								<Button
-									variant="destructive"
-									size="sm"
+									size="icon"
+									className="h-8 w-8 rounded-full"
 									onClick={() => {
-										if (confirm(`Delete ${selectedIds.size} exports?`)) {
-											handleBulkDelete();
-										}
+										setSelectedIds(new Set());
+										setShowConfirmation(false);
 									}}
-									disabled={isDeleting}
 								>
-									{isDeleting ? (
-										<div className="animate-spin mr-2 h-4 w-4 border-2 border-current border-t-transparent rounded-full" />
-									) : (
-										<Trash2 className="mr-2 h-4 w-4" />
-									)}
-									Delete Selected
+									<X className="h-4 w-4" />
 								</Button>
+								<span className="font-medium text-sm">
+									{selectedIds.size} selected
+								</span>
+							</div>
+
+							<div className="flex items-center gap-2">
+								{showConfirmation ? (
+									<>
+										<span className="text-xs text-muted-foreground mr-1">
+											Are you sure?
+										</span>
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={() => setShowConfirmation(false)}
+										>
+											Cancel
+										</Button>
+										<Button
+											variant="destructive"
+											size="sm"
+											onClick={() => handleBulkDelete()}
+											disabled={isDeleting}
+										>
+											{isDeleting && (
+												<div className="animate-spin mr-2 h-3 w-3 border-2 border-current border-t-transparent rounded-full" />
+											)}
+											Yes, Delete
+										</Button>
+									</>
+								) : (
+									<Button
+										variant="destructive"
+										size="sm"
+										onClick={() => setShowConfirmation(true)}
+									>
+										<Trash2 className="mr-2 h-4 w-4" />
+										Delete Selected
+									</Button>
+								)}
 							</div>
 						</GlassCard>
 					</motion.div>

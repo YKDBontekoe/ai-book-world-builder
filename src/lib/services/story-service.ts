@@ -11,8 +11,8 @@ import {
 	bookPlanSchema,
 	type StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
-import { logGenerationUsage } from "@/lib/services/usage-logger";
 import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
+import { logGenerationUsage } from "@/lib/services/usage-logger";
 
 // Re-export types for backward compatibility
 export type { BookPlan, StoryStyle };

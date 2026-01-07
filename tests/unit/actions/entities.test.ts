@@ -165,7 +165,10 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		const result = await updateEntityAction({ id: entity.id, projectId });
-		expect(result).toEqual({ success: false, error: "Access denied to entity" });
+		expect(result).toEqual({
+			success: false,
+			error: "Access denied to entity",
+		});
 		expect(mockedUpdate).not.toHaveBeenCalled();
 	});
 
@@ -208,7 +211,10 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		const result = await deleteEntityAction({ id: entity.id });
-		expect(result).toEqual({ success: false, error: "Access denied to entity" });
+		expect(result).toEqual({
+			success: false,
+			error: "Access denied to entity",
+		});
 		expect(mockedDelete).not.toHaveBeenCalled();
 	});
 

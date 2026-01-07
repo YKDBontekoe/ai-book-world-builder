@@ -1,7 +1,11 @@
 import { tool } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { db, getProjectByIdWithAccess, getVolumePlanById } from "@/lib/db/queries";
+import {
+	db,
+	getProjectByIdWithAccess,
+	getVolumePlanById,
+} from "@/lib/db/queries";
 import { chapter } from "@/lib/db/schema";
 
 export const batchCreateChapters = ({
@@ -67,7 +71,8 @@ export const batchCreateChapters = ({
 
 				if (!project || project.userId !== session.user.id) {
 					return {
-						error: "Unauthorized: You do not have write access to this project.",
+						error:
+							"Unauthorized: You do not have write access to this project.",
 					};
 				}
 

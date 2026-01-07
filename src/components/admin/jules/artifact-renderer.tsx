@@ -123,7 +123,8 @@ function ArtifactItem({ artifact }: { artifact: JulesArtifact }) {
 						<ScrollArea className="h-64 w-full bg-background">
 							<div className="p-3">
 								<div className="text-muted-foreground mb-2">
-									{"// "}{gitPatch.suggestedCommitMessage}
+									{"// "}
+									{gitPatch.suggestedCommitMessage}
 								</div>
 								<pre className="whitespace-pre-wrap text-[10px] leading-relaxed">
 									{gitPatch.unidiffPatch}

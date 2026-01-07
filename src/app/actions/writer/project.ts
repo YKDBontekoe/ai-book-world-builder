@@ -1,6 +1,8 @@
 "use server";
 
 import { asc, eq } from "drizzle-orm";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
@@ -11,9 +13,6 @@ import {
 } from "@/lib/db/queries/volume";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, project } from "@/lib/db/schema";
-
-import { z } from "zod";
-import { createUserAction } from "@/lib/action-middleware";
 
 const projectIdSchema = z.object({
 	projectId: z.string().uuid(),
