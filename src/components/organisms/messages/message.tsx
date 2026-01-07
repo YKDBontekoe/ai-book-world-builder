@@ -178,7 +178,9 @@ export const PreviewMessage = memo(
 			}
 		}
 
-		// Check usage (object) - check reference first
+		// Check usage (object) - First compare references (O(1)) to short-circuit the expensive
+		// deep comparison (O(N)). Only perform deep check if references differ, preventing
+		// unnecessary work when the usage object is referentially stable.
 		if (prevProps.message.usage !== nextProps.message.usage) {
 			if (!equal(prevProps.message.usage, nextProps.message.usage)) {
 				return false;
