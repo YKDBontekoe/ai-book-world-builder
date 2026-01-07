@@ -454,7 +454,7 @@ export class ProjectService {
 
 								// Resolve prevSceneId using the pre-filled map
 								const newPrevId = old.prevSceneId
-									? sceneIdMap.get(old.prevSceneId) ?? null
+									? (sceneIdMap.get(old.prevSceneId) ?? null)
 									: null;
 
 								const { id: _id, ...data } = old;

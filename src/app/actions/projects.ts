@@ -120,7 +120,7 @@ export async function deleteProjects(projectIds: string[]) {
 		session.user.id,
 	);
 
-	if (result.success) {
+	if ("success" in result && result.success) {
 		revalidatePath("/projects");
 	}
 
@@ -139,7 +139,7 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 		newName,
 	);
 
-	if (result.success) {
+	if ("success" in result && result.success) {
 		revalidatePath("/projects");
 	}
 
