@@ -1,14 +1,11 @@
 "use server";
 
-import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
-import { db } from "@/lib/db/drizzle";
 import { projectRepository } from "@/lib/db/repositories";
 import { projectService } from "@/lib/services/project-service";
-import { project } from "@/lib/db/schema";
 
 // Validation Schemas
 const createProjectSchema = z.object({
@@ -23,7 +20,7 @@ const renameProjectSchema = z.object({
 });
 
 // Helper for chunked inserts
-async function chunkedInsert<T>(
+async function _chunkedInsert<T>(
 	tx: any,
 	table: any,
 	items: T[],
@@ -131,6 +128,13 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 	const session = await auth();
 	if (!session?.user?.id) {
 		return { error: "Unauthorized" };
+	}
+
+	// Validate originalProjectId is a valid UUID
+	const idSchema = z.string().uuid();
+	const validation = idSchema.safeParse(originalProjectId);
+	if (!validation.success) {
+		return { error: "Invalid project id" };
 	}
 
 	const result = await projectService.forkProject(

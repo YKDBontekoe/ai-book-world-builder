@@ -1,6 +1,8 @@
 import "server-only";
 
-import { eq, inArray } from "drizzle-orm";
+import { type ExtractTablesWithRelations, eq, inArray } from "drizzle-orm";
+import type { PgTransaction } from "drizzle-orm/pg-core";
+import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 import { db } from "@/lib/db/drizzle";
 import { projectRepository } from "@/lib/db/repositories";
 import {
@@ -22,16 +24,22 @@ import {
 	storyState,
 	volume,
 } from "@/lib/db/schema";
+import type * as schema from "@/lib/db/schema";
 
 // Helper for chunked inserts
-async function chunkedInsert<T>(
-	tx: any,
-	table: any,
+async function chunkedInsert<T extends Record<string, unknown>, TTable>(
+	tx: PgTransaction<
+		PostgresJsQueryResultHKT,
+		typeof schema,
+		ExtractTablesWithRelations<typeof schema>
+	>,
+	table: TTable,
 	items: T[],
 	chunkSize = 1000,
 ) {
 	for (let i = 0; i < items.length; i += chunkSize) {
 		const chunk = items.slice(i, i + chunkSize);
+		// @ts-expect-error - Dynamic table insertion is tricky with Drizzle types
 		await tx.insert(table).values(chunk);
 	}
 }

@@ -5,6 +5,7 @@ import {
 	Expand,
 	Feather,
 	Globe,
+	Search,
 } from "lucide-react";
 
 export const TOOLS = [
@@ -29,6 +30,7 @@ export const TOOLS = [
 		color: "text-orange-400",
 	},
 	{ id: "lore", icon: Globe, label: "Lore", color: "text-pink-400" },
+	{ id: "search", icon: Search, label: "Search", color: "text-blue-400" },
 ] as const;
 
 export type ToolId = (typeof TOOLS)[number]["id"];

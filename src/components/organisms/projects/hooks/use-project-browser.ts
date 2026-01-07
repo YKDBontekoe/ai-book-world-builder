@@ -34,24 +34,6 @@ export function useProjectBrowser(projects: Project[]) {
 	const undoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 	const router = useRouter();
 
-	const handleSelect = (id: string) => {
-		const newSelected = new Set(selectedIds);
-		if (newSelected.has(id)) {
-			newSelected.delete(id);
-		} else {
-			newSelected.add(id);
-		}
-		setSelectedIds(newSelected);
-	};
-
-	const handleSelectAll = () => {
-		if (selectedIds.size === filteredProjects.length) {
-			setSelectedIds(new Set());
-		} else {
-			setSelectedIds(new Set(filteredProjects.map((p) => p.id)));
-		}
-	};
-
 	const filteredProjects = useMemo(() => {
 		let result = [...projects];
 
@@ -102,6 +84,24 @@ export function useProjectBrowser(projects: Project[]) {
 		visibilityFilter,
 	]);
 
+	const handleSelect = (id: string) => {
+		const newSelected = new Set(selectedIds);
+		if (newSelected.has(id)) {
+			newSelected.delete(id);
+		} else {
+			newSelected.add(id);
+		}
+		setSelectedIds(newSelected);
+	};
+
+	const handleSelectAll = () => {
+		if (selectedIds.size === filteredProjects.length) {
+			setSelectedIds(new Set());
+		} else {
+			setSelectedIds(new Set(filteredProjects.map((p) => p.id)));
+		}
+	};
+
 	// Clean up timeout and trigger pending deletions on unmount
 	useEffect(() => {
 		return () => {
@@ -136,7 +136,7 @@ export function useProjectBrowser(projects: Project[]) {
 	}, []);
 
 	const handleDelete = useCallback(
-		(idsToDelete: string[], onUndo?: () => void) => {
+		(idsToDelete: string[]) => {
 			if (idsToDelete.length === 0) return;
 
 			// 1. Optimistic Update
@@ -164,20 +164,21 @@ export function useProjectBrowser(projects: Project[]) {
 			if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current);
 
 			undoTimeoutRef.current = setTimeout(async () => {
-				// Execute deletion
-				const result = await deleteProjects(idsToDelete);
+				try {
+					const result = await deleteProjects(idsToDelete);
+					pendingDeletionRef.current = null;
+					undoTimeoutRef.current = null;
 
-				// Clear pending state as we've executed it
-				pendingDeletionRef.current = null;
-				undoTimeoutRef.current = null;
-
-				if (result?.error) {
+					if (result?.error) {
+						toast.error("Failed to delete projects");
+						undoDelete(idsToDelete);
+					}
+				} catch (err) {
+					console.error("Delete projects error:", err);
 					toast.error("Failed to delete projects");
-					// Revert optimistic update
 					undoDelete(idsToDelete);
-				} else {
-					// Success
-					// Optimistic state remains applied until revalidation/remount
+					pendingDeletionRef.current = null;
+					undoTimeoutRef.current = null;
 				}
 			}, 4500); // Slightly less than toast duration
 		},

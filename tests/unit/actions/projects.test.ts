@@ -79,7 +79,7 @@ describe("forkProject Action", () => {
 		// Setup: Mock counts to exceed limit
 		mockDb.$count.mockResolvedValueOnce(1500).mockResolvedValueOnce(600); // Total 2100
 
-		const result = await forkProject("proj-123");
+		const result = await forkProject("123e4567-e89b-12d3-a456-426614174000");
 		expect(result).toEqual({
 			error:
 				"Project is too large to fork instantly. Please export and import instead.",
@@ -122,7 +122,7 @@ describe("forkProject Action", () => {
 			return resolve(response);
 		});
 
-		const result = await forkProject("proj-123");
+		const result = await forkProject("123e4567-e89b-12d3-a456-426614174000");
 
 		expect(result).toEqual({ success: true, projectId: "new-proj-id" });
 		expect(mockDb.transaction).toHaveBeenCalled();
