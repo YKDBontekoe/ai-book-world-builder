@@ -169,7 +169,9 @@ export const PreviewMessage = memo(
 			return false;
 		}
 
-		// Check parts (array/deep) - check reference first to avoid O(N) deep compare
+		// Check parts (array/deep) - First compare references (O(1)) to short-circuit the expensive
+		// deep comparison (O(N)). Only perform deep check if references differ, preventing
+		// unnecessary work when the parts array is referentially stable.
 		if (prevProps.message.parts !== nextProps.message.parts) {
 			if (!equal(prevProps.message.parts, nextProps.message.parts)) {
 				return false;
