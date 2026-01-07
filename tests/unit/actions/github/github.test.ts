@@ -1,40 +1,45 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { auth } from "@/app/(auth)/auth";
 import * as githubActions from "@/app/actions/github";
 
-// Mock Octokit instance methods
-const mockOctokit = {
-	rest: {
-		repos: {
-			get: vi.fn(),
-		},
-		issues: {
-			listForRepo: vi.fn(),
-			get: vi.fn(),
-			listComments: vi.fn(),
-			createComment: vi.fn(),
-			update: vi.fn(),
-		},
-		pulls: {
-			list: vi.fn(),
-			get: vi.fn(),
-			merge: vi.fn(),
+const mocks = vi.hoisted(() => ({
+	octokit: {
+		rest: {
+			repos: {
+				get: vi.fn(),
+			},
+			issues: {
+				listForRepo: vi.fn(),
+				get: vi.fn(),
+				listComments: vi.fn(),
+				createComment: vi.fn(),
+				update: vi.fn(),
+			},
+			pulls: {
+				list: vi.fn(),
+				get: vi.fn(),
+				merge: vi.fn(),
+			},
 		},
 	},
-};
+	auth: vi.fn(),
+}));
 
 // Mock Octokit constructor as a class
 vi.mock("octokit", () => {
 	return {
-		Octokit: vi.fn().mockImplementation(() => mockOctokit),
+		Octokit: class {
+			constructor() {
+				return mocks.octokit;
+			}
+		},
 	};
 });
 
 // Mock auth
 vi.mock("@/app/(auth)/auth", () => ({
-	auth: vi.fn(),
+	auth: mocks.auth,
 }));
-
-import { auth } from "@/app/(auth)/auth";
 
 describe("GitHub Actions", () => {
 	const originalEnv = process.env;
@@ -47,7 +52,7 @@ describe("GitHub Actions", () => {
 		process.env.GITHUB_TOKEN = "test-token";
 
 		// Default to authorized admin
-		(auth as any).mockResolvedValue({
+		mocks.auth.mockResolvedValue({
 			user: { id: "admin-id", role: "admin" },
 		});
 	});
@@ -58,7 +63,7 @@ describe("GitHub Actions", () => {
 
 	describe("Authorization", () => {
 		it("should fail if user is not logged in", async () => {
-			(auth as any).mockResolvedValue({ user: null });
+			mocks.auth.mockResolvedValue({ user: null });
 
 			const result = await githubActions.getRepoStats();
 
@@ -71,7 +76,7 @@ describe("GitHub Actions", () => {
 		});
 
 		it("should fail if user is not admin", async () => {
-			(auth as any).mockResolvedValue({
+			mocks.auth.mockResolvedValue({
 				user: { id: "user-id", role: "user" },
 			});
 
@@ -86,7 +91,7 @@ describe("GitHub Actions", () => {
 
 	describe("getRepoStats", () => {
 		it("should fetch repo stats successfully using env vars", async () => {
-			mockOctokit.rest.repos.get.mockResolvedValue({
+			mocks.octokit.rest.repos.get.mockResolvedValue({
 				data: {
 					stargazers_count: 100,
 					forks_count: 20,
@@ -96,7 +101,7 @@ describe("GitHub Actions", () => {
 
 			const result = await githubActions.getRepoStats();
 
-			expect(mockOctokit.rest.repos.get).toHaveBeenCalledWith({
+			expect(mocks.octokit.rest.repos.get).toHaveBeenCalledWith({
 				owner: "TestOwner",
 				repo: "TestRepo",
 			});
@@ -112,7 +117,7 @@ describe("GitHub Actions", () => {
 		});
 
 		it("should handle errors gracefully", async () => {
-			mockOctokit.rest.repos.get.mockRejectedValue(new Error("API Error"));
+			mocks.octokit.rest.repos.get.mockRejectedValue(new Error("API Error"));
 
 			const result = await githubActions.getRepoStats();
 
@@ -122,7 +127,7 @@ describe("GitHub Actions", () => {
 
 	describe("getIssues", () => {
 		it("should fetch issues and filter out PRs", async () => {
-			mockOctokit.rest.issues.listForRepo.mockResolvedValue({
+			mocks.octokit.rest.issues.listForRepo.mockResolvedValue({
 				data: [
 					{ number: 1, title: "Issue 1", pull_request: undefined }, // Issue
 					{ number: 2, title: "PR 1", pull_request: {} }, // PR
@@ -131,7 +136,7 @@ describe("GitHub Actions", () => {
 
 			const result = await githubActions.getIssues();
 
-			expect(mockOctokit.rest.issues.listForRepo).toHaveBeenCalledWith(
+			expect(mocks.octokit.rest.issues.listForRepo).toHaveBeenCalledWith(
 				expect.objectContaining({
 					owner: "TestOwner",
 					repo: "TestRepo",
@@ -148,7 +153,7 @@ describe("GitHub Actions", () => {
 
 	describe("getPullRequests", () => {
 		it("should fetch pull requests", async () => {
-			mockOctokit.rest.pulls.list.mockResolvedValue({
+			mocks.octokit.rest.pulls.list.mockResolvedValue({
 				data: [{ number: 2, title: "PR 1" }],
 			});
 
@@ -164,7 +169,7 @@ describe("GitHub Actions", () => {
 
 	describe("postComment", () => {
 		it("should post a comment successfully", async () => {
-			mockOctokit.rest.issues.createComment.mockResolvedValue({
+			mocks.octokit.rest.issues.createComment.mockResolvedValue({
 				data: { id: 123, body: "Test comment" },
 			});
 
@@ -177,7 +182,7 @@ describe("GitHub Actions", () => {
 			if (result.success) {
 				expect(result.data.body).toBe("Test comment");
 			}
-			expect(mockOctokit.rest.issues.createComment).toHaveBeenCalledWith(
+			expect(mocks.octokit.rest.issues.createComment).toHaveBeenCalledWith(
 				expect.objectContaining({
 					owner: "TestOwner",
 					repo: "TestRepo",
