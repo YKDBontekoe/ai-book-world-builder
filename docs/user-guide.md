@@ -26,45 +26,62 @@ The Project View is divided into three main panels to help you organize and writ
 
 1.  **Navigation (Left)**: This sidebar lists your Chapters and Scenes. Use it to jump between different parts of your book. It also contains the "Create Story" wizard when your project is empty.
 2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
-3.  **Canvas (Right)**: A visual board for your world. You can view your entities and their relationships here.
+3.  **Canvas (Right)**: A visual board for your world. Available panes include:
+    *   **Map**: Visual location tracking.
+    *   **Arc**: Pacing and tension visualization.
+    *   **Timeline**: Chronological event tracking.
+    *   **Network**: Entity relationship graph.
+    *   **Bible**: The core database of your characters and lore.
+    *   **Context**: Active context for the current scene.
 
 ## Writer Tools
 
-The Writer View includes specialized AI tools to assist your creative process. Access these via the **Tools** menu in the control bar at the bottom of the screen or the **Chapter Actions** menu.
+The Writer View includes specialized AI tools to assist your creative process.
 
-### 1. Generate Scenes (AI)
+### 1. Structure Power Editor
+Manage your entire book's outline as a simple text file.
+-   **Usage**: Click the **File Text** icon in the sidebar header.
+-   **Features**:
+    -   **Bulk Editing**: Type `Chapter 1: Title` and `Scene: Title` to rapidly build structure.
+    -   **Smart Format**: Automatically cleans up your text and numbering.
+    -   **Preview**: See a live tree view of your structure before saving.
+-   **Best For**: Rapidly prototyping a new book structure or reorganizing chapters.
+
+### 2. Time Travel
+Restore previous versions of your scene without losing progress.
+-   **Usage**: Click the **Clock** icon (Time Travel) at the bottom of the editor when a scene is active.
+-   **Controls**: Use the slider to step back through every save point.
+-   **Best For**: Recovering deleted text or comparing drafts.
+
+### 3. Generate Scenes (AI)
 Automatically drafts prose for planned scenes.
 -   **Usage**: Click the **Sparkles** icon next to a Chapter in the sidebar, then select **Generate Scenes (AI)**. The AI will draft content for all pending scenes in that chapter based on their summaries.
 -   **Note**: This tool processes a maximum of **5 scenes** at a time to ensure high-quality output and prevent network timeouts.
 -   **Best For**: Rapidly converting a chapter outline into a first draft.
 
-### 2. Rewrite
+### 4. Rewrite
 Refine existing scene content.
 -   **Usage**: Select a scene and provide instructions (e.g., "Make the dialogue more tense," "Show, don't tell") via the Tools menu.
 -   **Best For**: Polishing specific passages or changing the tone.
 
-### 3. Expand
+### 5. Expand
 Add depth and detail to a scene.
 -   **Usage**: Select a scene. The AI will elaborate on the existing content, adding sensory details and character introspection.
 -   **Best For**: Fleshng out "thin" scenes.
 
-### 4. Critique
+### 6. Critique
 Get feedback on your chapter.
 -   **Usage**: Select a chapter. The AI analyzes the structure, pacing, and character arcs, providing actionable feedback.
 -   **Best For**: Identifying weaknesses before editing.
 
-### 5. Consistency Check
+### 7. Consistency Check
 Ensure your story aligns with your world.
 -   **Usage**: The AI scans the chapter for contradictions with your defined Entities (Characters, Lore).
 -   **Best For**: catching plot holes or out-of-character behavior.
 
-### 6. Generate Lore
+### 8. Generate Lore
 Create new world entities from your ideas.
 -   **Usage**: Describe a character, location, or item. The AI will generate a structured entity entry in your World Bible.
-
-### 7. Search
-Quickly find information within your project.
--   **Usage**: Ask a question (e.g., "What color are the protagonist's eyes?"). The AI searches your project data for the answer.
 
 ## Book Generation Wizard
 
@@ -102,6 +119,7 @@ The chat interface is integrated into the **Floating Assistant** (Writer View).
 -   **Ask about your world**: "Who is the king of the Western Lands?" (It looks up your "Western Lands" entity).
 -   **Brainstorm**: "Give me 5 plot twists involving [Character Name]."
 -   **Drafting**: "Write a scene where [Character A] meets [Character B] for the first time."
+-   **Multimodal**: You can attach images or text files to the chat to provide additional context for the AI.
 
 > **Pro Tip**: Use the **"@"** key to explicitly reference a specific character or document in your chat.
 
