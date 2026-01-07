@@ -45,6 +45,7 @@ export const scene = pgTable(
 	(table) => ({
 		prevSceneIdx: index("scene_prev_scene_idx").on(table.prevSceneId),
 		chapterIdx: index("scene_chapter_idx").on(table.chapterId),
+		projectIdx: index("scene_project_idx").on(table.projectId),
 		sequenceIdx: uniqueIndex("scene_sequence_chapter_idx").on(
 			table.chapterId,
 			table.sequence,
