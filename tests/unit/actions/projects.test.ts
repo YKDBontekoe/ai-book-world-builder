@@ -1,22 +1,41 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted to ensure mocks are initialized before usage in vi.mock
-const { mockDb, mockProjectRepository, mockAuth } = vi.hoisted(() => ({
-	mockDb: {
+const { mockDb, mockProjectRepository, mockAuth } = vi.hoisted(() => {
+	const db: any = {
 		transaction: vi.fn(),
 		$count: vi.fn(),
-		select: vi.fn().mockReturnThis(),
-		from: vi.fn().mockReturnThis(),
-		where: vi.fn().mockReturnThis(),
-		insert: vi.fn().mockReturnThis(),
-		values: vi.fn().mockReturnThis(),
-		returning: vi.fn().mockReturnThis(),
-	},
-	mockProjectRepository: {
-		findByIdWithAccess: vi.fn(),
-	},
-	mockAuth: vi.fn(() => Promise.resolve({ user: { id: "user-123" } })),
-}));
+		select: vi.fn(),
+		from: vi.fn(),
+		where: vi.fn(),
+		limit: vi.fn(),
+		offset: vi.fn(),
+		insert: vi.fn(),
+		values: vi.fn(),
+		returning: vi.fn(),
+	};
+	// Make db chainable and thenable
+	db.select.mockReturnValue(db);
+	db.from.mockReturnValue(db);
+	db.where.mockReturnValue(db);
+	db.limit.mockReturnValue(db);
+	db.offset.mockReturnValue(db);
+	db.insert.mockReturnValue(db);
+	db.values.mockReturnValue(db);
+	db.returning.mockReturnValue(db);
+
+	// Default .then to resolve with empty array (simulating query execution)
+	// We use vi.fn() so it's tracked by Vitest
+	db.then = vi.fn((resolve: any) => resolve([]));
+
+	return {
+		mockDb: db,
+		mockProjectRepository: {
+			findByIdWithAccess: vi.fn(),
+		},
+		mockAuth: vi.fn(() => Promise.resolve({ user: { id: "user-123" } })),
+	};
+});
 
 // Apply mocks
 vi.mock("@/lib/db/drizzle", () => ({
@@ -42,12 +61,18 @@ describe("forkProject Action", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Reset chainable mocks default behavior
-		mockDb.select.mockReturnThis();
-		mockDb.from.mockReturnThis();
-		mockDb.where.mockReturnThis();
-		mockDb.insert.mockReturnThis();
-		mockDb.values.mockReturnThis();
-		mockDb.returning.mockReturnThis();
+		mockDb.select.mockReturnValue(mockDb);
+		mockDb.from.mockReturnValue(mockDb);
+		mockDb.where.mockReturnValue(mockDb);
+		mockDb.limit.mockReturnValue(mockDb);
+		mockDb.offset.mockReturnValue(mockDb);
+		mockDb.insert.mockReturnValue(mockDb);
+		mockDb.values.mockReturnValue(mockDb);
+		mockDb.returning.mockReturnValue(mockDb);
+
+		// Reset thenable behavior
+		mockDb.then.mockReset();
+		mockDb.then.mockImplementation((resolve: any) => resolve([]));
 	});
 
 	it("should fail if project is too large", async () => {
@@ -76,12 +101,26 @@ describe("forkProject Action", () => {
 			return callback(mockDb);
 		});
 
-		// Mock DB selects for parallel fetch
-		// We need to return empty arrays for the 9 queries in Promise.all
-		mockDb.where.mockResolvedValue([]);
+		// Deterministic query responses
+		const responses = [
+			[{ id: "new-proj-id" }], // 1. Insert Project
+			[], // 2. Select Entities Batch 1 (empty stops loop)
+			[], // 3. Select Attributes
+			[], // 4. Select Relationships
+			[], // 5. Select Outline
+			[], // 6. Select Volumes
+			[], // 7. Select Chapters
+			[], // 8. Select Drafts
+			[], // 9. Select Scene Metadata (ID Map)
+			[], // 10. Select Scenes Batch 1 (empty stops loop)
+			[], // 11. Select Scene Cards
+		];
+		let queryIndex = 0;
 
-		// Mock insert returning
-		mockDb.returning.mockResolvedValue([{ id: "new-proj-id" }]);
+		mockDb.then.mockImplementation((resolve: any) => {
+			const response = responses[queryIndex++] || [];
+			return resolve(response);
+		});
 
 		const result = await forkProject("proj-123");
 

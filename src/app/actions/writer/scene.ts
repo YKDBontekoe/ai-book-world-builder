@@ -1,8 +1,9 @@
 "use server";
 
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
+import { checkUsageQuota } from "@/lib/quota";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
 import { invalidateCache } from "@/lib/cache";
@@ -75,7 +76,7 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 		if (!currentChapter) throw new Error("Chapter not found");
 
 		// Write access required
-		await ensureProjectAccess(currentChapter.projectId, true);
+		const { project } = await ensureProjectAccess(currentChapter.projectId, true);
 
 		// Find previous scenes using repository
 		const scenes = await sceneRepository.findByChapter(chapterId);
@@ -91,7 +92,13 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 		const cookieStore = await cookies();
 		const modelId = cookieStore.get("chat-model")?.value;
 
-		// 2. Generate Content
+		// 2. Rate Limiting Check
+		const hasQuota = await checkUsageQuota(project.userId);
+		if (!hasQuota) {
+			return { success: false, error: "Usage quota exceeded" };
+		}
+
+		// 3. Generate Content
 		const generation = await continueWriting(context, prevContent, { modelId });
 
 		if (generation.error || !generation.text) {
@@ -269,17 +276,23 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 			}
 		}
 
-		// Update sequences in a transaction
-		await db.transaction(async (tx) => {
-			for (let i = 0; i < sceneIds.length; i++) {
-				await tx
-					.update(scene)
-					.set({ sequence: i + 1, updatedAt: new Date() })
-					.where(
-						and(eq(scene.id, sceneIds[i]), eq(scene.chapterId, chapterId)),
-					);
-			}
-		});
+		// Update sequences using a single SQL UPDATE with CASE statement
+		// This avoids N+1 database round-trips.
+		const sqlChunks = [];
+		sqlChunks.push(sql`(case`);
+		for (let i = 0; i < sceneIds.length; i++) {
+			sqlChunks.push(sql`when ${scene.id} = ${sceneIds[i]} then ${i + 1}`);
+		}
+		sqlChunks.push(sql`else ${scene.sequence} end)`);
+
+		const finalSql = sql.join(sqlChunks, sql` `);
+
+		await db
+			.update(scene)
+			.set({ sequence: finalSql, updatedAt: new Date() })
+			.where(
+				and(eq(scene.chapterId, chapterId), inArray(scene.id, sceneIds)),
+			);
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 

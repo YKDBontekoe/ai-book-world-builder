@@ -290,13 +290,25 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 			const sceneIdMap = new Map<string, string>();
 
 			// 2. Entities (Fetch & Insert)
+			// Using offset-based batching to avoid loading all entities into memory at once
 			{
-				const oldEntities = await tx
-					.select()
-					.from(entity)
-					.where(eq(entity.projectId, originalProjectId));
+				const limit = 100;
+				let offset = 0;
+				let hasMore = true;
 
-				if (oldEntities.length > 0) {
+				while (hasMore) {
+					const oldEntities = await tx
+						.select()
+						.from(entity)
+						.where(eq(entity.projectId, originalProjectId))
+						.limit(limit)
+						.offset(offset);
+
+					if (oldEntities.length === 0) {
+						hasMore = false;
+						break;
+					}
+
 					const newEntities = oldEntities.map((old) => {
 						const newId = crypto.randomUUID();
 						entityIdMap.set(old.id, newId);
@@ -309,7 +321,9 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 							updatedAt: new Date(),
 						};
 					});
+
 					await chunkedInsert(tx, entity, newEntities);
+					offset += limit;
 				}
 			} // oldEntities scope ends
 
@@ -493,25 +507,67 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 			}
 
 			// 9. Scenes (Fetch, Map, Insert)
+			// Using batch processing for Scenes (heaviest table)
 			{
-				const oldScenes = await tx
-					.select()
+				const limit = 50; // Smaller batch due to text content size
+				let offset = 0;
+				let hasMore = true;
+
+				// We need to fetch ALL IDs first to map prevSceneId correctly across batches,
+				// OR we handle re-linking in a separate pass.
+				// For simplicity and correctness with the linked list, we'll fetch ID+PrevID separately first (lightweight),
+				// then fetch content in batches.
+
+				// 1. Light fetch for ID Mapping
+				const allSceneMeta = await tx
+					.select({
+						id: scene.id,
+						prevSceneId: scene.prevSceneId,
+						chapterId: scene.chapterId,
+					})
 					.from(scene)
 					.where(eq(scene.projectId, originalProjectId));
 
-				if (oldScenes.length > 0) {
+				for (const meta of allSceneMeta) {
+					sceneIdMap.set(meta.id, crypto.randomUUID());
+				}
+
+				// 2. Heavy fetch and insert in batches
+				while (hasMore) {
+					const batch = await tx
+						.select()
+						.from(scene)
+						.where(eq(scene.projectId, originalProjectId))
+						.limit(limit)
+						.offset(offset);
+
+					if (batch.length === 0) {
+						hasMore = false;
+						break;
+					}
+
 					const newScenesToInsert = [];
-					// First pass: Generate IDs and basic mapping
-					for (const old of oldScenes) {
+					for (const old of batch) {
 						const newChapterId = chapterIdMap.get(old.chapterId);
 						if (newChapterId) {
-							const newId = crypto.randomUUID();
-							sceneIdMap.set(old.id, newId);
+							const newId = sceneIdMap.get(old.id);
+							if (!newId) {
+								console.error(`Missing ID mapping for scene ${old.id}`);
+								// Continue or throw? Throwing is safer for integrity.
+								throw new Error(`Failed to map scene ID for ${old.id}`);
+							}
+
+							// Resolve prevSceneId using the pre-filled map
+							const newPrevId = old.prevSceneId
+								? sceneIdMap.get(old.prevSceneId) ?? null
+								: null;
+
 							const { id: _id, ...data } = old;
 							newScenesToInsert.push({
 								...data,
 								id: newId,
 								chapterId: newChapterId,
+								prevSceneId: newPrevId,
 								projectId: newProject.id,
 								createdAt: new Date(),
 								updatedAt: new Date(),
@@ -519,18 +575,10 @@ export async function forkProject(originalProjectId: string, newName?: string) {
 						}
 					}
 
-					// Second pass: Resolve prevSceneId
-					const resolvedScenes = newScenesToInsert.map((s) => {
-						const oldPrev = s.prevSceneId;
-						if (oldPrev && sceneIdMap.has(oldPrev)) {
-							return { ...s, prevSceneId: sceneIdMap.get(oldPrev) };
-						}
-						return { ...s, prevSceneId: null };
-					});
-
-					if (resolvedScenes.length > 0) {
-						await chunkedInsert(tx, scene, resolvedScenes);
+					if (newScenesToInsert.length > 0) {
+						await chunkedInsert(tx, scene, newScenesToInsert);
 					}
+					offset += limit;
 				}
 			}
 
