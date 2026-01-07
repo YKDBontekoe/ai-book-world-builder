@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { AnalyzeBookButton } from "@/app/(chat)/inspiration/analyze-button";
+import { Button } from "@/components/atoms/button";
 import { FileIcon } from "@/components/atoms/file-icon";
 import { GridList } from "@/components/atoms/grid-list";
 import { StatusBadge } from "@/components/atoms/status-badge";
@@ -43,12 +44,9 @@ export default async function InspirationPage() {
 					description="Upload a PDF, EPUB, DOCX, or TXT file to any project to analyze it for characters, locations, and story elements."
 					icon={BookOpen}
 					action={
-						<Link
-							href="/"
-							className="text-primary hover:underline text-sm font-medium"
-						>
-							Go to Projects →
-						</Link>
+						<Button asChild>
+							<Link href="/">Go to Projects</Link>
+						</Button>
 					}
 				/>
 			) : (
@@ -70,7 +68,7 @@ export default async function InspirationPage() {
 										<div className="flex items-start justify-between gap-4">
 											<div className="flex items-start gap-4">
 												<div className="p-2.5 rounded-xl bg-primary/5 ring-1 ring-primary/10">
-													<FileIcon mimeType={material.mimeType} size={28} />
+													<FileIcon mimeType={material.mimeType} size={24} />
 												</div>
 												<div>
 													<h3 className="font-semibold text-base leading-tight">
@@ -116,7 +114,7 @@ export default async function InspirationPage() {
 										className="flex items-center justify-between p-6 opacity-75"
 									>
 										<div className="flex items-center gap-4">
-											<div className="p-2 rounded-xl bg-muted/20">
+											<div className="p-2.5 rounded-xl bg-muted/20">
 												<FileIcon
 													mimeType={material.mimeType}
 													className="opacity-50"

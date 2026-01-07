@@ -396,4 +396,3 @@ function parseStructureText(text: string): ParsedChapter[] {
 
 	return chapters;
 }
-

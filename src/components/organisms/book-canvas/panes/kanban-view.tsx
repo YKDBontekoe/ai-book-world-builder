@@ -4,8 +4,8 @@ import {
 	DndContext,
 	type DragEndEvent,
 	type DragOverEvent,
-	type DragStartEvent,
 	DragOverlay,
+	type DragStartEvent,
 	PointerSensor,
 	useSensor,
 	useSensors,
@@ -17,9 +17,9 @@ import { GripVertical } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import {
-	type SerializedChapterWithScenes,
-	type SerializedScene,
+import type {
+	SerializedChapterWithScenes,
+	SerializedScene,
 } from "@/app/actions/scene-data";
 import { updateSceneStatus } from "@/app/actions/writer/scene-status";
 import { Badge } from "@/components/atoms/badge";
@@ -218,7 +218,9 @@ export function KanbanView({
 						</div>
 						<ScrollArea className="flex-1">
 							<div className="p-2 flex flex-col gap-2 min-h-[150px]">
-								<SortableContext items={scenesByStatus[col.id]?.map((s) => s.id) || []}>
+								<SortableContext
+									items={scenesByStatus[col.id]?.map((s) => s.id) || []}
+								>
 									{scenesByStatus[col.id]?.map((scene) => (
 										<KanbanCard
 											key={scene.id}

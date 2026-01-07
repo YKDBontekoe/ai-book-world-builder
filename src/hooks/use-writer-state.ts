@@ -83,16 +83,12 @@ export function useWriterState({
 	);
 
 	// Use extracted hook for content management
-	const {
-		sceneContent,
-		isSaving,
-		lastSaved,
-		handleContentChange,
-	} = useSceneContent({
-		activeSceneId: activeSceneId || undefined,
-		initialContent: activeScene?.content ?? undefined,
-		onContentUpdate,
-	});
+	const { sceneContent, isSaving, lastSaved, handleContentChange } =
+		useSceneContent({
+			activeSceneId: activeSceneId || undefined,
+			initialContent: activeScene?.content ?? undefined,
+			onContentUpdate,
+		});
 
 	const fetchStructure = useCallback(async () => {
 		setLoading(true);

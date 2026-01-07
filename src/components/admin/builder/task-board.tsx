@@ -122,10 +122,12 @@ export function TaskBoard(): JSX.Element {
 			)
 			.map((s) => ({ type: "session", data: s }));
 
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map((p) => ({
-			type: "pr",
-			data: p,
-		}));
+		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map(
+			(p) => ({
+				type: "pr",
+				data: p,
+			}),
+		);
 
 		const doneItems: TaskItem[] = [
 			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({

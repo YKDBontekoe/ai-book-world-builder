@@ -1,13 +1,22 @@
-import { render, screen, waitFor, fireEvent, act } from "@testing-library/react";
-import type { RenderResult } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
-import { TaskBoard } from "@/components/admin/builder/task-board";
-import { getIssues, getPullRequests } from "@/app/actions/github";
-import { getJulesSessionsAction, listJulesSourcesAction } from "@/app/actions/jules";
-import { startFixSessionAction } from "@/app/actions/builder";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { RenderResult } from "@testing-library/react";
+import {
+	act,
+	fireEvent,
+	render,
+	screen,
+	waitFor,
+} from "@testing-library/react";
 import type { JSX, ReactNode } from "react";
 import { toast } from "sonner";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { startFixSessionAction } from "@/app/actions/builder";
+import { getIssues, getPullRequests } from "@/app/actions/github";
+import {
+	getJulesSessionsAction,
+	listJulesSourcesAction,
+} from "@/app/actions/jules";
+import { TaskBoard } from "@/components/admin/builder/task-board";
 
 // Mock dependencies
 vi.mock("@/app/actions/github", () => ({
@@ -40,7 +49,15 @@ vi.mock("lucide-react", () => ({
 
 // Mock GlassCard to forward onClick
 vi.mock("@/components/molecules/glass-card", () => ({
-	GlassCard: ({ children, className, onClick }: { children: ReactNode; className?: string; onClick?: () => void }) => (
+	GlassCard: ({
+		children,
+		className,
+		onClick,
+	}: {
+		children: ReactNode;
+		className?: string;
+		onClick?: () => void;
+	}) => (
 		// biome-ignore lint/a11y/useKeyWithClickEvents: Mock component for testing
 		<div className={className} onClick={onClick} data-testid="glass-card">
 			{children}
@@ -52,7 +69,9 @@ vi.mock("@/components/admin/github/item-detail", () => ({
 	ItemDetail: ({ onBack }: { onBack: () => void }) => (
 		<div>
 			<h1>Item Detail</h1>
-			<button type="button" onClick={onBack}>Back</button>
+			<button type="button" onClick={onBack}>
+				Back
+			</button>
 		</div>
 	),
 }));
@@ -61,7 +80,9 @@ vi.mock("@/components/admin/jules/jules-chat", () => ({
 	JulesChat: ({ onBack }: { onBack: () => void }) => (
 		<div>
 			<h1>Jules Chat</h1>
-			<button type="button" onClick={onBack}>Back</button>
+			<button type="button" onClick={onBack}>
+				Back
+			</button>
 		</div>
 	),
 }));
@@ -71,21 +92,20 @@ vi.mock("@/components/admin/builder/create-feature-dialog", () => ({
 }));
 
 // Setup QueryClient
-const createTestQueryClient = () => new QueryClient({
-	defaultOptions: {
-		queries: {
-			retry: false,
-			gcTime: 0,
+const createTestQueryClient = () =>
+	new QueryClient({
+		defaultOptions: {
+			queries: {
+				retry: false,
+				gcTime: 0,
+			},
 		},
-	},
-});
+	});
 
 const renderWithClient = (ui: JSX.Element): RenderResult => {
 	const queryClient = createTestQueryClient();
 	return render(
-		<QueryClientProvider client={queryClient}>
-			{ui}
-		</QueryClientProvider>
+		<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
 	);
 };
 
@@ -110,7 +130,10 @@ const createMockSession = (overrides = {}) => ({
 	title: "Test Session Title",
 	createTime: new Date().toISOString(),
 	updateTime: new Date().toISOString(),
-	sourceContext: { source: "source1", githubRepoContext: { startingBranch: "main" } },
+	sourceContext: {
+		source: "source1",
+		githubRepoContext: { startingBranch: "main" },
+	},
 	url: "http://jules.google.com/sessions/123",
 	...overrides,
 });
@@ -120,10 +143,19 @@ describe("TaskBoard", () => {
 		vi.resetAllMocks();
 
 		// Default successful mocks
-		vi.mocked(listJulesSourcesAction).mockResolvedValue({ success: true, data: [{ name: "source1" }] } as any);
+		vi.mocked(listJulesSourcesAction).mockResolvedValue({
+			success: true,
+			data: [{ name: "source1" }],
+		} as any);
 		vi.mocked(getIssues).mockResolvedValue({ success: true, data: [] } as any);
-		vi.mocked(getPullRequests).mockResolvedValue({ success: true, data: [] } as any);
-		vi.mocked(getJulesSessionsAction).mockResolvedValue({ success: true, data: { sessions: [] } } as any);
+		vi.mocked(getPullRequests).mockResolvedValue({
+			success: true,
+			data: [],
+		} as any);
+		vi.mocked(getJulesSessionsAction).mockResolvedValue({
+			success: true,
+			data: { sessions: [] },
+		} as any);
 	});
 
 	afterEach(() => {
@@ -138,9 +170,18 @@ describe("TaskBoard", () => {
 	});
 
 	it("handles non-array API responses gracefully without crashing", async () => {
-		vi.mocked(getIssues).mockResolvedValue({ success: true, data: { unexpected: "object" } } as any);
-		vi.mocked(getPullRequests).mockResolvedValue({ success: true, data: { unexpected: "object" } } as any);
-		vi.mocked(getJulesSessionsAction).mockResolvedValue({ success: true, data: { sessions: { unexpected: "object" } } } as any);
+		vi.mocked(getIssues).mockResolvedValue({
+			success: true,
+			data: { unexpected: "object" },
+		} as any);
+		vi.mocked(getPullRequests).mockResolvedValue({
+			success: true,
+			data: { unexpected: "object" },
+		} as any);
+		vi.mocked(getJulesSessionsAction).mockResolvedValue({
+			success: true,
+			data: { sessions: { unexpected: "object" } },
+		} as any);
 
 		renderWithClient(<TaskBoard />);
 
@@ -151,9 +192,18 @@ describe("TaskBoard", () => {
 	});
 
 	it("handles failed API responses gracefully", async () => {
-		vi.mocked(getIssues).mockResolvedValue({ success: false, error: "Failed" } as any);
-		vi.mocked(getPullRequests).mockResolvedValue({ success: false, error: "Failed" } as any);
-		vi.mocked(getJulesSessionsAction).mockResolvedValue({ success: false, error: "Failed" } as any);
+		vi.mocked(getIssues).mockResolvedValue({
+			success: false,
+			error: "Failed",
+		} as any);
+		vi.mocked(getPullRequests).mockResolvedValue({
+			success: false,
+			error: "Failed",
+		} as any);
+		vi.mocked(getJulesSessionsAction).mockResolvedValue({
+			success: false,
+			error: "Failed",
+		} as any);
 
 		renderWithClient(<TaskBoard />);
 
@@ -165,7 +215,10 @@ describe("TaskBoard", () => {
 
 	it("renders items and handles navigation to details", async () => {
 		const mockIssue = createMockIssue();
-		vi.mocked(getIssues).mockResolvedValue({ success: true, data: [mockIssue] } as any);
+		vi.mocked(getIssues).mockResolvedValue({
+			success: true,
+			data: [mockIssue],
+		} as any);
 
 		renderWithClient(<TaskBoard />);
 
@@ -173,7 +226,9 @@ describe("TaskBoard", () => {
 		// Use partial match function to handle potential whitespace issues in JSDOM
 		await waitFor(() => {
 			const headings = screen.getAllByRole("heading");
-			const issueHeading = headings.find(h => h.textContent?.includes("Test Issue"));
+			const issueHeading = headings.find((h) =>
+				h.textContent?.includes("Test Issue"),
+			);
 			expect(issueHeading).toBeInTheDocument();
 		});
 
@@ -182,9 +237,12 @@ describe("TaskBoard", () => {
 		fireEvent.click(cards[0]);
 
 		// Wait for navigation
-		await waitFor(() => {
-			expect(screen.getByText(/Item Detail/)).toBeInTheDocument();
-		}, { timeout: 3000 });
+		await waitFor(
+			() => {
+				expect(screen.getByText(/Item Detail/)).toBeInTheDocument();
+			},
+			{ timeout: 3000 },
+		);
 
 		fireEvent.click(screen.getByText(/Back/));
 
@@ -193,7 +251,10 @@ describe("TaskBoard", () => {
 
 	it("renders session items and handles navigation to chat", async () => {
 		const mockSession = createMockSession();
-		vi.mocked(getJulesSessionsAction).mockResolvedValue({ success: true, data: { sessions: [mockSession] } } as any);
+		vi.mocked(getJulesSessionsAction).mockResolvedValue({
+			success: true,
+			data: { sessions: [mockSession] },
+		} as any);
 
 		renderWithClient(<TaskBoard />);
 
@@ -215,43 +276,59 @@ describe("TaskBoard", () => {
 
 	it("handles start fix action success", async () => {
 		const mockIssue = createMockIssue();
-		vi.mocked(getIssues).mockResolvedValue({ success: true, data: [mockIssue] } as any);
-		vi.mocked(startFixSessionAction).mockResolvedValue({ success: true, data: {} } as any);
-		vi.spyOn(window, 'confirm').mockReturnValue(true);
+		vi.mocked(getIssues).mockResolvedValue({
+			success: true,
+			data: [mockIssue],
+		} as any);
+		vi.mocked(startFixSessionAction).mockResolvedValue({
+			success: true,
+			data: {},
+		} as any);
+		vi.spyOn(window, "confirm").mockReturnValue(true);
 
 		renderWithClient(<TaskBoard />);
 
 		await waitFor(() => {
 			const buttons = screen.getAllByRole("button");
-			const fixButton = buttons.find(b => b.textContent?.includes("Fix"));
+			const fixButton = buttons.find((b) => b.textContent?.includes("Fix"));
 			expect(fixButton).toBeInTheDocument();
 			fireEvent.click(fixButton!);
 		});
 
 		await waitFor(() => {
 			expect(startFixSessionAction).toHaveBeenCalledWith({ issueNumber: 1 });
-			expect(toast.success).toHaveBeenCalledWith("Jules is working on the fix!");
+			expect(toast.success).toHaveBeenCalledWith(
+				"Jules is working on the fix!",
+			);
 		});
 	});
 
 	it("handles start fix action failure", async () => {
 		const mockIssue = createMockIssue();
-		vi.mocked(getIssues).mockResolvedValue({ success: true, data: [mockIssue] } as any);
-		vi.mocked(startFixSessionAction).mockResolvedValue({ success: false, error: "Failed to start" } as any);
-		vi.spyOn(window, 'confirm').mockReturnValue(true);
+		vi.mocked(getIssues).mockResolvedValue({
+			success: true,
+			data: [mockIssue],
+		} as any);
+		vi.mocked(startFixSessionAction).mockResolvedValue({
+			success: false,
+			error: "Failed to start",
+		} as any);
+		vi.spyOn(window, "confirm").mockReturnValue(true);
 
 		renderWithClient(<TaskBoard />);
 
 		await waitFor(() => {
 			const buttons = screen.getAllByRole("button");
-			const fixButton = buttons.find(b => b.textContent?.includes("Fix"));
+			const fixButton = buttons.find((b) => b.textContent?.includes("Fix"));
 			expect(fixButton).toBeInTheDocument();
 			fireEvent.click(fixButton!);
 		});
 
 		await waitFor(() => {
 			expect(startFixSessionAction).toHaveBeenCalled();
-			expect(toast.error).toHaveBeenCalledWith(expect.stringContaining("Failed to start"));
+			expect(toast.error).toHaveBeenCalledWith(
+				expect.stringContaining("Failed to start"),
+			);
 		});
 	});
 
@@ -263,8 +340,14 @@ describe("TaskBoard", () => {
 
 		const mockGetSessions = vi.mocked(getJulesSessionsAction);
 		mockGetSessions
-			.mockResolvedValueOnce({ success: true, data: { sessions: [mockSession] } } as any)
-			.mockResolvedValue({ success: true, data: { sessions: [updatedSession] } } as any);
+			.mockResolvedValueOnce({
+				success: true,
+				data: { sessions: [mockSession] },
+			} as any)
+			.mockResolvedValue({
+				success: true,
+				data: { sessions: [updatedSession] },
+			} as any);
 
 		renderWithClient(<TaskBoard />);
 
@@ -276,9 +359,12 @@ describe("TaskBoard", () => {
 			vi.advanceTimersByTime(11000);
 		});
 
-		await waitFor(() => {
-			expect(mockGetSessions).toHaveBeenCalledTimes(2);
-			expect(screen.getByText("Updated Title")).toBeInTheDocument();
-		}, { timeout: 3000 });
+		await waitFor(
+			() => {
+				expect(mockGetSessions).toHaveBeenCalledTimes(2);
+				expect(screen.getByText("Updated Title")).toBeInTheDocument();
+			},
+			{ timeout: 3000 },
+		);
 	});
 });

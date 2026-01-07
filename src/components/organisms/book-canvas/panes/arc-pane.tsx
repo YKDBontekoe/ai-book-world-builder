@@ -175,8 +175,9 @@ export function ArcPane() {
 				<div className="p-3 rounded-lg border bg-muted/20 text-xs">
 					<h4 className="font-semibold mb-1 text-primary">Tension Analysis</h4>
 					<p className="text-muted-foreground">
-						Derived from atmospheric keywords (e.g., "dark", "urgent") and number
-						of emotional beats per scene. Higher peaks indicate climax points.
+						Derived from atmospheric keywords (e.g., "dark", "urgent") and
+						number of emotional beats per scene. Higher peaks indicate climax
+						points.
 					</p>
 				</div>
 				<div className="p-3 rounded-lg border bg-muted/20 text-xs">

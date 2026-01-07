@@ -25,9 +25,7 @@ const mockOctokit = {
 // Mock Octokit constructor as a class
 vi.mock("octokit", () => {
 	return {
-		Octokit: vi.fn().mockImplementation(function () {
-			return mockOctokit;
-		}),
+		Octokit: vi.fn().mockImplementation(() => mockOctokit),
 	};
 });
 

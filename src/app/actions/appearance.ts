@@ -62,7 +62,10 @@ export const saveAppearancePreferences = createUserAction({
 			.where(eq(userPreferences.userId, user.id));
 
 		const current = prefs?.appearancePreferences || DEFAULT_APPEARANCE;
-		const merged: AppearancePreferences = { ...current, ...input } as AppearancePreferences;
+		const merged: AppearancePreferences = {
+			...current,
+			...input,
+		} as AppearancePreferences;
 
 		await db
 			.insert(userPreferences)

@@ -39,8 +39,14 @@ describe("Reader Progress Action", () => {
 	});
 
 	it("should save progress when user has access", async () => {
-		const mockUser = { id: "123e4567-e89b-12d3-a456-426614174000", email: "test@example.com" };
-		const mockProject = { id: "123e4567-e89b-12d3-a456-426614174001", userId: "123e4567-e89b-12d3-a456-426614174000" };
+		const mockUser = {
+			id: "123e4567-e89b-12d3-a456-426614174000",
+			email: "test@example.com",
+		};
+		const mockProject = {
+			id: "123e4567-e89b-12d3-a456-426614174001",
+			userId: "123e4567-e89b-12d3-a456-426614174000",
+		};
 
 		mocks.auth.mockResolvedValue({ user: mockUser });
 		mocks.projectRepository.findByIdWithAccess.mockResolvedValue(mockProject);

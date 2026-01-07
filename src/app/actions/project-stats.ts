@@ -11,11 +11,7 @@ import {
 	getOutlinesForProject,
 	getRelationshipsForProject,
 } from "@/lib/db/queries";
-import {
-	chapterDraft,
-	type Entity,
-	type Relationship,
-} from "@/lib/db/schema";
+import { chapterDraft, type Entity, type Relationship } from "@/lib/db/schema";
 
 export type EntityCounts = {
 	characters: number;
