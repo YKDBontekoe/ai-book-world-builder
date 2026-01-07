@@ -39,6 +39,8 @@ import {
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { usePowerDockHistory } from "@/components/organisms/writer/hooks/use-power-dock-history";
+import { TOOLS } from "@/components/organisms/writer/tools/tool-config";
 import {
 	type ToolType,
 	toolStrategies,
@@ -47,37 +49,6 @@ import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { cn } from "@/lib/utils";
-
-// Tool Configuration
-const TOOLS = [
-	{
-		id: "write",
-		icon: Feather,
-		label: "Batch Write",
-		color: "text-purple-400",
-	},
-	{ id: "rewrite", icon: Edit, label: "Rewrite", color: "text-blue-400" },
-	{ id: "expand", icon: Expand, label: "Expand", color: "text-green-400" },
-	{
-		id: "critique",
-		icon: BookOpenCheck,
-		label: "Critique",
-		color: "text-yellow-400",
-	},
-	{
-		id: "consistency",
-		icon: AlertTriangle,
-		label: "Fix",
-		color: "text-orange-400",
-	},
-	{ id: "lore", icon: Globe, label: "Lore", color: "text-pink-400" },
-] as const;
-
-export type HistoryItem = {
-	toolId: ToolType;
-	input: string;
-	timestamp: number;
-};
 
 export function PowerDock() {
 	const {
@@ -100,10 +71,8 @@ export function PowerDock() {
 	const [isProcessing, setIsProcessing] = useState(false);
 	const [result, setResult] = useState<string | null>(null);
 
-	const [history, setHistory] = useLocalStorage<HistoryItem[]>(
-		"power-dock-history",
-		[],
-	);
+	const { addToHistory, getToolHistory, clearToolHistory } =
+		usePowerDockHistory();
 
 	// Reset when closing or changing modes
 	const reset = () => {
@@ -118,20 +87,6 @@ export function PowerDock() {
 		setSelectedTool(toolId as ToolType);
 		setMode("input");
 		setResult(null);
-	};
-
-	const addToHistory = (toolId: ToolType, text: string) => {
-		setHistory((prev) => {
-			// Remove identical recent entry to avoid clutter
-			const filtered = prev.filter(
-				(item) => !(item.toolId === toolId && item.input === text),
-			);
-			// Add new item to top, keep max 20
-			return [
-				{ toolId, input: text, timestamp: Date.now() },
-				...filtered,
-			].slice(0, 20);
-		});
 	};
 
 	const handleExecute = async () => {
@@ -176,10 +131,6 @@ export function PowerDock() {
 		} finally {
 			setIsProcessing(false);
 		}
-	};
-
-	const getToolHistory = (toolId: ToolType) => {
-		return history.filter((h) => h.toolId === toolId);
 	};
 
 	const getPlaceholder = (tool: ToolType) => {
@@ -459,11 +410,7 @@ export function PowerDock() {
 													<button
 														type="button"
 														aria-label="Clear history for this tool"
-														onClick={() =>
-															setHistory((prev) =>
-																prev.filter((h) => h.toolId !== selectedTool),
-															)
-														}
+														onClick={() => clearToolHistory(selectedTool)}
 														className="p-1 hover:text-destructive transition-colors"
 														title="Clear history for this tool"
 													>
