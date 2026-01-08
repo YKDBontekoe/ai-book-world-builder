@@ -9,6 +9,7 @@ import { getComments, postComment } from "@/app/actions/github";
 import { Button } from "@/components/atoms/button";
 import { Textarea } from "@/components/atoms/textarea";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { CommentSectionSkeleton } from "./comment-section-skeleton";
 
 interface CommentSectionProps {
 	issueNumber: number;
@@ -45,8 +46,7 @@ export function CommentSection({ issueNumber }: CommentSectionProps) {
 		},
 	});
 
-	if (isLoading)
-		return <div className="p-4 text-center">Loading comments...</div>;
+	if (isLoading) return <CommentSectionSkeleton />;
 
 	// Explicit type narrowing for Result<T> to satisfy TypeScript
 	if (error || !result || !result.success) {

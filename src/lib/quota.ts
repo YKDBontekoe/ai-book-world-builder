@@ -1,4 +1,3 @@
-
 /**
  * Placeholder for quota checking logic.
  *

@@ -1,20 +1,14 @@
-## 2024-05-23 - Command Palette Navigation Pattern
+## 2026-01-08 - Replaced Raw Loading Text with Skeletons
 
-When implementing keyboard-driven command palettes (like `WriterSpotlight`):
-1.  **State Management**: Reset the `selectedIndex` to `0` whenever the filtered list changes (e.g., query updates or category switches).
-2.  **Implementation**: Use a `useEffect` dependent on the filter state variables.
-    ```tsx
-    useEffect(() => {
-        setSelectedIndex(0);
-    }, [activeCategory, debouncedQuery]);
-    ```
-3.  **Why**: Without this, switching from a long list (e.g., "All") to a short list (e.g., "Actions") leaves the index pointing to an undefined element, breaking keyboard interactions and previews.
+### Context
+The `ItemDetail` and `CommentSection` components in the GitHub admin interface were using raw `<div>Loading...</div>` text, which broke the "Native macOS" aesthetic.
 
-## 2024-12-16 - Standardizing Empty States
+### Solution
+Created specific Skeleton components (`ItemDetailSkeleton` and `CommentSectionSkeleton`) that mirror the layout of the actual components using `GlassCard` and `Skeleton` atoms.
 
-1.  **Context**: The application had inconsistent empty states (text links vs. buttons) and inconsistent icon sizing in list views (`InspirationPage` vs `ExportList`).
-2.  **Solution**:
-    *   Standardized `EmptyState` actions to always use the primary `Button` component for clear calls to action.
-    *   Unified icon sizing in `GlassCard` lists to `size={24}` (24px) within a `p-2.5` container to ensure visual balance across different list views.
-    *   Updated floating action bars (bulk actions) to use `rounded-2xl` to distinguish them as "floating panels" versus standard cards (`rounded-lg`).
-3.  **Why**: Consistent empty states reduce cognitive load, and standardized icon metrics contribute to the polished "Native macOS" aesthetic.
+### Outcome
+Loading states now transition smoothly and match the rest of the application's design language.
+
+### Learnings
+- Always look for opportunities to replace raw loading text with high-fidelity skeletons.
+- Skeletons should use `GlassCard` variants to match the container they are loading into.

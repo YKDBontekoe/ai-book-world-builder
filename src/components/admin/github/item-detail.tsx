@@ -25,6 +25,7 @@ import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { Response } from "@/components/molecules/response";
 import { CommentSection } from "./comment-section";
+import { ItemDetailSkeleton } from "./item-detail-skeleton";
 
 interface ItemDetailProps {
 	number: number;
@@ -80,8 +81,7 @@ export function ItemDetail({
 		onError: (err) => toast.error(err.message),
 	});
 
-	if (isLoading)
-		return <div className="p-8 text-center">Loading details...</div>;
+	if (isLoading) return <ItemDetailSkeleton />;
 
 	if (error || !result || !result.success) {
 		const errorMessage =

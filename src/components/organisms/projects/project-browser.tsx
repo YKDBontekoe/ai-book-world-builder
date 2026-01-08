@@ -42,8 +42,8 @@ import {
 import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
 import {
-	useProjectBrowser,
 	type SortOption,
+	useProjectBrowser,
 	type VisibilityFilter,
 } from "@/components/organisms/projects/hooks/use-project-browser";
 import { ProjectGrid } from "@/components/organisms/projects/project-grid";
