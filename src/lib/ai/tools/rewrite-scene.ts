@@ -1,4 +1,4 @@
-import { type CoreTool, tool } from "ai";
+import { type Tool, tool } from "ai";
 import { z } from "zod";
 import { writingService } from "@/lib/services/ai/writing-service";
 
@@ -7,9 +7,9 @@ const inputSchema = z.object({
 	instructions: z.string().describe("Instructions for rewriting."),
 });
 
-export const rewriteScene = (): CoreTool<
+export const rewriteScene = (): Tool<
 	z.infer<typeof inputSchema>,
-	unknown
+	{ text: string }
 > =>
 	tool({
 		description: "Rewrites a specific scene based on instructions.",

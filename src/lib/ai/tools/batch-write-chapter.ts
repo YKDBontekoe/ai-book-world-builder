@@ -1,4 +1,4 @@
-import { type CoreTool, tool } from "ai";
+import { type Tool, tool } from "ai";
 import { z } from "zod";
 import { writingService } from "@/lib/services/ai/writing-service";
 
@@ -15,9 +15,9 @@ const inputSchema = z.object({
  *
  * @returns A tool that executes the batch writing process.
  */
-export const batchWriteChapter = (): CoreTool<
+export const batchWriteChapter = (): Tool<
 	z.infer<typeof inputSchema>,
-	unknown
+	{ success: boolean; writtenCount: number }
 > =>
 	tool({
 		description:

@@ -1,4 +1,4 @@
-import { type CoreTool, tool } from "ai";
+import { type Tool, tool } from "ai";
 import { z } from "zod";
 import { analysisService } from "@/lib/services/ai/analysis-service";
 
@@ -6,9 +6,15 @@ const inputSchema = z.object({
 	chapterId: z.string().describe("The Chapter ID."),
 });
 
-export const critiqueChapter = (): CoreTool<
+export const critiqueChapter = (): Tool<
 	z.infer<typeof inputSchema>,
-	unknown
+	{
+		strengths: string[];
+		weaknesses: string[];
+		pacing: string;
+		tone: string;
+		suggestions: string[];
+	}
 > =>
 	tool({
 		description:

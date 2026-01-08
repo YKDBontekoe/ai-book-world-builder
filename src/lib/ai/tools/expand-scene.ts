@@ -1,4 +1,4 @@
-import { type CoreTool, tool } from "ai";
+import { type Tool, tool } from "ai";
 import { z } from "zod";
 import { writingService } from "@/lib/services/ai/writing-service";
 
@@ -7,9 +7,9 @@ const inputSchema = z.object({
 	notes: z.string().describe("The rough notes or skeleton to expand."),
 });
 
-export const expandScene = (): CoreTool<
+export const expandScene = (): Tool<
 	z.infer<typeof inputSchema>,
-	unknown
+	{ text: string }
 > =>
 	tool({
 		description: "Expands a skeletal scene or notes into full prose.",
