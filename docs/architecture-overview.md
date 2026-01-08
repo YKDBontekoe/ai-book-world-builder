@@ -1,42 +1,59 @@
 # Architecture Overview
 
-This document summarizes the key modules that power the chat experience, persistence layer, authentication, and blob storage, and shows how the AI SDK is wired through the request lifecycle.
+This document summarizes the key modules that power the AI Book World Builder, including the Writer, the Reader, the Brain (AI), and the Library (Database).
 
-## Chat pipeline
-- **Client chat surface**: The `components/chat.tsx` client component uses the AI SDK `useChat` hook to manage state, throttle sends, and stream UI updates over `DefaultChatTransport` targeting `/api/chat`. It enriches outbound requests with the selected model and visibility flag, mirrors server data through `DataStreamHandler`, and reconciles usage updates from `data-usage` events.【F:components/chat.tsx†L5-L145】
-- **Server execution**: The `/api/chat` route turns UI messages into model messages, enforces auth and daily message entitlements, and decides whether to create a new chat (with generated title) or load history. It streams responses via `streamText` with optional tool calls and smooth chunking, forwards telemetry, and persists messages plus last-usage context when streaming completes.【F:app/(chat)/api/chat/route.ts†L1-L231】
-- **Chat tools**: AI functions such as `createDocument`, `updateDocument`, and `requestSuggestions` are registered as tools for the model when allowed, enabling the assistant to branch into document workflows or suggestion generation during a chat turn.【F:app/(chat)/api/chat/route.ts†L74-L126】
+## High-Level Design
 
-## Data persistence
-- **Database access**: `lib/db/queries.ts` centralizes Drizzle ORM queries against Postgres for users, chats, messages, streams, votes, and documents. It handles lifecycle operations such as creating chats, saving or deleting messages, updating visibility, pagination for history, and persisting usage context for analytics and throttling.【F:lib/db/queries.ts†L1-L200】
-- **Schema coverage**: The same module offers helpers for counting messages per user (used in rate limits), saving stream IDs for resumable transport, pruning trailing messages, and recording votes or suggestions associated with chats.【F:lib/db/queries.ts†L200-L520】
-- **Source material ledger**: The `SourceMaterial` table records uploaded reference files with project and user links, MIME type, size, blob URL, and status transitions, indexed by project and user for quick retrieval during chat grounding.【F:lib/db/schema/source-material.ts†L17-L52】
+The application is a Next.js 14 App Router application designed to assist authors in writing fiction. It combines a structured writing environment with generative AI capabilities and a distraction-free reading mode.
 
-## Authentication
-- **NextAuth configuration**: `app/(auth)/auth.ts` configures credential-based login and a guest-provider pathway. Sessions attach `id` and `type` to the JWT and session objects, allowing downstream handlers (such as `/api/chat` and file uploads) to authorize requests and apply entitlements based on user type.【F:app/(auth)/auth.ts†L1-L73】
-- **Auth gating**: The chat entry page enforces authentication by redirecting unauthenticated users through the guest sign-in route before instantiating a new chat session, ensuring every chat run is associated with a user identity.【F:app/(chat)/page.tsx†L16-L43】
+## Core Systems
 
-## File/blob storage
-- **Uploads via Vercel Blob**: The `/api/files/upload` endpoint enforces project-scoped uploads (auth + projectId), validates PDF/EPUB/DOCX/TXT MIME types, and applies per-role size limits before creating a pending `SourceMaterial` record. After the blob is written with a project prefix, the handler advances the record to `uploaded` status and returns structured status and error codes for clients.【F:app/(chat)/api/files/upload/route.ts†L1-L158】【F:lib/source-materials.ts†L1-L88】
+### 1. The Writer (Frontend)
+*   **Writer View:** A complex 3-pane layout (Sidebar, Editor, Canvas) managed by `react-resizable-panels`.
+*   **State Management:** Heavy use of React Context (`WriterContext`) and optimistic UI updates.
+*   **Real-time:** Uses `useOptimistic` for immediate feedback on structural changes.
+*   **Code:** `src/components/organisms/writer/`
 
-## AI SDK integration
-- **Provider registry**: `lib/ai/providers.ts` declares language model IDs via the AI SDK `customProvider`, defaulting to Vercel AI Gateway-backed xAI models in production and mocked models in tests. Reasoning models are wrapped with `extractReasoningMiddleware` to expose “think” traces alongside responses.【F:lib/ai/providers.ts†L1-L29】
-- **Model selection and prompts**: The chat route selects models dynamically based on the user’s choice, applies a system prompt with geolocation hints, and streams text via `streamText`, which also emits usage telemetry consumed by the UI.【F:app/(chat)/api/chat/route.ts†L88-L231】
+### 2. The Reader (Consumption)
+*   **Reader Mode:** A standalone app shell (`src/app/(reader)`) optimized for long-form reading.
+*   **Pagination Engine:** CSS Multi-column layout simulating physical pages.
+*   **Isolation:** Bypasses the heavy Writer/Admin logic for performance.
+*   **Code:** `src/components/organisms/reader/`
 
-## Request flow (end-to-end)
-```text
-User -> /chat (page) --auth--> guest/login
-  -> Chat component (useChat) --POST /api/chat--> auth + rate limit + load/create chat
-      -> streamText (AI SDK) -> tools (weather/doc/suggestions) -> data-usage events
-      -> persist messages/usage (Drizzle/Postgres)
-  <- SSE/JSON stream --DefaultChatTransport--> UI renders Messages & usage
-```
+### 3. The Brain (AI Backend)
+*   **Providers:** OpenRouter (access to GPT-4, Claude 3, etc.) via `lib/ai/providers.ts`.
+*   **Generation Service:** `lib/ai/services/generation-service.ts` abstracts LLM calls.
+*   **Context Engine:** `lib/services/story/story-context-builder.ts` constructs prompts using "Smart Context" (immediate text + summaries).
+*   **RAG:** Currently uses an in-memory "Structured Context" strategy instead of Vector DBs for reliability and speed.
+*   **Tools:** AI can execute tools (e.g., `createDocument`, `requestSuggestions`) defined in `lib/ai/tools`.
 
-## Code map
-- Client chat UI: [`components/chat.tsx`](../components/chat.tsx)
-- Chat API & streaming: [`app/(chat)/api/chat/route.ts`](../app/(chat)/api/chat/route.ts)
-- Database queries: [`lib/db/queries.ts`](../lib/db/queries.ts)
-- Authentication: [`app/(auth)/auth.ts`](../app/(auth)/auth.ts)
-- File uploads (blob): [`app/(chat)/api/files/upload/route.ts`](../app/(chat)/api/files/upload/route.ts)
-- Model provider registry: [`lib/ai/providers.ts`](../lib/ai/providers.ts)
-```
+### 4. The Library (Database)
+*   **PostgreSQL:** Relational data model.
+*   **Drizzle ORM:** Type-safe database access via `lib/db/`.
+*   **Schema:** `Project` -> `Volume` -> `Chapter` -> `Scene`.
+*   **Persistence:** `lib/db/queries.ts` centralizes queries for projects, chats, and documents.
+
+### 5. The Builder (Agentic Workflow)
+*   **Jules Agent:** A self-improving agent that can modify the codebase.
+*   **TaskBoard:** An admin interface (`src/app/admin/github`) to manage development tasks.
+*   **Integration:** Connects to GitHub Issues and PRs.
+
+## Data Flow (Generation)
+1.  **User Action:** User requests "Generate Scene".
+2.  **Server Action:** `generateScene` (in `app/actions/generation.ts`) is called.
+3.  **Context Builder:** Fetches active scene, outline, and relevant entities.
+4.  **LLM Call:** Sends prompt to OpenRouter via `GenerationService`.
+5.  **Stream:** Text streams back to the client via `AI SDK`.
+6.  **Persistence:** Final result is saved to the DB via `WritingService`.
+
+## Security
+*   **Authentication:** NextAuth.js (Google, Credentials).
+*   **Authorization:** Row-level security checks in every Server Action (`getProjectByIdWithAccess`).
+*   **File Uploads:** Validated and stored via Vercel Blob (`src/app/(chat)/api/files/upload/route.ts`).
+
+## Code Map
+- Writer View: `src/components/organisms/writer/writer-view.tsx`
+- Reader View: `src/components/organisms/reader/reader-view.tsx`
+- Generation Logic: `src/lib/services/ai/writing-service.ts`
+- Database Schema: `src/lib/db/schema/`
+- AI Tools: `src/lib/ai/tools/`
