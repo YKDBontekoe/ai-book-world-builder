@@ -42,7 +42,7 @@ const item = {
 interface ProjectGridProps {
 	projects: Project[];
 	selectedIds?: Set<string>;
-	onSelect?: (id: string) => void;
+	onSelect?: (id: string, shiftKey?: boolean) => void;
 	onDeleteProject?: (id: string) => void;
 }
 
@@ -56,7 +56,7 @@ function ProjectCard({
 }: {
 	project: Project;
 	selected?: boolean;
-	onSelect?: (id: string) => void;
+	onSelect?: (id: string, shiftKey?: boolean) => void;
 	onDelete?: (id: string) => void;
 }) {
 	const [showPreview, setShowPreview] = useState(false);
@@ -69,15 +69,20 @@ function ProjectCard({
 					// biome-ignore lint/a11y/useSemanticElements: this is an overlay wrapper for the checkbox
 					<div
 						className={cn(
-							"absolute top-4 left-4 z-20 transition-opacity duration-200",
+							"absolute top-4 left-4 z-20 transition-opacity duration-200 cursor-pointer",
 							selected
 								? "opacity-100"
 								: "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
 						)}
-						onClick={(e) => e.stopPropagation()}
+						onClick={(e) => {
+							e.stopPropagation();
+							onSelect(project.id, e.shiftKey);
+						}}
 						onKeyDown={(e) => {
 							if (e.key === "Enter" || e.key === " ") {
 								e.stopPropagation();
+								// No shift key support for keyboard selection easily unless we track it globally
+								onSelect(project.id, false);
 							}
 						}}
 						role="button"
@@ -85,8 +90,9 @@ function ProjectCard({
 					>
 						<Checkbox
 							checked={selected}
-							onCheckedChange={() => onSelect(project.id)}
-							className="bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50 h-5 w-5"
+							// We handle the change in the wrapper onClick to capture the event object
+							onCheckedChange={() => {}}
+							className="bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50 h-5 w-5 pointer-events-none"
 						/>
 					</div>
 				)}

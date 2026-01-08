@@ -32,7 +32,7 @@ const item = {
 interface ProjectListProps {
 	projects: Project[];
 	selectedIds?: Set<string>;
-	onSelect?: (id: string) => void;
+	onSelect?: (id: string, shiftKey?: boolean) => void;
 	onDeleteProject?: (id: string) => void;
 }
 
@@ -44,12 +44,19 @@ function ProjectRow({
 }: {
 	project: Project;
 	selected?: boolean;
-	onSelect?: (id: string) => void;
+	onSelect?: (id: string, shiftKey?: boolean) => void;
 	onDelete?: (id: string) => void;
 }) {
 	const router = useRouter();
 
-	const handleRowClick = () => {
+	const handleRowClick = (e: React.MouseEvent) => {
+		// If clicking anywhere on the row with Ctrl/Cmd, toggle selection
+		if ((e.ctrlKey || e.metaKey) && onSelect) {
+			e.preventDefault();
+			onSelect(project.id, e.shiftKey);
+			return;
+		}
+
 		router.push(`/projects/${project.id}`);
 	};
 
@@ -101,24 +108,35 @@ function ProjectRow({
 
 						{/* Checkbox Overlay */}
 						{onSelect && (
+							// biome-ignore lint/a11y/useKeyWithClickEvents: simple click handler
+							// biome-ignore lint/a11y/noStaticElementInteractions: overlay
 							<div
 								className={cn(
-									"absolute inset-0 flex items-center justify-center transition-all duration-200",
+									"absolute inset-0 flex items-center justify-center transition-all duration-200 cursor-pointer",
 									selected
 										? "opacity-100 scale-100"
 										: "opacity-0 scale-90 group-hover:opacity-100 group-hover:scale-100 focus-within:opacity-100 focus-within:scale-100",
 								)}
+								onClick={(e) => {
+									e.stopPropagation();
+									onSelect(project.id, e.shiftKey);
+								}}
 							>
 								{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation only */}
 								{/* biome-ignore lint/a11y/useKeyWithClickEvents: stop propagation only */}
 								<div
-									onClick={(e) => e.stopPropagation()}
+									onClick={(e) => {
+										// This inner click handler is redundant if the parent handles it,
+										// but the checkbox itself might eat the click.
+										// We make the checkbox pointer-events-none and handle click on the wrapper.
+										e.stopPropagation();
+									}}
 									className="flex items-center justify-center"
 								>
 									<Checkbox
 										checked={selected}
-										onCheckedChange={() => onSelect(project.id)}
-										className="h-5 w-5 border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground bg-background/80 backdrop-blur-sm shadow-sm"
+										onCheckedChange={() => {}}
+										className="h-5 w-5 border-primary/50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground bg-background/80 backdrop-blur-sm shadow-sm pointer-events-none"
 										aria-label={`Select project ${project.name}`}
 									/>
 								</div>

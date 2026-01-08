@@ -1,5 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import { deleteProjects, forkProject } from "@/app/actions/projects";
@@ -18,6 +19,7 @@ export function useProjectBrowser(projects: Project[]) {
 		"grid",
 	);
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	const [lastSelectedId, setLastSelectedId] = useState<string | null>(null);
 	const [isProcessing, setIsProcessing] = useState(false);
 
 	// Optimistic UI state
@@ -78,13 +80,34 @@ export function useProjectBrowser(projects: Project[]) {
 		visibilityFilter,
 	]);
 
-	const handleSelect = (id: string) => {
+	const handleSelect = (id: string, shiftKey = false) => {
 		const newSelected = new Set(selectedIds);
-		if (newSelected.has(id)) {
-			newSelected.delete(id);
+
+		if (shiftKey && lastSelectedId && newSelected.has(lastSelectedId)) {
+			// Range selection
+			const lastIndex = filteredProjects.findIndex(
+				(p) => p.id === lastSelectedId,
+			);
+			const currentIndex = filteredProjects.findIndex((p) => p.id === id);
+
+			if (lastIndex !== -1 && currentIndex !== -1) {
+				const start = Math.min(lastIndex, currentIndex);
+				const end = Math.max(lastIndex, currentIndex);
+
+				for (let i = start; i <= end; i++) {
+					newSelected.add(filteredProjects[i].id);
+				}
+			}
 		} else {
-			newSelected.add(id);
+			// Toggle selection
+			if (newSelected.has(id)) {
+				newSelected.delete(id);
+			} else {
+				newSelected.add(id);
+			}
+			setLastSelectedId(id);
 		}
+
 		setSelectedIds(newSelected);
 	};
 
@@ -205,6 +228,27 @@ export function useProjectBrowser(projects: Project[]) {
 		router.refresh();
 		setIsProcessing(false);
 	};
+
+	// --- Keyboard Shortcuts ---
+	useHotkeys(
+		"meta+a, ctrl+a",
+		(e) => {
+			e.preventDefault();
+			handleSelectAll();
+		},
+		{ preventDefault: true },
+	);
+
+	useHotkeys(
+		"esc",
+		(e) => {
+			e.preventDefault();
+			setSelectedIds(new Set());
+		},
+		{ enabled: selectedIds.size > 0 },
+	);
+
+	// Delete shortcut is handled in the parent component to access toast/undo logic
 
 	return {
 		searchQuery,

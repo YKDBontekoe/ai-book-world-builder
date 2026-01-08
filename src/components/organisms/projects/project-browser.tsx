@@ -4,27 +4,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowDownAZ,
 	ArrowUpAZ,
-	ChevronDown,
 	Clock,
-	Copy,
-	Download,
 	Eye,
-	FileJson,
-	FileText,
 	LayoutGrid,
 	List,
 	Search,
-	Trash2,
 	Undo2,
 } from "lucide-react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/atoms/dropdown-menu";
 import { Input } from "@/components/atoms/input";
 import {
 	Select,
@@ -41,6 +30,7 @@ import {
 } from "@/components/atoms/tooltip";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { BulkActionsBar } from "@/components/organisms/projects/bulk-actions-bar";
 import {
 	type SortOption,
 	useProjectBrowser,
@@ -106,6 +96,17 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 	const handleBulkDelete = () => {
 		handleDeleteWithToast(Array.from(selectedIds));
 	};
+
+	// Bind Delete key here in the UI component where we have access to handleBulkDelete
+	useHotkeys(
+		"delete, backspace",
+		() => {
+			if (selectedIds.size > 0) {
+				handleBulkDelete();
+			}
+		},
+		{ enabled: selectedIds.size > 0 },
+	);
 
 	const handleBulkExportJson = () => {
 		const projectsToExport = projects.filter((p) => selectedIds.has(p.id));
@@ -288,6 +289,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 								<ProjectGrid
 									projects={filteredProjects}
 									selectedIds={selectedIds}
+									// Pass handleSelect to accept the 2nd argument (shiftKey detection in Grid/List)
 									onSelect={handleSelect}
 									onDeleteProject={(id) => handleDeleteWithToast([id])}
 								/>
@@ -304,92 +306,16 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 				)}
 			</div>
 
-			{/* Selection Action Bar */}
-			<AnimatePresence>
-				{selectedIds.size > 0 && (
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						exit={{ opacity: 0, y: 20 }}
-						className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
-					>
-						<GlassCard
-							variant="liquid"
-							className="flex items-center justify-between p-3 pl-5 pr-3 shadow-xl border-primary/20 backdrop-blur-xl"
-						>
-							<div className="flex items-center gap-4">
-								<div className="text-sm font-medium">
-									{selectedIds.size} selected
-								</div>
-								<div className="h-4 w-px bg-border" />
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-8 text-muted-foreground hover:text-foreground"
-									onClick={() => setSelectedIds(new Set())}
-								>
-									Deselect All
-								</Button>
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-8 text-muted-foreground hover:text-foreground"
-									onClick={handleSelectAll}
-								>
-									Select All
-								</Button>
-							</div>
-							<div className="flex items-center gap-2 border-r border-border pr-2 mr-2">
-								<DropdownMenu>
-									<DropdownMenuTrigger asChild>
-										<Button
-											size="sm"
-											variant="ghost"
-											className="gap-2 text-muted-foreground hover:text-foreground"
-											disabled={isProcessing}
-										>
-											<Download className="h-4 w-4" />
-											Export
-											<ChevronDown className="h-3 w-3 opacity-50" />
-										</Button>
-									</DropdownMenuTrigger>
-									<DropdownMenuContent align="start">
-										<DropdownMenuItem onClick={handleBulkExportJson}>
-											<FileJson className="mr-2 h-4 w-4" />
-											<span>Export to JSON</span>
-										</DropdownMenuItem>
-										<DropdownMenuItem onClick={handleBulkExportCsv}>
-											<FileText className="mr-2 h-4 w-4" />
-											<span>Export to CSV</span>
-										</DropdownMenuItem>
-									</DropdownMenuContent>
-								</DropdownMenu>
-								<Button
-									size="sm"
-									variant="ghost"
-									className="gap-2 text-muted-foreground hover:text-foreground"
-									onClick={handleBulkDuplicate}
-									disabled={isProcessing}
-								>
-									<Copy className="h-4 w-4" />
-									Duplicate
-								</Button>
-							</div>
-
-							<Button
-								size="sm"
-								variant="destructive"
-								className="gap-2 shadow-lg hover:shadow-destructive/20"
-								onClick={handleBulkDelete}
-								disabled={isProcessing}
-							>
-								<Trash2 className="h-4 w-4" />
-								Delete
-							</Button>
-						</GlassCard>
-					</motion.div>
-				)}
-			</AnimatePresence>
+			<BulkActionsBar
+				selectedCount={selectedIds.size}
+				isProcessing={isProcessing}
+				onClear={() => setSelectedIds(new Set())}
+				onSelectAll={handleSelectAll}
+				onDelete={handleBulkDelete}
+				onDuplicate={handleBulkDuplicate}
+				onExportJson={handleBulkExportJson}
+				onExportCsv={handleBulkExportCsv}
+			/>
 		</div>
 	);
 }
