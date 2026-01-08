@@ -2,12 +2,18 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { BookOpenIcon, LinkIcon, SparklesIcon } from "lucide-react";
+import { useMemo, useState } from "react";
 import { getEntities } from "@/app/actions/entities";
 import { getRelationships } from "@/app/actions/project-stats";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
 import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	BibleToolbar,
+	type SortOption,
+	type ViewMode,
+} from "@/components/organisms/book-canvas/panes/bible/bible-toolbar";
 import { EntityGroupSection } from "@/components/organisms/book-canvas/panes/bible/entity-group-section";
 import { SourceMaterialsSection } from "@/components/organisms/book-canvas/panes/bible/source-materials-section";
 import { useEntityGrouping } from "@/hooks/use-entity-grouping";
@@ -15,6 +21,12 @@ import { QUERY_KEYS } from "@/lib/query-options";
 
 export function BiblePane() {
 	const { projectId } = useBookCanvasLayout();
+
+	// View state
+	const [searchQuery, setSearchQuery] = useState("");
+	const [typeFilter, setTypeFilter] = useState("all");
+	const [sortOption, setSortOption] = useState<SortOption>("name-asc");
+	const [viewMode, setViewMode] = useState<ViewMode>("list");
 
 	const { data: entities, isLoading: entitiesLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.entities(projectId) : ["entities", "null"],
@@ -44,8 +56,61 @@ export function BiblePane() {
 
 	const isLoading = entitiesLoading || relationshipsLoading;
 
+	// Filter and sort entities before grouping
+	const filteredEntities = useMemo(() => {
+		if (!entities) return [];
+		let filtered = [...entities];
+
+		if (searchQuery) {
+			const query = searchQuery.toLowerCase();
+			filtered = filtered.filter(
+				(e) =>
+					e.name.toLowerCase().includes(query) ||
+					e.summary?.toLowerCase().includes(query),
+			);
+		}
+
+		if (typeFilter !== "all") {
+			filtered = filtered.filter((e) => e.kind === typeFilter);
+		}
+
+		return filtered;
+	}, [entities, searchQuery, typeFilter]);
+
 	// Use hook for grouping logic
-	const entityGroups = useEntityGrouping(entities);
+	const entityGroups = useEntityGrouping(filteredEntities);
+
+	// Sort entities within groups
+	const sortedGroups = useMemo(() => {
+		return entityGroups.map((group) => {
+			const sortedEntities = [...group.entities].sort((a, b) => {
+				switch (sortOption) {
+					case "name-asc":
+						return a.name.localeCompare(b.name);
+					case "name-desc":
+						return b.name.localeCompare(a.name);
+					case "newest":
+						return (
+							new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+						);
+					case "relationships": {
+						const countA =
+							relationships?.filter(
+								(r) => r.sourceEntityId === a.id || r.targetEntityId === a.id,
+							).length ?? 0;
+						const countB =
+							relationships?.filter(
+								(r) => r.sourceEntityId === b.id || r.targetEntityId === b.id,
+							).length ?? 0;
+						return countB - countA;
+					}
+					default:
+						return 0;
+				}
+			});
+			return { ...group, entities: sortedEntities };
+		});
+	}, [entityGroups, sortOption, relationships]);
 
 	if (!projectId) {
 		return (
@@ -90,14 +155,29 @@ export function BiblePane() {
 			{/* Source Materials for Analysis */}
 			<SourceMaterialsSection projectId={projectId} />
 
+			{/* Toolbar - Only show if we have entities or active filter */}
+			{(totalEntities > 0 || searchQuery || typeFilter !== "all") && (
+				<BibleToolbar
+					searchQuery={searchQuery}
+					onSearchChange={setSearchQuery}
+					typeFilter={typeFilter}
+					onTypeFilterChange={setTypeFilter}
+					sortOption={sortOption}
+					onSortChange={setSortOption}
+					viewMode={viewMode}
+					onViewModeChange={setViewMode}
+				/>
+			)}
+
 			{/* Entity groups */}
-			{entityGroups.length > 0 ? (
+			{sortedGroups.length > 0 ? (
 				<div className="space-y-6">
-					{entityGroups.map((group) => (
+					{sortedGroups.map((group) => (
 						<EntityGroupSection
 							key={group.type}
 							group={group}
 							relationships={relationships ?? []}
+							viewMode={viewMode}
 						/>
 					))}
 				</div>
@@ -105,14 +185,22 @@ export function BiblePane() {
 				<EmptyState
 					icon={isLoading ? undefined : SparklesIcon}
 					iconClassName="text-[var(--entity-character)]"
-					title={isLoading ? "Loading entities..." : "Build Your World"}
+					title={
+						isLoading
+							? "Loading entities..."
+							: searchQuery || typeFilter !== "all"
+								? "No entities found"
+								: "Build Your World"
+					}
 					description={
 						isLoading
 							? undefined
-							: "Ask the AI to create characters, locations, items, and events to populate your Story Bible."
+							: searchQuery || typeFilter !== "all"
+								? "Try adjusting your filters"
+								: "Ask the AI to create characters, locations, items, and events to populate your Story Bible."
 					}
 					suggestions={
-						isLoading
+						isLoading || searchQuery || typeFilter !== "all"
 							? undefined
 							: ['"Create a protagonist"', '"Add a mysterious forest"']
 					}

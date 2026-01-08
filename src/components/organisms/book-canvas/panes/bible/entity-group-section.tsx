@@ -2,16 +2,20 @@ import type { SerializedRelationship } from "@/app/actions/project-stats";
 import { Badge } from "@/components/atoms/badge";
 import { EntityCard } from "@/components/molecules/entity-card";
 import { SectionHeader } from "@/components/molecules/section-header";
+import type { ViewMode } from "@/components/organisms/book-canvas/panes/bible/bible-toolbar";
 import type { EntityGroup } from "@/components/organisms/book-canvas/panes/bible/types";
+import { cn } from "@/lib/utils";
 
 interface EntityGroupSectionProps {
 	group: EntityGroup;
 	relationships: SerializedRelationship[];
+	viewMode: ViewMode;
 }
 
 export function EntityGroupSection({
 	group,
 	relationships,
+	viewMode,
 }: EntityGroupSectionProps) {
 	const Icon = group.icon;
 
@@ -35,12 +39,18 @@ export function EntityGroupSection({
 				}
 				className="mb-2"
 			/>
-			<div className="grid gap-2">
+			<div
+				className={cn(
+					"grid gap-2",
+					viewMode === "grid" ? "grid-cols-2" : "grid-cols-1",
+				)}
+			>
 				{group.entities.map((entity) => (
 					<EntityCard
 						key={entity.id}
 						entity={entity}
 						relationshipCount={getRelationshipCount(entity.id)}
+						className={cn(viewMode === "grid" && "h-full")}
 					/>
 				))}
 			</div>
