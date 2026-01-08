@@ -44,7 +44,6 @@ export function ItemDetailSkeleton(): React.JSX.Element {
 				</div>
 			</GlassCard>
 
-			{/* Placeholder for comment section skeleton which might be rendered separately or included here */}
 			<CommentSectionSkeleton />
 		</div>
 	);
