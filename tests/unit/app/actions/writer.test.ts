@@ -58,8 +58,8 @@ vi.mock("@/lib/db/drizzle", () => {
 	};
 });
 
-// Mock @/lib/ai/writer
-vi.mock("@/lib/ai/writer", () => ({
+// Mock @/app/actions/writer/ai
+vi.mock("@/app/actions/writer/ai", () => ({
 	continueWriting: vi.fn().mockResolvedValue({ text: "Generated content" }),
 }));
 
