@@ -82,10 +82,18 @@ export const createJulesSessionAction = createAdminAction({
 		// Auto-detect the default branch if not provided
 		let startingBranch = input.startingBranch;
 		if (!startingBranch) {
-			const source = await jules.getSource(input.sourceName);
-			startingBranch =
-				source.githubRepo?.defaultBranch?.displayName ||
-				(source.githubRepo ? "main" : undefined);
+			try {
+				const source = await jules.getSource(input.sourceName);
+				startingBranch =
+					source.githubRepo?.defaultBranch?.displayName ||
+					(source.githubRepo ? "main" : undefined);
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "Unknown error";
+				throw new Error(
+					`Failed to detect default branch for source '${input.sourceName}': ${message}`,
+				);
+			}
 		}
 
 		return await jules.createSession({
