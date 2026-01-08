@@ -1,4 +1,4 @@
-## 2024-05-23 - Replaced Raw Loading Text with Skeletons
+## 2026-01-08 - Replaced Raw Loading Text with Skeletons
 
 ### Context
 The `ItemDetail` and `CommentSection` components in the GitHub admin interface were using raw `<div>Loading...</div>` text, which broke the "Native macOS" aesthetic.

@@ -1,7 +1,12 @@
 import { Skeleton } from "@/components/atoms/skeleton";
 import { GlassCard } from "@/components/molecules/glass-card";
 
-export function ItemDetailSkeleton() {
+/**
+ * Skeleton UI for GitHub item detail (issue or PR) used during loading.
+ * Renders skeleton placeholders for the item detail and comments.
+ * @returns The rendered skeleton component.
+ */
+export function ItemDetailSkeleton(): React.JSX.Element {
 	return (
 		<div className="space-y-6">
 			<div className="flex items-center justify-between">

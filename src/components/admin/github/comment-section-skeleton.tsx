@@ -1,7 +1,11 @@
 import { Skeleton } from "@/components/atoms/skeleton";
 import { GlassCard } from "@/components/molecules/glass-card";
 
-export function CommentSectionSkeleton() {
+/**
+ * Skeleton UI for GitHub comment section used during loading.
+ * @returns The rendered skeleton component.
+ */
+export function CommentSectionSkeleton(): React.JSX.Element {
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center gap-2">
