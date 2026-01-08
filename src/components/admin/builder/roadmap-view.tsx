@@ -1,15 +1,9 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import {
-	Brain,
-	ExternalLink,
-	Hammer,
-	Lightbulb,
-	Loader2,
-} from "lucide-react";
+import { Brain, ExternalLink, Hammer, Lightbulb, Loader2 } from "lucide-react";
 import type { JSX } from "react";
-// biome-ignore lint/correctness/noUnusedImports: <explanation>
+// biome-ignore lint/correctness/noUnusedImports: used for brainstorm state
 import { useState } from "react";
 import { getIssues } from "@/app/actions/github";
 import { discoverFeaturesAction } from "@/app/actions/jules-ai";
@@ -236,7 +230,7 @@ export function RoadmapView(): JSX.Element {
 							)}
 							{suggestions?.map((suggestion, i) => (
 								<SuggestionCard
-									// biome-ignore lint/suspicious/noArrayIndexKey: <explanation>
+									// biome-ignore lint/suspicious/noArrayIndexKey: no stable id available for AI suggestions
 									key={i}
 									suggestion={suggestion}
 									onPlan={() => {}} // Handled by DialogTrigger inside
