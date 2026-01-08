@@ -14,7 +14,11 @@ export const generateLore = () =>
 				.default("lore")
 				.describe("Category (character, location, etc.)."),
 		}),
-		execute: async (args: any) => {
+		execute: async (args: {
+			projectId: string;
+			prompt: string;
+			category?: string;
+		}) => {
 			return await loreService.generateLore(
 				args.projectId,
 				args.prompt,

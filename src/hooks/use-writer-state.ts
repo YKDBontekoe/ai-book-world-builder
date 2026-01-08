@@ -1,3 +1,4 @@
+import { isEqual } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createChapterSnapshot } from "@/app/actions/writer";
@@ -82,7 +83,9 @@ export function useWriterState({
 	// Update local state when props change
 	useEffect(() => {
 		if (initialStructure) {
-			setStructure(initialStructure);
+			setStructure((prev) =>
+				isEqual(prev, initialStructure) ? prev : initialStructure,
+			);
 			setStructureText(initialStructureText || "");
 		}
 	}, [initialStructure, initialStructureText, setStructure, setStructureText]);

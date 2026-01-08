@@ -13,12 +13,29 @@ interface UseWriterNavigationProps {
 	isLoading: boolean;
 }
 
+interface UseWriterNavigationReturn {
+	activeSceneId: string | null;
+	setActiveSceneId: (id: string | null) => void;
+	activeSceneIdRef: React.MutableRefObject<string | null>;
+}
+
+/**
+ * Manages the navigation state (active scene) in the writer view.
+ * Handles restoring last viewed scene and syncing with BookCanvas.
+ *
+ * @param props - Configuration properties
+ * @param props.projectId - The ID of the project
+ * @param props.structure - The current project structure
+ * @param props.lastViewedSceneId - The last viewed scene ID from the server
+ * @param props.isLoading - Whether the structure is loading
+ * @returns Object containing navigation state and helpers
+ */
 export function useWriterNavigation({
 	projectId,
 	structure,
 	lastViewedSceneId,
 	isLoading,
-}: UseWriterNavigationProps) {
+}: UseWriterNavigationProps): UseWriterNavigationReturn {
 	const { activeSceneId } = useBookCanvasValue();
 	const { setActiveSceneId } = useBookCanvasActions();
 
@@ -60,8 +77,12 @@ export function useWriterNavigation({
 	// Persist last viewed scene
 	useEffect(() => {
 		if (activeSceneId && projectId) {
-			const timer = setTimeout(() => {
-				updateLastViewedScene({ projectId, sceneId: activeSceneId });
+			const timer = setTimeout(async () => {
+				try {
+					await updateLastViewedScene({ projectId, sceneId: activeSceneId });
+				} catch (error) {
+					console.error("Failed to update last viewed scene:", error);
+				}
 			}, 1000);
 			return () => clearTimeout(timer);
 		}

@@ -5,11 +5,11 @@ import { analysisService } from "@/lib/services/ai/analysis-service";
 export const analyzeConsistency = () =>
 	tool({
 		description:
-			"Analyzes a chapter for consistency errors (plot, character, setting).",
+			"Analyzes a chapter for consistency errors (plot, character, setting); timeline analysis intentionally excluded.",
 		inputSchema: z.object({
 			chapterId: z.string().describe("The Chapter ID."),
 		}),
-		execute: async (args: any) => {
+		execute: async (args: { chapterId: string }) => {
 			return await analysisService.analyzeConsistency(args.chapterId);
 		},
 	});

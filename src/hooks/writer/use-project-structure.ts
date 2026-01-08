@@ -9,11 +9,33 @@ interface UseProjectStructureProps {
 	initialStructureText?: string;
 }
 
+interface UseProjectStructureReturn {
+	structure: ChapterWithScenes[] | null;
+	setStructure: React.Dispatch<
+		React.SetStateAction<ChapterWithScenes[] | null>
+	>;
+	structureText: string;
+	setStructureText: React.Dispatch<React.SetStateAction<string>>;
+	isLoading: boolean;
+	fetchStructure: () => Promise<void>;
+	updateSceneInStructure: (sceneId: string, content: string) => void;
+}
+
+/**
+ * Manages the project structure (chapters and scenes) state.
+ * Handles fetching, updating, and syncing structure data.
+ *
+ * @param props - Configuration properties
+ * @param props.projectId - The ID of the project to manage
+ * @param props.initialStructure - Optional initial structure data
+ * @param props.initialStructureText - Optional initial text representation
+ * @returns Object containing structure state and management functions
+ */
 export function useProjectStructure({
 	projectId,
 	initialStructure,
 	initialStructureText,
-}: UseProjectStructureProps) {
+}: UseProjectStructureProps): UseProjectStructureReturn {
 	const [structure, setStructure] = useState<ChapterWithScenes[] | null>(
 		initialStructure ?? null,
 	);
@@ -28,7 +50,7 @@ export function useProjectStructure({
 			const result = await getProjectStructure({ projectId });
 			if (result.success && result.data.structure) {
 				const { structure: newStructure, structureText: newText } = result.data;
-				setStructure(newStructure as unknown as ChapterWithScenes[]);
+				setStructure(newStructure);
 				if (newText) {
 					setStructureText(newText);
 				}
