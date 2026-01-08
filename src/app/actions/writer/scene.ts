@@ -3,13 +3,13 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
-import { checkUsageQuota } from "@/lib/quota";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { continueWriting } from "@/lib/ai/writer";
 import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
+import { checkUsageQuota } from "@/lib/quota";
 import {
 	createSceneInChapterSchema,
 	updateSceneContentSchema,
@@ -76,7 +76,10 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 		if (!currentChapter) throw new Error("Chapter not found");
 
 		// Write access required
-		const { project } = await ensureProjectAccess(currentChapter.projectId, true);
+		const { project } = await ensureProjectAccess(
+			currentChapter.projectId,
+			true,
+		);
 
 		// Find previous scenes using repository
 		const scenes = await sceneRepository.findByChapter(chapterId);
@@ -290,9 +293,7 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 		await db
 			.update(scene)
 			.set({ sequence: finalSql, updatedAt: new Date() })
-			.where(
-				and(eq(scene.chapterId, chapterId), inArray(scene.id, sceneIds)),
-			);
+			.where(and(eq(scene.chapterId, chapterId), inArray(scene.id, sceneIds)));
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 

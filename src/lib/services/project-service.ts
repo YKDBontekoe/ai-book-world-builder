@@ -5,6 +5,7 @@ import type { PgTransaction } from "drizzle-orm/pg-core";
 import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 import { db } from "@/lib/db/drizzle";
 import { projectRepository } from "@/lib/db/repositories";
+import type * as schema from "@/lib/db/schema";
 import {
 	bookExport,
 	bookGeneration,
@@ -24,7 +25,6 @@ import {
 	storyState,
 	volume,
 } from "@/lib/db/schema";
-import type * as schema from "@/lib/db/schema";
 
 // Helper for chunked inserts
 async function chunkedInsert<T extends Record<string, unknown>, TTable>(

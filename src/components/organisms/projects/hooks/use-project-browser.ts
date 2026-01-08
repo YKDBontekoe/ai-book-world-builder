@@ -1,15 +1,9 @@
-import {
-	useCallback,
-	useEffect,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import { deleteProjects, forkProject } from "@/app/actions/projects";
 import type { Project } from "@/lib/db/schema";
-import { useRouter } from "next/navigation";
 
 export type SortOption = "newest" | "oldest" | "a-z" | "z-a";
 export type VisibilityFilter = "all" | "public" | "private";
