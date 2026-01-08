@@ -1,15 +1,15 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { analysisService } from "@/lib/services/ai/analysis-service";
 
 export const critiqueChapter = () =>
 	tool({
 		description:
-			"Provides a critique of a chapter's pacing, tone, and quality.",
+			"Critiques a chapter's content, providing feedback on pacing, tone, and strengths/weaknesses.",
 		inputSchema: z.object({
-			chapterId: z.string().describe("The ID of the chapter."),
+			chapterId: z.string().describe("The Chapter ID."),
 		}),
 		execute: async (args: any) => {
-			return await aiService.critiqueChapter(args.chapterId);
+			return await analysisService.critiqueChapter(args.chapterId);
 		},
 	});
