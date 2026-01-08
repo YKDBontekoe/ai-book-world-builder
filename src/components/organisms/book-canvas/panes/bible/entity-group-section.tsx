@@ -42,7 +42,7 @@ export function EntityGroupSection({
 			<div
 				className={cn(
 					"grid gap-2",
-					viewMode === "grid" ? "grid-cols-2" : "grid-cols-1",
+					viewMode === "grid" ? "sm:grid-cols-1 md:grid-cols-2" : "grid-cols-1",
 				)}
 			>
 				{group.entities.map((entity) => (

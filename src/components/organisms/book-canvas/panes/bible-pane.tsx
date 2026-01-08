@@ -105,9 +105,13 @@ export function BiblePane(): React.JSX.Element {
 			const sortedEntities = [...group.entities].sort((a, b) => {
 				switch (sortOption) {
 					case "name-asc":
-						return a.name.localeCompare(b.name);
+						return a.name.localeCompare(b.name, undefined, {
+							sensitivity: "base",
+						});
 					case "name-desc":
-						return b.name.localeCompare(a.name);
+						return b.name.localeCompare(a.name, undefined, {
+							sensitivity: "base",
+						});
 					case "newest":
 						return (
 							new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

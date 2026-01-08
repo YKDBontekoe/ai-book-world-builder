@@ -77,7 +77,11 @@ export function BibleToolbar({
 					/>
 				</div>
 				<TooltipProvider>
-					<div className="flex bg-muted/50 rounded-lg p-1 gap-1">
+					<div
+						className="flex bg-muted/50 rounded-lg p-1 gap-1"
+						role="group"
+						aria-label="View mode"
+					>
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
