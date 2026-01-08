@@ -12,11 +12,19 @@ interface EntityGroupSectionProps {
 	viewMode: ViewMode;
 }
 
+/**
+ * Renders a group of entities (e.g., "Characters" or "Locations") within the Story Bible.
+ *
+ * @param props - The component properties.
+ * @param props.group - The group of entities to display, including metadata like label and color.
+ * @param props.relationships - A list of relationships used to calculate connection counts for each entity.
+ * @param props.viewMode - The current layout mode ('list' or 'grid'), affecting the grid column count.
+ */
 export function EntityGroupSection({
 	group,
 	relationships,
 	viewMode,
-}: EntityGroupSectionProps) {
+}: EntityGroupSectionProps): React.JSX.Element {
 	const Icon = group.icon;
 
 	// Count relationships for each entity

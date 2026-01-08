@@ -19,7 +19,14 @@ import { SourceMaterialsSection } from "@/components/organisms/book-canvas/panes
 import { useEntityGrouping } from "@/hooks/use-entity-grouping";
 import { QUERY_KEYS } from "@/lib/query-options";
 
-export function BiblePane() {
+/**
+ * The Story Bible pane allowing users to browse, filter, and manage entities.
+ *
+ * Consumes `useBookCanvasLayout` to access the current `projectId`.
+ * Fetches entities and relationships, grouping them by type and supporting
+ * sorting and view modes (list/grid).
+ */
+export function BiblePane(): React.JSX.Element {
 	const { projectId } = useBookCanvasLayout();
 
 	// View state
@@ -82,6 +89,21 @@ export function BiblePane() {
 
 	// Sort entities within groups
 	const sortedGroups = useMemo(() => {
+		// Precompute relationship counts if needed
+		const relationshipCounts = new Map<string, number>();
+		if (sortOption === "relationships" && relationships) {
+			for (const r of relationships) {
+				relationshipCounts.set(
+					r.sourceEntityId,
+					(relationshipCounts.get(r.sourceEntityId) || 0) + 1,
+				);
+				relationshipCounts.set(
+					r.targetEntityId,
+					(relationshipCounts.get(r.targetEntityId) || 0) + 1,
+				);
+			}
+		}
+
 		return entityGroups.map((group) => {
 			const sortedEntities = [...group.entities].sort((a, b) => {
 				switch (sortOption) {
@@ -94,14 +116,8 @@ export function BiblePane() {
 							new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
 						);
 					case "relationships": {
-						const countA =
-							relationships?.filter(
-								(r) => r.sourceEntityId === a.id || r.targetEntityId === a.id,
-							).length ?? 0;
-						const countB =
-							relationships?.filter(
-								(r) => r.sourceEntityId === b.id || r.targetEntityId === b.id,
-							).length ?? 0;
+						const countA = relationshipCounts.get(a.id) || 0;
+						const countB = relationshipCounts.get(b.id) || 0;
 						return countB - countA;
 					}
 					default:

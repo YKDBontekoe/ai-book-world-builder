@@ -39,6 +39,19 @@ interface BibleToolbarProps {
 	onViewModeChange: (value: ViewMode) => void;
 }
 
+/**
+ * A toolbar for the Story Bible containing search, filtering, sorting, and view options.
+ *
+ * @param props - The toolbar properties.
+ * @param props.searchQuery - The current search query string.
+ * @param props.onSearchChange - Callback when the search query changes.
+ * @param props.typeFilter - The current entity type filter (e.g., 'all', 'character').
+ * @param props.onTypeFilterChange - Callback when the type filter changes.
+ * @param props.sortOption - The current sort order.
+ * @param props.onSortChange - Callback when the sort order changes.
+ * @param props.viewMode - The current view mode ('list' or 'grid').
+ * @param props.onViewModeChange - Callback when the view mode changes.
+ */
 export function BibleToolbar({
 	searchQuery,
 	onSearchChange,
@@ -48,7 +61,7 @@ export function BibleToolbar({
 	onSortChange,
 	viewMode,
 	onViewModeChange,
-}: BibleToolbarProps) {
+}: BibleToolbarProps): React.JSX.Element {
 	return (
 		<div className="flex flex-col gap-3">
 			<div className="flex gap-2">
@@ -56,6 +69,7 @@ export function BibleToolbar({
 					<Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
 					<Input
 						placeholder="Search entities..."
+						aria-label="Search entities by name or description"
 						value={searchQuery}
 						onChange={(e) => onSearchChange(e.target.value)}
 						onClear={() => onSearchChange("")}
@@ -69,6 +83,8 @@ export function BibleToolbar({
 								<Button
 									variant="ghost"
 									size="icon"
+									aria-label="List view"
+									aria-pressed={viewMode === "list"}
 									className={cn(
 										"h-8 w-8 rounded-md",
 										viewMode === "list" && "bg-background shadow-sm",
@@ -85,6 +101,8 @@ export function BibleToolbar({
 								<Button
 									variant="ghost"
 									size="icon"
+									aria-label="Grid view"
+									aria-pressed={viewMode === "grid"}
 									className={cn(
 										"h-8 w-8 rounded-md",
 										viewMode === "grid" && "bg-background shadow-sm",
@@ -140,7 +158,7 @@ export function BibleToolbar({
 	);
 }
 
-function SortIcon({ sort }: { sort: SortOption }) {
+function SortIcon({ sort }: { sort: SortOption }): React.JSX.Element {
 	switch (sort) {
 		case "name-desc":
 			return <ArrowUpAZ className="h-3.5 w-3.5" />;
