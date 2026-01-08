@@ -75,6 +75,20 @@ const mergePRSchema = z.object({
 	number: z.number(),
 	method: z.enum(["merge", "squash", "rebase"]).default("merge"),
 });
+const executeFeaturePlanSchema = z.object({
+	parentIssue: z.object({
+		title: z.string(),
+		body: z.string(),
+		labels: z.array(z.string()).optional(),
+	}),
+	childIssues: z.array(
+		z.object({
+			title: z.string(),
+			body: z.string(),
+			labels: z.array(z.string()).optional(),
+		}),
+	),
+});
 
 // ============================================================================
 // Actions
@@ -243,5 +257,54 @@ export const mergePullRequest = createAdminAction({
 			pull_number: number,
 			merge_method: method,
 		});
+	},
+});
+
+/**
+ * Executes a feature plan by creating a parent issue and child task issues.
+ */
+export const executeFeaturePlanAction = createAdminAction({
+	input: executeFeaturePlanSchema,
+	handler: async ({ input }) => {
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+
+		// 1. Create Parent Issue
+		const parentRes = await octokit.rest.issues.create({
+			owner,
+			repo,
+			title: input.parentIssue.title,
+			body: input.parentIssue.body,
+			labels: input.parentIssue.labels,
+		});
+
+		const parentNumber = parentRes.data.number;
+		const createdIssues: number[] = [parentNumber];
+
+		// 2. Create Child Issues
+		for (const child of input.childIssues) {
+			const childRes = await octokit.rest.issues.create({
+				owner,
+				repo,
+				title: child.title,
+				body: `${child.body}\n\nRelated to #${parentNumber}`,
+				labels: child.labels,
+			});
+			createdIssues.push(childRes.data.number);
+		}
+
+		// 3. Update Parent with checklist of children
+		const checklist = createdIssues
+			.slice(1)
+			.map((num) => `- [ ] #${num}`)
+			.join("\n");
+		await octokit.rest.issues.update({
+			owner,
+			repo,
+			issue_number: parentNumber,
+			body: `${input.parentIssue.body}\n\n### Tasks\n${checklist}`,
+		});
+
+		return { parentNumber, createdIssues };
 	},
 });

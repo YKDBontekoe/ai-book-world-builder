@@ -1,5 +1,7 @@
 "use server";
 
+import fs from "node:fs/promises";
+import path from "node:path";
 import { generateObject, generateText } from "ai";
 import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
@@ -25,9 +27,38 @@ const reviewPlanSchema = z.object({
 	}),
 });
 
-const _generateTitleSchema = z.object({
-	prompt: z.string().min(1, "Prompt is required"),
+const discoverFeaturesSchema = z.object({});
+
+const planFeatureSchema = z.object({
+	title: z.string(),
+	description: z.string().optional(),
 });
+
+// ============================================================================
+// Helpers
+// ============================================================================
+
+async function getProjectContext() {
+	try {
+		const rootDir = process.cwd();
+		const [agentsMd, archMd] = await Promise.all([
+			fs.readFile(path.join(rootDir, "AGENTS.md"), "utf-8").catch(() => ""),
+			fs
+				.readFile(path.join(rootDir, "docs/architecture-overview.md"), "utf-8")
+				.catch(() => ""),
+		]);
+		return `
+=== PROJECT STANDARDS (AGENTS.md) ===
+${agentsMd}
+
+=== ARCHITECTURE (architecture-overview.md) ===
+${archMd}
+`;
+	} catch (error) {
+		console.error("Failed to read context files:", error);
+		return "";
+	}
+}
 
 // ============================================================================
 // Actions
@@ -103,3 +134,84 @@ export async function generateSessionTitleAction(
 		return "Untitled Session";
 	}
 }
+
+/**
+ * Discovers potential features or improvements by analyzing the codebase context.
+ */
+export const discoverFeaturesAction = createAdminAction({
+	input: discoverFeaturesSchema,
+	handler: async () => {
+		const modelId = await getSelectedModelId("large");
+		const context = await getProjectContext();
+
+		const { object } = await generateObject({
+			model: myProvider.languageModel(modelId),
+			schema: z.object({
+				features: z.array(
+					z.object({
+						title: z.string(),
+						description: z.string(),
+						reasoning: z.string(),
+						impact: z.enum(["High", "Medium", "Low"]),
+						type: z.enum(["Feature", "Refactor", "Test", "Docs"]),
+					}),
+				),
+			}),
+			system: `You are a visionary Product Manager and Lead Architect for this project.
+			Analyze the provided project documentation and standards.
+			Identify 3-5 high-value features, architectural improvements, or technical debt items that should be addressed next.
+			Focus on:
+			1. Gaps in the current architecture.
+			2. Enhancing the "Writer" or "Brain" modules.
+			3. Improving developer experience or stability.
+
+			Context:
+			${context}`,
+			prompt: "Propose a roadmap of strategic improvements.",
+		});
+
+		return object.features;
+	},
+});
+
+/**
+ * Plans a specific feature in detail, breaking it down into GitHub Issues.
+ */
+export const planFeatureAction = createAdminAction({
+	input: planFeatureSchema,
+	handler: async ({ input }) => {
+		const modelId = await getSelectedModelId("large");
+		const context = await getProjectContext();
+
+		const { object } = await generateObject({
+			model: myProvider.languageModel(modelId),
+			schema: z.object({
+				parentIssue: z.object({
+					title: z.string(),
+					body: z.string(),
+					labels: z.array(z.string()),
+				}),
+				childIssues: z.array(
+					z.object({
+						title: z.string(),
+						body: z.string(),
+						labels: z.array(z.string()),
+					}),
+				),
+			}),
+			system: `You are a Software Architect.
+			Your goal is to plan the implementation of a new feature: "${input.title}".
+
+			1. Create a "Parent Issue" (Epic) describing the high-level goal and scope.
+			2. Break it down into smaller, implementable "Child Issues" (Tasks).
+			3. Ensure the plan aligns with the project's architecture and coding standards.
+
+			Context:
+			${context}
+			${input.description ? `\nUser Description:\n${input.description}` : ""}`,
+			prompt: `Plan the feature: "${input.title}"`,
+		});
+
+		return object;
+	},
+});
