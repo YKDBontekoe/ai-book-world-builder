@@ -101,9 +101,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 	useHotkeys(
 		"delete, backspace",
 		() => {
-			if (selectedIds.size > 0) {
-				handleBulkDelete();
-			}
+			handleBulkDelete();
 		},
 		{ enabled: selectedIds.size > 0 },
 	);

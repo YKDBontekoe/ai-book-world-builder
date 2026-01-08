@@ -29,6 +29,13 @@ interface BulkActionsBarProps {
 	onExportCsv: () => void;
 }
 
+/**
+ * A floating bar that appears when items are selected, providing bulk actions
+ * like delete, duplicate, and export.
+ *
+ * @param props - The component props
+ * @returns The rendered floating action bar
+ */
 export function BulkActionsBar({
 	selectedCount,
 	isProcessing,
@@ -38,7 +45,7 @@ export function BulkActionsBar({
 	onDuplicate,
 	onExportJson,
 	onExportCsv,
-}: BulkActionsBarProps) {
+}: BulkActionsBarProps): React.JSX.Element {
 	return (
 		<AnimatePresence>
 			{selectedCount > 0 && (
@@ -46,6 +53,7 @@ export function BulkActionsBar({
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					exit={{ opacity: 0, y: 20 }}
+					transition={{ type: "spring", stiffness: 400, damping: 25 }}
 					className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-md px-4"
 				>
 					<GlassCard
@@ -82,6 +90,7 @@ export function BulkActionsBar({
 										variant="ghost"
 										className="gap-2 text-muted-foreground hover:text-foreground"
 										disabled={isProcessing}
+										aria-label="Export selected projects"
 									>
 										<Download className="h-4 w-4" />
 										Export

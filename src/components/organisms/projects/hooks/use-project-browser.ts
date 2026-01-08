@@ -83,7 +83,7 @@ export function useProjectBrowser(projects: Project[]) {
 	const handleSelect = (id: string, shiftKey = false) => {
 		const newSelected = new Set(selectedIds);
 
-		if (shiftKey && lastSelectedId && newSelected.has(lastSelectedId)) {
+		if (shiftKey && lastSelectedId) {
 			// Range selection
 			const lastIndex = filteredProjects.findIndex(
 				(p) => p.id === lastSelectedId,
@@ -232,8 +232,7 @@ export function useProjectBrowser(projects: Project[]) {
 	// --- Keyboard Shortcuts ---
 	useHotkeys(
 		"meta+a, ctrl+a",
-		(e) => {
-			e.preventDefault();
+		() => {
 			handleSelectAll();
 		},
 		{ preventDefault: true },
@@ -244,6 +243,7 @@ export function useProjectBrowser(projects: Project[]) {
 		(e) => {
 			e.preventDefault();
 			setSelectedIds(new Set());
+			setLastSelectedId(null);
 		},
 		{ enabled: selectedIds.size > 0 },
 	);

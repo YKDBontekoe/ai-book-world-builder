@@ -53,7 +53,8 @@ function ProjectRow({
 		// If clicking anywhere on the row with Ctrl/Cmd, toggle selection
 		if ((e.ctrlKey || e.metaKey) && onSelect) {
 			e.preventDefault();
-			onSelect(project.id, e.shiftKey);
+			// Force shiftKey to false so Ctrl+Click always toggles single item
+			onSelect(project.id, false);
 			return;
 		}
 
@@ -122,17 +123,7 @@ function ProjectRow({
 									onSelect(project.id, e.shiftKey);
 								}}
 							>
-								{/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation only */}
-								{/* biome-ignore lint/a11y/useKeyWithClickEvents: stop propagation only */}
-								<div
-									onClick={(e) => {
-										// This inner click handler is redundant if the parent handles it,
-										// but the checkbox itself might eat the click.
-										// We make the checkbox pointer-events-none and handle click on the wrapper.
-										e.stopPropagation();
-									}}
-									className="flex items-center justify-center"
-								>
+								<div className="flex items-center justify-center">
 									<Checkbox
 										checked={selected}
 										onCheckedChange={() => {}}
