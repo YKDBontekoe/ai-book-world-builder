@@ -87,23 +87,20 @@ export function BiblePane(): React.JSX.Element {
 	// Use hook for grouping logic
 	const entityGroups = useEntityGrouping(filteredEntities);
 
+	// Precompute relationship counts once for both sorting and child components
+	const relationshipCounts = useMemo(() => {
+		const counts = new Map<string, number>();
+		if (!relationships) return counts;
+
+		for (const r of relationships) {
+			counts.set(r.sourceEntityId, (counts.get(r.sourceEntityId) || 0) + 1);
+			counts.set(r.targetEntityId, (counts.get(r.targetEntityId) || 0) + 1);
+		}
+		return counts;
+	}, [relationships]);
+
 	// Sort entities within groups
 	const sortedGroups = useMemo(() => {
-		// Precompute relationship counts if needed
-		const relationshipCounts = new Map<string, number>();
-		if (sortOption === "relationships" && relationships) {
-			for (const r of relationships) {
-				relationshipCounts.set(
-					r.sourceEntityId,
-					(relationshipCounts.get(r.sourceEntityId) || 0) + 1,
-				);
-				relationshipCounts.set(
-					r.targetEntityId,
-					(relationshipCounts.get(r.targetEntityId) || 0) + 1,
-				);
-			}
-		}
-
 		return entityGroups.map((group) => {
 			const sortedEntities = [...group.entities].sort((a, b) => {
 				switch (sortOption) {
@@ -126,7 +123,7 @@ export function BiblePane(): React.JSX.Element {
 			});
 			return { ...group, entities: sortedEntities };
 		});
-	}, [entityGroups, sortOption, relationships]);
+	}, [entityGroups, sortOption, relationshipCounts]);
 
 	if (!projectId) {
 		return (
@@ -192,7 +189,7 @@ export function BiblePane(): React.JSX.Element {
 						<EntityGroupSection
 							key={group.type}
 							group={group}
-							relationships={relationships ?? []}
+							relationshipCounts={relationshipCounts}
 							viewMode={viewMode}
 						/>
 					))}

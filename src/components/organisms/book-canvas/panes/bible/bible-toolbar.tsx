@@ -120,7 +120,10 @@ export function BibleToolbar({
 
 			<div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">
 				<Select value={typeFilter} onValueChange={onTypeFilterChange}>
-					<SelectTrigger className="h-8 w-[130px] text-xs bg-background/50">
+					<SelectTrigger
+						className="h-8 w-[130px] text-xs bg-background/50"
+						aria-label="Filter by entity type"
+					>
 						<div className="flex items-center gap-2">
 							<Users className="h-3.5 w-3.5" />
 							<SelectValue placeholder="Type" />
@@ -140,7 +143,10 @@ export function BibleToolbar({
 					value={sortOption}
 					onValueChange={(value) => onSortChange(value as SortOption)}
 				>
-					<SelectTrigger className="h-8 w-[140px] text-xs bg-background/50">
+					<SelectTrigger
+						className="h-8 w-[140px] text-xs bg-background/50"
+						aria-label="Sort entities"
+					>
 						<div className="flex items-center gap-2">
 							<SortIcon sort={sortOption} />
 							<SelectValue placeholder="Sort" />

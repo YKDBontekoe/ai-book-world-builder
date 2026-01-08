@@ -1,4 +1,3 @@
-import type { SerializedRelationship } from "@/app/actions/project-stats";
 import { Badge } from "@/components/atoms/badge";
 import { EntityCard } from "@/components/molecules/entity-card";
 import { SectionHeader } from "@/components/molecules/section-header";
@@ -8,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 interface EntityGroupSectionProps {
 	group: EntityGroup;
-	relationships: SerializedRelationship[];
+	relationshipCounts: Map<string, number>;
 	viewMode: ViewMode;
 }
 
@@ -17,22 +16,15 @@ interface EntityGroupSectionProps {
  *
  * @param props - The component properties.
  * @param props.group - The group of entities to display, including metadata like label and color.
- * @param props.relationships - A list of relationships used to calculate connection counts for each entity.
+ * @param props.relationshipCounts - A map of entity IDs to their relationship counts, used to display connection metrics.
  * @param props.viewMode - The current layout mode ('list' or 'grid'), affecting the grid column count.
  */
 export function EntityGroupSection({
 	group,
-	relationships,
+	relationshipCounts,
 	viewMode,
 }: EntityGroupSectionProps): React.JSX.Element {
 	const Icon = group.icon;
-
-	// Count relationships for each entity
-	const getRelationshipCount = (entityId: string) => {
-		return relationships.filter(
-			(r) => r.sourceEntityId === entityId || r.targetEntityId === entityId,
-		).length;
-	};
 
 	return (
 		<div className="space-y-4">
@@ -57,7 +49,7 @@ export function EntityGroupSection({
 					<EntityCard
 						key={entity.id}
 						entity={entity}
-						relationshipCount={getRelationshipCount(entity.id)}
+						relationshipCount={relationshipCounts.get(entity.id) || 0}
 						className={cn(viewMode === "grid" && "h-full")}
 					/>
 				))}
