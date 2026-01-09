@@ -99,9 +99,9 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							// TODO: Remove this suppression once react-resizable-panels types are fixed or wrapper is updated
 							// @ts-expect-error ref is available in v4.1 but types might be outdated or mismatched with wrapper
 							ref={sidebarRef}
-							defaultSize={isMobile ? 0 : 20}
-							minSize={15}
-							maxSize={50}
+						defaultSize={isMobile ? 0 : 15}
+						minSize={5}
+						maxSize={90}
 							collapsible={true}
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
@@ -119,7 +119,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				)}
 
 				{/* Center Panel: Editor */}
-				<ResizablePanel defaultSize={50} minSize={30} className="relative z-10">
+				<ResizablePanel defaultSize={60} minSize={15} className="relative z-10">
 					<WriterEditor />
 					{/* Control Bar lives here, overlaying the editor */}
 					<PowerDock />
@@ -131,8 +131,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						<ResizableHandle />
 						{/* Right Panel: Book Canvas */}
 						<ResizablePanel
-							defaultSize={30}
-							minSize={20}
+							defaultSize={25}
+							minSize={5}
 							collapsible={true}
 							collapsedSize={0}
 						>
