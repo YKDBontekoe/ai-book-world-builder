@@ -12,6 +12,9 @@ import { chapter, scene } from "@/lib/db/schema";
 import { checkUsageQuota } from "@/lib/quota";
 import {
 	createSceneInChapterSchema,
+	deleteSceneSchema,
+	generateSceneSchema,
+	reorderScenesSchema,
 	updateSceneContentSchema,
 	updateSceneTitleSchema,
 } from "@/lib/validation";
@@ -65,6 +68,11 @@ export async function updateSceneContent(sceneId: string, content: string) {
 }
 
 export async function generateScene(chapterId: string, prevSceneId?: string) {
+	const validation = generateSceneSchema.safeParse({ chapterId, prevSceneId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		// 1. Fetch Context & Verify Access
 		const [currentChapter] = await db
@@ -210,6 +218,11 @@ export async function updateSceneTitle(sceneId: string, title: string) {
 export async function deleteScene(
 	sceneId: string,
 ): Promise<{ success: boolean; error?: string }> {
+	const validation = deleteSceneSchema.safeParse({ sceneId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		const targetScene = await sceneRepository.findById(sceneId);
 
@@ -336,6 +349,11 @@ export async function createSceneInChapter(
 }
 
 export async function reorderScenes(sceneIds: string[], chapterId: string) {
+	const validation = reorderScenesSchema.safeParse({ sceneIds, chapterId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		const [currentChapter] = await db
 			.select()

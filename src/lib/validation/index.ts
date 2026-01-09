@@ -139,6 +139,17 @@ export type CreateSceneInChapterInput = z.infer<
 	typeof createSceneInChapterSchema
 >;
 
+export const reorderScenesSchema = z.object({
+	chapterId: uuidSchema,
+	sceneIds: z
+		.array(uuidSchema)
+		.max(500, { message: "Too many scenes to reorder" }),
+});
+
+export const deleteSceneSchema = z.object({
+	sceneId: uuidSchema,
+});
+
 // ============================================================================
 // Chapter Schemas
 // ============================================================================
