@@ -13,7 +13,6 @@ import { SceneNavigation } from "@/components/organisms/writer/left-sidebar/scen
 import { StructureEditorDialog } from "@/components/organisms/writer/structure-editor-dialog";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
-import { cn } from "@/lib/utils";
 
 export function WriterSidebar() {
 	const { toggleSidebar } = useWriterLayoutContext();
@@ -34,25 +33,20 @@ export function WriterSidebar() {
 			data-testid="writer-sidebar"
 		>
 			<div className="px-3 py-2">
-				<Link href={`/projects/${project.id}/dashboard`}>
-					<Button
-						variant="ghost"
-						size="sm"
-						className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent/50"
-					>
+				<Button
+					asChild
+					variant="ghost"
+					size="sm"
+					className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent/50"
+				>
+					<Link href={`/projects/${project.id}/dashboard`}>
 						<LayoutDashboard className="mr-2 h-4 w-4" />
 						Dashboard
-					</Button>
-				</Link>
+					</Link>
+				</Button>
 			</div>
 
-			<div
-				className={cn(
-					"px-4 py-3 flex items-center justify-between sticky top-0 z-10",
-					// Use glass-surface utility for consistent theming (bg-background/50 + blur)
-					"glass-surface border-y border-border/50",
-				)}
-			>
+			<div className="px-4 py-3 flex items-center justify-between sticky top-0 z-10 glass-surface border-y border-border/50">
 				<div className="flex items-center gap-2.5">
 					<Button
 						variant="ghost"
