@@ -141,8 +141,8 @@ importers:
         specifier: 12.10.0
         version: 12.10.0(@types/react@19.2.7)(immer@11.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       ai:
-        specifier: 6.0.13
-        version: 6.0.13(zod@3.25.76)
+        specifier: 6.0.14
+        version: 6.0.14(zod@3.25.76)
       bcrypt-ts:
         specifier: 8.0.0
         version: 8.0.0
@@ -3495,6 +3495,12 @@ packages:
 
   ai@6.0.13:
     resolution: {integrity: sha512-xBP/OoYycUAVSF0h3BuU4/EcqAyKYIhu7LB2fPIogk+w5+b42LZXtm3rNtzt5YF0/gFScArLTxs6dhtLQuC48Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  ai@6.0.14:
+    resolution: {integrity: sha512-OaEJFeQ3gb45eZtC/lSNKqAxmsrqWxC8wLmIVXFYAMvPXE3lb96zIdS3swYArR4uXOVt6N7H/XZSyQz/Dl+HTw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -9441,6 +9447,14 @@ snapshots:
   agent-base@7.1.4: {}
 
   ai@6.0.13(zod@3.25.76):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.9(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.2
+      '@ai-sdk/provider-utils': 4.0.4(zod@3.25.76)
+      '@opentelemetry/api': 1.9.0
+      zod: 3.25.76
+
+  ai@6.0.14(zod@3.25.76):
     dependencies:
       '@ai-sdk/gateway': 3.0.9(zod@3.25.76)
       '@ai-sdk/provider': 3.0.2
