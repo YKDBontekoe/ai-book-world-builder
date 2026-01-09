@@ -85,7 +85,7 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 		const scenes = await sceneRepository.findByChapter(chapterId);
 
 		// Use shared context builder
-		const { context, prevContent, newSequence } = buildSceneGenerationContext(
+		const { context, prevContent } = buildSceneGenerationContext(
 			currentChapter,
 			scenes,
 			prevSceneId,
@@ -108,20 +108,73 @@ export async function generateScene(chapterId: string, prevSceneId?: string) {
 			throw new Error(generation.error || "No text generated");
 		}
 
-		// 3. Create New Scene using repository
-		const newScene = await sceneRepository.create({
-			projectId: currentChapter.projectId,
-			chapterId,
-			title: "AI Generated Scene",
-			sequence: newSequence,
-			content: generation.text,
-			status: "drafted",
-			prevSceneId,
+		// 4. Create New Scene using transaction to prevent race conditions on sequence
+		// Note: We bypass repository here to use transaction
+		const newSceneId = crypto.randomUUID();
+
+		await db.transaction(async (tx) => {
+			// Get max sequence atomically inside transaction
+			const [maxSeq] = await tx
+				.select({ max: sql<number>`max(${scene.sequence})` })
+				.from(scene)
+				.where(eq(scene.chapterId, chapterId));
+
+			const nextSequence = (maxSeq?.max ?? 0) + 1;
+
+			// Re-calculate local sequence for insertion if needed,
+			// but for appending (prevSceneId is last or undefined), max+1 is correct.
+			// However, generateScene typically appends to end or after prevSceneId.
+			// For simplicity and safety in generation, we append to end if prevSceneId logic is complex,
+			// or we need to shift.
+			// The original code calculated newSequence based on `scenes` array length/position.
+			// If we want to insert *after* a specific scene, we need shifting logic similar to createSceneInChapter.
+
+			// Let's assume strict append for generation unless sophisticated insertion is needed.
+			// If prevSceneId is provided, we should ideally insert after it.
+
+			// Use the same logic as createSceneInChapter for robust insertion
+			let finalSequence = nextSequence;
+
+			if (prevSceneId) {
+				const [prevScene] = await tx
+					.select()
+					.from(scene)
+					.where(eq(scene.id, prevSceneId));
+				if (prevScene) {
+					finalSequence = prevScene.sequence + 1;
+					// Shift subsequent scenes
+					await tx
+						.update(scene)
+						.set({
+							sequence: sql`${scene.sequence} + 1`,
+							updatedAt: new Date(),
+						})
+						.where(
+							and(
+								eq(scene.chapterId, chapterId),
+								sql`${scene.sequence} >= ${finalSequence}`,
+							),
+						);
+				}
+			}
+
+			await tx.insert(scene).values({
+				id: newSceneId,
+				projectId: currentChapter.projectId,
+				chapterId,
+				title: "AI Generated Scene",
+				sequence: finalSequence,
+				content: generation.text,
+				status: "drafted",
+				prevSceneId,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			});
 		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newScene.id };
+		return { success: true, sceneId: newSceneId };
 	} catch (error) {
 		console.error("Failed to generate scene", error);
 		return { success: false, error: "Generation failed" };
@@ -204,44 +257,78 @@ export async function createSceneInChapter(
 
 		await ensureProjectAccess(currentChapter.projectId, true);
 
-		const scenes = await sceneRepository.findByChapter(chapterId);
-		let newSequence = scenes.length + 1;
-		let prevSceneId: string | undefined;
+		// Use a transaction to ensure atomic sequence calculation and insertion
+		const newSceneId = crypto.randomUUID();
 
-		if (insertAfterSceneId) {
-			const insertAfterScene = scenes.find((s) => s.id === insertAfterSceneId);
-			if (insertAfterScene) {
-				newSequence = insertAfterScene.sequence + 1;
-				prevSceneId = insertAfterScene.id;
-				// Shift subsequent scenes
-				await db.transaction(async (tx) => {
-					for (const s of scenes) {
-						if (s.sequence >= newSequence) {
-							await tx
-								.update(scene)
-								.set({ sequence: s.sequence + 1, updatedAt: new Date() })
-								.where(eq(scene.id, s.id));
-						}
-					}
-				});
+		await db.transaction(async (tx) => {
+			let newSequence = 1;
+			let prevSceneId: string | undefined;
+
+			if (insertAfterSceneId) {
+				const [insertAfterScene] = await tx
+					.select()
+					.from(scene)
+					.where(eq(scene.id, insertAfterSceneId));
+
+				if (insertAfterScene) {
+					newSequence = insertAfterScene.sequence + 1;
+					prevSceneId = insertAfterScene.id;
+
+					// Shift subsequent scenes atomically
+					await tx
+						.update(scene)
+						.set({
+							sequence: sql`${scene.sequence} + 1`,
+							updatedAt: new Date(),
+						})
+						.where(
+							and(
+								eq(scene.chapterId, chapterId),
+								sql`${scene.sequence} >= ${newSequence}`,
+							),
+						);
+				}
+			} else {
+				// Append to end
+				const [maxSeq] = await tx
+					.select({ max: sql<number>`max(${scene.sequence})` })
+					.from(scene)
+					.where(eq(scene.chapterId, chapterId));
+
+				newSequence = (maxSeq?.max ?? 0) + 1;
+
+				if (newSequence > 1) {
+					// Find the ID of the scene with sequence = newSequence - 1 to set as prevSceneId
+					const [lastScene] = await tx
+						.select()
+						.from(scene)
+						.where(
+							and(
+								eq(scene.chapterId, chapterId),
+								eq(scene.sequence, newSequence - 1),
+							),
+						);
+					prevSceneId = lastScene?.id;
+				}
 			}
-		} else if (scenes.length > 0) {
-			prevSceneId = scenes[scenes.length - 1].id;
-		}
 
-		const newScene = await sceneRepository.create({
-			projectId: currentChapter.projectId,
-			chapterId,
-			title,
-			sequence: newSequence,
-			content: "",
-			status: "planned",
-			prevSceneId,
+			await tx.insert(scene).values({
+				id: newSceneId,
+				projectId: currentChapter.projectId,
+				chapterId,
+				title,
+				sequence: newSequence,
+				content: "",
+				status: "planned",
+				prevSceneId,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			});
 		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newScene.id };
+		return { success: true, sceneId: newSceneId };
 	} catch (error) {
 		console.error("Failed to create scene", error);
 		return { success: false, error: "Failed to create scene" };
