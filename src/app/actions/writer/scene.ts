@@ -359,6 +359,10 @@ export async function createSceneInChapter(
 }
 
 export async function reorderScenes(sceneIds: string[], chapterId: string) {
+	if (sceneIds.length === 0) {
+		return { success: true };
+	}
+
 	const validation = reorderScenesSchema.safeParse({ sceneIds, chapterId });
 	if (!validation.success) {
 		return { success: false, error: validation.error.errors[0].message };
