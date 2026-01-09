@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Lock, MousePointerClick, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useRef } from "react";
 import { Button } from "@/components/atoms/button";
 import { Slider } from "@/components/atoms/slider";
 import { EmptyState } from "@/components/molecules/empty-state";
@@ -37,7 +37,8 @@ export function WriterEditor() {
 	const { isTypewriterMode, isDirectorMode } = useWriterLayoutContext();
 	const { registerEditorActions } = useWriterControl();
 	const { data: entities } = useProjectEntities(project.id);
-	const editorRef = useRef<EditorHandle>(null);
+	// Use a standard ref to access the editor instance for non-effect usage
+	const editorRef = useRef<EditorHandle | null>(null);
 	const { editorFont, editorFontSize, editorLineHeight } = useAppearance();
 
 	const hasStructure = structure && structure.length > 0;
@@ -59,17 +60,25 @@ export function WriterEditor() {
 		onRestore: handleContentChange,
 	});
 
-	// Register Editor Actions (Undo/Redo/Insert)
-	useEffect(() => {
-		if (editorRef.current) {
-			registerEditorActions({
-				undo: () => editorRef.current?.undo(),
-				redo: () => editorRef.current?.redo(),
-				insertText: (text: string) => editorRef.current?.insertText(text),
-				getSelection: () => editorRef.current?.getSelection() ?? null,
-			});
-		}
-	}, [registerEditorActions]); // Re-register when scene changes
+	// Use a callback ref to handle editor registration/unregistration reliably.
+	// This ensures that whenever the Editor instance changes (e.g. key change),
+	// the actions are re-registered with the correct instance.
+	const setEditorRef = useCallback(
+		(node: EditorHandle | null) => {
+			// Update the mutable ref for other consumers
+			editorRef.current = node;
+
+			if (node) {
+				registerEditorActions({
+					undo: () => node.undo(),
+					redo: () => node.redo(),
+					insertText: (text: string) => node.insertText(text),
+					getSelection: () => node.getSelection() ?? null,
+				});
+			}
+		},
+		[registerEditorActions],
+	);
 
 	const onEditorContentChange = useCallback(
 		(content: string, _debounce: boolean) => {
@@ -101,7 +110,7 @@ export function WriterEditor() {
 						}}
 					>
 						<Editor
-							ref={editorRef}
+							ref={setEditorRef}
 							key={activeSceneId} // Reset editor when scene changes
 							content={previewContent ?? sceneContent}
 							onSaveContent={onEditorContentChange}

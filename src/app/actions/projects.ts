@@ -6,6 +6,7 @@ import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { projectRepository } from "@/lib/db/repositories";
 import { projectService } from "@/lib/services/project-service";
+import { deleteProjectsSchema } from "@/lib/validation";
 
 // Validation Schemas
 const createProjectSchema = z.object({
@@ -112,8 +113,13 @@ export async function deleteProjects(projectIds: string[]) {
 		return { error: "Unauthorized" };
 	}
 
+	const validation = deleteProjectsSchema.safeParse({ projectIds });
+	if (!validation.success) {
+		return { error: validation.error.errors[0].message };
+	}
+
 	const result = await projectService.deleteProjects(
-		projectIds,
+		validation.data.projectIds,
 		session.user.id,
 	);
 
