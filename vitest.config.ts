@@ -16,17 +16,6 @@ console.log("Vitest dirname:", dirname);
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
 	test: {
-		coverage: {
-			provider: "v8",
-			reporter: ["text", "lcov", "json"],
-			include: ["src/**/*.{ts,tsx}"],
-			exclude: [
-				"src/**/*.stories.tsx",
-				"src/app/layout.tsx",
-				"src/lib/db/schema/**",
-				"src/components/ui/**",
-			],
-		},
 		projects: [
 			{
 				plugins: [tsconfigPaths()],
@@ -39,6 +28,12 @@ export default defineConfig({
 						deps: {
 							inline: ["next-auth"],
 						},
+					},
+					coverage: {
+						provider: "v8",
+						reporter: ["text", "lcov", "json"],
+						include: ["src/**/*.{ts,tsx}"],
+						exclude: ["src/**/*.stories.tsx", "src/lib/db/schema/**"],
 					},
 				},
 			},
