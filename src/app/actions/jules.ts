@@ -16,6 +16,7 @@ const createSessionSchema = z.object({
 	title: z.string().optional(),
 	sourceName: z.string().min(1, "Source is required"),
 	requirePlanApproval: z.boolean().optional(),
+	startingBranch: z.string().optional(),
 });
 
 const sendMessageSchema = z.object({
@@ -78,10 +79,28 @@ export const createJulesSessionAction = createAdminAction({
 			title = await generateSessionTitleAction(input.prompt);
 		}
 
+		// Auto-detect the default branch if not provided
+		let startingBranch = input.startingBranch;
+		if (!startingBranch) {
+			try {
+				const source = await jules.getSource(input.sourceName);
+				startingBranch =
+					source.githubRepo?.defaultBranch?.displayName ||
+					(source.githubRepo ? "main" : undefined);
+			} catch (error) {
+				const message =
+					error instanceof Error ? error.message : "Unknown error";
+				throw new Error(
+					`Failed to detect default branch for source '${input.sourceName}': ${message}`,
+				);
+			}
+		}
+
 		return await jules.createSession({
 			prompt: input.prompt,
 			title: title,
 			sourceName: input.sourceName,
+			startingBranch,
 			automationMode: "AUTO_CREATE_PR",
 			requirePlanApproval: input.requirePlanApproval,
 		});

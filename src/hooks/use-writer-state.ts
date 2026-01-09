@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { isEqual } from "lodash";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import {
-	createChapterSnapshot,
-	getProjectStructure,
-	updateLastViewedScene,
-} from "@/app/actions/writer";
-import {
-	useBookCanvasActions,
-	useBookCanvasValue,
-} from "@/components/organisms/book-canvas/book-canvas-context";
+import { createChapterSnapshot } from "@/app/actions/writer";
 import { useSceneContent } from "@/hooks/use-scene-content";
+import { useProjectStructure } from "@/hooks/writer/use-project-structure";
+import { useWriterNavigation } from "@/hooks/writer/use-writer-navigation";
 import type { ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterStateProps {
@@ -25,113 +20,46 @@ export function useWriterState({
 	initialStructureText,
 	lastViewedSceneId,
 }: UseWriterStateProps) {
-	const [structure, setStructure] = useState<ChapterWithScenes[] | null>(
-		initialStructure ?? null,
-	);
-	const [structureText, setStructureText] = useState(
-		initialStructureText ?? "",
-	);
-	const [loading, setLoading] = useState(!initialStructure);
+	// 1. Structure Management
+	const {
+		structure,
+		structureText,
+		isLoading: isStructureLoading,
+		fetchStructure,
+		updateSceneInStructure,
+		setStructure,
+		setStructureText,
+	} = useProjectStructure({
+		projectId,
+		initialStructure,
+		initialStructureText,
+	});
 
-	// Use context for active scene to sync with Book Canvas
-	const { activeSceneId } = useBookCanvasValue();
-	const { setActiveSceneId, setProjectId } = useBookCanvasActions();
+	// 2. Navigation & Selection
+	const { activeSceneId, setActiveSceneId } = useWriterNavigation({
+		projectId,
+		structure,
+		lastViewedSceneId,
+		isLoading: isStructureLoading,
+	});
 
-	// ⚡ Bolt: Store activeSceneId in a ref to access it in fetchStructure
-	// without adding it to the dependency array. This stabilizes fetchStructure
-	// and prevents unnecessary context updates/re-renders during navigation.
-	const activeSceneIdRef = useRef(activeSceneId);
-	useEffect(() => {
-		activeSceneIdRef.current = activeSceneId;
-	}, [activeSceneId]);
-
-	const [isSnapshotting, setIsSnapshotting] = useState(false);
-
-	// Sync project ID to Book Canvas context
-	useEffect(() => {
-		if (projectId) {
-			setProjectId(projectId);
-		}
-	}, [projectId, setProjectId]);
-
-	// Update state if initial props change (e.g. navigation)
-	useEffect(() => {
-		if (initialStructure) {
-			setStructure(initialStructure);
-			setStructureText(initialStructureText || "");
-			setLoading(false);
-		}
-	}, [initialStructure, initialStructureText]);
-
-	// Callback to sync content updates from useSceneContent back to structure state
-	const onContentUpdate = useCallback((id: string, content: string) => {
-		setStructure((prev) =>
-			prev
-				? prev.map((c) => ({
-						...c,
-						scenes: c.scenes.map((s) => (s.id === id ? { ...s, content } : s)),
-					}))
-				: null,
-		);
-	}, []);
-
-	// Find the active scene object to extract cached content
+	// 3. Derived State: Active Scene Object
 	const activeScene = useMemo(
 		() =>
 			structure?.flatMap((c) => c.scenes).find((s) => s.id === activeSceneId),
 		[structure, activeSceneId],
 	);
 
-	// Use extracted hook for content management
+	// 4. Content Management (Editor State)
 	const { sceneContent, isSaving, lastSaved, handleContentChange } =
 		useSceneContent({
 			activeSceneId: activeSceneId || undefined,
 			initialContent: activeScene?.content ?? undefined,
-			onContentUpdate,
+			onContentUpdate: updateSceneInStructure,
 		});
 
-	const fetchStructure = useCallback(async () => {
-		setLoading(true);
-		const result = await getProjectStructure({ projectId });
-		if (result.success && result.data.structure) {
-			const { structure, structureText } = result.data;
-			// Cast the result to our extended type for now
-			setStructure(structure as unknown as ChapterWithScenes[]);
-			if (structureText) {
-				setStructureText(structureText);
-			}
-
-			// Use the ref here instead of the dependency
-			const currentActiveId = activeSceneIdRef.current;
-
-			if (
-				!currentActiveId &&
-				structure.length > 0 &&
-				structure[0].scenes.length > 0
-			) {
-				// Check for last viewed scene match
-				const hasLastViewed =
-					lastViewedSceneId &&
-					structure.some((c: any) =>
-						c.scenes.some((s: any) => s.id === lastViewedSceneId),
-					);
-				if (hasLastViewed && lastViewedSceneId) {
-					setActiveSceneId(lastViewedSceneId);
-				} else {
-					setActiveSceneId(structure[0].scenes[0].id);
-				}
-			}
-		}
-		setLoading(false);
-	}, [projectId, lastViewedSceneId, setActiveSceneId]);
-
-	useEffect(() => {
-		// Only fetch if no structure or if we are supposed to (though logic above handles initialStructure updates)
-		// But if we navigate to a new project and initialStructure is NOT provided for some reason, we fetch.
-		if (!initialStructure) {
-			fetchStructure();
-		}
-	}, [fetchStructure, initialStructure]);
+	// 5. Actions (Snapshots)
+	const [isSnapshotting, setIsSnapshotting] = useState(false);
 
 	const handleSnapshot = useCallback(async () => {
 		if (!activeScene?.chapterId) return;
@@ -145,43 +73,28 @@ export function useWriterState({
 		}
 	}, [activeScene]);
 
-	// Persist last viewed scene
+	// Initialize structure if needed
 	useEffect(() => {
-		if (activeSceneId && projectId) {
-			const timer = setTimeout(() => {
-				updateLastViewedScene({ projectId, sceneId: activeSceneId });
-			}, 1000);
-			return () => clearTimeout(timer);
+		if (!initialStructure) {
+			fetchStructure();
 		}
-	}, [activeSceneId, projectId]);
+	}, [fetchStructure, initialStructure]);
 
-	// Initialize selection from lastViewedSceneId if needed (when structure loaded via props)
+	// Update local state when props change
 	useEffect(() => {
-		if (loading || !structure) return;
-
-		const isValid =
-			activeSceneId &&
-			structure.some((ch) => ch.scenes.some((s) => s.id === activeSceneId));
-
-		if (!isValid) {
-			if (
-				lastViewedSceneId &&
-				structure.some((ch) =>
-					ch.scenes.some((s) => s.id === lastViewedSceneId),
-				)
-			) {
-				setActiveSceneId(lastViewedSceneId);
-			} else if (structure.length > 0 && structure[0].scenes.length > 0) {
-				setActiveSceneId(structure[0].scenes[0].id);
-			}
+		if (initialStructure) {
+			setStructure((prev) =>
+				isEqual(prev, initialStructure) ? prev : initialStructure,
+			);
+			setStructureText(initialStructureText || "");
 		}
-	}, [structure, activeSceneId, lastViewedSceneId, loading, setActiveSceneId]);
+	}, [initialStructure, initialStructureText, setStructure, setStructureText]);
 
 	return useMemo(
 		() => ({
 			structure,
 			structureText,
-			loading,
+			loading: isStructureLoading,
 			activeSceneId,
 			setActiveSceneId,
 			sceneContent,
@@ -196,7 +109,7 @@ export function useWriterState({
 		[
 			structure,
 			structureText,
-			loading,
+			isStructureLoading,
 			activeSceneId,
 			setActiveSceneId,
 			sceneContent,

@@ -1,15 +1,26 @@
-import { tool } from "ai";
+import { type Tool, tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { analysisService } from "@/lib/services/ai/analysis-service";
 
-export const critiqueChapter = () =>
+const inputSchema = z.object({
+	chapterId: z.string().describe("The Chapter ID."),
+});
+
+export const critiqueChapter = (): Tool<
+	z.infer<typeof inputSchema>,
+	{
+		strengths: string[];
+		weaknesses: string[];
+		pacing: string;
+		tone: string;
+		suggestions: string[];
+	}
+> =>
 	tool({
 		description:
-			"Provides a critique of a chapter's pacing, tone, and quality.",
-		inputSchema: z.object({
-			chapterId: z.string().describe("The ID of the chapter."),
-		}),
-		execute: async (args: any) => {
-			return await aiService.critiqueChapter(args.chapterId);
+			"Critiques a chapter's content, providing feedback on pacing, tone, and strengths/weaknesses.",
+		inputSchema,
+		execute: async (args: z.infer<typeof inputSchema>) => {
+			return await analysisService.critiqueChapter(args.chapterId);
 		},
 	});
