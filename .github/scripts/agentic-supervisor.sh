@@ -158,9 +158,8 @@ has_jules_invoked_label() {
   [[ "$LABELS" == *"jules-invoked"* ]]
 }
 
-# Helper: Collect all CodeRabbit inline comments on this PR
-# Helper: Collect all CodeRabbit inline comments on this PR
-collect_coderabbit_comments() {
+# Helper: Collect all CodeRabbit and Codecov inline comments on this PR
+collect_review_comments() {
   if [[ -n "$GH_TOKEN" && -n "$NUMBER" ]]; then
     # Create temp file for comments to avoid argument list too long errors
     local comments_file=$(mktemp)
@@ -174,45 +173,69 @@ collect_coderabbit_comments() {
       const fs = require("fs");
       try {
         const comments = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+
         const coderabbitComments = comments.filter(c => 
           c.user && c.user.login && c.user.login.includes("coderabbitai")
         );
 
-        const output = coderabbitComments.map(c => {
-          const body = c.body || "";
-          let content = "";
-          
-          // 1. Try to extract "Prompt for AI Agents"
-          // Pattern: <summary>🤖 Prompt for AI Agents</summary> ... ``` ... content ... ```
-          const promptMatch = body.match(/<summary>🤖 Prompt for AI Agents<\/summary>[\s\S]*?```[\w]*\n([\s\S]*?)```/);
-          
-          if (promptMatch && promptMatch[1]) {
-            content = "🤖 **AI Prompt**:\n" + promptMatch[1].trim();
-          } else {
-            // 2. Try to extract "Committable suggestion"
-            // Pattern: <summary>📝 Committable suggestion</summary> ... ```suggestion ... content ... ```
-            // Note: GitHub suggestions use ```suggestion key
-            const suggestionMatch = body.match(/<summary>📝 Committable suggestion<\/summary>[\s\S]*?```suggestion\n([\s\S]*?)```/);
-             
-             if (suggestionMatch && suggestionMatch[1]) {
-                content = "📝 **Suggestion**:\n```typescript\n" + suggestionMatch[1].trim() + "\n```";
-             } else {
-                // 3. Fallback to cleaned body (remove large details blocks if possible, or just take the first few lines?)
-                // For now, let"s just take the whole body but strip the extensive HTML details tags to reduce noise if possible
-                // A simple strip of <details> tags might be too aggressive. 
-                // Let"s just use the body but truncate if too long?
-                // Actually, if it"s a generic comment without those tags, use it as is.
-                content = body;
-             }
-          }
-          
-          const path = c.path || "unknown";
-          const line = c.line || c.original_line || "?";
-          
-          return `### ${path}:${line}\n${content}`;
-        }).join("\n\n---\n\n");
+        const codecovComments = comments.filter(c =>
+          c.user && c.user.login && c.user.login.includes("codecov")
+        );
 
-        console.log(output);
+        const formatCodeRabbit = (comments) => {
+          return comments.map(c => {
+            const body = c.body || "";
+            let content = "";
+
+            // 1. Try to extract "Prompt for AI Agents"
+            const promptMatch = body.match(/<summary>🤖 Prompt for AI Agents<\/summary>[\s\S]*?```[\w]*\n([\s\S]*?)```/);
+
+            if (promptMatch && promptMatch[1]) {
+              content = "🤖 **AI Prompt**:\n" + promptMatch[1].trim();
+            } else {
+              // 2. Try to extract "Committable suggestion"
+              const suggestionMatch = body.match(/<summary>📝 Committable suggestion<\/summary>[\s\S]*?```suggestion\n([\s\S]*?)```/);
+
+               if (suggestionMatch && suggestionMatch[1]) {
+                  content = "📝 **Suggestion**:\n```typescript\n" + suggestionMatch[1].trim() + "\n```";
+               } else {
+                  // 3. Fallback to cleaned body
+                  content = body;
+               }
+            }
+
+            const path = c.path || "unknown";
+            const line = c.line || c.original_line || "?";
+
+            return `### ${path}:${line}\n${content}`;
+          }).join("\n\n---\n\n");
+        };
+
+        const formatCodecov = (comments) => {
+           return comments.map(c => {
+             const body = c.body || "";
+             const path = c.path || "unknown";
+             const line = c.line || c.original_line || "?";
+             // Use simple format for Codecov
+             return `### ${path}:${line}\n${body}`;
+           }).join("\n\n---\n\n");
+        };
+
+        const rabbitOutput = formatCodeRabbit(coderabbitComments);
+        const codecovOutput = formatCodecov(codecovComments);
+
+        const parts = [];
+        if (rabbitOutput) {
+           parts.push(rabbitOutput);
+        }
+        if (codecovOutput) {
+           if (rabbitOutput) {
+             parts.push("\n\n---\n\n### Codecov Feedback\n\n");
+           }
+           parts.push(codecovOutput);
+        }
+
+        console.log(parts.join(""));
       } catch (e) {
         console.error("Error parsing comments:", e);
       }
@@ -297,14 +320,14 @@ if [[ "$EVENT_NAME" == "issues" && "$EVENT_ACTION" == "labeled" && "$LABEL_NAME"
 fi
 
 # ==============================================================================
-# LOGIC C: CodeRabbit Review Completed
+# LOGIC C: Automated Review Completed (CodeRabbit or Codecov)
 # ==============================================================================
-if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" == *"coderabbitai"* ]]; then
-    log "CodeRabbit review complete - batching comments..."
+if [[ "$EVENT_NAME" == "pull_request_review" && ( "$REVIEW_AUTHOR" == *"coderabbitai"* || "$REVIEW_AUTHOR" == *"codecov"* ) ]]; then
+    log "Automated review complete (Author: $REVIEW_AUTHOR) - batching comments..."
     
-    BATCHED_COMMENTS=$(collect_coderabbit_comments)
+    BATCHED_COMMENTS=$(collect_review_comments)
     COMMENT_COUNT=$(echo "$BATCHED_COMMENTS" | grep -c "^###" || echo "0")
-    log "Found $COMMENT_COUNT CodeRabbit inline comments"
+    log "Found $COMMENT_COUNT review inline comments"
     
     if [[ -n "$BATCHED_COMMENTS" && "$BATCHED_COMMENTS" != "" ]]; then
       
@@ -314,8 +337,6 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" == *"coderabbit
 
       if [[ "$INVOCATION_METHOD" == "api" ]]; then
          # Select prompt based on author?
-         # If Renovate (API) -> renovate-review.md
-         # If Human (API) -> code-rabbit-review.md
          if [[ "$AUTHOR" == "renovate[bot]" ]]; then
             JULES_PROMPT=$(get_prompt "renovate-review.md")
          else
@@ -325,14 +346,14 @@ if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" == *"coderabbit
       # If mention, we just leave it as "mention", and the workflow step 'jules-mention' handles it.
       
     else
-      log "No CodeRabbit inline comments - skipping"
+      log "No inline comments found - skipping"
     fi
 fi
 
 # ==============================================================================
 # LOGIC D: Human Review (Changes Requested)
 # ==============================================================================
-if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" != "coderabbitai[bot]" ]]; then
+if [[ "$EVENT_NAME" == "pull_request_review" && "$REVIEW_AUTHOR" != "coderabbitai[bot]" && "$REVIEW_AUTHOR" != *"codecov"* ]]; then
   REVIEW_STATE=$(get_json_val ".review.state")
   
   if [[ "$REVIEW_STATE" == "changes_requested" ]]; then
