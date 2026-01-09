@@ -141,8 +141,8 @@ importers:
         specifier: 12.10.0
         version: 12.10.0(@types/react@19.2.7)(immer@11.1.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       ai:
-        specifier: 6.0.13
-        version: 6.0.13(zod@3.25.76)
+        specifier: 6.0.14
+        version: 6.0.14(zod@3.25.76)
       bcrypt-ts:
         specifier: 8.0.0
         version: 8.0.0
