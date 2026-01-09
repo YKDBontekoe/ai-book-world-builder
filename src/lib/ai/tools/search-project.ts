@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { loreService } from "@/lib/services/ai/lore-service";
 
 export const searchProject = () =>
 	tool({
@@ -11,6 +11,6 @@ export const searchProject = () =>
 			query: z.string().describe("The question or term to search for."),
 		}),
 		execute: async (args: any) => {
-			return await aiService.searchProject(args.projectId, args.query);
+			return await loreService.searchProject(args.projectId, args.query);
 		},
 	});

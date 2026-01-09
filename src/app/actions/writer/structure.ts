@@ -29,7 +29,14 @@ const saveStructureSchema = z.object({
  */
 export const getProjectStructure = createUserAction({
 	input: z.object({ projectId: z.string() }),
-	handler: async ({ input: { projectId } }) => {
+	handler: async ({
+		input: { projectId },
+	}): Promise<{
+		structure: (typeof chapter.$inferSelect & {
+			scenes: (typeof scene.$inferSelect)[];
+		})[];
+		structureText: string;
+	}> => {
 		// 1. Verify Access (Read is sufficient)
 		await ensureProjectAccess(projectId);
 

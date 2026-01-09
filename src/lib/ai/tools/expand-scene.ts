@@ -1,15 +1,20 @@
-import { tool } from "ai";
+import { type Tool, tool } from "ai";
 import { z } from "zod";
-import { aiService } from "@/lib/services/ai-service";
+import { writingService } from "@/lib/services/ai/writing-service";
 
-export const expandScene = () =>
+const inputSchema = z.object({
+	sceneId: z.string().describe("The Scene ID."),
+	notes: z.string().describe("The rough notes or skeleton to expand."),
+});
+
+export const expandScene = (): Tool<
+	z.infer<typeof inputSchema>,
+	{ text: string }
+> =>
 	tool({
-		description: "Expands skeletal notes or a rough draft into a full scene.",
-		inputSchema: z.object({
-			sceneId: z.string().describe("The ID of the scene."),
-			notes: z.string().describe("The notes or skeleton to expand."),
-		}),
-		execute: async (args: any) => {
-			return await aiService.expandScene(args.sceneId, args.notes);
+		description: "Expands a skeletal scene or notes into full prose.",
+		inputSchema,
+		execute: async (args: z.infer<typeof inputSchema>) => {
+			return await writingService.expandScene(args.sceneId, args.notes);
 		},
 	});
