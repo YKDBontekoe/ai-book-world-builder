@@ -532,7 +532,10 @@ function ControlButton({
 	// If asChild is true, we clone the child element and pass props to it
 	// This is a simplified version of Slot from Radix UI
 	if (asChild && children) {
-		const child = children as React.ReactElement;
+		const child = children as React.ReactElement<{
+			className?: string;
+			children?: React.ReactNode;
+		}>;
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		return (
 			<Tooltip>

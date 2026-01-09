@@ -16,7 +16,7 @@ export default function StudioLayout({
 	children,
 }: {
 	children: React.ReactNode;
-}): JSX.Element {
+}): React.ReactElement {
 	return (
 		<>
 			<Script
