@@ -99,9 +99,9 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							// TODO: Remove this suppression once react-resizable-panels types are fixed or wrapper is updated
 							// @ts-expect-error ref is available in v4.1 but types might be outdated or mismatched with wrapper
 							ref={sidebarRef}
-						defaultSize={isMobile ? 0 : 15}
-						minSize={5}
-						maxSize={80}
+							defaultSize={isMobile ? 0 : 15}
+							minSize={15}
+							maxSize={50}
 							collapsible={true}
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
