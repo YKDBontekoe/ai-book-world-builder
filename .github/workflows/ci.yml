@@ -71,7 +71,14 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
-      - run: pnpm test:unit --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }}
+      - run: pnpm test:unit --coverage --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unit-tests
+          name: shard-${{ matrix.shard }}
+          fail_ci_if_error: false
 
   build:
     runs-on: ubuntu-latest

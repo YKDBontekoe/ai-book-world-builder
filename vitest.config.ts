@@ -29,6 +29,13 @@ export default defineConfig({
 							inline: ["next-auth"],
 						},
 					},
+					// @ts-expect-error coverage is valid here
+					coverage: {
+						provider: "v8",
+						reporter: ["text", "lcov", "json"],
+						include: ["src/**/*.{ts,tsx}"],
+						exclude: ["src/**/*.stories.tsx", "src/lib/db/schema/**"],
+					},
 				},
 			},
 			{
