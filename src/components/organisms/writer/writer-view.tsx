@@ -116,7 +116,10 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							<WriterSidebar />
 						</ResizablePanel>
 						{/* Subtle Handle */}
-						<ResizableHandle className="w-1 bg-transparent hover:bg-primary/20 transition-colors" />
+						<ResizableHandle
+							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+							aria-label="Resize sidebar"
+						/>
 					</>
 				)}
 
@@ -132,7 +135,10 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 
 				{!isZen && (
 					<>
-						<ResizableHandle className="w-1 bg-transparent hover:bg-primary/20 transition-colors" />
+						<ResizableHandle
+							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+							aria-label="Resize book canvas"
+						/>
 						{/* Right Panel: Book Canvas (On-Demand Drawer) */}
 						<ResizablePanel
 							// @ts-expect-error ref available

@@ -24,6 +24,12 @@ export interface WriterLayoutState {
 	};
 }
 
+/**
+ * Hook to manage the layout state of the Writer View, including sidebar visibility,
+ * view modes (Zen, Standard), and specific editor modes (Typewriter, Director).
+ *
+ * @returns The current layout state and actions to modify it.
+ */
 export function useWriterLayout(): WriterLayoutState {
 	const isMobile = useMediaQuery("(max-width: 768px)");
 	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
