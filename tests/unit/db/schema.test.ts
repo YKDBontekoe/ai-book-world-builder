@@ -8,7 +8,6 @@ import {
 	bookGenerationStep,
 	chapter,
 	generationTemplate,
-	legacySchema,
 	sourceMaterialProcessing,
 	type Vote,
 	vote,
@@ -94,12 +93,5 @@ describe("db schema barrel", () => {
 
 	it("continues to provide typed exports via the barrel", () => {
 		expectTypeOf<Vote>().toEqualTypeOf<InferSelectModel<typeof vote>>();
-		expect(Object.keys(legacySchema)).toEqual(
-			expect.arrayContaining([
-				"messageDeprecated",
-				"voteDeprecated",
-				"legacySchemas",
-			]),
-		);
 	});
 });

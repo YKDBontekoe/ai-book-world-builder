@@ -5,7 +5,6 @@ export * from "@/lib/db/schema/entities";
 export * from "@/lib/db/schema/feedback";
 export * from "@/lib/db/schema/generation";
 export * from "@/lib/db/schema/issues";
-export * as legacySchema from "@/lib/db/schema/legacy";
 export * from "@/lib/db/schema/outlines";
 export * from "@/lib/db/schema/projects";
 export * from "@/lib/db/schema/reader";

@@ -2,9 +2,9 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
+import { continueWriting } from "@/app/actions/writer/ai";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
-import { continueWriting } from "@/app/actions/writer/ai";
 import { invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db/drizzle";
 import { sceneRepository } from "@/lib/db/repositories";
