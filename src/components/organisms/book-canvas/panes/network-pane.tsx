@@ -112,11 +112,13 @@ export function NetworkPane() {
 		? (relationshipsResult.data as SerializedRelationship[])
 		: [];
 
-	const { initialNodes, initialEdges } = useMemo(() => {
+	// 1. Calculate Layout (Expensive, Structure-dependent)
+	// Only runs when entities or relationships change, not on theme change.
+	const { layoutedNodes, layoutedEdges } = useMemo(() => {
 		const nodes: Node[] = [];
 		const edges: Edge[] = [];
 
-		if (!entities?.length) return { initialNodes: [], initialEdges: [] };
+		if (!entities?.length) return { layoutedNodes: [], layoutedEdges: [] };
 
 		entities.forEach((entity: any) => {
 			nodes.push({
@@ -142,28 +144,44 @@ export function NetworkPane() {
 				},
 				animated: false,
 				style: { strokeWidth: 1.5 },
-				labelStyle: { fill: theme === "dark" ? "#aaa" : "#555", fontSize: 10 },
-				labelBgStyle: {
-					fill: theme === "dark" ? "#1a1a1a" : "#ffffff",
-					fillOpacity: 0.8,
-				},
+				// Styles are applied in step 2
 			});
 		});
 
 		if (nodes.length > 0) {
-			return getLayoutedElements(nodes, edges);
+			const { initialNodes, initialEdges } = getLayoutedElements(nodes, edges);
+			return { layoutedNodes: initialNodes, layoutedEdges: initialEdges };
 		}
 
-		return { initialNodes: nodes, initialEdges: edges };
-	}, [entities, relationships, theme]);
+		return { layoutedNodes: nodes, layoutedEdges: edges };
+	}, [entities, relationships]);
 
-	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+	// 2. Apply Theme (Cheap, Theme-dependent)
+	// Runs on theme change but reuses layout.
+	const styledEdges = useMemo(() => {
+		return layoutedEdges.map((edge) => ({
+			...edge,
+			labelStyle: { fill: theme === "dark" ? "#aaa" : "#555", fontSize: 10 },
+			labelBgStyle: {
+				fill: theme === "dark" ? "#1a1a1a" : "#ffffff",
+				fillOpacity: 0.8,
+			},
+		}));
+	}, [layoutedEdges, theme]);
 
+	const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
+	const [edges, setEdges, onEdgesChange] = useEdgesState(styledEdges);
+
+	// Sync Nodes: Only when structure changes (layoutedNodes)
+	// This preserves user-dragged positions when only theme changes.
 	useEffect(() => {
-		setNodes(initialNodes);
-		setEdges(initialEdges);
-	}, [initialNodes, initialEdges, setNodes, setEdges]);
+		setNodes(layoutedNodes);
+	}, [layoutedNodes, setNodes]);
+
+	// Sync Edges: When structure OR theme changes
+	useEffect(() => {
+		setEdges(styledEdges);
+	}, [styledEdges, setEdges]);
 
 	if (!projectId) {
 		return (
