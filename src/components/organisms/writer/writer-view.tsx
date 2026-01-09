@@ -89,7 +89,9 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						? "writer-view-layout-vertical"
 						: "writer-view-layout-horizontal"
 				}
-				className="flex-1"
+				// Use the existing .glass-panel utility or consistent glass variables from globals.css
+				// We want a subtle background for the whole container, but specific glass effects on panels
+				className="flex-1 bg-background/50 backdrop-blur-3xl"
 			>
 				{/* Zen Mode: Animate panels out */}
 				{!isZen && (
@@ -104,7 +106,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							maxSize={50}
 							collapsible={true}
 							collapsedSize={0}
-							className="bg-muted/10 backdrop-blur-md"
+							// Use .glass-surface for consistent semi-transparent background
+							className="glass-surface border-r border-border/50"
 							onResize={(size) => {
 								// react-resizable-panels v4.1+ passes size as number (but types might say PanelSize object)
 								// Casting to any or number to bypass incorrect strict type check if needed
@@ -135,6 +138,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							minSize={10}
 							collapsible={true}
 							collapsedSize={0}
+							className="glass-surface border-l border-border/50"
 						>
 							<BookCanvas variant="embedded" />
 						</ResizablePanel>
@@ -180,7 +184,7 @@ export function WriterView(props: WriterViewProps) {
 	const { project, isReadOnly = false } = props;
 
 	return (
-		<div className="h-full w-full overflow-hidden flex flex-col">
+		<div className="h-full w-full overflow-hidden flex flex-col bg-background/95">
 			<WriterProvider {...props}>
 				<WriterControlProvider>
 					<CanvasSync projectId={project.id} isReadOnly={isReadOnly} />
