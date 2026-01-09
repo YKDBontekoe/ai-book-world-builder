@@ -101,7 +101,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 							ref={sidebarRef}
 						defaultSize={isMobile ? 0 : 15}
 						minSize={5}
-						maxSize={90}
+						maxSize={80}
 							collapsible={true}
 							collapsedSize={0}
 							className="bg-muted/10 backdrop-blur-md"
@@ -119,7 +119,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				)}
 
 				{/* Center Panel: Editor */}
-				<ResizablePanel defaultSize={60} minSize={15} className="relative z-10">
+				<ResizablePanel defaultSize={60} minSize={20} className="relative z-10">
 					<WriterEditor />
 					{/* Control Bar lives here, overlaying the editor */}
 					<PowerDock />
@@ -132,7 +132,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						{/* Right Panel: Book Canvas */}
 						<ResizablePanel
 							defaultSize={25}
-							minSize={5}
+							minSize={10}
 							collapsible={true}
 							collapsedSize={0}
 						>
