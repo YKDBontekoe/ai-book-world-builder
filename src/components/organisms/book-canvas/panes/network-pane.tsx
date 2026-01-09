@@ -169,8 +169,8 @@ export function NetworkPane() {
 		}));
 	}, [layoutedEdges, theme]);
 
-	const [nodes, setNodes, onNodesChange] = useNodesState(layoutedNodes);
-	const [edges, setEdges, onEdgesChange] = useEdgesState(styledEdges);
+	const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+	const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
 	// Sync Nodes: Only when structure changes (layoutedNodes)
 	// This preserves user-dragged positions when only theme changes.
