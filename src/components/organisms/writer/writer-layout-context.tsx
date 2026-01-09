@@ -7,6 +7,8 @@ export type ViewMode = "standard" | "zen";
 interface WriterLayoutContextType {
 	isSidebarOpen: boolean;
 	toggleSidebar: () => void;
+	isCanvasOpen: boolean;
+	toggleCanvas: () => void;
 	viewMode: ViewMode;
 	toggleZenMode: () => void;
 	isTypewriterMode: boolean;
