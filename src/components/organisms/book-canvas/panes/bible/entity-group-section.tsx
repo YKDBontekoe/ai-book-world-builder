@@ -1,26 +1,30 @@
-import type { SerializedRelationship } from "@/app/actions/project-stats";
 import { Badge } from "@/components/atoms/badge";
 import { EntityCard } from "@/components/molecules/entity-card";
 import { SectionHeader } from "@/components/molecules/section-header";
+import type { ViewMode } from "@/components/organisms/book-canvas/panes/bible/bible-toolbar";
 import type { EntityGroup } from "@/components/organisms/book-canvas/panes/bible/types";
+import { cn } from "@/lib/utils";
 
 interface EntityGroupSectionProps {
 	group: EntityGroup;
-	relationships: SerializedRelationship[];
+	relationshipCounts: Map<string, number>;
+	viewMode: ViewMode;
 }
 
+/**
+ * Renders a group of entities (e.g., "Characters" or "Locations") within the Story Bible.
+ *
+ * @param props - The component properties.
+ * @param props.group - The group of entities to display, including metadata like label and color.
+ * @param props.relationshipCounts - A map of entity IDs to their relationship counts, used to display connection metrics.
+ * @param props.viewMode - The current layout mode ('list' or 'grid'), affecting the grid column count.
+ */
 export function EntityGroupSection({
 	group,
-	relationships,
-}: EntityGroupSectionProps) {
+	relationshipCounts,
+	viewMode,
+}: EntityGroupSectionProps): React.JSX.Element {
 	const Icon = group.icon;
-
-	// Count relationships for each entity
-	const getRelationshipCount = (entityId: string) => {
-		return relationships.filter(
-			(r) => r.sourceEntityId === entityId || r.targetEntityId === entityId,
-		).length;
-	};
 
 	return (
 		<div className="space-y-4">
@@ -35,12 +39,18 @@ export function EntityGroupSection({
 				}
 				className="mb-2"
 			/>
-			<div className="grid gap-2">
+			<div
+				className={cn(
+					"grid gap-2",
+					viewMode === "grid" ? "sm:grid-cols-1 md:grid-cols-2" : "grid-cols-1",
+				)}
+			>
 				{group.entities.map((entity) => (
 					<EntityCard
 						key={entity.id}
 						entity={entity}
-						relationshipCount={getRelationshipCount(entity.id)}
+						relationshipCount={relationshipCounts.get(entity.id) || 0}
+						className={cn(viewMode === "grid" && "h-full")}
 					/>
 				))}
 			</div>
