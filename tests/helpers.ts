@@ -43,7 +43,8 @@ export async function createAuthenticatedContext({
 	await page.getByPlaceholder("user@acme.com").fill(email);
 	await page.getByLabel("Password").click();
 	await page.getByLabel("Password").fill(password);
-	await page.getByRole("button", { name: "Sign Up" }).click();
+	// Use more specific locator to avoid ambiguity with "Sign up with Google"
+	await page.getByRole("button", { name: "Sign Up", exact: true }).click();
 
 	await expect(page.getByTestId("toast")).toContainText(
 		"Account created successfully!",

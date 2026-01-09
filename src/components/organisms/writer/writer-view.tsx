@@ -41,17 +41,26 @@ interface WriterViewProps {
 	availableModels?: ChatModel[];
 }
 
+function getPanelSize(size: unknown): number {
+	if (typeof size === "number") {
+		return size;
+	}
+	return 0;
+}
+
 function WriterViewContent({ props }: { props: WriterViewProps }) {
 	const [mounted, setMounted] = useState(false);
 
 	// Use extracted layout hook
 	const {
 		isSidebarOpen,
+		isCanvasOpen,
 		viewMode,
 		isTypewriterMode,
 		isDirectorMode,
 		isMobile,
 		sidebarRef,
+		canvasRef,
 		actions,
 	} = useWriterLayout();
 
@@ -73,6 +82,8 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			value={{
 				isSidebarOpen,
 				toggleSidebar: actions.toggleSidebar,
+				isCanvasOpen,
+				toggleCanvas: actions.toggleCanvas,
 				viewMode,
 				toggleZenMode: actions.toggleZenMode,
 				isTypewriterMode,
@@ -89,56 +100,66 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 						? "writer-view-layout-vertical"
 						: "writer-view-layout-horizontal"
 				}
-				// Use the existing .glass-panel utility or consistent glass variables from globals.css
-				// We want a subtle background for the whole container, but specific glass effects on panels
-				className="flex-1 bg-background/50 backdrop-blur-3xl"
+				className="flex-1 bg-background" // Studio Base
 			>
 				{/* Zen Mode: Animate panels out */}
 				{!isZen && (
 					<>
-						{/* Left Panel: Navigation */}
+						{/* Left Panel: Navigation (Glass Rail) */}
 						<ResizablePanel
-							// TODO: Remove this suppression once react-resizable-panels types are fixed or wrapper is updated
-							// @ts-expect-error ref is available in v4.1 but types might be outdated or mismatched with wrapper
+							// @ts-expect-error ref is available in v4.1 but types might be outdated
 							ref={sidebarRef}
-							defaultSize={isMobile ? 0 : 15}
-							minSize={15}
-							maxSize={50}
+							defaultSize={isMobile ? 0 : 18}
+							minSize={12}
+							maxSize={35}
 							collapsible={true}
 							collapsedSize={0}
-							// Use .glass-surface for consistent semi-transparent background
-							className="glass-surface border-r border-border/50"
+							className="glass-surface border-r border-border/20 shadow-lg z-20"
 							onResize={(size) => {
-								// react-resizable-panels v4.1+ passes size as number (but types might say PanelSize object)
-								// Casting to any or number to bypass incorrect strict type check if needed
-								const isCollapsed = (size as unknown as number) === 0;
+								const isCollapsed = getPanelSize(size) === 0;
 								actions.setSidebarOpen(!isCollapsed);
 							}}
 						>
 							<WriterSidebar />
 						</ResizablePanel>
-						<ResizableHandle />
+						{/* Subtle Handle */}
+						<ResizableHandle
+							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+							aria-label="Resize sidebar"
+						/>
 					</>
 				)}
 
-				{/* Center Panel: Editor */}
-				<ResizablePanel defaultSize={60} minSize={20} className="relative z-10">
+				{/* Center Panel: Editor (Studio Stage) */}
+				<ResizablePanel defaultSize={82} minSize={30} className="relative z-10">
+					{/* Editor Container - Centered "Paper" look managed inside WriterEditor */}
 					<WriterEditor />
-					{/* Control Bar lives here, overlaying the editor */}
+
+					{/* Command Deck (Floating) */}
 					<PowerDock />
 					<WriterSpotlight />
 				</ResizablePanel>
 
 				{!isZen && (
 					<>
-						<ResizableHandle />
-						{/* Right Panel: Book Canvas */}
+						<ResizableHandle
+							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+							aria-label="Resize book canvas"
+						/>
+						{/* Right Panel: Book Canvas (On-Demand Drawer) */}
 						<ResizablePanel
-							defaultSize={25}
-							minSize={10}
+							// @ts-expect-error ref available
+							ref={canvasRef}
+							defaultSize={0} // Default collapsed
+							minSize={25}
 							collapsible={true}
 							collapsedSize={0}
-							className="glass-surface border-l border-border/50"
+							className="glass-surface border-l border-border/20 shadow-lg z-20"
+							data-testid="book-canvas-panel"
+							onResize={(size) => {
+								const isCollapsed = getPanelSize(size) === 0;
+								actions.setCanvasOpen(!isCollapsed);
+							}}
 						>
 							<BookCanvas variant="embedded" />
 						</ResizablePanel>
@@ -170,7 +191,6 @@ function CanvasSync({
 	useEffect(() => {
 		setProjectId(projectId);
 		setIsReadOnly(isReadOnly);
-		// Reset when unmounting (optional, but good for cleanup)
 		return () => {
 			setProjectId(null);
 			setIsReadOnly(false);
@@ -184,7 +204,7 @@ export function WriterView(props: WriterViewProps) {
 	const { project, isReadOnly = false } = props;
 
 	return (
-		<div className="h-full w-full overflow-hidden flex flex-col bg-background/95">
+		<div className="h-full w-full overflow-hidden flex flex-col bg-background">
 			<WriterProvider {...props}>
 				<WriterControlProvider>
 					<CanvasSync projectId={project.id} isReadOnly={isReadOnly} />

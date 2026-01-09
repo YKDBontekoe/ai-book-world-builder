@@ -2,15 +2,12 @@
 
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
-	AlertTriangle,
-	BookOpenCheck,
 	Clock,
-	Edit,
-	Expand,
-	Feather,
-	Globe,
 	History as HistoryIcon,
+	Home,
 	MessageSquare,
+	PanelRightClose,
+	PanelRightOpen,
 	Redo,
 	Search,
 	Send,
@@ -19,9 +16,10 @@ import {
 	Undo,
 	X,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import { useLocalStorage } from "usehooks-ts";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -61,8 +59,21 @@ export function PowerDock() {
 
 	const { project, structure, activeChapterId, activeSceneId } =
 		useWriterContext();
-	const { viewMode } = useWriterLayoutContext();
+	const { viewMode, toggleCanvas, isCanvasOpen } = useWriterLayoutContext();
 	const isZen = viewMode === "zen";
+
+	// Hotkeys
+	useHotkeys(
+		"meta+\\",
+		(e) => {
+			e.preventDefault();
+			toggleCanvas();
+		},
+		{
+			description: "Toggle canvas",
+		},
+		[toggleCanvas],
+	);
 
 	// Dock States
 	const [mode, setMode] = useState<"default" | "tools" | "input">("default");
@@ -244,7 +255,7 @@ export function PowerDock() {
 					)}
 				>
 					<div className="flex items-center gap-1">
-						{/* MAIN BAR: Always Visible (unless in input mode, maybe shift?) */}
+						{/* MAIN BAR: Always Visible (unless in input mode) */}
 						<AnimatePresence mode="popLayout">
 							{mode !== "input" && (
 								<motion.div
@@ -253,6 +264,23 @@ export function PowerDock() {
 									animate={{ opacity: 1, x: 0 }}
 									exit={{ opacity: 0, x: -20, width: 0 }}
 								>
+									{/* Studio Navigation Group */}
+									<ControlGroup>
+										<ControlButton
+											asChild
+											label="All Projects"
+											icon={Home}
+											shortcut="Esc"
+										>
+											<Link href="/projects" />
+										</ControlButton>
+									</ControlGroup>
+
+									<Separator
+										orientation="vertical"
+										className="h-6 mx-1 bg-white/10"
+									/>
+
 									<ControlGroup>
 										<ControlButton
 											label="Undo"
@@ -309,6 +337,14 @@ export function PowerDock() {
 											onClick={toggleChat}
 											active={isChatOpen}
 											shortcut="⌘J"
+										/>
+										<ControlButton
+											label={isCanvasOpen ? "Close Canvas" : "Open Canvas"}
+											icon={isCanvasOpen ? PanelRightClose : PanelRightOpen}
+											onClick={toggleCanvas}
+											active={isCanvasOpen}
+											shortcut="⌘\"
+											data-testid="canvas-toggle"
 										/>
 									</ControlGroup>
 								</motion.div>
@@ -470,11 +506,14 @@ function ControlGroup({ children }: { children: React.ReactNode }) {
 interface ControlButtonProps {
 	label: string;
 	icon: React.ElementType;
-	onClick: () => void;
+	onClick?: () => void;
 	active?: boolean;
 	disabled?: boolean;
 	shortcut?: string;
 	className?: string;
+	"data-testid"?: string;
+	asChild?: boolean;
+	children?: React.ReactNode;
 }
 
 function ControlButton({
@@ -485,7 +524,66 @@ function ControlButton({
 	disabled,
 	shortcut,
 	className,
+	"data-testid": testId,
+	asChild,
+	children,
 }: ControlButtonProps) {
+	// If asChild is true, we clone the child element and pass props to it
+	// This is a simplified version of Slot from Radix UI
+	if (asChild && children) {
+		const child = children as React.ReactElement<{
+			className?: string;
+			children?: React.ReactNode;
+			"data-testid"?: string;
+		}>;
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		return (
+			<Tooltip>
+				<TooltipTrigger asChild>
+					<div className="relative">
+						{/* We wrap in a div to handle tooltip ref forwarding cleanly if child is complex */}
+						<child.type
+							{...child.props}
+							aria-label={label}
+							data-testid={testId}
+							className={cn(
+								"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
+								"hover:bg-white/10 hover:scale-105 active:scale-95",
+								active &&
+									"bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]",
+								disabled &&
+									"opacity-50 cursor-not-allowed hover:bg-transparent hover:scale-100",
+								!active &&
+									!disabled &&
+									"text-muted-foreground hover:text-foreground",
+								className,
+								child.props.className,
+							)}
+						>
+							<Icon className="w-5 h-5" />
+							{active && (
+								<motion.div
+									layoutId="active-dot"
+									className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary"
+								/>
+							)}
+							{/* Preserve original children of the passed element if any, though usually Link has none or text */}
+							{child.props.children}
+						</child.type>
+					</div>
+				</TooltipTrigger>
+				<TooltipContent side="top" className="flex items-center gap-2">
+					<span>{label}</span>
+					{shortcut && (
+						<kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-medium text-muted-foreground">
+							{shortcut}
+						</kbd>
+					)}
+				</TooltipContent>
+			</Tooltip>
+		);
+	}
+
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
@@ -494,6 +592,7 @@ function ControlButton({
 					aria-label={label}
 					onClick={onClick}
 					disabled={disabled}
+					data-testid={testId}
 					className={cn(
 						"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
 						"hover:bg-white/10 hover:scale-105 active:scale-95",
