@@ -67,7 +67,17 @@ export async function updateSceneContent(sceneId: string, content: string) {
 	}
 }
 
-export async function generateScene(chapterId: string, prevSceneId?: string) {
+/**
+ * Generates a new scene using AI based on context from the chapter and previous scenes.
+ *
+ * @param chapterId - The ID of the chapter to generate the scene in.
+ * @param prevSceneId - Optional ID of the preceding scene to maintain continuity.
+ * @returns A promise resolving to an object indicating success/failure and the new scene ID or error.
+ */
+export async function generateScene(
+	chapterId: string,
+	prevSceneId?: string,
+): Promise<{ success: boolean; sceneId?: string; error?: string }> {
 	const validation = generateSceneSchema.safeParse({ chapterId, prevSceneId });
 	if (!validation.success) {
 		return { success: false, error: validation.error.errors[0].message };

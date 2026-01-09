@@ -143,7 +143,10 @@ export const reorderScenesSchema = z.object({
 	chapterId: uuidSchema,
 	sceneIds: z
 		.array(uuidSchema)
-		.max(500, { message: "Too many scenes to reorder" }),
+		.max(500, { message: "Too many scenes to reorder" })
+		.refine((items) => new Set(items).size === items.length, {
+			message: "Duplicate scene IDs not allowed",
+		}),
 });
 
 export const deleteSceneSchema = z.object({
