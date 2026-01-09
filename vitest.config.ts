@@ -29,6 +29,17 @@ export default defineConfig({
 							inline: ["next-auth"],
 						},
 					},
+					coverage: {
+						provider: "v8",
+						reporter: ["text", "lcov", "json"],
+						include: ["src/**/*.{ts,tsx}"],
+						exclude: [
+							"src/**/*.stories.tsx",
+							"src/app/layout.tsx",
+							"src/lib/db/schema/**",
+							"src/components/ui/**",
+						],
+					},
 				},
 			},
 			{
