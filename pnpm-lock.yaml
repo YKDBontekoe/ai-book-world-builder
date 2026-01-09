@@ -267,8 +267,8 @@ importers:
         specifier: 19.2.3
         version: 19.2.3
       react-data-grid:
-        specifier: 7.0.0-beta.47
-        version: 7.0.0-beta.47(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: 7.0.0-beta.59
+        version: 7.0.0-beta.59(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-dom:
         specifier: 19.2.3
         version: 19.2.3(react@19.2.3)
@@ -276,8 +276,8 @@ importers:
         specifier: 5.2.1
         version: 5.2.1(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-resizable-panels:
-        specifier: 4.2.0
-        version: 4.2.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        specifier: 4.2.2
+        version: 4.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-syntax-highlighter:
         specifier: 15.6.6
         version: 15.6.6(react@19.2.3)
@@ -4682,6 +4682,7 @@ packages:
 
   jpeg-exif@1.1.4:
     resolution: {integrity: sha512-a+bKEcCjtuW5WTdgeXFzswSrdqi0jk4XlEtZlx5A94wCoBpFjfFTbo/Tra5SpNCl/YFZPvcV1dJc+TAYeg6ROQ==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -5507,11 +5508,11 @@ packages:
       '@types/react-dom':
         optional: true
 
-  react-data-grid@7.0.0-beta.47:
-    resolution: {integrity: sha512-28kjsmwQGD/9RXYC50zn5Zv/SQMhBBoSvG5seq0fM8XXi9TZ0zr9Z5T3YJqLwcEtoNzTOq3y0njkmdujGkIwQQ==}
+  react-data-grid@7.0.0-beta.59:
+    resolution: {integrity: sha512-iAp/UYWjfmXYFsyKDtGDMP1IvhwtQSjCP6G/wFEbMNuumWGOEZF8Ut1S2Bp4XxVpOrBkEVKXn+QC3rs14AcB7A==}
     peerDependencies:
-      react: ^18.0 || ^19.0
-      react-dom: ^18.0 || ^19.0
+      react: ^19.2
+      react-dom: ^19.2
 
   react-docgen-typescript@2.4.0:
     resolution: {integrity: sha512-ZtAp5XTO5HRzQctjPU0ybY0RRCQO19X/8fxn3w7y2VVTUbGHDKULPTL4ky3vB05euSgG5NpALhEhDPvQ56wvXg==}
@@ -5568,8 +5569,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.2.0:
-    resolution: {integrity: sha512-X/WbnyT/bgx09KEGvtJvaTr3axRrcBGcJdELIoGXZipCxc2hPwFsH/pfpVgwNVq5LpQxF/E5pPXGTQdjBnidPw==}
+  react-resizable-panels@4.2.2:
+    resolution: {integrity: sha512-BxDTFHxDCyCRPK54X5hpnhoLZbBslUrTTelQDRHo4107FXODjPSTqEWOPlFxE/ho0Vw4JrsRgaWdx6GIK073XA==}
     peerDependencies:
       react: ^18.0.0 || ^19.0.0
       react-dom: ^18.0.0 || ^19.0.0
@@ -11784,9 +11785,8 @@ snapshots:
       '@types/react': 19.2.7
       '@types/react-dom': 19.2.3(@types/react@19.2.7)
 
-  react-data-grid@7.0.0-beta.47(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-data-grid@7.0.0-beta.59(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
-      clsx: 2.1.1
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
 
@@ -11849,7 +11849,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.7
 
-  react-resizable-panels@4.2.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-resizable-panels@4.2.2(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
