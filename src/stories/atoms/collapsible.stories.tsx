@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { ChevronsUpDown, Plus, X } from "lucide-react";
+import { ChevronsUpDown } from "lucide-react";
 import * as React from "react";
 
 import { Button } from "@/components/atoms/button";
@@ -27,6 +27,7 @@ export const Default: Story = {
 
 		return (
 			<Collapsible
+				{...args}
 				open={isOpen}
 				onOpenChange={setIsOpen}
 				className="w-[350px] space-y-2"
