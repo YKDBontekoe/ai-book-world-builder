@@ -13,6 +13,7 @@ import { SceneNavigation } from "@/components/organisms/writer/left-sidebar/scen
 import { StructureEditorDialog } from "@/components/organisms/writer/structure-editor-dialog";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
+import { cn } from "@/lib/utils";
 
 export function WriterSidebar() {
 	const { toggleSidebar } = useWriterLayoutContext();
@@ -29,19 +30,29 @@ export function WriterSidebar() {
 
 	return (
 		<div
-			className="flex flex-col h-full bg-sidebar/30 backdrop-blur-xl overflow-hidden"
+			className="flex flex-col h-full overflow-hidden"
 			data-testid="writer-sidebar"
 		>
 			<div className="px-3 py-2">
 				<Link href={`/projects/${project.id}/dashboard`}>
-					<Button variant="ghost" size="sm" className="w-full justify-start">
+					<Button
+						variant="ghost"
+						size="sm"
+						className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-accent/50"
+					>
 						<LayoutDashboard className="mr-2 h-4 w-4" />
 						Dashboard
 					</Button>
 				</Link>
 			</div>
 
-			<div className="px-4 py-3 flex items-center justify-between bg-sidebar/20 backdrop-blur-md sticky top-0 z-10">
+			<div
+				className={cn(
+					"px-4 py-3 flex items-center justify-between sticky top-0 z-10",
+					// Use glass-surface utility for consistent theming (bg-background/50 + blur)
+					"glass-surface border-y border-border/50",
+				)}
+			>
 				<div className="flex items-center gap-2.5">
 					<Button
 						variant="ghost"
@@ -52,7 +63,7 @@ export function WriterSidebar() {
 					>
 						<PanelLeftClose className="h-4 w-4" />
 					</Button>
-					<div className="flex items-center gap-2 text-sidebar-foreground/90">
+					<div className="flex items-center gap-2 text-foreground/90">
 						<Book className="h-4 w-4 opacity-70" />
 						<h2 className="font-semibold text-sm tracking-tight">
 							Book Structure
@@ -71,7 +82,7 @@ export function WriterSidebar() {
 							<Button
 								variant="ghost"
 								size="icon"
-								className="h-7 w-7 text-muted-foreground/70 hover:text-foreground transition-colors"
+								className="h-7 w-7 text-muted-foreground/70 hover:text-foreground transition-colors hover:bg-accent/50"
 								aria-label="Edit Structure"
 							>
 								<FileText className="h-4 w-4" />
@@ -79,7 +90,7 @@ export function WriterSidebar() {
 						</StructureEditorDialog>
 					)}
 					{isReadOnly && (
-						<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60 flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/50">
+						<span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground/60 flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/30">
 							<Lock className="h-3 w-3" /> Read Only
 						</span>
 					)}

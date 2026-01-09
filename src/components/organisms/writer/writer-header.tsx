@@ -65,8 +65,9 @@ export function WriterHeader() {
 	return (
 		<div
 			className={cn(
-				"flex items-center justify-between border-b px-4 py-2 shrink-0 z-10 transition-all duration-500",
-				"glass-surface",
+				"flex items-center justify-between px-4 py-2 shrink-0 z-10 transition-all duration-500",
+				// Use consistent glass styling using semantic tokens
+				"border-b border-border/50 glass-surface",
 				isZen ? "opacity-0 hover:opacity-100 bg-background/80" : "",
 			)}
 		>
@@ -75,7 +76,7 @@ export function WriterHeader() {
 					<Button
 						variant="ghost"
 						size="icon"
-						className="h-8 w-8 shrink-0 text-muted-foreground"
+						className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent/50"
 						onClick={toggleSidebar}
 						aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
 					>
@@ -98,8 +99,8 @@ export function WriterHeader() {
 								variant="ghost"
 								size="icon"
 								className={cn(
-									"h-8 w-8",
-									isDirectorMode && "text-primary bg-primary/10",
+									"h-8 w-8 hover:bg-accent/50",
+									isDirectorMode && "text-primary bg-primary/10 hover:bg-primary/20",
 								)}
 								onClick={toggleDirectorMode}
 							>
@@ -115,8 +116,9 @@ export function WriterHeader() {
 								variant="ghost"
 								size="icon"
 								className={cn(
-									"h-8 w-8",
-									isTypewriterMode && "text-primary bg-primary/10",
+									"h-8 w-8 hover:bg-accent/50",
+									isTypewriterMode &&
+										"text-primary bg-primary/10 hover:bg-primary/20",
 								)}
 								onClick={toggleTypewriterMode}
 							>
@@ -131,7 +133,10 @@ export function WriterHeader() {
 							<Button
 								variant="ghost"
 								size="icon"
-								className={cn("h-8 w-8", isZen && "text-primary bg-primary/10")}
+								className={cn(
+									"h-8 w-8 hover:bg-accent/50",
+									isZen && "text-primary bg-primary/10 hover:bg-primary/20",
+								)}
 								onClick={toggleZenMode}
 							>
 								{isZen ? (
@@ -149,13 +154,13 @@ export function WriterHeader() {
 
 				{activeScene && !isZen && (
 					<>
-						<div className="h-4 w-[1px] bg-border mx-1" />
+						<div className="h-4 w-[1px] bg-border/50 mx-1" />
 						{/* Writing Quality Indicators */}
 						{narrativeMetrics.wordCount > 0 && (
 							<>
 								<Tooltip>
 									<TooltipTrigger asChild>
-										<div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/50 text-xs">
+										<div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-accent/30 hover:bg-accent/50 transition-colors text-xs cursor-default">
 											<BookOpen className="h-3 w-3" />
 											<span className="font-mono">
 												{narrativeMetrics.wordCount.toLocaleString()}
@@ -170,12 +175,12 @@ export function WriterHeader() {
 									<TooltipTrigger asChild>
 										<div
 											className={cn(
-												"flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium",
+												"flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium cursor-default",
 												narrativeMetrics.pacingScore > 70
-													? "bg-orange-500/20 text-orange-500"
+													? "bg-orange-500/10 text-orange-500"
 													: narrativeMetrics.pacingScore < 30
-														? "bg-blue-500/20 text-blue-500"
-														: "bg-green-500/20 text-green-500",
+														? "bg-blue-500/10 text-blue-500"
+														: "bg-green-500/10 text-green-500",
 											)}
 										>
 											<TrendingUp className="h-3 w-3" />
@@ -193,14 +198,14 @@ export function WriterHeader() {
 								</Tooltip>
 							</>
 						)}
-						<div className="h-4 w-[1px] bg-border mx-1" />
+						<div className="h-4 w-[1px] bg-border/50 mx-1" />
 						<WritingGoals />
 						<SessionInsights />
-						<div className="h-4 w-[1px] bg-border mx-1" />
+						<div className="h-4 w-[1px] bg-border/50 mx-1" />
 						<Button
 							variant="ghost"
 							size="sm"
-							className="h-6 px-2 text-xs"
+							className="h-6 px-2 text-xs hover:bg-accent/50"
 							onClick={handleSnapshot}
 							disabled={isSnapshotting}
 						>
@@ -216,17 +221,21 @@ export function WriterHeader() {
 
 				{!isZen && (
 					<>
-						<div className="h-4 w-[1px] bg-border mx-1" />
+						<div className="h-4 w-[1px] bg-border/50 mx-1" />
 						{isSaving ? (
-							<>
+							<div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">
 								<Loader2 className="h-3 w-3 animate-spin" />
-								Saving...
-							</>
+								<span className="text-[10px] font-medium uppercase tracking-wider">
+									Saving
+								</span>
+							</div>
 						) : lastSaved ? (
-							<>
+							<div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/30 text-muted-foreground transition-opacity duration-1000">
 								<Save className="h-3 w-3" />
-								Saved
-							</>
+								<span className="text-[10px] font-medium uppercase tracking-wider">
+									Saved
+								</span>
+							</div>
 						) : null}
 					</>
 				)}
