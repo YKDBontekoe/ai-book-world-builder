@@ -6,7 +6,9 @@ import { withProjectWriteAccess } from "@/lib/actions-utils";
 import {
 	type BookPlan,
 	type StoryStyle,
+	bookPlanSchema,
 	storyService,
+	storyStyleSchema,
 } from "@/lib/services/story-service";
 
 // Define schema for validation
@@ -15,13 +17,7 @@ const generateBookPlanSchema = z.object({
 		.string()
 		.min(1, "Prompt is required")
 		.max(5000, "Prompt is too long (max 5000 chars)"),
-	style: z
-		.object({
-			pov: z.string().optional(),
-			tone: z.string().optional(),
-			genre: z.string().optional(),
-		})
-		.optional(),
+	style: storyStyleSchema.partial().optional(),
 	modelId: z.string().optional(),
 });
 
@@ -66,6 +62,19 @@ export async function createBookFromPlan(
 	plan: BookPlan,
 	style?: StoryStyle,
 ) {
+	// Validate Input
+	const planValidation = bookPlanSchema.safeParse(plan);
+	if (!planValidation.success) {
+		return { success: false, error: "Invalid book plan data" };
+	}
+
+	if (style) {
+		const styleValidation = storyStyleSchema.partial().safeParse(style);
+		if (!styleValidation.success) {
+			return { success: false, error: "Invalid story style data" };
+		}
+	}
+
 	return withProjectWriteAccess(projectId, async () => {
 		try {
 			await storyService.createBookFromPlan(projectId, plan, style);
