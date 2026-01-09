@@ -9,8 +9,8 @@ Object.defineProperty(global, "crypto", {
 
 vi.mock("@/lib/db/drizzle", () => {
 	const mockChapter = {
-		id: "ch-1",
-		projectId: "proj-1",
+		id: "123e4567-e89b-12d3-a456-426614174001",
+		projectId: "123e4567-e89b-12d3-a456-426614174000",
 		title: "Chapter 1",
 		notes: "Notes",
 	};
@@ -128,11 +128,11 @@ vi.mock("@/lib/db/repositories", () => ({
 	sceneRepository: {
 		findByChapter: vi.fn().mockResolvedValue([
 			{
-				id: "scene-1",
+				id: "123e4567-e89b-12d3-a456-426614174002",
 				title: "Scene 1",
 				content: "Content",
 				sequence: 1,
-				chapterId: "ch-1",
+				chapterId: "123e4567-e89b-12d3-a456-426614174001",
 			},
 		]),
 		create: vi.fn().mockResolvedValue({
@@ -143,7 +143,7 @@ vi.mock("@/lib/db/repositories", () => ({
 	},
 	projectRepository: {
 		findByIdWithAccess: vi.fn().mockResolvedValue({
-			id: "proj-1",
+			id: "123e4567-e89b-12d3-a456-426614174000",
 			userId: "user-1",
 			visibility: "private",
 		}),
@@ -153,7 +153,7 @@ vi.mock("@/lib/db/repositories", () => ({
 vi.mock("@/lib/db/repositories/project-repository", () => ({
 	projectRepository: {
 		findByIdWithAccess: vi.fn().mockResolvedValue({
-			id: "proj-1",
+			id: "123e4567-e89b-12d3-a456-426614174000",
 			userId: "user-1",
 			visibility: "private",
 		}),
@@ -166,7 +166,7 @@ vi.mock("@/app/(auth)/auth", () => ({
 
 vi.mock("@/lib/db/queries/project", () => ({
 	getProjectByIdWithAccess: vi.fn().mockResolvedValue({
-		id: "proj-1",
+		id: "123e4567-e89b-12d3-a456-426614174000",
 		userId: "user-1",
 		visibility: "private",
 	}),
@@ -183,7 +183,7 @@ import { generateScene } from "@/app/actions/writer/scene";
 
 describe("generateScene", () => {
 	it("should generate a scene successfully", async () => {
-		const result = await generateScene("ch-1");
+		const result = await generateScene("123e4567-e89b-12d3-a456-426614174001");
 		expect(result.success).toBe(true);
 		expect(result.sceneId).toBe("new-scene-1");
 	});
