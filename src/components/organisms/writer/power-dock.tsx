@@ -2,15 +2,12 @@
 
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
-	AlertTriangle,
-	BookOpenCheck,
 	Clock,
-	Edit,
-	Expand,
-	Feather,
-	Globe,
 	History as HistoryIcon,
+	Home,
 	MessageSquare,
+	PanelRightClose,
+	PanelRightOpen,
 	Redo,
 	Search,
 	Send,
@@ -19,9 +16,9 @@ import {
 	Undo,
 	X,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
-import { useLocalStorage } from "usehooks-ts";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -61,7 +58,7 @@ export function PowerDock() {
 
 	const { project, structure, activeChapterId, activeSceneId } =
 		useWriterContext();
-	const { viewMode } = useWriterLayoutContext();
+	const { viewMode, toggleCanvas, isCanvasOpen } = useWriterLayoutContext();
 	const isZen = viewMode === "zen";
 
 	// Dock States
@@ -244,7 +241,7 @@ export function PowerDock() {
 					)}
 				>
 					<div className="flex items-center gap-1">
-						{/* MAIN BAR: Always Visible (unless in input mode, maybe shift?) */}
+						{/* MAIN BAR: Always Visible (unless in input mode) */}
 						<AnimatePresence mode="popLayout">
 							{mode !== "input" && (
 								<motion.div
@@ -253,6 +250,23 @@ export function PowerDock() {
 									animate={{ opacity: 1, x: 0 }}
 									exit={{ opacity: 0, x: -20, width: 0 }}
 								>
+									{/* Studio Navigation Group */}
+									<ControlGroup>
+										<Link href="/projects" passHref>
+											<ControlButton
+												label="All Projects"
+												icon={Home}
+												onClick={() => {}} // Link handles nav
+												shortcut="Esc"
+											/>
+										</Link>
+									</ControlGroup>
+
+									<Separator
+										orientation="vertical"
+										className="h-6 mx-1 bg-white/10"
+									/>
+
 									<ControlGroup>
 										<ControlButton
 											label="Undo"
@@ -309,6 +323,13 @@ export function PowerDock() {
 											onClick={toggleChat}
 											active={isChatOpen}
 											shortcut="⌘J"
+										/>
+										<ControlButton
+											label={isCanvasOpen ? "Close Canvas" : "Open Canvas"}
+											icon={isCanvasOpen ? PanelRightClose : PanelRightOpen}
+											onClick={toggleCanvas}
+											active={isCanvasOpen}
+											shortcut="⌘\"
 										/>
 									</ControlGroup>
 								</motion.div>
