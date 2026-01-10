@@ -165,9 +165,9 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
-          CODEx_MENTION=""
+          ASSIGNEE_MENTION="@Jules"
           if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
-            CODEx_MENTION=" @codex"
+            ASSIGNEE_MENTION="@codex"
           fi
 
           MESSAGE="🚨 **CI Pipeline Failed**
@@ -177,7 +177,7 @@ jobs:
 
           **Workflow Run:** ${{ steps.failures.outputs.workflow_url }}
 
-          🤖 @Jules will automatically attempt to fix these issues.${CODEx_MENTION}"
+          🤖 ${ASSIGNEE_MENTION} will automatically attempt to fix these issues."
 
           echo "$MESSAGE" > message.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}
