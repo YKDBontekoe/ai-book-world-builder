@@ -33,7 +33,6 @@ export function ContextualPrompts() {
 
 		// Generate contextual prompts based on content
 		const generatePrompts = (): ContextualPrompt[] => {
-			const contentLower = debouncedContent.toLowerCase();
 			const wordCount = debouncedContent.split(/\s+/).length;
 			const hasDialogue = /["'"]/.test(debouncedContent);
 			const hasAction = /\b(run|jump|grab|throw|strike|attack|defend)\b/i.test(
