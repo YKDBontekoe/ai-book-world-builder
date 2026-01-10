@@ -26,13 +26,27 @@ The Project View is divided into three main panels to help you organize and writ
 
 1.  **Navigation (Left)**: This sidebar lists your Chapters and Scenes. Use it to jump between different parts of your book. It also contains the "Create Story" wizard when your project is empty.
 2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
-3.  **Canvas (Right)**: A visual board for your world. Available panes include:
-    *   **Map**: Visual location tracking.
-    *   **Arc**: Pacing and tension visualization.
-    *   **Timeline**: Chronological event tracking.
-    *   **Network**: Entity relationship graph.
-    *   **Bible**: The core database of your characters and lore.
-    *   **Context**: Active context for the current scene.
+3.  **Canvas (Right)**: A visual board for your world.
+
+### Using the World Canvas
+
+The Canvas (Right Panel) is your command center for world-building and analysis. It features several specialized tools (tabs):
+
+*   **Outline**: View and manage your high-level book structure (Volumes and Chapters).
+*   **Graph**: Visualizes your **Entity Network**. See how characters, locations, and lore are connected.
+    *   *Nodes* represent entities.
+    *   *Lines* represent relationships (e.g., "Ally", "Sibling").
+*   **Arc**: Analyzes your story's **Pacing** and **Tension**.
+    *   *Tension (Area Chart)*: Derived from atmospheric keywords and emotional beats.
+    *   *Pacing (Line Chart)*: Based on scene length and dialogue density.
+*   **Timeline**: Tracks chronological events to ensure your plot is consistent.
+*   **Context**: Shows exactly what the AI "sees" when generating the current scene (e.g., Active Characters, Location details). Use this to verify the AI has the right info.
+*   **Map**: A visual gallery of your locations. You can attach images to locations to visualize your world's geography.
+*   **Scenes**: A Kanban-style board to manage scene status (Planned -> Drafted -> Final).
+*   **Draft**: A scratchpad for rough ideas or snippets that don't fit in the main manuscript yet.
+*   **Readiness**: Displays the **Project Readiness Score** and diagnostic health checks. It tells you if you have enough world data to start generating high-quality prose.
+*   **Bible**: The core database of your characters and lore. Use this to search and edit entities without leaving the editor.
+*   **Log**: A history of changes and AI generations.
 
 ## Writer Tools
 
@@ -67,7 +81,7 @@ Refine existing scene content.
 ### 5. Expand
 Add depth and detail to a scene.
 -   **Usage**: Select a scene. The AI will elaborate on the existing content, adding sensory details and character introspection.
--   **Best For**: Fleshng out "thin" scenes.
+-   **Best For**: Fleshing out "thin" scenes.
 
 ### 6. Critique
 Get feedback on your chapter.
@@ -77,7 +91,7 @@ Get feedback on your chapter.
 ### 7. Consistency Check
 Ensure your story aligns with your world.
 -   **Usage**: The AI scans the chapter for contradictions with your defined Entities (Characters, Lore).
--   **Best For**: catching plot holes or out-of-character behavior.
+-   **Best For**: Catching plot holes or out-of-character behavior.
 
 ### 8. Generate Lore
 Create new world entities from your ideas.
