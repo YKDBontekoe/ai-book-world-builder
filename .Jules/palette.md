@@ -12,3 +12,17 @@ Loading states now transition smoothly and match the rest of the application's d
 ### Learnings
 - Always look for opportunities to replace raw loading text with high-fidelity skeletons.
 - Skeletons should use `GlassCard` variants to match the container they are loading into.
+
+## 2026-01-10 - Moved Writer Tools into a Rail Layout
+
+### Context
+The writing style analyzer and contextual prompts were floating overlays, which competed with the editor for attention and overlapped other UI panels.
+
+### Solution
+Relocated the tools into a dedicated right-side rail styled with glass surfaces, keeping the layout consistent with the rest of the writer view.
+
+### Outcome
+The tools now live in a predictable column, making them easier to scan without interrupting the writing flow.
+
+### Learnings
+- Reserve floating overlays for transient actions; persistent insights belong in structured rails.

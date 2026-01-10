@@ -11,6 +11,8 @@ import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
+import { ContextualPrompts } from "@/components/organisms/writer/tools/contextual-prompts";
+import { WritingStyleAnalyzer } from "@/components/organisms/writer/tools/writing-style-analyzer";
 import { WriterSpotlight } from "@/components/organisms/writer/tools/writer-spotlight";
 import { WriterProvider } from "@/components/organisms/writer/writer-context";
 import {
@@ -124,7 +126,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				)}
 
 				{/* Center Panel: Editor (Studio Stage) */}
-				<ResizablePanel defaultSize={82} minSize={30} className="relative z-10">
+				<ResizablePanel defaultSize={62} minSize={30} className="relative z-10">
 					{/* Editor Container - Centered "Paper" look managed inside WriterEditor */}
 					<WriterEditor />
 
@@ -135,6 +137,21 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 
 				{!isZen && (
 					<>
+						<ResizableHandle
+							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+							aria-label="Resize tools rail"
+						/>
+						<ResizablePanel
+							defaultSize={20}
+							minSize={16}
+							maxSize={28}
+							className="glass-surface border-l border-border/20 shadow-lg z-20"
+						>
+							<div className="flex h-full flex-col gap-4 p-4 overflow-y-auto">
+								<ContextualPrompts />
+								{isDirectorMode && <WritingStyleAnalyzer />}
+							</div>
+						</ResizablePanel>
 						<ResizableHandle
 							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
 							aria-label="Resize book canvas"

@@ -1,11 +1,10 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { Minus, Palette, TrendingDown, TrendingUp, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Palette } from "lucide-react";
 import { useMemo } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { Badge } from "@/components/atoms/badge";
-import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
@@ -105,7 +104,7 @@ export function WritingStyleAnalyzer() {
 			animate={{ opacity: 1, x: 0 }}
 			exit={{ opacity: 0, x: -20 }}
 			transition={{ type: "spring", stiffness: 400, damping: 25 }}
-			className="fixed top-20 right-4 z-30 w-72"
+			className="w-full"
 		>
 			<GlassCard
 				variant="liquid"

@@ -13,8 +13,6 @@ import {
 	type EditorHandle,
 } from "@/components/organisms/editor/text-editor";
 import { StoryWizard } from "@/components/organisms/writer/story-wizard";
-import { ContextualPrompts } from "@/components/organisms/writer/tools/contextual-prompts";
-import { WritingStyleAnalyzer } from "@/components/organisms/writer/tools/writing-style-analyzer";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { WriterHeader } from "@/components/organisms/writer/writer-header";
@@ -34,7 +32,7 @@ export function WriterEditor() {
 		isReadOnly,
 	} = useWriterContext();
 
-	const { isTypewriterMode, isDirectorMode } = useWriterLayoutContext();
+	const { isTypewriterMode } = useWriterLayoutContext();
 	const { registerEditorActions } = useWriterControl();
 	const { data: entities } = useProjectEntities(project.id);
 	// Use a standard ref to access the editor instance for non-effect usage
@@ -152,12 +150,6 @@ export function WriterEditor() {
 					</div>
 				)}
 			</div>
-
-			{/* Contextual Prompts */}
-			<ContextualPrompts />
-
-			{/* Writing Style Analyzer */}
-			{isDirectorMode && <WritingStyleAnalyzer />}
 
 			{/* Time Travel Controls */}
 			{activeSceneId && historyStack.length > 1 && (

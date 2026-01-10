@@ -119,7 +119,7 @@ export function ContextualPrompts() {
 				animate={{ opacity: 1, y: 0 }}
 				exit={{ opacity: 0, y: 20 }}
 				transition={{ type: "spring", stiffness: 400, damping: 25 }}
-				className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4"
+				className="w-full"
 			>
 				<GlassCard
 					variant="liquid"
