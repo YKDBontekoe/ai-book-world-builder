@@ -4,7 +4,6 @@ import {
 	useBookCanvasActions,
 	useBookCanvasValue,
 } from "@/components/organisms/book-canvas/book-canvas-context";
-import { uuidSchema } from "@/lib/validation";
 import type { ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterNavigationProps {
@@ -77,13 +76,7 @@ export function useWriterNavigation({
 
 	// Persist last viewed scene
 	useEffect(() => {
-		const isValidUuid = (value: string) => uuidSchema.safeParse(value).success;
-		if (
-			activeSceneId &&
-			projectId &&
-			isValidUuid(projectId) &&
-			isValidUuid(activeSceneId)
-		) {
+		if (activeSceneId && projectId) {
 			const timer = setTimeout(async () => {
 				try {
 					await updateLastViewedScene({ projectId, sceneId: activeSceneId });
