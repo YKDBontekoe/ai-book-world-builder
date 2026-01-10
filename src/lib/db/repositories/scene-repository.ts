@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
 import { BaseRepository, type FindOptions } from "./base-repository";

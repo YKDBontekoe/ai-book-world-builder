@@ -5,7 +5,7 @@ import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { createOutline, getOutlinesForProject } from "@/lib/db/queries/outline";
 import {
 	createVolumePlan,

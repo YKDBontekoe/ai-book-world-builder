@@ -1,6 +1,6 @@
 import "server-only";
 import { asc, desc, eq } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { chapter, outline, scene, volume } from "@/lib/db/schema";
 import type {
 	BookPlan,

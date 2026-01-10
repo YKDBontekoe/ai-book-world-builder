@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { readingProgress } from "@/lib/db/schema/reader";
 
 export async function getReadingProgress({

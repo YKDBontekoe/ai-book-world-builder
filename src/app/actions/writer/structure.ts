@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getCached, invalidateCache } from "@/lib/cache";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, outline, type Scene, scene, volume } from "@/lib/db/schema";
 

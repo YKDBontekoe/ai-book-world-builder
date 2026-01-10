@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, count, eq, inArray, isNull, lte, or } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { safeQuery } from "@/lib/db/safe-query";
 import {
 	type NewSourceMaterialChapter,

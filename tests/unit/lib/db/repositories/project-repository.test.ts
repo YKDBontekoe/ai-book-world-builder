@@ -49,7 +49,7 @@ const mocks = vi.hoisted(() => {
 	return mockChain;
 });
 
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: mocks,
 }));
 

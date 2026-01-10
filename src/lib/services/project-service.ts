@@ -3,7 +3,7 @@ import "server-only";
 import { type ExtractTablesWithRelations, eq, inArray } from "drizzle-orm";
 import type { PgTransaction } from "drizzle-orm/pg-core";
 import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { projectRepository } from "@/lib/db/repositories";
 import type * as schema from "@/lib/db/schema";
 import {

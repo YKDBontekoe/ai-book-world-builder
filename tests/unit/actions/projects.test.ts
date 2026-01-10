@@ -38,7 +38,7 @@ const { mockDb, mockProjectRepository, mockAuth } = vi.hoisted(() => {
 });
 
 // Apply mocks
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: mockDb,
 }));
 

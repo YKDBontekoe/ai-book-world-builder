@@ -2,7 +2,7 @@
 
 import { desc, eq, sql } from "drizzle-orm";
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { projectRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
 

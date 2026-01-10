@@ -69,7 +69,7 @@ vi.mock("server-only", () => {
 });
 
 // Mock drizzle to prevent initialization errors in unit tests
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: {
 		select: vi.fn().mockReturnThis(),
 		from: vi.fn().mockReturnThis(),

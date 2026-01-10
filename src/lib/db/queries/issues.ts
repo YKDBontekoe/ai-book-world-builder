@@ -1,7 +1,7 @@
 import "server-only";
 
 import { and, desc, eq } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { safeQuery } from "@/lib/db/safe-query";
 import {
 	type ConsistencyIssue,

@@ -1,7 +1,7 @@
 import "server-only";
 import { and, asc, desc, eq, gt } from "drizzle-orm";
 import type { ArtifactKind } from "@/components/organisms/artifact";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { document, type Suggestion, suggestion } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 

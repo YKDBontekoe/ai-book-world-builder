@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, count, eq, gte, inArray } from "drizzle-orm";
-import { type DbTransaction, db } from "@/lib/db/drizzle";
+import { type DbTransaction, db } from "@/lib/db";
 import { chat, type DBMessage, message, vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 
