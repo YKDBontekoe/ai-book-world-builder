@@ -1,6 +1,6 @@
 import { type Tool, tool } from "ai";
 import { z } from "zod";
-import { writingService } from "@/lib/services/ai/writing-service";
+import { storyService } from "@/lib/services/story-service";
 
 const inputSchema = z.object({
 	sceneId: z.string().describe("The Scene ID."),
@@ -15,6 +15,6 @@ export const expandScene = (): Tool<
 		description: "Expands a skeletal scene or notes into full prose.",
 		inputSchema,
 		execute: async (args: z.infer<typeof inputSchema>) => {
-			return await writingService.expandScene(args.sceneId, args.notes);
+			return await storyService.expandScene(args.sceneId, args.notes);
 		},
 	});

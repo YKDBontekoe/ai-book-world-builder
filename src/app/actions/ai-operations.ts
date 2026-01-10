@@ -2,14 +2,14 @@
 
 import { analysisService } from "@/lib/services/ai/analysis-service";
 import { loreService } from "@/lib/services/ai/lore-service";
-import { writingService } from "@/lib/services/ai/writing-service";
+import { storyService } from "@/lib/services/story-service";
 
 export async function batchWriteChapterAction(
 	chapterId: string,
 	instructions?: string,
 ) {
 	try {
-		return await writingService.batchWriteChapter(chapterId, instructions);
+		return await storyService.batchWriteChapter(chapterId, instructions);
 	} catch (error) {
 		return { success: false, error: (error as Error).message };
 	}
@@ -20,7 +20,7 @@ export async function rewriteSceneAction(
 	instructions: string,
 ) {
 	try {
-		return await writingService.rewriteScene(sceneId, instructions);
+		return await storyService.rewriteScene(sceneId, instructions);
 	} catch (error) {
 		return { error: (error as Error).message };
 	}
@@ -28,7 +28,7 @@ export async function rewriteSceneAction(
 
 export async function expandSceneAction(sceneId: string, notes: string) {
 	try {
-		return await writingService.expandScene(sceneId, notes);
+		return await storyService.expandScene(sceneId, notes);
 	} catch (error) {
 		return { error: (error as Error).message };
 	}

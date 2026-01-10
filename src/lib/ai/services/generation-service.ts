@@ -164,6 +164,70 @@ export class GenerationService extends BaseAIService {
 			modelId: result.modelId,
 		};
 	}
+
+	/**
+	 * Expands a skeletal scene or notes into full prose.
+	 */
+	async expandScene(
+		sceneTitle: string,
+		notes: string,
+		options: GenerationOptions = {},
+	): Promise<{ text?: string; error?: string } & AIGenerationResult> {
+		const systemPrompt = writerPrompts.expandScene.system();
+		const prompt = writerPrompts.expandScene.user({
+			sceneTitle,
+			notes,
+		});
+
+		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
+			modelId: options.modelId,
+			modelRole: "writer",
+			temperature: options.temperature ?? 0.7,
+		});
+
+		if (!result.success) {
+			return { error: result.error };
+		}
+
+		return {
+			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
+	}
+
+	/**
+	 * Rewrites an entire scene based on instructions.
+	 */
+	async rewriteScene(
+		sceneTitle: string,
+		originalContent: string,
+		instructions: string,
+		options: GenerationOptions = {},
+	): Promise<{ text?: string; error?: string } & AIGenerationResult> {
+		const systemPrompt = writerPrompts.rewriteScene.system();
+		const prompt = writerPrompts.rewriteScene.user({
+			sceneTitle,
+			originalContent,
+			instructions,
+		});
+
+		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
+			modelId: options.modelId,
+			modelRole: "writer",
+			temperature: options.temperature ?? 0.7,
+		});
+
+		if (!result.success) {
+			return { error: result.error };
+		}
+
+		return {
+			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
+	}
 }
 
 export const generationService = new GenerationService();
