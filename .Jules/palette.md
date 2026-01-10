@@ -16,13 +16,17 @@ Loading states now transition smoothly and match the rest of the application's d
 ## 2026-01-10 - Writer Header Responsive Grouping
 
 ### Context
+
 The writer header contained dense metrics and status chips in a single row, squeezing the scene title on smaller screens.
 
 ### Solution
+
 Split the header into primary and secondary rows, moving metrics, goals, insights, and save/snapshot status into a dedicated secondary row with a mobile "More" menu fallback.
 
 ### Outcome
+
 The scene title gains more horizontal space while secondary details remain accessible across breakpoints.
 
 ### Learnings
+
 - Group secondary metadata into responsive rows or menus to preserve primary navigation clarity on compact layouts.
