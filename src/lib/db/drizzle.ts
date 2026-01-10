@@ -34,6 +34,15 @@ export type AppDb = PgDb | SqliteDb;
 
 const createPostgresDb = async (): Promise<PgDb> => {
 	if (!process.env.POSTGRES_URL) {
+		if (process.env.CI === "true" || process.env.NEXT_PHASE === "phase-production-build") {
+			const handler: ProxyHandler<AppDb> = {
+				get: () => {
+					throw new Error("POSTGRES_URL is not defined");
+				},
+			};
+			return new Proxy({} as AppDb, handler) as PgDb;
+		}
+
 		throw new Error("POSTGRES_URL is not defined");
 	}
 
