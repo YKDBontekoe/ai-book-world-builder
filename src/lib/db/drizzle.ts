@@ -15,8 +15,9 @@ if (dbDriver !== "postgres" && dbDriver !== "sqlite") {
 }
 
 const isServer = typeof window === "undefined";
+const isTestEnv = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
 
-if (!isServer) {
+if (!isServer && !isTestEnv) {
 	throw new Error("Database client initialized in a browser context.");
 }
 
