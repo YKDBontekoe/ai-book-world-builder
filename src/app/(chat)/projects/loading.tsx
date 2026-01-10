@@ -19,7 +19,7 @@ export default function ProjectsLoading(): React.JSX.Element {
 			<div className="mt-8">
 				{/* ProjectTabs Skeleton */}
 				<div className="mb-6">
-					<Skeleton className="h-10 w-[240px] rounded-lg bg-muted" />
+					<Skeleton className="h-10 w-[240px] rounded-lg glass-panel bg-muted/20" />
 				</div>
 
 				{/* Grid Content Skeleton */}
@@ -33,18 +33,18 @@ export default function ProjectsLoading(): React.JSX.Element {
 								className="h-[200px] p-6 flex flex-col justify-between"
 							>
 								<div className="space-y-4">
-									<div className="flex items-center gap-3 pr-8 pl-6">
-										<Skeleton className="h-12 w-12 rounded-xl" />
-										<Skeleton className="h-6 w-32 rounded-lg" />
+									<div className="flex items-center gap-3">
+										<Skeleton className="h-12 w-12 rounded-xl bg-primary/10" />
+										<Skeleton className="h-6 w-32 rounded-lg bg-foreground/10" />
 									</div>
 									<div className="space-y-2">
-										<Skeleton className="h-4 w-full rounded" />
-										<Skeleton className="h-4 w-2/3 rounded" />
+										<Skeleton className="h-4 w-full rounded bg-foreground/5" />
+										<Skeleton className="h-4 w-2/3 rounded bg-foreground/5" />
 									</div>
 								</div>
-								<div className="flex justify-between items-center pt-4 border-t border-border/30">
-									<Skeleton className="h-3 w-24 rounded" />
-									<Skeleton className="h-3 w-3 rounded-full" />
+								<div className="flex justify-between items-center pt-4 border-t border-border/10">
+									<Skeleton className="h-3 w-24 rounded bg-foreground/10" />
+									<Skeleton className="h-3 w-3 rounded-full bg-foreground/10" />
 								</div>
 							</GlassCard>
 						))}

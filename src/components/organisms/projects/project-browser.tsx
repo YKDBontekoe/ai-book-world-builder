@@ -170,7 +170,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						onClear={() => setSearchQuery("")}
-						className="pl-9 bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50 transition-colors"
+						className="pl-9 glass-input focus:border-primary/50 transition-colors"
 					/>
 				</div>
 				<div className="flex items-center gap-2 w-full sm:w-auto">
@@ -180,7 +180,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 							setVisibilityFilter(value as VisibilityFilter)
 						}
 					>
-						<SelectTrigger className="w-full sm:w-[140px] bg-background/50 backdrop-blur-sm border-border/50">
+						<SelectTrigger className="w-full sm:w-[140px] glass-input">
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<Eye className="h-4 w-4" />
 								<SelectValue placeholder="Visibility" />
@@ -195,7 +195,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 
 					<div className="h-8 w-px bg-border/50 mx-1" />
 
-					<div className="flex items-center bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg p-1 mr-2">
+					<div className="flex items-center glass-input rounded-lg p-1 mr-2">
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
@@ -241,7 +241,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 						value={sortOption}
 						onValueChange={(value) => setSortOption(value as SortOption)}
 					>
-						<SelectTrigger className="w-full sm:w-[180px] bg-background/50 backdrop-blur-sm border-border/50">
+						<SelectTrigger className="w-full sm:w-[180px] glass-input">
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<SortIcon sort={sortOption} />
 								<SelectValue placeholder="Sort by" />
