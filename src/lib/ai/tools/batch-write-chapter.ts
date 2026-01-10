@@ -1,6 +1,6 @@
 import { type Tool, tool } from "ai";
 import { z } from "zod";
-import { writingService } from "@/lib/services/ai/writing-service";
+import { storyService } from "@/lib/services/story-service";
 
 const inputSchema = z.object({
 	chapterId: z.string().describe("The Chapter ID."),
@@ -24,7 +24,7 @@ export const batchWriteChapter = (): Tool<
 			"Automatically writes or continues multiple scenes in a chapter.",
 		inputSchema,
 		execute: async (args: z.infer<typeof inputSchema>) => {
-			return await writingService.batchWriteChapter(
+			return await storyService.batchWriteChapter(
 				args.chapterId,
 				args.instructions,
 			);

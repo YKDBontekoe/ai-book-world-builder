@@ -5,6 +5,7 @@ import { getSelectedModelId } from "@/lib/ai/models";
 import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service"; // Use new service
 import { invalidateCache } from "@/lib/cache";
+import { getScenesForChapter, updateSceneContent } from "@/lib/db/queries";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 import {
 	type BookPlan,
@@ -13,6 +14,10 @@ import {
 } from "@/lib/services/schemas/story-schemas";
 import { buildSceneGenerationContext } from "@/lib/services/story/story-context-builder";
 import { logGenerationUsage } from "@/lib/services/usage-logger";
+import {
+	verifyProjectAccessViaScenes,
+	verifySceneAccess,
+} from "./ai/utils";
 
 // Re-export types for backward compatibility
 export type { BookPlan, StoryStyle };
@@ -191,6 +196,122 @@ export class StoryService {
 		}).catch((err: any) =>
 			console.error("Failed to log generation usage:", err),
 		);
+	}
+
+	/**
+	 * Batch writes all scenes in a chapter.
+	 * Iterates with limited concurrency to maintain context while speeding up.
+	 */
+	async batchWriteChapter(
+		chapterId: string,
+		instructions?: string,
+	): Promise<{ success: boolean; writtenCount: number }> {
+		const scenes = await getScenesForChapter({ chapterId });
+		if (!scenes || scenes.length === 0) {
+			throw new Error("No scenes found in chapter.");
+		}
+
+		await verifyProjectAccessViaScenes(scenes);
+
+		// Sort by sequence to ensure logical flow
+		const sortedScenes = scenes.sort((a, b) => a.sequence - b.sequence);
+
+		// Limit the number of scenes to prevent timeouts
+		if (sortedScenes.length > 5) {
+			throw new Error(
+				"Batch writing is limited to 5 scenes at a time to prevent timeouts.",
+			);
+		}
+
+		// Concurrency limit to prevent timeouts/rate-limits
+		const CONCURRENCY_LIMIT = 3;
+
+		const tasks = sortedScenes.map((sceneItem) => async () => {
+			// Skip if already has substantial content (safety check)
+			if (sceneItem.content && sceneItem.content.length > 500) {
+				return false;
+			}
+
+			try {
+				const { text } = await generationService.draftScene(
+					sceneItem.title,
+					{
+						purpose: "Part of batch generation",
+					},
+					instructions,
+				);
+
+				if (text) {
+					await updateSceneContent({
+						sceneId: sceneItem.id,
+						content: text,
+						status: "drafted",
+					});
+					return true;
+				}
+			} catch (e) {
+				console.error(`Failed to write scene ${sceneItem.id}`, e);
+			}
+			return false;
+		});
+
+		// Execute in chunks
+		let processed = 0;
+		for (let i = 0; i < tasks.length; i += CONCURRENCY_LIMIT) {
+			const chunk = tasks.slice(i, i + CONCURRENCY_LIMIT);
+			const chunkResults = await Promise.all(chunk.map((t) => t()));
+			processed += chunkResults.filter(Boolean).length;
+		}
+
+		return { success: true, writtenCount: processed };
+	}
+
+	/**
+	 * Rewrites a specific scene based on instructions.
+	 */
+	async rewriteScene(
+		sceneId: string,
+		instructions: string,
+	): Promise<{ text: string }> {
+		await verifySceneAccess(sceneId);
+
+		const sceneItem = await storyRepository.getScene(sceneId);
+		if (!sceneItem) throw new Error("Scene not found");
+
+		const modelId = await getSelectedModelId("large");
+
+		const { text, error } = await generationService.rewriteScene(
+			sceneItem.title,
+			sceneItem.content || "",
+			instructions,
+			{ modelId },
+		);
+
+		if (error || !text) throw new Error(error || "Failed to generate rewrite.");
+
+		return { text };
+	}
+
+	/**
+	 * Expands a skeletal scene into full prose.
+	 */
+	async expandScene(sceneId: string, notes: string): Promise<{ text: string }> {
+		await verifySceneAccess(sceneId);
+
+		const sceneItem = await storyRepository.getScene(sceneId);
+		if (!sceneItem) throw new Error("Scene not found");
+
+		const modelId = await getSelectedModelId("large");
+
+		const { text, error } = await generationService.expandScene(
+			sceneItem.title,
+			notes || sceneItem.content || "",
+			{ modelId },
+		);
+
+		if (error || !text) throw new Error(error || "Failed to generate text.");
+
+		return { text };
 	}
 }
 

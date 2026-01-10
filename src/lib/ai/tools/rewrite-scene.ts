@@ -1,6 +1,6 @@
 import { type Tool, tool } from "ai";
 import { z } from "zod";
-import { writingService } from "@/lib/services/ai/writing-service";
+import { storyService } from "@/lib/services/story-service";
 
 const inputSchema = z.object({
 	sceneId: z.string().describe("The Scene ID."),
@@ -15,6 +15,6 @@ export const rewriteScene = (): Tool<
 		description: "Rewrites a specific scene based on instructions.",
 		inputSchema,
 		execute: async (args: z.infer<typeof inputSchema>) => {
-			return await writingService.rewriteScene(args.sceneId, args.instructions);
+			return await storyService.rewriteScene(args.sceneId, args.instructions);
 		},
 	});

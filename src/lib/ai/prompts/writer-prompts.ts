@@ -21,6 +21,17 @@ export interface RewriteSelectionPromptParams {
 	instruction: string;
 }
 
+export interface ExpandScenePromptParams {
+	sceneTitle: string;
+	notes: string;
+}
+
+export interface RewriteScenePromptParams {
+	sceneTitle: string;
+	originalContent: string;
+	instructions: string;
+}
+
 export const writerPrompts = {
 	continueWriting: {
 		system: (style?: string) =>
@@ -52,6 +63,30 @@ Emotional Beats: ${emotionalBeats || "None"}
 
 Instructions: ${instructions || "Draft the scene."}
 `,
+	},
+
+	expandScene: {
+		system: () =>
+			`You are an expert fiction writer. Your goal is to expand rough notes or a skeleton into a full, vivid scene. Focus on sensory details, dialogue, and pacing. Output ONLY the story prose.`,
+		user: ({ sceneTitle, notes }: ExpandScenePromptParams) =>
+			`Scene Title: ${sceneTitle}
+Notes/Skeleton:
+${notes || ""}`,
+	},
+
+	rewriteScene: {
+		system: () =>
+			`You are an expert editor and fiction writer. Rewrite the scene based on the instructions. Output ONLY the rewritten scene content.`,
+		user: ({
+			sceneTitle,
+			originalContent,
+			instructions,
+		}: RewriteScenePromptParams) =>
+			`Instructions: "${instructions}"
+
+Original Scene Title: ${sceneTitle}
+Original Content:
+${originalContent || "(No content yet)"}`,
 	},
 
 	generateIdeas: {

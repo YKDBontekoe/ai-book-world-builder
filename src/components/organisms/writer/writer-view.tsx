@@ -15,22 +15,17 @@ import {
 	SheetTitle,
 } from "@/components/atoms/sheet";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
-import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
-import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
+import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { PowerDock } from "@/components/organisms/writer/power-dock";
 import { WriterSpotlight } from "@/components/organisms/writer/tools/writer-spotlight";
-import { WriterProvider } from "@/components/organisms/writer/writer-context";
-import {
-	useWriterControl,
-	WriterControlProvider,
-} from "@/components/organisms/writer/writer-control-context";
+import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
 import { WriterEditor } from "@/components/organisms/writer/writer-editor";
-import { WriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
 import { WriterSidebar } from "@/components/organisms/writer/writer-sidebar";
 import { WriterSkeleton } from "@/components/organisms/writer/writer-skeleton";
 import type { ChatModel } from "@/lib/ai/models";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
+import { WriterContextShell } from "./writer-context-shell";
 
 // Lazy load assistant
 const FloatingAssistant = dynamic(() =>
@@ -51,18 +46,15 @@ interface WriterViewProps {
 function WriterViewContent({ props }: { props: WriterViewProps }) {
 	const [mounted, setMounted] = useState(false);
 
-	// Use extracted layout hook
 	const {
 		isSidebarOpen,
 		isCanvasOpen,
 		viewMode,
-		isTypewriterMode,
-		isDirectorMode,
 		isMobile,
 		sidebarRef,
 		canvasRef,
 		actions,
-	} = useWriterLayout();
+	} = useWriterLayoutContext();
 
 	// Control Context
 	const { isChatOpen, setChatOpen } = useWriterControl();
@@ -85,20 +77,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 	);
 
 	return (
-		<WriterLayoutContext.Provider
-			value={{
-				isSidebarOpen,
-				toggleSidebar: actions.toggleSidebar,
-				isCanvasOpen,
-				toggleCanvas: actions.toggleCanvas,
-				viewMode,
-				toggleZenMode: actions.toggleZenMode,
-				isTypewriterMode,
-				toggleTypewriterMode: actions.toggleTypewriterMode,
-				isDirectorMode,
-				toggleDirectorMode: actions.toggleDirectorMode,
-			}}
-		>
+		<>
 			{isMobile ? (
 				<div className="flex flex-col flex-1 bg-background">
 					{editorPanel}
@@ -214,42 +193,16 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				onOpenChange={setChatOpen}
 				hideTrigger={true}
 			/>
-		</WriterLayoutContext.Provider>
+		</>
 	);
 }
 
-function CanvasSync({
-	projectId,
-	isReadOnly,
-}: {
-	projectId: string;
-	isReadOnly: boolean;
-}) {
-	const { setProjectId, setIsReadOnly } = useBookCanvasActions();
-
-	useEffect(() => {
-		setProjectId(projectId);
-		setIsReadOnly(isReadOnly);
-		return () => {
-			setProjectId(null);
-			setIsReadOnly(false);
-		};
-	}, [projectId, isReadOnly, setProjectId, setIsReadOnly]);
-
-	return null;
-}
-
 export function WriterView(props: WriterViewProps) {
-	const { project, isReadOnly = false } = props;
-
 	return (
 		<div className="h-full w-full overflow-hidden flex flex-col bg-background">
-			<WriterProvider {...props}>
-				<WriterControlProvider>
-					<CanvasSync projectId={project.id} isReadOnly={isReadOnly} />
-					<WriterViewContent props={props} />
-				</WriterControlProvider>
-			</WriterProvider>
+			<WriterContextShell {...props}>
+				<WriterViewContent props={props} />
+			</WriterContextShell>
 		</div>
 	);
 }
