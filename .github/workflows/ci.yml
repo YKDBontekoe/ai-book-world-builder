@@ -163,7 +163,13 @@ jobs:
       - name: Comment on PR about failures
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
+          ASSIGNEE_MENTION="@Jules"
+          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+            ASSIGNEE_MENTION="@codex"
+          fi
+
           MESSAGE="🚨 **CI Pipeline Failed**
 
           The following checks failed on this PR:
@@ -171,7 +177,7 @@ jobs:
 
           **Workflow Run:** ${{ steps.failures.outputs.workflow_url }}
 
-          🤖 @Jules will automatically attempt to fix these issues."
+          🤖 ${ASSIGNEE_MENTION} will automatically attempt to fix these issues."
 
           echo "$MESSAGE" > message.txt
           gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}

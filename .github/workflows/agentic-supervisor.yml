@@ -123,21 +123,32 @@ jobs:
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
-          gh pr comment "$PR_NUMBER" --body "🔄 **Routing to Jules via @mention**
+          ASSIGNEE_MENTION="@jules"
+          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+            ASSIGNEE_MENTION="@codex"
+          fi
+
+          gh pr comment "$PR_NUMBER" --body "🔄 **Routing via @mention**
           
-          Using @jules mention (cost-optimized) instead of new API session.
+          Using ${ASSIGNEE_MENTION} mention (cost-optimized) instead of new API session.
           
           **PR Author:** \`$AUTHOR\`
-          **Method:** GitHub Integration (@jules mention)" --repo "${{ github.repository }}"
+          **Method:** GitHub Integration (${ASSIGNEE_MENTION} mention)" --repo "${{ github.repository }}"
 
       - name: Post @jules mention with feedback
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           BATCHED_COMMENTS: ${{ needs.supervisor.outputs.batched_comments }}
+          AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
+          ASSIGNEE_MENTION="@jules"
+          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+            ASSIGNEE_MENTION="@codex"
+          fi
+
           if [[ -n "$BATCHED_COMMENTS" ]]; then
-            echo "@jules Please address the following feedback:" > /tmp/comment.md
+            echo "${ASSIGNEE_MENTION} Please address the following feedback:" > /tmp/comment.md
             echo "" >> /tmp/comment.md
             echo "$BATCHED_COMMENTS" >> /tmp/comment.md
             echo "" >> /tmp/comment.md
@@ -147,7 +158,7 @@ jobs:
             echo "3. Commit with message: \`fix: address review feedback\`" >> /tmp/comment.md
             gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md --repo "${{ github.repository }}"
           else
-            gh pr comment "$PR_NUMBER" --body "@jules Please review and address any pending feedback on this PR." --repo "${{ github.repository }}"
+            gh pr comment "$PR_NUMBER" --body "${ASSIGNEE_MENTION} Please review and address any pending feedback on this PR." --repo "${{ github.repository }}"
           fi
 
   # ==========================================================================
