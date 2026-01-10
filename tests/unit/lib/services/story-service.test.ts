@@ -66,7 +66,7 @@ vi.mock("@/lib/ai/providers", () => ({
 	},
 }));
 
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: {
 		transaction: mocks.transaction,
 		insert: mocks.insert,

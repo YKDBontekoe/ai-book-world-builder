@@ -2,7 +2,7 @@ import "server-only";
 import { and, desc, eq, ne, or, type SQL } from "drizzle-orm";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { DEFAULT_PROJECT_FOLDERS } from "@/lib/constants";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { type Project, project } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 

@@ -1,6 +1,6 @@
 import "server-only";
 import { asc, eq } from "drizzle-orm";
-import { type DbTransaction, db } from "@/lib/db/drizzle";
+import { type DbTransaction, db } from "@/lib/db";
 import { stream } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 

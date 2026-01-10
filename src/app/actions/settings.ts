@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createPublicAction, createUserAction } from "@/lib/action-middleware";
 import { getOpenRouterModels } from "@/lib/ai/openrouter";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { userPreferences } from "@/lib/db/schema/auth";
 
 // ============================================================================

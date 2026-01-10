@@ -2,7 +2,7 @@
 
 import { eq } from "drizzle-orm";
 import { createUserAction } from "@/lib/action-middleware";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { account } from "@/lib/db/schema";
 
 // ============================================================================

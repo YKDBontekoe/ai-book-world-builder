@@ -6,7 +6,7 @@ import { continueWriting } from "@/app/actions/writer/ai";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { invalidateCache } from "@/lib/cache";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
 import { checkUsageQuota } from "@/lib/quota";

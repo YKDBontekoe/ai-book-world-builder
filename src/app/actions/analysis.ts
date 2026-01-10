@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { ensureProjectAccess } from "@/lib/actions-utils";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { getIssuesForProject, resolveIssue } from "@/lib/db/queries/issues";
 import { scene, sceneCard } from "@/lib/db/schema";
 import { consistencyService } from "@/lib/services/analysis/consistency-service";

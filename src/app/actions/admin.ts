@@ -6,7 +6,7 @@ import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { createAdminAction } from "@/lib/action-middleware";
 import { isAdmin } from "@/lib/auth/utils";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import {
 	bookGeneration as generationTable,
 	project as projectTable,

@@ -1,6 +1,6 @@
 import "server-only";
 import { eq } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { user } from "@/lib/db/schema";
 import { generateHashedPassword } from "@/lib/db/utils";
 import { ChatSDKError } from "@/lib/errors";
