@@ -13,14 +13,15 @@ import {
 } from "@/lib/db/queries/volume";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, project } from "@/lib/db/schema";
+import { uuidSchema } from "@/lib/validation";
 
 const projectIdSchema = z.object({
 	projectId: z.string().uuid(),
 });
 
 const lastViewedSchema = z.object({
-	projectId: z.string().uuid(),
-	sceneId: z.string().uuid(),
+	projectId: z.string(),
+	sceneId: z.string(),
 });
 
 export const initializeProject = createUserAction({
@@ -114,6 +115,16 @@ export const initializeProject = createUserAction({
 export const updateLastViewedScene = createUserAction({
 	input: lastViewedSchema,
 	handler: async ({ input: { projectId, sceneId } }) => {
+		const isValidProjectId = uuidSchema.safeParse(projectId).success;
+		const isValidSceneId = uuidSchema.safeParse(sceneId).success;
+
+		if (!isValidProjectId || !isValidSceneId) {
+			return {
+				success: false,
+				error: "Invalid project or scene ID format",
+			};
+		}
+
 		await ensureProjectAccess(projectId, true);
 
 		await db
