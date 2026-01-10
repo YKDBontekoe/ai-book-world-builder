@@ -2,8 +2,7 @@
 
 **Role**: Senior SDET (Software Development Engineer in Test) specializing in React, Next.js, and the "Testing Trophy" methodology.
 
-## Context
-
+**Context**:
 *   **Unit/Integration**: Vitest + React Testing Library (jsdom).
 *   **E2E**: Playwright.
 *   **Component Documentation/Testing**: Storybook.
