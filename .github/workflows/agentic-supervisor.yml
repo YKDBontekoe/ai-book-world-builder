@@ -123,8 +123,9 @@ jobs:
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
+          AUTHOR_LOWER=$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')
           ASSIGNEE_MENTION="@jules"
-          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+          if [[ "$AUTHOR_LOWER" != "google-labs-jules" && "$AUTHOR_LOWER" != google-labs-jules* && "$AUTHOR_LOWER" != "jules" ]]; then
             ASSIGNEE_MENTION="@codex"
           fi
 
@@ -142,8 +143,9 @@ jobs:
           BATCHED_COMMENTS: ${{ needs.supervisor.outputs.batched_comments }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
+          AUTHOR_LOWER=$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')
           ASSIGNEE_MENTION="@jules"
-          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+          if [[ "$AUTHOR_LOWER" != "google-labs-jules" && "$AUTHOR_LOWER" != google-labs-jules* && "$AUTHOR_LOWER" != "jules" ]]; then
             ASSIGNEE_MENTION="@codex"
           fi
 

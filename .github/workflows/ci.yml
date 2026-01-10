@@ -165,8 +165,9 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
+          AUTHOR_LOWER=$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')
           ASSIGNEE_MENTION="@Jules"
-          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+          if [[ "$AUTHOR_LOWER" != "google-labs-jules" && "$AUTHOR_LOWER" != google-labs-jules* && "$AUTHOR_LOWER" != "jules" ]]; then
             ASSIGNEE_MENTION="@codex"
           fi
 
