@@ -199,7 +199,13 @@ export const projectIdSchema = z.object({
 
 export const saveProjectStructureSchema = z.object({
 	projectId: uuidSchema,
-	structureText: z.string(),
+	structureText: z
+		.string()
+		.trim()
+		.min(1, { message: "Structure text cannot be empty" })
+		.max(200000, {
+			message: "Structure text must be 200,000 characters or less",
+		}),
 });
 
 export const updateLastViewedSceneSchema = z.object({
