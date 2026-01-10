@@ -245,7 +245,9 @@ export function WriterHeader(): JSX.Element {
 										{saveStatus && (
 											<>
 												<DropdownMenuSeparator />
-												<div className="flex items-center justify-end">{saveStatus}</div>
+												<div className="flex items-center justify-end">
+													{saveStatus}
+												</div>
 											</>
 										)}
 									</div>
@@ -269,7 +271,8 @@ export function WriterHeader(): JSX.Element {
 											</div>
 										</TooltipTrigger>
 										<TooltipContent>
-											Word Count • {narrativeMetrics.readingTimeMinutes} min read
+											Word Count • {narrativeMetrics.readingTimeMinutes} min
+											read
 										</TooltipContent>
 									</Tooltip>
 									<Tooltip>
