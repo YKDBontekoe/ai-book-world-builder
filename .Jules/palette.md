@@ -26,3 +26,16 @@ Developers can now run the app against SQLite by toggling `DB_DRIVER` and initia
 
 ### Learnings
 - Keep DB driver selection centralized so server actions and repositories always follow the active driver.
+## 2026-01-10 - Mobile overlays preserve editor focus
+
+### Context
+The writer layout now uses overlay sheets for navigation and canvas on mobile to avoid shrinking the editor space.
+
+### Solution
+Keep the editor as the full-height primary surface while sliding sidebar/canvas panels in as translucent sheets.
+
+### Outcome
+Mobile writing stays focused and visually consistent with the macOS glass aesthetic.
+
+### Learnings
+- Mobile panels should be overlays so the editor remains the dominant surface.

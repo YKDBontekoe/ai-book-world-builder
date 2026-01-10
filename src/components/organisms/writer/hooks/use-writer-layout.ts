@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
 import { useMediaQuery } from "usehooks-ts";
 
@@ -32,7 +32,7 @@ export interface WriterLayoutState {
  */
 export function useWriterLayout(): WriterLayoutState {
 	const isMobile = useMediaQuery("(max-width: 768px)");
-	const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+	const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
 	const [isCanvasOpen, setIsCanvasOpen] = useState(false); // Default closed for Studio feel
 	const [viewMode, setViewMode] = useState<ViewMode>("standard");
 	const [isTypewriterMode, setIsTypewriterMode] = useState(false);
@@ -42,6 +42,11 @@ export function useWriterLayout(): WriterLayoutState {
 	const canvasRef = useRef<PanelImperativeHandle>(null);
 
 	const toggleSidebar = () => {
+		if (isMobile) {
+			setIsSidebarOpen((prev) => !prev);
+			return;
+		}
+
 		const panel = sidebarRef.current;
 		if (panel) {
 			if (isSidebarOpen) {
@@ -53,6 +58,11 @@ export function useWriterLayout(): WriterLayoutState {
 	};
 
 	const toggleCanvas = () => {
+		if (isMobile) {
+			setIsCanvasOpen((prev) => !prev);
+			return;
+		}
+
 		const panel = canvasRef.current;
 		if (panel) {
 			if (isCanvasOpen) {
@@ -74,6 +84,13 @@ export function useWriterLayout(): WriterLayoutState {
 	const toggleDirectorMode = () => {
 		setIsDirectorMode((prev) => !prev);
 	};
+
+	useEffect(() => {
+		if (isMobile) {
+			setIsSidebarOpen(false);
+			setIsCanvasOpen(false);
+		}
+	}, [isMobile]);
 
 	return {
 		isSidebarOpen,
