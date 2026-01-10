@@ -123,9 +123,15 @@ jobs:
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
+          CODEX_MENTION=""
+          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+            CODEX_MENTION="@codex"
+          fi
+
           gh pr comment "$PR_NUMBER" --body "🔄 **Routing to Jules via @mention**
           
           Using @jules mention (cost-optimized) instead of new API session.
+          ${CODEX_MENTION:+Additional mention: $CODEX_MENTION}
           
           **PR Author:** \`$AUTHOR\`
           **Method:** GitHub Integration (@jules mention)" --repo "${{ github.repository }}"
@@ -135,9 +141,15 @@ jobs:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           BATCHED_COMMENTS: ${{ needs.supervisor.outputs.batched_comments }}
+          AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
+          CODEX_MENTION=""
+          if [[ "$AUTHOR" != "google-labs-jules" && "$AUTHOR" != "Jules" ]]; then
+            CODEX_MENTION="@codex "
+          fi
+
           if [[ -n "$BATCHED_COMMENTS" ]]; then
-            echo "@jules Please address the following feedback:" > /tmp/comment.md
+            echo "${CODEX_MENTION}@jules Please address the following feedback:" > /tmp/comment.md
             echo "" >> /tmp/comment.md
             echo "$BATCHED_COMMENTS" >> /tmp/comment.md
             echo "" >> /tmp/comment.md
@@ -147,7 +159,7 @@ jobs:
             echo "3. Commit with message: \`fix: address review feedback\`" >> /tmp/comment.md
             gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md --repo "${{ github.repository }}"
           else
-            gh pr comment "$PR_NUMBER" --body "@jules Please review and address any pending feedback on this PR." --repo "${{ github.repository }}"
+            gh pr comment "$PR_NUMBER" --body "${CODEX_MENTION}@jules Please review and address any pending feedback on this PR." --repo "${{ github.repository }}"
           fi
 
   # ==========================================================================
