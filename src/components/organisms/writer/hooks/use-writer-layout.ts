@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
 import { useMediaQuery } from "usehooks-ts";
 
@@ -41,7 +41,7 @@ export function useWriterLayout(): WriterLayoutState {
 	const sidebarRef = useRef<PanelImperativeHandle>(null);
 	const canvasRef = useRef<PanelImperativeHandle>(null);
 
-	const toggleSidebar = () => {
+	const toggleSidebar = useCallback(() => {
 		if (isMobile) {
 			setIsSidebarOpen((prev) => !prev);
 			return;
@@ -55,9 +55,9 @@ export function useWriterLayout(): WriterLayoutState {
 				panel.expand();
 			}
 		}
-	};
+	}, [isMobile, isSidebarOpen]);
 
-	const toggleCanvas = () => {
+	const toggleCanvas = useCallback(() => {
 		if (isMobile) {
 			setIsCanvasOpen((prev) => !prev);
 			return;
@@ -71,19 +71,19 @@ export function useWriterLayout(): WriterLayoutState {
 				panel.expand();
 			}
 		}
-	};
+	}, [isMobile, isCanvasOpen]);
 
-	const toggleZenMode = () => {
+	const toggleZenMode = useCallback(() => {
 		setViewMode((prev) => (prev === "standard" ? "zen" : "standard"));
-	};
+	}, []);
 
-	const toggleTypewriterMode = () => {
+	const toggleTypewriterMode = useCallback(() => {
 		setIsTypewriterMode((prev) => !prev);
-	};
+	}, []);
 
-	const toggleDirectorMode = () => {
+	const toggleDirectorMode = useCallback(() => {
 		setIsDirectorMode((prev) => !prev);
-	};
+	}, []);
 
 	useEffect(() => {
 		if (isMobile) {
@@ -92,16 +92,8 @@ export function useWriterLayout(): WriterLayoutState {
 		}
 	}, [isMobile]);
 
-	return {
-		isSidebarOpen,
-		isCanvasOpen,
-		viewMode,
-		isTypewriterMode,
-		isDirectorMode,
-		isMobile,
-		sidebarRef,
-		canvasRef,
-		actions: {
+	const actions = useMemo(
+		() => ({
 			toggleSidebar,
 			toggleCanvas,
 			toggleZenMode,
@@ -109,6 +101,36 @@ export function useWriterLayout(): WriterLayoutState {
 			toggleDirectorMode,
 			setSidebarOpen: setIsSidebarOpen,
 			setCanvasOpen: setIsCanvasOpen,
-		},
-	};
+		}),
+		[
+			toggleSidebar,
+			toggleCanvas,
+			toggleZenMode,
+			toggleTypewriterMode,
+			toggleDirectorMode,
+		],
+	);
+
+	return useMemo(
+		() => ({
+			isSidebarOpen,
+			isCanvasOpen,
+			viewMode,
+			isTypewriterMode,
+			isDirectorMode,
+			isMobile,
+			sidebarRef,
+			canvasRef,
+			actions,
+		}),
+		[
+			isSidebarOpen,
+			isCanvasOpen,
+			viewMode,
+			isTypewriterMode,
+			isDirectorMode,
+			isMobile,
+			actions,
+		],
+	);
 }
