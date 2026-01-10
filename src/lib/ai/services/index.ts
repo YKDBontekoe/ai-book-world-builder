@@ -13,7 +13,6 @@ export {
 	type EntityKind,
 	type InferredRelationship,
 } from "./analysis-service";
-export { BaseAIService } from "./base-ai-service";
 export { ConsistencyService, consistencyService } from "./consistency-service";
 export type { GenerationOptions, SceneCardData } from "./generation-service";
 // Services
