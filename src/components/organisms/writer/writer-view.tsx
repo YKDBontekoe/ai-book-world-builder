@@ -7,6 +7,13 @@ import {
 	ResizablePanel,
 	ResizablePanelGroup,
 } from "@/components/atoms/resizable";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+} from "@/components/atoms/sheet";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/components/organisms/writer/hooks/use-writer-layout";
@@ -69,6 +76,13 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 	}
 
 	const isZen = viewMode === "zen";
+	const editorPanel = (
+		<div className="relative z-10 flex-1">
+			<WriterEditor />
+			<PowerDock />
+			<WriterSpotlight />
+		</div>
+	);
 
 	return (
 		<WriterLayoutContext.Provider
@@ -85,79 +99,114 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 				toggleDirectorMode: actions.toggleDirectorMode,
 			}}
 		>
-			<ResizablePanelGroup
-				// @ts-expect-error react-resizable-panels types are slightly inconsistent between versions for direction/orientation alias
-				direction={isMobile ? "vertical" : "horizontal"}
-				id={
-					isMobile
-						? "writer-view-layout-vertical"
-						: "writer-view-layout-horizontal"
-				}
-				className="flex-1 bg-background" // Studio Base
-			>
-				{/* Zen Mode: Animate panels out */}
-				{!isZen && (
-					<>
-						{/* Left Panel: Navigation (Glass Rail) */}
-						<ResizablePanel
-							// @ts-expect-error ref is available in v4.1 but types might be outdated
-							ref={sidebarRef}
-							defaultSize={isMobile ? 0 : 18}
-							minSize={12}
-							maxSize={35}
-							collapsible={true}
-							collapsedSize={0}
-							className="glass-surface border-r border-border/20 shadow-lg z-20"
-							onResize={(size) => {
-								const isCollapsed = (size as unknown as number) === 0;
-								actions.setSidebarOpen(!isCollapsed);
-							}}
-						>
-							<WriterSidebar />
-						</ResizablePanel>
-						{/* Subtle Handle */}
-						<ResizableHandle
-							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
-							aria-label="Resize sidebar"
-						/>
-					</>
-				)}
+			{isMobile ? (
+				<div className="flex flex-col flex-1 bg-background">
+					{editorPanel}
+					{!isZen && (
+						<>
+							<Sheet
+								open={isSidebarOpen}
+								onOpenChange={actions.setSidebarOpen}
+							>
+								<SheetContent
+									side="left"
+									className="border-border/20 p-0 shadow-xl"
+								>
+									<SheetHeader className="sr-only">
+										<SheetTitle>Writer sidebar</SheetTitle>
+										<SheetDescription>
+											Writer navigation and structure.
+										</SheetDescription>
+									</SheetHeader>
+									<WriterSidebar />
+								</SheetContent>
+							</Sheet>
+							<Sheet
+								open={isCanvasOpen}
+								onOpenChange={actions.setCanvasOpen}
+							>
+								<SheetContent
+									side="right"
+									className="border-border/20 p-0 shadow-xl"
+								>
+									<SheetHeader className="sr-only">
+										<SheetTitle>Book canvas</SheetTitle>
+										<SheetDescription>
+											Visualize scenes and chapters on the canvas.
+										</SheetDescription>
+									</SheetHeader>
+									<BookCanvas variant="embedded" />
+								</SheetContent>
+							</Sheet>
+						</>
+					)}
+				</div>
+			) : (
+				<ResizablePanelGroup
+					// @ts-expect-error react-resizable-panels types are slightly inconsistent between versions for direction/orientation alias
+					direction="horizontal"
+					id="writer-view-layout-horizontal"
+					className="flex-1 bg-background" // Studio Base
+				>
+					{/* Zen Mode: Animate panels out */}
+					{!isZen && (
+						<>
+							{/* Left Panel: Navigation (Glass Rail) */}
+							<ResizablePanel
+								// @ts-expect-error ref is available in v4.1 but types might be outdated
+								ref={sidebarRef}
+								defaultSize={18}
+								minSize={12}
+								maxSize={35}
+								collapsible={true}
+								collapsedSize={0}
+								className="glass-surface border-r border-border/20 shadow-lg z-20"
+								onResize={(size) => {
+									const isCollapsed = (size as unknown as number) === 0;
+									actions.setSidebarOpen(!isCollapsed);
+								}}
+							>
+								<WriterSidebar />
+							</ResizablePanel>
+							{/* Subtle Handle */}
+							<ResizableHandle
+								className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+								aria-label="Resize sidebar"
+							/>
+						</>
+					)}
 
-				{/* Center Panel: Editor (Studio Stage) */}
-				<ResizablePanel defaultSize={82} minSize={30} className="relative z-10">
-					{/* Editor Container - Centered "Paper" look managed inside WriterEditor */}
-					<WriterEditor />
+					{/* Center Panel: Editor (Studio Stage) */}
+					<ResizablePanel defaultSize={82} minSize={30} className="relative z-10">
+						{editorPanel}
+					</ResizablePanel>
 
-					{/* Command Deck (Floating) */}
-					<PowerDock />
-					<WriterSpotlight />
-				</ResizablePanel>
-
-				{!isZen && (
-					<>
-						<ResizableHandle
-							className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
-							aria-label="Resize book canvas"
-						/>
-						{/* Right Panel: Book Canvas (On-Demand Drawer) */}
-						<ResizablePanel
-							// @ts-expect-error ref available
-							ref={canvasRef}
-							defaultSize={0} // Default collapsed
-							minSize={25}
-							collapsible={true}
-							collapsedSize={0}
-							className="glass-surface border-l border-border/20 shadow-lg z-20"
-							onResize={(size) => {
-								const isCollapsed = (size as unknown as number) === 0;
-								actions.setCanvasOpen(!isCollapsed);
-							}}
-						>
-							<BookCanvas variant="embedded" />
-						</ResizablePanel>
-					</>
-				)}
-			</ResizablePanelGroup>
+					{!isZen && (
+						<>
+							<ResizableHandle
+								className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
+								aria-label="Resize book canvas"
+							/>
+							{/* Right Panel: Book Canvas (On-Demand Drawer) */}
+							<ResizablePanel
+								// @ts-expect-error ref available
+								ref={canvasRef}
+								defaultSize={0} // Default collapsed
+								minSize={25}
+								collapsible={true}
+								collapsedSize={0}
+								className="glass-surface border-l border-border/20 shadow-lg z-20"
+								onResize={(size) => {
+									const isCollapsed = (size as unknown as number) === 0;
+									actions.setCanvasOpen(!isCollapsed);
+								}}
+							>
+								<BookCanvas variant="embedded" />
+							</ResizablePanel>
+						</>
+					)}
+				</ResizablePanelGroup>
+			)}
 
 			<FloatingAssistant
 				projectId={props.project.id}
