@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -71,6 +71,34 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 		setMounted(true);
 	}, []);
 
+	// Memoize the context value
+	const layoutContextValue = useMemo(
+		() => ({
+			isSidebarOpen,
+			toggleSidebar: actions.toggleSidebar,
+			isCanvasOpen,
+			toggleCanvas: actions.toggleCanvas,
+			viewMode,
+			toggleZenMode: actions.toggleZenMode,
+			isTypewriterMode,
+			toggleTypewriterMode: actions.toggleTypewriterMode,
+			isDirectorMode,
+			toggleDirectorMode: actions.toggleDirectorMode,
+		}),
+		[
+			isSidebarOpen,
+			actions.toggleSidebar,
+			isCanvasOpen,
+			actions.toggleCanvas,
+			viewMode,
+			actions.toggleZenMode,
+			isTypewriterMode,
+			actions.toggleTypewriterMode,
+			isDirectorMode,
+			actions.toggleDirectorMode,
+		],
+	);
+
 	if (!mounted) {
 		return <WriterSkeleton />;
 	}
@@ -85,20 +113,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 	);
 
 	return (
-		<WriterLayoutContext.Provider
-			value={{
-				isSidebarOpen,
-				toggleSidebar: actions.toggleSidebar,
-				isCanvasOpen,
-				toggleCanvas: actions.toggleCanvas,
-				viewMode,
-				toggleZenMode: actions.toggleZenMode,
-				isTypewriterMode,
-				toggleTypewriterMode: actions.toggleTypewriterMode,
-				isDirectorMode,
-				toggleDirectorMode: actions.toggleDirectorMode,
-			}}
-		>
+		<WriterLayoutContext.Provider value={layoutContextValue}>
 			{isMobile ? (
 				<div className="flex flex-col flex-1 bg-background">
 					{editorPanel}
