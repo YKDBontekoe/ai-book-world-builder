@@ -1,5 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("better-sqlite3", () => {
+	class MockDatabase {
+		constructor(_path: string) {}
+
+		pragma = vi.fn();
+	}
+
+	return { default: MockDatabase };
+});
+
 vi.unmock("@/lib/db");
 
 const resetEnvVar = (key: string, value: string | undefined): void => {
