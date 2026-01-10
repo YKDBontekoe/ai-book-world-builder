@@ -9,16 +9,11 @@ import { getCached, invalidateCache } from "@/lib/cache";
 import { db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, outline, type Scene, scene, volume } from "@/lib/db/schema";
+import { saveProjectStructureSchema } from "@/lib/validation";
 
 // ============================================================================
 // Validation Schemas
 // ============================================================================
-
-const projectIdSchema = z.string();
-const saveStructureSchema = z.object({
-	projectId: z.string(),
-	structureText: z.string().trim().min(1, "Structure text cannot be empty"),
-});
 
 // ============================================================================
 // Actions
@@ -28,7 +23,7 @@ const saveStructureSchema = z.object({
  * Get the structure of a project (chapters and scenes)
  */
 export const getProjectStructure = createUserAction({
-	input: z.object({ projectId: z.string() }),
+	input: z.object({ projectId: z.string().uuid() }),
 	handler: async ({
 		input: { projectId },
 	}): Promise<{
@@ -84,7 +79,7 @@ export const getProjectStructure = createUserAction({
  * Save the project structure from manual text input
  */
 export const saveProjectStructure = createUserAction({
-	input: saveStructureSchema,
+	input: saveProjectStructureSchema,
 	handler: async ({ input: { projectId, structureText } }) => {
 		// 1. Verify Access (Write)
 		await ensureProjectAccess(projectId, true);

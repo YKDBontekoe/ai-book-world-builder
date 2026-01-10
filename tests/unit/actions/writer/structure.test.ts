@@ -102,7 +102,7 @@ vi.mock("@/app/(auth)/auth", () => ({
 import { saveProjectStructure } from "@/app/actions/writer/structure";
 
 describe("saveProjectStructure", () => {
-	const projectId = "project-123";
+	const projectId = "550e8400-e29b-41d4-a716-446655440000";
 
 	beforeEach(() => {
 		vi.clearAllMocks();
