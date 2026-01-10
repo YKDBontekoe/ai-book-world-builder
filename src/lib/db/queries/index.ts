@@ -21,4 +21,4 @@ export * from "@/lib/db/queries/volume";
 // Re-export common types that were defined in queries too (if any)
 // VolumePlan, EntityWithDetails are in their respective files.
 
-export * from "@/lib/db/drizzle";
+export * from "@/lib/db";

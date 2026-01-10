@@ -36,6 +36,25 @@ src/
 
 ## Key Architectural Patterns
 
+## Database Configuration
+
+The app supports both Postgres and SQLite via `DB_DRIVER`:
+
+- `DB_DRIVER=postgres` (default) uses `POSTGRES_URL`.
+- `DB_DRIVER=sqlite` uses `SQLITE_DB_PATH` (defaults to `.local/dev.sqlite`).
+
+For a lightweight local SQLite bootstrap (schema + seed data), run:
+
+```bash
+pnpm exec tsx scripts/dev-mock-db.ts --reset
+```
+
+Then start the app with:
+
+```bash
+DB_DRIVER=sqlite SQLITE_DB_PATH=.local/dev.sqlite pnpm dev
+```
+
 ### 1. Writer View Architecture
 The `WriterView` (`components/organisms/writer/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
 

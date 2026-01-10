@@ -69,7 +69,7 @@ const {
 });
 
 // Mock modules
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: mockDb,
 }));
 

@@ -78,6 +78,7 @@
 		"@xyflow/react": "12.10.0",
 		"ai": "6.0.14",
 		"bcrypt-ts": "8.0.0",
+		"better-sqlite3": "11.10.0",
 		"class-variance-authority": "0.7.1",
 		"classnames": "2.5.1",
 		"clsx": "2.1.1",

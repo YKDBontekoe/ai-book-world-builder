@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import {
 	bookGeneration,
 	bookGenerationStep,

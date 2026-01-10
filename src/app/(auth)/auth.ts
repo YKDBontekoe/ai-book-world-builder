@@ -7,7 +7,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { authConfig } from "@/app/(auth)/auth.config";
 import { DUMMY_PASSWORD } from "@/lib/constants";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { getUser } from "@/lib/db/queries/user";
 import { account, user as userTable } from "@/lib/db/schema";
 import type { UserRole } from "@/lib/db/schema/auth";

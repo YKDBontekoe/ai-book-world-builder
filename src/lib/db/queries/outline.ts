@@ -1,6 +1,6 @@
 import "server-only";
 import { desc, eq } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { type Outline, outline } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 

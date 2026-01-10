@@ -8,7 +8,7 @@ import {
 } from "@/app/actions/story-generation";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { generationService } from "@/lib/ai/writer-service";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 
 // Mocks
 vi.mock("@/app/(auth)/auth", () => ({
@@ -114,7 +114,7 @@ const createMockQuery = (resolveValue: any) => {
 
 const mockQuery = createMockQuery([]);
 
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: {
 		transaction: vi.fn(async (cb) => {
 			return await cb({

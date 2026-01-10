@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, count, desc, eq, or } from "drizzle-orm";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import {
 	type Entity,
 	type EntityAttribute,

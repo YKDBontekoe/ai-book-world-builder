@@ -20,7 +20,7 @@ vi.mock("@/lib/db/repositories", () => ({
 	projectRepository: mocks.projectRepository,
 }));
 
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: mocks.db,
 }));
 

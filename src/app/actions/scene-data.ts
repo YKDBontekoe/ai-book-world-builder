@@ -3,7 +3,7 @@
 import { asc, eq } from "drizzle-orm";
 import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { projectRepository, sceneRepository } from "@/lib/db/repositories";
 import {
 	type Chapter,

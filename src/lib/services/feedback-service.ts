@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { myProvider } from "@/lib/ai/providers";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import {
 	type Feedback,
 	type FeedbackType,

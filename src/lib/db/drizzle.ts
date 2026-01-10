@@ -1,14 +1,68 @@
-import { drizzle } from "drizzle-orm/postgres-js";
-import postgres from "postgres";
+import "server-only";
 
-import * as schema from "@/lib/db/schema";
+import type { BetterSQLite3Database } from "drizzle-orm/better-sqlite3";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 
-// Filter schema to remove null/undefined values that can cause drizzle-orm to crash
-const filteredSchema = Object.fromEntries(
-	Object.entries(schema).filter(([_, value]) => value != null),
+import * as pgSchema from "@/lib/db/schema";
+import * as sqliteSchema from "@/lib/db/schema/sqlite";
+
+export type DbDriver = "postgres" | "sqlite";
+
+const dbDriver = (process.env.DB_DRIVER ?? "postgres").toLowerCase() as DbDriver;
+
+if (dbDriver !== "postgres" && dbDriver !== "sqlite") {
+	throw new Error(`Unsupported DB_DRIVER value: ${dbDriver}`);
+}
+
+const isServer = typeof window === "undefined";
+
+if (!isServer) {
+	throw new Error("Database client initialized in a browser context.");
+}
+
+const filteredPgSchema = Object.fromEntries(
+	Object.entries(pgSchema).filter(([_, value]) => value != null),
 );
 
-// biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!);
-export const db = drizzle(client, { schema: filteredSchema as typeof schema });
-export type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+const filteredSqliteSchema = Object.fromEntries(
+	Object.entries(sqliteSchema).filter(([_, value]) => value != null),
+);
+
+type PgDb = PostgresJsDatabase<typeof pgSchema>;
+type SqliteDb = BetterSQLite3Database<typeof sqliteSchema>;
+export type AppDb = PgDb | SqliteDb;
+
+const createPostgresDb = async (): Promise<PgDb> => {
+	if (!process.env.POSTGRES_URL) {
+		throw new Error("POSTGRES_URL is not defined");
+	}
+
+	const [{ drizzle }, { default: postgres }] = await Promise.all([
+		import("drizzle-orm/postgres-js"),
+		import("postgres"),
+	]);
+
+	const client = postgres(process.env.POSTGRES_URL);
+	return drizzle(client, { schema: filteredPgSchema as typeof pgSchema });
+};
+
+const createSqliteDb = async (): Promise<SqliteDb> => {
+	const sqlitePath = process.env.SQLITE_DB_PATH ?? ".local/dev.sqlite";
+
+	const [{ drizzle }, { default: Database }] = await Promise.all([
+		import("drizzle-orm/better-sqlite3"),
+		import("better-sqlite3"),
+	]);
+
+	const client = new Database(sqlitePath);
+	client.pragma("journal_mode = WAL");
+
+	return drizzle(client, { schema: filteredSqliteSchema as typeof sqliteSchema });
+};
+
+export const db: AppDb = await (dbDriver === "sqlite"
+	? createSqliteDb()
+	: createPostgresDb());
+
+export type DbTransaction = Parameters<Parameters<AppDb["transaction"]>[0]>[0];
+export { dbDriver };

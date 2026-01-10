@@ -3,7 +3,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { createOutline, getOutlinesForProject } from "@/lib/db/queries/outline";
 import {
 	createVolumePlan,

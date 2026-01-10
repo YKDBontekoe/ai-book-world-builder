@@ -4,7 +4,7 @@ import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { bookExport } from "@/lib/db/schema";
 
 // ============================================================================

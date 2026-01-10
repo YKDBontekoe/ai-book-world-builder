@@ -30,3 +30,29 @@ The scene title gains more horizontal space while secondary details remain acces
 ### Learnings
 
 - Group secondary metadata into responsive rows or menus to preserve primary navigation clarity on compact layouts.
+## 2026-01-10 - Added SQLite Driver Support
+
+### Context
+Local development and unit tests needed a lightweight database option without requiring Postgres.
+
+### Solution
+Implemented a DB driver switch with a SQLite schema layer and a bootstrap script to initialize a local `.sqlite` file with seed data.
+
+### Outcome
+Developers can now run the app against SQLite by toggling `DB_DRIVER` and initializing the database with the mock bootstrap script.
+
+### Learnings
+- Keep DB driver selection centralized so server actions and repositories always follow the active driver.
+## 2026-01-10 - Mobile overlays preserve editor focus
+
+### Context
+The writer layout now uses overlay sheets for navigation and canvas on mobile to avoid shrinking the editor space.
+
+### Solution
+Keep the editor as the full-height primary surface while sliding sidebar/canvas panels in as translucent sheets.
+
+### Outcome
+Mobile writing stays focused and visually consistent with the macOS glass aesthetic.
+
+### Learnings
+- Mobile panels should be overlays so the editor remains the dominant surface.

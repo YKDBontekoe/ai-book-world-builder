@@ -2,7 +2,7 @@ import "server-only";
 
 import type { LanguageModelUsage } from "ai";
 import { enrichUsage } from "@/lib/ai/usage-tracking";
-import { db } from "@/lib/db/drizzle";
+import { db } from "@/lib/db";
 import { bookGeneration, bookGenerationStep } from "@/lib/db/schema";
 
 export type UsageLogContext = {

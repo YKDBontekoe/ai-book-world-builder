@@ -7,7 +7,7 @@ Object.defineProperty(global, "crypto", {
 	},
 });
 
-vi.mock("@/lib/db/drizzle", () => {
+vi.mock("@/lib/db", () => {
 	const mockChapter = {
 		id: "123e4567-e89b-12d3-a456-426614174001",
 		projectId: "123e4567-e89b-12d3-a456-426614174000",

@@ -14,7 +14,7 @@ const mocks = vi.hoisted(() => ({
 	auth: vi.fn(),
 }));
 
-vi.mock("@/lib/db/drizzle", () => ({
+vi.mock("@/lib/db", () => ({
 	db: mocks.db,
 }));
 
