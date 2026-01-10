@@ -1,7 +1,17 @@
 import { render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { WriterView } from "@/components/organisms/writer/writer-view";
 import type { Project } from "@/lib/db/schema";
+
+vi.mock("usehooks-ts", async (importOriginal) => {
+	const actual = await importOriginal<typeof import("usehooks-ts")>();
+
+	return {
+		...actual,
+		useMediaQuery: vi.fn(),
+	};
+});
 
 // Mock child components
 vi.mock("@/components/organisms/writer/writer-sidebar", () => ({
@@ -41,6 +51,20 @@ vi.mock("@/components/organisms/editor/text-editor", () => ({
 	Editor: () => <div data-testid="editor">Editor</div>,
 }));
 
+vi.mock("@/components/atoms/sheet", () => ({
+	Sheet: ({ children }: { children: ReactNode }) => (
+		<div data-testid="sheet">{children}</div>
+	),
+	SheetContent: ({ children }: { children: ReactNode }) => (
+		<div data-testid="sheet-content">{children}</div>
+	),
+	SheetHeader: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	SheetTitle: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+	SheetDescription: ({ children }: { children: ReactNode }) => (
+		<div>{children}</div>
+	),
+}));
+
 vi.mock("@/components/organisms/writer/writer-editor", () => ({
 	WriterEditor: () => <div data-testid="writer-editor">Writer Editor</div>,
 }));
@@ -61,9 +85,13 @@ vi.mock("@/app/actions/writer", () => ({
 
 // Mock Resizeable Panels (UI lib) - often needs mocking in jsdom
 vi.mock("@/components/atoms/resizable", () => ({
-	ResizablePanelGroup: ({ children }: any) => <div>{children}</div>,
-	ResizablePanel: ({ children }: any) => <div>{children}</div>,
-	ResizableHandle: () => <div>|</div>,
+	ResizablePanelGroup: ({ children }: { children: ReactNode }) => (
+		<div data-testid="resizable-panel-group">{children}</div>
+	),
+	ResizablePanel: ({ children }: { children: ReactNode }) => (
+		<div data-testid="resizable-panel">{children}</div>
+	),
+	ResizableHandle: () => <div data-testid="resizable-handle">|</div>,
 }));
 
 const mockProject: Project = {
@@ -80,10 +108,26 @@ const mockProject: Project = {
 
 describe("WriterView", () => {
 	it("renders the 3-pane layout", async () => {
+		const { useMediaQuery } = await import("usehooks-ts");
+		vi.mocked(useMediaQuery).mockReturnValue(false);
+
 		render(<WriterView project={mockProject} />);
 
 		expect(screen.getByTestId("writer-sidebar")).toBeInTheDocument();
 		expect(screen.getByTestId("book-canvas")).toBeInTheDocument();
 		expect(await screen.findByTestId("floating-assistant")).toBeInTheDocument();
+	});
+
+	it("renders mobile overlays without resizable panels", async () => {
+		const { useMediaQuery } = await import("usehooks-ts");
+		vi.mocked(useMediaQuery).mockReturnValue(true);
+
+		render(<WriterView project={mockProject} />);
+
+		expect(
+			screen.queryByTestId("resizable-panel-group"),
+		).not.toBeInTheDocument();
+		expect(screen.getByTestId("writer-editor")).toBeInTheDocument();
+		expect(screen.getAllByTestId("sheet-content")).toHaveLength(2);
 	});
 });

@@ -12,3 +12,17 @@ Loading states now transition smoothly and match the rest of the application's d
 ### Learnings
 - Always look for opportunities to replace raw loading text with high-fidelity skeletons.
 - Skeletons should use `GlassCard` variants to match the container they are loading into.
+
+## 2026-01-10 - Mobile overlays preserve editor focus
+
+### Context
+The writer layout now uses overlay sheets for navigation and canvas on mobile to avoid shrinking the editor space.
+
+### Solution
+Keep the editor as the full-height primary surface while sliding sidebar/canvas panels in as translucent sheets.
+
+### Outcome
+Mobile writing stays focused and visually consistent with the macOS glass aesthetic.
+
+### Learnings
+- Mobile panels should be overlays so the editor remains the dominant surface.

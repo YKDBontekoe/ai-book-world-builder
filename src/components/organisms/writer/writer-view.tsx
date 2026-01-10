@@ -104,10 +104,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					{editorPanel}
 					{!isZen && (
 						<>
-							<Sheet
-								open={isSidebarOpen}
-								onOpenChange={actions.setSidebarOpen}
-							>
+							<Sheet open={isSidebarOpen} onOpenChange={actions.setSidebarOpen}>
 								<SheetContent
 									side="left"
 									className="border-border/20 p-0 shadow-xl"
@@ -121,10 +118,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 									<WriterSidebar />
 								</SheetContent>
 							</Sheet>
-							<Sheet
-								open={isCanvasOpen}
-								onOpenChange={actions.setCanvasOpen}
-							>
+							<Sheet open={isCanvasOpen} onOpenChange={actions.setCanvasOpen}>
 								<SheetContent
 									side="right"
 									className="border-border/20 p-0 shadow-xl"
@@ -177,7 +171,11 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 					)}
 
 					{/* Center Panel: Editor (Studio Stage) */}
-					<ResizablePanel defaultSize={82} minSize={30} className="relative z-10">
+					<ResizablePanel
+						defaultSize={82}
+						minSize={30}
+						className="relative z-10"
+					>
 						{editorPanel}
 					</ResizablePanel>
 
