@@ -14,9 +14,10 @@ if (dbDriver !== "postgres" && dbDriver !== "sqlite") {
 	throw new Error(`Unsupported DB_DRIVER value: ${dbDriver}`);
 }
 
-const isServer = typeof window === "undefined";
+const isBrowserContext = typeof window !== "undefined";
+const isVitest = process.env.VITEST === "true";
 
-if (!isServer) {
+if (isBrowserContext && !isVitest) {
 	throw new Error("Database client initialized in a browser context.");
 }
 
