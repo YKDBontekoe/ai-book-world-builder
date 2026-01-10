@@ -47,3 +47,7 @@
 ## 2025-06-15 - Callback Instability Breaking Memoization
 **Learning:** Passing a callback that depends on a changing value (e.g., `activeId`) to a list of memoized items breaks the memoization for *all* items, causing O(N) re-renders on every selection change.
 **Action:** Use `useRef` to store the changing value and access `ref.current` inside the callback. This keeps the callback stable (same function reference) and allows `React.memo` to work correctly, reducing re-renders to O(1) (only the changing items).
+
+## 2025-06-16 - Splitting Visualization Layout from Styling
+**Learning:** Expensive layout algorithms (like `dagre` in graph visualizations) are often coupled with cheap styling logic (like theme colors) in a single `useMemo`. This causes the expensive algorithm to re-run unnecessarily when only the cheap style changes.
+**Action:** Split the logic into two `useMemo` hooks: one for structure/layout (expensive, depends on data) and one for styling (cheap, depends on theme/layout). This preserves the expensive calculation across theme switches and can also preserve state (like user-dragged node positions).
