@@ -15,12 +15,14 @@ src/
 │   ├── admin/           # Admin Dashboard (Jules, GitHub)
 │   ├── actions/         # Server Actions (mutations)
 │   └── api/             # API Routes (webhooks, streaming)
-├── components/          # React components
+├── components/          # Shared React components
 │   ├── atoms/           # Low-level UI primitives (Button, Input)
 │   ├── molecules/       # Composition of atoms (GlassCard, StatCard)
 │   ├── messages/        # Chat message components
-│   ├── reader/          # Reader Mode specific components
-│   └── writer/          # Writer View components (Sidebar, Editor)
+│   ├── organisms/       # Complex components (BookCanvas, Settings)
+│   └── ...
+├── features/            # Feature-scoped components and logic
+│   └── writer/          # Writer View implementation (Sidebar, Editor, Context)
 ├── lib/                 # Shared logic
 │   ├── ai/              # AI Service wrappers (models, tools, providers)
 │   │   └── tools/       # AI Tools definition
@@ -56,17 +58,20 @@ DB_DRIVER=sqlite SQLITE_DB_PATH=.local/dev.sqlite pnpm dev
 ```
 
 ### 1. Writer View Architecture
-The `WriterView` (`components/organisms/writer/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
+The `WriterView` (`features/writer/components/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
 
 1.  **Sidebar (Left)**: Managed by `WriterSidebar`. Contains navigation (Chapters/Scenes) and Project structure.
 2.  **Editor (Center)**: The `WriterEditor` wraps a ProseMirror instance. It is the primary workspace.
-3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas`. Displays the Entity Bible, Graphs, and Context.
+3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`components/organisms/book-canvas`). Displays the Entity Bible, Graphs, and Context.
 
 **State Management**:
-The Writer uses a context stack to manage its state without prop drilling:
--   **WriterProvider**: Holds project data (`project`, `chapters`, `scenes`).
--   **WriterControlProvider**: Manages UI state like `isChatOpen`, `activePane`.
--   **WriterLayoutContext**: Handles layout toggles like `ZenMode`, `DirectorMode`.
+The Writer uses a **Split Context** strategy (`features/writer/components/`) to prevent unnecessary re-renders:
+-   **WriterContext**: Holds relatively stable data (`project`, `structure`, `activeSceneId`).
+-   **WriterControlContext**: Holds volatile UI state (`isChatOpen`, `isSpotlightOpen`).
+-   **WriterLayoutContext**: Handles layout toggles (`ZenMode`, `DirectorMode`, `SidebarOpen`).
+
+**Embedded Canvas Sync**:
+The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
 
 **Lazy Loading**:
 To optimize TTI (Time to Interactive), heavy components are lazy-loaded:
@@ -74,7 +79,12 @@ To optimize TTI (Time to Interactive), heavy components are lazy-loaded:
 -   `BookCanvas` (The entity graph/bible)
 -   `StructureEditorDialog` (The power editor)
 
-### 2. Smart Sync (Structure Editor)
+### 2. Command Palette (Writer Spotlight)
+The Command Palette is driven by the `useSpotlightItems` hook (`hooks/use-spotlight-items.tsx`).
+-   **Registry**: It aggregates "Actions" (static commands), "Entities" (from `useProjectEntities`), and "Scenes" (from `WriterContext`).
+-   **Filtering**: It performs client-side fuzzy filtering on the aggregated list.
+
+### 3. Smart Sync (Structure Editor)
 The `saveProjectStructure` Server Action (`app/actions/writer/structure.ts`) implements a **Smart Sync** algorithm to allow plain-text editing of the database structure:
 1.  **Parse**: Converts the text input into a hierarchical tree (Chapters -> Scenes).
 2.  **Normalize**: Converts titles to lowercase and removes accents for fuzzy matching.
@@ -84,14 +94,14 @@ The `saveProjectStructure` Server Action (`app/actions/writer/structure.ts`) imp
     *   *Missing*: Deletes records that are no longer in the text input.
 4.  **Transaction**: All operations occur within a single Drizzle transaction to ensure atomicity.
 
-### 3. Server Actions & Services
+### 4. Server Actions & Services
 We separate controller logic (Server Actions) from business logic (Services):
 -   **Server Actions** (`app/actions/`): Handle auth checks, input validation, and calling services. They must check `ensureProjectAccess`.
 -   **Services** (`lib/services/`): Pure business logic, database transactions, and AI orchestration.
     -   `StoryService`: Handles scene planning and text generation.
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
 
-### 4. Software Builder (Jules Agent)
+### 5. Software Builder (Jules Agent)
 We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
 
 -   **Admin Dashboard**: Located at `/admin/github`. It wraps the `TaskBoard` component to visualize Issues, Plans, and PRs.
@@ -102,7 +112,7 @@ We utilize a dedicated "Agentic" workflow for self-improvement, known as the **S
     3.  **Execution**: The agent generates `JulesArtifact`s (Git patches, bash commands).
     4.  **PR**: The agent opens a Pull Request via the configured GitHub credentials.
 
-### 5. AI Service Architecture
+### 6. AI Service Architecture
 The AI layer is structured to separate "AI Logic" from "Business Logic".
 
 **Core Components**:
@@ -115,14 +125,14 @@ Long-running AI tasks (like "Generate All Scenes") are handled in `WritingServic
 2.  **Concurrency Limit**: Runs strictly 3 generations in parallel to balance speed vs. rate limits.
 3.  **Chunking**: Breaks the task into chunks (e.g., `tasks.slice(i, i + CONCURRENCY_LIMIT)`), awaiting each chunk before proceeding.
 
-### 6. Project Analytics
+### 7. Project Analytics
 Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services/project-analytics.ts`).
 
 -   **Readiness Score**: A weighted metric (0-100) indicating how "ready" a project is for generation.
     -   Formula: `min(Chars*20, 100)*0.3 + min(Locs*25, 100)*0.2 + (HasOutline?100:0)*0.3 + min(Chaps*10, 100)*0.2`
 -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
-### 7. Structured Context (Context Builder)
+### 8. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/ai/context-builder.ts`:
 
 -   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene to ensure flow.
@@ -130,7 +140,7 @@ To enable the AI to write coherently over long contexts without a Vector DB, we 
 -   **Global Context**: Chapter notes and Outline parameters (POV, Tone) are always included.
 -   *Note*: This replaces the previous "Smart Context" flooding strategy with a more deterministic approach.
 
-### 8. AI Integration & Models
+### 9. AI Integration & Models
 
 **Role-Based Routing**:
 We do not hardcode model IDs. Instead, we use a role-based system defined in `lib/ai/model-routing.ts`:

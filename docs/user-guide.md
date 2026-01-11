@@ -28,6 +28,16 @@ The Project View is divided into three main panels to help you organize and writ
 2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
 3.  **Canvas (Right)**: A visual board for your world.
 
+### Command Palette (Writer Spotlight)
+
+Access powerful actions instantly without taking your hands off the keyboard.
+
+-   **Open**: Press `Cmd+K` (Mac) or `Ctrl+K` (Windows), or click the search icon in the bottom toolbar.
+-   **Features**:
+    -   **Navigate**: Type a scene or character name to jump directly to it.
+    -   **Actions**: Run commands like "Toggle Zen Mode", "Toggle Typewriter Mode", or "Ask AI Assistant".
+    -   **Filter**: Use tabs to search only for Entities, Scenes, or Actions.
+
 ### Using the World Canvas
 
 The Canvas (Right Panel) is your command center for world-building and analysis. It features several specialized tools (tabs):
@@ -40,12 +50,15 @@ The Canvas (Right Panel) is your command center for world-building and analysis.
     *   *Tension (Area Chart)*: Derived from atmospheric keywords and emotional beats.
     *   *Pacing (Line Chart)*: Based on scene length and dialogue density.
 *   **Timeline**: Tracks chronological events to ensure your plot is consistent.
-*   **Context**: Shows exactly what the AI "sees" when generating the current scene (e.g., Active Characters, Location details). Use this to verify the AI has the right info.
-*   **Map**: A visual gallery of your locations. You can attach images to locations to visualize your world's geography.
-*   **Scenes**: A Kanban-style board to manage scene status (Planned -> Drafted -> Final).
-*   **Draft**: A scratchpad for rough ideas or snippets that don't fit in the main manuscript yet.
-*   **Readiness**: Displays the **Project Readiness Score** and diagnostic health checks. It tells you if you have enough world data to start generating high-quality prose.
+*   **Map**: A visual gallery of your locations.
+    *   *Images*: Attach reference images or maps to your Location entities.
+    *   *Grid*: View all your locations in a visual grid.
+*   **Scenes**: A Kanban-style board to manage scene status.
+    *   *Workflow*: Drag and drop scenes between columns (Planned -> Drafted -> Final).
 *   **Bible**: The core database of your characters and lore. Use this to search and edit entities without leaving the editor.
+*   **Context**: Shows exactly what the AI "sees" when generating the current scene (e.g., Active Characters, Location details). Use this to verify the AI has the right info.
+*   **Draft**: A scratchpad for rough ideas or snippets that don't fit in the main manuscript yet.
+*   **Diagnostics**: Runs health checks on your story (e.g., "Missing Character Descriptions", "Empty Scenes").
 *   **Log**: A history of changes and AI generations.
 
 ## Writer Tools
