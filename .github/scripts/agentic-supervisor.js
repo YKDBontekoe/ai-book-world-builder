@@ -128,9 +128,7 @@ function getCIFailures(repo, sha) {
        }
     } catch (e) {}
 
-    return `### 🚨 CI Failure (Run #${runId})\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n\
-```text\n${logOutput}\n\
-```${codecovSection}`;
+    return `### 🚨 CI Failure (Run #${runId})\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n\`\`\`text\n${logOutput}\n\`\`\`${codecovSection}`;
   } catch (e) {
     log(`Failed to fetch CI failures: ${e.message}`);
     return '';
@@ -284,9 +282,8 @@ async function main() {
                 }
               } catch (e) {}
               
-              context.failedJobs = `### 🚨 CI Failure\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n\
-```text\n${logOutput}\n\
-```${codecovSection}\n\n[View Full Log](${link})`;
+              const codeBlock = "```";
+              context.failedJobs = `### 🚨 CI Failure\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n${codeBlock}text\n${logOutput}\n${codeBlock}${codecovSection}\n\n[View Full Log](${link})`;
             }
         }
       }
