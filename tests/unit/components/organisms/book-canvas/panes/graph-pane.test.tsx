@@ -115,12 +115,11 @@ describe("GraphPane", () => {
 			},
 		};
 
+		const mockIssuesResult = { success: true, data: [] }; // Stable
+
 		(getProjectStructure as any).mockResolvedValue(mockStructureResult);
 
-		(getProjectIssuesAction as any).mockResolvedValue({
-			success: true,
-			data: [],
-		});
+		(getProjectIssuesAction as any).mockResolvedValue(mockIssuesResult);
 
 		const useQuery = await import("@tanstack/react-query").then(
 			(m) => m.useQuery,
@@ -134,7 +133,7 @@ describe("GraphPane", () => {
 			}
 			if (queryKey[0] === "issues") {
 				return {
-					data: { success: true, data: [] },
+					data: mockIssuesResult, // Return stable
 					isLoading: false,
 				};
 			}

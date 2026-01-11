@@ -53,6 +53,13 @@ Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. 
 -   **Draft**: A scratchpad for rough ideas, snippets of dialogue, or alternative scene versions that don't yet have a place in the main manuscript.
 -   **Diagnostics**: Runs health checks on your story, flagging potential issues like missing character descriptions, empty scenes, or continuity errors.
 -   **Changelog**: A log of all the changes made to your project, allowing you to track your progress and easily revert to previous versions if needed.
+Use the **World Canvas** (Right Panel) to gain insights and ensure consistency.
+
+-   **Graph**: Visualizes your **Entity Network**. See how characters, locations, and lore are connected.
+-   **Arc**: Analyzes your story's **Pacing** and **Tension**.
+-   **Timeline**: Tracks chronological events to ensure your plot is consistent.
+-   **Diagnostics**: Runs health checks on your story (e.g., "Missing Character Descriptions", "Empty Scenes").
+-   **Context**: Shows exactly what the AI "sees" when generating the current scene. Use this to verify the AI has the right information.
 
 ## Advanced Features
 
