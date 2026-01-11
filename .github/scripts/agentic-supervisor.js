@@ -3,12 +3,12 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
- * AGENTIC SUPERVISOR (v4.1)
+ * AGENTIC SUPERVISOR (v4.2)
  * 
  * Centralized orchestration for AI agents.
  * Features:
+ * - Batched Feedback (CI + Codecov + CodeRabbit)
  * - Author-based Invocation Strategy (Hybrid)
- * - Slash Command Support (/refactor, /test, /explain)
  * - Smart Auto-Triage & Labeling
  * - Infinite Loop Protection
  * - Context Injection (AGENTS.md, Renovate Release Notes)
@@ -49,7 +49,7 @@ function getPrompt(filename, replacements = {}) {
   try {
     let content = fs.readFileSync(`.github/prompts/${filename}`, 'utf8');
     for (const [key, val] of Object.entries(replacements)) {
-      content = content.replace(new RegExp(`\$${key}`, 'g'), val || '');
+      content = content.replace(new RegExp(`\\$${key}`, 'g'), val || '');
     }
     return content;
   } catch (e) {
@@ -66,6 +66,74 @@ async function addLabels(number, labels) {
     exec(`gh issue edit ${number} --add-label "${labelStr}"`);
   } catch (e) {
     log(`Failed to add labels: ${e.message}`);
+  }
+}
+
+// --- Batched Feedback Helpers ---
+
+function getCodeRabbitComments(repo, number) {
+  try {
+    const commentsJSON = exec(`gh api "/repos/${repo}/pulls/${number}/comments"`);
+    const comments = JSON.parse(commentsJSON);
+    const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
+    
+    if (rabbitComments.length === 0) return '';
+    
+    const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'}\n${c.body}`).join('\n\n---\n\n');
+    
+    let summary = '';
+    if (rabbitComments.length > 10) {
+      summary = "### 🐰 CodeRabbit Review (Summary)\n\n(Showing top 10 of " + rabbitComments.length + " comments)\n" + 
+             formatComments(rabbitComments.slice(0, 10)) + 
+             "\n\n...(and " + (rabbitComments.length - 10) + " more)";
+    } else {
+      summary = "### 🐰 CodeRabbit Review\n\n" + formatComments(rabbitComments);
+    }
+    return summary;
+  } catch (e) {
+    log(`Failed to fetch CodeRabbit comments: ${e.message}`);
+    return '';
+  }
+}
+
+function getCIFailures(repo, sha) {
+  try {
+    const runsData = JSON.parse(exec(`gh api "/repos/${repo}/actions/runs?head_sha=${sha}&status=completed&conclusion=failure" --jq '.workflow_runs[0]'`));
+    if (!runsData || !runsData.id) return '';
+    
+    const runId = runsData.id;
+    const jobs = JSON.parse(exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`));
+    const failed = jobs.jobs
+      .filter(j => j.conclusion === 'failure')
+      .map(j => {
+         const failedSteps = j.steps.filter(s => s.conclusion === 'failure').map(s => s.name).join(', ');
+         return `- **${j.name}**: ${failedSteps}`;
+      }).join('\n');
+      
+    if (!failed) return '';
+
+    let logOutput = '';
+    try {
+        logOutput = exec(`gh run view ${runId} --repo ${repo} --log-failed`);
+        if (logOutput.length > 2000) logOutput = logOutput.slice(0, 2000) + '\n... (truncated)';
+    } catch (e) {}
+    
+    let codecovSection = '';
+    try {
+       const statuses = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/statuses" --per-page 100`));
+       const codecov = statuses.find(s => s.context && s.context.toLowerCase().includes('codecov'));
+       if (codecov && (codecov.state === 'failure' || codecov.description.toLowerCase().includes('coverage'))) {
+          const icon = codecov.state === 'success' ? '✅' : '❌';
+          codecovSection = `\n\n**Codecov Report**\n${icon} ${codecov.description}\n[View Details](${codecov.target_url})`;
+       }
+    } catch (e) {}
+
+    return `### 🚨 CI Failure (Run #${runId})\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n\
+```text\n${logOutput}\n\
+```${codecovSection}`;
+  } catch (e) {
+    log(`Failed to fetch CI failures: ${e.message}`);
+    return '';
   }
 }
 
@@ -93,6 +161,7 @@ async function main() {
     isPr: false,
     number: '',
     branch: 'main',
+    sha: '',
     author: '',
     labels: [],
     commentBody: '',
@@ -109,6 +178,7 @@ async function main() {
     context.isPr = true;
     context.number = event.pull_request.number;
     context.branch = event.pull_request.head.ref;
+    context.sha = event.pull_request.head.sha;
     context.author = event.pull_request.user.login;
     context.labels = event.pull_request.labels.map(l => l.name);
     context.prBody = event.pull_request.body;
@@ -117,20 +187,22 @@ async function main() {
     if (eventName === 'pull_request_review') {
       context.reviewAuthor = event.review.user.login;
       context.reviewBody = event.review.body;
+      context.sha = event.review.commit_id; // Use review commit
     }
 
   } else if (eventName === 'issue_comment') {
     context.number = event.issue.number;
-    context.author = event.issue.user.login; // PR author
+    context.author = event.issue.user.login;
     context.labels = event.issue.labels.map(l => l.name);
     context.commentBody = event.comment.body;
-    context.commentAuthor = event.comment.user.login; // Commenter
+    context.commentAuthor = event.comment.user.login;
     
     if (event.issue.pull_request) {
       context.isPr = true;
       try {
-        const prData = JSON.parse(exec(`gh pr view ${context.number} --json body,headRefName,author,labels,isDraft --repo ${repo}`));
+        const prData = JSON.parse(exec(`gh pr view ${context.number} --json body,headRefName,headRefOid,author,labels,isDraft --repo ${repo}`));
         context.branch = prData.headRefName;
+        context.sha = prData.headRefOid;
         context.author = prData.author.login;
         context.labels = prData.labels.map(l => l.name);
         context.prBody = prData.body;
@@ -147,11 +219,11 @@ async function main() {
 
   } else if (eventName === 'workflow_run') {
     const sha = event.workflow_run.head_sha;
+    context.sha = sha;
     const runId = event.workflow_run.id;
     const conclusion = event.workflow_run.conclusion;
     
     try {
-      // Use the dedicated endpoint to find PRs for a commit (more reliable than listing all PRs)
       const prs = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/pulls" --header "X-GitHub-Api-Version: 2022-11-28"`));
       
       if (prs.length > 0) {
@@ -167,18 +239,8 @@ async function main() {
         log(`Linked workflow_run to PR #${context.number} (Draft: ${context.isDraft})`);
 
         if (conclusion === 'failure') {
-          try {
-            // Fetch detailed failure logs (truncated)
-            let logOutput = '';
-            try {
-                logOutput = exec(`gh run view ${runId} --repo ${repo} --log-failed`);
-                if (logOutput.length > 3000) logOutput = logOutput.slice(0, 3000) + '\n... (truncated)';
-            } catch (e) {
-                logOutput = 'Could not retrieve logs.';
-            }
-
-            const jobs = JSON.parse(exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`));
-            const failed = jobs.jobs
+             const jobs = JSON.parse(exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`));
+             const failed = jobs.jobs
               .filter(j => j.conclusion === 'failure')
               .map(j => {
                 const failedSteps = j.steps.filter(s => s.conclusion === 'failure').map(s => s.name).join(', ');
@@ -187,29 +249,32 @@ async function main() {
             
             if (failed) {
               const link = `${process.env.GITHUB_SERVER_URL}/${repo}/actions/runs/${runId}`;
+              let logOutput = '';
+              try {
+                  logOutput = exec(`gh run view ${runId} --repo ${repo} --log-failed`);
+                  if (logOutput.length > 2000) logOutput = logOutput.slice(0, 2000) + '\n... (truncated)';
+              } catch (e) {}
               
               let codecovSection = '';
               try {
                 const statuses = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/statuses" --per-page 100`));
-                const codecovStatus = statuses.find(s => s.context && s.context.toLowerCase().includes('codecov'));
-                
-                if (codecovStatus && (codecovStatus.state === 'failure' || codecovStatus.description.toLowerCase().includes('coverage'))) {
-                   const icon = codecovStatus.state === 'success' ? '✅' : '❌';
-                   codecovSection = `\n\n**Codecov Report**\n${icon} ${codecovStatus.description}\n[View Details](${codecovStatus.target_url})`;
+                const codecov = statuses.find(s => s.context && s.context.toLowerCase().includes('codecov'));
+                if (codecov && (codecov.state === 'failure' || codecov.description.toLowerCase().includes('coverage'))) {
+                   const icon = codecov.state === 'success' ? '✅' : '❌';
+                   codecovSection = `\n\n**Codecov Report**\n${icon} ${codecov.description}\n[View Details](${codecov.target_url})`;
                 }
-              } catch (e) {
-                log(`Warning: Failed to fetch Codecov status: ${e.message}`);
-              }
+              } catch (e) {}
               
-              context.failedJobs = `### 🚨 CI Failure\n\n**Failed Jobs:**\n${failed}\n\n**Error Logs:**\n```text\n${logOutput}\n```${codecovSection}\n\n[View Full Log](${link})`;
+              context.failedJobs = `### 🚨 CI Failure\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n\
+```text\n${logOutput}\n\
+```${codecovSection}\n\n[View Full Log](${link})`;
             }
-          } catch (e) {}
         }
       }
     } catch (e) {}
   }
 
-  // Fetch changed files for smart triage
+  // Fetch changed files
   if (context.isPr && context.number) {
     try {
       context.changedFiles = exec(`gh pr view ${context.number} --json files --jq '.files[].path'`).split('\n');
@@ -218,18 +283,124 @@ async function main() {
 
   log(`Context: PR=${context.isPr}, #${context.number}, Author=${context.author}`);
 
-  // ... (Context Injection Logic skipped for brevity) ...
+  // ---------------------------------------------------------------------------
+  // 2. Prepare Context Injection
+  // ---------------------------------------------------------------------------
+  let projectContext = '';
+  try {
+    const agentsDoc = fs.existsSync('AGENTS.md') ? fs.readFileSync('AGENTS.md', 'utf8') : '';
+    const conventions = fs.existsSync('.agent/context/conventions.md') ? fs.readFileSync('.agent/context/conventions.md', 'utf8') : '';
+    projectContext = `
+## 🛡️ CRITICAL PROJECT RULES (Must Follow)
+${agentsDoc}
+
+## 📏 CODING CONVENTIONS
+${conventions}
+`;
+  } catch (e) {
+    log('Warning: Could not read context files');
+  }
+
+  const getContextualPrompt = (filename, extraReplacements = {}) => {
+    return getPrompt(filename, {
+      ...extraReplacements,
+      PROJECT_CONTEXT: projectContext,
+      PR_BODY: context.prBody || '',
+      NUMBER: context.number,
+      BRANCH: context.branch,
+      AUTHOR: context.author
+    });
+  };
+
+  // ---------------------------------------------------------------------------
+  // 3. Smart Triage
+  // ---------------------------------------------------------------------------
+  
+  if (context.number) {
+    let newLabels = [];
+    if (eventName === 'issues' && event.action === 'opened') {
+      const text = `${event.issue.title} ${event.issue.body}`.toLowerCase();
+      if (text.match(/bug|error|crash|fail/)) newLabels.push('bug');
+      if (text.match(/feature|add|create|new/)) newLabels.push('enhancement');
+      if (text.match(/doc|readme|guide/)) newLabels.push('documentation');
+    }
+    if (context.isPr && context.changedFiles.length > 0) {
+      const files = context.changedFiles.join(' ');
+      if (files.match(/drizzle|db|schema|migration/)) newLabels.push('area/database');
+      if (files.match(/components|ui|app|css|tailwind/)) newLabels.push('area/ui');
+      if (files.match(/tests|spec|e2e/)) newLabels.push('area/testing');
+      if (files.match(/\.github|workflow/)) newLabels.push('area/devops');
+      if (files.match(/docs|md/)) newLabels.push('documentation');
+    }
+    newLabels = [...new Set(newLabels)].filter(l => !context.labels.includes(l));
+    if (newLabels.length > 0) await addLabels(context.number, newLabels);
+  }
 
   // ---------------------------------------------------------------------------
   // 4. Decision Logic
   // ---------------------------------------------------------------------------
   
-  // ... (Decision setup) ...
+  let decision = {
+    method: 'none',
+    prompt: '',
+    batchedComments: '',
+    shouldTriggerCodeRabbit: 'false',
+    reason: ''
+  };
+
+  const authorLower = (context.author || '').toLowerCase();
+  
+  function getStandardMethod() {
+    if (authorLower === 'google-labs-jules' || authorLower === 'jules' || authorLower.startsWith('google-labs-jules')) {
+      return { method: 'mention', reason: 'Jules PR' };
+    }
+    if (authorLower === 'renovate[bot]') {
+      if (context.labels.includes('jules-invoked')) return { method: 'mention', reason: 'Renovate (Existing)' };
+      return { method: 'api', reason: 'Renovate (First Run)' };
+    }
+    return { method: 'api', reason: 'Human Author' };
+  }
+
+  function isLooping() {
+    try {
+        const commits = JSON.parse(exec(`gh pr view ${context.number} --json commits --jq '[.commits[].authors[0].login] | reverse | .[0:3]'`));
+        const isJules = c => c && (c.includes('jules') || c.includes('google-labs'));
+        if (commits.length >= 3 && commits.every(isJules)) {
+            return true;
+        }
+    } catch(e) {}
+    return false;
+  }
 
   // --- A: Commands & Mentions ---
-  // ... (No change) ...
+  if (eventName === 'issue_comment') {
+    const body = context.commentBody.trim();
+    const commenter = context.commentAuthor;
+    
+    if (commenter !== 'github-actions[bot]' && commenter !== 'google-labs-jules' && body.includes('@jules')) {
+      const standard = getStandardMethod();
+      decision.reason = 'Manual interaction';
+      
+      let cmdPrompt = 'manual-pr.md';
+      if (body.includes('/refactor')) cmdPrompt = 'cmd-refactor.md';
+      else if (body.includes('/test')) cmdPrompt = 'cmd-test.md';
+      else if (body.includes('/explain')) cmdPrompt = 'cmd-explain.md';
+      else if (!context.isPr) cmdPrompt = 'manual-issue.md';
 
-  // --- B: CI Failure ---
+      if (standard.method === 'api') {
+        decision.method = 'api';
+        decision.prompt = getContextualPrompt(cmdPrompt, {
+          COMMENT_BODY: body,
+          COMMENT_AUTHOR: commenter
+        });
+        decision.reason = `Command: ${cmdPrompt.replace('.md', '')}`;
+      } else {
+        decision.method = 'mention'; 
+      }
+    }
+  }
+
+  // --- B: CI Failure (Enhanced with CodeRabbit) ---
   else if (context.failedJobs) {
     if (isLooping()) {
         log('Loop detected. Aborting CI fix.');
@@ -242,9 +413,7 @@ async function main() {
         decision.method = 'none';
         decision.reason = 'Draft PR';
     } else {
-      // Check if Jules is involved (Author or Commits)
       let isJulesInvolved = authorLower.includes('jules') || authorLower.includes('google-labs');
-      
       if (!isJulesInvolved) {
           try {
           const commitAuthors = JSON.parse(exec(`gh pr view ${context.number} --json commits --jq '[.commits[].authors[0].login]'`));
@@ -252,27 +421,30 @@ async function main() {
           } catch(e) {}
       }
 
+      // BATCHING: Include CodeRabbit comments if available
+      const rabbitFeedback = getCodeRabbitComments(repo, context.number);
+      const combinedFeedback = context.failedJobs + (rabbitFeedback ? "\n\n---\n\n" + rabbitFeedback : "");
+
       if (isJulesInvolved) {
           decision.method = 'mention';
-          decision.batchedComments = context.failedJobs;
-          decision.reason = 'CI Failure (Jules Context)';
+          decision.batchedComments = combinedFeedback;
+          decision.reason = 'CI Failure + Feedback';
       } else {
-          // Human PR: Offer help
-          try {
-              // Only post if we haven't offered recently to avoid spam (simple check)
+          // Human PR: Offer help (but don't auto-fix yet)
+           try {
               const comments = exec(`gh pr view ${context.number} --json comments --jq '.comments[].body'`);
               if (!comments.includes('Reply with: @jules fix')) {
-                  exec(`gh pr comment ${context.number} --body "❌ **CI Checks Failed**\n\nI can attempt to fix these issues automatically.\n\nReply with: \`@jules fix\`"`);
+                  exec(`gh pr comment ${context.number} --body "❌ **CI Checks Failed**\n\nI can attempt to fix these issues automatically.\n\nReply with: 
+`@jules fix`"`);
               }
           } catch (e) {}
-          
           decision.method = 'none';
-          decision.reason = 'CI Failure (Human PR - Opt-in required)';
+          decision.reason = 'CI Failure (Human PR)';
       }
     }
   }
 
-  // --- C: Automated Review ---
+  // --- C: Automated Review (Enhanced with CI) ---
   else if (eventName === 'pull_request_review' && 
           (context.reviewAuthor.includes('coderabbitai') || context.reviewAuthor.includes('codecov'))) {
     
@@ -281,30 +453,24 @@ async function main() {
       decision.reason = 'Draft PR (Review ignored)';
     } else {
       try {
-        const commentsJSON = exec(`gh api "/repos/${repo}/pulls/${context.number}/comments"`);
-        const comments = JSON.parse(commentsJSON);
+        const rabbitFeedback = getCodeRabbitComments(repo, context.number);
         
-        const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
-        
-        const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'}\n${c.body}`).join('\n\n---\n\n');
-
-        let finalComments = '';
-        if (rabbitComments.length > 15) {
-            finalComments = "### Summary of Feedback\n\nThere are many comments. Focus on the high-level themes:\n" + 
-                            formatComments(rabbitComments.slice(0, 5)) + 
-                            "\n\n...(and " + (rabbitComments.length - 5) + " more)";
-        } else {
-            finalComments = formatComments(rabbitComments);
+        // BATCHING: Include CI failures if available
+        let ciFeedback = '';
+        if (context.sha) {
+            ciFeedback = getCIFailures(repo, context.sha);
         }
 
-        if (finalComments) {
+        const combinedFeedback = (rabbitFeedback || '') + (ciFeedback ? "\n\n---\n\n" + ciFeedback : "");
+
+        if (combinedFeedback) {
           const standard = getStandardMethod();
           decision.method = standard.method;
-          decision.batchedComments = finalComments;
-          decision.reason = 'Review comments batched';
+          decision.batchedComments = combinedFeedback;
+          decision.reason = 'Review + CI Feedback';
           if (decision.method === 'api') {
             decision.prompt = getContextualPrompt(context.author === 'renovate[bot]' ? 'renovate-review.md' : 'code-rabbit-review.md', {
-              BATCHED_COMMENTS: finalComments
+              BATCHED_COMMENTS: combinedFeedback
             });
           }
         }
@@ -313,7 +479,14 @@ async function main() {
   }
 
   // --- D: Label Trigger ---
-  // ... (Manual label is usually okay even in draft) ...
+  else if (eventName === 'issues' && event.action === 'labeled' && event.label.name === 'jules') {
+    decision.method = 'api';
+    decision.prompt = getContextualPrompt('manual-issue.md', {
+      ISSUE_TITLE: event.issue.title,
+      ISSUE_BODY: event.issue.body
+    });
+    decision.reason = 'Issue labeled jules';
+  }
 
   // --- E: Human Changes Requested ---
   else if (eventName === 'pull_request_review' && event.review.state === 'changes_requested' && !context.reviewAuthor.includes('bot')) {
@@ -354,7 +527,7 @@ async function main() {
   setOutput('should_trigger_coderabbit', decision.shouldTriggerCodeRabbit);
 
   if (process.env.GITHUB_STEP_SUMMARY) {
-    const summary = `### 🤖 Jules Supervisor (v4.1)
+    const summary = `### 🤖 Jules Supervisor (v4.2)
     
 | Metric | Value |
 | :--- | :--- |
