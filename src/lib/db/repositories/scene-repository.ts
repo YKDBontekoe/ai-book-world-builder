@@ -66,6 +66,26 @@ export class SceneRepository extends BaseRepository<
 	}
 
 	/**
+	 * Find a scene by ID within a specific project (secure)
+	 */
+	async findByIdInProject(
+		id: string,
+		projectId: string,
+	): Promise<Scene | null> {
+		try {
+			const [result] = await db
+				.select()
+				.from(scene)
+				.where(and(eq(scene.id, id), eq(scene.projectId, projectId)))
+				.limit(1);
+			return result ?? null;
+		} catch (error) {
+			console.error("SceneRepository.findByIdInProject error:", error);
+			throw new DatabaseError("Failed to find scene in project");
+		}
+	}
+
+	/**
 	 * Find all scenes (not commonly used)
 	 */
 	async findAll(_options?: FindOptions): Promise<Scene[]> {

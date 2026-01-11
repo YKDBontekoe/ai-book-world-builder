@@ -19,17 +19,20 @@ import {
 	updateSceneTitleSchema,
 } from "@/lib/validation";
 
-export async function getSceneContent(sceneId: string) {
+export async function getSceneContent(projectId: string, sceneId: string) {
 	try {
-		// 1. Get Scene using repository
-		const targetScene = await sceneRepository.findById(sceneId);
+		// 1. Verify Access (Read is sufficient)
+		await ensureProjectAccess(projectId);
+
+		// 2. Get Scene using secure, project-scoped repository method
+		const targetScene = await sceneRepository.findByIdInProject(
+			sceneId,
+			projectId,
+		);
 
 		if (!targetScene) {
-			throw new Error("Scene not found");
+			throw new Error("Scene not found in this project");
 		}
-
-		// 2. Verify Access (Read is sufficient)
-		await ensureProjectAccess(targetScene.projectId);
 
 		return { success: true, content: targetScene.content };
 	} catch (error) {

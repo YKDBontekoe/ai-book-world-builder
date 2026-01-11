@@ -53,6 +53,7 @@ export function useWriterState({
 	// 4. Content Management (Editor State)
 	const { sceneContent, isSaving, lastSaved, handleContentChange } =
 		useSceneContent({
+			projectId,
 			activeSceneId: activeSceneId || undefined,
 			initialContent: activeScene?.content ?? undefined,
 			onContentUpdate: updateSceneInStructure,
