@@ -85,7 +85,7 @@ The Command Palette is driven by the `useSpotlightItems` hook (`hooks/use-spotli
 -   **Filtering**: It performs client-side fuzzy filtering on the aggregated list.
 
 ### 3. Smart Sync (Structure Editor)
-The `saveProjectStructure` Server Action (`app/actions/writer/structure.ts`) implements a **Smart Sync** algorithm to allow plain-text editing of the database structure:
+The `saveProjectStructure` Server Action (`features/writer/actions/structure.ts`) implements a **Smart Sync** algorithm to allow plain-text editing of the database structure:
 1.  **Parse**: Converts the text input into a hierarchical tree (Chapters -> Scenes).
 2.  **Normalize**: Converts titles to lowercase and removes accents for fuzzy matching.
 3.  **Match**: Queries existing DB records and attempts to match them by title.
