@@ -35,6 +35,12 @@ export default defineConfig({
 						reporter: ["text", "lcov", "json"],
 						include: ["src/**/*.{ts,tsx}"],
 						exclude: ["src/**/*.stories.tsx", "src/lib/db/schema/**"],
+						thresholds: {
+							branches: 50,
+							functions: 50,
+							lines: 50,
+							statements: 50,
+						},
 					},
 				},
 			},
