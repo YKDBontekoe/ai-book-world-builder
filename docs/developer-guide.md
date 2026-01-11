@@ -57,7 +57,7 @@ DB_DRIVER=sqlite SQLITE_DB_PATH=.local/dev.sqlite pnpm dev
 ```
 
 ### 1. Writer View Architecture
-The `WriterView` (`features/writer/components/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
+The `WriterView` (`src/features/writer/components/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
 
 1.  **Sidebar (Left)**: Managed by `WriterSidebar`. Contains navigation (Chapters/Scenes) and Project structure.
 2.  **Editor (Center)**: The `WriterEditor` wraps a ProseMirror instance. It is the primary workspace.
@@ -65,6 +65,12 @@ The `WriterView` (`features/writer/components/writer-view.tsx`) is the core inte
 
 **State Management**:
 The Writer uses a **Split Context** strategy (`features/writer/components/`) to prevent unnecessary re-renders:
+1.  **Sidebar (Left)**: Managed by `WriterSidebar` (`src/features/writer/components/writer-sidebar.tsx`). Contains navigation (Chapters/Scenes) and Project structure.
+2.  **Editor (Center)**: The `WriterEditor` (`src/features/writer/components/writer-editor.tsx`) wraps a ProseMirror instance. It is the primary workspace.
+3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`src/components/organisms/book-canvas/book-canvas.tsx`). Displays the Entity Bible, relationship graphs, and other contextual panes. The `network-pane.tsx` specifically handles visualizing the entity network graph.
+
+**Embedded Canvas Sync**:
+The `BookCanvas` is typically a standalone page but is embedded in the Writer View. A small `CanvasSync` component within `writer-view.tsx` is responsible for synchronizing the `WriterContext` state (like `projectId` and `isReadOnly`) to the `BookCanvasContext`.
 1.  **Sidebar (Left)**: Managed by `WriterSidebar` (`features/writer/components/sidebar/writer-sidebar.tsx`). Contains navigation (Chapters/Scenes) and Project structure.
 2.  **Editor (Center)**: The `WriterEditor` (`features/writer/components/editor/writer-editor.tsx`) wraps a ProseMirror instance. It is the primary workspace.
 3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`components/organisms/book-canvas`). Displays the Entity Bible, Graphs, and Context.
