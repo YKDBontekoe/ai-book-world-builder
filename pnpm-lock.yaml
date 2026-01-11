@@ -21,11 +21,11 @@ importers:
         specifier: 3.0.2
         version: 3.0.2
       '@ai-sdk/react':
-        specifier: 3.0.23
-        version: 3.0.23(react@19.2.3)(zod@3.25.76)
+        specifier: 3.0.29
+        version: 3.0.29(react@19.2.3)(zod@3.25.76)
       '@ai-sdk/xai':
-        specifier: 3.0.10
-        version: 3.0.10(zod@3.25.76)
+        specifier: 3.0.13
+        version: 3.0.13(zod@3.25.76)
       '@auth/drizzle-adapter':
         specifier: 1.11.1
         version: 1.11.1
@@ -445,14 +445,14 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       ultracite:
-        specifier: 7.0.10
-        version: 7.0.10(typescript@5.9.3)
+        specifier: 7.0.11
+        version: 7.0.11(oxlint@1.36.0)(typescript@5.9.3)
       vite:
         specifier: 7.3.1
         version: 7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)
       vite-tsconfig-paths:
-        specifier: 6.0.3
-        version: 6.0.3(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
+        specifier: 6.0.4
+        version: 6.0.4(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2))
       vitest:
         specifier: 4.0.16
         version: 4.0.16(@opentelemetry/api@1.9.0)(@types/node@24.10.4)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(jsdom@27.4.0)(lightningcss@1.30.2)(msw@2.12.7(@types/node@24.10.4)(typescript@5.9.3))(tsx@4.21.0)(yaml@2.8.2)
@@ -473,6 +473,12 @@ packages:
 
   '@ai-sdk/gateway@3.0.10':
     resolution: {integrity: sha512-sRlPMKd38+fdp2y11USW44c0o8tsIsT6T/pgyY04VXC3URjIRnkxugxd9AkU2ogfpPDMz50cBAGPnMxj+6663Q==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
+  '@ai-sdk/gateway@3.0.11':
+    resolution: {integrity: sha512-gLrgNXA95wdo/zAlA0miX/SJEYKSYCHg+e0Y/uQeABLScZAMjPw3jWaeANta/Db1T4xfi8cBvY3nnV8Pa27z+w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -499,14 +505,14 @@ packages:
     resolution: {integrity: sha512-HrEmNt/BH/hkQ7zpi2o6N3k1ZR1QTb7z85WYhYygiTxOQuaml4CMtHCWRbric5WPU+RNsYI7r1EpyVQMKO1pYw==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@3.0.23':
-    resolution: {integrity: sha512-SlGHxj3IrY/t2zf/kKHac8DiwKOPWCSBiaxGejijjST1mlAS5Hjp9CchmQNswNh9NxZQ7mow2C3t2jC/PLfLbw==}
+  '@ai-sdk/react@3.0.29':
+    resolution: {integrity: sha512-e17Id+43xCjHApsjane3dVl5xuUdP9lXgZMtNcgMlg3NHhv6UYpRGuH4+d/5W8+VHhhpNfTZEf7J5DkKehGgJQ==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
-  '@ai-sdk/xai@3.0.10':
-    resolution: {integrity: sha512-36Uf1/aALU1pZkyiCh6DkOqcy7GNmFXg3PRDyWT2K/w4cgRh8cEAOy4P9o47KM35F2PAHPGIqv5y2K791yWBdg==}
+  '@ai-sdk/xai@3.0.13':
+    resolution: {integrity: sha512-7bV9iXWXwmVIDv5hhl82VScc7owGcvs0L63nffHQxIGyuNbVteHuDLchTxNqJsYLEMUf0NsnvDP8S5BSRGNC+w==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3508,6 +3514,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  ai@6.0.27:
+    resolution: {integrity: sha512-a4ToMt5+4xOzHuYdoTy2GQXuNa2/Tpuhxfs5QESHtEV/Vf2HAzSwmTwikrIs8CDKPuMWV1I9YqAvaN5xexMCiQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   ansi-escapes@7.2.0:
     resolution: {integrity: sha512-g6LhBsl+GBPRWGWsBtutpzBYuIIdBkLEvad5C/va/74Db018+5TZiyA26cZJAr3Rft5lprVqOIPxf5Vid6tqAw==}
     engines: {node: '>=18'}
@@ -6172,8 +6184,8 @@ packages:
   trough@2.2.0:
     resolution: {integrity: sha512-tmMpK00BjZiUyVyvrBK7knerNgmgvcV/KLVyuma/SC+TQN167GrMRciANTz09+k3zW8L8t60jWO1GpfkZdjTaw==}
 
-  trpc-cli@0.12.1:
-    resolution: {integrity: sha512-/D/mIQf3tUrS7ZKJZ1gmSPJn2psAABJfkC5Eevm55SZ4s6KwANOUNlwhAGXN9HT4VSJVfoF2jettevE9vHPQlg==}
+  trpc-cli@0.12.2:
+    resolution: {integrity: sha512-kGNCiyOimGlfcZFImbWzFF2Nn3TMnenwUdyuckiN5SEaceJbIac7+Iau3WsVHjQpoNgugFruZMDOKf8GNQNtJw==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -6241,9 +6253,14 @@ packages:
   ufo@1.6.1:
     resolution: {integrity: sha512-9a4/uxlTWJ4+a5i0ooc1rU7C7YOw3wT+UGqdeNNHWnOF9qcMBgLRS+4IYUqbczewFx4mLEig6gawh7X6mFlEkA==}
 
-  ultracite@7.0.10:
-    resolution: {integrity: sha512-rA3uaic0tuwr9iQHqb3P2OPkluGakZGMgrcXKR/qb68uXNQ+rl3oZ+oPvJMB+qOxi4Au/E2qZjWblj1q9U+/Qg==}
+  ultracite@7.0.11:
+    resolution: {integrity: sha512-YeuJTf/Tu12l7K0qvl1G525NfrPUay6UFVt6TrTL8QfXcFZBI+Tzr0Dg14Hxcb964pRQF5PjBaUk3bJCNQHu+g==}
     hasBin: true
+    peerDependencies:
+      oxlint: ^1.0.0
+    peerDependenciesMeta:
+      oxlint:
+        optional: true
 
   underscore@1.13.7:
     resolution: {integrity: sha512-GMXzWtsc57XAtguZgaQViUOzs0KTkk8ojr3/xAxXLITqf/3EMwxC0inyETfDFjH/Krbhuep0HNbbjI9i/q3F3g==}
@@ -6382,8 +6399,8 @@ packages:
       vite:
         optional: true
 
-  vite-tsconfig-paths@6.0.3:
-    resolution: {integrity: sha512-7bL7FPX/DSviaZGYUKowWF1AiDVWjMjxNbE8lyaVGDezkedWqfGhlnQ4BZXre0ZN5P4kAgIJfAlgFDVyjrCIyg==}
+  vite-tsconfig-paths@6.0.4:
+    resolution: {integrity: sha512-iIsEJ+ek5KqRTK17pmxtgIxXtqr3qDdE6OxrP9mVeGhVDNXRJTKN/l9oMbujTQNzMLe6XZ8qmpztfbkPu2TiFQ==}
     peerDependencies:
       vite: '*'
     peerDependenciesMeta:
@@ -6602,8 +6619,8 @@ packages:
   zod@3.25.76:
     resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
-  zod@4.3.4:
-    resolution: {integrity: sha512-Zw/uYiiyF6pUT1qmKbZziChgNPRu+ZRneAsMUDU6IwmXdWt5JwcUfy2bvLOCUtz5UniaN/Zx5aFttZYbYc7O/A==}
+  zod@4.3.5:
+    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
 
   zustand@4.5.7:
     resolution: {integrity: sha512-CHOUy7mu3lbD6o6LJLfllpjkzhHXSBlX8B9+qPddUsIfeF5S/UZ5q0kmCsnRqT1UHFQZchNFDDzMbQsuesHWlw==}
@@ -6642,6 +6659,13 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 3.25.76
 
+  '@ai-sdk/gateway@3.0.11(zod@3.25.76)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.2
+      '@ai-sdk/provider-utils': 4.0.4(zod@3.25.76)
+      '@vercel/oidc': 3.1.0
+      zod: 3.25.76
+
   '@ai-sdk/openai-compatible@2.0.4(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.2
@@ -6665,17 +6689,17 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.23(react@19.2.3)(zod@3.25.76)':
+  '@ai-sdk/react@3.0.29(react@19.2.3)(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider-utils': 4.0.4(zod@3.25.76)
-      ai: 6.0.23(zod@3.25.76)
+      ai: 6.0.27(zod@3.25.76)
       react: 19.2.3
       swr: 2.3.8(react@19.2.3)
       throttleit: 2.1.0
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/xai@3.0.10(zod@3.25.76)':
+  '@ai-sdk/xai@3.0.13(zod@3.25.76)':
     dependencies:
       '@ai-sdk/openai-compatible': 2.0.4(zod@3.25.76)
       '@ai-sdk/provider': 3.0.2
@@ -9563,6 +9587,14 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 3.25.76
 
+  ai@6.0.27(zod@3.25.76):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.11(zod@3.25.76)
+      '@ai-sdk/provider': 3.0.2
+      '@ai-sdk/provider-utils': 4.0.4(zod@3.25.76)
+      '@opentelemetry/api': 1.9.0
+      zod: 3.25.76
+
   ansi-escapes@7.2.0:
     dependencies:
       environment: 1.1.0
@@ -11656,6 +11688,7 @@ snapshots:
       '@oxlint/linux-x64-musl': 1.36.0
       '@oxlint/win32-arm64': 1.36.0
       '@oxlint/win32-x64': 1.36.0
+    optional: true
 
   package-json-from-dist@1.0.1: {}
 
@@ -12695,12 +12728,12 @@ snapshots:
 
   trough@2.2.0: {}
 
-  trpc-cli@0.12.1(@trpc/server@11.8.1(typescript@5.9.3))(zod@4.3.4):
+  trpc-cli@0.12.2(@trpc/server@11.8.1(typescript@5.9.3))(zod@4.3.5):
     dependencies:
       commander: 14.0.2
     optionalDependencies:
       '@trpc/server': 11.8.1(typescript@5.9.3)
-      zod: 4.3.4
+      zod: 4.3.5
 
   ts-dedent@2.2.0: {}
 
@@ -12737,7 +12770,7 @@ snapshots:
 
   ufo@1.6.1: {}
 
-  ultracite@7.0.10(typescript@5.9.3):
+  ultracite@7.0.11(oxlint@1.36.0)(typescript@5.9.3):
     dependencies:
       '@clack/prompts': 0.11.0
       '@trpc/server': 11.8.1(typescript@5.9.3)
@@ -12745,14 +12778,14 @@ snapshots:
       glob: 13.0.0
       jsonc-parser: 3.3.1
       nypm: 0.6.2
+      trpc-cli: 0.12.2(@trpc/server@11.8.1(typescript@5.9.3))(zod@4.3.5)
+      zod: 4.3.5
+    optionalDependencies:
       oxlint: 1.36.0
-      trpc-cli: 0.12.1(@trpc/server@11.8.1(typescript@5.9.3))(zod@4.3.4)
-      zod: 4.3.4
     transitivePeerDependencies:
       - '@orpc/server'
       - '@valibot/to-json-schema'
       - effect
-      - oxlint-tsgolint
       - typescript
       - valibot
 
@@ -12930,7 +12963,7 @@ snapshots:
       - supports-color
       - typescript
 
-  vite-tsconfig-paths@6.0.3(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)):
+  vite-tsconfig-paths@6.0.4(typescript@5.9.3)(vite@7.3.1(@types/node@24.10.4)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)(yaml@2.8.2)):
     dependencies:
       debug: 4.4.3
       globrex: 0.1.2
@@ -13111,7 +13144,7 @@ snapshots:
 
   zod@3.25.76: {}
 
-  zod@4.3.4: {}
+  zod@4.3.5: {}
 
   zustand@4.5.7(@types/react@19.2.7)(immer@11.1.0)(react@19.2.3):
     dependencies:
