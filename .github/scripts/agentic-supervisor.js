@@ -3,15 +3,15 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
- * AGENTIC SUPERVISOR (v4.2)
+ * AGENTIC SUPERVISOR (v4.3)
  * 
  * Centralized orchestration for AI agents.
  * Features:
  * - Batched Feedback (CI + Codecov + CodeRabbit)
+ * - Synchronized Execution (Waits for all signals)
  * - Author-based Invocation Strategy (Hybrid)
  * - Smart Auto-Triage & Labeling
  * - Infinite Loop Protection
- * - Context Injection (AGENTS.md, Renovate Release Notes)
  */
 
 // =============================================================================
@@ -49,7 +49,7 @@ function getPrompt(filename, replacements = {}) {
   try {
     let content = fs.readFileSync(`.github/prompts/${filename}`, 'utf8');
     for (const [key, val] of Object.entries(replacements)) {
-      content = content.replace(new RegExp(`\\$${key}`, 'g'), val || '');
+      content = content.replace(new RegExp(`\$${key}`, 'g'), val || '');
     }
     return content;
   } catch (e) {
@@ -79,7 +79,7 @@ function getCodeRabbitComments(repo, number) {
     
     if (rabbitComments.length === 0) return '';
     
-    const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'}\n${c.body}`).join('\n\n---\n\n');
+    const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'} \n${c.body}`).join('\n\n---\n\n');
     
     let summary = '';
     if (rabbitComments.length > 10) {
@@ -137,6 +137,25 @@ function getCIFailures(repo, sha) {
   }
 }
 
+function areChecksInProgress(repo, sha, namePattern) {
+  try {
+    const runs = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/check-runs" --jq '.check_runs'`));
+    // Filter for checks matching the pattern AND (in_progress or queued)
+    // Exclude self if possible? (If we are running this script inside a check run...)
+    // But this script runs in a workflow job. Check runs are usually per-job or per-app.
+    const running = runs.filter(c => 
+      c.name.toLowerCase().includes(namePattern.toLowerCase()) && 
+      (c.status === 'in_progress' || c.status === 'queued')
+    );
+    
+    return running.length > 0;
+  } catch (e) {
+    // If API fails, assume NOT in progress to avoid deadlock, unless it's critical?
+    // Safer to assume false so we don't hang forever.
+    return false;
+  }
+}
+
 // =============================================================================
 // MAIN LOGIC
 // =============================================================================
@@ -153,7 +172,7 @@ async function main() {
   
   log(`Analyzing event: ${eventName} (${event.action || 'n/a'})`);
 
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------- 
   // 1. Context Analysis
   // ---------------------------------------------------------------------------
   
@@ -187,7 +206,7 @@ async function main() {
     if (eventName === 'pull_request_review') {
       context.reviewAuthor = event.review.user.login;
       context.reviewBody = event.review.body;
-      context.sha = event.review.commit_id; // Use review commit
+      context.sha = event.review.commit_id; 
     }
 
   } else if (eventName === 'issue_comment') {
@@ -283,7 +302,7 @@ async function main() {
 
   log(`Context: PR=${context.isPr}, #${context.number}, Author=${context.author}`);
 
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------- 
   // 2. Prepare Context Injection
   // ---------------------------------------------------------------------------
   let projectContext = '';
@@ -312,7 +331,7 @@ ${conventions}
     });
   };
 
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------- 
   // 3. Smart Triage
   // ---------------------------------------------------------------------------
   
@@ -336,7 +355,7 @@ ${conventions}
     if (newLabels.length > 0) await addLabels(context.number, newLabels);
   }
 
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------- 
   // 4. Decision Logic
   // ---------------------------------------------------------------------------
   
@@ -402,7 +421,12 @@ ${conventions}
 
   // --- B: CI Failure (Enhanced with CodeRabbit) ---
   else if (context.failedJobs) {
-    if (isLooping()) {
+    if (areChecksInProgress(repo, context.sha, 'coderabbit')) {
+        log('CodeRabbit is still analyzing. Waiting for review to complete before batching.');
+        decision.method = 'none';
+        decision.reason = 'Waiting for CodeRabbit';
+    } 
+    else if (isLooping()) {
         log('Loop detected. Aborting CI fix.');
         decision.method = 'none';
         decision.reason = 'Loop Protection';
@@ -435,7 +459,7 @@ ${conventions}
               const comments = exec(`gh pr view ${context.number} --json comments --jq '.comments[].body'`);
               if (!comments.includes('Reply with: @jules fix')) {
                   exec(`gh pr comment ${context.number} --body "❌ **CI Checks Failed**\n\nI can attempt to fix these issues automatically.\n\nReply with: 
-`@jules fix`"`);
+@jules fix"`);
               }
           } catch (e) {}
           decision.method = 'none';
@@ -448,7 +472,12 @@ ${conventions}
   else if (eventName === 'pull_request_review' && 
           (context.reviewAuthor.includes('coderabbitai') || context.reviewAuthor.includes('codecov'))) {
     
-    if (context.isDraft) {
+    if (areChecksInProgress(repo, context.sha, 'CI')) {
+        log('CI is still running. Waiting for completion before batching.');
+        decision.method = 'none';
+        decision.reason = 'Waiting for CI';
+    }
+    else if (context.isDraft) {
       decision.method = 'none';
       decision.reason = 'Draft PR (Review ignored)';
     } else {
@@ -510,7 +539,7 @@ ${conventions}
      }
   }
 
-  // ---------------------------------------------------------------------------
+  // --------------------------------------------------------------------------- 
   // 5. Output
   // ---------------------------------------------------------------------------
 
@@ -527,7 +556,7 @@ ${conventions}
   setOutput('should_trigger_coderabbit', decision.shouldTriggerCodeRabbit);
 
   if (process.env.GITHUB_STEP_SUMMARY) {
-    const summary = `### 🤖 Jules Supervisor (v4.2)
+    const summary = `### 🤖 Jules Supervisor (v4.3)    
     
 | Metric | Value |
 | :--- | :--- |
