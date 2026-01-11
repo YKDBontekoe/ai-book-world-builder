@@ -21,6 +21,55 @@ The **Story Wizard** is the fastest way to turn an idea into a complete outline.
 **Option B: Manual Structuring**
 If you already have an outline, you can build it manually.
 
+## Writer View Interface
+
+The Project View is divided into three main panels to help you organize and write your story:
+
+1.  **Navigation (Left)**: This sidebar lists your Chapters and Scenes. Use it to jump between different parts of your book. It also contains the "Create Story" wizard when your project is empty.
+2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
+3.  **Canvas (Right)**: A visual board for your world.
+
+### Command Palette (Writer Spotlight)
+
+Access powerful actions instantly without taking your hands off the keyboard.
+
+-   **Open**: Press `Cmd+K` (Mac) or `Ctrl+K` (Windows), or click the search icon in the bottom toolbar.
+-   **Features**:
+    -   **Navigate**: Type a scene or character name to jump directly to it.
+    -   **Actions**: Run commands like "Toggle Zen Mode", "Toggle Typewriter Mode", or "Ask AI Assistant".
+    -   **Filter**: Use tabs to search only for Entities, Scenes, or Actions.
+
+### Using the World Canvas
+
+The Canvas (Right Panel) is your command center for world-building and analysis. It features several specialized tools (tabs):
+
+*   **Outline**: View and manage your high-level book structure (Volumes and Chapters).
+*   **Graph**: Visualizes your **Entity Network**. See how characters, locations, and lore are connected.
+    *   *Nodes* represent entities.
+    *   *Lines* represent relationships (e.g., "Ally", "Sibling").
+*   **Arc**: Analyzes your story's **Pacing** and **Tension**.
+    *   *Tension (Area Chart)*: Derived from atmospheric keywords and emotional beats.
+    *   *Pacing (Line Chart)*: Based on scene length and dialogue density.
+*   **Timeline**: Tracks chronological events to ensure your plot is consistent.
+*   **Map**: A visual gallery of your locations.
+    *   *Images*: Attach reference images or maps to your Location entities.
+    *   *Grid*: View all your locations in a visual grid.
+*   **Scenes**: A Kanban-style board to manage scene status.
+    *   *Workflow*: Drag and drop scenes between columns (Planned -> Drafted -> Final).
+*   **Bible**: The core database of your characters and lore. Use this to search and edit entities without leaving the editor.
+*   **Context**: Shows exactly what the AI "sees" when generating the current scene (e.g., Active Characters, Location details). Use this to verify the AI has the right info.
+*   **Draft**: A scratchpad for rough ideas or snippets that don't fit in the main manuscript yet.
+*   **Diagnostics**: Runs health checks on your story (e.g., "Missing Character Descriptions", "Empty Scenes").
+*   **Log**: A history of changes and AI generations.
+
+## Writer Tools
+
+The Writer View includes specialized AI tools to assist your creative process.
+
+### 1. Structure Power Editor
+Manage your entire book's outline as a simple text file.
+-   **Usage**: Click the **File Text** icon in the sidebar header.
+-   **Features**:
 1.  **Structure Power Editor**: Click the **File Text** icon in the sidebar header to manage your entire book's outline as a simple text file.
     -   **Bulk Editing**: Type `Chapter 1: Title` and `Scene: Title` to rapidly build structure.
     -   **Smart Format**: Automatically cleans up your text and numbering.
