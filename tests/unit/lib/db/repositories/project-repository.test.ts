@@ -17,13 +17,20 @@ const mocks = vi.hoisted(() => {
 		set: vi.fn(),
 		delete: vi.fn(),
 		// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for Drizzle
-		then: vi.fn((resolve, reject) => {
-			if (mockChain.error) {
-				return Promise.reject(mockChain.error).catch(reject);
-			}
-			return Promise.resolve(mockChain.result).then(resolve);
-		}),
+		then(onFulfilled: any, onRejected: any) {
+			const currentResult =
+				mockChain.results && mockChain.results.length > 0
+					? mockChain.results.shift()
+					: mockChain.result;
+
+			const p = mockChain.error
+				? Promise.reject(mockChain.error)
+				: Promise.resolve(currentResult);
+
+			return p.then(onFulfilled, onRejected);
+		},
 		result: [],
+		results: null as any[] | null,
 		error: null,
 	};
 
@@ -66,6 +73,7 @@ describe("ProjectRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.result = [];
+		mocks.results = null;
 		mocks.error = null;
 	});
 
@@ -132,6 +140,11 @@ describe("ProjectRepository", () => {
 			const result = await projectRepository.findByIdWithAccess("p1", "u2");
 			expect(result).toBeNull();
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			vi.spyOn(projectRepository, "findById").mockRejectedValueOnce(new DatabaseError("DB"));
+			await expect(projectRepository.findByIdWithAccess("p1")).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("findByIdWithOwnership", () => {
@@ -164,10 +177,73 @@ describe("ProjectRepository", () => {
 		});
 	});
 
+	describe("findAll", () => {
+		it("should return all projects", async () => {
+			const projects = [{ id: "p1" }];
+			mocks.result = projects;
+			const result = await projectRepository.findAll();
+			expect(result).toEqual(projects);
+		});
+
+		it("should apply pagination and sorting", async () => {
+			mocks.result = [];
+			await projectRepository.findAll({ limit: 10, offset: 5, orderBy: "createdAt", orderDirection: "desc" });
+			expect(mocks.limit).toHaveBeenCalledWith(10);
+			expect(mocks.offset).toHaveBeenCalledWith(5);
+			expect(mocks.orderBy).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.findAll()).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("findVisibleToUser", () => {
+		it("should return visible projects", async () => {
+			const projects = [{ id: "p1" }];
+			mocks.result = projects;
+			const result = await projectRepository.findVisibleToUser("u1");
+			expect(result).toEqual(projects);
+		});
+
+		it("should apply filter 'mine'", async () => {
+			mocks.result = [];
+			await projectRepository.findVisibleToUser("u1", "mine");
+			expect(mocks.where).toHaveBeenCalled(); // verify called (logic mocked by drizzle-orm mock)
+		});
+
+		it("should apply filter 'shared'", async () => {
+			mocks.result = [];
+			await projectRepository.findVisibleToUser("u1", "shared");
+			expect(mocks.where).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.findVisibleToUser("u1")).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("findByUserId", () => {
+		it("should return user projects", async () => {
+			const projects = [{ id: "p1" }];
+			mocks.result = projects;
+			const result = await projectRepository.findByUserId("u1");
+			expect(result).toEqual(projects);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.findByUserId("u1")).rejects.toThrow(DatabaseError);
+		});
+	});
+
 	describe("create", () => {
 		it("should create and return a project", async () => {
 			const mockInput = {
 				name: "New Project",
+				description: "Desc",
 				visibility: "private" as const,
 				userId: "u1",
 			};
@@ -177,6 +253,11 @@ describe("ProjectRepository", () => {
 			const result = await projectRepository.create(mockInput);
 			expect(result).toEqual(mockProject);
 			expect(mocks.insert).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.create({ name: "n", visibility: "public", userId: "u" })).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -196,6 +277,11 @@ describe("ProjectRepository", () => {
 				projectRepository.update("p1", { name: "Updated" }),
 			).rejects.toThrow(NotFoundError);
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.update("p1", {})).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("delete", () => {
@@ -203,6 +289,28 @@ describe("ProjectRepository", () => {
 			mocks.result = {};
 			await projectRepository.delete("p1");
 			expect(mocks.delete).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.delete("p1")).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("deleteMany", () => {
+		it("should return early if empty array", async () => {
+			await projectRepository.deleteMany([]);
+			expect(mocks.delete).not.toHaveBeenCalled();
+		});
+
+		it("should delete multiple projects", async () => {
+			await projectRepository.deleteMany(["p1", "p2"]);
+			expect(mocks.delete).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.deleteMany(["p1"])).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -233,6 +341,52 @@ describe("ProjectRepository", () => {
 			await expect(projectRepository.fork("p1", "u1")).rejects.toThrow(
 				NotFoundError,
 			);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			vi.spyOn(projectRepository, "findByIdWithAccess").mockResolvedValueOnce({ id: "p1" } as any);
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.fork("p1", "u1")).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("findByIds", () => {
+		it("should return early if empty ids", async () => {
+			const result = await projectRepository.findByIds([]);
+			expect(result).toEqual([]);
+			expect(mocks.select).not.toHaveBeenCalled();
+		});
+
+		it("should return projects", async () => {
+			const projects = [{ id: "p1" }];
+			mocks.result = projects;
+			const result = await projectRepository.findByIds(["p1"]);
+			expect(result).toEqual(projects);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.findByIds(["p1"])).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("findOwnedByUser", () => {
+		it("should return early if empty ids", async () => {
+			const result = await projectRepository.findOwnedByUser([], "u1");
+			expect(result).toEqual([]);
+			expect(mocks.select).not.toHaveBeenCalled();
+		});
+
+		it("should return owned projects", async () => {
+			const projects = [{ id: "p1" }];
+			mocks.result = projects;
+			const result = await projectRepository.findOwnedByUser(["p1"], "u1");
+			expect(result).toEqual(projects);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(projectRepository.findOwnedByUser(["p1"], "u1")).rejects.toThrow(DatabaseError);
 		});
 	});
 });

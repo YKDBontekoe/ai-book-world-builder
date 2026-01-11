@@ -18,6 +18,7 @@ src/
 ├── components/          # Shared React components
 │   ├── atoms/           # Low-level UI primitives (Button, Input)
 │   ├── molecules/       # Composition of atoms (GlassCard, StatCard)
+│   ├── messages/        # Chat message components
 │   ├── organisms/       # Complex components (BookCanvas, Settings)
 │   └── ...
 ├── features/            # Feature-scoped components and logic
@@ -64,12 +65,19 @@ The `WriterView` (`features/writer/components/writer-view.tsx`) is the core inte
 
 **State Management**:
 The Writer uses a **Split Context** strategy (`features/writer/components/`) to prevent unnecessary re-renders:
+1.  **Sidebar (Left)**: Managed by `WriterSidebar` (`features/writer/components/sidebar/writer-sidebar.tsx`). Contains navigation (Chapters/Scenes) and Project structure.
+2.  **Editor (Center)**: The `WriterEditor` (`features/writer/components/editor/writer-editor.tsx`) wraps a ProseMirror instance. It is the primary workspace.
+3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`components/organisms/book-canvas`). Displays the Entity Bible, Graphs, and Context.
+
+**State Management**:
+The Writer uses a **Split Context** strategy (`features/writer/contexts/`) to prevent unnecessary re-renders:
 -   **WriterContext**: Holds relatively stable data (`project`, `structure`, `activeSceneId`).
 -   **WriterControlContext**: Holds volatile UI state (`isChatOpen`, `isSpotlightOpen`).
 -   **WriterLayoutContext**: Handles layout toggles (`ZenMode`, `DirectorMode`, `SidebarOpen`).
 
 **Embedded Canvas Sync**:
 The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
+The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component (`features/writer/components/canvas-sync.tsx`) to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
 
 **Lazy Loading**:
 To optimize TTI (Time to Interactive), heavy components are lazy-loaded:
@@ -131,6 +139,7 @@ Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services
 -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
 ### 8. Structured Context (Context Builder)
+### 7. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/ai/context-builder.ts`:
 
 -   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene to ensure flow.
