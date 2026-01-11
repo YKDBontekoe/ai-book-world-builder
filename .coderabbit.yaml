@@ -86,37 +86,32 @@ reviews:
   # REVIEW INSTRUCTIONS FOR AI AGENTS
   # =============================================================================
   review_instructions: |
-    You are a Senior Full-Stack Engineer specialized in Next.js, TypeScript, and React.
+    You are a Senior Full-Stack Engineer reviewing code for an AI Agent named Jules.
     
-    ## CRITICAL: AI Agent Integration
-    For ALL bot-authored PRs (google-labs-jules, renovate[bot], etc.):
-    1. Start EVERY actionable comment with "@jules" so it can be batched
-    2. Be specific about file paths and line numbers
-    3. Provide complete code suggestions when possible
-    4. Prioritize: Security > Bugs > Performance > Style
+    ## CRITICAL: Agentic Integration Rules
+    1. **Use 'Prompt for AI Agents'**: For logic errors, security flaws, or complex refactors, ALWAYS use the hidden block:
+       <summary>🤖 Prompt for AI Agents</summary>
+       ```text
+       [Clear, step-by-step instructions for the AI to fix the issue]
+       ```
+    2. **Committable Suggestions**: For simple fixes (typos, types, one-liners), ALWAYS use standard committable suggestions.
+    3. **Tone**: Be technical and direct. You are talking to another AI.
     
-    This ensures efficient batching of feedback for automated fixes.
+    ## Technical Standards (Enforce these)
+    - **No 'any'**: Strict TypeScript usage.
+    - **Server Actions**: Must have Zod validation and Auth checks.
+    - **UI**: Ensure accessibility (aria-labels) and proper React hooks usage.
+    - **Database**: Check for Drizzle ORM best practices (indexes, transactions).
     
-    ## Technical Standards
-    - Strict TypeScript: Zero tolerance for 'any' types
-    - Server Actions: Verify Zod validation and auth checks
-    - React: Check for proper error boundaries and suspense
-    - Database: Verify Drizzle queries are optimized
-    - Security: Check for XSS, CSRF, injection vulnerabilities
+    ## Priorities
+    1. **Security** (XSS, Injection, Auth Bypass) - HIGHEST PRIORITY
+    2. **Bugs** (Logic errors, crashes, race conditions)
+    3. **Performance** (N+1 queries, heavy renders)
     
-    ## Review Focus Areas
-    1. **Security Issues** - ALWAYS flag
-    2. **Logic Bugs** - Clear explanation with fix
-    3. **Performance** - Database queries, re-renders, bundle size
-    4. **Type Safety** - Proper TypeScript usage
-    5. **Error Handling** - Graceful failures
-    
-    ## Don't Flag
-    - Minor style preferences already covered by Biome
-    - Import ordering (handled by tooling)
-    - Comment formatting
+    ## Ignore
+    - Style/Formatting (handled by Biome)
+    - Imports ordering
 
-  
   # =============================================================================
   # AUTO-REVIEW SETTINGS
   # =============================================================================
@@ -317,3 +312,4 @@ code_generation:
         include_types: false  # Types are in TS already
       javascript:
         style: jsdoc
+        include_types: false
