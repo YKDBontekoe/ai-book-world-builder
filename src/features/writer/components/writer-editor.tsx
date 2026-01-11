@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Lock, MousePointerClick, RotateCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { Button } from "@/components/atoms/button";
 import { Slider } from "@/components/atoms/slider";
 import { EmptyState } from "@/components/molecules/empty-state";
@@ -12,6 +13,7 @@ import {
 	Editor,
 	type EditorHandle,
 } from "@/components/organisms/editor/text-editor";
+import { useAppearance } from "@/components/providers/appearance-provider";
 import { StoryWizard } from "@/features/writer/components/story-wizard";
 import { ContextualPrompts } from "@/features/writer/components/tools/contextual-prompts";
 import { WritingStyleAnalyzer } from "@/features/writer/components/tools/writing-style-analyzer";
@@ -19,7 +21,6 @@ import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { WriterHeader } from "@/features/writer/components/writer-header";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
-import { useAppearance } from "@/components/providers/appearance-provider";
 import { useEditorHistory } from "@/hooks/use-editor-history";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 
@@ -35,7 +36,7 @@ export function WriterEditor() {
 	} = useWriterContext();
 
 	const { isTypewriterMode, isDirectorMode } = useWriterLayoutContext();
-	const { registerEditorActions } = useWriterControl();
+	const { registerEditorActions, toggleChat, toggleSpotlight } = useWriterControl();
 	const { data: entities } = useProjectEntities(project.id);
 	// Use a standard ref to access the editor instance for non-effect usage
 	const editorRef = useRef<EditorHandle | null>(null);
@@ -88,6 +89,17 @@ export function WriterEditor() {
 			pushHistory(content);
 		},
 		[handleContentChange, pushHistory],
+	);
+
+	// Add hotkey scope for editor specific actions
+	useHotkeys(
+		"meta+enter, ctrl+enter",
+		(e) => {
+			e.preventDefault();
+			// Logic to "Continue Writing" or "Focus Chat"
+			toggleChat();
+		},
+		{ enableOnFormTags: true, description: "Trigger AI Assistant" },
 	);
 
 	return (

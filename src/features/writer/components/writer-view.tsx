@@ -2,6 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
 import {
 	ResizableHandle,
 	ResizablePanel,
@@ -17,6 +19,7 @@ import {
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/features/writer/components/hooks/use-writer-layout";
+import { useWriterNavigation } from "@/features/writer/components/hooks/use-writer-navigation";
 import { PowerDock } from "@/features/writer/components/power-dock";
 import { WriterSpotlight } from "@/features/writer/components/tools/writer-spotlight";
 import { WriterProvider } from "@/features/writer/components/writer-context";
@@ -65,7 +68,48 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 	} = useWriterLayout();
 
 	// Control Context
-	const { isChatOpen, setChatOpen } = useWriterControl();
+	const { isChatOpen, setChatOpen, toggleSpotlight } = useWriterControl();
+
+	// Navigation Hook
+	const { nextScene, prevScene } = useWriterNavigation();
+
+	// Global Hotkeys
+	useHotkeys(
+		"meta+j, ctrl+j",
+		(e) => {
+			e.preventDefault();
+			nextScene();
+		},
+		{ enableOnFormTags: true, description: "Next Scene" },
+	);
+
+	useHotkeys(
+		"meta+k, ctrl+k",
+		(e) => {
+			e.preventDefault();
+			prevScene();
+		},
+		{ enableOnFormTags: true, description: "Previous Scene" },
+	);
+
+	useHotkeys(
+		"meta+b, ctrl+b",
+		(e) => {
+			e.preventDefault();
+			actions.toggleSidebar();
+			toast.info("Toggled Sidebar", { duration: 1000, icon: "⚡" });
+		},
+		{ enableOnFormTags: true, description: "Toggle Sidebar" },
+	);
+
+	useHotkeys(
+		"meta+/, ctrl+/",
+		(e) => {
+			e.preventDefault();
+			toggleSpotlight();
+		},
+		{ enableOnFormTags: true, description: "Toggle Spotlight" },
+	);
 
 	useEffect(() => {
 		setMounted(true);
