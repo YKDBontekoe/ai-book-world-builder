@@ -60,18 +60,18 @@ DB_DRIVER=sqlite SQLITE_DB_PATH=.local/dev.sqlite pnpm dev
 ### 1. Writer View Architecture
 The `WriterView` (`features/writer/components/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
 
-1.  **Sidebar (Left)**: Managed by `WriterSidebar`. Contains navigation (Chapters/Scenes) and Project structure.
-2.  **Editor (Center)**: The `WriterEditor` wraps a ProseMirror instance. It is the primary workspace.
+1.  **Sidebar (Left)**: Managed by `WriterSidebar` (`features/writer/components/sidebar/writer-sidebar.tsx`). Contains navigation (Chapters/Scenes) and Project structure.
+2.  **Editor (Center)**: The `WriterEditor` (`features/writer/components/editor/writer-editor.tsx`) wraps a ProseMirror instance. It is the primary workspace.
 3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`components/organisms/book-canvas`). Displays the Entity Bible, Graphs, and Context.
 
 **State Management**:
-The Writer uses a **Split Context** strategy (`features/writer/components/`) to prevent unnecessary re-renders:
+The Writer uses a **Split Context** strategy (`features/writer/contexts/`) to prevent unnecessary re-renders:
 -   **WriterContext**: Holds relatively stable data (`project`, `structure`, `activeSceneId`).
 -   **WriterControlContext**: Holds volatile UI state (`isChatOpen`, `isSpotlightOpen`).
 -   **WriterLayoutContext**: Handles layout toggles (`ZenMode`, `DirectorMode`, `SidebarOpen`).
 
 **Embedded Canvas Sync**:
-The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
+The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component (`features/writer/components/canvas-sync.tsx`) to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
 
 **Lazy Loading**:
 To optimize TTI (Time to Interactive), heavy components are lazy-loaded:
