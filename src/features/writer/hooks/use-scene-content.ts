@@ -4,6 +4,7 @@ import { useDebounceCallback } from "usehooks-ts";
 import { getSceneContent, updateSceneContent } from "@/features/writer/actions";
 
 interface UseSceneContentProps {
+	projectId?: string;
 	activeSceneId?: string;
 	initialContent?: string;
 	onContentUpdate?: (sceneId: string, content: string) => void;
@@ -18,6 +19,7 @@ export interface UseSceneContentReturn {
 }
 
 export function useSceneContent({
+	projectId,
 	activeSceneId,
 	initialContent,
 	onContentUpdate,
@@ -62,7 +64,12 @@ export function useSceneContent({
 				// No initial content, clear and fetch.
 				setSceneContent("");
 
-				getSceneContent(activeSceneId).then((result) => {
+				if (!projectId) {
+					console.warn("No projectId provided to useSceneContent");
+					return;
+				}
+
+				getSceneContent(projectId, activeSceneId).then((result) => {
 					if (!isMounted) return;
 
 					// Race condition check: make sure we are still on the same scene
