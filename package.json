@@ -33,10 +33,10 @@
 		]
 	},
 	"dependencies": {
-		"@ai-sdk/anthropic": "3.0.7",
+		"@ai-sdk/anthropic": "3.0.9",
 		"@ai-sdk/openai": "3.0.7",
 		"@ai-sdk/provider": "3.0.2",
-		"@ai-sdk/react": "3.0.14",
+		"@ai-sdk/react": "3.0.22",
 		"@ai-sdk/xai": "3.0.10",
 		"@auth/drizzle-adapter": "1.11.1",
 		"@codemirror/lang-javascript": "6.2.4",
@@ -179,8 +179,8 @@
 		"tailwindcss": "4.1.18",
 		"tsx": "4.21.0",
 		"typescript": "5.9.3",
-		"ultracite": "7.0.8",
-		"vite": "7.3.0",
+		"ultracite": "7.0.10",
+		"vite": "7.3.1",
 		"vite-tsconfig-paths": "6.0.3",
 		"vitest": "4.0.16"
 	},
