@@ -11,7 +11,7 @@ export const metadata = {
 export default async function ProjectDashboardPage({
 	params,
 }: {
-	params: { id: string };
+	params: Promise<{ id: string }>;
 }) {
 	const { id } = await params;
 	const result = await getDashboardStatsAction({ projectId: id });

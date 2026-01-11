@@ -31,6 +31,22 @@ export const VersionFooter = ({
 
 	const { width } = useWindowSize();
 	const isMobile = width < 768;
+	const [timeString, setTimeString] = useState<string>("");
+
+	// Fix hydration mismatch by calculating relative time only on client
+	useEffect(() => {
+		if (documents?.[currentVersionIndex]?.createdAt) {
+			setTimeString(
+				formatDistance(
+					new Date(documents[currentVersionIndex].createdAt),
+					new Date(),
+					{
+						addSuffix: true,
+					},
+				),
+			);
+		}
+	}, [documents, currentVersionIndex]);
 
 	const { mutate: restoreVersion, isPending: isMutating } = useMutation({
 		mutationFn: async () => {
@@ -111,16 +127,9 @@ export const VersionFooter = ({
 				<div className="flex flex-col gap-1">
 					<div className="flex flex-row flex-wrap items-center gap-2">
 						<Badge variant="outline">{draftLabel}</Badge>
-						{currentDocument?.createdAt ? (
+						{currentDocument?.createdAt && timeString ? (
 							<div className="text-muted-foreground text-sm">
-								Saved{" "}
-								{formatDistance(
-									new Date(currentDocument.createdAt),
-									new Date(),
-									{
-										addSuffix: true,
-									},
-								)}
+								Saved {timeString}
 							</div>
 						) : null}
 					</div>
