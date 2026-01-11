@@ -5,6 +5,7 @@ import { redo, undo } from "prosemirror-history";
 import {
 	forwardRef,
 	memo,
+	useCallback,
 	useEffect,
 	useImperativeHandle,
 	useRef,
@@ -64,6 +65,20 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			top: number;
 		} | null>(null);
 
+		const handleMentionStateChange = useCallback(
+			(
+				state: MentionState | null,
+				coords: {
+					left: number;
+					top: number;
+				} | null,
+			) => {
+				setTempMentionState(state);
+				setTempMentionCoords(coords);
+			},
+			[],
+		);
+
 		const { editorRef, mounted: _mounted } = useProseMirror({
 			containerRef: containerRef as React.RefObject<HTMLDivElement>,
 			content,
@@ -72,10 +87,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			onSelectionChange,
 			typewriterMode,
 			status,
-			onMentionStateChange: (state, coords) => {
-				setTempMentionState(state);
-				setTempMentionCoords(coords);
-			},
+			onMentionStateChange: handleMentionStateChange,
 		});
 
 		// Sync local mention state with hook

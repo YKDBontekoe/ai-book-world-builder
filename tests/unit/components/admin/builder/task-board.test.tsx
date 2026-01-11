@@ -58,14 +58,20 @@ vi.mock("@/components/molecules/glass-card", () => ({
 		className?: string;
 		onClick?: () => void;
 	}) => (
-		<button
+		<div
 			className={className}
 			onClick={onClick}
 			data-testid="glass-card"
-			type="button"
+			role="button"
+			tabIndex={0}
+			onKeyDown={(e) => {
+				if (e.key === "Enter" || e.key === " ") {
+					onClick?.();
+				}
+			}}
 		>
 			{children}
-		</button>
+		</div>
 	),
 }));
 
@@ -295,7 +301,11 @@ describe("TaskBoard", () => {
 		await waitFor(() => {
 			const fixButton = screen
 				.getAllByRole("button")
-				.find((b) => b.textContent?.includes("Fix"));
+				.find(
+					(b) =>
+						b.textContent?.includes("Fix") &&
+						b.getAttribute("data-testid") !== "glass-card",
+				);
 			expect(fixButton).toBeInTheDocument();
 			if (fixButton) {
 				fireEvent.click(fixButton);
@@ -327,7 +337,11 @@ describe("TaskBoard", () => {
 		await waitFor(() => {
 			const fixButton = screen
 				.getAllByRole("button")
-				.find((b) => b.textContent?.includes("Fix"));
+				.find(
+					(b) =>
+						b.textContent?.includes("Fix") &&
+						b.getAttribute("data-testid") !== "glass-card",
+				);
 			expect(fixButton).toBeInTheDocument();
 			if (fixButton) {
 				fireEvent.click(fixButton);

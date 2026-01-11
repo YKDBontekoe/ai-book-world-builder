@@ -26,7 +26,10 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("octokit", () => {
 	return {
-		Octokit: vi.fn().mockImplementation(() => mocks.octokit),
+		// biome-ignore lint/complexity/useArrowFunction: Octokit must be constructed with new
+		Octokit: vi.fn().mockImplementation(function () {
+			return mocks.octokit;
+		}),
 	};
 });
 

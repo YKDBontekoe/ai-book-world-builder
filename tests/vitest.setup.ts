@@ -23,6 +23,9 @@ vi.mock("next/server", () => ({
 beforeAll(() => server.listen());
 afterEach(() => {
 	server.resetHandlers();
+	if (typeof window !== "undefined") {
+		window.localStorage?.clear();
+	}
 	cleanup();
 });
 afterAll(() => server.close());
@@ -48,6 +51,26 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
 			removeEventListener: () => {},
 			dispatchEvent: () => {},
 		}),
+	});
+
+	// Mock localStorage
+	const localStorageMock = (function () {
+		let store: Record<string, string> = {};
+		return {
+			getItem: (key: string) => store[key] || null,
+			setItem: (key: string, value: string) => {
+				store[key] = value.toString();
+			},
+			removeItem: (key: string) => {
+				delete store[key];
+			},
+			clear: () => {
+				store = {};
+			},
+		};
+	})();
+	Object.defineProperty(window, "localStorage", {
+		value: localStorageMock,
 	});
 }
 
