@@ -8,7 +8,9 @@ import * as sqliteSchema from "@/lib/db/schema/sqlite";
 
 export type DbDriver = "postgres" | "sqlite";
 
-const dbDriver = (process.env.DB_DRIVER ?? "postgres").toLowerCase() as DbDriver;
+const dbDriver = (
+	process.env.DB_DRIVER ?? "postgres"
+).toLowerCase() as DbDriver;
 
 if (dbDriver !== "postgres" && dbDriver !== "sqlite") {
 	throw new Error(`Unsupported DB_DRIVER value: ${dbDriver}`);
@@ -33,7 +35,22 @@ type SqliteDb = BetterSQLite3Database<typeof sqliteSchema>;
 export type AppDb = PgDb | SqliteDb;
 
 const createPostgresDb = async (): Promise<PgDb> => {
-	if (!process.env.POSTGRES_URL) {
+	const url = process.env.POSTGRES_URL;
+
+	if (!url) {
+		if (process.env.NODE_ENV === "production") {
+			console.warn(
+				"POSTGRES_URL is not defined. Using dummy connection for build/CI.",
+			);
+			const [{ drizzle }, { default: postgres }] = await Promise.all([
+				import("drizzle-orm/postgres-js"),
+				import("postgres"),
+			]);
+			const client = postgres(
+				"postgres://placeholder:placeholder@localhost:5432/placeholder",
+			);
+			return drizzle(client, { schema: filteredPgSchema as typeof pgSchema });
+		}
 		throw new Error("POSTGRES_URL is not defined");
 	}
 
@@ -42,7 +59,7 @@ const createPostgresDb = async (): Promise<PgDb> => {
 		import("postgres"),
 	]);
 
-	const client = postgres(process.env.POSTGRES_URL);
+	const client = postgres(url);
 	return drizzle(client, { schema: filteredPgSchema as typeof pgSchema });
 };
 
@@ -57,7 +74,9 @@ const createSqliteDb = async (): Promise<SqliteDb> => {
 	const client = new Database(sqlitePath);
 	client.pragma("journal_mode = WAL");
 
-	return drizzle(client, { schema: filteredSqliteSchema as typeof sqliteSchema });
+	return drizzle(client, {
+		schema: filteredSqliteSchema as typeof sqliteSchema,
+	});
 };
 
 export const db: AppDb = await (dbDriver === "sqlite"

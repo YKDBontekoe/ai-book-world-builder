@@ -60,7 +60,7 @@ export class WriteStrategy implements ToolStrategy {
 				toast.error(res.error || "Generation failed", { id: toastId });
 			}
 			return { success: false };
-		} catch (error) {
+		} catch (_error) {
 			toast.error("An error occurred during generation", { id: toastId });
 			return { success: false };
 		}
@@ -88,7 +88,7 @@ export class RewriteStrategy implements ToolStrategy {
 				toast.error(res.error || "Rewrite failed", { id: toastId });
 			}
 			return { success: false };
-		} catch (error) {
+		} catch (_error) {
 			toast.error("An error occurred during rewrite", { id: toastId });
 			return { success: false };
 		}
@@ -116,7 +116,7 @@ export class ExpandStrategy implements ToolStrategy {
 				toast.error(res.error || "Expansion failed", { id: toastId });
 			}
 			return { success: false };
-		} catch (error) {
+		} catch (_error) {
 			toast.error("An error occurred during expansion", { id: toastId });
 			return { success: false };
 		}
@@ -144,7 +144,7 @@ export class CritiqueStrategy implements ToolStrategy {
 				toast.error(res.error || "Analysis failed", { id: toastId });
 			}
 			return { success: false };
-		} catch (error) {
+		} catch (_error) {
 			toast.error("An error occurred during analysis", { id: toastId });
 			return { success: false };
 		}
@@ -172,7 +172,7 @@ export class ConsistencyStrategy implements ToolStrategy {
 				toast.error(res.error || "Consistency check failed", { id: toastId });
 			}
 			return { success: false };
-		} catch (error) {
+		} catch (_error) {
 			toast.error("An error occurred during consistency check", {
 				id: toastId,
 			});
@@ -197,7 +197,7 @@ export class LoreStrategy implements ToolStrategy {
 				toast.error(res.error || "Failed to generate lore", { id: toastId });
 			}
 			return { success: false };
-		} catch (error) {
+		} catch (_error) {
 			toast.error("An error occurred during lore generation", { id: toastId });
 			return { success: false };
 		}

@@ -15,7 +15,10 @@ import { project } from "@/lib/db/schema/sqlite/projects";
 export const readingProgress = sqliteTable(
 	"ReadingProgress",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		userId: text("userId")
 			.notNull()
 			.references(() => user.id),

@@ -260,8 +260,11 @@ export function OutlinePane() {
 					</h4>
 					<div className="rounded-lg border bg-muted/20 p-3">
 						<ul className="space-y-1.5">
-							{outline.beats.map((beat, i) => (
-								<li key={i} className="flex items-start gap-2 text-xs">
+							{outline.beats.map((beat: string, i: number) => (
+								<li
+									key={`${i}-${beat.substring(0, 20)}`}
+									className="flex items-start gap-2 text-xs"
+								>
 									<span className="font-mono text-muted-foreground">
 										{i + 1}.
 									</span>

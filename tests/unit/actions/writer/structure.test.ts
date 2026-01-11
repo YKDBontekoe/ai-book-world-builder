@@ -1,14 +1,13 @@
-import { inArray } from "drizzle-orm";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Chapter, Scene } from "@/lib/db/schema";
 
 // Mocks must be hoisted
 const {
 	mockDb,
-	mockTransaction,
-	mockSelect,
-	mockFrom,
-	mockWhere,
+	_mockTransaction,
+	_mockSelect,
+	_mockFrom,
+	_mockWhere,
 	mockOrderBy,
 	mockLimit,
 	mockInsert,
@@ -17,7 +16,7 @@ const {
 	mockValues,
 	mockSet,
 	mockReturning,
-	mockTransactionImpl,
+	_mockTransactionImpl,
 } = vi.hoisted(() => {
 	const mockReturning = vi.fn().mockResolvedValue([{ id: "new-id" }]);
 
@@ -52,10 +51,10 @@ const {
 
 	return {
 		mockDb,
-		mockTransaction: mockTransactionImpl,
-		mockSelect,
-		mockFrom,
-		mockWhere,
+		_mockTransaction: mockTransactionImpl,
+		_mockSelect: mockSelect,
+		_mockFrom: mockFrom,
+		_mockWhere: mockWhere,
 		mockOrderBy,
 		mockLimit,
 		mockInsert,
@@ -64,7 +63,7 @@ const {
 		mockValues,
 		mockSet,
 		mockReturning,
-		mockTransactionImpl,
+		_mockTransactionImpl: mockTransactionImpl,
 	};
 });
 
@@ -78,7 +77,7 @@ vi.mock("@/lib/actions-utils", () => ({
 }));
 
 vi.mock("@/lib/cache", () => ({
-	getCached: vi.fn((key, fn) => fn()),
+	getCached: vi.fn((_key, fn) => fn()),
 	invalidateCache: vi.fn(),
 }));
 

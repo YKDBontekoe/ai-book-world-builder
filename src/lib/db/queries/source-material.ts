@@ -16,7 +16,6 @@ import {
 	sourceMaterialChunk,
 	sourceMaterialProcessing,
 } from "@/lib/db/schema";
-import { ChatSDKError } from "@/lib/errors";
 
 export async function createSourceMaterial({
 	blobUrl,

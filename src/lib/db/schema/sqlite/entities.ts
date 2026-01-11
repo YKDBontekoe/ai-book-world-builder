@@ -11,7 +11,10 @@ import { project } from "@/lib/db/schema/sqlite/projects";
 export const entity = sqliteTable(
 	"Entity",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		name: text("name").notNull(),
@@ -36,7 +39,10 @@ export type Entity = InferSelectModel<typeof entity>;
 export const entityAttribute = sqliteTable(
 	"EntityAttribute",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		name: text("name").notNull(),
 		value: text("value").notNull(),
@@ -63,7 +69,10 @@ export type EntityAttribute = InferSelectModel<typeof entityAttribute>;
 export const relationship = sqliteTable(
 	"Relationship",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		type: text("type").notNull(),
 		description: text("description"),

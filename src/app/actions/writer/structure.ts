@@ -14,7 +14,7 @@ import { chapter, outline, type Scene, scene, volume } from "@/lib/db/schema";
 // Validation Schemas
 // ============================================================================
 
-const projectIdSchema = z.string();
+const _projectIdSchema = z.string();
 const saveStructureSchema = z.object({
 	projectId: z.string(),
 	structureText: z.string().trim().min(1, "Structure text cannot be empty"),

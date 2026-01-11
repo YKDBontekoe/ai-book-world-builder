@@ -58,10 +58,14 @@ vi.mock("@/components/molecules/glass-card", () => ({
 		className?: string;
 		onClick?: () => void;
 	}) => (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: Mock component for testing
-		<div className={className} onClick={onClick} data-testid="glass-card">
+		<button
+			className={className}
+			onClick={onClick}
+			data-testid="glass-card"
+			type="button"
+		>
 			{children}
-		</div>
+		</button>
 	),
 }));
 
@@ -289,10 +293,13 @@ describe("TaskBoard", () => {
 		renderWithClient(<TaskBoard />);
 
 		await waitFor(() => {
-			const buttons = screen.getAllByRole("button");
-			const fixButton = buttons.find((b) => b.textContent?.includes("Fix"));
+			const fixButton = screen
+				.getAllByRole("button")
+				.find((b) => b.textContent?.includes("Fix"));
 			expect(fixButton).toBeInTheDocument();
-			fireEvent.click(fixButton!);
+			if (fixButton) {
+				fireEvent.click(fixButton);
+			}
 		});
 
 		await waitFor(() => {
@@ -318,10 +325,13 @@ describe("TaskBoard", () => {
 		renderWithClient(<TaskBoard />);
 
 		await waitFor(() => {
-			const buttons = screen.getAllByRole("button");
-			const fixButton = buttons.find((b) => b.textContent?.includes("Fix"));
+			const fixButton = screen
+				.getAllByRole("button")
+				.find((b) => b.textContent?.includes("Fix"));
 			expect(fixButton).toBeInTheDocument();
-			fireEvent.click(fixButton!);
+			if (fixButton) {
+				fireEvent.click(fixButton);
+			}
 		});
 
 		await waitFor(() => {

@@ -5,17 +5,14 @@ import {
 	AlertOctagonIcon,
 	AlertTriangleIcon,
 	BookIcon,
-	CheckCircleIcon,
 	CheckIcon,
 	GlobeIcon,
 	InfoIcon,
 	Loader2,
 	RefreshCwIcon,
 	Sparkles,
-	SparklesIcon,
 	TrendingUpIcon,
 	UsersIcon,
-	XCircleIcon,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -142,7 +139,7 @@ export function DiagnosticsPane() {
 	const { projectId } = useBookCanvasLayout();
 	const queryClient = useQueryClient();
 
-	const { data: statsResult, isLoading: isLoadingStats } = useQuery({
+	const { data: statsResult } = useQuery({
 		queryKey: projectId
 			? QUERY_KEYS.diagnostics(projectId)
 			: ["diagnostics", "null"],
@@ -156,7 +153,7 @@ export function DiagnosticsPane() {
 
 	const stats = statsResult?.success ? statsResult.data : null;
 
-	const { data: issuesResult, isLoading: isLoadingIssues } = useQuery({
+	const { data: issuesResult } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.issues(projectId) : ["issues", "null"],
 		queryFn: async () => {
 			if (!projectId) return null;
@@ -173,9 +170,11 @@ export function DiagnosticsPane() {
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: QUERY_KEYS.issues(projectId!),
-			});
+			if (projectId) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.issues(projectId),
+				});
+			}
 			toast.success("Analysis complete");
 		},
 		onError: () => {
@@ -190,9 +189,11 @@ export function DiagnosticsPane() {
 			if (!res.success) throw new Error(res.error);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({
-				queryKey: QUERY_KEYS.issues(projectId!),
-			});
+			if (projectId) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.issues(projectId),
+				});
+			}
 		},
 	});
 
@@ -208,11 +209,15 @@ export function DiagnosticsPane() {
 		);
 	}
 
-	const issues = issuesResult?.success ? issuesResult.data : [];
-	const openIssues =
-		issues?.filter((i: ConsistencyIssue) => i.status === "open") || [];
-	const resolvedIssues =
-		issues?.filter((i: ConsistencyIssue) => i.status === "resolved") || [];
+	const issues = issuesResult?.success
+		? (issuesResult.data as ConsistencyIssue[])
+		: [];
+	const openIssues = issues.filter(
+		(i: ConsistencyIssue) => i.status === "open",
+	);
+	const _resolvedIssues = issues.filter(
+		(i: ConsistencyIssue) => i.status === "resolved",
+	);
 
 	const readiness = stats?.readiness ?? {
 		characters: { score: 0, feedback: "Add characters to get started" },

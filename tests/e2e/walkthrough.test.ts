@@ -1,7 +1,6 @@
 import { expect, test } from "../fixtures";
 import { generateRandomTestUser } from "../helpers";
 import { AuthPage } from "../pages/auth";
-import { ChatPage } from "../pages/chat";
 import { ProjectsPage } from "../pages/projects";
 import { WriterPage } from "../pages/writer";
 
@@ -18,6 +17,7 @@ test.describe("App Walkthrough", () => {
 		const auth = new AuthPage(page);
 		const projects = new ProjectsPage(page);
 		// WriterPage needs projectId, we will set it later or instantiate it then
+		// biome-ignore lint/style/useConst: writer is assigned later after projectId is known
 		let writer: WriterPage;
 
 		// 1. Register
@@ -83,7 +83,7 @@ test.describe("App Walkthrough", () => {
 			await assistantToggle.click();
 		}
 
-		const chatInput = page.getByPlaceholder(/Ask|Type/i);
+		const _chatInput = page.getByPlaceholder(/Ask|Type/i);
 		// await chatInput.fill("Hello from test");
 		// await page.keyboard.press("Enter");
 
@@ -103,7 +103,7 @@ test.describe("App Walkthrough", () => {
 			.filter({ hasText: projectName })
 			.last();
 		// Look for menu trigger
-		const menuTrigger = projectCard
+		const _menuTrigger = projectCard
 			.getByRole("button")
 			.filter({ has: page.locator("svg") })
 			.first(); // Approximate

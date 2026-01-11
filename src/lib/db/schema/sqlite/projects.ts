@@ -20,7 +20,10 @@ export type ProjectFolder = {
 export const project = sqliteTable(
 	"Project",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		name: text("name").notNull(),
 		description: text("description"),
@@ -50,7 +53,9 @@ export type Project = InferSelectModel<typeof project>;
 export const document = sqliteTable(
 	"Document",
 	{
-		id: text("id").notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		title: text("title").notNull(),
 		content: text("content"),
@@ -74,10 +79,13 @@ export type Document = InferSelectModel<typeof document>;
 export const suggestion = sqliteTable(
 	"Suggestion",
 	{
-		id: text("id").notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		documentId: text("documentId").notNull(),
-		documentCreatedAt: integer("documentCreatedAt", { mode: "timestamp" })
-			.notNull(),
+		documentCreatedAt: integer("documentCreatedAt", {
+			mode: "timestamp",
+		}).notNull(),
 		originalText: text("originalText").notNull(),
 		suggestedText: text("suggestedText").notNull(),
 		description: text("description"),

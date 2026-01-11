@@ -69,12 +69,13 @@ type BookCanvasActions = {
 // Kept for backward compatibility
 export type BookCanvasContextType = BookCanvasState & BookCanvasActions;
 
-const BookCanvasLayoutContext = createContext<BookCanvasLayoutState | null>(
+export const BookCanvasLayoutContext =
+	createContext<BookCanvasLayoutState | null>(null);
+export const BookCanvasSelectionContext =
+	createContext<BookCanvasSelectionState | null>(null);
+export const BookCanvasActionsContext = createContext<BookCanvasActions | null>(
 	null,
 );
-const BookCanvasSelectionContext =
-	createContext<BookCanvasSelectionState | null>(null);
-const BookCanvasActionsContext = createContext<BookCanvasActions | null>(null);
 
 // Legacy hook that subscribes to EVERYTHING (heavy!)
 export function useBookCanvas() {

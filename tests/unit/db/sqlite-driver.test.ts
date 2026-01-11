@@ -1,6 +1,33 @@
+/**
+ * @vitest-environment node
+ */
 import { describe, expect, it, vi } from "vitest";
 
 vi.unmock("@/lib/db");
+
+// Mock database drivers to avoid native binding errors
+vi.mock("better-sqlite3", () => {
+	class Database {
+		pragma = vi.fn();
+		close = vi.fn();
+	}
+	return { default: Database };
+});
+
+vi.mock("postgres", () => {
+	const postgres = vi.fn(() => ({
+		close: vi.fn(),
+	}));
+	return { default: postgres };
+});
+
+vi.mock("drizzle-orm/better-sqlite3", () => ({
+	drizzle: vi.fn().mockReturnValue({}),
+}));
+
+vi.mock("drizzle-orm/postgres-js", () => ({
+	drizzle: vi.fn().mockReturnValue({}),
+}));
 
 const resetEnvVar = (key: string, value: string | undefined): void => {
 	if (value === undefined) {

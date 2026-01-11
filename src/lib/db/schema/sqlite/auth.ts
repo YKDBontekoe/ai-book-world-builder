@@ -5,7 +5,10 @@ export const userRole = ["user", "admin"] as const;
 export type UserRole = (typeof userRole)[number];
 
 export const user = sqliteTable("User", {
-	id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+	id: text("id")
+		.primaryKey()
+		.notNull()
+		.$defaultFn(() => crypto.randomUUID()),
 	name: text("name"),
 	email: text("email").notNull().unique(),
 	emailVerified: integer("emailVerified", { mode: "timestamp" }),
@@ -33,7 +36,10 @@ export interface AppearancePreferences {
 export const userPreferences = sqliteTable(
 	"UserPreferences",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		userId: text("userId")
 			.notNull()
 			.references(() => user.id)

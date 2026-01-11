@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS UserPreferences (
   userId TEXT NOT NULL UNIQUE,
   favoriteModels TEXT NOT NULL DEFAULT '[]',
   recentModels TEXT NOT NULL DEFAULT '[]',
-  modelPreferences TEXT DEFAULT '{\"light\":null,\"middle\":null,\"large\":null}',
-  appearancePreferences TEXT DEFAULT '{\"theme\":\"violet\",\"editorFont\":\"sans\",\"editorFontSize\":16,\"editorLineHeight\":1.6}',
+  modelPreferences TEXT DEFAULT '{"light":null,"middle":null,"large":null}',
+  appearancePreferences TEXT DEFAULT '{"theme":"violet","editorFont":"sans","editorFontSize":16,"editorLineHeight":1.6}',
   createdAt INTEGER NOT NULL,
   updatedAt INTEGER NOT NULL,
   FOREIGN KEY (userId) REFERENCES User(id)
@@ -535,9 +535,7 @@ CREATE INDEX IF NOT EXISTS generation_note_chapter_idx ON GenerationNote(chapter
 `;
 
 const run = async (): Promise<void> => {
-	const [{ default: Database }] = await Promise.all([
-		import("better-sqlite3"),
-	]);
+	const [{ default: Database }] = await Promise.all([import("better-sqlite3")]);
 
 	const resolvedPath = resolve(sqlitePath);
 	await mkdir(dirname(resolvedPath), { recursive: true });

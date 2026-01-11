@@ -59,13 +59,14 @@ export function SceneWidget({ scene, projectId }: SceneWidgetProps) {
 		"text-zinc-600 bg-zinc-100";
 
 	const handleSave = async () => {
-		if (!projectId && !scene.projectId) return;
+		const targetProjectId = projectId ?? scene.projectId;
+		if (!targetProjectId) return;
 
 		setIsSaving(true);
 		try {
 			await updateSceneAction({
 				id: scene.id,
-				projectId: projectId ?? scene.projectId!,
+				projectId: targetProjectId,
 				title,
 				status,
 			});

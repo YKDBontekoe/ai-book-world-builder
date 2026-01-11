@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { auth } from "@/app/(auth)/auth";
 import * as githubActions from "@/app/actions/github";
 
 const mocks = vi.hoisted(() => ({
@@ -25,14 +24,9 @@ const mocks = vi.hoisted(() => ({
 	auth: vi.fn(),
 }));
 
-// Mock Octokit constructor as a class
 vi.mock("octokit", () => {
 	return {
-		Octokit: class {
-			constructor() {
-				return mocks.octokit;
-			}
-		},
+		Octokit: vi.fn().mockImplementation(() => mocks.octokit),
 	};
 });
 

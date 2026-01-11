@@ -11,7 +11,7 @@ import type { ChatMessage } from "@/lib/types";
 function PureAttachmentsButton({
 	fileInputRef,
 	status,
-	selectedModelId,
+	selectedModelId: _selectedModelId,
 }: {
 	fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
 	status: UseChatHelpers<ChatMessage>["status"];

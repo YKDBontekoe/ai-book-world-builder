@@ -54,7 +54,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		},
 		ref,
 	) => {
-		const containerRef = useRef<HTMLDivElement>(null!);
+		const containerRef = useRef<HTMLDivElement>(null);
 
 		// Hoist mention state to pass to useProseMirror init
 		const [tempMentionState, setTempMentionState] =
@@ -64,8 +64,8 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			top: number;
 		} | null>(null);
 
-		const { editorRef, mounted } = useProseMirror({
-			containerRef,
+		const { editorRef, mounted: _mounted } = useProseMirror({
+			containerRef: containerRef as React.RefObject<HTMLDivElement>,
 			content,
 			readOnly,
 			onSaveContent,
@@ -103,9 +103,14 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		const {
 			activeSuggestion,
 			setActiveSuggestion,
-			projectedSuggestions,
+			projectedSuggestions: _projectedSuggestions,
 			handleApplySuggestion,
-		} = useSuggestions(editorRef.current, suggestions, content, containerRef);
+		} = useSuggestions(
+			editorRef.current,
+			suggestions,
+			content,
+			containerRef as React.RefObject<HTMLDivElement>,
+		);
 
 		useImperativeHandle(ref, () => ({
 			undo: () => {

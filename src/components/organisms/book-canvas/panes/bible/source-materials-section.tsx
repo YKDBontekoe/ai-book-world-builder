@@ -27,7 +27,7 @@ export function SourceMaterialsSection({ projectId }: { projectId: string }) {
 	const { mutate: analyze, isPending } = useMutation({
 		mutationFn: async ({
 			materialId,
-			filename,
+			filename: _filename,
 		}: {
 			materialId: string;
 			filename: string;

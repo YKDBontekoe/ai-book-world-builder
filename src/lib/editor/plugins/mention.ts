@@ -5,7 +5,6 @@ import {
 	type Transaction,
 } from "prosemirror-state";
 import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
-import { Entity } from "@/lib/db/schema";
 
 export const mentionPluginKey = new PluginKey("mention");
 
@@ -28,8 +27,8 @@ export const mentionPlugin = (
 			apply(
 				tr: Transaction,
 				value: MentionState,
-				oldState: EditorState,
-				newState: EditorState,
+				_oldState: EditorState,
+				_newState: EditorState,
 			): MentionState {
 				const { selection } = tr;
 				const { $from } = selection;
@@ -87,7 +86,7 @@ export const mentionPlugin = (
 			},
 			decorations(state: EditorState) {
 				const pluginState = mentionPluginKey.getState(state);
-				if (pluginState && pluginState.active && pluginState.range) {
+				if (pluginState?.active && pluginState.range) {
 					return DecorationSet.create(state.doc, [
 						Decoration.inline(pluginState.range.from, pluginState.range.to, {
 							class: "bg-primary/20 text-primary rounded-sm px-0.5",
@@ -97,9 +96,9 @@ export const mentionPlugin = (
 				return null;
 			},
 		},
-		view(editorView: EditorView) {
+		view(_editorView: EditorView) {
 			return {
-				update(view: EditorView, prevState: EditorState) {
+				update(view: EditorView, _prevState: EditorState) {
 					const state = mentionPluginKey.getState(view.state);
 					onMentionStateChange(state.active ? state : null);
 				},

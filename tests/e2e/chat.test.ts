@@ -114,7 +114,7 @@ test.describe("Chat activity", () => {
 		await chatPage.isGenerationComplete();
 
 		const assistantMessage = await chatPage.getRecentAssistantMessage();
-		await assistantMessage!.upvote();
+		await assistantMessage?.upvote();
 		await chatPage.isVoteComplete();
 	});
 
@@ -123,7 +123,7 @@ test.describe("Chat activity", () => {
 		await chatPage.isGenerationComplete();
 
 		const assistantMessage = await chatPage.getRecentAssistantMessage();
-		await assistantMessage!.downvote();
+		await assistantMessage?.downvote();
 		await chatPage.isVoteComplete();
 	});
 
@@ -132,10 +132,10 @@ test.describe("Chat activity", () => {
 		await chatPage.isGenerationComplete();
 
 		const assistantMessage = await chatPage.getRecentAssistantMessage();
-		await assistantMessage!.upvote();
+		await assistantMessage?.upvote();
 		await chatPage.isVoteComplete();
 
-		await assistantMessage!.downvote();
+		await assistantMessage?.downvote();
 		await chatPage.isVoteComplete();
 	});
 

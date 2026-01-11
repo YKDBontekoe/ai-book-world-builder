@@ -37,7 +37,7 @@ export class WriterPage {
 		await expect(this.page.getByText(expectedTitle)).toBeVisible();
 	}
 
-	async createScene(chapterTitle: string, sceneTitle: string) {
+	async createScene(chapterTitle: string, _sceneTitle: string) {
 		// Find the Chapter row
 		const chapterItem = this.page
 			.getByRole("button", { name: chapterTitle })

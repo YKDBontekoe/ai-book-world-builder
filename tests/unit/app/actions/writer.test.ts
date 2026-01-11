@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // Mock crypto
 Object.defineProperty(global, "crypto", {
@@ -16,7 +16,7 @@ vi.mock("@/lib/db", () => {
 	};
 
 	// Helper factories for query chains
-	const createChapterQuery = () => ({
+	const _createChapterQuery = () => ({
 		from: () => ({
 			where: () => ({
 				limit: () => Promise.resolve([mockChapter]),
@@ -24,13 +24,13 @@ vi.mock("@/lib/db", () => {
 		}),
 	});
 
-	const createSequenceQuery = () => ({
+	const _createSequenceQuery = () => ({
 		from: () => ({
 			where: () => Promise.resolve([{ max: 2 }]),
 		}),
 	});
 
-	const createSceneQuery = () => ({
+	const _createSceneQuery = () => ({
 		from: () => ({
 			where: () => Promise.resolve([{ id: "scene-1", sequence: 1 }]),
 		}),
@@ -44,8 +44,8 @@ vi.mock("@/lib/db", () => {
 	// But since this is a global mock factory, we'll try to make it robust.
 
 	// A simplified robust mock that returns a chainable object capable of handling the specific calls in generateScene
-	const mockSelect = vi.fn(() => ({
-		from: (table: any) => {
+	const _mockSelect = vi.fn(() => ({
+		from: (_table: any) => {
 			return {
 				where: () => {
 					return {
@@ -82,6 +82,7 @@ vi.mock("@/lib/db", () => {
 		limit: vi.fn().mockResolvedValue([mockChapter]),
 		orderBy: vi.fn().mockResolvedValue([]),
 		// Promise interface
+		// biome-ignore lint/suspicious/noThenProperty: Mocking Promise-like interface
 		then: (resolve: any) => resolve([{ max: 1 }]), // Default for max sequence
 	};
 

@@ -6,7 +6,6 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { ensureProjectAccess } from "@/lib/actions-utils";
 import { generationService } from "@/lib/ai/writer-service";
 import { db } from "@/lib/db";
 
@@ -29,7 +28,7 @@ vi.mock("ai", async (importOriginal) => {
 });
 
 // Mock DB chain helper
-const mockDbChain = () => {
+const _mockDbChain = () => {
 	const chain = {
 		values: vi.fn(() => chain),
 		returning: vi.fn(() => Promise.resolve([{ id: "mock-id", sequence: 1 }])),
@@ -160,7 +159,7 @@ vi.mock("@/lib/ai/providers", () => ({
 
 // Use importOriginal to include non-mocked exports like GenerationService if needed,
 // but for `generationService` instance, we want to mock its methods.
-vi.mock("@/lib/ai/writer-service", async (importOriginal) => {
+vi.mock("@/lib/ai/writer-service", async (_importOriginal) => {
 	// We can't import the actual class if we are mocking the module that exports it
 	// unless we use importOriginal, but here we just want to mock the singleton instance.
 	return {

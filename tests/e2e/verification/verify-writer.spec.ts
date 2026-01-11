@@ -40,7 +40,7 @@ test.describe("Writer View Improvements", () => {
 
 		// From snapshot: Textbox "Name"
 		const titleInput = page.getByRole("textbox", { name: "Name" });
-		await titleInput.fill("Verification Project " + Date.now());
+		await titleInput.fill(`Verification Project ${Date.now()}`);
 
 		// Submit
 		await page

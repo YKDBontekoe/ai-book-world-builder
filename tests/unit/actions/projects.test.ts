@@ -24,8 +24,7 @@ const { mockDb, mockProjectRepository, mockAuth } = vi.hoisted(() => {
 	db.values.mockReturnValue(db);
 	db.returning.mockReturnValue(db);
 
-	// Default .then to resolve with empty array (simulating query execution)
-	// We use vi.fn() so it's tracked by Vitest
+	// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for Drizzle
 	db.then = vi.fn((resolve: any) => resolve([]));
 
 	return {

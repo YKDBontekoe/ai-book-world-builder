@@ -63,7 +63,7 @@ export function ReaderView({
 		if (saved) {
 			try {
 				setSettings(JSON.parse(saved));
-			} catch (e) {}
+			} catch (_e) {}
 		}
 	}, []);
 
@@ -159,7 +159,7 @@ export function ReaderView({
 
 // Inner component to handle the complex CSS column pagination logic
 function PaginatedContent({
-	chapterId,
+	chapterId: _chapterId,
 	content,
 	settings,
 	initialProgress,
@@ -210,7 +210,7 @@ function PaginatedContent({
 			window.removeEventListener("resize", measure);
 			clearTimeout(timer);
 		};
-	}, [content, settings, initialProgress]);
+	}, [initialProgress]);
 
 	// Report progress whenever page changes
 	useEffect(() => {
@@ -262,9 +262,16 @@ function PaginatedContent({
 	};
 
 	return (
+		/* biome-ignore lint/a11y/useSemanticElements: "Main reading surface is not a button" */
 		<div
-			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none`}
+			role="button"
+			tabIndex={0}
+			className={`h-full w-full ${getThemeStyles()} transition-colors duration-300 select-none cursor-default`}
 			onClick={handleClick}
+			onKeyDown={(e) => {
+				if (e.key === "ArrowRight" || e.key === " ") handlePageTurn("next");
+				if (e.key === "ArrowLeft") handlePageTurn("prev");
+			}}
 		>
 			<div
 				ref={containerRef}
@@ -285,11 +292,13 @@ function PaginatedContent({
 			>
 				{content.split("\n").map((para, i) =>
 					para.trim() ? (
-						<p key={i} className="mb-4 indent-6">
+						// biome-ignore lint/suspicious/noArrayIndexKey: split from static text
+						<p key={`para-${i}`} className="mb-4 indent-6">
 							{para}
 						</p>
 					) : (
-						<br key={i} />
+						// biome-ignore lint/suspicious/noArrayIndexKey: split from static text
+						<br key={`br-${i}`} />
 					),
 				)}
 				<div className="break-before-column h-[50vh] flex items-center justify-center text-muted-foreground opacity-50">

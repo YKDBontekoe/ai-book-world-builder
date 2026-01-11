@@ -2,7 +2,7 @@
 @import "katex/dist/katex.min.css";
 
 /* include utility classes in streamdown */
-@source '../node_modules/streamdown/dist/index.js';
+@source "../node_modules/streamdown/dist/index.js";
 
 /* custom variant for setting dark mode programmatically */
 @custom-variant dark (&:is(.dark, .dark *));
@@ -223,28 +223,64 @@
 	--animate-slide-right-spring: slide-right-spring 0.4s var(--ease-spring);
 
 	@keyframes spring-in {
-		from { opacity: 0; transform: scale(0.95); }
-		to { opacity: 1; transform: scale(1); }
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
 	}
 	@keyframes spring-out {
-		from { opacity: 1; transform: scale(1); }
-		to { opacity: 0; transform: scale(0.95); }
+		from {
+			opacity: 1;
+			transform: scale(1);
+		}
+		to {
+			opacity: 0;
+			transform: scale(0.95);
+		}
 	}
 	@keyframes slide-up-spring {
-		from { opacity: 0; transform: translateY(20px); }
-		to { opacity: 1; transform: translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateY(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 	@keyframes slide-down-spring {
-		from { opacity: 0; transform: translateY(-20px); }
-		to { opacity: 1; transform: translateY(0); }
+		from {
+			opacity: 0;
+			transform: translateY(-20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
 	}
 	@keyframes slide-left-spring {
-		from { opacity: 0; transform: translateX(20px); }
-		to { opacity: 1; transform: translateX(0); }
+		from {
+			opacity: 0;
+			transform: translateX(20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
 	}
 	@keyframes slide-right-spring {
-		from { opacity: 0; transform: translateX(-20px); }
-		to { opacity: 1; transform: translateX(0); }
+		from {
+			opacity: 0;
+			transform: translateX(-20px);
+		}
+		to {
+			opacity: 1;
+			transform: translateX(0);
+		}
 	}
 }
 
@@ -336,7 +372,7 @@
 
 .skeleton {
 	* {
-		pointer-events: none !important;
+		pointer-events: none;
 	}
 
 	*[class^="text-"] {

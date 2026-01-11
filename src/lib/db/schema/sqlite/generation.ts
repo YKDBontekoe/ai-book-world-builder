@@ -47,11 +47,16 @@ export type GenerationTaskLog = TaskLogEntry[];
 export const bookGeneration = sqliteTable(
 	"BookGeneration",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		status: text("status").notNull().default("idle"),
-		settings: text("settings", { mode: "json" }).$type<Record<string, unknown>>(),
+		settings: text("settings", { mode: "json" }).$type<
+			Record<string, unknown>
+		>(),
 		canvasState: text("canvasState", { mode: "json" })
 			.$type<CanvasState | null>()
 			.default(null),
@@ -99,7 +104,10 @@ export type StoryStateData = {
 export const storyState = sqliteTable(
 	"StoryState",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		chapterNumber: integer("chapterNumber").notNull(),
@@ -148,7 +156,10 @@ export type BookExportStatus = (typeof bookExportStatus)[number];
 export const bookExport = sqliteTable(
 	"BookExport",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		projectId: text("projectId")
 			.notNull()
@@ -256,7 +267,10 @@ export type GenerationStepType = (typeof generationStepType)[number];
 export const bookGenerationStep = sqliteTable(
 	"BookGenerationStep",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		generationId: text("generationId")
 			.notNull()
 			.references(() => bookGeneration.id),
@@ -303,14 +317,19 @@ export type GenerationAssetType = (typeof generationAssetType)[number];
 export const bookGenerationAsset = sqliteTable(
 	"BookGenerationAsset",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		generationId: text("generationId")
 			.notNull()
 			.references(() => bookGeneration.id),
 		assetType: text("assetType").notNull(),
 		content: text("content"),
 		imageUrl: text("imageUrl"),
-		metadata: text("metadata", { mode: "json" }).$type<Record<string, unknown>>(),
+		metadata: text("metadata", { mode: "json" }).$type<
+			Record<string, unknown>
+		>(),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 	},
@@ -330,7 +349,10 @@ export type BookGenerationAsset = InferSelectModel<typeof bookGenerationAsset>;
 export const generationTemplate = sqliteTable(
 	"GenerationTemplate",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		name: text("name").notNull(),
 		description: text("description"),
 		settings: text("settings", { mode: "json" })
@@ -353,7 +375,10 @@ export type GenerationTemplate = InferSelectModel<typeof generationTemplate>;
 export const chapterVersion = sqliteTable(
 	"ChapterVersion",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		chapterId: text("chapterId")
 			.notNull()
 			.references(() => chapter.id),
@@ -378,15 +403,16 @@ export type ChapterVersion = InferSelectModel<typeof chapterVersion>;
 export const generationNote = sqliteTable(
 	"GenerationNote",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		generationId: text("generationId")
 			.notNull()
 			.references(() => bookGeneration.id),
 		chapterId: text("chapterId").references(() => chapter.id),
 		content: text("content").notNull(),
-		isGlobal: integer("isGlobal", { mode: "boolean" })
-			.notNull()
-			.default(false),
+		isGlobal: integer("isGlobal", { mode: "boolean" }).notNull().default(false),
 		appliedAt: integer("appliedAt", { mode: "timestamp" }),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 	},

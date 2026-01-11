@@ -9,7 +9,9 @@ export const feedbackStatus = ["pending", "processed", "ignored"] as const;
 export type FeedbackStatus = (typeof feedbackStatus)[number];
 
 export const feedback = sqliteTable("feedback", {
-	id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+	id: text("id")
+		.primaryKey()
+		.$defaultFn(() => crypto.randomUUID()),
 	userId: text("userId").references(() => user.id, { onDelete: "set null" }),
 	type: text("type").notNull(),
 	content: text("content").notNull(),

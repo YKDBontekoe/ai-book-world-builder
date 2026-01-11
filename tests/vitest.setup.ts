@@ -16,9 +16,7 @@ vi.mock("next/server", () => ({
 			json: async () => body,
 		}),
 	},
-	NextRequest: class NextRequest {
-		constructor(input: any, init?: any) {}
-	},
+	NextRequest: class NextRequest {},
 }));
 
 // MSW Setup

@@ -1,11 +1,10 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { Minus, Palette, TrendingDown, TrendingUp, X } from "lucide-react";
+import { motion } from "framer-motion";
+import { Palette } from "lucide-react";
 import { useMemo } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { Badge } from "@/components/atoms/badge";
-import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { useWriterContext } from "@/components/organisms/writer/writer-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";

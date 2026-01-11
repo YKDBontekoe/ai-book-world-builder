@@ -45,7 +45,10 @@ export function KeyValueTable({
 		return (
 			<div className="flex flex-col gap-1">
 				{data.map((item, index) => (
-					<div key={index} className="flex items-start gap-2 text-xs">
+					<div
+						key={`${index}-${typeof item === "string" ? item.substring(0, 10) : index}`}
+						className="flex items-start gap-2 text-xs"
+					>
 						<span className="text-muted-foreground shrink-0">{index + 1}.</span>
 						{typeof item === "object" ? (
 							<KeyValueTable data={item} maxHeight={150} />

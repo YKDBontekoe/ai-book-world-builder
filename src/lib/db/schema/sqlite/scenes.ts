@@ -22,7 +22,10 @@ export type SceneStatus = (typeof sceneStatus)[number];
 export const scene = sqliteTable(
 	"Scene",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		title: text("title").notNull(),
@@ -60,7 +63,10 @@ export type SceneCardData = {
 export const sceneCard = sqliteTable(
 	"SceneCard",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		purpose: text("purpose").notNull(),

@@ -330,19 +330,17 @@ Chapter 2: The Journey
 							</div>
 							<ScrollArea className="flex-1 p-4">
 								<div className="space-y-4">
-									{parsedStructure.map((node, i) => (
-										// biome-ignore lint/suspicious/noArrayIndexKey: no stable id for preview
-										<div key={i} className="space-y-1">
+									{parsedStructure.map((node) => (
+										<div key={node.lineIndex} className="space-y-1">
 											<div className="flex items-center gap-2 text-sm font-medium text-foreground/90">
 												<FolderPlus className="h-3.5 w-3.5 text-primary/70" />
 												<span className="truncate">{node.title}</span>
 											</div>
 											{node.children && node.children.length > 0 && (
 												<div className="pl-4 space-y-1 mt-1 border-l border-border/50 ml-1.5">
-													{node.children.map((child, j) => (
-														// biome-ignore lint/suspicious/noArrayIndexKey: no stable id for preview
+													{node.children.map((child) => (
 														<div
-															key={j}
+															key={child.lineIndex}
 															className="flex items-center gap-2 text-xs text-muted-foreground py-0.5"
 														>
 															<FilePlus className="h-3 w-3 opacity-50" />
