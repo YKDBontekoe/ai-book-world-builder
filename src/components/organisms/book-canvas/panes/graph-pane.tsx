@@ -16,14 +16,14 @@ import {
 import dagre from "dagre";
 import { AlertTriangle, Network } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import "@xyflow/react/dist/style.css";
 
 import { getProjectIssuesAction } from "@/app/actions/analysis";
-import { getProjectStructure } from "@/features/writer/actions";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import { getProjectStructure } from "@/features/writer/actions";
 import type { ConsistencyIssue } from "@/lib/db/schema/issues";
 import { QUERY_KEYS } from "@/lib/query-options";
 
@@ -89,6 +89,12 @@ export function GraphPane() {
 	const { projectId, activeSceneId, setActiveSceneId } = useBookCanvas();
 	const { theme } = useTheme();
 
+	// Ref to track activeSceneId without triggering layout effects
+	const activeSceneIdRef = useRef(activeSceneId);
+	useEffect(() => {
+		activeSceneIdRef.current = activeSceneId;
+	}, [activeSceneId]);
+
 	const { data: result, isLoading } = useQuery({
 		queryKey: projectId
 			? ["project-structure", projectId]
@@ -114,7 +120,8 @@ export function GraphPane() {
 		? (issuesResult.data as ConsistencyIssue[])
 		: [];
 
-	// Transform structure into nodes and edges
+	// 1. Calculate Layout (Expensive)
+	// Depends ONLY on structure and issues. Changing activeSceneId will NOT re-run this.
 	const { initialNodes, initialEdges } = useMemo(() => {
 		const nodes: Node[] = [];
 		const edges: Edge[] = [];
@@ -146,7 +153,7 @@ export function GraphPane() {
 						chapter: chapter.title,
 						issueCount: sceneIssues.length,
 					},
-					selected: scene.id === activeSceneId,
+					// selected: scene.id === activeSceneId, // REMOVED to avoid dependency
 				});
 
 				if (scene.prevSceneId) {
@@ -165,16 +172,38 @@ export function GraphPane() {
 		});
 
 		return getLayoutedElements(nodes, edges);
-	}, [structure, activeSceneId, issues]);
+	}, [structure, issues]);
 
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-	// Update nodes when initialNodes change (due to layout or data updates)
+	// 2. Sync Structure Changes (Resets Layout)
+	// When structure changes, we must reset nodes (including positions).
+	// We apply the CURRENT selection immediately via ref to avoid "lost selection".
 	useEffect(() => {
-		setNodes(initialNodes);
+		setNodes(
+			initialNodes.map((n) => ({
+				...n,
+				selected: n.id === activeSceneIdRef.current,
+			})),
+		);
 		setEdges(initialEdges);
 	}, [initialNodes, initialEdges, setNodes, setEdges]);
+
+	// 3. Sync Selection (Updates State Only)
+	// When activeSceneId changes, we update selection WITHOUT resetting layout positions.
+	useEffect(() => {
+		setNodes((nds) =>
+			nds.map((node) => {
+				const isSelected = node.id === activeSceneId;
+				// Optimization: Only create new object if changed
+				if (node.selected !== isSelected) {
+					return { ...node, selected: isSelected };
+				}
+				return node;
+			}),
+		);
+	}, [activeSceneId, setNodes]);
 
 	const handleNodeClick = useCallback(
 		(_event: any, node: Node) => {
