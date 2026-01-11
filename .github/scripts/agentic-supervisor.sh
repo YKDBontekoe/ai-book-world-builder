@@ -101,6 +101,9 @@ elif [[ "$EVENT_NAME" == "issues" ]]; then
 # Context: Workflow Run (from CI)
 elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
   SHA=$(get_json_val ".workflow_run.head_sha")
+  CONCLUSION=$(get_json_val ".workflow_run.conclusion")
+  RUN_ID=$(get_json_val ".workflow_run.id")
+
   if [[ -n "$GH_TOKEN" && -n "$SHA" ]]; then
     PR_DATA=$(gh api "/repos/${GITHUB_REPOSITORY}/pulls" \
       --jq ".[] | select(.head.sha == \"$SHA\") | {number, headRefName, user: .user.login, labels: [.labels[].name]}" 2>/dev/null | head -1)
@@ -112,6 +115,32 @@ elif [[ "$EVENT_NAME" == "workflow_run" ]]; then
       AUTHOR=$(echo "$PR_DATA" | jq -r ".user")
       LABELS=$(echo "$PR_DATA" | jq -r '.labels | join(",")')
       log "Identified PR #$NUMBER from workflow_run SHA $SHA"
+      
+      # Handle CI Failure
+      if [[ "$CONCLUSION" == "failure" ]]; then
+        log "CI Failed for PR #$NUMBER. Analyzing failures..."
+        
+        FAILED_JOBS=$(gh api "/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}/jobs" --paginate \
+          --jq '.jobs[] | select(.conclusion == "failure") | "- **\(.name)**: \(.steps[] | select(.conclusion == "failure") | .name // "unknown step")"' 2>/dev/null || echo "")
+
+        if [[ -n "$FAILED_JOBS" ]]; then
+           LINK="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}"
+           BATCHED_COMMENTS="### 🚨 CI Failure
+
+**Failed Jobs:**
+$FAILED_JOBS
+
+[View Log]($LINK)"
+           
+           determine_standard_method
+           INVOCATION_METHOD="$METHOD"
+           
+           # If strictly API is desired for humans, logic would go here, 
+           # but we follow determine_standard_method (currently 'mention')
+           log "CI Failure Detected - Method: $INVOCATION_METHOD"
+        fi
+      fi
+
     else
       log "No PR found for workflow_run SHA $SHA"
       IS_PR="false"
