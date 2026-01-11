@@ -95,7 +95,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, [containerRef, content, onMentionStateChange, readOnly]); // Dependencies for editor initialization
+	}, [containerRef]); // Only run on mount or if container changes (rare)
 
 	// Synchronize content when it changes externally
 	useEffect(() => {
