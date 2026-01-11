@@ -1,6 +1,6 @@
 import "server-only";
 import { asc, desc, eq } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { type DbTransaction, db } from "@/lib/db";
 import { chapter, outline, scene, volume } from "@/lib/db/schema";
 import type {
 	BookPlan,
@@ -16,7 +16,7 @@ export class StoryRepository {
 		plan: BookPlan,
 		style?: StoryStyle,
 	) {
-		return await db.transaction(async (tx) => {
+		return await db.transaction(async (tx: DbTransaction) => {
 			// 1. Create Outline
 			const [newOutline] = await tx
 				.insert(outline)
@@ -139,7 +139,7 @@ export class StoryRepository {
 			.values(scenesToInsert)
 			.returning({ id: scene.id });
 
-		return createdScenes.map((s) => s.id);
+		return createdScenes.map((s: { id: string }) => s.id);
 	}
 
 	async getSceneContextData(sceneId: string) {

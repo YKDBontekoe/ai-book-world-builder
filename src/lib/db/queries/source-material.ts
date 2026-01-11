@@ -171,7 +171,7 @@ export async function upsertSourceMaterialProcessing({
 		async () => {
 			const now = new Date();
 
-			return await db.transaction(async (tx) => {
+			return await db.transaction(async (tx: any) => {
 				const [existing] = await tx
 					.select()
 					.from(sourceMaterialProcessing)
@@ -293,7 +293,7 @@ export async function saveSourceMaterialExtraction({
 		async () => {
 			const now = new Date();
 
-			return await db.transaction(async (tx) => {
+			return await db.transaction(async (tx: any) => {
 				await tx
 					.delete(sourceMaterialChunk)
 					.where(eq(sourceMaterialChunk.sourceMaterialId, materialId));
@@ -401,7 +401,9 @@ export async function getSampledChunks({
 				.orderBy(asc(sourceMaterialChunk.sequence));
 
 			// Sample every Nth chunk
-			return allChunks.filter((_, index) => index % sampleRate === 0);
+			return (allChunks as any[]).filter(
+				(_: any, index: number) => index % sampleRate === 0,
+			);
 		},
 		{ errorMessage: "Failed to load sampled chunks for source material" },
 	);
@@ -488,7 +490,7 @@ export async function getSourceMaterialsForUser({
 				.where(eq(sourceMaterial.userId, userId))
 				.orderBy(asc(sourceMaterial.createdAt));
 
-			return results.map((r) => ({
+			return (results as any[]).map((r: any) => ({
 				...r.material,
 				projectName: r.projectName,
 				processingStatus: r.processing,

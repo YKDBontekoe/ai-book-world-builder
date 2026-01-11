@@ -130,19 +130,21 @@ export default async function EntityPage({ params }: PageProps) {
 							Attributes
 						</h2>
 						<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-							{attributes.map((attr) => (
-								<div
-									key={attr.id}
-									className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm"
-								>
-									<h3 className="text-xs font-semibold text-muted-foreground uppercase mb-1">
-										{attr.name}
-									</h3>
-									<p className="text-sm font-medium break-words">
-										{attr.value}
-									</p>
-								</div>
-							))}
+							{attributes.map(
+								(attr: { id: string; name: string; value: string }) => (
+									<div
+										key={attr.id}
+										className="p-4 rounded-lg border bg-card text-card-foreground shadow-sm"
+									>
+										<h3 className="text-xs font-semibold text-muted-foreground uppercase mb-1">
+											{attr.name}
+										</h3>
+										<p className="text-sm font-medium break-words">
+											{attr.value}
+										</p>
+									</div>
+								),
+							)}
 						</div>
 					</section>
 				)}

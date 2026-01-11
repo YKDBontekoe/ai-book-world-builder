@@ -250,7 +250,7 @@ export async function initializeChatSession({
 
 	const existingChat = await getChatById({ id });
 
-	await db.transaction(async (tx) => {
+	await db.transaction(async (tx: any) => {
 		if (existingChat) {
 			if (existingChat.userId !== user.id) {
 				throw new ChatSDKError("forbidden:chat");

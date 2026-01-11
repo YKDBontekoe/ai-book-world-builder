@@ -96,27 +96,34 @@ export default async function UserDetailsPage({
 						<p className="text-muted-foreground text-sm">No projects found.</p>
 					) : (
 						<ul className="space-y-3">
-							{projects.map((project) => (
-								<li
-									key={project.id}
-									className="flex items-center justify-between p-3 rounded-md bg-muted/50"
-								>
-									<div className="space-y-1">
-										<p className="font-medium text-sm">{project.name}</p>
-										<div className="flex items-center gap-2 text-xs text-muted-foreground">
-											<Clock className="h-3 w-3" />
-											{format(project.createdAt, "MMM d, yyyy")}
-										</div>
-									</div>
-									<Badge
-										variant={
-											project.visibility === "public" ? "default" : "outline"
-										}
+							{projects.map(
+								(project: {
+									id: string;
+									name: string;
+									createdAt: Date;
+									visibility: string;
+								}) => (
+									<li
+										key={project.id}
+										className="flex items-center justify-between p-3 rounded-md bg-muted/50"
 									>
-										{project.visibility}
-									</Badge>
-								</li>
-							))}
+										<div className="space-y-1">
+											<p className="font-medium text-sm">{project.name}</p>
+											<div className="flex items-center gap-2 text-xs text-muted-foreground">
+												<Clock className="h-3 w-3" />
+												{format(project.createdAt, "MMM d, yyyy")}
+											</div>
+										</div>
+										<Badge
+											variant={
+												project.visibility === "public" ? "default" : "outline"
+											}
+										>
+											{project.visibility}
+										</Badge>
+									</li>
+								),
+							)}
 						</ul>
 					)}
 				</GlassCard>

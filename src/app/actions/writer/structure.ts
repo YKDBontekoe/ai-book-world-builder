@@ -6,9 +6,16 @@ import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getCached, invalidateCache } from "@/lib/cache";
-import { db } from "@/lib/db";
+import { type DbTransaction, db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
-import { chapter, outline, type Scene, scene, volume } from "@/lib/db/schema";
+import {
+	type Chapter,
+	chapter,
+	outline,
+	type Scene,
+	scene,
+	volume,
+} from "@/lib/db/schema";
 
 // ============================================================================
 // Validation Schemas
@@ -55,7 +62,7 @@ export const getProjectStructure = createUserAction({
 
 				// 3. Map scenes to chapters in memory
 				const scenesByChapter = allScenes.reduce(
-					(acc, s) => {
+					(acc: Record<string, typeof allScenes>, s: Scene) => {
 						if (!acc[s.chapterId]) {
 							acc[s.chapterId] = [];
 						}
@@ -65,7 +72,7 @@ export const getProjectStructure = createUserAction({
 					{} as Record<string, typeof allScenes>,
 				);
 
-				const structure = chapters.map((ch) => ({
+				const structure = (chapters as Chapter[]).map((ch) => ({
 					...ch,
 					scenes: scenesByChapter[ch.id] || [],
 				}));
@@ -93,7 +100,7 @@ export const saveProjectStructure = createUserAction({
 		const newStructure = parseStructureText(structureText);
 
 		// 3. Sync with DB (Smart Sync)
-		await db.transaction(async (tx) => {
+		await db.transaction(async (tx: DbTransaction) => {
 			// A. Get existing structure
 			const [existingChapters, existingScenes] = await Promise.all([
 				tx
@@ -109,8 +116,8 @@ export const saveProjectStructure = createUserAction({
 			]);
 
 			// Group Scenes by ChapterId
-			const dbScenesByChapter = existingScenes.reduce(
-				(acc, s) => {
+			const dbScenesByChapter = (existingScenes as Scene[]).reduce(
+				(acc: Record<string, Scene[]>, s) => {
 					if (!acc[s.chapterId]) acc[s.chapterId] = [];
 					acc[s.chapterId].push(s);
 					return acc;
@@ -195,7 +202,7 @@ export const saveProjectStructure = createUserAction({
 
 			// B. Process Chapters
 			for (const newCh of newStructure) {
-				const match = existingChapters.find(
+				const match = (existingChapters as Chapter[]).find(
 					(c) =>
 						normalize(c.title) === normalize(newCh.title) &&
 						!chapterIdsToKeep.has(c.id),
@@ -240,7 +247,7 @@ export const saveProjectStructure = createUserAction({
 					!isNewChapter && match ? dbScenesByChapter[match.id] || [] : [];
 
 				for (const newSc of newCh.scenes) {
-					const scMatch = existingChScenes.find(
+					const scMatch = (existingChScenes as Scene[]).find(
 						(s) =>
 							normalize(s.title) === normalize(newSc.title) &&
 							!sceneIdsToKeep.has(s.id),
@@ -277,7 +284,7 @@ export const saveProjectStructure = createUserAction({
 			}
 
 			// D. Cleanup (Delete unmatched)
-			const chaptersToDeleteIds = existingChapters
+			const chaptersToDeleteIds = (existingChapters as Chapter[])
 				.filter((c) => !chapterIdsToKeep.has(c.id))
 				.map((c) => c.id);
 

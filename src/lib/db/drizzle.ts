@@ -32,7 +32,10 @@ const filteredSqliteSchema = Object.fromEntries(
 
 type PgDb = PostgresJsDatabase<typeof pgSchema>;
 type SqliteDb = BetterSQLite3Database<typeof sqliteSchema>;
-export type AppDb = PgDb | SqliteDb;
+
+// We use an intersection but omit the private 'fullSchema' property which causes conflicts
+// between different Drizzle dialects in the type system.
+export type AppDb = Omit<PgDb, "fullSchema"> & Omit<SqliteDb, "fullSchema">;
 
 const createPostgresDb = async (): Promise<PgDb> => {
 	const url = process.env.POSTGRES_URL;
@@ -79,9 +82,10 @@ const createSqliteDb = async (): Promise<SqliteDb> => {
 	});
 };
 
-export const db: AppDb = await (dbDriver === "sqlite"
+// Cast to any to avoid dialect-specific type mismatches when using generic repositories
+export const db = (await (dbDriver === "sqlite"
 	? createSqliteDb()
-	: createPostgresDb());
+	: createPostgresDb())) as AppDb & any;
 
 export type DbTransaction = Parameters<Parameters<AppDb["transaction"]>[0]>[0];
 export { dbDriver };

@@ -1,6 +1,7 @@
 "use client";
 
 import { BookOpen, TrendingUp } from "lucide-react";
+import type React from "react";
 import {
 	Tooltip,
 	TooltipContent,
@@ -22,7 +23,7 @@ export function MetricsDisplay({
 	pacingScore,
 	readingTimeMinutes,
 	variant,
-}: MetricsDisplayProps): JSX.Element | null {
+}: MetricsDisplayProps): React.JSX.Element | null {
 	if (wordCount <= 0) {
 		return null;
 	}

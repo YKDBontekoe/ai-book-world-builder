@@ -20,7 +20,10 @@ async function main() {
 	for (const chapterId in scenesByChapter) {
 		const chapterScenes = scenesByChapter[chapterId];
 		// Sort by sequence
-		chapterScenes.sort((a, b) => a.sequence - b.sequence);
+		chapterScenes.sort(
+			(a: { sequence: number }, b: { sequence: number }) =>
+				a.sequence - b.sequence,
+		);
 
 		for (let i = 1; i < chapterScenes.length; i++) {
 			const current = chapterScenes[i];

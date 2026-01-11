@@ -102,8 +102,8 @@ export async function deleteMessagesByChatIdAfterTimestamp({
 				and(eq(message.chatId, chatId), gte(message.createdAt, timestamp)),
 			);
 
-		const messageIds = messagesToDelete.map(
-			(currentMessage) => currentMessage.id,
+		const messageIds = (messagesToDelete as any[]).map(
+			(currentMessage: any) => currentMessage.id,
 		);
 
 		if (messageIds.length > 0) {

@@ -110,7 +110,9 @@ export function GraphPane() {
 	});
 
 	const structure = result?.success ? result.data.structure : undefined;
-	const issues = issuesResult?.success ? issuesResult.data : [];
+	const issues: ConsistencyIssue[] = issuesResult?.success
+		? (issuesResult.data as ConsistencyIssue[])
+		: [];
 
 	// Transform structure into nodes and edges
 	const { initialNodes, initialEdges } = useMemo(() => {
@@ -121,7 +123,7 @@ export function GraphPane() {
 
 		// Optimization: Create an issue lookup map for O(1) access instead of filtering O(N) inside the loop
 		const issuesByScene = new Map<string, ConsistencyIssue[]>();
-		issues.forEach((issue) => {
+		issues.forEach((issue: ConsistencyIssue) => {
 			if (issue.status === "open" && issue.sceneId) {
 				if (!issuesByScene.has(issue.sceneId)) {
 					issuesByScene.set(issue.sceneId, []);

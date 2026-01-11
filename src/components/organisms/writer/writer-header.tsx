@@ -12,6 +12,7 @@ import {
 	PanelLeftOpen,
 	Save,
 } from "lucide-react";
+import type React from "react";
 import { Button } from "@/components/atoms/button";
 import {
 	DropdownMenu,
@@ -46,7 +47,7 @@ function SnapshotButton({
 	onClick,
 	isSnapshotting,
 	size = "sm",
-}: SnapshotButtonProps): JSX.Element {
+}: SnapshotButtonProps): React.JSX.Element {
 	const sizeClasses = size === "xs" ? "h-6 px-2 text-xs" : "h-7 px-2 text-xs";
 
 	return (
@@ -73,7 +74,7 @@ function SnapshotButton({
  * @returns {JSX.Element} The writer header UI with primary controls and
  * responsive secondary metadata.
  */
-export function WriterHeader(): JSX.Element {
+export function WriterHeader(): React.JSX.Element {
 	const {
 		project,
 		activeScene,

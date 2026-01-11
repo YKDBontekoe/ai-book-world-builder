@@ -110,7 +110,7 @@ export async function updateEntity({
 
 	return safeQuery(
 		async () => {
-			return await db.transaction(async (tx) => {
+			return await db.transaction(async (tx: any) => {
 				const [updatedEntity] = await tx
 					.update(entity)
 					.set({
@@ -437,7 +437,7 @@ export async function getAttributesForProject({
 export async function deleteEntity({ id }: { id: string }): Promise<void> {
 	return safeQuery(
 		async () => {
-			await db.transaction(async (tx) => {
+			await db.transaction(async (tx: any) => {
 				// Delete related attributes first
 				await tx
 					.delete(entityAttribute)

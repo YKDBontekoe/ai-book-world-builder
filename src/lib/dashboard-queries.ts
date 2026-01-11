@@ -159,7 +159,7 @@ export async function getProjectStats(projectId: string): Promise<{
 		.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
 		.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`);
 
-	const usageHistory: UsageHistory = historyRaw.map((row) => ({
+	const usageHistory: UsageHistory = (historyRaw as any[]).map((row: any) => ({
 		date: row.date,
 		cost: Number(row.cost || 0),
 		tokens: Number(row.tokens || 0),
@@ -189,9 +189,9 @@ export async function getProjectStats(projectId: string): Promise<{
 		connCounts[r.t] = (connCounts[r.t] || 0) + 1;
 	}
 
-	const mostConnected = entities
-		.map((e) => ({ ...e, connections: connCounts[e.id] || 0 }))
-		.sort((a, b) => b.connections - a.connections)
+	const mostConnected = (entities as any[])
+		.map((e: any) => ({ ...e, connections: connCounts[e.id] || 0 }))
+		.sort((a: any, b: any) => b.connections - a.connections)
 		.slice(0, 5);
 
 	const entityStats = {
@@ -290,7 +290,7 @@ export async function getGlobalStats(userId: string): Promise<{
 			.where(eq(project.userId, userId)),
 	]);
 
-	const projectIds = userProjects.map((p) => p.id);
+	const projectIds = (userProjects as any[]).map((p: any) => p.id);
 
 	// Usage History (Global)
 	const historyRaw = await db
@@ -317,7 +317,7 @@ export async function getGlobalStats(userId: string): Promise<{
 		.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
 		.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`);
 
-	const usageHistory: UsageHistory = historyRaw.map((row) => ({
+	const usageHistory: UsageHistory = (historyRaw as any[]).map((row: any) => ({
 		date: row.date,
 		cost: Number(row.cost || 0),
 		tokens: Number(row.tokens || 0),

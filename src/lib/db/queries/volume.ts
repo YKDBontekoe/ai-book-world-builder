@@ -1,6 +1,6 @@
 import "server-only";
 import { asc, desc, eq, inArray } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { type DbTransaction, db } from "@/lib/db";
 import {
 	type Chapter,
 	type ChapterDraft,
@@ -75,7 +75,7 @@ export async function createVolumePlan({
 	}>;
 }): Promise<VolumePlan> {
 	try {
-		return await db.transaction(async (transaction) => {
+		return await db.transaction(async (transaction: DbTransaction) => {
 			const [volumeRecord] = await transaction
 				.insert(volume)
 				.values({
@@ -134,7 +134,7 @@ export async function getVolumePlansForProject({
 			return [];
 		}
 
-		const volumeIds = volumePlans.map((item) => item.id);
+		const volumeIds = volumePlans.map((item: Volume) => item.id);
 		const [chaptersForVolumes, draftsForVolumes] = await Promise.all([
 			db
 				.select()

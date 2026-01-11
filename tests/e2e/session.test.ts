@@ -15,13 +15,14 @@ test.describe
 				throw new Error("Failed to load page");
 			}
 
-			let request = response.request();
+			const request = response.request();
 
 			const chain: string[] = [];
 
-			while (request) {
-				chain.unshift(request.url());
-				request = request.redirectedFrom();
+			let currentRequest = request as any; // Using any for Playwright Request union if needed, but let's try without
+			while (currentRequest) {
+				chain.unshift(currentRequest.url());
+				currentRequest = currentRequest.redirectedFrom();
 			}
 
 			expect(chain).toEqual([
@@ -57,13 +58,14 @@ test.describe
 				throw new Error("Failed to load page");
 			}
 
-			let request = response.request();
+			const request = response.request();
 
 			const chain: string[] = [];
 
-			while (request) {
-				chain.unshift(request.url());
-				request = request.redirectedFrom();
+			let currentRequest: any = request;
+			while (currentRequest) {
+				chain.unshift(currentRequest.url());
+				currentRequest = currentRequest.redirectedFrom();
 			}
 
 			expect(chain).toEqual(["http://localhost:3000/"]);

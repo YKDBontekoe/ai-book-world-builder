@@ -250,6 +250,15 @@ export const manageStory = ({
 							}
 
 							// SECURITY: Verify ownership of the target project
+							if (!effectiveProjectId) {
+								results.push({
+									title: item.title,
+									success: false,
+									error: "Chapter not found, cannot determine Project ID.",
+								});
+								continue;
+							}
+
 							if (!(await checkOwnership(effectiveProjectId))) {
 								results.push({
 									title: item.title,

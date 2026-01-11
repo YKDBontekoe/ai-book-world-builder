@@ -74,7 +74,7 @@ export function ChapterActions({
 
 			// Initialize scene progress with titles (we'll get titles from the response)
 			const initialScenes: SceneProgress[] = planResult.sceneIds.map(
-				(id, index) => ({
+				(id: string, index: number) => ({
 					id,
 					title: `Scene ${index + 1}`,
 					status: "pending" as const,

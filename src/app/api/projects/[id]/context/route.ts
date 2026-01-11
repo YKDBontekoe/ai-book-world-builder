@@ -67,11 +67,15 @@ export async function GET(
 			]);
 
 		// Map drafts to include chapter titles
-		const chaptersMap = new Map(chapters.map((c) => [c.id, c.title]));
-		const draftsWithTitles = drafts.map((d) => ({
-			id: d.id,
-			chapterTitle: chaptersMap.get(d.chapterId) || "Unknown Chapter",
-		}));
+		const chaptersMap = new Map(
+			chapters.map((c: { id: string; title: string }) => [c.id, c.title]),
+		);
+		const draftsWithTitles = drafts.map(
+			(d: { id: string; chapterId: string }) => ({
+				id: d.id,
+				chapterTitle: chaptersMap.get(d.chapterId) || "Unknown Chapter",
+			}),
+		);
 
 		return NextResponse.json({
 			entities: entities.map((e) => ({
@@ -83,13 +87,15 @@ export async function GET(
 				id: o.id,
 				title: o.title,
 			})),
-			scenes: scenes.map((s) => ({
-				id: s.id,
-				title: s.title,
-				chapterId: s.chapterId,
-			})),
+			scenes: scenes.map(
+				(s: { id: string; title: string; chapterId: string }) => ({
+					id: s.id,
+					title: s.title,
+					chapterId: s.chapterId,
+				}),
+			),
 			drafts: draftsWithTitles,
-			sourceMaterials: materials.map((m) => ({
+			sourceMaterials: materials.map((m: { id: string; filename: string }) => ({
 				id: m.id,
 				filename: m.filename,
 			})),

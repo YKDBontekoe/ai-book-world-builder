@@ -238,7 +238,7 @@ export class ChatRepository extends BaseRepository<
 				return { deletedCount: 0 };
 			}
 
-			const chatIds = userChats.map((c) => c.id);
+			const chatIds = userChats.map((c: { id: string }) => c.id);
 
 			await db.delete(vote).where(inArray(vote.chatId, chatIds));
 			await db.delete(message).where(inArray(message.chatId, chatIds));
