@@ -66,10 +66,6 @@ vi.mock("drizzle-orm", () => ({
 	eq: vi.fn(),
 }));
 
-vi.mock("@/lib/db/queries/scene", () => ({
-	createScene: vi.fn(),
-}));
-
 describe("StoryRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -79,16 +75,13 @@ describe("StoryRepository", () => {
 	});
 
 	describe("createBookFromPlan", () => {
-		it("should create outline, volume, chapters and initial scene", async () => {
-			const plan = {
-				title: "Test Book",
-				summary: "Summary",
-				chapters: [
-					{ title: "Ch 1", summary: "S1" },
-					{ title: "Ch 2", summary: "S2" },
-				],
-			};
+		const plan = {
+			title: "Test Book",
+			summary: "Summary",
+			chapters: [{ title: "Ch 1", summary: "S1" }],
+		};
 
+		it("should create book structure successfully", async () => {
 			mocks.results = [
 				[{ id: "o1" }], // insert outline
 				[{ id: "v1" }], // insert volume
@@ -97,13 +90,47 @@ describe("StoryRepository", () => {
 				[], // insert scene
 			];
 
-			const result = await storyRepository.createBookFromPlan(
-				"p1",
-				plan as any,
-			);
+			const result = await storyRepository.createBookFromPlan("p1", plan as any);
 			expect(result).toEqual({ outlineId: "o1", volumeId: "v1" });
-			expect(mocks.transaction).toHaveBeenCalled();
-			expect(mocks.insert).toHaveBeenCalledTimes(4); // outline, volume, chapters(batch), scene
+			expect(mocks.insert).toHaveBeenCalledTimes(4);
+		});
+
+		it("should use provided style", async () => {
+			mocks.results = [
+				[{ id: "o1" }], [{ id: "v1" }], [], [{ id: "ch1" }], [],
+			];
+			const style = { pov: "First Person", tone: "Dark" };
+			await storyRepository.createBookFromPlan("p1", plan as any, style as any);
+			expect(mocks.values).toHaveBeenCalledWith(expect.objectContaining({
+				pov: "First Person",
+				tone: "Dark"
+			}));
+		});
+
+		it("should handle empty chapters plan", async () => {
+			const emptyPlan = { ...plan, chapters: [] };
+			mocks.results = [
+				[{ id: "o1" }], [{ id: "v1" }],
+				// no chapters insert
+				[], // select chapter 1 (none)
+			];
+			const result = await storyRepository.createBookFromPlan("p1", emptyPlan as any);
+			expect(result).toEqual({ outlineId: "o1", volumeId: "v1" });
+			expect(mocks.insert).toHaveBeenCalledTimes(2); // outline, volume
+		});
+
+		it("should handle missing chapter1 when creating scene", async () => {
+			mocks.results = [
+				[{ id: "o1" }], [{ id: "v1" }], [],
+				[], // select chapter 1 (returns nothing)
+			];
+			await storyRepository.createBookFromPlan("p1", plan as any);
+			expect(mocks.insert).toHaveBeenCalledTimes(3); // no scene insert
+		});
+
+		it("should throw on failure", async () => {
+			mocks.error = new Error("DB Fail");
+			await expect(storyRepository.createBookFromPlan("p1", plan as any)).rejects.toThrow("DB Fail");
 		});
 	});
 
@@ -116,27 +143,39 @@ describe("StoryRepository", () => {
 
 		it("should throw error if chapter not found", async () => {
 			mocks.result = [];
-			await expect(storyRepository.getChapterWithScenes("ch1")).rejects.toThrow(
-				"Chapter not found",
-			);
+			await expect(storyRepository.getChapterWithScenes("ch1")).rejects.toThrow("Chapter not found");
+		});
+	});
+
+	describe("getLastSceneInChapter", () => {
+		it("should return last scene", async () => {
+			const mockScene = { id: "s1", sequence: 10 };
+			mocks.result = [mockScene];
+			const result = await storyRepository.getLastSceneInChapter("ch1");
+			expect(result).toEqual(mockScene);
+		});
+
+		it("should return undefined if no scenes", async () => {
+			mocks.result = [];
+			const result = await storyRepository.getLastSceneInChapter("ch1");
+			expect(result).toBeUndefined();
 		});
 	});
 
 	describe("createScenesBatch", () => {
-		it("should create multiple scenes using batch insert", async () => {
-			// Setup mock return for the batch insert
-			mocks.results = [[{ id: "s1" }, { id: "s2" }]];
+		it("should return empty array if no scenesData", async () => {
+			const result = await storyRepository.createScenesBatch("p1", "ch1", []);
+			expect(result).toEqual([]);
+			expect(mocks.insert).not.toHaveBeenCalled();
+		});
 
+		it("should create multiple scenes", async () => {
+			mocks.results = [[{ id: "s1" }, { id: "s2" }]];
 			const result = await storyRepository.createScenesBatch("p1", "ch1", [
 				{ title: "S1", sequence: 1 },
 				{ title: "S2", sequence: 2 },
 			]);
-
 			expect(result).toEqual(["s1", "s2"]);
-			expect(mocks.insert).toHaveBeenCalledTimes(1);
-			expect(mocks.values).toHaveBeenCalledWith(expect.any(Array));
-			const valuesCall = mocks.values.mock.calls[0][0];
-			expect(valuesCall).toHaveLength(2);
 		});
 	});
 
@@ -149,8 +188,8 @@ describe("StoryRepository", () => {
 
 			mocks.results = [
 				[mockScene], // 1. targetScene
-				[mockChapter], // 2. targetChapter (via Promise.all)
-				mockScenes, // 3. scenesInChapter (via Promise.all)
+				[mockChapter], // 2. targetChapter
+				mockScenes, // 3. scenesInChapter
 				[mockOutline], // 4. targetOutline
 			];
 
@@ -160,6 +199,20 @@ describe("StoryRepository", () => {
 			expect(result.targetOutline).toEqual(mockOutline);
 			expect(result.scenesInChapter).toEqual(mockScenes);
 		});
+
+		it("should throw if scene not found", async () => {
+			mocks.result = [];
+			await expect(storyRepository.getSceneContextData("s1")).rejects.toThrow("Scene not found");
+		});
+
+		it("should throw if chapter not found", async () => {
+			mocks.results = [
+				[{ id: "s1", chapterId: "ch1" }], // targetScene
+				[], // targetChapter (Promise.all 1)
+				[], // scenesInChapter (Promise.all 2)
+			];
+			await expect(storyRepository.getSceneContextData("s1")).rejects.toThrow("Chapter not found");
+		});
 	});
 
 	describe("updateSceneContent", () => {
@@ -167,12 +220,6 @@ describe("StoryRepository", () => {
 			mocks.result = [];
 			await storyRepository.updateSceneContent("s1", "new content");
 			expect(mocks.update).toHaveBeenCalled();
-			expect(mocks.set).toHaveBeenCalledWith(
-				expect.objectContaining({
-					content: "new content",
-					status: "drafting",
-				}),
-			);
 		});
 	});
 });

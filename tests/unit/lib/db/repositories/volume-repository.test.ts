@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { volumeRepository } from "@/lib/db/repositories/volume-repository";
-import { NotFoundError } from "@/lib/errors";
+import { DatabaseError, NotFoundError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
 	const mockChain: any = {
@@ -84,6 +84,31 @@ describe("VolumeRepository", () => {
 			const result = await volumeRepository.findById("v1");
 			expect(result).toEqual(mockVolume);
 		});
+
+		it("should return null when not found", async () => {
+			mocks.result = [];
+			const result = await volumeRepository.findById("v1");
+			expect(result).toBeNull();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.findById("v1")).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("findAll", () => {
+		it("should return all volumes", async () => {
+			const volumes = [{ id: "v1" }];
+			mocks.result = volumes;
+			const result = await volumeRepository.findAll();
+			expect(result).toEqual(volumes);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.findAll()).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("findByProject", () => {
@@ -93,6 +118,11 @@ describe("VolumeRepository", () => {
 
 			const result = await volumeRepository.findByProject("p1");
 			expect(result).toEqual(mockVolumes);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.findByProject("p1")).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -125,6 +155,11 @@ describe("VolumeRepository", () => {
 			const result = await volumeRepository.findByIdWithPlan("v1");
 			expect(result).toBeNull();
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.findByIdWithPlan("v1")).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("findByProjectWithPlans", () => {
@@ -149,11 +184,17 @@ describe("VolumeRepository", () => {
 			const result = await volumeRepository.findByProjectWithPlans("p1");
 			expect(result).toEqual([]);
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.findByProjectWithPlans("p1")).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("create", () => {
+		const mockInput = { projectId: "p1", outlineId: "o1", title: "New" };
+
 		it("should create and return a volume", async () => {
-			const mockInput = { projectId: "p1", outlineId: "o1", title: "New" };
 			const mockCreated = { id: "v1", ...mockInput };
 			mocks.result = [mockCreated];
 
@@ -161,13 +202,19 @@ describe("VolumeRepository", () => {
 			expect(result).toEqual(mockCreated);
 			expect(mocks.insert).toHaveBeenCalled();
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.create(mockInput)).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("createWithChapters", () => {
+		const mockInput = { projectId: "p1", outlineId: "o1", title: "New" };
+		const mockChaptersInput = [{ title: "Ch1", sequence: 1 }];
+
 		it("should create volume and chapters in transaction", async () => {
-			const mockInput = { projectId: "p1", outlineId: "o1", title: "New" };
 			const mockVolume = { id: "v1", ...mockInput };
-			const mockChaptersInput = [{ title: "Ch1", sequence: 1 }];
 			const mockCreatedChapters = [
 				{ id: "c1", volumeId: "v1", title: "Ch1", sequence: 1 },
 			];
@@ -184,6 +231,22 @@ describe("VolumeRepository", () => {
 			expect(result.id).toBe("v1");
 			expect(result.chapters).toHaveLength(1);
 			expect(mocks.transaction).toHaveBeenCalled();
+		});
+
+		it("should handle empty chapters list", async () => {
+			const mockVolume = { id: "v1", ...mockInput };
+			mocks.results = [
+				[mockVolume], // insert volume
+				// insert chapters NOT called
+			];
+			const result = await volumeRepository.createWithChapters(mockInput, []);
+			expect(result.id).toBe("v1");
+			expect(result.chapters).toEqual([]);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.createWithChapters(mockInput, mockChaptersInput)).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -203,6 +266,11 @@ describe("VolumeRepository", () => {
 				volumeRepository.update("v1", { title: "Updated" }),
 			).rejects.toThrow(NotFoundError);
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.update("v1", { title: "U" })).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("delete", () => {
@@ -210,6 +278,11 @@ describe("VolumeRepository", () => {
 			mocks.result = {};
 			await volumeRepository.delete("v1");
 			expect(mocks.delete).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(volumeRepository.delete("v1")).rejects.toThrow(DatabaseError);
 		});
 	});
 });

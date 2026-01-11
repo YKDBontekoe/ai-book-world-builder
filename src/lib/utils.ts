@@ -24,10 +24,10 @@ export function getDocumentTimestampByIndex(
 	documents: Document[],
 	index: number,
 ) {
-	if (!documents) {
+	if (!documents || documents.length === 0) {
 		return new Date();
 	}
-	if (index > documents.length) {
+	if (index >= documents.length) {
 		return new Date();
 	}
 

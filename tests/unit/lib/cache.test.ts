@@ -1,4 +1,11 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	getCached,
+	invalidateCache,
+	invalidateCachePattern,
+} from "@/lib/cache";
+import { redis } from "@/lib/redis";
 
 // Mock redis client
 vi.mock("@/lib/redis", () => ({
@@ -9,13 +16,6 @@ vi.mock("@/lib/redis", () => ({
 		scan: vi.fn(),
 	},
 }));
-
-import {
-	getCached,
-	invalidateCache,
-	invalidateCachePattern,
-} from "@/lib/cache";
-import { redis } from "@/lib/redis";
 
 // Define a type for the mocked redis client to satisfy TS
 type MockRedis = {
@@ -28,8 +28,8 @@ type MockRedis = {
 const mockedRedis = redis as unknown as MockRedis;
 
 describe("Cache Utils", () => {
-	afterEach(() => {
-		vi.clearAllMocks();
+	beforeEach(() => {
+		vi.resetAllMocks();
 	});
 
 	describe("getCached", () => {
@@ -49,6 +49,7 @@ describe("Cache Utils", () => {
 			mockedRedis.get.mockResolvedValue(null);
 			const mockData = { foo: "bar" };
 			const fetchFn = vi.fn().mockResolvedValue(mockData);
+			mockedRedis.set.mockResolvedValue("OK");
 
 			const result = await getCached("test-key", fetchFn);
 
@@ -66,6 +67,7 @@ describe("Cache Utils", () => {
 			mockedRedis.get.mockResolvedValue("invalid-json");
 			const mockData = { foo: "bar" };
 			const fetchFn = vi.fn().mockResolvedValue(mockData);
+			mockedRedis.del.mockResolvedValue(1);
 
 			const result = await getCached("test-key", fetchFn);
 
@@ -73,12 +75,39 @@ describe("Cache Utils", () => {
 			expect(fetchFn).toHaveBeenCalled();
 			expect(result).toEqual(mockData);
 		});
+
+		it("handles redis set error gracefully", async () => {
+			mockedRedis.get.mockResolvedValue(null);
+			mockedRedis.set.mockRejectedValue(new Error("Redis Set Error"));
+			const mockData = { foo: "bar" };
+			const fetchFn = vi.fn().mockResolvedValue(mockData);
+
+			const result = await getCached("test-key", fetchFn);
+			expect(result).toEqual(mockData);
+			expect(fetchFn).toHaveBeenCalled();
+		});
+
+		it("handles redis get error by falling back to fetch", async () => {
+			mockedRedis.get.mockRejectedValue(new Error("Redis Get Error"));
+			const mockData = { foo: "bar" };
+			const fetchFn = vi.fn().mockResolvedValue(mockData);
+
+			const result = await getCached("test-key", fetchFn);
+			expect(result).toEqual(mockData);
+			expect(fetchFn).toHaveBeenCalled();
+		});
 	});
 
 	describe("invalidateCache", () => {
 		it("deletes key from redis", async () => {
+			mockedRedis.del.mockResolvedValue(1);
 			await invalidateCache("test-key");
 			expect(mockedRedis.del).toHaveBeenCalledWith("test-key");
+		});
+
+		it("handles deletion errors gracefully", async () => {
+			mockedRedis.del.mockRejectedValue(new Error("Del Error"));
+			await expect(invalidateCache("key")).resolves.not.toThrow();
 		});
 	});
 
@@ -93,12 +122,24 @@ describe("Cache Utils", () => {
 					cursor: 0, // End of scan
 					keys: ["key3"],
 				});
+			mockedRedis.del.mockResolvedValue(1);
 
 			await invalidateCachePattern("test-*");
 
 			expect(mockedRedis.scan).toHaveBeenCalledTimes(2);
 			expect(mockedRedis.del).toHaveBeenCalledWith(["key1", "key2"]);
 			expect(mockedRedis.del).toHaveBeenCalledWith(["key3"]);
+		});
+
+		it("handles scan/delete errors gracefully", async () => {
+			mockedRedis.scan.mockRejectedValue(new Error("Scan Error"));
+			await expect(invalidateCachePattern("pattern")).resolves.not.toThrow();
+		});
+
+		it("handles empty scan results", async () => {
+			mockedRedis.scan.mockResolvedValue({ cursor: 0, keys: [] });
+			await invalidateCachePattern("pattern");
+			expect(mockedRedis.del).not.toHaveBeenCalled();
 		});
 	});
 });

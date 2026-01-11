@@ -1,190 +1,162 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-
-// Hoist mocks using vi.hoisted to allow access inside vi.mock factory
-const mocks = vi.hoisted(() => {
-	const chain: any = {};
-	chain.generateObject = vi.fn();
-	chain.continueWriting = vi.fn();
-	chain.createScene = vi.fn().mockResolvedValue({ id: "new-scene-id" });
-	chain.ensureProjectAccess = vi.fn().mockResolvedValue(true);
-	chain.getSelectedModelId = vi.fn().mockResolvedValue("mock-model-id");
-
-	// Drizzle chainable mocks
-	// We use mockReturnValue(chain) instead of mockReturnThis() to ensure
-	// it always returns this chain object, regardless of call context.
-	chain.insert = vi.fn().mockReturnValue(chain);
-	chain.values = vi.fn().mockReturnValue(chain);
-	chain.returning = vi.fn().mockResolvedValue([{ id: "mock-id", sequence: 1 }]);
-	chain.select = vi.fn().mockReturnValue(chain);
-	chain.from = vi.fn().mockReturnValue(chain);
-	chain.where = vi.fn().mockReturnValue(chain);
-	chain.orderBy = vi.fn().mockReturnValue(chain);
-	chain.limit = vi.fn().mockResolvedValue([
-		{
-			id: "mock-id",
-			sequence: 1,
-			content: "mock content",
-			chapterId: "mock-chapter-id",
-			projectId: "mock-project-id",
-			notes: "mock notes",
-			title: "mock title",
-		},
-	]);
-	chain.update = vi.fn().mockReturnValue(chain);
-	chain.set = vi.fn().mockReturnValue(chain);
-
-	chain.transaction = vi.fn((callback) => {
-		return callback({
-			insert: chain.insert,
-			values: chain.values,
-			returning: chain.returning,
-			select: chain.select,
-			from: chain.from,
-			where: chain.where,
-			orderBy: chain.orderBy,
-			limit: chain.limit,
-			update: chain.update,
-			set: chain.set,
-		});
-	});
-
-	return chain;
-});
-
-// Mock modules
-vi.mock("ai", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("ai")>();
-	return {
-		...actual,
-		generateObject: mocks.generateObject,
-	};
-});
-
-vi.mock("@/lib/ai/providers", () => ({
-	myProvider: {
-		languageModel: vi.fn(),
-	},
-}));
-
-vi.mock("@/lib/db", () => ({
-	db: {
-		transaction: mocks.transaction,
-		insert: mocks.insert,
-		select: mocks.select,
-		from: mocks.from,
-		where: mocks.where,
-		orderBy: mocks.orderBy,
-		limit: mocks.limit,
-		update: mocks.update,
-		set: mocks.set,
-	},
-}));
-
-vi.mock("@/lib/db/schema", async (importOriginal) => {
-	const actual = await importOriginal<typeof import("@/lib/db/schema")>();
-	return {
-		...actual,
-	};
-});
+import { storyService } from "@/lib/services/story-service";
+import { ensureProjectAccess } from "@/lib/actions-utils";
+import { planningService } from "@/lib/ai/services/planning-service";
+import { generationService } from "@/lib/ai/writer-service";
+import { invalidateCache } from "@/lib/cache";
+import { storyRepository } from "@/lib/db/repositories/story-repository";
+import { logGenerationUsage } from "@/lib/services/usage-logger";
+import { getSelectedModelId } from "@/lib/ai/models";
 
 vi.mock("@/lib/actions-utils", () => ({
-	ensureProjectAccess: mocks.ensureProjectAccess,
-}));
-
-vi.mock("drizzle-orm", () => ({
-	eq: vi.fn(),
-	asc: vi.fn(),
-	desc: vi.fn(),
-}));
-
-vi.mock("@/lib/ai/writer", () => ({
-	continueWriting: mocks.continueWriting,
-}));
-
-vi.mock("@/lib/db/queries/scene", () => ({
-	createScene: mocks.createScene,
-	getScenesForProject: vi.fn(),
+	ensureProjectAccess: vi.fn().mockResolvedValue(true),
 }));
 
 vi.mock("@/lib/ai/models", () => ({
-	getSelectedModelId: mocks.getSelectedModelId,
+	getSelectedModelId: vi.fn().mockResolvedValue("mock-model"),
 }));
 
-// Import the service after mocking
-import { storyService } from "@/lib/services/story-service";
+vi.mock("@/lib/ai/services/planning-service", () => ({
+	planningService: {
+		generateBookPlan: vi.fn(),
+		planChapterScenes: vi.fn(),
+	},
+}));
+
+vi.mock("@/lib/ai/writer-service", () => ({
+	generationService: {
+		continueWriting: vi.fn(),
+	},
+}));
+
+vi.mock("@/lib/cache", () => ({
+	invalidateCache: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/db/repositories/story-repository", () => ({
+	storyRepository: {
+		createBookFromPlan: vi.fn(),
+		getChapterWithScenes: vi.fn(),
+		getLastSceneInChapter: vi.fn(),
+		createScenesBatch: vi.fn(),
+		getSceneContextData: vi.fn(),
+		updateSceneContent: vi.fn(),
+	},
+}));
+
+vi.mock("@/lib/services/usage-logger", () => ({
+	logGenerationUsage: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe("StoryService", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		// Reset specific return values if needed
-		mocks.insert.mockReturnValue(mocks);
-		mocks.values.mockReturnValue(mocks);
-		mocks.returning.mockResolvedValue([{ id: "mock-id", sequence: 1 }]);
 	});
 
 	describe("generateBookPlan", () => {
-		it("should call generateObject with correct parameters", async () => {
-			mocks.generateObject.mockResolvedValueOnce({
-				object: { title: "Test Book", summary: "Summary", chapters: [] },
-			});
+		it("should delegate to planningService", async () => {
+			const mockPlan = { plan: { title: "T" } };
+			(planningService.generateBookPlan as any).mockResolvedValue(mockPlan);
 
-			const result = await storyService.generateBookPlan("test prompt");
-
-			expect(mocks.generateObject).toHaveBeenCalled();
-			expect(result).toEqual({
-				plan: {
-					title: "Test Book",
-					summary: "Summary",
-					chapters: [],
-				},
-				usage: undefined,
-				modelId: "mock-model-id",
-			});
-		});
-
-		it("should return error if generation fails", async () => {
-			mocks.generateObject.mockRejectedValueOnce(new Error("AI error"));
-
-			const result = await storyService.generateBookPlan("test prompt");
-
-			expect(result).toHaveProperty("error");
-			expect(result.error).toBe("AI error");
+			const result = await storyService.generateBookPlan("prompt");
+			expect(planningService.generateBookPlan).toHaveBeenCalledWith("prompt", undefined, undefined);
+			expect(result).toBe(mockPlan);
 		});
 	});
 
 	describe("createBookFromPlan", () => {
-		it("should execute transaction and insert records", async () => {
-			const plan = {
-				title: "Test Book",
-				logline: "Logline",
-				summary: "Summary",
-				chapters: [{ title: "Ch1", summary: "Sum1" }],
-			};
+		it("should ensure access, create book, and invalidate cache", async () => {
+			const plan = { title: "T" } as any;
+			(storyRepository.createBookFromPlan as any).mockResolvedValue({ outlineId: "o1" });
 
-			await storyService.createBookFromPlan("project-id", plan);
+			const result = await storyService.createBookFromPlan("p1", plan);
 
-			expect(mocks.ensureProjectAccess).toHaveBeenCalledWith(
-				"project-id",
-				true,
-			);
-			expect(mocks.transaction).toHaveBeenCalled();
-			expect(mocks.insert).toHaveBeenCalledTimes(4); // Outline, Volume, Chapter, Scene
+			expect(ensureProjectAccess).toHaveBeenCalledWith("p1", true);
+			expect(storyRepository.createBookFromPlan).toHaveBeenCalledWith("p1", plan, undefined);
+			expect(invalidateCache).toHaveBeenCalledWith("project-structure:p1");
+			expect(result).toEqual({ outlineId: "o1" });
 		});
 	});
 
 	describe("planChapterScenes", () => {
-		it("should generate scenes and create them", async () => {
-			mocks.generateObject.mockResolvedValueOnce({
-				object: { scenes: [{ title: "Scene 1", beat: "Beat 1" }] },
+		const chapterId = "c1";
+		const mockChapter = { id: "c1", projectId: "p1", title: "Ch", notes: "Notes" };
+
+		it("should plan scenes and batch create them", async () => {
+			(storyRepository.getChapterWithScenes as any).mockResolvedValue(mockChapter);
+			(planningService.planChapterScenes as any).mockResolvedValue({
+				plan: { scenes: [{ title: "S1" }] },
+				usage: { tokens: 10 },
+				modelId: "m1",
+			});
+			(storyRepository.getLastSceneInChapter as any).mockResolvedValue({ sequence: 5 });
+			(storyRepository.createScenesBatch as any).mockResolvedValue(["s1"]);
+
+			const result = await storyService.planChapterScenes(chapterId);
+
+			expect(storyRepository.getChapterWithScenes).toHaveBeenCalledWith(chapterId);
+			expect(ensureProjectAccess).toHaveBeenCalledWith("p1", true);
+			expect(planningService.planChapterScenes).toHaveBeenCalledWith("Ch", "Notes");
+			expect(logGenerationUsage).toHaveBeenCalled();
+			expect(storyRepository.createScenesBatch).toHaveBeenCalledWith("p1", "c1", [{ title: "S1", sequence: 6 }]);
+			expect(invalidateCache).toHaveBeenCalledWith("project-structure:p1");
+			expect(result).toEqual(["s1"]);
+		});
+
+		it("should throw if planning fails", async () => {
+			(storyRepository.getChapterWithScenes as any).mockResolvedValue(mockChapter);
+			(planningService.planChapterScenes as any).mockResolvedValue({ error: "Failed" });
+
+			await expect(storyService.planChapterScenes(chapterId)).rejects.toThrow("Failed");
+		});
+
+		it("should handle missing plan", async () => {
+			(storyRepository.getChapterWithScenes as any).mockResolvedValue(mockChapter);
+			(planningService.planChapterScenes as any).mockResolvedValue({ plan: null });
+
+			await expect(storyService.planChapterScenes(chapterId)).rejects.toThrow("Failed to plan scenes");
+		});
+	});
+
+	describe("generateSceneText", () => {
+		const sceneId = "s1";
+		const mockContext = {
+			targetScene: { id: "s1", projectId: "p1", title: "Title", chapterId: "c1" },
+			targetChapter: {},
+			targetOutline: {},
+			scenesInChapter: [],
+		};
+
+		it("should build context, generate text, and update DB", async () => {
+			(storyRepository.getSceneContextData as any).mockResolvedValue(mockContext);
+			(generationService.continueWriting as any).mockResolvedValue({
+				text: "Generated text",
+				usage: {},
+				modelId: "m1",
 			});
 
-			const result = await storyService.planChapterScenes("chapter-id");
+			await storyService.generateSceneText(sceneId);
 
-			expect(mocks.ensureProjectAccess).toHaveBeenCalled();
-			expect(mocks.generateObject).toHaveBeenCalled();
-			// LogUsage calls insert too, so we expect more calls potentially
-			expect(mocks.insert).toHaveBeenCalled();
-			expect(result).toEqual(["mock-id"]); // Returns mock-id from mocks.returning
+			expect(storyRepository.getSceneContextData).toHaveBeenCalledWith(sceneId);
+			expect(ensureProjectAccess).toHaveBeenCalledWith("p1", true);
+			expect(getSelectedModelId).toHaveBeenCalledWith("large");
+			expect(generationService.continueWriting).toHaveBeenCalled();
+			expect(storyRepository.updateSceneContent).toHaveBeenCalledWith(sceneId, "Generated text");
+			expect(logGenerationUsage).toHaveBeenCalled();
+		});
+
+		it("should throw if generation result has error", async () => {
+			(storyRepository.getSceneContextData as any).mockResolvedValue(mockContext);
+			(generationService.continueWriting as any).mockResolvedValue({ error: "AI error" });
+
+			await expect(storyService.generateSceneText(sceneId)).rejects.toThrow("AI error");
+		});
+
+		it("should throw if AI generates empty text", async () => {
+			(storyRepository.getSceneContextData as any).mockResolvedValue(mockContext);
+			(generationService.continueWriting as any).mockResolvedValue({ text: "" });
+
+			await expect(storyService.generateSceneText(sceneId)).rejects.toThrow("AI generated empty content");
 		});
 	});
 });

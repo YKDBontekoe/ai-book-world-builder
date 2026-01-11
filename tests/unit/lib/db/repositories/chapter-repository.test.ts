@@ -16,14 +16,22 @@ const mocks = vi.hoisted(() => {
 		update: vi.fn(),
 		set: vi.fn(),
 		delete: vi.fn(),
+		transaction: vi.fn((cb) => cb(mockChain)),
 		// biome-ignore lint/suspicious/noThenProperty: Mocking thenable for Drizzle
-		then: vi.fn((resolve, reject) => {
-			if (mockChain.error) {
-				return Promise.reject(mockChain.error).catch(reject);
-			}
-			return Promise.resolve(mockChain.result).then(resolve);
-		}),
+		then(onFulfilled: any, onRejected: any) {
+			const currentResult =
+				mockChain.results && mockChain.results.length > 0
+					? mockChain.results.shift()
+					: mockChain.result;
+
+			const p = mockChain.error
+				? Promise.reject(mockChain.error)
+				: Promise.resolve(currentResult);
+
+			return p.then(onFulfilled, onRejected);
+		},
 		result: [],
+		results: null as any[] | null,
 		error: null,
 	};
 
@@ -66,6 +74,7 @@ describe("ChapterRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.result = [];
+		mocks.results = null;
 		mocks.error = null;
 	});
 
@@ -92,6 +101,20 @@ describe("ChapterRepository", () => {
 		});
 	});
 
+	describe("findAll", () => {
+		it("should return all chapters", async () => {
+			const chapters = [{ id: "c1" }];
+			mocks.result = chapters;
+			const result = await chapterRepository.findAll();
+			expect(result).toEqual(chapters);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.findAll()).rejects.toThrow(DatabaseError);
+		});
+	});
+
 	describe("findByProject", () => {
 		it("should return chapters for a project", async () => {
 			const mockChapters = [
@@ -105,6 +128,11 @@ describe("ChapterRepository", () => {
 			expect(mocks.select).toHaveBeenCalled();
 			expect(mocks.where).toHaveBeenCalled();
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.findByProject("p1")).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("findByVolume", () => {
@@ -115,23 +143,72 @@ describe("ChapterRepository", () => {
 			const result = await chapterRepository.findByVolume("v1");
 			expect(result).toEqual(mockChapters);
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.findByVolume("v1")).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("findByProjectWithContent", () => {
+		it("should return chapters with content", async () => {
+			const chapters = [{ id: "c1" }, { id: "c2" }];
+			const version1 = [{ content: "Content 1" }];
+			const version2 = [{ content: "Content 2" }];
+
+			mocks.results = [
+				chapters, // findByProject
+				version1, // version for c1
+				version2, // version for c2
+			];
+
+			const result = await chapterRepository.findByProjectWithContent("p1");
+			expect(result).toHaveLength(2);
+			expect(result[0].content).toBe("Content 1");
+			expect(result[1].content).toBe("Content 2");
+		});
+
+		it("should handle missing content", async () => {
+			const chapters = [{ id: "c1" }];
+			const version1: any[] = []; // No version
+
+			mocks.results = [
+				chapters,
+				version1,
+			];
+
+			const result = await chapterRepository.findByProjectWithContent("p1");
+			expect(result).toHaveLength(1);
+			expect(result[0].content).toBeNull();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.findByProjectWithContent("p1")).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("create", () => {
+		const mockInput = {
+			projectId: "p1",
+			volumeId: "v1",
+			outlineId: "o1",
+			title: "New Chapter",
+			sequence: 1,
+		};
+
 		it("should create and return a chapter", async () => {
-			const mockInput = {
-				projectId: "p1",
-				volumeId: "v1",
-				outlineId: "o1",
-				title: "New Chapter",
-				sequence: 1,
-			};
-			const mockChapter = { id: "c1", ...mockInput };
+			const mockChapter = { id: "c1", ...mockInput, status: "planned" };
 			mocks.result = [mockChapter];
 
 			const result = await chapterRepository.create(mockInput);
 			expect(result).toEqual(mockChapter);
 			expect(mocks.insert).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.create(mockInput)).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -151,6 +228,11 @@ describe("ChapterRepository", () => {
 				chapterRepository.update("c1", { title: "Updated" }),
 			).rejects.toThrow(NotFoundError);
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.update("c1", { title: "U" })).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("markAsDrafted", () => {
@@ -158,6 +240,55 @@ describe("ChapterRepository", () => {
 			mocks.result = {};
 			await chapterRepository.markAsDrafted("c1");
 			expect(mocks.update).toHaveBeenCalled();
+			expect(mocks.set).toHaveBeenCalledWith(
+				expect.objectContaining({ status: "drafted" })
+			);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.markAsDrafted("c1")).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("createDraft", () => {
+		const draftInput = {
+			chapterId: "c1",
+			volumeId: "v1",
+			outlineId: "o1",
+			projectId: "p1",
+			content: "Draft content",
+		};
+
+		it("should create draft and mark chapter as drafted", async () => {
+			const mockDraft = { id: "d1", ...draftInput };
+			mocks.results = [
+				[mockDraft], // insert draft
+				[], // markAsDrafted update
+			];
+
+			const result = await chapterRepository.createDraft(draftInput);
+			expect(result).toEqual(mockDraft);
+			expect(mocks.insert).toHaveBeenCalled();
+			expect(mocks.update).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.createDraft(draftInput)).rejects.toThrow(DatabaseError);
+		});
+	});
+
+	describe("delete", () => {
+		it("should delete chapter", async () => {
+			mocks.result = [];
+			await chapterRepository.delete("c1");
+			expect(mocks.delete).toHaveBeenCalled();
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.delete("c1")).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -175,21 +306,25 @@ describe("ChapterRepository", () => {
 			const result = await chapterRepository.getLastInVolume("v1");
 			expect(result).toBeNull();
 		});
+
+		it("should throw DatabaseError on failure", async () => {
+			mocks.error = new Error("DB Error");
+			await expect(chapterRepository.getLastInVolume("v1")).rejects.toThrow(DatabaseError);
+		});
 	});
 
 	describe("getNextSequence", () => {
+		// Mock getLastInVolume specifically or rely on mocks.result?
+		// Since getNextSequence calls getLastInVolume which calls db, we can just mock db result.
+		
 		it("should return 1 if no chapters", async () => {
-			vi.spyOn(chapterRepository, "getLastInVolume").mockResolvedValueOnce(
-				null,
-			);
+			mocks.result = []; // getLastInVolume returns null
 			const result = await chapterRepository.getNextSequence("v1");
 			expect(result).toBe(1);
 		});
 
 		it("should return next sequence number", async () => {
-			vi.spyOn(chapterRepository, "getLastInVolume").mockResolvedValueOnce({
-				sequence: 5,
-			} as any);
+			mocks.result = [{ sequence: 5 }];
 			const result = await chapterRepository.getNextSequence("v1");
 			expect(result).toBe(6);
 		});
