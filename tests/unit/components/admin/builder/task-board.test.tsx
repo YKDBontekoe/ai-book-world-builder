@@ -58,18 +58,9 @@ vi.mock("@/components/molecules/glass-card", () => ({
 		className?: string;
 		onClick?: () => void;
 	}) => (
-		<div
-			className={className}
-			onClick={onClick}
-			data-testid="glass-card"
-			role="button"
-			tabIndex={0}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					onClick?.();
-				}
-			}}
-		>
+		/* biome-ignore lint/a11y/noStaticElementInteractions: Mock for testing */
+		/* biome-ignore lint/a11y/useKeyWithClickEvents: Mock for testing */
+		<div className={className} onClick={onClick} data-testid="glass-card">
 			{children}
 		</div>
 	),

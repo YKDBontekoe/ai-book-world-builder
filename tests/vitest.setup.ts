@@ -54,7 +54,7 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
 	});
 
 	// Mock localStorage
-	const localStorageMock = (function () {
+	const localStorageMock = (() => {
 		let store: Record<string, string> = {};
 		return {
 			getItem: (key: string) => store[key] || null,

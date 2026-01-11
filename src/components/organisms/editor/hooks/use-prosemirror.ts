@@ -95,7 +95,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, []); // Empty dependency array to run once on mount
+	}, [containerRef, content, onMentionStateChange, readOnly]); // Dependencies for editor initialization
 
 	// Synchronize content when it changes externally
 	useEffect(() => {
