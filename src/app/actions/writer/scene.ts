@@ -6,7 +6,7 @@ import { continueWriting } from "@/app/actions/writer/ai";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
 import { invalidateCache } from "@/lib/cache";
-import { db } from "@/lib/db";
+import { type DbTransaction, db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
 import { checkUsageQuota } from "@/lib/quota";
@@ -130,7 +130,7 @@ export async function generateScene(
 		// Note: We bypass repository here to use transaction
 		const newSceneId = crypto.randomUUID();
 
-		await db.transaction(async (tx) => {
+		await db.transaction(async (tx: DbTransaction) => {
 			// Get max sequence atomically inside transaction
 			const [maxSeq] = await tx
 				.select({ max: sql<number>`max(${scene.sequence})` })
@@ -283,7 +283,7 @@ export async function createSceneInChapter(
 		// Use a transaction to ensure atomic sequence calculation and insertion
 		const newSceneId = crypto.randomUUID();
 
-		await db.transaction(async (tx) => {
+		await db.transaction(async (tx: DbTransaction) => {
 			let newSequence = 1;
 			let prevSceneId: string | undefined;
 

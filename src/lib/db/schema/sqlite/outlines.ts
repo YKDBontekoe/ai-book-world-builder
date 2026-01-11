@@ -9,7 +9,10 @@ import {
 import { project } from "@/lib/db/schema/sqlite/projects";
 
 export const outline = sqliteTable("Outline", {
-	id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+	id: text("id")
+		.primaryKey()
+		.notNull()
+		.$defaultFn(() => crypto.randomUUID()),
 	createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 	updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 	title: text("title").notNull(),
@@ -26,7 +29,10 @@ export const outline = sqliteTable("Outline", {
 export type Outline = InferSelectModel<typeof outline>;
 
 export const volume = sqliteTable("Volume", {
-	id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+	id: text("id")
+		.primaryKey()
+		.notNull()
+		.$defaultFn(() => crypto.randomUUID()),
 	createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 	updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 	title: text("title").notNull(),
@@ -44,7 +50,10 @@ export type Volume = InferSelectModel<typeof volume>;
 export const chapter = sqliteTable(
 	"Chapter",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		title: text("title").notNull(),
@@ -72,7 +81,10 @@ export const chapter = sqliteTable(
 export type Chapter = InferSelectModel<typeof chapter>;
 
 export const chapterDraft = sqliteTable("ChapterDraft", {
-	id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+	id: text("id")
+		.primaryKey()
+		.notNull()
+		.$defaultFn(() => crypto.randomUUID()),
 	createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 	updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 	content: text("content").notNull(),

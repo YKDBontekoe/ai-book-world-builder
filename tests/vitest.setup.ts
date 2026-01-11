@@ -16,15 +16,16 @@ vi.mock("next/server", () => ({
 			json: async () => body,
 		}),
 	},
-	NextRequest: class NextRequest {
-		constructor(input: any, init?: any) {}
-	},
+	NextRequest: class NextRequest {},
 }));
 
 // MSW Setup
 beforeAll(() => server.listen());
 afterEach(() => {
 	server.resetHandlers();
+	if (typeof window !== "undefined") {
+		window.localStorage?.clear();
+	}
 	cleanup();
 });
 afterAll(() => server.close());
@@ -50,6 +51,26 @@ if (typeof window !== "undefined" && typeof document !== "undefined") {
 			removeEventListener: () => {},
 			dispatchEvent: () => {},
 		}),
+	});
+
+	// Mock localStorage
+	const localStorageMock = (() => {
+		let store: Record<string, string> = {};
+		return {
+			getItem: (key: string) => store[key] || null,
+			setItem: (key: string, value: string) => {
+				store[key] = value.toString();
+			},
+			removeItem: (key: string) => {
+				delete store[key];
+			},
+			clear: () => {
+				store = {};
+			},
+		};
+	})();
+	Object.defineProperty(window, "localStorage", {
+		value: localStorageMock,
 	});
 }
 

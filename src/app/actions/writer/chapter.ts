@@ -3,7 +3,7 @@
 import { and, desc, eq, inArray } from "drizzle-orm";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
-import { db } from "@/lib/db";
+import { type DbTransaction, db } from "@/lib/db";
 import { createOutline, getOutlinesForProject } from "@/lib/db/queries/outline";
 import {
 	createVolumePlan,
@@ -203,7 +203,9 @@ export async function reorderChapters(chapterIds: string[], volumeId: string) {
 
 		// 3. Verify they all share the same projectId
 		const projectId = chapters[0].projectId;
-		const allSameProject = chapters.every((ch) => ch.projectId === projectId);
+		const allSameProject = chapters.every(
+			(ch: { projectId: string }) => ch.projectId === projectId,
+		);
 		if (!allSameProject) {
 			return {
 				success: false,
@@ -215,7 +217,7 @@ export async function reorderChapters(chapterIds: string[], volumeId: string) {
 		await ensureProjectAccess(projectId, true);
 
 		// 5. Inside the transaction update chapters
-		await db.transaction(async (tx) => {
+		await db.transaction(async (tx: DbTransaction) => {
 			for (let i = 0; i < chapterIds.length; i++) {
 				await tx
 					.update(chapter)

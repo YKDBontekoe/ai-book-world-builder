@@ -73,7 +73,7 @@ export const updateSceneCards = ({ session }: { session: Session | null }) =>
         Current Scenes: ${JSON.stringify(currentScenes.map((s) => ({ id: s.id, title: s.title })))}
         Instructions: ${instructions || "Review and refine scenes."}
         
-        Project Tone: ${projectData.project.description ? "Tone: " + projectData.project.description : ""}
+        Project Tone: ${projectData.project.description ? `Tone: ${projectData.project.description}` : ""}
         
         Return a list of operations to align the chapter with the story bible.
         `,

@@ -93,10 +93,12 @@ export const getScenesData = createUserAction({
 		}
 
 		// 5. Construct result
-		const result: SerializedChapterWithScenes[] = chapters.map((c) => ({
-			...c,
-			scenes: scenesByChapter.get(c.id) || [],
-		}));
+		const result: SerializedChapterWithScenes[] = chapters.map(
+			(c: Chapter) => ({
+				...c,
+				scenes: scenesByChapter.get(c.id) || [],
+			}),
+		);
 
 		return result;
 	},

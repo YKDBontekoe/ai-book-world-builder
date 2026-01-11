@@ -282,13 +282,21 @@ export const getOutlineData = createUserAction({
 		const currentOutline = outlines[0];
 
 		// Map chapters to serialized format (sorted by sequence already from query)
-		const serializedChapters: SerializedChapter[] = chapters.map((ch) => ({
-			id: ch.id,
-			title: ch.title,
-			notes: ch.notes,
-			status: ch.status,
-			sequence: ch.sequence,
-		}));
+		const serializedChapters: SerializedChapter[] = chapters.map(
+			(ch: {
+				id: string;
+				title: string;
+				notes: string | null;
+				status: unknown;
+				sequence: number;
+			}) => ({
+				id: ch.id,
+				title: ch.title,
+				notes: ch.notes,
+				status: ch.status,
+				sequence: ch.sequence,
+			}),
+		);
 
 		return {
 			id: currentOutline.id,

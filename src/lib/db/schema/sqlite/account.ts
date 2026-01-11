@@ -1,4 +1,9 @@
-import { integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import {
+	integer,
+	primaryKey,
+	sqliteTable,
+	text,
+} from "drizzle-orm/sqlite-core";
 import { user } from "@/lib/db/schema/sqlite/auth";
 
 export const account = sqliteTable(

@@ -17,8 +17,8 @@ type Story = StoryObj<typeof GridList>;
 export const Default: Story = {
 	render: (args) => (
 		<GridList {...args}>
-			{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
 			{Array.from({ length: 6 }).map((_, i) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example
 				<Card key={i}>
 					<CardContent className="p-6">
 						<div className="font-medium">Item {i + 1}</div>
@@ -39,8 +39,8 @@ export const Responsive: Story = {
 	},
 	render: (args) => (
 		<GridList {...args}>
-			{/* biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example */}
 			{Array.from({ length: 8 }).map((_, i) => (
+				// biome-ignore lint/suspicious/noArrayIndexKey: Static storybook example
 				<Card key={i}>
 					<CardContent className="p-6">
 						<div className="font-medium">Item {i + 1}</div>

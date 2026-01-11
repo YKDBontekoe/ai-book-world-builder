@@ -108,11 +108,13 @@ export async function getProjectPreviewData(
 							updatedAt: recentScene.updatedAt,
 						}
 					: null,
-				structure: chapters.map((c) => ({
-					id: c.id,
-					title: c.title,
-					sceneCount: Number(c.sceneCount),
-				})),
+				structure: chapters.map(
+					(c: { id: string; title: string; sceneCount: number }) => ({
+						id: c.id,
+						title: c.title,
+						sceneCount: Number(c.sceneCount),
+					}),
+				),
 			},
 		};
 	} catch (error) {

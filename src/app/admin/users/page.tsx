@@ -2,14 +2,6 @@ import Link from "next/link";
 import { getUsers } from "@/app/actions/admin";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/atoms/table"; // Assuming table component exists in atoms or ui, need to verify
 import { GlassCard } from "@/components/molecules/glass-card";
 
 // Note: Table component might not exist in atoms. Checking file structure...
@@ -65,41 +57,53 @@ export default async function UsersPage({
 							</tr>
 						</thead>
 						<tbody className="[&_tr:last-child]:border-0">
-							{users.map((user) => (
-								<tr
-									key={user.id}
-									className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
-								>
-									<td className="p-4 align-middle font-medium">
-										{user.name || "N/A"}
-									</td>
-									<td className="p-4 align-middle">{user.email}</td>
-									<td className="p-4 align-middle">
-										<Badge
-											variant={user.role === "admin" ? "default" : "secondary"}
-										>
-											{user.role}
-										</Badge>
-									</td>
-									<td className="p-4 align-middle">
-										{user.bannedAt ? (
-											<Badge variant="destructive">Banned</Badge>
-										) : (
+							{users.map(
+								(user: {
+									id: string;
+									name: string | null;
+									email: string;
+									role: string;
+									bannedAt: Date | null;
+								}) => (
+									<tr
+										key={user.id}
+										className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+									>
+										<td className="p-4 align-middle font-medium">
+											{user.name || "N/A"}
+										</td>
+										<td className="p-4 align-middle">{user.email}</td>
+										<td className="p-4 align-middle">
 											<Badge
-												variant="outline"
-												className="bg-green-500/10 text-green-600 border-green-500/20"
+												variant={
+													user.role === "admin" ? "default" : "secondary"
+												}
 											>
-												Active
+												{user.role}
 											</Badge>
-										)}
-									</td>
-									<td className="p-4 align-middle text-right">
-										<Button asChild variant="ghost" size="sm">
-											<Link href={`/admin/users/${user.id}`}>View Details</Link>
-										</Button>
-									</td>
-								</tr>
-							))}
+										</td>
+										<td className="p-4 align-middle">
+											{user.bannedAt ? (
+												<Badge variant="destructive">Banned</Badge>
+											) : (
+												<Badge
+													variant="outline"
+													className="bg-green-500/10 text-green-600 border-green-500/20"
+												>
+													Active
+												</Badge>
+											)}
+										</td>
+										<td className="p-4 align-middle text-right">
+											<Button asChild variant="ghost" size="sm">
+												<Link href={`/admin/users/${user.id}`}>
+													View Details
+												</Link>
+											</Button>
+										</td>
+									</tr>
+								),
+							)}
 						</tbody>
 					</table>
 				</div>

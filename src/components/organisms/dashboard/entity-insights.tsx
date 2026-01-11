@@ -54,7 +54,7 @@ export function EntityInsights({ stats }: { stats: EntityStats }) {
 											>
 												{formattedData.map((entry, index) => (
 													<Cell
-														key={`cell-${index}`}
+														key={`cell-${entry.name}`}
 														fill={COLORS[index % COLORS.length]}
 													/>
 												))}

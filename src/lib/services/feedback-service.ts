@@ -72,7 +72,7 @@ export async function processDailyFeedback() {
 	if (pending.length === 0) return { processed: 0, groups: 0 };
 
 	// Filter for feature requests (type 'feedback')
-	const features = pending.filter((f) => f.type === "feedback");
+	const features = (pending as any[]).filter((f: any) => f.type === "feedback");
 
 	if (features.length === 0) return { processed: 0, groups: 0 };
 

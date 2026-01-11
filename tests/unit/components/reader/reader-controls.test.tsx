@@ -54,7 +54,7 @@ describe("ReaderControls", () => {
 		render(<ReaderControls {...defaultProps} />);
 		// There are multiple "Prev" texts (mobile/desktop potentially), or just icons.
 		// The mobile nav has text "Prev".
-		const prevButtons = screen
+		const _prevButtons = screen
 			.getAllByRole("button")
 			.filter(
 				(b) =>

@@ -8,7 +8,9 @@ import * as sqliteSchema from "@/lib/db/schema/sqlite";
 
 export type DbDriver = "postgres" | "sqlite";
 
-const dbDriver = (process.env.DB_DRIVER ?? "postgres").toLowerCase() as DbDriver;
+const dbDriver = (
+	process.env.DB_DRIVER ?? "postgres"
+).toLowerCase() as DbDriver;
 
 if (dbDriver !== "postgres" && dbDriver !== "sqlite") {
 	throw new Error(`Unsupported DB_DRIVER value: ${dbDriver}`);
@@ -30,10 +32,28 @@ const filteredSqliteSchema = Object.fromEntries(
 
 type PgDb = PostgresJsDatabase<typeof pgSchema>;
 type SqliteDb = BetterSQLite3Database<typeof sqliteSchema>;
-export type AppDb = PgDb | SqliteDb;
+
+// We use an intersection but omit the private 'fullSchema' property which causes conflicts
+// between different Drizzle dialects in the type system.
+export type AppDb = Omit<PgDb, "fullSchema"> & Omit<SqliteDb, "fullSchema">;
 
 const createPostgresDb = async (): Promise<PgDb> => {
-	if (!process.env.POSTGRES_URL) {
+	const url = process.env.POSTGRES_URL;
+
+	if (!url) {
+		if (process.env.NODE_ENV === "production") {
+			console.warn(
+				"POSTGRES_URL is not defined. Using dummy connection for build/CI.",
+			);
+			const [{ drizzle }, { default: postgres }] = await Promise.all([
+				import("drizzle-orm/postgres-js"),
+				import("postgres"),
+			]);
+			const client = postgres(
+				"postgres://placeholder:placeholder@localhost:5432/placeholder",
+			);
+			return drizzle(client, { schema: filteredPgSchema as typeof pgSchema });
+		}
 		throw new Error("POSTGRES_URL is not defined");
 	}
 
@@ -42,7 +62,7 @@ const createPostgresDb = async (): Promise<PgDb> => {
 		import("postgres"),
 	]);
 
-	const client = postgres(process.env.POSTGRES_URL);
+	const client = postgres(url);
 	return drizzle(client, { schema: filteredPgSchema as typeof pgSchema });
 };
 
@@ -57,12 +77,15 @@ const createSqliteDb = async (): Promise<SqliteDb> => {
 	const client = new Database(sqlitePath);
 	client.pragma("journal_mode = WAL");
 
-	return drizzle(client, { schema: filteredSqliteSchema as typeof sqliteSchema });
+	return drizzle(client, {
+		schema: filteredSqliteSchema as typeof sqliteSchema,
+	});
 };
 
-export const db: AppDb = await (dbDriver === "sqlite"
+// Cast to any to avoid dialect-specific type mismatches when using generic repositories
+export const db = (await (dbDriver === "sqlite"
 	? createSqliteDb()
-	: createPostgresDb());
+	: createPostgresDb())) as AppDb & any;
 
 export type DbTransaction = Parameters<Parameters<AppDb["transaction"]>[0]>[0];
 export { dbDriver };

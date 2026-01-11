@@ -2,7 +2,6 @@ import type { InferSelectModel } from "drizzle-orm";
 import {
 	index,
 	pgTable,
-	primaryKey,
 	text,
 	timestamp,
 	uuid,

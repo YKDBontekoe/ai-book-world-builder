@@ -1,10 +1,5 @@
 import type { InferSelectModel } from "drizzle-orm";
-import {
-	index,
-	integer,
-	sqliteTable,
-	text,
-} from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 import { project } from "@/lib/db/schema/sqlite/projects";
 import { scene } from "@/lib/db/schema/sqlite/scenes";
@@ -33,7 +28,10 @@ export type ConsistencyIssueStatus = (typeof consistencyIssueStatus)[number];
 export const consistencyIssue = sqliteTable(
 	"ConsistencyIssue",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		projectId: text("projectId")
 			.notNull()
 			.references(() => project.id, { onDelete: "cascade" }),

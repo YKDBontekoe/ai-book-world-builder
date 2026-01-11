@@ -58,7 +58,8 @@ vi.mock("@/components/molecules/glass-card", () => ({
 		className?: string;
 		onClick?: () => void;
 	}) => (
-		// biome-ignore lint/a11y/useKeyWithClickEvents: Mock component for testing
+		/* biome-ignore lint/a11y/noStaticElementInteractions: Mock for testing */
+		/* biome-ignore lint/a11y/useKeyWithClickEvents: Mock for testing */
 		<div className={className} onClick={onClick} data-testid="glass-card">
 			{children}
 		</div>
@@ -289,10 +290,17 @@ describe("TaskBoard", () => {
 		renderWithClient(<TaskBoard />);
 
 		await waitFor(() => {
-			const buttons = screen.getAllByRole("button");
-			const fixButton = buttons.find((b) => b.textContent?.includes("Fix"));
+			const fixButton = screen
+				.getAllByRole("button")
+				.find(
+					(b) =>
+						b.textContent?.includes("Fix") &&
+						b.getAttribute("data-testid") !== "glass-card",
+				);
 			expect(fixButton).toBeInTheDocument();
-			fireEvent.click(fixButton!);
+			if (fixButton) {
+				fireEvent.click(fixButton);
+			}
 		});
 
 		await waitFor(() => {
@@ -318,10 +326,17 @@ describe("TaskBoard", () => {
 		renderWithClient(<TaskBoard />);
 
 		await waitFor(() => {
-			const buttons = screen.getAllByRole("button");
-			const fixButton = buttons.find((b) => b.textContent?.includes("Fix"));
+			const fixButton = screen
+				.getAllByRole("button")
+				.find(
+					(b) =>
+						b.textContent?.includes("Fix") &&
+						b.getAttribute("data-testid") !== "glass-card",
+				);
 			expect(fixButton).toBeInTheDocument();
-			fireEvent.click(fixButton!);
+			if (fixButton) {
+				fireEvent.click(fixButton);
+			}
 		});
 
 		await waitFor(() => {

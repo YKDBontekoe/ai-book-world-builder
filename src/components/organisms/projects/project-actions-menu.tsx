@@ -77,12 +77,12 @@ export function ProjectActionsMenu({
 		setIsDeleting(true);
 		try {
 			const result = await deleteProject(projectId);
-			if (result && "error" in result) {
-				toast.error(result.error);
+			if (result && typeof result === "object" && "error" in result) {
+				toast.error(String(result.error));
 			} else {
 				toast.success("Project deleted");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to delete project");
 		} finally {
 			setIsDeleting(false);
@@ -95,12 +95,12 @@ export function ProjectActionsMenu({
 		toast.info("Forking project...");
 		try {
 			const result = await forkProject(projectId);
-			if (result && "error" in result) {
-				toast.error(result.error);
+			if (result && typeof result === "object" && "error" in result) {
+				toast.error(String(result.error));
 			} else {
 				toast.success("Project forked successfully");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to fork project");
 		} finally {
 			setIsForking(false);
@@ -111,13 +111,13 @@ export function ProjectActionsMenu({
 		setIsRenaming(true);
 		try {
 			const result = await renameProject(projectId, newName, newDescription);
-			if (result && "error" in result) {
-				toast.error(result.error);
+			if (result && typeof result === "object" && "error" in result) {
+				toast.error(String(result.error));
 			} else {
 				toast.success("Project renamed");
 				setShowRenameDialog(false);
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to rename project");
 		} finally {
 			setIsRenaming(false);
@@ -126,7 +126,9 @@ export function ProjectActionsMenu({
 
 	return (
 		<>
+			{/* biome-ignore lint/a11y/noStaticElementInteractions: "Stopping propagation on wrapper" */}
 			<div
+				role="presentation"
 				onClick={(e) => e.stopPropagation()}
 				onKeyDown={(e) => e.stopPropagation()}
 			>

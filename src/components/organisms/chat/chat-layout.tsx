@@ -2,9 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useChatContext } from "@/components/organisms/chat/chat-context";
-import { ChatHeader } from "@/components/organisms/chat/chat-header";
 import { ProjectContextBar } from "@/components/organisms/sidebar/project-context-bar";
-import { ChatMessage } from "@/lib/types";
 
 interface ChatLayoutProps {
 	chatId: string;
@@ -16,9 +14,9 @@ interface ChatLayoutProps {
 }
 
 export function ChatLayout({
-	chatId,
-	isReadonly,
-	initialVisibilityType,
+	chatId: _chatId,
+	isReadonly: _isReadonly,
+	initialVisibilityType: _initialVisibilityType,
 	messagesLength,
 	children,
 	header,

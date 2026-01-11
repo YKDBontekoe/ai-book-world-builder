@@ -88,7 +88,6 @@ export class StoryService {
 		}
 
 		// Log Usage (Fire and forget)
-		// biome-ignore lint/suspicious/noExplicitAny: Allowing any for catch to simplify logging
 		logGenerationUsage({
 			projectId: targetChapter.projectId,
 			usage: result.usage,
@@ -177,7 +176,6 @@ export class StoryService {
 		await storyRepository.updateSceneContent(sceneId, result.text);
 
 		// 6. Log Usage (Fire and forget)
-		// biome-ignore lint/suspicious/noExplicitAny: Allowing any for catch to simplify logging
 		logGenerationUsage({
 			projectId: targetScene.projectId,
 			usage: result.usage,

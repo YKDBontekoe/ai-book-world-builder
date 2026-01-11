@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createScene } from "@/lib/db/queries/scene";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 
 const mocks = vi.hoisted(() => {

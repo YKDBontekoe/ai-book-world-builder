@@ -22,7 +22,10 @@ export type SourceMaterialStatus = (typeof sourceMaterialStatus)[number];
 export const sourceMaterial = sqliteTable(
 	"SourceMaterial",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		filename: text("filename").notNull(),
@@ -50,7 +53,10 @@ export type SourceMaterial = InferSelectModel<typeof sourceMaterial>;
 export const sourceMaterialProcessing = sqliteTable(
 	"SourceMaterialProcessing",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		status: text("status", { enum: sourceMaterialStatus })
@@ -102,7 +108,10 @@ export type NewSourceMaterialChapter = {
 export const sourceMaterialChapter = sqliteTable(
 	"SourceMaterialChapter",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		title: text("title").notNull(),
@@ -136,7 +145,10 @@ export type SourceMaterialChapter = InferSelectModel<
 export const sourceMaterialChunk = sqliteTable(
 	"SourceMaterialChunk",
 	{
-		id: text("id").primaryKey().notNull().$defaultFn(() => crypto.randomUUID()),
+		id: text("id")
+			.primaryKey()
+			.notNull()
+			.$defaultFn(() => crypto.randomUUID()),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),
 		sequence: integer("sequence").notNull(),

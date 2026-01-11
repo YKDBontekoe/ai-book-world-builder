@@ -98,9 +98,11 @@ export async function GET(
 						.where(eq(bookGenerationStep.generationId, generationId));
 
 					const completedSteps = steps.filter(
-						(s) => s.status === "completed",
+						(s: { status: string }) => s.status === "completed",
 					).length;
-					const runningStep = steps.find((s) => s.status === "running");
+					const runningStep = steps.find(
+						(s: { status: string }) => s.status === "running",
+					);
 
 					// Send progress update
 					sendEvent("progress", {

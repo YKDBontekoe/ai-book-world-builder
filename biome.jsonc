@@ -1,12 +1,13 @@
 {
 	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
 	"files": {
-		"includes": [
-			"**/*",
-			"!components/ui",
-			"!lib/utils.ts",
-			"!hooks/use-mobile.ts"
-		]
+		"ignoreUnknown": true,
+		"includes": ["src/**/*", "tests/**/*"]
 	},
 	"linter": {
 		"rules": {
@@ -45,6 +46,11 @@
 				/* Needs more work to fix */
 				"noSvgWithoutTitle": "off"
 			}
+		}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true
 		}
 	}
 }

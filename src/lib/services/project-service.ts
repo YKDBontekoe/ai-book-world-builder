@@ -1,11 +1,8 @@
 import "server-only";
+import { eq, inArray } from "drizzle-orm";
 
-import { type ExtractTablesWithRelations, eq, inArray } from "drizzle-orm";
-import type { PgTransaction } from "drizzle-orm/pg-core";
-import type { PostgresJsQueryResultHKT } from "drizzle-orm/postgres-js";
 import { db } from "@/lib/db";
 import { projectRepository } from "@/lib/db/repositories";
-import type * as schema from "@/lib/db/schema";
 import {
 	bookExport,
 	bookGeneration,
@@ -28,18 +25,13 @@ import {
 
 // Helper for chunked inserts
 async function chunkedInsert<T extends Record<string, unknown>, TTable>(
-	tx: PgTransaction<
-		PostgresJsQueryResultHKT,
-		typeof schema,
-		ExtractTablesWithRelations<typeof schema>
-	>,
+	tx: any,
 	table: TTable,
 	items: T[],
 	chunkSize = 1000,
 ) {
 	for (let i = 0; i < items.length; i += chunkSize) {
 		const chunk = items.slice(i, i + chunkSize);
-		// @ts-expect-error - Dynamic table insertion is tricky with Drizzle types
 		await tx.insert(table).values(chunk);
 	}
 }
@@ -62,21 +54,21 @@ export class ProjectService {
 				.where(inArray(project.id, projectIds));
 
 			const ownedProjectIds = projects
-				.filter((p) => p.userId === userId)
-				.map((p) => p.id);
+				.filter((p: any) => p.userId === userId)
+				.map((p: any) => p.id);
 
 			if (ownedProjectIds.length === 0) {
 				return { error: "No valid projects to delete" };
 			}
 
-			await db.transaction(async (tx) => {
+			await db.transaction(async (tx: any) => {
 				// 1. Generation related tables (Leaf first)
 				const generations = await tx
 					.select({ id: bookGeneration.id })
 					.from(bookGeneration)
 					.where(inArray(bookGeneration.projectId, ownedProjectIds));
 
-				const generationIds = generations.map((g) => g.id);
+				const generationIds = (generations as any[]).map((g: any) => g.id);
 
 				if (generationIds.length > 0) {
 					await tx
@@ -179,7 +171,7 @@ export class ProjectService {
 		const finalName = rawName.slice(0, 100); // Truncate to DB limit
 
 		try {
-			const result = await db.transaction(async (tx) => {
+			const result = await db.transaction(async (tx: any) => {
 				// 1. Create New Project
 				const [newProject] = await tx
 					.insert(project)
@@ -220,7 +212,7 @@ export class ProjectService {
 							break;
 						}
 
-						const newEntities = oldEntities.map((old) => {
+						const newEntities = (oldEntities as any[]).map((old: any) => {
 							const newId = crypto.randomUUID();
 							entityIdMap.set(old.id, newId);
 							const { id: _id, ...data } = old;
@@ -304,7 +296,7 @@ export class ProjectService {
 						.where(eq(outline.projectId, originalProjectId));
 
 					if (oldOutlines.length > 0) {
-						const newOutlines = oldOutlines.map((old) => {
+						const newOutlines = (oldOutlines as any[]).map((old: any) => {
 							const newId = crypto.randomUUID();
 							outlineIdMap.set(old.id, newId);
 							const { id: _id, ...data } = old;

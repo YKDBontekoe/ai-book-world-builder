@@ -49,13 +49,13 @@ async function collectBookContent(projectData: FullProjectData): Promise<{
 			.where(eq(bookGenerationAsset.generationId, generationId));
 
 		// Get prologue from assets
-		const prologueAsset = assets.find((a) => a.assetType === "prologue");
+		const prologueAsset = assets.find((a: any) => a.assetType === "prologue");
 		if (prologueAsset?.content) {
 			prologue = prologueAsset.content;
 		}
 
 		// Get epilogue from assets
-		const epilogueAsset = assets.find((a) => a.assetType === "epilogue");
+		const epilogueAsset = assets.find((a: any) => a.assetType === "epilogue");
 		if (epilogueAsset?.content) {
 			epilogue = epilogueAsset.content;
 		}

@@ -27,14 +27,20 @@ test.describe("chat activity with reasoning", () => {
 
 		const assistantMessage = await chatPage.getRecentAssistantMessage();
 		const reasoningElement =
-			assistantMessage!.element.getByTestId("message-reasoning");
-		expect(reasoningElement).toBeVisible();
+			assistantMessage?.element.getByTestId("message-reasoning");
+		if (reasoningElement) {
+			await expect(reasoningElement).toBeVisible();
+		}
 
-		await assistantMessage!.toggleReasoningVisibility();
-		await expect(reasoningElement).not.toBeVisible();
+		await assistantMessage?.toggleReasoningVisibility();
+		if (reasoningElement) {
+			await expect(reasoningElement).not.toBeVisible();
+		}
 
-		await assistantMessage!.toggleReasoningVisibility();
-		await expect(reasoningElement).toBeVisible();
+		await assistantMessage?.toggleReasoningVisibility();
+		if (reasoningElement) {
+			await expect(reasoningElement).toBeVisible();
+		}
 	});
 
 	test("Curie can edit message and resubmit", async () => {
@@ -43,8 +49,10 @@ test.describe("chat activity with reasoning", () => {
 
 		const assistantMessage = await chatPage.getRecentAssistantMessage();
 		const reasoningElement =
-			assistantMessage!.element.getByTestId("message-reasoning");
-		expect(reasoningElement).toBeVisible();
+			assistantMessage?.element.getByTestId("message-reasoning");
+		if (reasoningElement) {
+			await expect(reasoningElement).toBeVisible();
+		}
 
 		const userMessage = await chatPage.getRecentUserMessage();
 

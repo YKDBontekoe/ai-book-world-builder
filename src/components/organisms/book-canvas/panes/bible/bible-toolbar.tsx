@@ -77,9 +77,8 @@ export function BibleToolbar({
 					/>
 				</div>
 				<TooltipProvider>
-					<div
+					<fieldset
 						className="flex bg-muted/50 rounded-lg p-1 gap-1"
-						role="group"
 						aria-label="View mode"
 					>
 						<Tooltip>
@@ -118,7 +117,7 @@ export function BibleToolbar({
 							</TooltipTrigger>
 							<TooltipContent>Grid View</TooltipContent>
 						</Tooltip>
-					</div>
+					</fieldset>
 				</TooltipProvider>
 			</div>
 

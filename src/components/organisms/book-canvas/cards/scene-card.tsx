@@ -51,9 +51,8 @@ export function SceneCard({ card, title, sequence }: SceneCardProps) {
 	return (
 		<div className="rounded-lg border bg-card shadow-sm transition-all hover:shadow-md">
 			{/* Header */}
-			<div
-				role="button"
-				tabIndex={0}
+			<button
+				type="button"
 				className="flex w-full cursor-pointer items-center justify-between p-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-t-lg text-left"
 				onClick={() => setExpanded(!expanded)}
 				onKeyDown={(e) => {
@@ -78,14 +77,17 @@ export function SceneCard({ card, title, sequence }: SceneCardProps) {
 					variant="ghost"
 					size="icon"
 					className="h-6 w-6 text-muted-foreground"
+					asChild
 				>
-					{expanded ? (
-						<ChevronDownIcon className="h-4 w-4" />
-					) : (
-						<ChevronRightIcon className="h-4 w-4" />
-					)}
+					<span>
+						{expanded ? (
+							<ChevronDownIcon className="h-4 w-4" />
+						) : (
+							<ChevronRightIcon className="h-4 w-4" />
+						)}
+					</span>
 				</Button>
-			</div>
+			</button>
 
 			{/* Expanded Content */}
 			{expanded && (

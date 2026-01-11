@@ -173,7 +173,7 @@ export class MessageRepository extends BaseRepository<
 					and(eq(message.chatId, chatId), gte(message.createdAt, timestamp)),
 				);
 
-			const messageIds = messagesToDelete.map((m) => m.id);
+			const messageIds = messagesToDelete.map((m: { id: string }) => m.id);
 
 			if (messageIds.length > 0) {
 				await db

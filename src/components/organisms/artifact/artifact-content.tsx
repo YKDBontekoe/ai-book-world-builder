@@ -6,7 +6,7 @@ import type { Document } from "@/lib/db/schema"; // Assuming Document type locat
 const PureArtifactContent = ({
 	artifact,
 	document,
-	sendMessage,
+	sendMessage: _sendMessage,
 }: {
 	artifact: UIArtifact;
 	document?: Document;

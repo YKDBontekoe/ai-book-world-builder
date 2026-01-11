@@ -68,6 +68,7 @@ const SidebarProvider = React.forwardRef<
 					_setOpen(openState);
 				}
 
+				// biome-ignore lint/suspicious/noDocumentCookie: Persisting sidebar state to cookie for SSR consistency
 				document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
 			},
 			[setOpenProp, open],
@@ -77,7 +78,7 @@ const SidebarProvider = React.forwardRef<
 			return isMobile
 				? setOpenMobile((currentOpen) => !currentOpen)
 				: setOpen((currentOpen) => !currentOpen);
-		}, [isMobile, setOpen, setOpenMobile]);
+		}, [isMobile, setOpen]);
 
 		React.useEffect(() => {
 			const handleKeyDown = (event: KeyboardEvent) => {
@@ -106,15 +107,7 @@ const SidebarProvider = React.forwardRef<
 				setOpenMobile,
 				toggleSidebar,
 			}),
-			[
-				state,
-				open,
-				setOpen,
-				isMobile,
-				openMobile,
-				setOpenMobile,
-				toggleSidebar,
-			],
+			[state, open, setOpen, isMobile, openMobile, toggleSidebar],
 		);
 
 		return (

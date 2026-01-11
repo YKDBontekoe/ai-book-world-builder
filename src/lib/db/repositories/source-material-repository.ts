@@ -1,6 +1,6 @@
 import "server-only";
 import { and, asc, count, eq, inArray, isNull, lte, or } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { type DbTransaction, db } from "@/lib/db";
 import {
 	type NewSourceMaterialChapter,
 	type NewSourceMaterialChunk,
@@ -164,11 +164,17 @@ export class SourceMaterialRepository extends BaseRepository<
 				.where(eq(sourceMaterial.userId, userId))
 				.orderBy(asc(sourceMaterial.createdAt));
 
-			return results.map((r) => ({
-				...r.material,
-				projectName: r.projectName,
-				processingStatus: r.processing,
-			}));
+			return results.map(
+				(r: {
+					material: SourceMaterial;
+					projectName: string;
+					processing: SourceMaterialProcessing | null;
+				}) => ({
+					...r.material,
+					projectName: r.projectName,
+					processingStatus: r.processing,
+				}),
+			);
 		} catch (error) {
 			console.error(
 				"SourceMaterialRepository.findByUserWithProcessing error:",
@@ -303,7 +309,7 @@ export class SourceMaterialRepository extends BaseRepository<
 		try {
 			const now = new Date();
 
-			return await db.transaction(async (tx) => {
+			return await db.transaction(async (tx: DbTransaction) => {
 				const [existing] = await tx
 					.select()
 					.from(sourceMaterialProcessing)
@@ -406,7 +412,7 @@ export class SourceMaterialRepository extends BaseRepository<
 		try {
 			const now = new Date();
 
-			return await db.transaction(async (tx) => {
+			return await db.transaction(async (tx: DbTransaction) => {
 				await tx
 					.delete(sourceMaterialChunk)
 					.where(eq(sourceMaterialChunk.sourceMaterialId, data.materialId));
@@ -503,7 +509,9 @@ export class SourceMaterialRepository extends BaseRepository<
 				.where(eq(sourceMaterialChunk.sourceMaterialId, sourceMaterialId))
 				.orderBy(asc(sourceMaterialChunk.sequence));
 
-			return allChunks.filter((_, index) => index % sampleRate === 0);
+			return allChunks.filter(
+				(_: unknown, index: number) => index % sampleRate === 0,
+			);
 		} catch (error) {
 			console.error("SourceMaterialRepository.getSampledChunks error:", error);
 			throw new DatabaseError("Failed to load sampled chunks");

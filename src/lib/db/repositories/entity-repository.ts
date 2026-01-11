@@ -166,17 +166,19 @@ export class EntityRepository extends BaseRepository<
 			]);
 
 			// Map details to entities
-			return entities.map((ent) => ({
+			return (entities as any[]).map((ent: any) => ({
 				...ent,
-				attributes: allAttributes
-					.filter((attr) => attr.entityId === ent.id)
-					.sort((a, b) => a.name.localeCompare(b.name)),
-				relationships: allRelationships
+				attributes: (allAttributes as any[])
+					.filter((attr: any) => attr.entityId === ent.id)
+					.sort((a: any, b: any) => a.name.localeCompare(b.name)),
+				relationships: (allRelationships as any[])
 					.filter(
-						(rel) =>
+						(rel: any) =>
 							rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
 					)
-					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+					.sort(
+						(a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime(),
+					),
 			}));
 		} catch (error) {
 			console.error("EntityRepository.findByProjectWithDetails error:", error);
@@ -274,7 +276,7 @@ export class EntityRepository extends BaseRepository<
 		validateDateRange(data.startDate, data.endDate);
 
 		try {
-			return await db.transaction(async (tx) => {
+			return await db.transaction(async (tx: any) => {
 				const updateData: Record<string, unknown> = { updatedAt: new Date() };
 				if (data.name !== undefined) updateData.name = data.name;
 				if (data.kind !== undefined) updateData.kind = data.kind;
@@ -327,7 +329,7 @@ export class EntityRepository extends BaseRepository<
 	 */
 	async delete(id: string): Promise<void> {
 		try {
-			await db.transaction(async (tx) => {
+			await db.transaction(async (tx: any) => {
 				// Delete related attributes first
 				await tx
 					.delete(entityAttribute)

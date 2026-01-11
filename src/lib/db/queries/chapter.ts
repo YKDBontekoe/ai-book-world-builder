@@ -2,6 +2,7 @@ import "server-only";
 import { asc, desc, eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
+	type Chapter,
 	type ChapterDraft,
 	chapter,
 	chapterDraft,
@@ -13,7 +14,7 @@ export async function getChaptersWithContent({
 	projectId,
 }: {
 	projectId: string;
-}): Promise<Array<typeof chapter.$inferSelect & { content: string | null }>> {
+}): Promise<Array<Chapter & { content: string | null }>> {
 	try {
 		const chapters = await db
 			.select()
@@ -25,12 +26,12 @@ export async function getChaptersWithContent({
 			return [];
 		}
 
-		const chapterIds = chapters.map((c) => c.id);
+		const chapterIds = chapters.map((c: Chapter) => c.id);
 
 		// Optimize: Fetch latest versions for all chapters in one query using DISTINCT ON
 		// We use DISTINCT ON (chapterId) to get unique rows per chapter,
 		// and ORDER BY chapterId, version DESC to ensure we get the latest version.
-		const versions = await db
+		const versions = await (db as any) // selectDistinctOn is PG only
 			.selectDistinctOn([chapterVersion.chapterId], {
 				chapterId: chapterVersion.chapterId,
 				content: chapterVersion.content,
@@ -40,9 +41,14 @@ export async function getChaptersWithContent({
 			.orderBy(chapterVersion.chapterId, desc(chapterVersion.version));
 
 		// Create a map for O(1) lookup
-		const versionMap = new Map(versions.map((v) => [v.chapterId, v.content]));
+		const versionMap = new Map(
+			(versions as { chapterId: string; content: string | null }[]).map((v) => [
+				v.chapterId,
+				v.content,
+			]),
+		);
 
-		return chapters.map((ch) => ({
+		return chapters.map((ch: Chapter) => ({
 			...ch,
 			content: versionMap.get(ch.id) ?? null,
 		}));

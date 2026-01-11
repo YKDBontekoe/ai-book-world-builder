@@ -80,7 +80,9 @@ export class GenerationPipeline {
 			const context: ProcessStepContext = {
 				projectData,
 				settings,
-				globalNotes: notes.filter((n) => n.isGlobal).map((n) => n.content),
+				globalNotes: notes
+					.filter((n: { isGlobal: boolean }) => n.isGlobal)
+					.map((n: { content: string }) => n.content),
 				previousChapterSummary: "",
 				chapterContents: new Map(),
 				log,

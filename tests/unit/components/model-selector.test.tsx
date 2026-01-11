@@ -46,6 +46,7 @@ function createDeferred<T>() {
 		reject = rej;
 	});
 
+	// biome-ignore lint/style/noNonNullAssertion: resolve and reject are assigned in the promise constructor
 	return { promise, resolve: resolve!, reject: reject! };
 }
 

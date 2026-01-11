@@ -98,6 +98,7 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 			<CardContent className="grid gap-2 text-sm px-4 pb-2">
 				{operations.map((op, idx) => (
 					<div
+						// biome-ignore lint/suspicious/noArrayIndexKey: Proposal operations are stable
 						key={idx}
 						className="group flex items-start gap-3 rounded-lg border border-border/40 p-3 bg-card hover:bg-muted/30 transition-colors"
 					>
@@ -148,7 +149,7 @@ export function EntityProposal({ projectId, operations }: EntityProposalProps) {
 									"{op.payload.summary}"
 								</div>
 							)}
-							{op.payload?.attributes && op.payload.attributes.length > 0 && (
+							{(op.payload?.attributes?.length ?? 0) > 0 && (
 								<div className="text-[10px] text-muted-foreground pt-1">
 									<span className="font-medium">
 										{op.payload.attributes.length}

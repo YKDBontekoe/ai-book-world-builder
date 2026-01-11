@@ -1,6 +1,5 @@
 import type { InferSelectModel } from "drizzle-orm";
 import {
-	jsonb,
 	pgTable,
 	text,
 	timestamp,

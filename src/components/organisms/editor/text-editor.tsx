@@ -5,6 +5,7 @@ import { redo, undo } from "prosemirror-history";
 import {
 	forwardRef,
 	memo,
+	useCallback,
 	useEffect,
 	useImperativeHandle,
 	useRef,
@@ -54,7 +55,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		},
 		ref,
 	) => {
-		const containerRef = useRef<HTMLDivElement>(null!);
+		const containerRef = useRef<HTMLDivElement>(null);
 
 		// Hoist mention state to pass to useProseMirror init
 		const [tempMentionState, setTempMentionState] =
@@ -64,18 +65,29 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			top: number;
 		} | null>(null);
 
-		const { editorRef, mounted } = useProseMirror({
-			containerRef,
+		const handleMentionStateChange = useCallback(
+			(
+				state: MentionState | null,
+				coords: {
+					left: number;
+					top: number;
+				} | null,
+			) => {
+				setTempMentionState(state);
+				setTempMentionCoords(coords);
+			},
+			[],
+		);
+
+		const { editorRef, mounted: _mounted } = useProseMirror({
+			containerRef: containerRef as React.RefObject<HTMLDivElement>,
 			content,
 			readOnly,
 			onSaveContent,
 			onSelectionChange,
 			typewriterMode,
 			status,
-			onMentionStateChange: (state, coords) => {
-				setTempMentionState(state);
-				setTempMentionCoords(coords);
-			},
+			onMentionStateChange: handleMentionStateChange,
 		});
 
 		// Sync local mention state with hook
@@ -103,9 +115,14 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 		const {
 			activeSuggestion,
 			setActiveSuggestion,
-			projectedSuggestions,
+			projectedSuggestions: _projectedSuggestions,
 			handleApplySuggestion,
-		} = useSuggestions(editorRef.current, suggestions, content, containerRef);
+		} = useSuggestions(
+			editorRef.current,
+			suggestions,
+			content,
+			containerRef as React.RefObject<HTMLDivElement>,
+		);
 
 		useImperativeHandle(ref, () => ({
 			undo: () => {
