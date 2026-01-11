@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import type { Project } from "@/lib/db/schema";
 import { BookCanvasProvider } from "@/components/organisms/book-canvas/book-canvas-context";
 
-// Inline mock data
+// Inline mock data satisfying Project type
 const mockProject: Project = {
 	id: "project-1",
 	userId: "user-1",
@@ -22,7 +22,7 @@ const mockProject: Project = {
 	defaultChapterId: null,
 	lastViewedSceneId: null,
 	folders: [],
-    customMetadata: null,
+    customMetadata: {},
     forkedFromId: null
 };
 
@@ -70,9 +70,8 @@ vi.mock("@/components/atoms/resizable", () => ({
 }));
 
 describe("WriterView Hotkeys", () => {
-	const user = userEvent.setup();
-
 	it("toggles sidebar on Cmd+B", async () => {
+		const user = userEvent.setup();
 		render(
 			<BookCanvasProvider>
 				<WriterView project={mockProject} />

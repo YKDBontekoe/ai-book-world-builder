@@ -3,7 +3,10 @@ import { toast } from "sonner";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import type { ChapterWithScenes } from "@/lib/types";
 
-export function useWriterNavigation() {
+export function useWriterNavigation(): {
+	nextScene: () => void;
+	prevScene: () => void;
+} {
 	const { structure, activeSceneId, setActiveSceneId } = useWriterContext();
 
 	const flattenScenes = useCallback((chapters: ChapterWithScenes[]) => {

@@ -60,7 +60,9 @@ export function PowerDock() {
 
 	const { project, structure, activeChapterId, activeSceneId, sceneContent } =
 		useWriterContext();
-	const { viewMode, toggleCanvas, isCanvasOpen, actions } = useWriterLayoutContext();
+	// Updated: Use context object directly as 'actions' does not exist on the type
+	const layoutContext = useWriterLayoutContext();
+	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
 	const isZen = viewMode === "zen";
 
 	// Hotkeys
@@ -101,12 +103,28 @@ export function PowerDock() {
 		setResult(null);
 	};
 
-	const handleCopyScene = () => {
-		if (sceneContent) {
-			navigator.clipboard.writeText(sceneContent);
-			toast.success("Scene copied to clipboard");
+	const handleCopyScene = async () => {
+		if (sceneContent != null) {
+			try {
+				await navigator.clipboard.writeText(sceneContent);
+				toast.success("Scene copied to clipboard");
+			} catch (error) {
+				console.error("Failed to copy scene:", error);
+				toast.error("Failed to copy scene to clipboard");
+			}
 		}
 	};
+
+	// Register Copy Scene Hotkey (Cmd+Shift+C)
+	useHotkeys(
+		"meta+shift+c, ctrl+shift+c",
+		(e) => {
+			e.preventDefault();
+			handleCopyScene();
+		},
+		{ enableOnFormTags: true, description: "Copy Scene" },
+		[handleCopyScene]
+	);
 
 	const handleExecute = async () => {
 		if (!project?.id || !selectedTool) return;
@@ -318,7 +336,7 @@ export function PowerDock() {
 											icon={Copy}
 											onClick={handleCopyScene}
 											disabled={!activeSceneId}
-											shortcut="⌘C"
+											shortcut="⌘⇧C"
 										/>
 									</ControlGroup>
 

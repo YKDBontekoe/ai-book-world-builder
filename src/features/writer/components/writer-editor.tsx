@@ -100,6 +100,7 @@ export function WriterEditor() {
 			toggleChat();
 		},
 		{ enableOnFormTags: true, description: "Trigger AI Assistant" },
+		[toggleChat]
 	);
 
 	return (

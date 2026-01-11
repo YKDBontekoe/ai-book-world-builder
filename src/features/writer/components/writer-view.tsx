@@ -81,6 +81,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			nextScene();
 		},
 		{ enableOnFormTags: true, description: "Next Scene" },
+		[nextScene]
 	);
 
 	useHotkeys(
@@ -90,6 +91,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			prevScene();
 		},
 		{ enableOnFormTags: true, description: "Previous Scene" },
+		[prevScene]
 	);
 
 	useHotkeys(
@@ -100,6 +102,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			toast.info("Toggled Sidebar", { duration: 1000, icon: "⚡" });
 		},
 		{ enableOnFormTags: true, description: "Toggle Sidebar" },
+		[actions]
 	);
 
 	useHotkeys(
@@ -109,6 +112,7 @@ function WriterViewContent({ props }: { props: WriterViewProps }) {
 			toggleSpotlight();
 		},
 		{ enableOnFormTags: true, description: "Toggle Spotlight" },
+		[toggleSpotlight]
 	);
 
 	useEffect(() => {
