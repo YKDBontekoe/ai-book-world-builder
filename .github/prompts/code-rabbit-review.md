@@ -1,10 +1,17 @@
-CodeRabbit review on PR #$NUMBER (Branch: $BRANCH).
+$PROJECT_CONTEXT
 
-## Comments to Address
+## TASK
+Review and address feedback from CodeRabbit AI.
+
+## FEEDBACK
 $BATCHED_COMMENTS
 
-## Instructions
-1. Fix EVERY comment listed above
-2. Run: pnpm lint && pnpm type-check && pnpm test:unit
-3. Commit with message: 'fix: address CodeRabbit review feedback'
-4. Push directly to branch '$BRANCH'
+## INSTRUCTIONS
+1.  **Analyze**: Review each piece of feedback above.
+2.  **Implement**: Fix the code issues identified.
+    *   If a "Committable suggestion" is provided, verify it is correct before applying.
+    *   If feedback is stylistic, follow the project's **CODING CONVENTIONS**.
+3.  **Verify**:
+    *   Run `pnpm type-check` and `pnpm test:unit`.
+    *   Ensure all tests pass.
+4.  **Commit**: Use a clear commit message like `fix: address coderabbit feedback`.

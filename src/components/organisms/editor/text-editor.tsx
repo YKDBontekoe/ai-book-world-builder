@@ -14,7 +14,7 @@ import {
 import { createPortal } from "react-dom";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { PreviewSuggestion } from "@/components/molecules/preview-suggestion";
-import { EditorBubbleMenu } from "@/components/organisms/writer/tools/editor-bubble-menu";
+import { EditorBubbleMenu } from "@/features/writer/components/tools/editor-bubble-menu";
 import type { Entity, Suggestion } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 import { type MentionState, useMention } from "./hooks/use-mention";

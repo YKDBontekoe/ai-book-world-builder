@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { getAvailableModels } from "@/app/actions/settings";
-import { getProjectStructure } from "@/app/actions/writer";
-import { WriterView } from "@/components/organisms/writer/writer-view";
+import { getProjectStructure } from "@/features/writer/actions";
+import { WriterView } from "@/features/writer/components/writer-view";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { getProjectByIdWithAccess } from "@/lib/db/queries";
 import type { ChapterWithScenes } from "@/lib/types";

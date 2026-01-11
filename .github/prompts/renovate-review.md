@@ -1,14 +1,19 @@
-CodeRabbit review on Renovate PR #$NUMBER (Branch: $BRANCH).
+$PROJECT_CONTEXT
 
-CONTEXT: This is a dependency update.
-1. Priority: Run 'pnpm install' to ensure lockfile is in sync
-2. Check for breaking changes in the updated packages
+## CONTEXT
+You are fixing a Renovate dependency update PR.
 
-## Comments to Address
+## RELEASE NOTES
+$PR_BODY
+
+## TASK
+The build or tests are failing for this update.
 $BATCHED_COMMENTS
 
-## Instructions
-1. Fix EVERY comment listed above
-2. Run: pnpm lint && pnpm type-check && pnpm test:unit
-3. Commit with message: 'fix: address CodeRabbit review feedback'
-4. Push directly to branch '$BRANCH'
+## INSTRUCTIONS
+1.  **Analyze**: Compare the **RELEASE NOTES** with the **ERRORS** to understand breaking changes.
+2.  **Fix**: Update the code to be compatible with the new dependency version.
+    *   Check for API changes, deprecated methods, or type signature changes.
+3.  **Verify**:
+    *   Run `pnpm build` to ensure successful compilation.
+    *   Run `pnpm test:unit` to verify logic.

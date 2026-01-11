@@ -2,7 +2,7 @@ import "server-only";
 
 import { tool } from "ai";
 import { z } from "zod";
-import { updateSceneContent as dbUpdateSceneContent } from "@/app/actions/writer";
+import { updateSceneContent as dbUpdateSceneContent } from "@/features/writer/actions";
 import { verifySceneAccess } from "@/lib/services/ai/utils";
 
 const inputSchema = z.object({

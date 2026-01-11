@@ -51,15 +51,19 @@ jobs:
           echo "total=$SHARD_TOTAL" >> $GITHUB_OUTPUT
           echo "Found $TEST_COUNT tests. Dynamic shard count: $SHARD_TOTAL"
 
-  lint-and-typecheck:
+  static-checks:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
-      - run: pnpm lint
-      - run: pnpm type-check
-
+      
+      - name: Run Static Checks
+        run: |
+          pnpm lint & 
+          pnpm type-check &
+          wait
+  
   unit-tests:
     needs: setup-tests
     if: github.event_name == 'pull_request'
@@ -71,7 +75,15 @@ jobs:
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       - uses: ./.github/actions/setup
-      - run: pnpm test:unit --coverage --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }}
+      - run: pnpm test:unit --coverage --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }} --reporter=default --reporter=json --outputFile=test-results.json
+      
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: test-results-${{ matrix.shard }}
+          path: test-results.json
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
@@ -124,61 +136,28 @@ jobs:
 
   ci-success:
     runs-on: ubuntu-latest
-    needs: [setup-tests, lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
+    needs: [setup-tests, static-checks, unit-tests, build, db-check, check-conflicts]
     if: always() && github.event_name == 'pull_request'
     steps:
       - name: Evaluate Results
+        env:
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
             echo "CI pipeline failed."
+            
+            # Post a summary comment for Jules
+            gh pr comment "$PR_NUMBER" --body "🚨 **CI Failure Detected**
+            
+            One or more checks failed.
+            - **Static Checks**: ${{ needs.static-checks.result }}
+            - **Unit Tests**: ${{ needs.unit-tests.result }}
+            - **Build**: ${{ needs.build.result }}
+            - **DB Check**: ${{ needs.db-check.result }}
+            
+            The **Agentic Supervisor** will automatically analyze these failures and attempt a fix." --repo "${{ github.repository }}"
+            
             exit 1
           fi
           echo "CI pipeline passed!"
-
-  notify-failure:
-    runs-on: ubuntu-latest
-    needs: [setup-tests, lint-and-typecheck, unit-tests, build, db-check, check-conflicts]
-    if: |
-      always() &&
-      github.event_name == 'pull_request' &&
-      (contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled'))
-    permissions:
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
-        with:
-          fetch-depth: 0
-
-      - name: Make Scripts Executable
-        run: chmod +x .github/scripts/*.sh
-
-      - name: Collect failure details
-        id: failures
-        env:
-          RESULTS_JSON: ${{ toJson(needs) }}
-        run: ./.github/scripts/analyze-failures.sh
-
-      - name: Comment on PR about failures
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          AUTHOR: ${{ github.event.pull_request.user.login }}
-        run: |
-          AUTHOR_LOWER=$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')
-          ASSIGNEE_MENTION="@Jules"
-          if [[ "$AUTHOR_LOWER" != "google-labs-jules" && "$AUTHOR_LOWER" != google-labs-jules* && "$AUTHOR_LOWER" != "jules" ]]; then
-            ASSIGNEE_MENTION="@codex"
-          fi
-
-          MESSAGE="🚨 **CI Pipeline Failed**
-
-          The following checks failed on this PR:
-          ${{ steps.failures.outputs.failed_jobs }}
-
-          **Workflow Run:** ${{ steps.failures.outputs.workflow_url }}
-
-          🤖 ${ASSIGNEE_MENTION} will automatically attempt to fix these issues."
-
-          echo "$MESSAGE" > message.txt
-          gh pr comment ${{ github.event.pull_request.number }} --body-file message.txt --repo ${{ github.repository }}

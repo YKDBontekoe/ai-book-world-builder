@@ -1,9 +1,9 @@
 import { BookOpen, FileText, MessageSquare, Target, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
-import { useWriterContext } from "@/components/organisms/writer/writer-context";
-import { useWriterControl } from "@/components/organisms/writer/writer-control-context";
-import { useWriterLayoutContext } from "@/components/organisms/writer/writer-layout-context";
+import { useWriterContext } from "@/features/writer/components/writer-context";
+import { useWriterControl } from "@/features/writer/components/writer-control-context";
+import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 
 export type Category = "all" | "actions" | "entities" | "scenes";

@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getProjectIssuesAction } from "../../../../../../src/app/actions/analysis";
-import { getProjectStructure } from "../../../../../../src/app/actions/writer";
+import { getProjectStructure } from "../../../../../../src/features/writer/actions/structure";
 import { useBookCanvas } from "../../../../../../src/components/organisms/book-canvas/book-canvas-context";
 import { GraphPane } from "../../../../../../src/components/organisms/book-canvas/panes/graph-pane";
 
@@ -14,7 +14,7 @@ vi.mock(
 	}),
 );
 
-vi.mock("../../../../../../src/app/actions/writer", () => ({
+vi.mock("../../../../../../src/features/writer/actions/structure", () => ({
 	getProjectStructure: vi.fn(),
 }));
 

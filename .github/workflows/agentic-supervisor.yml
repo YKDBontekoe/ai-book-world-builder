@@ -54,14 +54,11 @@ jobs:
         with:
           fetch-depth: 1
 
-      - name: Make Scripts Executable
-        run: chmod +x .github/scripts/*.sh
-
       - name: Analyze Event Context
         id: analyze
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-        run: ./.github/scripts/agentic-supervisor.sh
+        run: node .github/scripts/agentic-supervisor.js
 
   # ==========================================================================
   # 2a. JULES API INVOKE: For humans and first-time Renovate PRs
@@ -123,12 +120,8 @@ jobs:
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
-          AUTHOR_LOWER=$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')
           ASSIGNEE_MENTION="@jules"
-          if [[ "$AUTHOR_LOWER" != "google-labs-jules" && "$AUTHOR_LOWER" != google-labs-jules* && "$AUTHOR_LOWER" != "jules" ]]; then
-            ASSIGNEE_MENTION="@codex"
-          fi
-
+          
           gh pr comment "$PR_NUMBER" --body "🔄 **Routing via @mention**
           
           Using ${ASSIGNEE_MENTION} mention (cost-optimized) instead of new API session.
@@ -143,11 +136,7 @@ jobs:
           BATCHED_COMMENTS: ${{ needs.supervisor.outputs.batched_comments }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
-          AUTHOR_LOWER=$(echo "$AUTHOR" | tr '[:upper:]' '[:lower:]')
           ASSIGNEE_MENTION="@jules"
-          if [[ "$AUTHOR_LOWER" != "google-labs-jules" && "$AUTHOR_LOWER" != google-labs-jules* && "$AUTHOR_LOWER" != "jules" ]]; then
-            ASSIGNEE_MENTION="@codex"
-          fi
 
           if [[ -n "$BATCHED_COMMENTS" ]]; then
             echo "${ASSIGNEE_MENTION} Please address the following feedback:" > /tmp/comment.md
@@ -201,34 +190,6 @@ jobs:
           CI passed for bot PR (Author: \`$AUTHOR\`). Triggering full code review.
           
           @coderabbitai review" --repo "${{ github.repository }}"
-
-  # ==========================================================================
-  # 4. TRIAGE: Auto-Label Issues
-  # ==========================================================================
-  auto-triage:
-    if: github.event_name == 'issues' && github.event.action == 'opened'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Label & Welcome
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          ISSUE_NUMBER: ${{ github.event.issue.number }}
-          TITLE: ${{ github.event.issue.title }}
-          BODY: ${{ github.event.issue.body }}
-        run: |
-          LABELS=""
-          TEXT=$(echo "$TITLE $BODY" | tr '[:upper:]' '[:lower:]')
-
-          echo "$TEXT" | grep -qE "bug|error|crash" && LABELS="$LABELS,bug"
-          echo "$TEXT" | grep -qE "feature|add|request" && LABELS="$LABELS,enhancement"
-          echo "$TEXT" | grep -qE "doc|readme" && LABELS="$LABELS,documentation"
-          echo "$TEXT" | grep -qE "how to|question" && LABELS="$LABELS,question"
-
-          LABELS=$(echo "$LABELS" | sed 's/^,//')
-          if [[ -n "$LABELS" ]]; then
-            gh issue edit $ISSUE_NUMBER --add-label "$LABELS" --repo "${{ github.repository }}"
-            gh issue comment $ISSUE_NUMBER --body "👋 I've added labels: \`$LABELS\`. Add \`jules\` label or mention \`@jules\` to have me solve this!" --repo "${{ github.repository }}"
-          fi
 
   # ==========================================================================
   # 5. ONBOARDING: Good First Issue
