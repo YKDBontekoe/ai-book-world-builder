@@ -20,7 +20,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import "@xyflow/react/dist/style.css";
 
 import { getProjectIssuesAction } from "@/app/actions/analysis";
-import { getProjectStructure } from "@/app/actions/writer";
+import { getProjectStructure } from "@/features/writer/actions";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";

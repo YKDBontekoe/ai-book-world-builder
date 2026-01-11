@@ -1,4 +1,4 @@
-import { WriterSkeleton } from "@/components/organisms/writer/writer-skeleton";
+import { WriterSkeleton } from "@/features/writer/components/writer-skeleton";
 
 export default function ProjectLoading() {
 	return (

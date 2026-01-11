@@ -21,7 +21,7 @@ import type {
 	SerializedChapterWithScenes,
 	SerializedScene,
 } from "@/app/actions/scene-data";
-import { updateSceneStatus } from "@/app/actions/writer/scene-status";
+import { updateSceneStatus } from "@/features/writer/actions/scene-status";
 import { Badge } from "@/components/atoms/badge";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { QUERY_KEYS } from "@/lib/query-options";

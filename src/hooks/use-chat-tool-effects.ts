@@ -6,7 +6,7 @@ import {
 	type CanvasPane,
 	useBookCanvasActions,
 } from "@/components/organisms/book-canvas/book-canvas-context";
-import { WriterContext } from "@/components/organisms/writer/writer-context";
+import { WriterContext } from "@/features/writer/components/writer-context";
 import { QUERY_KEYS } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
 

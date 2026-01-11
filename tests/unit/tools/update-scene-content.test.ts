@@ -11,7 +11,7 @@ vi.mock("@/lib/services/ai/utils", () => ({
 	verifySceneAccess: mocks.verifySceneAccess,
 }));
 
-vi.mock("@/app/actions/writer", () => ({
+vi.mock("@/features/writer/actions", () => ({
 	updateSceneContent: mocks.updateSceneContent,
 }));
 
