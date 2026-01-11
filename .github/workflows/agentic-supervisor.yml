@@ -37,6 +37,7 @@ jobs:
   # ==========================================================================
   supervisor:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       is_pr: ${{ steps.analyze.outputs.is_pr }}
       number: ${{ steps.analyze.outputs.number }}
@@ -47,6 +48,7 @@ jobs:
       jules_prompt: ${{ steps.analyze.outputs.jules_prompt }}
       batched_comments: ${{ steps.analyze.outputs.batched_comments }}
       should_trigger_coderabbit: ${{ steps.analyze.outputs.should_trigger_coderabbit }}
+      assignee_mention: ${{ steps.analyze.outputs.assignee_mention }}
 
     steps:
       - name: Checkout
@@ -67,6 +69,7 @@ jobs:
     needs: supervisor
     if: needs.supervisor.outputs.invocation_method == 'api'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Acknowledge (Emoji)
         if: github.event_name == 'issue_comment'
@@ -113,31 +116,30 @@ jobs:
     needs: supervisor
     if: needs.supervisor.outputs.invocation_method == 'mention'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
-      - name: Post status - Using @jules mention
+      - name: Post status - Using ${{ needs.supervisor.outputs.assignee_mention }}
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
+          ASSIGNEE_MENTION: ${{ needs.supervisor.outputs.assignee_mention }}
         run: |
-          ASSIGNEE_MENTION="@jules"
+          gh pr comment "$PR_NUMBER" --body "🔄 **Routing via Trigger**
           
-          gh pr comment "$PR_NUMBER" --body "🔄 **Routing via @mention**
-          
-          Using ${ASSIGNEE_MENTION} mention (cost-optimized) instead of new API session.
+          Using ${ASSIGNEE_MENTION} (cost-optimized) instead of new API session.
           
           **PR Author:** \`$AUTHOR\`
-          **Method:** GitHub Integration (${ASSIGNEE_MENTION} mention)" --repo "${{ github.repository }}"
+          **Method:** GitHub Integration (${ASSIGNEE_MENTION})" --repo "${{ github.repository }}"
 
-      - name: Post @jules mention with feedback
+      - name: Post ${{ needs.supervisor.outputs.assignee_mention }} with feedback
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           BATCHED_COMMENTS: ${{ needs.supervisor.outputs.batched_comments }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
+          ASSIGNEE_MENTION: ${{ needs.supervisor.outputs.assignee_mention }}
         run: |
-          ASSIGNEE_MENTION="@jules"
-
           if [[ -n "$BATCHED_COMMENTS" ]]; then
             echo "${ASSIGNEE_MENTION} Please address the following feedback:" > /tmp/comment.md
             echo "" >> /tmp/comment.md

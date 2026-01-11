@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
- * AGENTIC SUPERVISOR (v4.3)
+ * AGENTIC SUPERVISOR (v4.5)
  * 
  * Centralized orchestration for AI agents.
  * Features:
@@ -12,14 +12,46 @@ const path = require('path');
  * - Author-based Invocation Strategy (Hybrid)
  * - Smart Auto-Triage & Labeling
  * - Infinite Loop Protection
+ * - Input Sanitization for Shell Commands
+ * - Enhanced Error Logging
  */
+
+// =============================================================================
+// CONFIGURATION
+// =============================================================================
+
+const CONFIG = {
+  LOOP_THRESHOLD: 3,
+  LOG_TRUNCATE_LENGTH: 2000,
+  CODERABBIT_COMMENT_LIMIT: 10,
+  BOT_USERS: ['google-labs-jules', 'jules', 'renovate[bot]', 'coderabbitai', 'github-actions[bot]']
+};
 
 // =============================================================================
 // HELPERS
 // =============================================================================
 
-function log(msg) {
-  console.log(`[Supervisor] ${msg}`);
+function log(msg, data = null) {
+  const timestamp = new Date().toISOString();
+  if (data) {
+    console.log(`[Supervisor ${timestamp}] ${msg}`, JSON.stringify(data));
+  } else {
+    console.log(`[Supervisor ${timestamp}] ${msg}`);
+  }
+}
+
+function logError(msg, error) {
+  const timestamp = new Date().toISOString();
+  console.error(`[Supervisor ERROR ${timestamp}] ${msg}:`, error.message || error);
+}
+
+/**
+ * Sanitize a string for safe use in shell commands.
+ * Prevents command injection attacks.
+ */
+function sanitizeShellArg(arg) {
+  if (!arg) return '';
+  return String(arg).replace(/[`$\\!"']/g, '\\$&');
 }
 
 function setOutput(key, value) {
@@ -37,10 +69,15 @@ function setOutput(key, value) {
   }
 }
 
-function exec(command) {
+function exec(command, options = {}) {
+  const { silent = true, throwOnError = false } = options;
   try {
     return execSync(command, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim();
   } catch (e) {
+    if (!silent) {
+      logError(`Command failed: ${command.substring(0, 100)}...`, e);
+    }
+    if (throwOnError) throw e;
     return '';
   }
 }
@@ -60,12 +97,14 @@ function getPrompt(filename, replacements = {}) {
 
 async function addLabels(number, labels) {
   if (!labels || labels.length === 0) return;
-  const labelStr = labels.join(',');
+  // Sanitize labels to prevent command injection
+  const sanitizedLabels = labels.map(l => sanitizeShellArg(l));
+  const labelStr = sanitizedLabels.join(',');
   log(`Adding labels: ${labelStr}`);
   try {
     exec(`gh issue edit ${number} --add-label "${labelStr}"`);
   } catch (e) {
-    log(`Failed to add labels: ${e.message}`);
+    logError(`Failed to add labels to #${number}`, e);
   }
 }
 
@@ -74,6 +113,8 @@ async function addLabels(number, labels) {
 function getCodeRabbitComments(repo, number) {
   try {
     const commentsJSON = exec(`gh api "/repos/${repo}/pulls/${number}/comments"`);
+    if (!commentsJSON) return '';
+    
     const comments = JSON.parse(commentsJSON);
     const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
     
@@ -82,55 +123,100 @@ function getCodeRabbitComments(repo, number) {
     const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'} \n${c.body}`).join('\n\n---\n\n');
     
     let summary = '';
-    if (rabbitComments.length > 10) {
-      summary = "### 🐰 CodeRabbit Review (Summary)\n\n(Showing top 10 of " + rabbitComments.length + " comments)\n" + 
-             formatComments(rabbitComments.slice(0, 10)) + 
-             "\n\n...(and " + (rabbitComments.length - 10) + " more)";
+    if (rabbitComments.length > CONFIG.CODERABBIT_COMMENT_LIMIT) {
+      summary = "### 🐰 CodeRabbit Review (Summary)\n\n(Showing top " + CONFIG.CODERABBIT_COMMENT_LIMIT + " of " + rabbitComments.length + " comments)\n" + 
+             formatComments(rabbitComments.slice(0, CONFIG.CODERABBIT_COMMENT_LIMIT)) + 
+             "\n\n...(and " + (rabbitComments.length - CONFIG.CODERABBIT_COMMENT_LIMIT) + " more)";
     } else {
       summary = "### 🐰 CodeRabbit Review\n\n" + formatComments(rabbitComments);
     }
     return summary;
   } catch (e) {
-    log(`Failed to fetch CodeRabbit comments: ${e.message}`);
+    logError('Failed to fetch CodeRabbit comments', e);
+    return '';
+  }
+}
+
+/**
+ * Get Codecov status for a specific commit.
+ * @param {string} repo - Repository in owner/name format
+ * @param {string} sha - Commit SHA
+ * @returns {string} Formatted Codecov status or empty string
+ */
+function getCodecovStatus(repo, sha) {
+  try {
+    const statusesJSON = exec(`gh api "/repos/${repo}/commits/${sha}/statuses" --per-page 100`);
+    if (!statusesJSON) return '';
+    
+    const statuses = JSON.parse(statusesJSON);
+    const codecov = statuses.find(s => s.context && s.context.toLowerCase().includes('codecov'));
+    
+    if (codecov && (codecov.state === 'failure' || codecov.description?.toLowerCase().includes('coverage'))) {
+      const icon = codecov.state === 'success' ? '✅' : '❌';
+      return `\n\n**Codecov Report**\n${icon} ${codecov.description || 'No description'}\n[View Details](${codecov.target_url})`;
+    }
+  } catch (e) {
+    logError('Failed to fetch Codecov status', e);
+  }
+  return '';
+}
+
+/**
+ * Format failed jobs from a workflow run.
+ * @param {Object} jobs - Jobs object from GitHub API
+ * @returns {string} Formatted list of failed jobs or empty string
+ */
+function formatFailedJobs(jobs) {
+  if (!jobs?.jobs) return '';
+  
+  return jobs.jobs
+    .filter(j => j.conclusion === 'failure')
+    .map(j => {
+      const failedSteps = j.steps?.filter(s => s.conclusion === 'failure').map(s => s.name).join(', ') || 'Unknown step';
+      return `- **${j.name}**: ${failedSteps}`;
+    }).join('\n');
+}
+
+/**
+ * Get truncated failure logs for a workflow run.
+ * @param {string} repo - Repository in owner/name format
+ * @param {number} runId - Workflow run ID
+ * @returns {string} Truncated log output
+ */
+function getFailureLogs(repo, runId) {
+  try {
+    let logOutput = exec(`gh run view ${runId} --repo ${repo} --log-failed`);
+    if (logOutput.length > CONFIG.LOG_TRUNCATE_LENGTH) {
+      logOutput = logOutput.slice(0, CONFIG.LOG_TRUNCATE_LENGTH) + '\n... (truncated)';
+    }
+    return logOutput;
+  } catch (e) {
     return '';
   }
 }
 
 function getCIFailures(repo, sha) {
   try {
-    const runsData = JSON.parse(exec(`gh api "/repos/${repo}/actions/runs?head_sha=${sha}&status=completed&conclusion=failure" --jq '.workflow_runs[0]'`));
+    const runsJSON = exec(`gh api "/repos/${repo}/actions/runs?head_sha=${sha}&status=completed&conclusion=failure" --jq '.workflow_runs[0]'`);
+    if (!runsJSON) return '';
+    
+    const runsData = JSON.parse(runsJSON);
     if (!runsData || !runsData.id) return '';
     
     const runId = runsData.id;
-    const jobs = JSON.parse(exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`));
-    const failed = jobs.jobs
-      .filter(j => j.conclusion === 'failure')
-      .map(j => {
-         const failedSteps = j.steps.filter(s => s.conclusion === 'failure').map(s => s.name).join(', ');
-         return `- **${j.name}**: ${failedSteps}`;
-      }).join('\n');
-      
+    const jobsJSON = exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`);
+    if (!jobsJSON) return '';
+    
+    const jobs = JSON.parse(jobsJSON);
+    const failed = formatFailedJobs(jobs);
     if (!failed) return '';
 
-    let logOutput = '';
-    try {
-        logOutput = exec(`gh run view ${runId} --repo ${repo} --log-failed`);
-        if (logOutput.length > 2000) logOutput = logOutput.slice(0, 2000) + '\n... (truncated)';
-    } catch (e) {}
-    
-    let codecovSection = '';
-    try {
-       const statuses = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/statuses" --per-page 100`));
-       const codecov = statuses.find(s => s.context && s.context.toLowerCase().includes('codecov'));
-       if (codecov && (codecov.state === 'failure' || codecov.description.toLowerCase().includes('coverage'))) {
-          const icon = codecov.state === 'success' ? '✅' : '❌';
-          codecovSection = `\n\n**Codecov Report**\n${icon} ${codecov.description}\n[View Details](${codecov.target_url})`;
-       }
-    } catch (e) {}
+    const logOutput = getFailureLogs(repo, runId);
+    const codecovSection = getCodecovStatus(repo, sha);
 
-    return `### 🚨 CI Failure (Run #${runId})\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n\`\`\`text\n${logOutput}\n\`\`\`${codecovSection}`;
+    return `### 🚨 CI Failure (Run #${runId})\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n\n\`\`\`text\n${logOutput}\n\`\`\`${codecovSection}`;
   } catch (e) {
-    log(`Failed to fetch CI failures: ${e.message}`);
+    logError('Failed to fetch CI failures', e);
     return '';
   }
 }
@@ -138,9 +224,6 @@ function getCIFailures(repo, sha) {
 function areChecksInProgress(repo, sha, namePattern) {
   try {
     const runs = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/check-runs" --jq '.check_runs'`));
-    // Filter for checks matching the pattern AND (in_progress or queued)
-    // Exclude self if possible? (If we are running this script inside a check run...)
-    // But this script runs in a workflow job. Check runs are usually per-job or per-app.
     const running = runs.filter(c => 
       c.name.toLowerCase().includes(namePattern.toLowerCase()) && 
       (c.status === 'in_progress' || c.status === 'queued')
@@ -148,8 +231,6 @@ function areChecksInProgress(repo, sha, namePattern) {
     
     return running.length > 0;
   } catch (e) {
-    // If API fails, assume NOT in progress to avoid deadlock, unless it's critical?
-    // Safer to assume false so we don't hang forever.
     return false;
   }
 }
@@ -170,9 +251,9 @@ async function main() {
   
   log(`Analyzing event: ${eventName} (${event.action || 'n/a'})`);
 
-  // --------------------------------------------------------------------------- 
-  // 1. Context Analysis
   // ---------------------------------------------------------------------------
+  // 1. Context Analysis
+  // --------------------------------------------------------------------------- 
   
   let context = {
     isPr: false,
@@ -256,35 +337,20 @@ async function main() {
         log(`Linked workflow_run to PR #${context.number} (Draft: ${context.isDraft})`);
 
         if (conclusion === 'failure') {
-             const jobs = JSON.parse(exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`));
-             const failed = jobs.jobs
-              .filter(j => j.conclusion === 'failure')
-              .map(j => {
-                const failedSteps = j.steps.filter(s => s.conclusion === 'failure').map(s => s.name).join(', ');
-                return `- **${j.name}**: ${failedSteps}`;
-              }).join('\n');
+          const jobsJSON = exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`);
+          if (jobsJSON) {
+            const jobs = JSON.parse(jobsJSON);
+            const failed = formatFailedJobs(jobs);
             
             if (failed) {
               const link = `${process.env.GITHUB_SERVER_URL}/${repo}/actions/runs/${runId}`;
-              let logOutput = '';
-              try {
-                  logOutput = exec(`gh run view ${runId} --repo ${repo} --log-failed`);
-                  if (logOutput.length > 2000) logOutput = logOutput.slice(0, 2000) + '\n... (truncated)';
-              } catch (e) {}
-              
-              let codecovSection = '';
-              try {
-                const statuses = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/statuses" --per-page 100`));
-                const codecov = statuses.find(s => s.context && s.context.toLowerCase().includes('codecov'));
-                if (codecov && (codecov.state === 'failure' || codecov.description.toLowerCase().includes('coverage'))) {
-                   const icon = codecov.state === 'success' ? '✅' : '❌';
-                   codecovSection = `\n\n**Codecov Report**\n${icon} ${codecov.description}\n[View Details](${codecov.target_url})`;
-                }
-              } catch (e) {}
+              const logOutput = getFailureLogs(repo, runId);
+              const codecovSection = getCodecovStatus(repo, sha);
               
               const codeBlock = "```";
               context.failedJobs = `### 🚨 CI Failure\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n${codeBlock}text\n${logOutput}\n${codeBlock}${codecovSection}\n\n[View Full Log](${link})`;
             }
+          }
         }
       }
     } catch (e) {}
@@ -299,7 +365,7 @@ async function main() {
 
   log(`Context: PR=${context.isPr}, #${context.number}, Author=${context.author}`);
 
-  // --------------------------------------------------------------------------- 
+  // ---------------------------------------------------------------------------
   // 2. Prepare Context Injection
   // ---------------------------------------------------------------------------
   let projectContext = '';
@@ -328,7 +394,7 @@ ${conventions}
     });
   };
 
-  // --------------------------------------------------------------------------- 
+  // ---------------------------------------------------------------------------
   // 3. Smart Triage
   // ---------------------------------------------------------------------------
   
@@ -352,7 +418,7 @@ ${conventions}
     if (newLabels.length > 0) await addLabels(context.number, newLabels);
   }
 
-  // --------------------------------------------------------------------------- 
+  // ---------------------------------------------------------------------------
   // 4. Decision Logic
   // ---------------------------------------------------------------------------
   
@@ -367,7 +433,7 @@ ${conventions}
   const authorLower = (context.author || '').toLowerCase();
   
   function getStandardMethod() {
-    if (authorLower === 'google-labs-jules' || authorLower === 'jules' || authorLower.startsWith('google-labs-jules')) {
+    if (authorLower === 'google-labs-jules' || authorLower === 'jules' || authorLower.includes('google-labs-jules')) {
       return { method: 'mention', reason: 'Jules PR' };
     }
     if (authorLower === 'renovate[bot]') {
@@ -393,7 +459,8 @@ ${conventions}
     const body = context.commentBody.trim();
     const commenter = context.commentAuthor;
     
-    if (commenter !== 'github-actions[bot]' && commenter !== 'google-labs-jules' && body.includes('@jules')) {
+    if (commenter !== 'github-actions[bot]' && commenter !== 'google-labs-jules' && 
+        (body.includes('@jules') || body.includes('@google-labs-jules') || body.includes('@src/lib/jules-client.ts'))) {
       const standard = getStandardMethod();
       decision.reason = 'Manual interaction';
       
@@ -454,9 +521,10 @@ ${conventions}
           // Human PR: Offer help (but don't auto-fix yet)
            try {
               const comments = exec(`gh pr view ${context.number} --json comments --jq '.comments[].body'`);
-              if (!comments.includes('Reply with: @jules fix')) {
+              const mention = (authorLower.includes('jules') || authorLower.includes('google-labs')) ? '@src/lib/jules-client.ts' : '@jules';
+              if (!comments.includes(`Reply with: ${mention} fix`)) {
                   exec(`gh pr comment ${context.number} --body "❌ **CI Checks Failed**\n\nI can attempt to fix these issues automatically.\n\nReply with: 
-@jules fix"`);
+${mention} fix"`);
               }
           } catch (e) {}
           decision.method = 'none';
@@ -520,12 +588,15 @@ ${conventions}
         decision.method = 'none';
         decision.reason = 'Draft PR (Human review ignored)';
     } else {
-        decision.method = 'api';
-        decision.prompt = getContextualPrompt('human-review.md', {
-        REVIEW_AUTHOR: context.reviewAuthor,
-        REVIEW_BODY: context.reviewBody
-        });
+        const standard = getStandardMethod();
+        decision.method = standard.method;
         decision.reason = 'Human requested changes';
+        if (decision.method === 'api') {
+            decision.prompt = getContextualPrompt('human-review.md', {
+                REVIEW_AUTHOR: context.reviewAuthor,
+                REVIEW_BODY: context.reviewBody
+            });
+        }
     }
   }
 
@@ -536,9 +607,11 @@ ${conventions}
      }
   }
 
-  // --------------------------------------------------------------------------- 
+  // ---------------------------------------------------------------------------
   // 5. Output
   // ---------------------------------------------------------------------------
+
+  const assigneeMention = (authorLower.includes('jules') || authorLower.includes('google-labs')) ? '@src/lib/jules-client.ts' : '@jules';
 
   log(`Final Decision: ${decision.method} (${decision.reason})`);
 
@@ -551,9 +624,10 @@ ${conventions}
   setOutput('jules_prompt', decision.prompt);
   setOutput('batched_comments', decision.batchedComments);
   setOutput('should_trigger_coderabbit', decision.shouldTriggerCodeRabbit);
+  setOutput('assignee_mention', assigneeMention);
 
   if (process.env.GITHUB_STEP_SUMMARY) {
-    const summary = `### 🤖 Jules Supervisor (v4.3)    
+    const summary = `### 🤖 Jules Supervisor (v4.4)
     
 | Metric | Value |
 | :--- | :--- |
