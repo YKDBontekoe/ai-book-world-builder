@@ -3,6 +3,7 @@
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
 	Clock,
+	Copy,
 	History as HistoryIcon,
 	Home,
 	MessageSquare,
@@ -57,9 +58,11 @@ export function PowerDock() {
 		isSpotlightOpen,
 	} = useWriterControl();
 
-	const { project, structure, activeChapterId, activeSceneId } =
+	const { project, structure, activeChapterId, activeSceneId, sceneContent } =
 		useWriterContext();
-	const { viewMode, toggleCanvas, isCanvasOpen } = useWriterLayoutContext();
+	// Updated: Use context object directly as 'actions' does not exist on the type
+	const layoutContext = useWriterLayoutContext();
+	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
 	const isZen = viewMode === "zen";
 
 	// Hotkeys
@@ -99,6 +102,29 @@ export function PowerDock() {
 		setMode("input");
 		setResult(null);
 	};
+
+	const handleCopyScene = async () => {
+		if (sceneContent != null) {
+			try {
+				await navigator.clipboard.writeText(sceneContent);
+				toast.success("Scene copied to clipboard");
+			} catch (error) {
+				console.error("Failed to copy scene:", error);
+				toast.error("Failed to copy scene to clipboard");
+			}
+		}
+	};
+
+	// Register Copy Scene Hotkey (Cmd+Shift+C)
+	useHotkeys(
+		"meta+shift+c, ctrl+shift+c",
+		(e) => {
+			e.preventDefault();
+			handleCopyScene();
+		},
+		{ enableOnFormTags: true, description: "Copy Scene" },
+		[handleCopyScene]
+	);
 
 	const handleExecute = async () => {
 		if (!project?.id || !selectedTool) return;
@@ -306,11 +332,26 @@ export function PowerDock() {
 
 									<ControlGroup>
 										<ControlButton
+											label="Copy Scene"
+											icon={Copy}
+											onClick={handleCopyScene}
+											disabled={!activeSceneId}
+											shortcut="⌘⇧C"
+										/>
+									</ControlGroup>
+
+									<Separator
+										orientation="vertical"
+										className="h-6 mx-1 bg-white/10"
+									/>
+
+									<ControlGroup>
+										<ControlButton
 											label="Spotlight"
 											icon={Search}
 											onClick={toggleSpotlight}
 											active={isSpotlightOpen}
-											shortcut="⌘K"
+											shortcut="⌘/"
 										/>
 										<ControlButton
 											label="AI Tools"
@@ -337,7 +378,7 @@ export function PowerDock() {
 											icon={MessageSquare}
 											onClick={toggleChat}
 											active={isChatOpen}
-											shortcut="⌘J"
+											shortcut="⌘Enter"
 										/>
 										<ControlButton
 											label={isCanvasOpen ? "Close Canvas" : "Open Canvas"}

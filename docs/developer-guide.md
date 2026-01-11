@@ -85,7 +85,7 @@ The Command Palette is driven by the `useSpotlightItems` hook (`hooks/use-spotli
 -   **Filtering**: It performs client-side fuzzy filtering on the aggregated list.
 
 ### 3. Smart Sync (Structure Editor)
-The `saveProjectStructure` Server Action (`app/actions/writer/structure.ts`) implements a **Smart Sync** algorithm to allow plain-text editing of the database structure:
+The `saveProjectStructure` Server Action (`features/writer/actions/structure.ts`) implements a **Smart Sync** algorithm to allow plain-text editing of the database structure:
 1.  **Parse**: Converts the text input into a hierarchical tree (Chapters -> Scenes).
 2.  **Normalize**: Converts titles to lowercase and removes accents for fuzzy matching.
 3.  **Match**: Queries existing DB records and attempts to match them by title.
@@ -125,14 +125,7 @@ Long-running AI tasks (like "Generate All Scenes") are handled in `WritingServic
 2.  **Concurrency Limit**: Runs strictly 3 generations in parallel to balance speed vs. rate limits.
 3.  **Chunking**: Breaks the task into chunks (e.g., `tasks.slice(i, i + CONCURRENCY_LIMIT)`), awaiting each chunk before proceeding.
 
-### 7. Project Analytics
-Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services/project-analytics.ts`).
-
--   **Readiness Score**: A weighted metric (0-100) indicating how "ready" a project is for generation.
-    -   Formula: `min(Chars*20, 100)*0.3 + min(Locs*25, 100)*0.2 + (HasOutline?100:0)*0.3 + min(Chaps*10, 100)*0.2`
--   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
-
-### 8. Structured Context (Context Builder)
+### 7. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/ai/context-builder.ts`:
 
 -   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene to ensure flow.
