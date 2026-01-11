@@ -82,6 +82,9 @@ export function ChatHistoryList({
 	const queryClient = useQueryClient();
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+	const [groupedChats, setGroupedChats] = useState<ReturnType<
+		typeof groupChatsByDate
+	> | null>(null);
 
 	const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
 		useInfiniteQuery({
@@ -157,7 +160,16 @@ export function ChatHistoryList({
 		}
 	};
 
-	if (isLoading) {
+	const chatsFromHistory = data?.pages.flatMap((page) => page.chats) || [];
+
+	// Fix hydration mismatch by grouping on client only
+	useEffect(() => {
+		if (!isLoading) {
+			setGroupedChats(groupChatsByDate(chatsFromHistory));
+		}
+	}, [chatsFromHistory, isLoading]);
+
+	if (isLoading || !groupedChats) {
 		return (
 			<div className="flex flex-col gap-2 p-4">
 				{[...Array(5)].map((_, i) => (
@@ -180,9 +192,6 @@ export function ChatHistoryList({
 			</div>
 		);
 	}
-
-	const chatsFromHistory = data?.pages.flatMap((page) => page.chats) || [];
-	const groupedChats = groupChatsByDate(chatsFromHistory);
 
 	return (
 		<div className="flex h-full flex-col">

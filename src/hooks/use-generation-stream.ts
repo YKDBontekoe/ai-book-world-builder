@@ -130,17 +130,16 @@ export function useGenerationStream({
 			const cleanup = connect();
 			return cleanup;
 		}
-	}, [generationId, connect]);
-
-	// Cleanup on unmount
-	useEffect(() => {
+		// Cleanup when generationId changes or unmount (if not handled by connect's return)
+		// but connect return value ALREADY handles this.
+		// However, to be absolutely safe and clear, we just rely on the first effect.
 		return () => {
 			if (eventSourceRef.current) {
 				eventSourceRef.current.close();
 				eventSourceRef.current = null;
 			}
 		};
-	}, []);
+	}, [generationId, connect]);
 
 	return {
 		isConnected,

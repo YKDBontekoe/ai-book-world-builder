@@ -44,9 +44,9 @@ export function useChatUrl({
 			setHasAppendedQuery(true);
 			const currentUrl = new URL(window.location.href);
 			currentUrl.searchParams.delete("query");
-			window.history.replaceState({}, "", `/chat/${id}${currentUrl.search}`);
+			router.replace(`/chat/${id}${currentUrl.search}`);
 		}
-	}, [query, sendMessage, hasAppendedQuery, id]);
+	}, [query, sendMessage, hasAppendedQuery, id, router]);
 
 	// Update URL for new chats
 	useEffect(() => {
@@ -60,7 +60,7 @@ export function useChatUrl({
 			!status.includes("streaming") &&
 			messages.some((m) => m.role !== "user")
 		) {
-			window.history.replaceState({}, "", `/chat/${id}`);
+			router.replace(`/chat/${id}`);
 		}
 	}, [id, router, messages, status]);
 }

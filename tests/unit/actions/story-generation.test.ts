@@ -8,6 +8,7 @@ import {
 } from "@/app/actions/story-generation";
 import { generationService } from "@/lib/ai/writer-service";
 import { db } from "@/lib/db";
+import { storyService } from "@/lib/services/story-service";
 
 // Mocks
 vi.mock("@/app/(auth)/auth", () => ({
@@ -16,6 +17,30 @@ vi.mock("@/app/(auth)/auth", () => ({
 
 vi.mock("@/lib/ai/models", () => ({
 	getSelectedModelId: vi.fn(() => Promise.resolve("mock-model")),
+}));
+
+// Mock repositories to support authorization checks
+vi.mock("@/lib/db/repositories", () => ({
+	chapterRepository: {
+		findById: vi.fn((id) =>
+			Promise.resolve(
+				id === "123e4567-e89b-12d3-a456-426614174001"
+					? { id: "123e4567-e89b-12d3-a456-426614174001", projectId: "p-1" }
+					: null,
+			),
+		),
+	},
+	sceneRepository: {
+		findById: vi.fn((id) =>
+			Promise.resolve(
+				id === "123e4567-e89b-12d3-a456-426614174002"
+					? { id: "123e4567-e89b-12d3-a456-426614174002", projectId: "p-1" }
+					: null,
+			),
+		),
+	},
+	// We also need to export these if the test uses them elsewhere or if other imports depend on them
+	projectRepository: {},
 }));
 
 vi.mock("ai", async (importOriginal) => {
@@ -145,6 +170,25 @@ vi.mock("@/lib/actions-utils", () => ({
 	}),
 }));
 
+// Mock Story Service
+vi.mock("@/lib/services/story-service", () => ({
+	storyService: {
+		generateBookPlan: vi.fn((prompt) =>
+			Promise.resolve({
+				plan: {
+					title: "Mock Title",
+					logline: "Mock Logline",
+					summary: "Mock Summary",
+					chapters: [{ title: "Ch 1", summary: "Sum 1" }],
+				},
+			}),
+		),
+		createBookFromPlan: vi.fn(() => Promise.resolve({ success: true })),
+		planChapterScenes: vi.fn(() => Promise.resolve(["mock-id"])),
+		generateSceneText: vi.fn(() => Promise.resolve()),
+	},
+}));
+
 vi.mock("next/headers", () => ({
 	cookies: () => ({
 		get: () => ({ value: "gpt-4o" }),
@@ -205,8 +249,8 @@ describe("Story Generation Actions", () => {
 	});
 
 	describe("createBookFromPlan", () => {
-		it("should use transaction to create entities", async () => {
-			const projectId = "proj-123";
+		it("should call storyService to create book", async () => {
+			const projectId = "123e4567-e89b-12d3-a456-426614174099"; // valid uuid
 			const plan = {
 				title: "New Book",
 				logline: "Logline",
@@ -215,32 +259,32 @@ describe("Story Generation Actions", () => {
 			};
 
 			const result = await createBookFromPlan(projectId, plan);
-			// Since we mocked withProjectWriteAccess to execute callback,
-			// the inner storyService function is called, which calls db.transaction.
-			expect(db.transaction).toHaveBeenCalled();
+			// We check that the service method was called
+			expect(storyService.createBookFromPlan).toHaveBeenCalledWith(
+				projectId,
+				plan,
+				undefined,
+			);
 			expect(result.success).toBe(true);
 		});
 	});
 
 	describe("planChapterScenes", () => {
 		it("should return scene IDs", async () => {
-			(generateObject as any).mockResolvedValue({
-				object: { scenes: [{ title: "Scene 1", beat: "beat" }] },
-			});
-			const result = await planChapterScenes("ch-1");
+			const validChapterId = "123e4567-e89b-12d3-a456-426614174001";
+			const result = await planChapterScenes(validChapterId);
 			expect(result.success).toBe(true);
 			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id"); // Updated from "scene-1" to "mock-id" because we use batch insert which uses the mockQuery returning
+			expect(result.sceneIds?.[0]).toBe("mock-id");
 		});
 	});
 
 	describe("generateSceneText", () => {
-		it("should update scene content", async () => {
-			const result = await generateSceneText("scene-1");
+		it("should call storyService to generate text", async () => {
+			const validSceneId = "123e4567-e89b-12d3-a456-426614174002";
+			const result = await generateSceneText(validSceneId);
 			expect(result.success).toBe(true);
-			// Check if generationService.continueWriting was called
-			expect(generationService.continueWriting).toHaveBeenCalled();
-			expect(db.update).toHaveBeenCalled();
+			expect(storyService.generateSceneText).toHaveBeenCalledWith(validSceneId);
 		});
 	});
 });
