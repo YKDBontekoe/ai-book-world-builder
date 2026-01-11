@@ -184,7 +184,7 @@
 		"vite-tsconfig-paths": "6.0.3",
 		"vitest": "4.0.16"
 	},
-	"packageManager": "pnpm@10.27.0",
+	"packageManager": "pnpm@10.28.0",
 	"pnpm": {
 		"overrides": {
 			"@auth/core": "0.41.1"
