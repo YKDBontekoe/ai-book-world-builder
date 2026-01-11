@@ -41,6 +41,10 @@ export function useProseMirror({
 	const editorRef = useRef<EditorView | null>(null);
 	const [mounted, setMounted] = useState(false);
 	const prevContentRef = useRef<string | null>(null);
+	const onMentionStateChangeRef = useRef(onMentionStateChange);
+
+	// Update ref whenever the callback changes
+	onMentionStateChangeRef.current = onMentionStateChange;
 
 	// Initialize editor once
 	useEffect(() => {
@@ -70,12 +74,12 @@ export function useProseMirror({
 				mentionPlugin((state) => {
 					if (state?.active && state.range && editorRef.current) {
 						const coords = editorRef.current.coordsAtPos(state.range.from);
-						onMentionStateChange(state, {
+						onMentionStateChangeRef.current(state, {
 							left: coords.left,
 							top: coords.bottom + 5,
 						});
 					} else {
-						onMentionStateChange(null, null);
+						onMentionStateChangeRef.current(null, null);
 					}
 				}),
 			],
@@ -95,7 +99,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, [containerRef]); // Only run on mount or if container changes (rare)
+	}, [containerRef, content, readOnly]); // Only run on mount or if dependencies change (early return if already initialized)
 
 	// Synchronize content when it changes externally
 	useEffect(() => {
