@@ -41,13 +41,18 @@ The Project View is divided into three main panels:
 -   **Project-Aware Chat**: Open the **Floating Assistant** to ask the AI questions about your world, brainstorm ideas, or draft new scenes with specific instructions.
 
 ### 3. Analyze & Refine
-Use the **World Canvas** (Right Panel) to gain insights and ensure consistency.
+Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. The canvas is a powerful tool for visualizing your story's structure and content.
 
--   **Graph**: Visualizes your **Entity Network**. See how characters, locations, and lore are connected.
--   **Arc**: Analyzes your story's **Pacing** and **Tension**.
--   **Timeline**: Tracks chronological events to ensure your plot is consistent.
--   **Diagnostics**: Runs health checks on your story (e.g., "Missing Character Descriptions", "Empty Scenes").
--   **Context**: Shows exactly what the AI "sees" when generating the current scene. Use this to verify the AI has the right information.
+-   **Bible**: The central repository for all your world-building information. Here you can create, edit, and view all your characters, locations, and lore.
+-   **Graph / Network**: Visualizes the relationships between your entities. See at a glance how characters are connected to each other and to various locations.
+-   **Arc**: Analyzes your story's narrative arc, showing the pacing and tension across scenes and chapters.
+-   **Timeline**: Tracks chronological events to ensure your plot is consistent and free of continuity errors.
+-   **Map**: A visual gallery of your locations. Attach images to your location entities to create a visual reference for your world.
+-   **Scenes / Kanban**: A Kanban-style board for managing the status of your scenes. Drag and drop scenes between columns like "Planned," "Drafted," and "Final" to track your progress.
+-   **Context**: Shows exactly what information the AI "sees" when generating a scene. Use this to verify that the AI has the right context before you generate new content.
+-   **Draft**: A scratchpad for rough ideas, snippets of dialogue, or alternative scene versions that don't yet have a place in the main manuscript.
+-   **Diagnostics**: Runs health checks on your story, flagging potential issues like missing character descriptions, empty scenes, or continuity errors.
+-   **Changelog**: A log of all the changes made to your project, allowing you to track your progress and easily revert to previous versions if needed.
 
 ## Advanced Features
 
