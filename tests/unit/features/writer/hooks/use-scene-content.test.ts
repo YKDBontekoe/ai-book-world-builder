@@ -1,7 +1,7 @@
 import { renderHook, waitFor } from "@testing-library/react";
-import { describe, it, vi, expect } from "vitest";
-import { useSceneContent } from "@/features/writer/hooks/use-scene-content";
+import { describe, expect, it, vi } from "vitest";
 import * as sceneActions from "@/features/writer/actions";
+import { useSceneContent } from "@/features/writer/hooks/use-scene-content";
 
 // Mock the server action
 vi.mock("@/features/writer/actions", () => ({
@@ -12,7 +12,10 @@ vi.mock("@/features/writer/actions", () => ({
 describe("useSceneContent", () => {
 	it("should call getSceneContent with projectId and sceneId", async () => {
 		const mockGetSceneContent = vi.spyOn(sceneActions, "getSceneContent");
-		mockGetSceneContent.mockResolvedValue({ success: true, content: "Test Content" });
+		mockGetSceneContent.mockResolvedValue({
+			success: true,
+			content: "Test Content",
+		});
 
 		const projectId = "test-project-id";
 		const sceneId = "test-scene-id";

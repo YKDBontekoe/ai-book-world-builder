@@ -1,9 +1,9 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { BookCanvasProvider } from "@/components/organisms/book-canvas/book-canvas-context";
 import { WriterView } from "@/features/writer/components/writer-view";
 import type { Project } from "@/lib/db/schema";
-import { BookCanvasProvider } from "@/components/organisms/book-canvas/book-canvas-context";
 
 // Inline mock data satisfying Project type
 const mockProject: Project = {
@@ -21,8 +21,8 @@ const mockProject: Project = {
 	defaultChapterId: null,
 	lastViewedSceneId: null,
 	folders: [],
-    customMetadata: {},
-    forkedFromId: null
+	customMetadata: {},
+	forkedFromId: null,
 };
 
 // Mock dependencies
@@ -77,8 +77,12 @@ vi.mock("@/features/writer/actions", () => ({
 
 // Mock Resizable Panel Group (simplified)
 vi.mock("@/components/atoms/resizable", () => ({
-	ResizablePanelGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-	ResizablePanel: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	ResizablePanelGroup: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
+	ResizablePanel: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
 	ResizableHandle: () => <div />,
 }));
 
@@ -88,11 +92,13 @@ describe("WriterView Hotkeys", () => {
 		render(
 			<BookCanvasProvider>
 				<WriterView project={mockProject} />
-			</BookCanvasProvider>
+			</BookCanvasProvider>,
 		);
 
 		// Wait for mount and verify initial state (sidebar open on desktop)
-		await waitFor(() => expect(screen.getByTestId("writer-editor")).toBeInTheDocument());
+		await waitFor(() =>
+			expect(screen.getByTestId("writer-editor")).toBeInTheDocument(),
+		);
 		expect(screen.getByTestId("writer-sidebar")).toBeInTheDocument();
 
 		// Trigger Cmd+B

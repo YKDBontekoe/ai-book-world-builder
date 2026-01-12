@@ -93,7 +93,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.findById("v1")).rejects.toThrow(DatabaseError);
+			await expect(volumeRepository.findById("v1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -122,7 +124,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.findByProject("p1")).rejects.toThrow(DatabaseError);
+			await expect(volumeRepository.findByProject("p1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -158,7 +162,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.findByIdWithPlan("v1")).rejects.toThrow(DatabaseError);
+			await expect(volumeRepository.findByIdWithPlan("v1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -187,7 +193,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.findByProjectWithPlans("p1")).rejects.toThrow(DatabaseError);
+			await expect(
+				volumeRepository.findByProjectWithPlans("p1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -205,7 +213,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.create(mockInput)).rejects.toThrow(DatabaseError);
+			await expect(volumeRepository.create(mockInput)).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -246,7 +256,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.createWithChapters(mockInput, mockChaptersInput)).rejects.toThrow(DatabaseError);
+			await expect(
+				volumeRepository.createWithChapters(mockInput, mockChaptersInput),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -269,7 +281,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.update("v1", { title: "U" })).rejects.toThrow(DatabaseError);
+			await expect(
+				volumeRepository.update("v1", { title: "U" }),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -282,7 +296,9 @@ describe("VolumeRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(volumeRepository.delete("v1")).rejects.toThrow(DatabaseError);
+			await expect(volumeRepository.delete("v1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 });

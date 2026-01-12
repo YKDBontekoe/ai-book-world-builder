@@ -1,9 +1,9 @@
 import { useEffect } from "react";
-import { updateLastViewedScene } from "@/features/writer/actions";
 import {
 	useBookCanvasActions,
 	useBookCanvasSelection,
 } from "@/components/organisms/book-canvas/book-canvas-context";
+import { updateLastViewedScene } from "@/features/writer/actions";
 import type { ChapterWithScenes } from "@/lib/types";
 
 interface UseWriterNavigationProps {
@@ -16,7 +16,7 @@ interface UseWriterNavigationProps {
 interface UseWriterNavigationReturn {
 	activeSceneId: string | null;
 	setActiveSceneId: (id: string | null) => void;
-} 
+}
 
 /**
  * Manages the navigation state (active scene) in the writer view.
@@ -43,9 +43,9 @@ export function useWriterNavigation({
 		if (isLoading || !structure || structure.length === 0) return;
 
 		// Check if current selection is already valid within structure
-		const isValid = activeSceneId && structure.some((ch) => 
-			ch.scenes.some((s) => s.id === activeSceneId)
-		);
+		const isValid =
+			activeSceneId &&
+			structure.some((ch) => ch.scenes.some((s) => s.id === activeSceneId));
 
 		if (isValid) return;
 
@@ -62,7 +62,13 @@ export function useWriterNavigation({
 		if (structure[0].scenes.length > 0) {
 			setActiveSceneId(structure[0].scenes[0].id);
 		}
-	}, [structure, lastViewedSceneId, isLoading, setActiveSceneId, activeSceneId]);
+	}, [
+		structure,
+		lastViewedSceneId,
+		isLoading,
+		setActiveSceneId,
+		activeSceneId,
+	]);
 
 	// Persist last viewed scene
 	useEffect(() => {

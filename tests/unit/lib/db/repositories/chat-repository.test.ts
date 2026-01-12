@@ -95,7 +95,9 @@ describe("ChatRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(chatRepository.findById("c1")).rejects.toThrow(DatabaseError);
+			await expect(chatRepository.findById("c1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -185,7 +187,7 @@ describe("ChatRepository", () => {
 		it("should throw DatabaseError on query failure", async () => {
 			mocks.error = new Error("DB Error");
 			await expect(
-				chatRepository.findByUserPaginated("u1", { limit: 10 })
+				chatRepository.findByUserPaginated("u1", { limit: 10 }),
 			).rejects.toThrow(DatabaseError);
 		});
 	});
@@ -209,7 +211,9 @@ describe("ChatRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(chatRepository.create(mockInput)).rejects.toThrow(DatabaseError);
+			await expect(chatRepository.create(mockInput)).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -224,12 +228,16 @@ describe("ChatRepository", () => {
 
 		it("should throw NotFoundError if chat does not exist", async () => {
 			mocks.result = [];
-			await expect(chatRepository.update("c1", { title: "Updated" })).rejects.toThrow(NotFoundError);
+			await expect(
+				chatRepository.update("c1", { title: "Updated" }),
+			).rejects.toThrow(NotFoundError);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(chatRepository.update("c1", { title: "U" })).rejects.toThrow(DatabaseError);
+			await expect(chatRepository.update("c1", { title: "U" })).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -242,23 +250,28 @@ describe("ChatRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(chatRepository.updateVisibility("c1", "public")).rejects.toThrow(DatabaseError);
+			await expect(
+				chatRepository.updateVisibility("c1", "public"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
 	describe("updateLastContext", () => {
 		it("should update last context", async () => {
 			mocks.result = [];
-			await chatRepository.updateLastContext("c1", { modelId: "m1", promptTokens: 10 } as any);
+			await chatRepository.updateLastContext("c1", {
+				modelId: "m1",
+				promptTokens: 10,
+			} as any);
 			expect(mocks.update).toHaveBeenCalled();
 		});
 
 		it("should catch and warn on failure instead of throwing", async () => {
 			mocks.error = new Error("DB Error");
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			
+
 			await chatRepository.updateLastContext("c1", {} as any);
-			
+
 			expect(consoleSpy).toHaveBeenCalled();
 			consoleSpy.mockRestore();
 		});
@@ -302,7 +315,9 @@ describe("ChatRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(chatRepository.deleteAllByUser("u1")).rejects.toThrow(DatabaseError);
+			await expect(chatRepository.deleteAllByUser("u1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 });

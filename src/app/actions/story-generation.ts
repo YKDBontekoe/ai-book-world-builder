@@ -4,12 +4,12 @@ import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import { withProjectWriteAccess } from "@/lib/actions-utils";
 import { chapterRepository, sceneRepository } from "@/lib/db/repositories";
+import { bookPlanSchema } from "@/lib/services/schemas/story-schemas";
 import {
 	type BookPlan,
 	type StoryStyle,
 	storyService,
 } from "@/lib/services/story-service";
-import { bookPlanSchema } from "@/lib/services/schemas/story-schemas";
 
 // Define schema for validation
 const generateBookPlanSchema = z.object({

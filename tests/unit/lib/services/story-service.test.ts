@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { storyService } from "@/lib/services/story-service";
 import { ensureProjectAccess } from "@/lib/actions-utils";
+import { getSelectedModelId } from "@/lib/ai/models";
 import { planningService } from "@/lib/ai/services/planning-service";
 import { generationService } from "@/lib/ai/writer-service";
 import { invalidateCache } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
+import { storyService } from "@/lib/services/story-service";
 import { logGenerationUsage } from "@/lib/services/usage-logger";
-import { getSelectedModelId } from "@/lib/ai/models";
 
 vi.mock("@/lib/actions-utils", () => ({
 	ensureProjectAccess: vi.fn().mockResolvedValue(true),
@@ -59,7 +59,11 @@ describe("StoryService", () => {
 			(planningService.generateBookPlan as any).mockResolvedValue(mockPlan);
 
 			const result = await storyService.generateBookPlan("prompt");
-			expect(planningService.generateBookPlan).toHaveBeenCalledWith("prompt", undefined, undefined);
+			expect(planningService.generateBookPlan).toHaveBeenCalledWith(
+				"prompt",
+				undefined,
+				undefined,
+			);
 			expect(result).toBe(mockPlan);
 		});
 	});
@@ -67,12 +71,18 @@ describe("StoryService", () => {
 	describe("createBookFromPlan", () => {
 		it("should ensure access, create book, and invalidate cache", async () => {
 			const plan = { title: "T" } as any;
-			(storyRepository.createBookFromPlan as any).mockResolvedValue({ outlineId: "o1" });
+			(storyRepository.createBookFromPlan as any).mockResolvedValue({
+				outlineId: "o1",
+			});
 
 			const result = await storyService.createBookFromPlan("p1", plan);
 
 			expect(ensureProjectAccess).toHaveBeenCalledWith("p1", true);
-			expect(storyRepository.createBookFromPlan).toHaveBeenCalledWith("p1", plan, undefined);
+			expect(storyRepository.createBookFromPlan).toHaveBeenCalledWith(
+				"p1",
+				plan,
+				undefined,
+			);
 			expect(invalidateCache).toHaveBeenCalledWith("project-structure:p1");
 			expect(result).toEqual({ outlineId: "o1" });
 		});
@@ -80,55 +90,92 @@ describe("StoryService", () => {
 
 	describe("planChapterScenes", () => {
 		const chapterId = "c1";
-		const mockChapter = { id: "c1", projectId: "p1", title: "Ch", notes: "Notes" };
+		const mockChapter = {
+			id: "c1",
+			projectId: "p1",
+			title: "Ch",
+			notes: "Notes",
+		};
 
 		it("should plan scenes and batch create them", async () => {
-			(storyRepository.getChapterWithScenes as any).mockResolvedValue(mockChapter);
+			(storyRepository.getChapterWithScenes as any).mockResolvedValue(
+				mockChapter,
+			);
 			(planningService.planChapterScenes as any).mockResolvedValue({
 				plan: { scenes: [{ title: "S1" }] },
 				usage: { tokens: 10 },
 				modelId: "m1",
 			});
-			(storyRepository.getLastSceneInChapter as any).mockResolvedValue({ sequence: 5 });
+			(storyRepository.getLastSceneInChapter as any).mockResolvedValue({
+				sequence: 5,
+			});
 			(storyRepository.createScenesBatch as any).mockResolvedValue(["s1"]);
 
 			const result = await storyService.planChapterScenes(chapterId);
 
-			expect(storyRepository.getChapterWithScenes).toHaveBeenCalledWith(chapterId);
+			expect(storyRepository.getChapterWithScenes).toHaveBeenCalledWith(
+				chapterId,
+			);
 			expect(ensureProjectAccess).toHaveBeenCalledWith("p1", true);
-			expect(planningService.planChapterScenes).toHaveBeenCalledWith("Ch", "Notes");
+			expect(planningService.planChapterScenes).toHaveBeenCalledWith(
+				"Ch",
+				"Notes",
+			);
 			expect(logGenerationUsage).toHaveBeenCalled();
-			expect(storyRepository.createScenesBatch).toHaveBeenCalledWith("p1", "c1", [{ title: "S1", sequence: 6 }]);
+			expect(storyRepository.createScenesBatch).toHaveBeenCalledWith(
+				"p1",
+				"c1",
+				[{ title: "S1", sequence: 6 }],
+			);
 			expect(invalidateCache).toHaveBeenCalledWith("project-structure:p1");
 			expect(result).toEqual(["s1"]);
 		});
 
 		it("should throw if planning fails", async () => {
-			(storyRepository.getChapterWithScenes as any).mockResolvedValue(mockChapter);
-			(planningService.planChapterScenes as any).mockResolvedValue({ error: "Failed" });
+			(storyRepository.getChapterWithScenes as any).mockResolvedValue(
+				mockChapter,
+			);
+			(planningService.planChapterScenes as any).mockResolvedValue({
+				error: "Failed",
+			});
 
-			await expect(storyService.planChapterScenes(chapterId)).rejects.toThrow("Failed");
+			await expect(storyService.planChapterScenes(chapterId)).rejects.toThrow(
+				"Failed",
+			);
 		});
 
 		it("should handle missing plan", async () => {
-			(storyRepository.getChapterWithScenes as any).mockResolvedValue(mockChapter);
-			(planningService.planChapterScenes as any).mockResolvedValue({ plan: null });
+			(storyRepository.getChapterWithScenes as any).mockResolvedValue(
+				mockChapter,
+			);
+			(planningService.planChapterScenes as any).mockResolvedValue({
+				plan: null,
+			});
 
-			await expect(storyService.planChapterScenes(chapterId)).rejects.toThrow("Failed to plan scenes");
+			await expect(storyService.planChapterScenes(chapterId)).rejects.toThrow(
+				"Failed to plan scenes",
+			);
 		});
 	});
 
 	describe("generateSceneText", () => {
 		const sceneId = "s1";
 		const mockContext = {
-			targetScene: { id: "s1", projectId: "p1", title: "Title", chapterId: "c1" },
+			targetScene: {
+				id: "s1",
+				projectId: "p1",
+				title: "Title",
+				chapterId: "c1",
+			},
 			targetChapter: {},
 			targetOutline: {},
 			scenesInChapter: [],
 		};
 
 		it("should build context, generate text, and update DB", async () => {
-			(storyRepository.getSceneContextData as any).mockResolvedValue(mockContext);
+			(storyRepository.getSceneContextData as any).mockResolvedValue(
+				mockContext,
+			);
 			(generationService.continueWriting as any).mockResolvedValue({
 				text: "Generated text",
 				usage: {},
@@ -141,22 +188,37 @@ describe("StoryService", () => {
 			expect(ensureProjectAccess).toHaveBeenCalledWith("p1", true);
 			expect(getSelectedModelId).toHaveBeenCalledWith("large");
 			expect(generationService.continueWriting).toHaveBeenCalled();
-			expect(storyRepository.updateSceneContent).toHaveBeenCalledWith(sceneId, "Generated text");
+			expect(storyRepository.updateSceneContent).toHaveBeenCalledWith(
+				sceneId,
+				"Generated text",
+			);
 			expect(logGenerationUsage).toHaveBeenCalled();
 		});
 
 		it("should throw if generation result has error", async () => {
-			(storyRepository.getSceneContextData as any).mockResolvedValue(mockContext);
-			(generationService.continueWriting as any).mockResolvedValue({ error: "AI error" });
+			(storyRepository.getSceneContextData as any).mockResolvedValue(
+				mockContext,
+			);
+			(generationService.continueWriting as any).mockResolvedValue({
+				error: "AI error",
+			});
 
-			await expect(storyService.generateSceneText(sceneId)).rejects.toThrow("AI error");
+			await expect(storyService.generateSceneText(sceneId)).rejects.toThrow(
+				"AI error",
+			);
 		});
 
 		it("should throw if AI generates empty text", async () => {
-			(storyRepository.getSceneContextData as any).mockResolvedValue(mockContext);
-			(generationService.continueWriting as any).mockResolvedValue({ text: "" });
+			(storyRepository.getSceneContextData as any).mockResolvedValue(
+				mockContext,
+			);
+			(generationService.continueWriting as any).mockResolvedValue({
+				text: "",
+			});
 
-			await expect(storyService.generateSceneText(sceneId)).rejects.toThrow("AI generated empty content");
+			await expect(storyService.generateSceneText(sceneId)).rejects.toThrow(
+				"AI generated empty content",
+			);
 		});
 	});
 });

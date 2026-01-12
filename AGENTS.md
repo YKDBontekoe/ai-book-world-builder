@@ -37,10 +37,11 @@ Run the project's test suite to ensure logic correctness and prevent regressions
 - **E2E/Integration**: `pnpm exec playwright test`
 - **Reference**: `docs/testing.md`
 
-### 2. Visual Verification (Python)
-Use Python scripts with Playwright (typically in `verification/`) to generate screenshots of your changes.
-- **Purpose**: Visually verify that UI changes match the "Native macOS" aesthetic and don't break layout.
-- **Action**: Create a script if one doesn't exist for your feature.
+### 2. Visual & Interaction Verification (Storybook)
+Create and run Storybook stories for UI components to verify states and interactions.
+- **Purpose**: Visually verify UI states (Loading, Success, Error) and interactions (via play functions).
+- **Action**: Create a `.stories.tsx` file for every new component.
+- **Command**: `pnpm storybook`
 
 ## Design System
 
@@ -56,9 +57,8 @@ Adhere to the **Native macOS** aesthetic defined in [`docs/design-system.md`](do
 3.  **Verify**:
     *   Run `pnpm lint` and `pnpm format` (using `ultracite`).
     *   Run `pnpm type-check` (TypeScript Linter).
-    *   Run `pnpm test` (Unit/E2E).
+    *   Run `pnpm test:unit` and `pnpm test:e2e` as needed.
     *   Run `pnpm storybook` to visually check components if modifying UI. Ensure `globals.css` styles are applied and addons (Accessibility, Controls) are working.
-    *   Run Python visual verification scripts.
 4.  **Document**: Update JSDoc, READMEs, and `.agent` docs.
 5.  **Reflect**:
     *   **MANDATORY**: Log critical UX, accessibility, or architectural learnings in `.AgentName/palette.md` (e.g., `.Jules/palette.md`).

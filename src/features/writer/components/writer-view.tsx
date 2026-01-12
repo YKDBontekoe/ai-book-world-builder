@@ -1,10 +1,9 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useState, memo } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-
 
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
@@ -61,10 +60,42 @@ function WriterViewContent({
 	const { nextScene, prevScene } = useWriterNavigation();
 
 	// Global Hotkeys
-	useHotkeys("meta+j, ctrl+j", (e) => { e.preventDefault(); nextScene(); }, { enableOnFormTags: true }, [nextScene]);
-	useHotkeys("meta+k, ctrl+k", (e) => { e.preventDefault(); prevScene(); }, { enableOnFormTags: true }, [prevScene]);
-	useHotkeys("meta+b, ctrl+b", (e) => { e.preventDefault(); actions.toggleSidebar(); }, { enableOnFormTags: true }, [actions]);
-	useHotkeys("meta+/, ctrl+/", (e) => { e.preventDefault(); toggleSpotlight(); }, { enableOnFormTags: true }, [toggleSpotlight]);
+	useHotkeys(
+		"meta+j, ctrl+j",
+		(e) => {
+			e.preventDefault();
+			nextScene();
+		},
+		{ enableOnFormTags: true },
+		[nextScene],
+	);
+	useHotkeys(
+		"meta+k, ctrl+k",
+		(e) => {
+			e.preventDefault();
+			prevScene();
+		},
+		{ enableOnFormTags: true },
+		[prevScene],
+	);
+	useHotkeys(
+		"meta+b, ctrl+b",
+		(e) => {
+			e.preventDefault();
+			actions.toggleSidebar();
+		},
+		{ enableOnFormTags: true },
+		[actions],
+	);
+	useHotkeys(
+		"meta+/, ctrl+/",
+		(e) => {
+			e.preventDefault();
+			toggleSpotlight();
+		},
+		{ enableOnFormTags: true },
+		[toggleSpotlight],
+	);
 
 	useEffect(() => {
 		setMounted(true);
@@ -83,7 +114,14 @@ function WriterViewContent({
 			isDirectorMode,
 			toggleDirectorMode: actions.toggleDirectorMode,
 		}),
-		[isSidebarOpen, isCanvasOpen, viewMode, isTypewriterMode, isDirectorMode, actions],
+		[
+			isSidebarOpen,
+			isCanvasOpen,
+			viewMode,
+			isTypewriterMode,
+			isDirectorMode,
+			actions,
+		],
 	);
 
 	const isZen = viewMode === "zen";
@@ -93,13 +131,16 @@ function WriterViewContent({
 		setCanvasInternalOpen(isCanvasOpen);
 	}, [isCanvasOpen, setCanvasInternalOpen]);
 
-	const editorPanel = useMemo(() => (
-		<div className="relative z-10 h-full w-full bg-background border-x border-border/10">
-			<WriterEditor />
-			<PowerDock />
-			<WriterSpotlight />
-		</div>
-	), []);
+	const editorPanel = useMemo(
+		() => (
+			<div className="relative z-10 h-full w-full bg-background border-x border-border/10">
+				<WriterEditor />
+				<PowerDock />
+				<WriterSpotlight />
+			</div>
+		),
+		[],
+	);
 
 	if (!mounted) {
 		return <WriterSkeleton />;

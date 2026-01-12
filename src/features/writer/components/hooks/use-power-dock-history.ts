@@ -22,10 +22,10 @@ export function usePowerDockHistory() {
 					(item) => !(item.toolId === toolId && item.input === text),
 				);
 				// Add new item to top, keep max 20
-				return [{ toolId, input: text, timestamp: Date.now() }, ...filtered].slice(
-					0,
-					20,
-				);
+				return [
+					{ toolId, input: text, timestamp: Date.now() },
+					...filtered,
+				].slice(0, 20);
 			});
 		},
 		[setHistory],

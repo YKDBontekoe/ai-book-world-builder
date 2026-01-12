@@ -126,6 +126,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 
 		useImperativeHandle(
 			ref,
+			// biome-ignore lint/correctness/useExhaustiveDependencies: Ref-based editor state requires manual dependency management
 			() => ({
 				undo: () => {
 					if (editorRef.current) {
