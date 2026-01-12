@@ -1,21 +1,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, memo } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import {
-	ResizableHandle,
-	ResizablePanel,
-	ResizablePanelGroup,
-} from "@/components/atoms/resizable";
-import {
-	Sheet,
-	SheetContent,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-} from "@/components/atoms/sheet";
+
+
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/features/writer/components/hooks/use-writer-layout";
@@ -51,222 +41,107 @@ interface WriterViewProps {
 	availableModels?: ChatModel[];
 }
 
-function WriterViewContent({ props }: { props: WriterViewProps }) {
+function WriterViewContent({
+	project,
+	availableModels,
+	defaultModelId,
+}: WriterViewProps) {
 	const [mounted, setMounted] = useState(false);
 
-	// Use extracted layout hook
 	const {
 		isSidebarOpen,
 		isCanvasOpen,
 		viewMode,
 		isTypewriterMode,
 		isDirectorMode,
-		isMobile,
-		sidebarRef,
-		canvasRef,
 		actions,
 	} = useWriterLayout();
 
-	// Control Context
 	const { isChatOpen, setChatOpen, toggleSpotlight } = useWriterControl();
-
-	// Navigation Hook
 	const { nextScene, prevScene } = useWriterNavigation();
 
 	// Global Hotkeys
-	useHotkeys(
-		"meta+j, ctrl+j",
-		(e) => {
-			e.preventDefault();
-			nextScene();
-		},
-		{ enableOnFormTags: true, description: "Next Scene" },
-		[nextScene]
-	);
-
-	useHotkeys(
-		"meta+k, ctrl+k",
-		(e) => {
-			e.preventDefault();
-			prevScene();
-		},
-		{ enableOnFormTags: true, description: "Previous Scene" },
-		[prevScene]
-	);
-
-	useHotkeys(
-		"meta+b, ctrl+b",
-		(e) => {
-			e.preventDefault();
-			actions.toggleSidebar();
-			toast.info("Toggled Sidebar", { duration: 1000, icon: "⚡" });
-		},
-		{ enableOnFormTags: true, description: "Toggle Sidebar" },
-		[actions]
-	);
-
-	useHotkeys(
-		"meta+/, ctrl+/",
-		(e) => {
-			e.preventDefault();
-			toggleSpotlight();
-		},
-		{ enableOnFormTags: true, description: "Toggle Spotlight" },
-		[toggleSpotlight]
-	);
+	useHotkeys("meta+j, ctrl+j", (e) => { e.preventDefault(); nextScene(); }, { enableOnFormTags: true }, [nextScene]);
+	useHotkeys("meta+k, ctrl+k", (e) => { e.preventDefault(); prevScene(); }, { enableOnFormTags: true }, [prevScene]);
+	useHotkeys("meta+b, ctrl+b", (e) => { e.preventDefault(); actions.toggleSidebar(); }, { enableOnFormTags: true }, [actions]);
+	useHotkeys("meta+/, ctrl+/", (e) => { e.preventDefault(); toggleSpotlight(); }, { enableOnFormTags: true }, [toggleSpotlight]);
 
 	useEffect(() => {
 		setMounted(true);
 	}, []);
 
-	if (!mounted) {
-		return <WriterSkeleton />;
-	}
+	const layoutContextValue = useMemo(
+		() => ({
+			isSidebarOpen,
+			toggleSidebar: actions.toggleSidebar,
+			isCanvasOpen,
+			toggleCanvas: actions.toggleCanvas,
+			viewMode,
+			toggleZenMode: actions.toggleZenMode,
+			isTypewriterMode,
+			toggleTypewriterMode: actions.toggleTypewriterMode,
+			isDirectorMode,
+			toggleDirectorMode: actions.toggleDirectorMode,
+		}),
+		[isSidebarOpen, isCanvasOpen, viewMode, isTypewriterMode, isDirectorMode, actions],
+	);
 
 	const isZen = viewMode === "zen";
-	const editorPanel = (
-		<div className="relative z-10 flex-1">
+	const { setIsOpen: setCanvasInternalOpen } = useBookCanvasActions();
+
+	useEffect(() => {
+		setCanvasInternalOpen(isCanvasOpen);
+	}, [isCanvasOpen, setCanvasInternalOpen]);
+
+	const editorPanel = useMemo(() => (
+		<div className="relative z-10 h-full w-full bg-background border-x border-border/10">
 			<WriterEditor />
 			<PowerDock />
 			<WriterSpotlight />
 		</div>
-	);
+	), []);
 
+	if (!mounted) {
+		return <WriterSkeleton />;
+	}
+
+	// Layout matching skeleton: 20% sidebar | flex-1 editor | 30% canvas
 	return (
-		<WriterLayoutContext.Provider
-			value={{
-				isSidebarOpen,
-				toggleSidebar: actions.toggleSidebar,
-				isCanvasOpen,
-				toggleCanvas: actions.toggleCanvas,
-				viewMode,
-				toggleZenMode: actions.toggleZenMode,
-				isTypewriterMode,
-				toggleTypewriterMode: actions.toggleTypewriterMode,
-				isDirectorMode,
-				toggleDirectorMode: actions.toggleDirectorMode,
-			}}
-		>
-			{isMobile ? (
-				<div className="flex flex-col flex-1 bg-background">
+		<WriterLayoutContext.Provider value={layoutContextValue}>
+			<div className="flex h-full w-full overflow-hidden bg-background">
+				{/* Left Panel: Sidebar (20%) - matches skeleton */}
+				{!isZen && isSidebarOpen && (
+					<div className="w-[20%] min-w-[250px] border-r bg-muted/10 flex flex-col hidden md:flex">
+						<WriterSidebar />
+					</div>
+				)}
+
+				{/* Center Panel: Editor (flex-1) - matches skeleton */}
+				<div className="flex-1 flex flex-col min-w-0 bg-background/50 relative">
 					{editorPanel}
-					{!isZen && (
-						<>
-							<Sheet open={isSidebarOpen} onOpenChange={actions.setSidebarOpen}>
-								<SheetContent
-									side="left"
-									className="border-border/20 p-0 shadow-xl"
-								>
-									<SheetHeader className="sr-only">
-										<SheetTitle>Writer sidebar</SheetTitle>
-										<SheetDescription>
-											Writer navigation and structure.
-										</SheetDescription>
-									</SheetHeader>
-									<WriterSidebar />
-								</SheetContent>
-							</Sheet>
-							<Sheet open={isCanvasOpen} onOpenChange={actions.setCanvasOpen}>
-								<SheetContent
-									side="right"
-									className="border-border/20 p-0 shadow-xl"
-								>
-									<SheetHeader className="sr-only">
-										<SheetTitle>Book canvas</SheetTitle>
-										<SheetDescription>
-											Visualize scenes and chapters on the canvas.
-										</SheetDescription>
-									</SheetHeader>
-									<BookCanvas variant="embedded" />
-								</SheetContent>
-							</Sheet>
-						</>
-					)}
 				</div>
-			) : (
-				<ResizablePanelGroup
-					// @ts-expect-error react-resizable-panels types are slightly inconsistent between versions for direction/orientation alias
-					direction="horizontal"
-					id="writer-view-layout-horizontal"
-					className="flex-1 bg-background" // Studio Base
-				>
-					{/* Zen Mode: Animate panels out */}
-					{!isZen && (
-						<>
-							{/* Left Panel: Navigation (Glass Rail) */}
-							<ResizablePanel
-								// @ts-expect-error ref is available in v4.1 but types might be outdated
-								ref={sidebarRef}
-								defaultSize={18}
-								minSize={12}
-								maxSize={35}
-								collapsible={true}
-								collapsedSize={0}
-								className="glass-surface border-r border-border/20 shadow-lg z-20"
-								onResize={(size) => {
-									const isCollapsed = (size as unknown as number) === 0;
-									actions.setSidebarOpen(!isCollapsed);
-								}}
-							>
-								<WriterSidebar />
-							</ResizablePanel>
-							{/* Subtle Handle */}
-							<ResizableHandle
-								className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
-								aria-label="Resize sidebar"
-							/>
-						</>
-					)}
 
-					{/* Center Panel: Editor (Studio Stage) */}
-					<ResizablePanel
-						defaultSize={82}
-						minSize={30}
-						className="relative z-10"
-					>
-						{editorPanel}
-					</ResizablePanel>
+				{/* Right Panel: Canvas (30%) - matches skeleton */}
+				{!isZen && isCanvasOpen && (
+					<div className="w-[30%] min-w-[300px] border-l hidden lg:flex flex-col bg-muted/5">
+						<BookCanvas variant="embedded" />
+					</div>
+				)}
 
-					{!isZen && (
-						<>
-							<ResizableHandle
-								className="w-1 bg-transparent hover:bg-primary/20 transition-colors focus-visible:ring-1 focus-visible:ring-ring focus-visible:ring-offset-1"
-								aria-label="Resize book canvas"
-							/>
-							{/* Right Panel: Book Canvas (On-Demand Drawer) */}
-							<ResizablePanel
-								// @ts-expect-error ref available
-								ref={canvasRef}
-								defaultSize={0} // Default collapsed
-								minSize={25}
-								collapsible={true}
-								collapsedSize={0}
-								className="glass-surface border-l border-border/20 shadow-lg z-20"
-								onResize={(size) => {
-									const isCollapsed = (size as unknown as number) === 0;
-									actions.setCanvasOpen(!isCollapsed);
-								}}
-							>
-								<BookCanvas variant="embedded" />
-							</ResizablePanel>
-						</>
-					)}
-				</ResizablePanelGroup>
-			)}
-
-			<FloatingAssistant
-				projectId={props.project.id}
-				defaultModelId={props.defaultModelId}
-				availableModels={props.availableModels}
-				isOpen={isChatOpen}
-				onOpenChange={setChatOpen}
-				hideTrigger={true}
-			/>
+				<FloatingAssistant
+					projectId={project.id}
+					defaultModelId={defaultModelId}
+					availableModels={availableModels}
+					isOpen={isChatOpen}
+					onOpenChange={setChatOpen}
+					hideTrigger={true}
+				/>
+			</div>
 		</WriterLayoutContext.Provider>
 	);
 }
 
-function CanvasSync({
+const CanvasSync = memo(function CanvasSync({
 	projectId,
 	isReadOnly,
 }: {
@@ -285,17 +160,17 @@ function CanvasSync({
 	}, [projectId, isReadOnly, setProjectId, setIsReadOnly]);
 
 	return null;
-}
+});
 
 export function WriterView(props: WriterViewProps) {
 	const { project, isReadOnly = false } = props;
 
 	return (
-		<div className="h-full w-full overflow-hidden flex flex-col bg-background">
+		<div className="flex-1 w-full h-full min-h-0 overflow-hidden flex flex-col bg-background">
 			<WriterProvider {...props}>
 				<WriterControlProvider>
 					<CanvasSync projectId={project.id} isReadOnly={isReadOnly} />
-					<WriterViewContent props={props} />
+					<WriterViewContent {...props} />
 				</WriterControlProvider>
 			</WriterProvider>
 		</div>

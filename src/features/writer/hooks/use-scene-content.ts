@@ -36,14 +36,6 @@ export function useSceneContent({
 	// Ref to track pending retry timeouts for cleanup
 	const retryTimeoutsRef = useRef<Set<NodeJS.Timeout>>(new Set());
 
-	// Use explicit effect for ref updates to avoid render-phase side effects
-	useEffect(() => {
-		if (activeSceneIdRef.current !== activeSceneId) {
-			activeSceneIdRef.current = activeSceneId;
-			hasEditedRef.current = false;
-		}
-	}, [activeSceneId]);
-
 	// Cleanup retry timeouts on unmount
 	useEffect(() => {
 		return () => {
@@ -55,14 +47,21 @@ export function useSceneContent({
 	// Load content or sync when active scene changes
 	useEffect(() => {
 		let isMounted = true;
+		
+		// Update ref immediately when activeSceneId changes to track current target
+		const isSceneChanging = activeSceneIdRef.current !== activeSceneId;
+		if (isSceneChanging) {
+			activeSceneIdRef.current = activeSceneId;
+			hasEditedRef.current = false;
+		}
 
 		if (activeSceneId) {
 			// If we have initial content, use it.
 			if (initialContent !== undefined && initialContent !== null) {
-				setSceneContent(initialContent);
+				setSceneContent((prev) => (prev === initialContent ? prev : initialContent));
 			} else {
 				// No initial content, clear and fetch.
-				setSceneContent("");
+				setSceneContent((prev) => (prev === "" ? prev : ""));
 
 				if (!projectId) {
 					console.warn("No projectId provided to useSceneContent");
@@ -78,20 +77,21 @@ export function useSceneContent({
 					if (result.success && result.content !== undefined) {
 						// Only update if user hasn't started typing
 						if (!hasEditedRef.current) {
-							setSceneContent(result.content || "");
-							onContentUpdate?.(activeSceneId, result.content || "");
+							const content = result.content || "";
+							setSceneContent((prev) => (prev === content ? prev : content));
+							onContentUpdate?.(activeSceneId, content);
 						}
 					}
 				});
 			}
 		} else {
-			setSceneContent("");
+			setSceneContent((prev) => (prev === "" ? prev : ""));
 		}
 
 		return () => {
 			isMounted = false;
 		};
-	}, [activeSceneId, initialContent, onContentUpdate]); // Dependency on initialContent ensures we update if cache becomes available
+	}, [activeSceneId, initialContent, onContentUpdate, projectId]); // Dependency on initialContent ensures we update if cache becomes available
 
 	const performSave = async (content: string, id: string, retryCount = 0) => {
 		setIsSaving(true);

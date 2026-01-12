@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { PanelImperativeHandle } from "react-resizable-panels";
 import { useMediaQuery } from "usehooks-ts";
 
@@ -33,7 +33,7 @@ export interface WriterLayoutState {
 export function useWriterLayout(): WriterLayoutState {
 	const isMobile = useMediaQuery("(max-width: 768px)");
 	const [isSidebarOpen, setIsSidebarOpen] = useState(!isMobile);
-	const [isCanvasOpen, setIsCanvasOpen] = useState(false); // Default closed for Studio feel
+	const [isCanvasOpen, setIsCanvasOpen] = useState(true); // Default open with balanced layout
 	const [viewMode, setViewMode] = useState<ViewMode>("standard");
 	const [isTypewriterMode, setIsTypewriterMode] = useState(false);
 	const [isDirectorMode, setIsDirectorMode] = useState(false);
@@ -41,7 +41,7 @@ export function useWriterLayout(): WriterLayoutState {
 	const sidebarRef = useRef<PanelImperativeHandle>(null);
 	const canvasRef = useRef<PanelImperativeHandle>(null);
 
-	const toggleSidebar = () => {
+	const toggleSidebar = useCallback(() => {
 		if (isMobile) {
 			setIsSidebarOpen((prev) => !prev);
 			return;
@@ -49,15 +49,19 @@ export function useWriterLayout(): WriterLayoutState {
 
 		const panel = sidebarRef.current;
 		if (panel) {
-			if (isSidebarOpen) {
-				panel.collapse();
-			} else {
+			if (panel.isCollapsed()) {
 				panel.expand();
+				setIsSidebarOpen(true);
+			} else {
+				panel.collapse();
+				setIsSidebarOpen(false);
 			}
+		} else {
+			setIsSidebarOpen((prev) => !prev);
 		}
-	};
+	}, [isMobile]);
 
-	const toggleCanvas = () => {
+	const toggleCanvas = useCallback(() => {
 		if (isMobile) {
 			setIsCanvasOpen((prev) => !prev);
 			return;
@@ -65,25 +69,29 @@ export function useWriterLayout(): WriterLayoutState {
 
 		const panel = canvasRef.current;
 		if (panel) {
-			if (isCanvasOpen) {
-				panel.collapse();
-			} else {
+			if (panel.isCollapsed()) {
 				panel.expand();
+				setIsCanvasOpen(true);
+			} else {
+				panel.collapse();
+				setIsCanvasOpen(false);
 			}
+		} else {
+			setIsCanvasOpen((prev) => !prev);
 		}
-	};
+	}, [isMobile]);
 
-	const toggleZenMode = () => {
+	const toggleZenMode = useCallback(() => {
 		setViewMode((prev) => (prev === "standard" ? "zen" : "standard"));
-	};
+	}, []);
 
-	const toggleTypewriterMode = () => {
+	const toggleTypewriterMode = useCallback(() => {
 		setIsTypewriterMode((prev) => !prev);
-	};
+	}, []);
 
-	const toggleDirectorMode = () => {
+	const toggleDirectorMode = useCallback(() => {
 		setIsDirectorMode((prev) => !prev);
-	};
+	}, []);
 
 	useEffect(() => {
 		if (isMobile) {
@@ -91,6 +99,35 @@ export function useWriterLayout(): WriterLayoutState {
 			setIsCanvasOpen(false);
 		}
 	}, [isMobile]);
+
+	const setSidebarOpen = useCallback((isOpen: boolean) => {
+		setIsSidebarOpen(isOpen);
+	}, []);
+
+	const setCanvasOpen = useCallback((isOpen: boolean) => {
+		setIsCanvasOpen(isOpen);
+	}, []);
+
+	const actions = useMemo(
+		() => ({
+			toggleSidebar,
+			toggleCanvas,
+			toggleZenMode,
+			toggleTypewriterMode,
+			toggleDirectorMode,
+			setSidebarOpen,
+			setCanvasOpen,
+		}),
+		[
+			toggleSidebar,
+			toggleCanvas,
+			toggleZenMode,
+			toggleTypewriterMode,
+			toggleDirectorMode,
+			setSidebarOpen,
+			setCanvasOpen,
+		],
+	);
 
 	return {
 		isSidebarOpen,
@@ -101,14 +138,6 @@ export function useWriterLayout(): WriterLayoutState {
 		isMobile,
 		sidebarRef,
 		canvasRef,
-		actions: {
-			toggleSidebar,
-			toggleCanvas,
-			toggleZenMode,
-			toggleTypewriterMode,
-			toggleDirectorMode,
-			setSidebarOpen: setIsSidebarOpen,
-			setCanvasOpen: setIsCanvasOpen,
-		},
+		actions,
 	};
 }

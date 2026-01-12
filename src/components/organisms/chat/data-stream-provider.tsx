@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { DataPart } from "@/lib/types";
 
 type DataStreamValue = DataPart[];
@@ -33,7 +33,7 @@ export function useDataStream() {
 	if (dataStream === null || setDataStream === null) {
 		throw new Error("useDataStream must be used within a DataStreamProvider");
 	}
-	return { dataStream, setDataStream };
+	return useMemo(() => ({ dataStream, setDataStream }), [dataStream, setDataStream]);
 }
 
 export function useDataStreamValue() {
@@ -43,7 +43,7 @@ export function useDataStreamValue() {
 			"useDataStreamValue must be used within a DataStreamProvider",
 		);
 	}
-	return { dataStream: context };
+	return useMemo(() => ({ dataStream: context }), [context]);
 }
 
 export function useSetDataStream() {
@@ -53,5 +53,5 @@ export function useSetDataStream() {
 			"useSetDataStream must be used within a DataStreamProvider",
 		);
 	}
-	return { setDataStream: context };
+	return useMemo(() => ({ setDataStream: context }), [context]);
 }

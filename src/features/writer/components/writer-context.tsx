@@ -38,25 +38,70 @@ export function WriterProvider({
 		lastViewedSceneId: project.lastViewedSceneId,
 	});
 
+	const {
+		structure,
+		structureText,
+		loading,
+		activeSceneId,
+		setActiveSceneId,
+		sceneContent,
+		activeScene,
+		isSaving,
+		lastSaved,
+		isSnapshotting,
+		handleContentChange,
+		handleSnapshot,
+		fetchStructure,
+	} = writerState;
+
 	// Derive activeChapterId
 	const activeChapterId = useMemo(() => {
-		if (!writerState.activeSceneId || !writerState.structure) return undefined;
-		for (const chapter of writerState.structure) {
-			if (chapter.scenes.some((s) => s.id === writerState.activeSceneId)) {
+		if (!activeSceneId || !structure) return undefined;
+		for (const chapter of structure) {
+			if (chapter.scenes.some((s) => s.id === activeSceneId)) {
 				return chapter.id;
 			}
 		}
 		return undefined;
-	}, [writerState.activeSceneId, writerState.structure]);
+	}, [activeSceneId, structure]);
 
 	const value = useMemo(
 		() => ({
-			...writerState,
+			structure,
+			structureText,
+			loading,
+			activeSceneId,
+			setActiveSceneId,
+			sceneContent,
+			activeScene,
+			isSaving,
+			lastSaved,
+			isSnapshotting,
+			handleContentChange,
+			handleSnapshot,
+			fetchStructure,
 			project,
 			isReadOnly,
 			activeChapterId,
 		}),
-		[writerState, project, isReadOnly, activeChapterId],
+		[
+			structure,
+			structureText,
+			loading,
+			activeSceneId,
+			setActiveSceneId,
+			sceneContent,
+			activeScene,
+			isSaving,
+			lastSaved,
+			isSnapshotting,
+			handleContentChange,
+			handleSnapshot,
+			fetchStructure,
+			project,
+			isReadOnly,
+			activeChapterId,
+		],
 	);
 
 	return (

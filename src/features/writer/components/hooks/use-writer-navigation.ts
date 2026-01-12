@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -46,8 +46,11 @@ export function useWriterNavigation(): {
 		[structure, activeSceneId, flattenScenes, setActiveSceneId],
 	);
 
-	return {
-		nextScene: () => navigateScene("next"),
-		prevScene: () => navigateScene("prev"),
-	};
+	return useMemo(
+		() => ({
+			nextScene: () => navigateScene("next"),
+			prevScene: () => navigateScene("prev"),
+		}),
+		[navigateScene],
+	);
 }

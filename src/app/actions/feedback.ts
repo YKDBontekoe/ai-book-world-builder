@@ -11,7 +11,7 @@ import { createFeedback } from "@/lib/services/feedback-service";
 
 const feedbackSchema = z.object({
 	type: z.enum(["bug", "feature", "general", "suggestion"]),
-	content: z.string().min(1, "Feedback content is required").max(5000),
+	content: z.string().min(1, "Feedback content is required").max(50000),
 	meta: z.any().optional(),
 });
 

@@ -87,7 +87,8 @@ export function useWriterState({
 			setStructure((prev) =>
 				isEqual(prev, initialStructure) ? prev : initialStructure,
 			);
-			setStructureText(initialStructureText || "");
+			const newText = initialStructureText || "";
+			setStructureText((prev) => (prev === newText ? prev : newText));
 		}
 	}, [initialStructure, initialStructureText, setStructure, setStructureText]);
 

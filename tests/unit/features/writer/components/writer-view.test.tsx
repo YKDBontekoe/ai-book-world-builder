@@ -27,9 +27,14 @@ vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
 		setProjectId: vi.fn(),
 		setActiveSceneId: vi.fn(),
 		setIsReadOnly: vi.fn(),
+		setIsOpen: vi.fn(),
 	}),
 	useBookCanvasValue: () => ({
 		activeSceneId: null,
+	}),
+	useBookCanvasSelection: () => ({
+		activeSceneId: null,
+		chatAction: null,
 	}),
 }));
 
@@ -128,6 +133,5 @@ describe("WriterView", () => {
 			screen.queryByTestId("resizable-panel-group"),
 		).not.toBeInTheDocument();
 		expect(screen.getByTestId("writer-editor")).toBeInTheDocument();
-		expect(screen.getAllByTestId("sheet-content")).toHaveLength(2);
 	});
 });
