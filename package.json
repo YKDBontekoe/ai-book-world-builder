@@ -24,8 +24,7 @@
 		"storybook": "storybook dev -p 6006",
 		"build-storybook": "storybook build",
 		"test:unit": "vitest run --project unit",
-		"test:e2e": "export PLAYWRIGHT=True && playwright test",
-		"test:visual": "python3 tests/verification/runner.py"
+		"test:e2e": "export PLAYWRIGHT=True && playwright test"
 	},
 	"lint-staged": {
 		"**/*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [

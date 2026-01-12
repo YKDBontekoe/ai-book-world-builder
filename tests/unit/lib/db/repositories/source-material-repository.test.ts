@@ -103,7 +103,9 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.findById("m1")).rejects.toThrow(DatabaseError);
+			await expect(sourceMaterialRepository.findById("m1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -123,13 +125,16 @@ describe("SourceMaterialRepository", () => {
 
 		it("should return null if not found", async () => {
 			mocks.result = [];
-			const result = await sourceMaterialRepository.findByIdWithProcessing("m1");
+			const result =
+				await sourceMaterialRepository.findByIdWithProcessing("m1");
 			expect(result).toBeNull();
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.findByIdWithProcessing("m1")).rejects.toThrow(DatabaseError);
+			await expect(
+				sourceMaterialRepository.findByIdWithProcessing("m1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -143,7 +148,9 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.findAll()).rejects.toThrow(DatabaseError);
+			await expect(sourceMaterialRepository.findAll()).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -166,7 +173,9 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.findByUserWithProcessing("u1")).rejects.toThrow(DatabaseError);
+			await expect(
+				sourceMaterialRepository.findByUserWithProcessing("u1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -180,7 +189,9 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.findReadyForProcessing(10)).rejects.toThrow(DatabaseError);
+			await expect(
+				sourceMaterialRepository.findReadyForProcessing(10),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -204,7 +215,9 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.create(mockInput)).rejects.toThrow(DatabaseError);
+			await expect(sourceMaterialRepository.create(mockInput)).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -213,18 +226,24 @@ describe("SourceMaterialRepository", () => {
 			const mockUpdated = { id: "m1", status: "processed" };
 			mocks.result = [mockUpdated];
 
-			const result = await sourceMaterialRepository.update("m1", { status: "processed" });
+			const result = await sourceMaterialRepository.update("m1", {
+				status: "processed",
+			});
 			expect(result).toEqual(mockUpdated);
 		});
 
 		it("should throw NotFoundError if material not found", async () => {
 			mocks.result = [];
-			await expect(sourceMaterialRepository.update("m1", { status: "processed" })).rejects.toThrow(NotFoundError);
+			await expect(
+				sourceMaterialRepository.update("m1", { status: "processed" }),
+			).rejects.toThrow(NotFoundError);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.update("m1", { status: "p" })).rejects.toThrow(DatabaseError);
+			await expect(
+				sourceMaterialRepository.update("m1", { status: "p" }),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -237,7 +256,9 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.delete("m1")).rejects.toThrow(DatabaseError);
+			await expect(sourceMaterialRepository.delete("m1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -286,9 +307,13 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.upsertProcessing({
-				sourceMaterialId: "m1", projectId: "p1", userId: "u1"
-			})).rejects.toThrow(DatabaseError);
+			await expect(
+				sourceMaterialRepository.upsertProcessing({
+					sourceMaterialId: "m1",
+					projectId: "p1",
+					userId: "u1",
+				}),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -296,20 +321,26 @@ describe("SourceMaterialRepository", () => {
 		it("should update processing record", async () => {
 			const updated = { id: "proc1", status: "completed" };
 			mocks.result = [updated];
-			
-			const result = await sourceMaterialRepository.updateProcessing("m1", { status: "completed" });
+
+			const result = await sourceMaterialRepository.updateProcessing("m1", {
+				status: "completed",
+			});
 			expect(result).toEqual(updated);
 		});
 
 		it("should return null if not found/updated", async () => {
 			mocks.result = [];
-			const result = await sourceMaterialRepository.updateProcessing("m1", { status: "completed" });
+			const result = await sourceMaterialRepository.updateProcessing("m1", {
+				status: "completed",
+			});
 			expect(result).toBeNull();
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.updateProcessing("m1", {})).rejects.toThrow(DatabaseError);
+			await expect(
+				sourceMaterialRepository.updateProcessing("m1", {}),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -344,7 +375,7 @@ describe("SourceMaterialRepository", () => {
 				// We need to ensure results queue matches calls.
 				// If length is 0, db.insert is NOT called.
 			];
-			
+
 			const result = await sourceMaterialRepository.saveExtraction({
 				materialId: "m1",
 				projectId: "p1",
@@ -352,14 +383,16 @@ describe("SourceMaterialRepository", () => {
 				chapters: [],
 				chunks: [],
 			} as any);
-			
+
 			expect(result.chapters).toEqual([]);
 			expect(result.chunks).toEqual([]);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sourceMaterialRepository.saveExtraction({} as any)).rejects.toThrow(DatabaseError);
+			await expect(
+				sourceMaterialRepository.saveExtraction({} as any),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -382,7 +415,9 @@ describe("SourceMaterialRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(sourceMaterialRepository.getChunks("m1")).rejects.toThrow(DatabaseError);
+				await expect(sourceMaterialRepository.getChunks("m1")).rejects.toThrow(
+					DatabaseError,
+				);
 			});
 		});
 
@@ -401,7 +436,9 @@ describe("SourceMaterialRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(sourceMaterialRepository.getChunkCount("m1")).rejects.toThrow(DatabaseError);
+				await expect(
+					sourceMaterialRepository.getChunkCount("m1"),
+				).rejects.toThrow(DatabaseError);
 			});
 		});
 
@@ -423,7 +460,9 @@ describe("SourceMaterialRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(sourceMaterialRepository.getSampledChunks("m1")).rejects.toThrow(DatabaseError);
+				await expect(
+					sourceMaterialRepository.getSampledChunks("m1"),
+				).rejects.toThrow(DatabaseError);
 			});
 		});
 	});

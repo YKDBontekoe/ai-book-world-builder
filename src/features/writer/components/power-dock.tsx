@@ -1,5 +1,6 @@
 "use client";
 
+import { Slot } from "@radix-ui/react-slot";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
 	Clock,
@@ -18,8 +19,8 @@ import {
 	X,
 } from "lucide-react";
 import Link from "next/link";
-import { Slot } from "@radix-ui/react-slot";
-import React, { memo, useState, useCallback } from "react";
+import type React from "react";
+import { memo, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import {
@@ -124,7 +125,7 @@ export const PowerDock = memo(function PowerDock() {
 			handleCopyScene();
 		},
 		{ enableOnFormTags: true, description: "Copy Scene" },
-		[handleCopyScene]
+		[handleCopyScene],
 	);
 
 	const handleExecute = useCallback(async () => {
@@ -169,7 +170,16 @@ export const PowerDock = memo(function PowerDock() {
 		} finally {
 			setIsProcessing(false);
 		}
-	}, [project, selectedTool, input, structure, activeChapterId, activeSceneId, addToHistory, reset]);
+	}, [
+		project,
+		selectedTool,
+		input,
+		structure,
+		activeChapterId,
+		activeSceneId,
+		addToHistory,
+		reset,
+	]);
 
 	const getPlaceholder = (tool: ToolType) => {
 		switch (tool) {

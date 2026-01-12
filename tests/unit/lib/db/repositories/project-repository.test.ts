@@ -142,8 +142,12 @@ describe("ProjectRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
-			vi.spyOn(projectRepository, "findById").mockRejectedValueOnce(new DatabaseError("DB"));
-			await expect(projectRepository.findByIdWithAccess("p1")).rejects.toThrow(DatabaseError);
+			vi.spyOn(projectRepository, "findById").mockRejectedValueOnce(
+				new DatabaseError("DB"),
+			);
+			await expect(projectRepository.findByIdWithAccess("p1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -187,7 +191,12 @@ describe("ProjectRepository", () => {
 
 		it("should apply pagination and sorting", async () => {
 			mocks.result = [];
-			await projectRepository.findAll({ limit: 10, offset: 5, orderBy: "createdAt", orderDirection: "desc" });
+			await projectRepository.findAll({
+				limit: 10,
+				offset: 5,
+				orderBy: "createdAt",
+				orderDirection: "desc",
+			});
 			expect(mocks.limit).toHaveBeenCalledWith(10);
 			expect(mocks.offset).toHaveBeenCalledWith(5);
 			expect(mocks.orderBy).toHaveBeenCalled();
@@ -221,7 +230,9 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.findVisibleToUser("u1")).rejects.toThrow(DatabaseError);
+			await expect(projectRepository.findVisibleToUser("u1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -235,7 +246,9 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.findByUserId("u1")).rejects.toThrow(DatabaseError);
+			await expect(projectRepository.findByUserId("u1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -257,7 +270,13 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.create({ name: "n", visibility: "public", userId: "u" })).rejects.toThrow(DatabaseError);
+			await expect(
+				projectRepository.create({
+					name: "n",
+					visibility: "public",
+					userId: "u",
+				}),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -280,7 +299,9 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.update("p1", {})).rejects.toThrow(DatabaseError);
+			await expect(projectRepository.update("p1", {})).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -293,7 +314,9 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.delete("p1")).rejects.toThrow(DatabaseError);
+			await expect(projectRepository.delete("p1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -310,7 +333,9 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.deleteMany(["p1"])).rejects.toThrow(DatabaseError);
+			await expect(projectRepository.deleteMany(["p1"])).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -344,9 +369,13 @@ describe("ProjectRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
-			vi.spyOn(projectRepository, "findByIdWithAccess").mockResolvedValueOnce({ id: "p1" } as any);
+			vi.spyOn(projectRepository, "findByIdWithAccess").mockResolvedValueOnce({
+				id: "p1",
+			} as any);
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.fork("p1", "u1")).rejects.toThrow(DatabaseError);
+			await expect(projectRepository.fork("p1", "u1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -366,7 +395,9 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.findByIds(["p1"])).rejects.toThrow(DatabaseError);
+			await expect(projectRepository.findByIds(["p1"])).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -386,7 +417,9 @@ describe("ProjectRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(projectRepository.findOwnedByUser(["p1"], "u1")).rejects.toThrow(DatabaseError);
+			await expect(
+				projectRepository.findOwnedByUser(["p1"], "u1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 });

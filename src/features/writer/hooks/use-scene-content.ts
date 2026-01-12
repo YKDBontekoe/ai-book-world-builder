@@ -47,7 +47,7 @@ export function useSceneContent({
 	// Load content or sync when active scene changes
 	useEffect(() => {
 		let isMounted = true;
-		
+
 		// Update ref immediately when activeSceneId changes to track current target
 		const isSceneChanging = activeSceneIdRef.current !== activeSceneId;
 		if (isSceneChanging) {
@@ -58,7 +58,9 @@ export function useSceneContent({
 		if (activeSceneId) {
 			// If we have initial content, use it.
 			if (initialContent !== undefined && initialContent !== null) {
-				setSceneContent((prev) => (prev === initialContent ? prev : initialContent));
+				setSceneContent((prev) =>
+					prev === initialContent ? prev : initialContent,
+				);
 			} else {
 				// No initial content, clear and fetch.
 				setSceneContent((prev) => (prev === "" ? prev : ""));

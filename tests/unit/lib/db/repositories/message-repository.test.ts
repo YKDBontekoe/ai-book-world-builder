@@ -100,7 +100,9 @@ describe("MessageRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.findById("m1")).rejects.toThrow(DatabaseError);
+			await expect(messageRepository.findById("m1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -129,7 +131,9 @@ describe("MessageRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.findByChatId("c1")).rejects.toThrow(DatabaseError);
+			await expect(messageRepository.findByChatId("c1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -146,7 +150,9 @@ describe("MessageRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.create(mockInput)).rejects.toThrow(DatabaseError);
+			await expect(messageRepository.create(mockInput)).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -168,7 +174,9 @@ describe("MessageRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.createMany([{}] as any)).rejects.toThrow(DatabaseError);
+			await expect(messageRepository.createMany([{}] as any)).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -182,12 +190,16 @@ describe("MessageRepository", () => {
 
 		it("should throw NotFoundError if message not found", async () => {
 			mocks.result = [];
-			await expect(messageRepository.update("m1", {})).rejects.toThrow(NotFoundError);
+			await expect(messageRepository.update("m1", {})).rejects.toThrow(
+				NotFoundError,
+			);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.update("m1", {})).rejects.toThrow(DatabaseError);
+			await expect(messageRepository.update("m1", {})).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -200,7 +212,9 @@ describe("MessageRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.delete("m1")).rejects.toThrow(DatabaseError);
+			await expect(messageRepository.delete("m1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -229,7 +243,9 @@ describe("MessageRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.deleteAfterTimestamp("c1", new Date())).rejects.toThrow(DatabaseError);
+			await expect(
+				messageRepository.deleteAfterTimestamp("c1", new Date()),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -249,7 +265,9 @@ describe("MessageRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(messageRepository.getCountByUserInWindow("u1", 1)).rejects.toThrow(DatabaseError);
+			await expect(
+				messageRepository.getCountByUserInWindow("u1", 1),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -288,7 +306,9 @@ describe("MessageRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(messageRepository.vote(voteInput)).rejects.toThrow(DatabaseError);
+				await expect(messageRepository.vote(voteInput)).rejects.toThrow(
+					DatabaseError,
+				);
 			});
 		});
 
@@ -303,7 +323,9 @@ describe("MessageRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(messageRepository.getVotesByChatId("c1")).rejects.toThrow(DatabaseError);
+				await expect(messageRepository.getVotesByChatId("c1")).rejects.toThrow(
+					DatabaseError,
+				);
 			});
 		});
 	});

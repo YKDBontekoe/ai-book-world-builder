@@ -14,9 +14,9 @@ import {
 import type { EditorView } from "prosemirror-view";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { rewriteSelection } from "@/features/writer/actions/ai";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { rewriteSelection } from "@/features/writer/actions/ai";
 import { cn } from "@/lib/utils";
 
 interface EditorBubbleMenuProps {

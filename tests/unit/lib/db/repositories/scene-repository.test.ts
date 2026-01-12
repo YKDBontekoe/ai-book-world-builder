@@ -58,7 +58,10 @@ vi.mock("drizzle-orm", () => ({
 	asc: vi.fn(),
 	desc: vi.fn(),
 	eq: vi.fn(),
-	sql: Object.assign(vi.fn(() => ({ as: vi.fn() })), { raw: vi.fn() }),
+	sql: Object.assign(
+		vi.fn(() => ({ as: vi.fn() })),
+		{ raw: vi.fn() },
+	),
 }));
 
 describe("SceneRepository", () => {
@@ -85,7 +88,9 @@ describe("SceneRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.findById("s1")).rejects.toThrow(DatabaseError);
+			await expect(sceneRepository.findById("s1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -105,7 +110,9 @@ describe("SceneRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.findByIdInProject("s1", "p1")).rejects.toThrow(DatabaseError);
+			await expect(
+				sceneRepository.findByIdInProject("s1", "p1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -134,7 +141,9 @@ describe("SceneRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.findByChapter("c1")).rejects.toThrow(DatabaseError);
+			await expect(sceneRepository.findByChapter("c1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -152,12 +161,14 @@ describe("SceneRepository", () => {
 			const result = await sceneRepository.findByProject("p1", true);
 			expect(result).toEqual(scenes);
 			// Verify optimize query structure if possible, but mockChain just captures calls
-			expect(mocks.select).toHaveBeenCalled(); 
+			expect(mocks.select).toHaveBeenCalled();
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.findByProject("p1")).rejects.toThrow(DatabaseError);
+			await expect(sceneRepository.findByProject("p1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -180,7 +191,9 @@ describe("SceneRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.create(validInput)).rejects.toThrow(DatabaseError);
+			await expect(sceneRepository.create(validInput)).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -198,7 +211,11 @@ describe("SceneRepository", () => {
 			const mockScene = { id: "s1", title: "Updated" };
 			mocks.result = [mockScene];
 
-			const result = await sceneRepository.update("s1", { title: "Updated" }, "p1");
+			const result = await sceneRepository.update(
+				"s1",
+				{ title: "Updated" },
+				"p1",
+			);
 			expect(result).toEqual(mockScene);
 			// Verify `and(eq(id), eq(projectId))` logic indirectly by ensuring call succeeds
 		});
@@ -212,7 +229,9 @@ describe("SceneRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.update("s1", { title: "Up" })).rejects.toThrow(DatabaseError);
+			await expect(
+				sceneRepository.update("s1", { title: "Up" }),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -241,12 +260,16 @@ describe("SceneRepository", () => {
 
 		it("should throw NotFoundError if scene not found", async () => {
 			mocks.result = [];
-			await expect(sceneRepository.updateContent("s1", "C")).rejects.toThrow(NotFoundError);
+			await expect(sceneRepository.updateContent("s1", "C")).rejects.toThrow(
+				NotFoundError,
+			);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.updateContent("s1", "C")).rejects.toThrow(DatabaseError);
+			await expect(sceneRepository.updateContent("s1", "C")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -280,7 +303,9 @@ describe("SceneRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.getLastInChapter("c1")).rejects.toThrow(DatabaseError);
+			await expect(sceneRepository.getLastInChapter("c1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -316,7 +341,9 @@ describe("SceneRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(sceneRepository.getSceneCard("s1")).rejects.toThrow(DatabaseError);
+				await expect(sceneRepository.getSceneCard("s1")).rejects.toThrow(
+					DatabaseError,
+				);
 			});
 		});
 
@@ -334,7 +361,9 @@ describe("SceneRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(sceneRepository.createSceneCard(validInput)).rejects.toThrow(DatabaseError);
+				await expect(
+					sceneRepository.createSceneCard(validInput),
+				).rejects.toThrow(DatabaseError);
 			});
 		});
 
@@ -359,7 +388,9 @@ describe("SceneRepository", () => {
 
 			it("should throw DatabaseError on failure", async () => {
 				mocks.error = new Error("DB Error");
-				await expect(sceneRepository.updateSceneCard("s1", { purpose: "Up" })).rejects.toThrow(DatabaseError);
+				await expect(
+					sceneRepository.updateSceneCard("s1", { purpose: "Up" }),
+				).rejects.toThrow(DatabaseError);
 			});
 		});
 	});

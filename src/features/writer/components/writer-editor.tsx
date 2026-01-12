@@ -36,7 +36,8 @@ export function WriterEditor() {
 	} = useWriterContext();
 
 	const { isTypewriterMode, isDirectorMode } = useWriterLayoutContext();
-	const { registerEditorActions, toggleChat, toggleSpotlight } = useWriterControl();
+	const { registerEditorActions, toggleChat, toggleSpotlight } =
+		useWriterControl();
 	const { data: entities } = useProjectEntities(project.id);
 	// Use a standard ref to access the editor instance for non-effect usage
 	const editorRef = useRef<EditorHandle | null>(null);
@@ -67,7 +68,7 @@ export function WriterEditor() {
 	const setEditorRef = useCallback(
 		(node: EditorHandle | null) => {
 			if (editorRef.current === node) return;
-			
+
 			// Update the mutable ref for other consumers
 			editorRef.current = node;
 
@@ -102,7 +103,7 @@ export function WriterEditor() {
 			toggleChat();
 		},
 		{ enableOnFormTags: true, description: "Trigger AI Assistant" },
-		[toggleChat]
+		[toggleChat],
 	);
 
 	return (

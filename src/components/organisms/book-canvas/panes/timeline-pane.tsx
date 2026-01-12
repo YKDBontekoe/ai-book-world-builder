@@ -14,8 +14,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Calendar, Clock, Flag, MapPin } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { getProjectStructure } from "@/features/writer/actions";
-import { updateSceneChronology } from "@/features/writer/actions/timeline";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { ScrollArea, ScrollBar } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
@@ -24,6 +22,8 @@ import {
 	useBookCanvasLayout,
 	useBookCanvasSelection,
 } from "@/components/organisms/book-canvas/book-canvas-context";
+import { getProjectStructure } from "@/features/writer/actions";
+import { updateSceneChronology } from "@/features/writer/actions/timeline";
 import { cn } from "@/lib/utils";
 
 type TimelineEvent = {

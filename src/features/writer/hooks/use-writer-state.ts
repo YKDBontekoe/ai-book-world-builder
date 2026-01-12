@@ -2,8 +2,8 @@ import { isEqual } from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createChapterSnapshot } from "@/features/writer/actions";
-import { useSceneContent } from "@/features/writer/hooks/use-scene-content";
 import { useProjectStructure } from "@/features/writer/hooks/use-project-structure";
+import { useSceneContent } from "@/features/writer/hooks/use-scene-content";
 import { useWriterNavigation } from "@/features/writer/hooks/use-writer-navigation";
 import type { ChapterWithScenes } from "@/lib/types";
 

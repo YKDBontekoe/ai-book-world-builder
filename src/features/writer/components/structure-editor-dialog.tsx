@@ -10,7 +10,6 @@ import {
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import { saveProjectStructure } from "@/features/writer/actions";
 import { Button } from "@/components/atoms/button";
 import {
 	Dialog,
@@ -29,6 +28,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { saveProjectStructure } from "@/features/writer/actions";
 import { cn } from "@/lib/utils";
 
 interface StructureEditorDialogProps {

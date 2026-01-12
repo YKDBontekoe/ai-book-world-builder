@@ -33,7 +33,10 @@ export function useDataStream() {
 	if (dataStream === null || setDataStream === null) {
 		throw new Error("useDataStream must be used within a DataStreamProvider");
 	}
-	return useMemo(() => ({ dataStream, setDataStream }), [dataStream, setDataStream]);
+	return useMemo(
+		() => ({ dataStream, setDataStream }),
+		[dataStream, setDataStream],
+	);
 }
 
 export function useDataStreamValue() {

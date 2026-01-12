@@ -90,38 +90,47 @@ describe("StoryRepository", () => {
 				[], // insert scene
 			];
 
-			const result = await storyRepository.createBookFromPlan("p1", plan as any);
+			const result = await storyRepository.createBookFromPlan(
+				"p1",
+				plan as any,
+			);
 			expect(result).toEqual({ outlineId: "o1", volumeId: "v1" });
 			expect(mocks.insert).toHaveBeenCalledTimes(4);
 		});
 
 		it("should use provided style", async () => {
-			mocks.results = [
-				[{ id: "o1" }], [{ id: "v1" }], [], [{ id: "ch1" }], [],
-			];
+			mocks.results = [[{ id: "o1" }], [{ id: "v1" }], [], [{ id: "ch1" }], []];
 			const style = { pov: "First Person", tone: "Dark" };
 			await storyRepository.createBookFromPlan("p1", plan as any, style as any);
-			expect(mocks.values).toHaveBeenCalledWith(expect.objectContaining({
-				pov: "First Person",
-				tone: "Dark"
-			}));
+			expect(mocks.values).toHaveBeenCalledWith(
+				expect.objectContaining({
+					pov: "First Person",
+					tone: "Dark",
+				}),
+			);
 		});
 
 		it("should handle empty chapters plan", async () => {
 			const emptyPlan = { ...plan, chapters: [] };
 			mocks.results = [
-				[{ id: "o1" }], [{ id: "v1" }],
+				[{ id: "o1" }],
+				[{ id: "v1" }],
 				// no chapters insert
 				[], // select chapter 1 (none)
 			];
-			const result = await storyRepository.createBookFromPlan("p1", emptyPlan as any);
+			const result = await storyRepository.createBookFromPlan(
+				"p1",
+				emptyPlan as any,
+			);
 			expect(result).toEqual({ outlineId: "o1", volumeId: "v1" });
 			expect(mocks.insert).toHaveBeenCalledTimes(2); // outline, volume
 		});
 
 		it("should handle missing chapter1 when creating scene", async () => {
 			mocks.results = [
-				[{ id: "o1" }], [{ id: "v1" }], [],
+				[{ id: "o1" }],
+				[{ id: "v1" }],
+				[],
 				[], // select chapter 1 (returns nothing)
 			];
 			await storyRepository.createBookFromPlan("p1", plan as any);
@@ -130,7 +139,9 @@ describe("StoryRepository", () => {
 
 		it("should throw on failure", async () => {
 			mocks.error = new Error("DB Fail");
-			await expect(storyRepository.createBookFromPlan("p1", plan as any)).rejects.toThrow("DB Fail");
+			await expect(
+				storyRepository.createBookFromPlan("p1", plan as any),
+			).rejects.toThrow("DB Fail");
 		});
 	});
 
@@ -143,7 +154,9 @@ describe("StoryRepository", () => {
 
 		it("should throw error if chapter not found", async () => {
 			mocks.result = [];
-			await expect(storyRepository.getChapterWithScenes("ch1")).rejects.toThrow("Chapter not found");
+			await expect(storyRepository.getChapterWithScenes("ch1")).rejects.toThrow(
+				"Chapter not found",
+			);
 		});
 	});
 
@@ -202,7 +215,9 @@ describe("StoryRepository", () => {
 
 		it("should throw if scene not found", async () => {
 			mocks.result = [];
-			await expect(storyRepository.getSceneContextData("s1")).rejects.toThrow("Scene not found");
+			await expect(storyRepository.getSceneContextData("s1")).rejects.toThrow(
+				"Scene not found",
+			);
 		});
 
 		it("should throw if chapter not found", async () => {
@@ -211,7 +226,9 @@ describe("StoryRepository", () => {
 				[], // targetChapter (Promise.all 1)
 				[], // scenesInChapter (Promise.all 2)
 			];
-			await expect(storyRepository.getSceneContextData("s1")).rejects.toThrow("Chapter not found");
+			await expect(storyRepository.getSceneContextData("s1")).rejects.toThrow(
+				"Chapter not found",
+			);
 		});
 	});
 

@@ -1,16 +1,15 @@
-
 import { describe, expect, it, vi } from "vitest";
 import {
 	ChatSDKError,
-	getMessageByErrorCode,
-	UnauthorizedError,
-	ForbiddenError,
-	NotFoundError,
-	ValidationError,
 	DatabaseError,
-	RateLimitError,
+	ForbiddenError,
+	getErrorMessage,
+	getMessageByErrorCode,
 	isAppError,
-	getErrorMessage
+	NotFoundError,
+	RateLimitError,
+	UnauthorizedError,
+	ValidationError,
 } from "@/lib/errors";
 
 describe("Error Classes", () => {
@@ -20,7 +19,9 @@ describe("Error Classes", () => {
 			expect(err.type).toBe("bad_request");
 			expect(err.surface).toBe("api");
 			expect(err.statusCode).toBe(400);
-			expect(err.message).toBe("The request couldn't be processed. Please check your input and try again.");
+			expect(err.message).toBe(
+				"The request couldn't be processed. Please check your input and try again.",
+			);
 		});
 
 		it("uses cause if provided", () => {
@@ -39,14 +40,18 @@ describe("Error Classes", () => {
 
 		it("toResponse logs and returns generic message for log visibility", async () => {
 			const err = new ChatSDKError("bad_request:database" as any); // database surface is "log"
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-			
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
 			const response = err.toResponse();
 			expect(consoleSpy).toHaveBeenCalled();
 			expect(response.status).toBe(400);
 			const data = await response.json();
-			expect(data.message).toBe("Something went wrong. Please try again later.");
-			
+			expect(data.message).toBe(
+				"Something went wrong. Please try again later.",
+			);
+
 			consoleSpy.mockRestore();
 		});
 	});
@@ -55,15 +60,21 @@ describe("Error Classes", () => {
 		it("returns correct messages for known codes", () => {
 			expect(getMessageByErrorCode("unauthorized:auth")).toContain("sign in");
 			expect(getMessageByErrorCode("rate_limit:chat")).toContain("exceeded");
-			expect(getMessageByErrorCode("forbidden:document")).toContain("another user");
+			expect(getMessageByErrorCode("forbidden:document")).toContain(
+				"another user",
+			);
 		});
 
 		it("returns database message for database codes", () => {
-			expect(getMessageByErrorCode("bad_request:database" as any)).toContain("database query");
+			expect(getMessageByErrorCode("bad_request:database" as any)).toContain(
+				"database query",
+			);
 		});
 
 		it("returns generic message for unknown code", () => {
-			expect(getMessageByErrorCode("unknown:api" as any)).toContain("Something went wrong");
+			expect(getMessageByErrorCode("unknown:api" as any)).toContain(
+				"Something went wrong",
+			);
 		});
 	});
 
@@ -97,8 +108,8 @@ describe("Error Classes", () => {
 			const zodError = {
 				errors: [
 					{ path: ["user", "name"], message: "Too short" },
-					{ path: ["email"], message: "Invalid" }
-				]
+					{ path: ["email"], message: "Invalid" },
+				],
 			};
 			const err = ValidationError.fromZodError(zodError as any);
 			expect(err.details).toHaveProperty("user.name", ["Too short"]);
@@ -121,7 +132,7 @@ describe("Error Classes", () => {
 			expect(err.toJSON()).toEqual({
 				code: "UNAUTHORIZED",
 				message: "Stop",
-				statusCode: 401
+				statusCode: 401,
 			});
 		});
 	});

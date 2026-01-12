@@ -1,5 +1,6 @@
 "use client";
 
+import { isEqual } from "lodash";
 import {
 	BookPlus,
 	ChevronsDown,
@@ -9,16 +10,8 @@ import {
 	Plus,
 	Sparkles,
 } from "lucide-react";
-import { isEqual } from "lodash";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-	createNewChapter,
-	createSceneInChapter,
-	deleteScene,
-	generateScene,
-	updateSceneTitle,
-} from "@/features/writer/actions";
 import {
 	Accordion,
 	AccordionContent,
@@ -34,6 +27,13 @@ import {
 } from "@/components/atoms/context-menu";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
+import {
+	createNewChapter,
+	createSceneInChapter,
+	deleteScene,
+	generateScene,
+	updateSceneTitle,
+} from "@/features/writer/actions";
 import { SceneItem } from "@/features/writer/components/left-sidebar/scene-item";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -63,7 +63,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 
 	// Stable setter for expanded chapters to prevent loops
 	const handleExpandedChange = useCallback((newValues: string[]) => {
-		setExpandedChapters((prev) => (isEqual(prev, newValues) ? prev : newValues));
+		setExpandedChapters((prev) =>
+			isEqual(prev, newValues) ? prev : newValues,
+		);
 	}, []);
 
 	// ⚡ Bolt: Store activeSceneId in ref to prevent prop instability in onDelete

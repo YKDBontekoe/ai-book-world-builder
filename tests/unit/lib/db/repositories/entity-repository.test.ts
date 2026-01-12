@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { entityRepository, toDateOrUndefined } from "@/lib/db/repositories/entity-repository";
+import {
+	entityRepository,
+	toDateOrUndefined,
+} from "@/lib/db/repositories/entity-repository";
 import { DatabaseError, NotFoundError, ValidationError } from "@/lib/errors";
 
 const mocks = vi.hoisted(() => {
@@ -121,7 +124,9 @@ describe("EntityRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.findById("e1")).rejects.toThrow(DatabaseError);
+			await expect(entityRepository.findById("e1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -149,7 +154,9 @@ describe("EntityRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.findByProject("p1")).rejects.toThrow(DatabaseError);
+			await expect(entityRepository.findByProject("p1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -163,31 +170,36 @@ describe("EntityRepository", () => {
 		it("should map attributes and relationships to entities", async () => {
 			const entities = [
 				{ id: "e1", name: "E1" },
-				{ id: "e2", name: "E2" }
+				{ id: "e2", name: "E2" },
 			];
 			const attributes = [
 				{ id: "a1", entityId: "e1", name: "Attr1" },
-				{ id: "a2", entityId: "e2", name: "Attr2" }
+				{ id: "a2", entityId: "e2", name: "Attr2" },
 			];
 			const relationships = [
-				{ id: "r1", sourceEntityId: "e1", targetEntityId: "e2", createdAt: new Date() }
+				{
+					id: "r1",
+					sourceEntityId: "e1",
+					targetEntityId: "e2",
+					createdAt: new Date(),
+				},
 			];
 
 			mocks.results = [
-				entities,       // Find entities
-				attributes,     // Find attributes (Promise.all 1)
-				relationships,  // Find relationships (Promise.all 2)
+				entities, // Find entities
+				attributes, // Find attributes (Promise.all 1)
+				relationships, // Find relationships (Promise.all 2)
 			];
 
 			const result = await entityRepository.findByProjectWithDetails("p1");
 			expect(result).toHaveLength(2);
-			
-			const e1 = result.find(e => e.id === "e1");
+
+			const e1 = result.find((e) => e.id === "e1");
 			expect(e1?.attributes).toHaveLength(1);
 			expect(e1?.attributes[0].id).toBe("a1");
 			expect(e1?.relationships).toHaveLength(1); // Involved in r1
 
-			const e2 = result.find(e => e.id === "e2");
+			const e2 = result.find((e) => e.id === "e2");
 			expect(e2?.attributes).toHaveLength(1);
 			expect(e2?.attributes[0].id).toBe("a2");
 			expect(e2?.relationships).toHaveLength(1); // Involved in r1
@@ -195,7 +207,9 @@ describe("EntityRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.findByProjectWithDetails("p1")).rejects.toThrow(DatabaseError);
+			await expect(
+				entityRepository.findByProjectWithDetails("p1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -227,7 +241,9 @@ describe("EntityRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.findByIdWithDetails("e1")).rejects.toThrow(DatabaseError);
+			await expect(entityRepository.findByIdWithDetails("e1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -255,16 +271,20 @@ describe("EntityRepository", () => {
 		});
 
 		it("should throw ValidationError if start date > end date", async () => {
-			await expect(entityRepository.create({
-				...validInput,
-				startDate: new Date("2023-01-02"),
-				endDate: new Date("2023-01-01")
-			})).rejects.toThrow(ValidationError);
+			await expect(
+				entityRepository.create({
+					...validInput,
+					startDate: new Date("2023-01-02"),
+					endDate: new Date("2023-01-01"),
+				}),
+			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw DatabaseError on unexpected error", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.create(validInput)).rejects.toThrow(DatabaseError);
+			await expect(entityRepository.create(validInput)).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -297,20 +317,26 @@ describe("EntityRepository", () => {
 
 		it("should throw NotFoundError if entity not found during update", async () => {
 			mocks.result = []; // Update returns nothing
-			
-			await expect(entityRepository.update("e1", { name: "New" })).rejects.toThrow(NotFoundError);
+
+			await expect(
+				entityRepository.update("e1", { name: "New" }),
+			).rejects.toThrow(NotFoundError);
 		});
 
 		it("should throw ValidationError if date range invalid", async () => {
-			await expect(entityRepository.update("e1", {
-				startDate: new Date("2023-01-02"),
-				endDate: new Date("2023-01-01")
-			})).rejects.toThrow(ValidationError);
+			await expect(
+				entityRepository.update("e1", {
+					startDate: new Date("2023-01-02"),
+					endDate: new Date("2023-01-01"),
+				}),
+			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw DatabaseError on unexpected error", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.update("e1", { name: "New" })).rejects.toThrow(DatabaseError);
+			await expect(
+				entityRepository.update("e1", { name: "New" }),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -325,7 +351,9 @@ describe("EntityRepository", () => {
 		it("should throw DatabaseError on failure", async () => {
 			// Mock transaction to fail
 			mocks.transaction = vi.fn(() => Promise.reject(new Error("DB Error")));
-			await expect(entityRepository.delete("e1")).rejects.toThrow(DatabaseError);
+			await expect(entityRepository.delete("e1")).rejects.toThrow(
+				DatabaseError,
+			);
 		});
 	});
 
@@ -352,20 +380,26 @@ describe("EntityRepository", () => {
 
 		it("should throw ValidationError if attribute name exists on entity", async () => {
 			mocks.result = [{ count: 1 }];
-			await expect(entityRepository.createAttribute(validInput)).rejects.toThrow(ValidationError);
+			await expect(
+				entityRepository.createAttribute(validInput),
+			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw ValidationError if date range invalid", async () => {
-			await expect(entityRepository.createAttribute({
-				...validInput,
-				startDate: new Date("2023-01-02"),
-				endDate: new Date("2023-01-01")
-			})).rejects.toThrow(ValidationError);
+			await expect(
+				entityRepository.createAttribute({
+					...validInput,
+					startDate: new Date("2023-01-02"),
+					endDate: new Date("2023-01-01"),
+				}),
+			).rejects.toThrow(ValidationError);
 		});
-		
+
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.createAttribute(validInput)).rejects.toThrow(DatabaseError);
+			await expect(
+				entityRepository.createAttribute(validInput),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -379,7 +413,9 @@ describe("EntityRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.getAttributesByProject("p1")).rejects.toThrow(DatabaseError);
+			await expect(
+				entityRepository.getAttributesByProject("p1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -406,45 +442,53 @@ describe("EntityRepository", () => {
 		});
 
 		it("should throw ValidationError if source and target are same", async () => {
-			await expect(entityRepository.createRelationship({
-				...validInput,
-				targetEntityId: "e1"
-			})).rejects.toThrow(ValidationError);
+			await expect(
+				entityRepository.createRelationship({
+					...validInput,
+					targetEntityId: "e1",
+				}),
+			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw ValidationError if entities do not belong to same project", async () => {
 			mocks.results = [
-				[{ id: "e1", projectId: "p1" }], 
+				[{ id: "e1", projectId: "p1" }],
 				[{ id: "e2", projectId: "p2" }], // Different project (though select checks project ID, so return empty)
 			];
 			// Wait, the select has WHERE id = ? AND projectId = ?
 			// So if project doesn't match, it returns empty array.
-			
+
 			// Scenario: entity exists but not in project p1
 			mocks.results = [
 				[{ id: "e1", projectId: "p1" }],
 				[], // e2 not found in p1
 			];
 
-			await expect(entityRepository.createRelationship(validInput)).rejects.toThrow(ValidationError);
+			await expect(
+				entityRepository.createRelationship(validInput),
+			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw ValidationError if relationship already exists", async () => {
 			mocks.results = [
-				[{ id: "e1", projectId: "p1" }], 
-				[{ id: "e2", projectId: "p1" }], 
+				[{ id: "e1", projectId: "p1" }],
+				[{ id: "e2", projectId: "p1" }],
 				[{ count: 1 }], // Exists
 			];
-			
-			await expect(entityRepository.createRelationship(validInput)).rejects.toThrow(ValidationError);
+
+			await expect(
+				entityRepository.createRelationship(validInput),
+			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw ValidationError if date range invalid", async () => {
-			await expect(entityRepository.createRelationship({
-				...validInput,
-				startDate: new Date("2023-01-02"),
-				endDate: new Date("2023-01-01")
-			})).rejects.toThrow(ValidationError);
+			await expect(
+				entityRepository.createRelationship({
+					...validInput,
+					startDate: new Date("2023-01-02"),
+					endDate: new Date("2023-01-01"),
+				}),
+			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
@@ -452,12 +496,14 @@ describe("EntityRepository", () => {
 			// Need to fail specifically at DB call, not validation
 			// Since validations happen first, passing validations needs mocks
 			// But mocks.error sets global error for the next call.
-			
+
 			// We need to bypass validation calls or make them succeed then fail.
 			// But mocks.error makes the *next* call fail.
 			// The first calls are `Promise.all` for entities.
-			
-			await expect(entityRepository.createRelationship(validInput)).rejects.toThrow(DatabaseError);
+
+			await expect(
+				entityRepository.createRelationship(validInput),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 
@@ -471,7 +517,9 @@ describe("EntityRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
-			await expect(entityRepository.getRelationshipsByProject("p1")).rejects.toThrow(DatabaseError);
+			await expect(
+				entityRepository.getRelationshipsByProject("p1"),
+			).rejects.toThrow(DatabaseError);
 		});
 	});
 });

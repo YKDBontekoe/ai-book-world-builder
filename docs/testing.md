@@ -15,7 +15,6 @@ This project follows the **Testing Trophy** methodology, prioritizing integratio
 tests/
   unit/               # Vitest: Unit and Integration (MSW) tests
   e2e/                # Playwright: Critical user journeys
-  verification/       # Python: Visual verification scripts
 src/
   mocks/              # MSW handlers
   **/*.stories.tsx    # Storybook stories (co-located with components)
@@ -67,16 +66,6 @@ pnpm exec vitest run --project storybook
 ```bash
 # Run E2E tests
 pnpm test:e2e
-```
-
-## Verification (Python)
-
-- **Tooling**: Python Playwright scripts.
-- **Strategy**: Visual verification of "Native macOS" aesthetic.
-- **Commands**:
-
-```bash
-pnpm test:visual
 ```
 
 ## CI Requirements
