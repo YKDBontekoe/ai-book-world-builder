@@ -10,3 +10,8 @@
 **Learning:** Even with fast libraries, CPU-intensive crypto operations must be async on the server to maintain availability. Legacy code often hides synchronous crypto calls in helper functions.
 
 **Prevention:** Audit all crypto imports for synchronous usage. Prefer async/await patterns for all security primitives.
+
+## 2025-05-XX - [Public Project Information Disclosure]
+**Vulnerability:** Public projects were exposing sensitive billing/usage data (costs, tokens) via the dashboard stats action to non-owners.
+**Learning:** Public visibility shouldn't imply "full transparency" of internal metrics like costs.
+**Prevention:** Always filter/redact sensitive fields in data objects based on ownership, even if the parent object is public.

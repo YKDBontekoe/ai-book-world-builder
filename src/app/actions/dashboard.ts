@@ -35,6 +35,26 @@ export const getDashboardStatsAction = createUserAction({
 			}
 
 			const stats = await getProjectStats(input.projectId);
+
+			// Security: Redact sensitive billing/usage info for non-owners (public viewers)
+			if (project.userId !== user.id) {
+				stats.tokenStats = {
+					totalCost: 0,
+					totalInputTokens: 0,
+					totalOutputTokens: 0,
+					byModel: {},
+					byFeature: {
+						chat: { cost: 0, inputTokens: 0, outputTokens: 0 },
+						generation: { cost: 0, inputTokens: 0, outputTokens: 0 },
+					},
+				};
+				stats.usageHistory = stats.usageHistory.map((h) => ({
+					...h,
+					cost: 0,
+					tokens: 0,
+				}));
+			}
+
 			return { stats };
 		}
 
