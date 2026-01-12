@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
- * AGENTIC SUPERVISOR (v4.5)
+ * AGENTIC SUPERVISOR (v4.6)
  * 
  * Centralized orchestration for AI agents.
  * Features:
@@ -14,6 +14,7 @@ const path = require('path');
  * - Infinite Loop Protection
  * - Input Sanitization for Shell Commands
  * - Enhanced Error Logging
+ * - Rich Dashboard with Metrics & Decision Flow
  */
 
 // =============================================================================
@@ -337,12 +338,14 @@ async function main() {
         log(`Linked workflow_run to PR #${context.number} (Draft: ${context.isDraft})`);
 
         if (conclusion === 'failure') {
+          log(`CI workflow failed. Fetching job details for run #${runId}`);
           const jobsJSON = exec(`gh api "/repos/${repo}/actions/runs/${runId}/jobs" --paginate`);
           if (jobsJSON) {
             const jobs = JSON.parse(jobsJSON);
             const failed = formatFailedJobs(jobs);
             
             if (failed) {
+              log(`Found failed jobs: ${failed.substring(0, 100)}...`);
               const link = `${process.env.GITHUB_SERVER_URL}/${repo}/actions/runs/${runId}`;
               const logOutput = getFailureLogs(repo, runId);
               const codecovSection = getCodecovStatus(repo, sha);
@@ -353,7 +356,9 @@ async function main() {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      logError('Failed to process workflow_run event', e);
+    }
   }
 
   // Fetch changed files
@@ -514,21 +519,20 @@ ${conventions}
       const combinedFeedback = context.failedJobs + (rabbitFeedback ? "\n\n---\n\n" + rabbitFeedback : "");
 
       if (isJulesInvolved) {
+          // Jules PR: Use @jules mention (free, Jules responds when it has commits on the PR)
           decision.method = 'mention';
           decision.batchedComments = combinedFeedback;
-          decision.reason = 'CI Failure + Feedback';
+          decision.reason = 'CI Failure (Jules PR)';
+          log('Using @jules mention for CI failure (Jules is involved)');
       } else {
-          // Human PR: Offer help (but don't auto-fix yet)
-           try {
-              const comments = exec(`gh pr view ${context.number} --json comments --jq '.comments[].body'`);
-              const mention = (authorLower.includes('jules') || authorLower.includes('google-labs')) ? '@src/lib/jules-client.ts' : '@jules';
-              if (!comments.includes(`Reply with: ${mention} fix`)) {
-                  exec(`gh pr comment ${context.number} --body "❌ **CI Checks Failed**\n\nI can attempt to fix these issues automatically.\n\nReply with: 
-${mention} fix"`);
-              }
-          } catch (e) {}
-          decision.method = 'none';
+          // Human PR: Use API to invoke Jules with full context
+          decision.method = 'api';
+          decision.prompt = getContextualPrompt('ci-failure.md', {
+            FAILED_JOBS: combinedFeedback,
+            PR_NUMBER: context.number
+          });
           decision.reason = 'CI Failure (Human PR)';
+          log('Using Jules API for CI failure (human PR)');
       }
     }
   }
@@ -611,7 +615,9 @@ ${mention} fix"`);
   // 5. Output
   // ---------------------------------------------------------------------------
 
-  const assigneeMention = (authorLower.includes('jules') || authorLower.includes('google-labs')) ? '@src/lib/jules-client.ts' : '@jules';
+  // NOTE: Always use @jules - this is the trigger that Jules responds to
+  // The old code incorrectly used '@src/lib/jules-client.ts' which is a FILE PATH, not a mention!
+  const assigneeMention = '@jules';
 
   log(`Final Decision: ${decision.method} (${decision.reason})`);
 
@@ -627,19 +633,114 @@ ${mention} fix"`);
   setOutput('assignee_mention', assigneeMention);
 
   if (process.env.GITHUB_STEP_SUMMARY) {
-    const summary = `### 🤖 Jules Supervisor (v4.4)
+    // Calculate metrics
+    const filesChanged = context.changedFiles?.length || 0;
+    const labelsCount = context.labels?.length || 0;
+    const hasCIFailure = !!context.failedJobs;
+    const isBotPR = authorLower.includes('bot') || authorLower.includes('jules') || authorLower.includes('renovate');
     
-| Metric | Value |
-| :--- | :--- |
-| **Context** | ${eventName} |
-| **Target** | #${context.number || 'N/A'} |
-| **Author** | ${context.author || 'N/A'} |
-| **Method** | 
-${decision.method}
- |
-| **Reason** | ${decision.reason || 'None'} |
+    // Decision flow path
+    const decisionPath = [];
+    if (eventName === 'workflow_run') decisionPath.push('Workflow Run');
+    else if (eventName === 'pull_request_review') decisionPath.push('PR Review');
+    else if (eventName === 'issue_comment') decisionPath.push('Comment');
+    else if (eventName === 'pull_request') decisionPath.push('PR Event');
+    else if (eventName === 'issues') decisionPath.push('Issue Event');
+    
+    if (context.isPr) decisionPath.push('PR Context');
+    else decisionPath.push('Issue Context');
+    
+    if (hasCIFailure) decisionPath.push('CI Failed');
+    if (context.isDraft) decisionPath.push('Draft PR');
+    decisionPath.push(decision.reason || 'No Action');
+    
+    // Cost indicator
+    const costIndicator = decision.method === 'api' ? '💰 API Call' : 
+                          decision.method === 'mention' ? '✨ Free Mention' : 
+                          '⏸️ No Cost';
+    
+    // Status emoji
+    const statusEmoji = decision.method === 'api' ? '🚀' : 
+                        decision.method === 'mention' ? '💬' : 
+                        '⏹️';
 
-${decision.method === 'api' ? '> **API Triggered**' : decision.method === 'mention' ? '> **Mention Triggered**' : '> No Action Taken'}
+    const summary = `## ${statusEmoji} Agentic Supervisor Dashboard (v4.5)
+
+### 📊 Event Summary
+
+| Metric | Value |
+|:-------|:------|
+| **Event Type** | \`${eventName}\` |
+| **Action** | \`${event.action || 'N/A'}\` |
+| **Target** | ${context.isPr ? `PR #${context.number}` : context.number ? `Issue #${context.number}` : 'N/A'} |
+| **Author** | \`${context.author || 'N/A'}\` ${isBotPR ? '🤖' : '👤'} |
+| **Branch** | \`${context.branch || 'N/A'}\` |
+| **Draft** | ${context.isDraft ? '✅ Yes' : '❌ No'} |
+| **Files Changed** | ${filesChanged} |
+| **Labels** | ${labelsCount > 0 ? context.labels.map(l => '`' + l + '`').join(', ') : 'None'} |
+
+### 🎯 Decision
+
+| | |
+|:--|:--|
+| **Method** | **${decision.method.toUpperCase()}** ${statusEmoji} |
+| **Reason** | ${decision.reason || 'None'} |
+| **Cost** | ${costIndicator} |
+| **CodeRabbit Trigger** | ${decision.shouldTriggerCodeRabbit === 'true' ? '✅ Yes' : '❌ No'} |
+
+### 🔄 Decision Flow
+
+\`\`\`mermaid
+flowchart LR
+    A[${eventName}] --> B{PR or Issue?}
+    B --> |${context.isPr ? 'PR' : 'Issue'}| C{Author Type}
+    C --> |${isBotPR ? 'Bot' : 'Human'}| D{CI Status}
+    D --> |${hasCIFailure ? 'Failed' : 'OK'}| E[${decision.method.toUpperCase()}]
+    style E fill:${decision.method === 'api' ? '#f9a825' : decision.method === 'mention' ? '#4caf50' : '#9e9e9e'}
+\`\`\`
+
+### 📈 Quick Stats
+
+| Indicator | Status |
+|:----------|:-------|
+| CI Failure Detected | ${hasCIFailure ? '🔴 Yes' : '🟢 No'} |
+| Bot Author | ${isBotPR ? '🤖 Yes' : '👤 No'} |
+| Jules Involved | ${authorLower.includes('jules') || authorLower.includes('google-labs') ? '✅' : '❌'} |
+| Loop Risk | ${context.labels?.includes('jules-stuck') ? '⚠️ HIGH' : '✅ Low'} |
+
+---
+
+<details>
+<summary>📝 Debug Info (click to expand)</summary>
+
+**Decision Path:** ${decisionPath.join(' → ')}
+
+**Context Object:**
+\`\`\`json
+${JSON.stringify({
+  isPr: context.isPr,
+  number: context.number,
+  author: context.author,
+  branch: context.branch,
+  isDraft: context.isDraft,
+  labelsCount: context.labels?.length,
+  filesChangedCount: context.changedFiles?.length,
+  hasCIFailure: !!context.failedJobs
+}, null, 2)}
+\`\`\`
+
+**Decision Object:**
+\`\`\`json
+${JSON.stringify({
+  method: decision.method,
+  reason: decision.reason,
+  shouldTriggerCodeRabbit: decision.shouldTriggerCodeRabbit,
+  hasPrompt: !!decision.prompt,
+  hasBatchedComments: !!decision.batchedComments
+}, null, 2)}
+\`\`\`
+
+</details>
 `;
     fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY, summary);
   }

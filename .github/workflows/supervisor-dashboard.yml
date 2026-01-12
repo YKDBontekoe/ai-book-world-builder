@@ -1,0 +1,202 @@
+name: Update Supervisor Dashboard
+
+# Updates aggregated metrics for the agentic supervisor dashboard on GitHub Pages
+
+on:
+  workflow_run:
+    workflows: ["Agentic Supervisor"]
+    types: [completed]
+
+concurrency:
+  group: supervisor-dashboard
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update-metrics:
+    runs-on: ubuntu-latest
+    if: github.event.workflow_run.conclusion != 'cancelled'
+    steps:
+      - name: Checkout gh-pages branch
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          ref: gh-pages
+          fetch-depth: 0
+        continue-on-error: true
+
+      - name: Initialize gh-pages if needed
+        run: |
+          if [ ! -d .git ]; then
+            git init
+            git checkout -b gh-pages
+          fi
+          mkdir -p supervisor
+
+      - name: Update metrics
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+          CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          EVENT_NAME: ${{ github.event.workflow_run.event }}
+          ACTOR: ${{ github.event.workflow_run.actor.login }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Initialize or load existing metrics
+          if [ -f supervisor/metrics.json ]; then
+            METRICS=$(cat supervisor/metrics.json)
+          else
+            METRICS='{
+              "totalRuns": 0,
+              "apiCalls": 0,
+              "mentions": 0,
+              "noAction": 0,
+              "successes": 0,
+              "failures": 0,
+              "ciFailures": 0,
+              "loopsDetected": 0,
+              "costEstimate": 0,
+              "authorStats": {},
+              "eventStats": {},
+              "dailyStats": {},
+              "reasonStats": {},
+              "history": []
+            }'
+          fi
+
+          # Try to get invocation details from workflow logs
+          JOBS_JSON=$(gh api "/repos/${REPO}/actions/runs/${RUN_ID}/jobs" 2>/dev/null || echo '{"jobs":[]}')
+          
+          # Extract supervisor job outputs if available
+          INVOCATION_METHOD="none"
+          REASON="Unknown"
+          
+          # Check which downstream job ran to infer invocation method
+          if echo "$JOBS_JSON" | grep -q '"jules-api-invoke"'; then
+            API_STATUS=$(echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name == "jules-api-invoke") | .conclusion' 2>/dev/null || echo "")
+            if [ "$API_STATUS" = "success" ] || [ "$API_STATUS" = "failure" ]; then
+              INVOCATION_METHOD="api"
+            fi
+          fi
+          
+          if echo "$JOBS_JSON" | grep -q '"jules-mention"'; then
+            MENTION_STATUS=$(echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name == "jules-mention") | .conclusion' 2>/dev/null || echo "")
+            if [ "$MENTION_STATUS" = "success" ] || [ "$MENTION_STATUS" = "failure" ]; then
+              INVOCATION_METHOD="mention"
+            fi
+          fi
+
+          # Update metrics using Node.js
+          node << 'NODEJS_SCRIPT'
+          const fs = require('fs');
+          const metrics = $METRICS;
+          
+          const now = new Date();
+          const today = now.toISOString().split('T')[0];
+          const method = process.env.INVOCATION_METHOD || 'none';
+          const conclusion = process.env.CONCLUSION || 'unknown';
+          const eventName = process.env.EVENT_NAME || 'unknown';
+          const actor = process.env.ACTOR || 'unknown';
+          const runId = parseInt(process.env.RUN_ID) || 0;
+          
+          // Update totals
+          metrics.totalRuns++;
+          if (method === 'api') {
+            metrics.apiCalls++;
+            metrics.costEstimate = (metrics.costEstimate || 0) + 0.10; // Estimated $0.10 per API call
+          } else if (method === 'mention') {
+            metrics.mentions++;
+          } else {
+            metrics.noAction++;
+          }
+          
+          if (conclusion === 'success') metrics.successes++;
+          else if (conclusion === 'failure') metrics.failures++;
+          
+          // Update author stats
+          if (!metrics.authorStats) metrics.authorStats = {};
+          if (!metrics.authorStats[actor]) {
+            metrics.authorStats[actor] = { total: 0, api: 0, mention: 0, none: 0 };
+          }
+          metrics.authorStats[actor].total++;
+          metrics.authorStats[actor][method]++;
+          
+          // Update event stats
+          if (!metrics.eventStats) metrics.eventStats = {};
+          if (!metrics.eventStats[eventName]) {
+            metrics.eventStats[eventName] = { total: 0, api: 0, mention: 0, none: 0 };
+          }
+          metrics.eventStats[eventName].total++;
+          metrics.eventStats[eventName][method]++;
+          
+          // Update daily stats
+          if (!metrics.dailyStats) metrics.dailyStats = {};
+          if (!metrics.dailyStats[today]) {
+            metrics.dailyStats[today] = { total: 0, api: 0, mention: 0, none: 0, cost: 0 };
+          }
+          metrics.dailyStats[today].total++;
+          metrics.dailyStats[today][method]++;
+          if (method === 'api') {
+            metrics.dailyStats[today].cost += 0.10;
+          }
+          
+          // Keep only last 30 days of daily stats
+          const thirtyDaysAgo = new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          Object.keys(metrics.dailyStats).forEach(date => {
+            if (date < thirtyDaysAgo) delete metrics.dailyStats[date];
+          });
+          
+          // Add to history
+          if (!metrics.history) metrics.history = [];
+          metrics.history.unshift({
+            timestamp: now.toISOString(),
+            method: method,
+            conclusion: conclusion,
+            event: eventName,
+            actor: actor,
+            runId: runId
+          });
+          
+          // Keep last 200 runs
+          if (metrics.history.length > 200) {
+            metrics.history = metrics.history.slice(0, 200);
+          }
+          
+          // Calculate success rate
+          metrics.successRate = metrics.totalRuns > 0 
+            ? Math.round((metrics.successes / metrics.totalRuns) * 100) 
+            : 0;
+          
+          // Calculate cost savings (mentions vs api)
+          metrics.costSavings = metrics.mentions * 0.10;
+          
+          metrics.lastUpdated = now.toISOString();
+          
+          fs.writeFileSync('supervisor/metrics.json', JSON.stringify(metrics, null, 2));
+          console.log('Metrics updated successfully');
+          NODEJS_SCRIPT
+
+      - name: Generate Dashboard HTML
+        env:
+          REPO: ${{ github.repository }}
+        run: |
+          # Read template
+          if [ -f .github/templates/dashboard.html ]; then
+            cp .github/templates/dashboard.html supervisor/index.html
+          else
+            echo "Error: Dashboard template not found"
+            exit 1
+          fi
+
+          # Replace repo placeholder
+          sed -i "s|REPO_PLACEHOLDER|${REPO}|g" supervisor/index.html
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add supervisor/
+          git diff --staged --quiet || git commit -m "chore: update supervisor dashboard metrics [skip ci]"
+          git push origin gh-pages || git push --set-upstream origin gh-pages

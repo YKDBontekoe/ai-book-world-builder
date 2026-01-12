@@ -155,22 +155,27 @@ jobs:
           fi
 
   # ==========================================================================
-  # 2c. AUTO-RESOLVE: Resolve CodeRabbit comments after Jules push
+  # 2c. AUTO-REVIEW: Request CodeRabbit review on bot pushes
   # ==========================================================================
-  auto-resolve-coderabbit:
+  auto-review-coderabbit:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'pull_request' &&
-      github.event.action == 'synchronize' &&
-      github.actor == 'google-labs-jules'
+      (github.event.action == 'synchronize' || github.event.action == 'opened') &&
+      (github.actor == 'google-labs-jules' || github.actor == 'renovate[bot]')
     steps:
-      - name: Resolve CodeRabbit comments
+      - name: Request CodeRabbit Review
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          ACTOR: ${{ github.actor }}
         run: |
-          echo "Jules pushed to PR #$PR_NUMBER - resolving CodeRabbit comments"
-          gh pr comment "$PR_NUMBER" --body "✅ Jules pushed changes. Resolving previous CodeRabbit comments. @coderabbitai resolve" --repo "${{ github.repository }}"
+          echo "Bot ($ACTOR) pushed to PR #$PR_NUMBER - requesting CodeRabbit review"
+          gh pr comment "$PR_NUMBER" --body "🤖 **Bot Push Detected**
+
+          $ACTOR pushed changes. Requesting fresh CodeRabbit review.
+
+          @coderabbitai review" --repo "${{ github.repository }}"
 
   # ==========================================================================
   # 3. CODERABBIT TRIGGER: For Bot PRs Only (after CI passes)

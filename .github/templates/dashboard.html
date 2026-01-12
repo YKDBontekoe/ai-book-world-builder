@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agentic Supervisor Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-primary: #0d1117;
+      --bg-secondary: #161b22;
+      --bg-tertiary: #21262d;
+      --bg-card: #1c2128;
+      --text-primary: #f0f6fc;
+      --text-secondary: #8b949e;
+      --text-muted: #6e7681;
+      --accent-blue: #58a6ff;
+      --accent-green: #3fb950;
+      --accent-yellow: #d29922;
+      --accent-orange: #db6d28;
+      --accent-red: #f85149;
+      --accent-purple: #a371f7;
+      --border-color: #30363d;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    /* Header */
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .header-left { display: flex; align-items: center; gap: 1rem; }
+    .logo { font-size: 2rem; }
+    header h1 { font-size: 1.5rem; font-weight: 600; }
+    .version {
+      background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .refresh-btn {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    .refresh-btn:hover { background: var(--bg-card); }
+    
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+    }
+    .stat-card.api::before { background: var(--accent-yellow); }
+    .stat-card.mention::before { background: var(--accent-green); }
+    .stat-card.total::before { background: var(--accent-blue); }
+    .stat-card.success::before { background: var(--accent-green); }
+    .stat-card.cost::before { background: var(--accent-orange); }
+    .stat-card.savings::before { background: var(--accent-purple); }
+    
+    .stat-card .icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+    .stat-card .label {
+      color: var(--text-secondary);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .stat-card .value { font-size: 1.75rem; font-weight: 700; }
+    .stat-card .subtext {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+    }
+    .stat-card.api .value { color: var(--accent-yellow); }
+    .stat-card.mention .value { color: var(--accent-green); }
+    .stat-card.total .value { color: var(--accent-blue); }
+    .stat-card.success .value { color: var(--accent-green); }
+    .stat-card.cost .value { color: var(--accent-orange); }
+    .stat-card.savings .value { color: var(--accent-purple); }
+    
+    /* Section Headers */
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .section-header h2 { font-size: 1rem; font-weight: 600; }
+    .section-header .icon { font-size: 1.25rem; }
+    
+    /* Charts Grid */
+    .charts-section { margin-bottom: 2rem; }
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+      gap: 1rem;
+    }
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      box-shadow: var(--shadow);
+    }
+    .chart-card h3 {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+    .chart-container { position: relative; height: 250px; }
+    
+    /* Tables Section */
+    .tables-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .table-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.75rem;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+    .table-card h3 {
+      padding: 1rem 1.25rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      border-bottom: 1px solid var(--border-color);
+      background: var(--bg-tertiary);
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.875rem;
+    }
+    th {
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--bg-tertiary); }
+    
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .badge.api { background: rgba(210, 153, 34, 0.2); color: var(--accent-yellow); }
+    .badge.mention { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+    .badge.none { background: var(--bg-tertiary); color: var(--text-muted); }
+    .badge.success { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+    .badge.failure { background: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+    
+    /* Footer */
+    footer {
+      text-align: center;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    footer a { color: var(--accent-blue); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-grid, .tables-grid { grid-template-columns: 1fr; }
+    }
+    
+    /* Loading State */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 200px;
+      color: var(--text-muted);
+    }
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid var(--border-color);
+      border-top-color: var(--accent-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 0.5rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="header-left">
+        <span class="logo">🤖</span>
+        <h1>Agentic Supervisor Dashboard</h1>
+        <span class="version">v4.6</span>
+      </div>
+      <div class="header-right">
+        <button class="refresh-btn" onclick="location.reload()">↻ Refresh</button>
+      </div>
+    </header>
+
+    <div class="stats-grid" id="statsGrid">
+      <div class="loading"><div class="spinner"></div>Loading metrics...</div>
+    </div>
+
+    <div class="charts-section">
+      <div class="section-header">
+        <span class="icon">📊</span>
+        <h2>Analytics</h2>
+      </div>
+      <div class="charts-grid" id="chartsGrid">
+        <div class="loading"><div class="spinner"></div>Loading charts...</div>
+      </div>
+    </div>
+
+    <div class="section-header">
+      <span class="icon">📋</span>
+      <h2>Detailed Breakdown</h2>
+    </div>
+    <div class="tables-grid" id="tablesGrid">
+      <div class="loading"><div class="spinner"></div>Loading data...</div>
+    </div>
+
+    <div class="section-header">
+      <span class="icon">📜</span>
+      <h2>Recent Activity</h2>
+    </div>
+    <div class="table-card">
+      <h3>Last 50 Supervisor Runs</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Actor</th>
+            <th>Method</th>
+            <th>Result</th>
+            <th>Run</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+
+    <footer>
+      <p>Last updated: <span id="lastUpdated">-</span></p>
+      <p><a href="https://github.com/REPO_PLACEHOLDER" target="_blank">View Repository</a> · 
+          <a href="/" target="_blank">Storybook</a></p>
+    </footer>
+  </div>
+
+  <script>
+    const REPO = 'REPO_PLACEHOLDER';
+    
+    function formatCurrency(amount) {
+      return '$' + (amount || 0).toFixed(2);
+    }
+    
+    function formatPercent(value) {
+      return (value || 0) + '%';
+    }
+    
+    function timeSince(date) {
+      const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+      const intervals = [
+        { label: 'd', seconds: 86400 },
+        { label: 'h', seconds: 3600 },
+        { label: 'm', seconds: 60 }
+      ];
+      for (const interval of intervals) {
+        const count = Math.floor(seconds / interval.seconds);
+        if (count >= 1) return count + interval.label + ' ago';
+      }
+      return 'just now';
+    }
+
+    fetch('metrics.json')
+      .then(r => r.json())
+      .then(data => {
+        // Stats Grid
+        document.getElementById('statsGrid').innerHTML = `
+          <div class="stat-card total">
+            <div class="icon">📈</div>
+            <div class="label">Total Runs</div>
+            <div class="value">${data.totalRuns || 0}</div>
+            <div class="subtext">All time</div>
+          </div>
+          <div class="stat-card success">
+            <div class="icon">✅</div>
+            <div class="label">Success Rate</div>
+            <div class="value">${data.successRate || 0}%</div>
+            <div class="subtext">${data.successes || 0} / ${data.totalRuns || 0}</div>
+          </div>
+          <div class="stat-card api">
+            <div class="icon">💰</div>
+            <div class="label">API Calls</div>
+            <div class="value">${data.apiCalls || 0}</div>
+            <div class="subtext">Paid invocations</div>
+          </div>
+          <div class="stat-card mention">
+            <div class="icon">✨</div>
+            <div class="label">Mentions</div>
+            <div class="value">${data.mentions || 0}</div>
+            <div class="subtext">Free invocations</div>
+          </div>
+          <div class="stat-card cost">
+            <div class="icon">💵</div>
+            <div class="label">Est. Cost</div>
+            <div class="value">${formatCurrency(data.costEstimate)}</div>
+            <div class="subtext">~$0.10 per API call</div>
+          </div>
+          <div class="stat-card savings">
+            <div class="icon">🎉</div>
+            <div class="label">Saved</div>
+            <div class="value">${formatCurrency(data.costSavings)}</div>
+            <div class="subtext">By using mentions</div>
+          </div>
+        `;
+
+        // Charts
+        document.getElementById('chartsGrid').innerHTML = `
+          <div class="chart-card">
+            <h3>Invocation Distribution</h3>
+            <div class="chart-container"><canvas id="pieChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3>Daily Activity (Last 14 Days)</h3>
+            <div class="chart-container"><canvas id="barChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3>Event Types</h3>
+            <div class="chart-container"><canvas id="eventChart"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <h3>Cumulative Cost Over Time</h3>
+            <div class="chart-container"><canvas id="costChart"></canvas></div>
+          </div>
+        `;
+
+        // Pie Chart
+        new Chart(document.getElementById('pieChart'), {
+          type: 'doughnut',
+          data: {
+            labels: ['API Calls', 'Mentions', 'No Action'],
+            datasets: [{
+              data: [data.apiCalls || 0, data.mentions || 0, data.noAction || 0],
+              backgroundColor: ['#d29922', '#3fb950', '#484f58'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { 
+              legend: { 
+                position: 'bottom',
+                labels: { color: '#8b949e', padding: 15 } 
+              } 
+            }
+          }
+        });
+
+        // Daily Bar Chart
+        const dailyStats = data.dailyStats || {};
+        const sortedDates = Object.keys(dailyStats).sort().slice(-14);
+        new Chart(document.getElementById('barChart'), {
+          type: 'bar',
+          data: {
+            labels: sortedDates.map(d => d.slice(5)),
+            datasets: [
+              { label: 'API', data: sortedDates.map(d => dailyStats[d]?.api || 0), backgroundColor: '#d29922' },
+              { label: 'Mention', data: sortedDates.map(d => dailyStats[d]?.mention || 0), backgroundColor: '#3fb950' },
+              { label: 'None', data: sortedDates.map(d => dailyStats[d]?.none || 0), backgroundColor: '#484f58' }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { stacked: true, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+              y: { stacked: true, ticks: { color: '#8b949e' }, grid: { color: '#21262d' } }
+            },
+            plugins: { legend: { labels: { color: '#8b949e' } } }
+          }
+        });
+
+        // Event Types Chart
+        const eventStats = data.eventStats || {};
+        const eventLabels = Object.keys(eventStats);
+        new Chart(document.getElementById('eventChart'), {
+          type: 'polarArea',
+          data: {
+            labels: eventLabels,
+            datasets: [{
+              data: eventLabels.map(e => eventStats[e]?.total || 0),
+              backgroundColor: ['#58a6ff', '#3fb950', '#d29922', '#a371f7', '#f85149', '#db6d28']
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'bottom', labels: { color: '#8b949e' } } },
+            scales: { r: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } } }
+          }
+        });
+
+        // Cumulative Cost Chart
+        let cumCost = 0;
+        const costData = sortedDates.map(d => {
+          cumCost += dailyStats[d]?.cost || 0;
+          return cumCost;
+        });
+        new Chart(document.getElementById('costChart'), {
+          type: 'line',
+          data: {
+            labels: sortedDates.map(d => d.slice(5)),
+            datasets: [{
+              label: 'Cumulative Cost ($)',
+              data: costData,
+              borderColor: '#db6d28',
+              backgroundColor: 'rgba(219, 109, 40, 0.1)',
+              fill: true,
+              tension: 0.3
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              x: { ticks: { color: '#8b949e' }, grid: { color: '#21262d' } },
+              y: { ticks: { color: '#8b949e', callback: v => '$' + v.toFixed(2) }, grid: { color: '#21262d' } }
+            },
+            plugins: { legend: { display: false } }
+          }
+        });
+
+        // Author Stats Table
+        const authorStats = data.authorStats || {};
+        const authorRows = Object.entries(authorStats)
+          .sort((a, b) => b[1].total - a[1].total)
+          .slice(0, 10)
+          .map(([author, stats]) => `
+            <tr>
+              <td>${author}</td>
+              <td>${stats.total}</td>
+              <td>${stats.api}</td>
+              <td>${stats.mention}</td>
+              <td>${stats.none}</td>
+            </tr>
+          `).join('');
+
+        document.getElementById('tablesGrid').innerHTML = `
+          <div class="table-card">
+            <h3>Top 10 Authors</h3>
+            <table>
+              <thead>
+                <tr><th>Author</th><th>Total</th><th>API</th><th>Mention</th><th>None</th></tr>
+              </thead>
+              <tbody>${authorRows || '<tr><td colspan="5">No data</td></tr>'}</tbody>
+            </table>
+          </div>
+          <div class="table-card">
+            <h3>Event Types</h3>
+            <table>
+              <thead>
+                <tr><th>Event</th><th>Total</th><th>API</th><th>Mention</th><th>None</th></tr>
+              </thead>
+              <tbody>
+                ${Object.entries(eventStats).map(([event, stats]) => `
+                  <tr>
+                    <td>${event}</td>
+                    <td>${stats.total}</td>
+                    <td>${stats.api}</td>
+                    <td>${stats.mention}</td>
+                    <td>${stats.none}</td>
+                  </tr>
+                `).join('') || '<tr><td colspan="5">No data</td></tr>'}
+              </tbody>
+            </table>
+          </div>
+        `;
+
+        // History Table
+        const tbody = document.getElementById('historyBody');
+        tbody.innerHTML = (data.history || []).slice(0, 50).map(h => `
+          <tr>
+            <td title="${new Date(h.timestamp).toLocaleString()}">${timeSince(h.timestamp)}</td>
+            <td>${h.event || '-'}</td>
+            <td>${h.actor || '-'}</td>
+            <td><span class="badge ${h.method}">${(h.method || 'none').toUpperCase()}</span></td>
+            <td><span class="badge ${h.conclusion}">${h.conclusion || '-'}</span></td>
+            <td><a href="https://github.com/${REPO}/actions/runs/${h.runId}" target="_blank" style="color: var(--accent-blue);">#${h.runId}</a></td>
+          </tr>
+        `).join('');
+
+        // Last Updated
+        document.getElementById('lastUpdated').textContent = data.lastUpdated 
+          ? new Date(data.lastUpdated).toLocaleString() 
+          : 'Never';
+      })
+      .catch(err => {
+        console.error('Failed to load metrics:', err);
+        document.getElementById('statsGrid').innerHTML = '<p style="color: var(--accent-red);">Failed to load metrics. Dashboard may not be initialized yet.</p>';
+        document.getElementById('chartsGrid').innerHTML = '';
+        document.getElementById('tablesGrid').innerHTML = '';
+      });
+  </script>
+</body>
+</html>
