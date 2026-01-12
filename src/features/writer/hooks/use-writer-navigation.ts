@@ -1,8 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { updateLastViewedScene } from "@/features/writer/actions";
 import {
 	useBookCanvasActions,
-	useBookCanvasValue,
+	useBookCanvasSelection,
 } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { ChapterWithScenes } from "@/lib/types";
 
@@ -16,8 +16,7 @@ interface UseWriterNavigationProps {
 interface UseWriterNavigationReturn {
 	activeSceneId: string | null;
 	setActiveSceneId: (id: string | null) => void;
-	activeSceneIdRef: React.MutableRefObject<string | null>;
-}
+} 
 
 /**
  * Manages the navigation state (active scene) in the writer view.
@@ -36,28 +35,19 @@ export function useWriterNavigation({
 	lastViewedSceneId,
 	isLoading,
 }: UseWriterNavigationProps): UseWriterNavigationReturn {
-	const { activeSceneId } = useBookCanvasValue();
+	const { activeSceneId } = useBookCanvasSelection();
 	const { setActiveSceneId } = useBookCanvasActions();
-
-	// Ref to access current active ID without dependency cycles
-	const activeSceneIdRef = useRef(activeSceneId);
-	useEffect(() => {
-		activeSceneIdRef.current = activeSceneId;
-	}, [activeSceneId]);
 
 	// Initialize selection
 	useEffect(() => {
-		if (isLoading || !structure) return;
+		if (isLoading || !structure || structure.length === 0) return;
 
-		const currentId = activeSceneIdRef.current;
+		// Check if current selection is already valid within structure
+		const isValid = activeSceneId && structure.some((ch) => 
+			ch.scenes.some((s) => s.id === activeSceneId)
+		);
 
-		// If we already have a valid selection that exists in structure, do nothing
-		if (
-			currentId &&
-			structure.some((ch) => ch.scenes.some((s) => s.id === currentId))
-		) {
-			return;
-		}
+		if (isValid) return;
 
 		// Try to restore last viewed scene
 		if (
@@ -69,10 +59,10 @@ export function useWriterNavigation({
 		}
 
 		// Fallback to first scene
-		if (structure.length > 0 && structure[0].scenes.length > 0) {
+		if (structure[0].scenes.length > 0) {
 			setActiveSceneId(structure[0].scenes[0].id);
 		}
-	}, [structure, lastViewedSceneId, isLoading, setActiveSceneId]);
+	}, [structure, lastViewedSceneId, isLoading, setActiveSceneId, activeSceneId]);
 
 	// Persist last viewed scene
 	useEffect(() => {
@@ -91,6 +81,5 @@ export function useWriterNavigation({
 	return {
 		activeSceneId,
 		setActiveSceneId,
-		activeSceneIdRef,
 	};
 }

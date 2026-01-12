@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import type { ToolType } from "@/features/writer/components/tools/tool-strategies";
 
@@ -13,32 +14,44 @@ export function usePowerDockHistory() {
 		[],
 	);
 
-	const addToHistory = (toolId: ToolType, text: string) => {
-		setHistory((prev) => {
-			// Remove identical recent entry to avoid clutter
-			const filtered = prev.filter(
-				(item) => !(item.toolId === toolId && item.input === text),
-			);
-			// Add new item to top, keep max 20
-			return [
-				{ toolId, input: text, timestamp: Date.now() },
-				...filtered,
-			].slice(0, 20);
-		});
-	};
+	const addToHistory = useCallback(
+		(toolId: ToolType, text: string) => {
+			setHistory((prev) => {
+				// Remove identical recent entry to avoid clutter
+				const filtered = prev.filter(
+					(item) => !(item.toolId === toolId && item.input === text),
+				);
+				// Add new item to top, keep max 20
+				return [{ toolId, input: text, timestamp: Date.now() }, ...filtered].slice(
+					0,
+					20,
+				);
+			});
+		},
+		[setHistory],
+	);
 
-	const getToolHistory = (toolId: ToolType) => {
-		return history.filter((h) => h.toolId === toolId);
-	};
+	const getToolHistory = useCallback(
+		(toolId: ToolType) => {
+			return history.filter((h) => h.toolId === toolId);
+		},
+		[history],
+	);
 
-	const clearToolHistory = (toolId: ToolType) => {
-		setHistory((prev) => prev.filter((h) => h.toolId !== toolId));
-	};
+	const clearToolHistory = useCallback(
+		(toolId: ToolType) => {
+			setHistory((prev) => prev.filter((h) => h.toolId !== toolId));
+		},
+		[setHistory],
+	);
 
-	return {
-		history,
-		addToHistory,
-		getToolHistory,
-		clearToolHistory,
-	};
+	return useMemo(
+		() => ({
+			history,
+			addToHistory,
+			getToolHistory,
+			clearToolHistory,
+		}),
+		[history, addToHistory, getToolHistory, clearToolHistory],
+	);
 }

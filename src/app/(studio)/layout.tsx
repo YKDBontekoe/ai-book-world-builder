@@ -28,7 +28,6 @@ export default function StudioLayout({
 					<AppearanceProvider>
 						<Suspense fallback={<div className="flex h-dvh bg-background" />}>
 							<GlobalErrorBoundary>
-								{/* Studio Mode: No Global Sidebar, Full Screen Canvas */}
 								<main className="flex h-dvh w-full flex-col overflow-hidden bg-background relative">
 									{children}
 								</main>

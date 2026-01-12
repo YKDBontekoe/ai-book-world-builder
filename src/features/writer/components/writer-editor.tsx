@@ -66,6 +66,8 @@ export function WriterEditor() {
 	// the actions are re-registered with the correct instance.
 	const setEditorRef = useCallback(
 		(node: EditorHandle | null) => {
+			if (editorRef.current === node) return;
+			
 			// Update the mutable ref for other consumers
 			editorRef.current = node;
 
@@ -110,7 +112,7 @@ export function WriterEditor() {
 			<div className="flex-1 overflow-y-auto relative scroll-smooth">
 				{activeSceneId ? (
 					<div
-						className="writer-instance max-w-3xl mx-auto min-h-full py-8 px-8 pb-32 transition-all duration-300"
+						className="writer-instance w-full min-h-full py-8 px-4 pb-32 transition-all duration-300"
 						style={{
 							fontFamily:
 								editorFont === "mono"

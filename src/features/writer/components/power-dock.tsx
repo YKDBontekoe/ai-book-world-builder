@@ -18,7 +18,8 @@ import {
 	X,
 } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { Slot } from "@radix-ui/react-slot";
+import React, { memo, useState, useCallback } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import {
@@ -49,7 +50,7 @@ import { useWriterControl } from "@/features/writer/components/writer-control-co
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
 import { cn } from "@/lib/utils";
 
-export function PowerDock() {
+export const PowerDock = memo(function PowerDock() {
 	const {
 		editorActions,
 		toggleChat,
@@ -65,6 +66,43 @@ export function PowerDock() {
 	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
 	const isZen = viewMode === "zen";
 
+	const { addToHistory, getToolHistory, clearToolHistory } =
+		usePowerDockHistory();
+
+	// Dock States
+	const [mode, setMode] = useState<"default" | "tools" | "input">("default");
+	const [selectedTool, setSelectedTool] = useState<ToolType | null>(null);
+	const [input, setInput] = useState("");
+	const [isProcessing, setIsProcessing] = useState(false);
+	const [result, setResult] = useState<string | null>(null);
+
+	// Reset when closing or changing modes
+	const reset = useCallback(() => {
+		setMode("default");
+		setSelectedTool(null);
+		setInput("");
+		setResult(null);
+		setIsProcessing(false);
+	}, []);
+
+	const handleToolSelect = useCallback((toolId: string) => {
+		setSelectedTool(toolId as ToolType);
+		setMode("input");
+		setResult(null);
+	}, []);
+
+	const handleCopyScene = useCallback(async () => {
+		if (sceneContent != null) {
+			try {
+				await navigator.clipboard.writeText(sceneContent);
+				toast.success("Scene copied to clipboard");
+			} catch (error) {
+				console.error("Failed to copy scene:", error);
+				toast.error("Failed to copy scene to clipboard");
+			}
+		}
+	}, [sceneContent]);
+
 	// Hotkeys
 	useHotkeys(
 		"meta+\\",
@@ -78,43 +116,6 @@ export function PowerDock() {
 		[toggleCanvas],
 	);
 
-	// Dock States
-	const [mode, setMode] = useState<"default" | "tools" | "input">("default");
-	const [selectedTool, setSelectedTool] = useState<ToolType | null>(null);
-	const [input, setInput] = useState("");
-	const [isProcessing, setIsProcessing] = useState(false);
-	const [result, setResult] = useState<string | null>(null);
-
-	const { addToHistory, getToolHistory, clearToolHistory } =
-		usePowerDockHistory();
-
-	// Reset when closing or changing modes
-	const reset = () => {
-		setMode("default");
-		setSelectedTool(null);
-		setInput("");
-		setResult(null);
-		setIsProcessing(false);
-	};
-
-	const handleToolSelect = (toolId: string) => {
-		setSelectedTool(toolId as ToolType);
-		setMode("input");
-		setResult(null);
-	};
-
-	const handleCopyScene = async () => {
-		if (sceneContent != null) {
-			try {
-				await navigator.clipboard.writeText(sceneContent);
-				toast.success("Scene copied to clipboard");
-			} catch (error) {
-				console.error("Failed to copy scene:", error);
-				toast.error("Failed to copy scene to clipboard");
-			}
-		}
-	};
-
 	// Register Copy Scene Hotkey (Cmd+Shift+C)
 	useHotkeys(
 		"meta+shift+c, ctrl+shift+c",
@@ -126,7 +127,7 @@ export function PowerDock() {
 		[handleCopyScene]
 	);
 
-	const handleExecute = async () => {
+	const handleExecute = useCallback(async () => {
 		if (!project?.id || !selectedTool) return;
 		setIsProcessing(true);
 		setResult(null);
@@ -168,7 +169,7 @@ export function PowerDock() {
 		} finally {
 			setIsProcessing(false);
 		}
-	};
+	}, [project, selectedTool, input, structure, activeChapterId, activeSceneId, addToHistory, reset]);
 
 	const getPlaceholder = (tool: ToolType) => {
 		switch (tool) {
@@ -199,6 +200,21 @@ export function PowerDock() {
 		},
 		zen: { y: 100, opacity: 0 },
 	};
+
+	const handleInsertResult = useCallback(() => {
+		if (editorActions?.insertText && result) {
+			editorActions.insertText(result);
+			reset();
+			toast.success("Text inserted into editor");
+		}
+	}, [editorActions, result, reset]);
+
+	const handleCopyResult = useCallback(() => {
+		if (result) {
+			navigator.clipboard.writeText(result);
+			toast.success("Copied to clipboard");
+		}
+	}, [result]);
 
 	return (
 		<TooltipProvider>
@@ -242,25 +258,14 @@ export function PowerDock() {
 								<div className="mt-2 flex items-center justify-between gap-2">
 									<button
 										type="button"
-										onClick={() => {
-											if (editorActions?.insertText && result) {
-												editorActions.insertText(result);
-												reset();
-												toast.success("Text inserted into editor");
-											}
-										}}
+										onClick={handleInsertResult}
 										className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
 									>
 										Insert into Editor
 									</button>
 									<button
 										type="button"
-										onClick={() => {
-											if (result) {
-												navigator.clipboard.writeText(result);
-												toast.success("Copied to clipboard");
-											}
-										}}
+										onClick={handleCopyResult}
 										className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
 									>
 										Copy
@@ -297,9 +302,10 @@ export function PowerDock() {
 											label="All Projects"
 											icon={Home}
 											shortcut="Esc"
-											onClick={() => {}}
 										>
-											<Link href="/projects" />
+											<Link href="/projects">
+												<Home className="w-5 h-5" />
+											</Link>
 										</ControlButton>
 									</ControlGroup>
 
@@ -539,7 +545,7 @@ export function PowerDock() {
 			</motion.div>
 		</TooltipProvider>
 	);
-}
+});
 
 function ControlGroup({ children }: { children: React.ReactNode }) {
 	return <div className="flex items-center gap-1">{children}</div>;
@@ -548,7 +554,7 @@ function ControlGroup({ children }: { children: React.ReactNode }) {
 interface ControlButtonProps {
 	label: string;
 	icon: React.ElementType;
-	onClick: () => void;
+	onClick?: () => void;
 	active?: boolean;
 	disabled?: boolean;
 	shortcut?: string;
@@ -558,7 +564,7 @@ interface ControlButtonProps {
 	children?: React.ReactNode;
 }
 
-function ControlButton({
+const ControlButton = memo(function ControlButton({
 	label,
 	icon: Icon,
 	onClick,
@@ -570,90 +576,45 @@ function ControlButton({
 	asChild,
 	children,
 }: ControlButtonProps) {
-	// If asChild is true, we clone the child element and pass props to it
-	// This is a simplified version of Slot from Radix UI
-	if (asChild && children) {
-		const child = children as React.ReactElement<{
-			className?: string;
-			children?: React.ReactNode;
-		}>;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		return (
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<div className="relative">
-						{/* We wrap in a div to handle tooltip ref forwarding cleanly if child is complex */}
-						<child.type
-							{...child.props}
-							aria-label={label}
-							className={cn(
-								"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
-								"hover:bg-white/10 hover:scale-105 active:scale-95",
-								active &&
-									"bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]",
-								disabled &&
-									"opacity-50 cursor-not-allowed hover:bg-transparent hover:scale-100",
-								!active &&
-									!disabled &&
-									"text-muted-foreground hover:text-foreground",
-								className,
-								child.props.className,
-							)}
-						>
-							<Icon className="w-5 h-5" />
-							{active && (
-								<motion.div
-									layoutId="active-dot"
-									className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary"
-								/>
-							)}
-							{/* Preserve original children of the passed element if any, though usually Link has none or text */}
-							{child.props.children}
-						</child.type>
-					</div>
-				</TooltipTrigger>
-				<TooltipContent side="top" className="flex items-center gap-2">
-					<span>{label}</span>
-					{shortcut && (
-						<kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-medium text-muted-foreground">
-							{shortcut}
-						</kbd>
-					)}
-				</TooltipContent>
-			</Tooltip>
-		);
-	}
+	const sharedClassName = cn(
+		"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
+		"hover:bg-white/10 hover:scale-105 active:scale-95",
+		active &&
+			"bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]",
+		disabled &&
+			"opacity-50 cursor-not-allowed hover:bg-transparent hover:scale-100",
+		!active && !disabled && "text-muted-foreground hover:text-foreground",
+		className,
+	);
+
+	const indicator = active && (
+		<div className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary" />
+	);
 
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
-				<button
-					type="button"
-					aria-label={label}
-					onClick={onClick}
-					disabled={disabled}
-					data-testid={testId}
-					className={cn(
-						"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
-						"hover:bg-white/10 hover:scale-105 active:scale-95",
-						active &&
-							"bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]",
-						disabled &&
-							"opacity-50 cursor-not-allowed hover:bg-transparent hover:scale-100",
-						!active &&
-							!disabled &&
-							"text-muted-foreground hover:text-foreground",
-						className,
-					)}
-				>
-					<Icon className="w-5 h-5" />
-					{active && (
-						<motion.div
-							layoutId="active-dot"
-							className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary"
-						/>
-					)}
-				</button>
+				{asChild ? (
+					<Slot
+						className={sharedClassName}
+						onClick={onClick}
+						data-testid={testId}
+					>
+						{children}
+					</Slot>
+				) : (
+					<button
+						type="button"
+						aria-label={label}
+						onClick={onClick}
+						disabled={disabled}
+						data-testid={testId}
+						className={sharedClassName}
+					>
+						<Icon className="w-5 h-5" />
+						{indicator}
+					</button>
+				)}
 			</TooltipTrigger>
 			<TooltipContent side="top" className="flex items-center gap-2">
 				<span>{label}</span>
@@ -665,4 +626,4 @@ function ControlButton({
 			</TooltipContent>
 		</Tooltip>
 	);
-}
+});

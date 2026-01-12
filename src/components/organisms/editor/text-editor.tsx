@@ -124,40 +124,44 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			containerRef as React.RefObject<HTMLDivElement>,
 		);
 
-		useImperativeHandle(ref, () => ({
-			undo: () => {
-				if (editorRef.current) {
-					undo(editorRef.current.state, editorRef.current.dispatch);
-					editorRef.current.focus();
-				}
-			},
-			redo: () => {
-				if (editorRef.current) {
-					redo(editorRef.current.state, editorRef.current.dispatch);
-					editorRef.current.focus();
-				}
-			},
-			insertText: (text: string) => {
-				if (editorRef.current) {
-					const { from, to } = editorRef.current.state.selection;
-					const tr = editorRef.current.state.tr.replaceWith(
-						from,
-						to,
-						editorRef.current.state.schema.text(text),
-					);
-					editorRef.current.dispatch(tr);
-					editorRef.current.focus();
-				}
-			},
-			getSelection: () => {
-				if (editorRef.current) {
-					const { from, to } = editorRef.current.state.selection;
-					const text = editorRef.current.state.doc.textBetween(from, to);
-					return { from, to, text };
-				}
-				return null;
-			},
-		}));
+		useImperativeHandle(
+			ref,
+			() => ({
+				undo: () => {
+					if (editorRef.current) {
+						undo(editorRef.current.state, editorRef.current.dispatch);
+						editorRef.current.focus();
+					}
+				},
+				redo: () => {
+					if (editorRef.current) {
+						redo(editorRef.current.state, editorRef.current.dispatch);
+						editorRef.current.focus();
+					}
+				},
+				insertText: (text: string) => {
+					if (editorRef.current) {
+						const { from, to } = editorRef.current.state.selection;
+						const tr = editorRef.current.state.tr.replaceWith(
+							from,
+							to,
+							editorRef.current.state.schema.text(text),
+						);
+						editorRef.current.dispatch(tr);
+						editorRef.current.focus();
+					}
+				},
+				getSelection: () => {
+					if (editorRef.current) {
+						const { from, to } = editorRef.current.state.selection;
+						const text = editorRef.current.state.doc.textBetween(from, to);
+						return { from, to, text };
+					}
+					return null;
+				},
+			}),
+			[editorRef.current],
+		);
 
 		// Update Editor Props (Handlers) to close over latest state
 		// This is necessary because some handlers (keydown) need access to the latest react state (mentionState, activeSuggestion)
@@ -206,7 +210,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 
 		return (
 			<div
-				className="prose dark:prose-invert relative h-full"
+				className="prose dark:prose-invert max-w-none relative h-full"
 				ref={containerRef}
 			>
 				{!readOnly && editorRef.current && (

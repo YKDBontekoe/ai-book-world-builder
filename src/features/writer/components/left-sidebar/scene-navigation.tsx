@@ -9,7 +9,8 @@ import {
 	Plus,
 	Sparkles,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { isEqual } from "lodash";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
 	createNewChapter,
@@ -47,7 +48,7 @@ interface SceneNavigationProps {
 	readOnly?: boolean;
 }
 
-export function SceneNavigation({
+export const SceneNavigation = memo(function SceneNavigation({
 	project,
 	activeSceneId,
 	onSceneSelect,
@@ -60,6 +61,11 @@ export function SceneNavigation({
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
 
+	// Stable setter for expanded chapters to prevent loops
+	const handleExpandedChange = useCallback((newValues: string[]) => {
+		setExpandedChapters((prev) => (isEqual(prev, newValues) ? prev : newValues));
+	}, []);
+
 	// ⚡ Bolt: Store activeSceneId in ref to prevent prop instability in onDelete
 	// This prevents all SceneItems from re-rendering when selection changes
 	const activeSceneIdRef = useRef(activeSceneId);
@@ -67,22 +73,27 @@ export function SceneNavigation({
 		activeSceneIdRef.current = activeSceneId;
 	}, [activeSceneId]);
 
-	// Initialize expanded state when structure loads
+	// Initialize expanded state when structure loads - only if not already initialized
+	const hasInitializedRef = useRef(false);
+
 	useEffect(() => {
+		if (structure && structure.length > 0 && !hasInitializedRef.current) {
+			const initialIds = structure.map((c) => c.id);
+			setExpandedChapters(initialIds);
+			hasInitializedRef.current = true;
+		}
+	}, [structure]); // Only depend on structure for initialization
+
+	const handleExpandAll = useCallback(() => {
 		if (structure) {
-			setExpandedChapters(structure.map((c) => c.id));
+			const allIds = structure.map((c) => c.id);
+			setExpandedChapters((prev) => (isEqual(prev, allIds) ? prev : allIds));
 		}
 	}, [structure]);
 
-	const handleExpandAll = () => {
-		if (structure) {
-			setExpandedChapters(structure.map((c) => c.id));
-		}
-	};
-
-	const handleCollapseAll = () => {
-		setExpandedChapters([]);
-	};
+	const handleCollapseAll = useCallback(() => {
+		setExpandedChapters((prev) => (prev.length === 0 ? prev : []));
+	}, []);
 
 	const handleGenerateNextScene = useCallback(
 		async (chapterId: string, prevSceneId?: string) => {
@@ -265,7 +276,7 @@ export function SceneNavigation({
 				<Accordion
 					type="multiple"
 					value={expandedChapters}
-					onValueChange={setExpandedChapters}
+					onValueChange={handleExpandedChange}
 					className="w-full"
 				>
 					{structure.map((chapter) => (
@@ -348,4 +359,4 @@ export function SceneNavigation({
 			</ScrollArea>
 		</div>
 	);
-}
+});

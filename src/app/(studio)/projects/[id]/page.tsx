@@ -47,7 +47,7 @@ export default async function ProjectPage({
 
 	// The WriterView is now the main interface for a project
 	return (
-		<div className="h-[calc(100vh-theme(spacing.16))] w-full">
+		<div className="h-dvh w-full">
 			<WriterView
 				project={project}
 				initialStructure={structure as ChapterWithScenes[]}

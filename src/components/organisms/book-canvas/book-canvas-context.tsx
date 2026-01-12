@@ -114,12 +114,14 @@ export function useBookCanvasSelection() {
 export function useBookCanvasValue() {
 	const layout = useContext(BookCanvasLayoutContext);
 	const selection = useContext(BookCanvasSelectionContext);
-	if (!layout || !selection) {
-		throw new Error(
-			"useBookCanvasValue must be used within a BookCanvasProvider",
-		);
-	}
-	return { ...layout, ...selection };
+	return useMemo(() => {
+		if (!layout || !selection) {
+			throw new Error(
+				"useBookCanvasValue must be used within a BookCanvasProvider",
+			);
+		}
+		return { ...layout, ...selection };
+	}, [layout, selection]);
 }
 
 export function useBookCanvasActions() {
@@ -138,27 +140,69 @@ export function BookCanvasProvider({ children }: { children: ReactNode }) {
 	const [overallStatus, setOverallStatus] = useState<GenerationStatus>("idle");
 	const [projectId, setProjectId] = useState<string | null>(null);
 	const [generationId, setGenerationId] = useState<string | null>(null);
-	const [chatAction, triggerChatAction] = useState<ChatAction>(null);
+	const [chatAction, setChatAction] = useState<ChatAction>(null);
 	const [activeSceneId, setActiveSceneId] = useState<string | null>(null);
 	const [isReadOnly, setIsReadOnly] = useState(false);
+
+	const handleSetIsOpen = useCallback((open: boolean) => {
+		setIsOpen(open);
+	}, []);
 
 	const togglePanel = useCallback(() => {
 		setIsOpen((prev) => !prev);
 	}, []);
 
+	const handleSetActivePane = useCallback((pane: CanvasPane) => {
+		setActivePane(pane);
+	}, []);
+
+	const handleSetOverallStatus = useCallback((status: GenerationStatus) => {
+		setOverallStatus(status);
+	}, []);
+
+	const handleSetProjectId = useCallback((id: string | null) => {
+		setProjectId(id);
+	}, []);
+
+	const handleSetGenerationId = useCallback((id: string | null) => {
+		setGenerationId(id);
+	}, []);
+
+	const triggerChatAction = useCallback((action: ChatAction) => {
+		setChatAction(action);
+	}, []);
+
+	const handleSetActiveSceneId = useCallback((id: string | null) => {
+		setActiveSceneId(id);
+	}, []);
+
+	const handleSetIsReadOnly = useCallback((readOnly: boolean) => {
+		setIsReadOnly(readOnly);
+	}, []);
+
 	const actions = useMemo(
 		() => ({
-			setIsOpen,
+			setIsOpen: handleSetIsOpen,
 			togglePanel,
-			setActivePane,
-			setOverallStatus,
-			setProjectId,
-			setGenerationId,
+			setActivePane: handleSetActivePane,
+			setOverallStatus: handleSetOverallStatus,
+			setProjectId: handleSetProjectId,
+			setGenerationId: handleSetGenerationId,
 			triggerChatAction,
-			setActiveSceneId,
-			setIsReadOnly,
+			setActiveSceneId: handleSetActiveSceneId,
+			setIsReadOnly: handleSetIsReadOnly,
 		}),
-		[togglePanel],
+		[
+			handleSetIsOpen,
+			togglePanel,
+			handleSetActivePane,
+			handleSetOverallStatus,
+			handleSetProjectId,
+			handleSetGenerationId,
+			triggerChatAction,
+			handleSetActiveSceneId,
+			handleSetIsReadOnly,
+		],
 	);
 
 	const layoutState = useMemo(

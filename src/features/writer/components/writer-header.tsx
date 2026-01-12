@@ -12,7 +12,7 @@ import {
 	PanelLeftOpen,
 	Save,
 } from "lucide-react";
-import type React from "react";
+import React, { memo } from "react";
 import { Button } from "@/components/atoms/button";
 import {
 	DropdownMenu,
@@ -74,7 +74,7 @@ function SnapshotButton({
  * @returns {JSX.Element} The writer header UI with primary controls and
  * responsive secondary metadata.
  */
-export function WriterHeader(): React.JSX.Element {
+export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 	const {
 		project,
 		activeScene,
@@ -300,4 +300,4 @@ export function WriterHeader(): React.JSX.Element {
 			</div>
 		</TooltipProvider>
 	);
-}
+});
