@@ -53,15 +53,16 @@ export function useEditorHistory({
 	}, [sceneId, sceneContent, historyStack.length]);
 
 	// Debounced history pusher
-	const pushHistory = useDebounceCallback((content: string) => {
-		if (!content) return;
-		setHistoryStack((prev) => {
-			// Avoid duplicates
-			if (prev.length > 0 && prev[prev.length - 1].content === content)
+	const pushHistoryCallback = useCallback((content: string) => {
+		setHistoryStack(prev => {
+			if (!content || (prev.length > 0 && prev[prev.length - 1].content === content)) {
 				return prev;
-			return [...prev, { content, timestamp: Date.now() }].slice(-50); // Keep last 50
-		});
-	}, 2000);
+			}
+			return [...prev, { content, timestamp: Date.now() }].slice(-50);
+		})
+	}, []);
+
+	const pushHistory = useDebounceCallback(pushHistoryCallback, 2000);
 
 	const toggleTimeTravel = useCallback(() => {
 		if (isTimeTraveling) {
