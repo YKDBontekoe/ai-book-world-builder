@@ -53,6 +53,8 @@ Shows recently closed issues and merged PRs.
 
 ## Troubleshooting
 
+> For advanced debugging and technical details, see the **[Jules Integration Guide](jules-integration.md)**.
+
 -   **"Jules API Error"**: Verify `JULES_API_KEY` is valid and has quota.
 -   **"GitHub Bad Credentials"**: Verify `GITHUB_TOKEN` has read/write access to the repo.
 -   **Session Stuck**: If a session remains in `IN_PROGRESS` without updates, use the Chat interface to ask "Status?" or "Abort".
