@@ -70,6 +70,70 @@ export class GenerationService extends BaseAIService {
 	}
 
 	/**
+	 * Rewrite an entire scene based on instructions.
+	 */
+	async rewriteScene(
+		sceneTitle: string,
+		currentContent: string,
+		instructions: string,
+		options: GenerationOptions = {},
+	): Promise<{ text?: string; error?: string } & AIGenerationResult> {
+		const systemPrompt = writerPrompts.rewriteScene.system();
+		const prompt = writerPrompts.rewriteScene.user({
+			sceneTitle,
+			currentContent,
+			instructions,
+		});
+
+		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
+			modelId: options.modelId,
+			modelRole: "writer",
+			temperature: options.temperature ?? 0.7,
+		});
+
+		if (!result.success) {
+			return { error: result.error };
+		}
+
+		return {
+			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
+	}
+
+	/**
+	 * Expand skeletal notes into a full scene.
+	 */
+	async expandScene(
+		sceneTitle: string,
+		notes: string,
+		options: GenerationOptions = {},
+	): Promise<{ text?: string; error?: string } & AIGenerationResult> {
+		const systemPrompt = writerPrompts.expandScene.system();
+		const prompt = writerPrompts.expandScene.user({
+			sceneTitle,
+			notes,
+		});
+
+		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
+			modelId: options.modelId,
+			modelRole: "writer",
+			temperature: options.temperature ?? 0.8,
+		});
+
+		if (!result.success) {
+			return { error: result.error };
+		}
+
+		return {
+			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
+	}
+
+	/**
 	 * Drafts a scene from scratch using scene card details.
 	 */
 	async draftScene(

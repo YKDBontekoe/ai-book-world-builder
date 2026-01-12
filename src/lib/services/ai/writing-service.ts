@@ -1,7 +1,7 @@
 import "server-only";
 
 import { eq } from "drizzle-orm";
-import { generationService } from "@/lib/ai/writer-service";
+import { generationService } from "@/lib/ai/services/generation-service";
 import { db, getScenesForChapter, updateSceneContent } from "@/lib/db/queries";
 import { scene } from "@/lib/db/schema";
 import { verifyProjectAccessViaScenes, verifySceneAccess } from "./utils";
@@ -90,18 +90,12 @@ export const writingService = {
 
 		if (!sceneItem) throw new Error("Scene not found");
 
-		const prompt = `
-      You are an expert editor and fiction writer.
-      Rewrite the following scene based on these instructions: "${instructions}"
-
-      Original Scene Title: ${sceneItem.title}
-      Original Content:
-      ${sceneItem.content || "(No content yet)"}
-    `;
-
-		const { text } = await generationService.continueWriting("", prompt, {
-			modelId: "large",
-		});
+		const { text } = await generationService.rewriteScene(
+			sceneItem.title,
+			sceneItem.content || "(No content yet)",
+			instructions,
+			{ modelId: "large" },
+		);
 
 		if (!text) throw new Error("Failed to generate rewrite.");
 
@@ -119,19 +113,11 @@ export const writingService = {
 		});
 		if (!sceneItem) throw new Error("Scene not found");
 
-		const prompt = `
-      You are an expert fiction writer.
-      Expand the following rough notes/skeleton into a full, vivid scene.
-      Focus on sensory details, dialogue, and pacing.
-
-      Scene Title: ${sceneItem.title}
-      Notes/Skeleton:
-      ${notes || sceneItem.content || ""}
-    `;
-
-		const { text } = await generationService.continueWriting("", prompt, {
-			modelId: "large",
-		});
+		const { text } = await generationService.expandScene(
+			sceneItem.title,
+			notes || sceneItem.content || "",
+			{ modelId: "large" },
+		);
 
 		if (!text) throw new Error("Failed to generate text.");
 
