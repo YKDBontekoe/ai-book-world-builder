@@ -1,21 +1,45 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
 	BookOpenIcon,
 	ChevronRightIcon,
 	FileTextIcon,
+	MoreHorizontalIcon,
 	PenIcon,
+	PlusIcon,
 	SparklesIcon,
+	TrashIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+import {
+	createChapterAction,
+	deleteChapterAction,
+	reorderChaptersAction,
+	updateChapterAction,
+} from "@/app/actions/chapter-ops";
 import {
 	getOutlineData,
 	type SerializedOutline,
 } from "@/app/actions/project-stats";
+import { Button } from "@/components/atoms/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/atoms/dropdown-menu";
+import { Input } from "@/components/atoms/input";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
+import { Textarea } from "@/components/atoms/textarea";
 import { EmptyState } from "@/components/molecules/empty-state";
 import { SectionHeader } from "@/components/molecules/section-header";
+import {
+	SortableItem,
+	SortableList,
+} from "@/components/molecules/sortable-list";
 import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
@@ -51,9 +75,7 @@ const statusConfig: Record<
 	},
 };
 
-function ChapterItem({
-	chapter,
-}: {
+interface ChapterItemProps {
 	chapter: {
 		id: string;
 		title: string;
@@ -61,48 +83,132 @@ function ChapterItem({
 		status: string;
 		sequence: number;
 	};
-}) {
+	onEdit: (id: string, data: { title: string; notes?: string }) => void;
+	onDelete: (id: string) => void;
+}
+
+function ChapterItem({ chapter, onEdit, onDelete }: ChapterItemProps) {
 	const [expanded, setExpanded] = useState(false);
+	const [isEditing, setIsEditing] = useState(false);
+	const [editTitle, setEditTitle] = useState(chapter.title);
+	const [editNotes, setEditNotes] = useState(chapter.notes || "");
 	const status = statusConfig[chapter.status] || statusConfig.planned;
 
-	return (
-		<div className="group">
-			<button
-				className={cn(
-					"flex w-full items-center gap-2 rounded-lg border bg-card p-2.5 text-left transition-all hover:bg-accent/50",
-					expanded && "ring-1 ring-primary/20",
-				)}
-				onClick={() => setExpanded(!expanded)}
-				type="button"
-			>
-				<ChevronRightIcon
-					className={cn(
-						"h-4 w-4 text-muted-foreground transition-transform shrink-0",
-						expanded && "rotate-90",
-					)}
+	const handleSave = () => {
+		onEdit(chapter.id, { title: editTitle, notes: editNotes });
+		setIsEditing(false);
+	};
+
+	const handleCancel = () => {
+		setEditTitle(chapter.title);
+		setEditNotes(chapter.notes || "");
+		setIsEditing(false);
+	};
+
+	// Reset local state if prop changes
+	useEffect(() => {
+		setEditTitle(chapter.title);
+		setEditNotes(chapter.notes || "");
+	}, [chapter.title, chapter.notes]);
+
+	if (isEditing) {
+		return (
+			<div className="rounded-lg border bg-card p-3 space-y-3 ring-2 ring-primary/20">
+				<Input
+					value={editTitle}
+					onChange={(e) => setEditTitle(e.target.value)}
+					placeholder="Chapter Title"
+					className="h-8 text-sm font-medium"
+					autoFocus
 				/>
-				<span className="flex items-center gap-2 flex-1 min-w-0">
-					<span className="font-mono text-xs text-muted-foreground">
-						{chapter.sequence}.
-					</span>
-					<span className="font-medium text-sm truncate">{chapter.title}</span>
-				</span>
-				<span
+				<Textarea
+					value={editNotes}
+					onChange={(e) => setEditNotes(e.target.value)}
+					placeholder="Chapter notes..."
+					className="text-xs min-h-[60px]"
+				/>
+				<div className="flex justify-end gap-2">
+					<Button size="xs" variant="ghost" onClick={handleCancel}>
+						Cancel
+					</Button>
+					<Button size="xs" onClick={handleSave}>
+						Save
+					</Button>
+				</div>
+			</div>
+		);
+	}
+
+	return (
+		<SortableItem id={chapter.id}>
+			<div className="group relative">
+				<div
 					className={cn(
-						"rounded-full px-2 py-0.5 text-xs font-medium shrink-0",
-						status.color,
-						status.bgColor,
+						"flex w-full items-center gap-2 rounded-lg border bg-card p-2.5 text-left transition-all hover:bg-accent/50 pl-8", // added padding for drag handle
+						expanded && "ring-1 ring-primary/20",
 					)}
 				>
-					{status.label}
-				</span>
-			</button>
-			{expanded && chapter.notes && (
-				<div className="ml-8 mt-1 rounded-lg border-l-2 border-muted bg-muted/20 p-3">
-					<p className="text-xs text-muted-foreground">{chapter.notes}</p>
+					<button
+						type="button"
+						onClick={() => setExpanded(!expanded)}
+						className="flex items-center gap-2 flex-1 min-w-0"
+					>
+						<ChevronRightIcon
+							className={cn(
+								"h-4 w-4 text-muted-foreground transition-transform shrink-0",
+								expanded && "rotate-90",
+							)}
+						/>
+						<span className="font-mono text-xs text-muted-foreground">
+							{chapter.sequence}.
+						</span>
+						<span className="font-medium text-sm truncate">
+							{chapter.title}
+						</span>
+					</button>
+
+					<span
+						className={cn(
+							"rounded-full px-2 py-0.5 text-xs font-medium shrink-0",
+							status.color,
+							status.bgColor,
+						)}
+					>
+						{status.label}
+					</span>
+
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="icon"
+								className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+							>
+								<MoreHorizontalIcon className="h-3.5 w-3.5" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent align="end">
+							<DropdownMenuItem onClick={() => setIsEditing(true)}>
+								<PenIcon className="h-3.5 w-3.5 mr-2" />
+								Edit
+							</DropdownMenuItem>
+							<DropdownMenuItem
+								className="text-destructive focus:text-destructive"
+								onClick={() => onDelete(chapter.id)}
+							>
+								<TrashIcon className="h-3.5 w-3.5 mr-2" />
+								Delete
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
 				</div>
-			)}
-		</div>
+				{expanded && chapter.notes && (
+					<div className="ml-8 mt-1 rounded-lg border-l-2 border-muted bg-muted/20 p-3">
+						<p className="text-xs text-muted-foreground">{chapter.notes}</p>
+					</div>
+				)}
+			</div>
+		</SortableItem>
 	);
 }
 
@@ -140,6 +246,7 @@ function OutlineHeader({ outline }: { outline: SerializedOutline }) {
 
 export function OutlinePane() {
 	const { projectId } = useBookCanvasLayout();
+	const queryClient = useQueryClient();
 
 	const { data: outlineResult, isLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.outline(projectId) : ["outline", "null"],
@@ -148,8 +255,108 @@ export function OutlinePane() {
 			return getOutlineData({ projectId });
 		},
 		enabled: !!projectId,
-		refetchInterval: 5000,
 	});
+
+	// Mutations
+	const reorderMutation = useMutation({
+		mutationFn: reorderChaptersAction,
+		onError: () => {
+			toast.error("Failed to reorder chapters");
+			// The onSettled invalidation will handle reverting optimistic UI
+		},
+		onSettled: (_data, _error, variables) => {
+			if (variables) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.outline(variables.projectId),
+				});
+			}
+		},
+	});
+
+	const updateMutation = useMutation({
+		mutationFn: updateChapterAction,
+		onSuccess: () => {
+			toast.success("Chapter updated");
+		},
+		onError: () => toast.error("Failed to update chapter"),
+		onSettled: (_data, _error, variables) => {
+			if (variables) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.outline(variables.projectId),
+				});
+			}
+		},
+	});
+
+	const deleteMutation = useMutation({
+		mutationFn: deleteChapterAction,
+		onSuccess: () => {
+			toast.success("Chapter deleted");
+		},
+		onError: () => toast.error("Failed to delete chapter"),
+		onSettled: (_data, _error, variables) => {
+			if (variables) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.outline(variables.projectId),
+				});
+			}
+		},
+	});
+
+	const createMutation = useMutation({
+		mutationFn: createChapterAction,
+		onSuccess: () => {
+			toast.success("Chapter added");
+		},
+		onError: () => toast.error("Failed to add chapter"),
+		onSettled: (_data, _error, variables) => {
+			if (variables) {
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.outline(variables.projectId),
+				});
+			}
+		},
+	});
+
+	// Local state for optimistic reordering
+	const [chapters, setChapters] = useState<
+		SerializedOutline["chapters"] | null
+	>(null);
+
+	useEffect(() => {
+		if (outlineResult?.data?.chapters) {
+			setChapters(outlineResult.data.chapters);
+		}
+	}, [outlineResult]);
+
+	const handleReorder = useCallback(
+		(newItems: typeof chapters) => {
+			if (!newItems || !projectId) return;
+
+			// Optimistic update
+			setChapters(newItems);
+
+			// Call API
+			const updates = newItems.map((item, index) => ({
+				id: item.id,
+				sequence: index + 1,
+			}));
+
+			reorderMutation.mutate({
+				projectId,
+				updates,
+			});
+		},
+		[projectId, reorderMutation],
+	);
+
+	const handleAddChapter = () => {
+		if (!projectId) return;
+		createMutation.mutate({
+			projectId,
+			title: `Chapter ${chapters ? chapters.length + 1 : 1}`,
+		});
+	};
 
 	if (!projectId) {
 		return (
@@ -185,35 +392,40 @@ export function OutlinePane() {
 	}
 
 	const outline = outlineResult.data;
+	// Use local state if available (for reordering), else fallback to query data
+	const displayChapters = chapters || outline.chapters;
 
 	// Calculate chapter progress
-	const completed = outline.chapters.filter(
+	const completed = displayChapters.filter(
 		(c: { status: string }) => c.status === "final",
 	).length;
-	const inProgress = outline.chapters.filter((c: { status: string }) =>
+	const inProgress = displayChapters.filter((c: { status: string }) =>
 		["drafting", "drafted", "review"].includes(c.status),
 	).length;
 
 	return (
-		<div className="flex flex-col gap-4 p-4">
-			{/* Header */}
+		<div className="flex flex-col gap-4 p-4 pb-20">
 			{/* Header */}
 			<SectionHeader
 				title="Outline"
 				description="Your story structure"
-				action={isLoading && <LoadingSpinner size="xs" variant="muted" />}
+				action={
+					(reorderMutation.isPending || isLoading) && (
+						<LoadingSpinner size="xs" variant="muted" />
+					)
+				}
 			/>
 
 			{/* Outline metadata */}
 			<OutlineHeader outline={outline} />
 
 			{/* Progress bar */}
-			{outline.chapters.length > 0 && (
+			{displayChapters.length > 0 && (
 				<div className="space-y-1.5">
 					<div className="flex justify-between text-xs text-muted-foreground">
 						<span>Progress</span>
 						<span>
-							{completed}/{outline.chapters.length} complete
+							{completed}/{displayChapters.length} complete
 						</span>
 					</div>
 					<div className="h-2 rounded-full bg-muted overflow-hidden">
@@ -221,13 +433,13 @@ export function OutlinePane() {
 							<div
 								className="bg-green-500 transition-all"
 								style={{
-									width: `${(completed / outline.chapters.length) * 100}%`,
+									width: `${(completed / displayChapters.length) * 100}%`,
 								}}
 							/>
 							<div
 								className="bg-blue-500 transition-all"
 								style={{
-									width: `${(inProgress / outline.chapters.length) * 100}%`,
+									width: `${(inProgress / displayChapters.length) * 100}%`,
 								}}
 							/>
 						</div>
@@ -237,18 +449,56 @@ export function OutlinePane() {
 
 			{/* Chapter list */}
 			<div className="space-y-2">
-				<h4 className="font-medium text-sm text-muted-foreground">Chapters</h4>
-				{outline.chapters.length > 0 ? (
-					<div className="space-y-1.5">
-						{outline.chapters.map((chapter) => (
-							<ChapterItem key={chapter.id} chapter={chapter} />
-						))}
-					</div>
+				<div className="flex items-center justify-between">
+					<h4 className="font-medium text-sm text-muted-foreground">
+						Chapters
+					</h4>
+					<Button
+						size="xs"
+						variant="ghost"
+						onClick={handleAddChapter}
+						disabled={createMutation.isPending}
+					>
+						<PlusIcon className="h-3.5 w-3.5 mr-1" />
+						Add
+					</Button>
+				</div>
+
+				{displayChapters.length > 0 ? (
+					<SortableList
+						items={displayChapters}
+						onReorder={handleReorder}
+						disabled={reorderMutation.isPending}
+					>
+						{(chapter) => (
+							<ChapterItem
+								key={chapter.id}
+								chapter={chapter}
+								onEdit={(id, data) =>
+									updateMutation.mutate({ projectId, chapterId: id, data })
+								}
+								onDelete={(id) =>
+									deleteMutation.mutate({ projectId, chapterId: id })
+								}
+							/>
+						)}
+					</SortableList>
 				) : (
 					<div className="rounded-lg border border-dashed p-4 text-center text-xs text-muted-foreground">
-						No chapters added yet. Ask the AI to add chapters to your outline.
+						No chapters added yet. Ask the AI to add chapters or click Add
+						above.
 					</div>
 				)}
+
+				<Button
+					variant="outline"
+					className="w-full border-dashed"
+					onClick={handleAddChapter}
+					disabled={createMutation.isPending}
+				>
+					<PlusIcon className="h-4 w-4 mr-2" />
+					Add Chapter
+				</Button>
 			</div>
 
 			{/* Story beats */}
