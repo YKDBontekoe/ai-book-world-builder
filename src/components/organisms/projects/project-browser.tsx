@@ -164,13 +164,13 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 		<div className="space-y-6 relative pb-20">
 			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
 				<div className="relative w-full sm:max-w-md">
-					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+					<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
 					<Input
 						placeholder="Search projects..."
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						onClear={() => setSearchQuery("")}
-						className="pl-9 bg-background/50 backdrop-blur-sm border-border/50 focus:border-primary/50 transition-colors"
+						className="pl-9"
 					/>
 				</div>
 				<div className="flex items-center gap-2 w-full sm:w-auto">
@@ -180,7 +180,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 							setVisibilityFilter(value as VisibilityFilter)
 						}
 					>
-						<SelectTrigger className="w-full sm:w-[140px] bg-background/50 backdrop-blur-sm border-border/50">
+						<SelectTrigger className="w-full sm:w-[140px]">
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<Eye className="h-4 w-4" />
 								<SelectValue placeholder="Visibility" />
@@ -195,7 +195,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 
 					<div className="h-8 w-px bg-border/50 mx-1" />
 
-					<div className="flex items-center bg-background/50 backdrop-blur-sm border border-border/50 rounded-lg p-1 mr-2">
+					<div className="flex items-center glass-surface border border-border/50 rounded-lg p-1 mr-2">
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
@@ -241,7 +241,7 @@ export function ProjectBrowser({ projects }: { projects: Project[] }) {
 						value={sortOption}
 						onValueChange={(value) => setSortOption(value as SortOption)}
 					>
-						<SelectTrigger className="w-full sm:w-[180px] bg-background/50 backdrop-blur-sm border-border/50">
+						<SelectTrigger className="w-full sm:w-[180px]">
 							<div className="flex items-center gap-2 text-muted-foreground">
 								<SortIcon sort={sortOption} />
 								<SelectValue placeholder="Sort by" />
