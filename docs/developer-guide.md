@@ -116,8 +116,11 @@ We separate controller logic (Server Actions) from business logic (Services):
 ### 5. Software Builder (Jules Agent)
 We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
 
+> **See [`docs/jules-integration.md`](jules-integration.md) for a deep dive into the architecture.**
+
 -   **Admin Dashboard**: Located at `/admin/github`. It wraps the `TaskBoard` component to visualize Issues, Plans, and PRs.
 -   **Jules Client**: `lib/jules-client.ts` wraps the Google Jules API.
+-   **Artifact Renderer**: `src/components/admin/jules/artifact-renderer.tsx` is a reusable component for displaying rich agent outputs like Git patches and terminal logs.
 -   **Workflow**:
     1.  **Session**: A long-lived interaction with the agent (`JulesSession`).
     2.  **Planning**: The agent proposes a `JulesPlan` (steps to solve the task).
