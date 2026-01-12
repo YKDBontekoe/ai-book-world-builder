@@ -97,7 +97,7 @@ export function CreateProjectDialog({
 					</Button>
 				)}
 			</DialogTrigger>
-			<DialogContent className="sm:max-w-[425px] glass-panel">
+			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>
 					<DialogTitle>Create Project</DialogTitle>
 					<DialogDescription>
@@ -114,7 +114,6 @@ export function CreateProjectDialog({
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							required
-							className="glass-input"
 							autoFocus
 						/>
 					</div>
@@ -136,7 +135,7 @@ export function CreateProjectDialog({
 							value={visibility}
 							onValueChange={(v) => setVisibility(v as VisibilityType)}
 						>
-							<SelectTrigger className="glass-input">
+							<SelectTrigger>
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>

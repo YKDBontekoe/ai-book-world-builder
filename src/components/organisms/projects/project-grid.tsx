@@ -92,7 +92,7 @@ function ProjectCard({
 							checked={selected}
 							// We handle the change in the wrapper onClick to capture the event object
 							onCheckedChange={() => {}}
-							className="bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50 h-5 w-5 pointer-events-none"
+							className="bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50 h-5 w-5 pointer-events-none rounded shadow-sm"
 						/>
 					</div>
 				)}
@@ -148,7 +148,7 @@ function ProjectCard({
 								<Button
 									variant="ghost"
 									size="icon"
-									className="h-8 w-8 bg-background/50 backdrop-blur-sm hover:bg-background/80 shadow-sm rounded-full"
+									className="h-8 w-8 glass-surface hover:bg-background/80 shadow-sm rounded-full"
 									onClick={(e) => {
 										e.stopPropagation();
 										setShowPreview(true);
