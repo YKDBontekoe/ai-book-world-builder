@@ -9,6 +9,7 @@ import {
 	type StoryStyle,
 	storyService,
 } from "@/lib/services/story-service";
+import { bookPlanSchema } from "@/lib/services/schemas/story-schemas";
 
 // Define schema for validation
 const generateBookPlanSchema = z.object({
@@ -32,6 +33,18 @@ const planChapterSchema = z.object({
 
 const generateSceneSchema = z.object({
 	sceneId: z.string().uuid("Invalid scene ID"),
+});
+
+const createBookFromPlanSchema = z.object({
+	projectId: z.string().uuid("Invalid project ID"),
+	plan: bookPlanSchema,
+	style: z
+		.object({
+			pov: z.string().optional(),
+			tone: z.string().optional(),
+			genre: z.string().optional(),
+		})
+		.optional(),
 });
 
 export async function generateBookPlan(
@@ -75,6 +88,15 @@ export async function createBookFromPlan(
 	plan: BookPlan,
 	style?: StoryStyle,
 ) {
+	const validation = createBookFromPlanSchema.safeParse({
+		projectId,
+		plan,
+		style,
+	});
+	if (!validation.success) {
+		return { success: false, error: validation.error.message };
+	}
+
 	return withProjectWriteAccess(projectId, async () => {
 		try {
 			await storyService.createBookFromPlan(projectId, plan, style);

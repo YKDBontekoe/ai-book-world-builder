@@ -267,6 +267,37 @@ describe("Story Generation Actions", () => {
 			);
 			expect(result.success).toBe(true);
 		});
+
+		it("should return an error for an invalid project ID", async () => {
+			const projectId = "not-a-uuid";
+			const plan = {
+				title: "New Book",
+				logline: "Logline",
+				summary: "Summary",
+				chapters: [{ title: "Chapter 1", summary: "Intro" }],
+			};
+
+			const result = await createBookFromPlan(projectId, plan);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toContain("Invalid project ID");
+			expect(storyService.createBookFromPlan).not.toHaveBeenCalled();
+		});
+
+		it("should return an error for an invalid plan object", async () => {
+			const projectId = "123e4567-e89b-12d3-a456-426614174099";
+			const invalidPlan = {
+				// Missing title, logline, summary
+				chapters: [{ title: "Chapter 1" }], // Missing summary in chapter
+			};
+
+			// @ts-expect-error - Testing invalid input
+			const result = await createBookFromPlan(projectId, invalidPlan);
+
+			expect(result.success).toBe(false);
+			expect(result.error).toBeDefined();
+			expect(storyService.createBookFromPlan).not.toHaveBeenCalled();
+		});
 	});
 
 	describe("planChapterScenes", () => {
