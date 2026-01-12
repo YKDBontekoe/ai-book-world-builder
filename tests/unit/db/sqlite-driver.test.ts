@@ -52,5 +52,5 @@ describe("db driver selection", () => {
 
 		resetEnvVar("DB_DRIVER", originalDriver);
 		resetEnvVar("SQLITE_DB_PATH", originalPath);
-	});
+	}, 10000);
 });

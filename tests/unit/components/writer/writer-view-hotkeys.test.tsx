@@ -2,7 +2,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { WriterView } from "@/features/writer/components/writer-view";
-import { toast } from "sonner";
 import type { Project } from "@/lib/db/schema";
 import { BookCanvasProvider } from "@/components/organisms/book-canvas/book-canvas-context";
 
@@ -34,6 +33,11 @@ vi.mock("next/navigation", () => ({
 	}),
 }));
 
+vi.mock("usehooks-ts", () => ({
+	useMediaQuery: () => false, // Desktop mode
+	useDebounceCallback: (fn: any) => fn,
+}));
+
 vi.mock("sonner", () => ({
 	toast: {
 		info: vi.fn(),
@@ -62,6 +66,15 @@ vi.mock("@/features/writer/components/tools/writer-spotlight", () => ({
 	WriterSpotlight: () => <div data-testid="writer-spotlight">Spotlight</div>,
 }));
 
+// Mock the server action file itself to prevent it from trying to load DB in test env
+vi.mock("@/features/writer/actions", () => ({
+	getProjectStructure: vi
+		.fn()
+		.mockResolvedValue({ structure: [], structureText: "" }),
+	updateSceneContent: vi.fn(),
+	createChapterSnapshot: vi.fn(),
+}));
+
 // Mock Resizable Panel Group (simplified)
 vi.mock("@/components/atoms/resizable", () => ({
 	ResizablePanelGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
@@ -78,18 +91,24 @@ describe("WriterView Hotkeys", () => {
 			</BookCanvasProvider>
 		);
 
-		// Wait for mount
+		// Wait for mount and verify initial state (sidebar open on desktop)
 		await waitFor(() => expect(screen.getByTestId("writer-editor")).toBeInTheDocument());
+		expect(screen.getByTestId("writer-sidebar")).toBeInTheDocument();
 
 		// Trigger Cmd+B
 		await user.keyboard("{Meta>}b{/Meta}");
 
-		// Expect toast
+		// Expect sidebar to be gone
 		await waitFor(() => {
-			expect(toast.info).toHaveBeenCalledWith(
-				expect.stringContaining("Toggled Sidebar"),
-				expect.any(Object)
-			);
+			expect(screen.queryByTestId("writer-sidebar")).not.toBeInTheDocument();
+		});
+
+		// Trigger Cmd+B again
+		await user.keyboard("{Meta>}b{/Meta}");
+
+		// Expect sidebar to be back
+		await waitFor(() => {
+			expect(screen.getByTestId("writer-sidebar")).toBeInTheDocument();
 		});
 	});
 });

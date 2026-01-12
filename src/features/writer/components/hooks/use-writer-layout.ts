@@ -56,6 +56,8 @@ export function useWriterLayout(): WriterLayoutState {
 				panel.collapse();
 				setIsSidebarOpen(false);
 			}
+		} else {
+			setIsSidebarOpen((prev) => !prev);
 		}
 	}, [isMobile]);
 
@@ -74,6 +76,8 @@ export function useWriterLayout(): WriterLayoutState {
 				panel.collapse();
 				setIsCanvasOpen(false);
 			}
+		} else {
+			setIsCanvasOpen((prev) => !prev);
 		}
 	}, [isMobile]);
 
