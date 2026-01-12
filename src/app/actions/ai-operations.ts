@@ -1,6 +1,6 @@
 "use server";
 
-import { analysisService } from "@/lib/services/ai/analysis-service";
+import { analysisService } from "@/lib/ai/services/analysis-service";
 import { loreService } from "@/lib/services/ai/lore-service";
 import { writingService } from "@/lib/services/ai/writing-service";
 

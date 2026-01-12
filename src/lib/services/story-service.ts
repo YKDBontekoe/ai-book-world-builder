@@ -2,8 +2,8 @@ import "server-only";
 
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { getSelectedModelId } from "@/lib/ai/models";
+import { generationService } from "@/lib/ai/services/generation-service";
 import { planningService } from "@/lib/ai/services/planning-service";
-import { generationService } from "@/lib/ai/writer-service"; // Use new service
 import { invalidateCache } from "@/lib/cache";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 import {

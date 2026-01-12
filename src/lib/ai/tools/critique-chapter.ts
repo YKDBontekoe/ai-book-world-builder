@@ -1,6 +1,6 @@
 import { type Tool, tool } from "ai";
 import { z } from "zod";
-import { analysisService } from "@/lib/services/ai/analysis-service";
+import { analysisService } from "@/lib/ai/services/analysis-service";
 
 const inputSchema = z.object({
 	chapterId: z.string().describe("The Chapter ID."),

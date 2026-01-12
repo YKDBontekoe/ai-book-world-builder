@@ -10,10 +10,18 @@
 import "server-only";
 
 import { z } from "zod";
+import { getSelectedModelId } from "@/lib/ai/models";
+import { writerPrompts } from "@/lib/ai/prompts/writer-prompts";
 import { retrieveContext } from "@/lib/ai/rag";
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
-import { getChunksForSourceMaterial, getSampledChunks } from "@/lib/db/queries";
+import {
+	getChunksForSourceMaterial,
+	getEntitiesForProject,
+	getSampledChunks,
+	getScenesForChapter,
+} from "@/lib/db/queries";
 import type { SourceMaterialChunk } from "@/lib/db/schema";
+import { verifyProjectAccessViaScenes } from "@/lib/services/ai/utils";
 
 // =============================================================================
 // Types
@@ -97,6 +105,32 @@ const relationshipSchema = z.object({
 			confidence: z.number().min(0).max(100),
 		}),
 	),
+});
+
+const critiqueSchema = z.object({
+	strengths: z.array(z.string()).describe("List of what works well."),
+	weaknesses: z
+		.array(z.string())
+		.describe("List of areas needing improvement."),
+	pacing: z
+		.string()
+		.describe("Analysis of the pacing (too fast, too slow, good)."),
+	tone: z.string().describe("Analysis of the tone consistency."),
+	suggestions: z
+		.array(z.string())
+		.describe("Actionable suggestions for improvement."),
+});
+
+const consistencySchema = z.object({
+	issues: z.array(
+		z.object({
+			type: z.enum(["plot", "character", "setting"]),
+			description: z.string(),
+			location: z.string().describe("Where in the text this issue occurs."),
+			severity: z.enum(["high", "medium", "low"]),
+		}),
+	),
+	overallCoherence: z.number().describe("Score from 0 to 10."),
 });
 
 // =============================================================================
@@ -334,6 +368,88 @@ Identify how they interact and what their relationship is.`;
 		}
 
 		return allRelationships;
+	}
+
+	/**
+	 * Critiques a chapter's content.
+	 */
+	async critiqueChapter(
+		chapterId: string,
+	): Promise<z.infer<typeof critiqueSchema>> {
+		const scenes = await getScenesForChapter({ chapterId });
+		if (!scenes.length) throw new Error("Chapter is empty");
+
+		await verifyProjectAccessViaScenes(scenes);
+
+		const fullText = scenes
+			.sort((a, b) => a.sequence - b.sequence)
+			.map((s) => `[SCENE: ${s.title}]\n${s.content || "(Not written)"}`)
+			.join("\n\n");
+
+		const systemPrompt = writerPrompts.critiqueChapter.system();
+		const prompt = writerPrompts.critiqueChapter.user({ fullText });
+
+		const result = await this.generateObjectWithSystem(
+			systemPrompt,
+			prompt,
+			critiqueSchema,
+			{
+				modelId: await getSelectedModelId("large"),
+			},
+		);
+
+		if (!result.success) {
+			throw new Error(result.error);
+		}
+
+		return result.data.object;
+	}
+
+	/**
+	 * Checks for consistency errors in a chapter.
+	 */
+	async analyzeConsistency(
+		chapterId: string,
+	): Promise<z.infer<typeof consistencySchema>> {
+		const scenes = await getScenesForChapter({ chapterId });
+		if (!scenes.length) throw new Error("Chapter is empty");
+
+		await verifyProjectAccessViaScenes(scenes);
+
+		const firstScene = scenes[0];
+		const entities = await getEntitiesForProject({
+			projectId: firstScene.projectId,
+		});
+
+		const entityContext = entities
+			.map((e) => `${e.name} (${e.kind}): ${e.summary}`)
+			.join("\n");
+
+		const fullText = scenes
+			.sort((a, b) => a.sequence - b.sequence)
+			.map((s) => `[SCENE: ${s.title}]\n${s.content || "(Not written)"}`)
+			.join("\n\n");
+
+		const systemPrompt = writerPrompts.analyzeConsistency.system();
+		const prompt = writerPrompts.analyzeConsistency.user({
+			fullText,
+			entityContext,
+		});
+
+		const result = await this.generateObjectWithSystem(
+			systemPrompt,
+			prompt,
+			consistencySchema,
+			{
+				modelId: await getSelectedModelId("large"),
+			},
+		);
+
+		if (!result.success) {
+			throw new Error(result.error);
+		}
+
+		return result.data.object;
 	}
 }
 

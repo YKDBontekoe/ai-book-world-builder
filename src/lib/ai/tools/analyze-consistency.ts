@@ -1,6 +1,6 @@
 import { tool } from "ai";
 import { z } from "zod";
-import { analysisService } from "@/lib/services/ai/analysis-service";
+import { analysisService } from "@/lib/ai/services/analysis-service";
 
 export const analyzeConsistency = () =>
 	tool({
