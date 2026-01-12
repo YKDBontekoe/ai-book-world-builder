@@ -160,7 +160,7 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 					return null;
 				},
 			}),
-			[editorRef.current],
+			[],
 		);
 
 		// Update Editor Props (Handlers) to close over latest state
