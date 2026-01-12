@@ -121,29 +121,16 @@ export function GraphPane() {
 		: [];
 
 	// 1. Calculate Layout (Expensive)
-	// Depends ONLY on structure and issues. Changing activeSceneId will NOT re-run this.
-	const { initialNodes, initialEdges } = useMemo(() => {
+	// Depends ONLY on structure. Changing issues or activeSceneId will NOT re-run this.
+	const layoutData = useMemo(() => {
 		const nodes: Node[] = [];
 		const edges: Edge[] = [];
 
-		if (!structure) return { initialNodes: [], initialEdges: [] };
-
-		// Optimization: Create an issue lookup map for O(1) access instead of filtering O(N) inside the loop
-		const issuesByScene = new Map<string, ConsistencyIssue[]>();
-		issues.forEach((issue: ConsistencyIssue) => {
-			if (issue.status === "open" && issue.sceneId) {
-				if (!issuesByScene.has(issue.sceneId)) {
-					issuesByScene.set(issue.sceneId, []);
-				}
-				issuesByScene.get(issue.sceneId)?.push(issue);
-			}
-		});
+		if (!structure) return null;
 
 		// Flatten structure
 		structure.forEach((chapter: any) => {
 			chapter.scenes.forEach((scene: any) => {
-				const sceneIssues = issuesByScene.get(scene.id) || [];
-
 				nodes.push({
 					id: scene.id,
 					type: "scene",
@@ -151,9 +138,8 @@ export function GraphPane() {
 					data: {
 						label: scene.title,
 						chapter: chapter.title,
-						issueCount: sceneIssues.length,
+						issueCount: 0, // Placeholder, updated in next step
 					},
-					// selected: scene.id === activeSceneId, // REMOVED to avoid dependency
 				});
 
 				if (scene.prevSceneId) {
@@ -172,7 +158,37 @@ export function GraphPane() {
 		});
 
 		return getLayoutedElements(nodes, edges);
-	}, [structure, issues]);
+	}, [structure]);
+
+	// 2. Merge Issues (Cheap)
+	// Updates node data without recalculating layout positions
+	const { initialNodes, initialEdges } = useMemo(() => {
+		if (!layoutData) return { initialNodes: [], initialEdges: [] };
+
+		const { initialNodes: layoutNodes, initialEdges: layoutEdges } = layoutData;
+
+		// Optimization: Create an issue lookup map for O(1) access
+		const issuesByScene = new Map<string, ConsistencyIssue[]>();
+		issues.forEach((issue: ConsistencyIssue) => {
+			if (issue.status === "open" && issue.sceneId) {
+				if (!issuesByScene.has(issue.sceneId)) {
+					issuesByScene.set(issue.sceneId, []);
+				}
+				issuesByScene.get(issue.sceneId)?.push(issue);
+			}
+		});
+
+		// Merge issues into nodes (preserving layout positions)
+		const nodesWithIssues = layoutNodes.map((node) => ({
+			...node,
+			data: {
+				...node.data,
+				issueCount: issuesByScene.get(node.id)?.length || 0,
+			},
+		}));
+
+		return { initialNodes: nodesWithIssues, initialEdges: layoutEdges };
+	}, [layoutData, issues]);
 
 	const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
 	const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
