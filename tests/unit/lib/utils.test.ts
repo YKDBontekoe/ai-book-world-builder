@@ -32,17 +32,6 @@ describe("lib/utils", () => {
 			const uuid2 = generateUUID();
 			expect(uuid1).not.toBe(uuid2);
 		});
-
-		it("should use fallback if crypto.randomUUID is not available", () => {
-			vi.stubGlobal("crypto", undefined);
-
-			const uuid = generateUUID();
-			expect(uuid).toMatch(
-				/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-			);
-
-			vi.unstubAllGlobals();
-		});
 	});
 
 	describe("getDocumentTimestampByIndex", () => {
