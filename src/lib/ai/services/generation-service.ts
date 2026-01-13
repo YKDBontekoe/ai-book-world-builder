@@ -12,11 +12,12 @@
 import "server-only";
 
 import { writerPrompts } from "@/lib/ai/prompts/writer-prompts";
-import { BaseAIService } from "@/lib/ai/services/base-ai-service";
+import { aiClient } from "@/lib/ai/services/ai-client";
 import type {
 	AIGenerationOptions,
 	AIGenerationResult,
 } from "@/lib/ai/services/types";
+import { BaseService } from "@/lib/services/base-service";
 
 // =============================================================================
 // Types
@@ -37,7 +38,7 @@ export interface SceneCardData {
 // Service
 // =============================================================================
 
-export class GenerationService extends BaseAIService {
+export class GenerationService extends BaseService {
 	/**
 	 * Continues writing a story based on context and previous content.
 	 */
@@ -52,10 +53,14 @@ export class GenerationService extends BaseAIService {
 			previousContent,
 		});
 
-		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
-			modelId: options.modelId,
-			modelRole: "writer",
-			temperature: options.temperature ?? 0.7,
+		const result = await aiClient.generateText({
+			prompt,
+			options: {
+				...options,
+				system: systemPrompt,
+				modelRole: "writer",
+				temperature: options.temperature ?? 0.7,
+			},
 		});
 
 		if (!result.success) {
@@ -89,10 +94,14 @@ export class GenerationService extends BaseAIService {
 			instructions,
 		});
 
-		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
-			modelId: options.modelId,
-			modelRole: "writer",
-			temperature: options.temperature ?? 0.7,
+		const result = await aiClient.generateText({
+			prompt,
+			options: {
+				...options,
+				system: systemPrompt,
+				modelRole: "writer",
+				temperature: options.temperature ?? 0.7,
+			},
 		});
 
 		if (!result.success) {
@@ -117,10 +126,14 @@ export class GenerationService extends BaseAIService {
 		const systemPrompt = writerPrompts.generateIdeas.system();
 		const prompt = writerPrompts.generateIdeas.user({ context, currentText });
 
-		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
-			modelId: options.modelId,
-			modelRole: "writer",
-			temperature: options.temperature ?? 0.7,
+		const result = await aiClient.generateText({
+			prompt,
+			options: {
+				...options,
+				system: systemPrompt,
+				modelRole: "writer",
+				temperature: options.temperature ?? 0.7,
+			},
 		});
 
 		if (!result.success) {
@@ -148,10 +161,14 @@ export class GenerationService extends BaseAIService {
 			instruction,
 		});
 
-		const result = await this.generateTextWithSystem(systemPrompt, prompt, {
-			modelId: options.modelId,
-			modelRole: "writer",
-			temperature: options.temperature ?? 0.5,
+		const result = await aiClient.generateText({
+			prompt,
+			options: {
+				...options,
+				system: systemPrompt,
+				modelRole: "writer",
+				temperature: options.temperature ?? 0.5,
+			},
 		});
 
 		if (!result.success) {
