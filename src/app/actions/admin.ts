@@ -1,11 +1,8 @@
 "use server";
 
 import { count, desc, eq, sql, sum } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/app/(auth)/auth";
 import { createAdminAction } from "@/lib/action-middleware";
-import { isAdmin } from "@/lib/auth/utils";
 import { db } from "@/lib/db";
 import {
 	bookGeneration as generationTable,
@@ -26,21 +23,6 @@ const paginationSchema = z.object({
 const userIdSchema = z.object({
 	userId: z.string().uuid("Invalid user ID"),
 });
-
-// ============================================================================
-// Legacy Helper (for redirect-based auth)
-// ============================================================================
-
-/**
- * @deprecated Use createAdminAction middleware instead
- */
-export async function ensureAdmin() {
-	const session = await auth();
-	if (!session?.user || !isAdmin(session.user.role)) {
-		redirect("/");
-	}
-	return session;
-}
 
 // ============================================================================
 // Actions
