@@ -21,9 +21,18 @@ The **Story Wizard** is the fastest way to turn an idea into a complete outline.
 **Option B: Manual Structuring**
 If you already have an outline, you can build it manually.
 
+## Project Dashboard
+
+The **Project Dashboard** gives you a high-level overview of your story's progress and health.
+- **Access**: Click the "Dashboard" tab on your project card or navigate to it from the project settings.
+- **Stats**: View your total word count, entity count, and estimated reading time.
+- **Analytics**:
+    -   **Usage History**: Track your AI token usage and costs over time.
+    -   **Entity Insights**: See which characters and locations are most active in your story.
+
 ## Writer View Interface
 
-The Project View is divided into three main panels to help you organize and write your story:
+The Project View (also known as the **Studio**) is divided into three main panels to help you organize and write your story:
 
 1.  **Navigation (Left)**: This sidebar lists your Chapters and Scenes. Use it to jump between different parts of your book. It also contains the "Create Story" wizard when your project is empty.
 2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
@@ -57,10 +66,20 @@ The Canvas (Right Panel) is your command center for world-building and analysis.
 *   **Scenes**: A Kanban-style board to manage scene status.
     *   *Workflow*: Drag and drop scenes between columns (Planned -> Drafted -> Final).
 *   **Bible**: The core database of your characters and lore. Use this to search and edit entities without leaving the editor.
+    *   *Entity Pages*: Click on any entity name to open a dedicated **Entity Details** page with a full timeline, attribute list, and biography.
 *   **Context**: Shows exactly what the AI "sees" when generating the current scene (e.g., Active Characters, Location details). Use this to verify the AI has the right info.
 *   **Draft**: A scratchpad for rough ideas or snippets that don't fit in the main manuscript yet.
 *   **Diagnostics**: Runs health checks on your story (e.g., "Missing Character Descriptions", "Empty Scenes").
 *   **Log**: A history of changes and AI generations.
+
+## Reader Mode
+
+**Reader Mode** offers a distraction-free environment to review your work as a finished book.
+-   **Access**: Click the "Read" button in the project header.
+-   **Features**:
+    -   **Clean Layout**: Hides all editing tools and sidebars.
+    -   **Progress Tracking**: Automatically remembers where you left off.
+    -   **Pagination**: Read comfortably with simulated book pages or continuous scroll.
 
 ## Writer Tools
 
@@ -128,5 +147,20 @@ Restore previous versions of your scene without losing progress. Click the **Clo
 
 ## Troubleshooting
 
--   **The AI got a fact wrong**: Check your **Bible** entities. The AI relies on what you've written there.
--   **The generation is stalled**: Large generations can take time. If it seems stuck, try refreshing the page. The system saves progress at every step.
+### Common Issues
+
+**1. "The AI keeps getting facts wrong"**
+*   **Cause**: The AI might not have access to the specific detail you need.
+*   **Fix**: Update your **Bible** (Entity Database). Ensure the character or location has a clear description. Check the **Context** pane to see if that entity is currently active in the scene.
+
+**2. "Generation is stalled or spinning forever"**
+*   **Cause**: Vercel Serverless Function timeouts (usually after 60 seconds) or browser connection interruptions.
+*   **Fix**: Refresh the page. The system saves generation progress in real-time, so you shouldn't lose much work. Try generating smaller chunks (one scene at a time) instead of a whole chapter.
+
+**3. "I can't find my project"**
+*   **Cause**: You might be logged into a different account or the project was deleted.
+*   **Fix**: Check the "Shared" tab if you are looking for a community project.
+
+**4. "Models are not loading"**
+*   **Cause**: API key issues or OpenRouter service outages.
+*   **Fix**: Go to **Settings > Models** and try selecting a different default model (e.g., switch from "Middle" to "Light").
