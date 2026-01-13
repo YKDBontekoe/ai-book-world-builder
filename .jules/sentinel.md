@@ -15,3 +15,8 @@
 **Vulnerability:** Public projects were exposing sensitive billing/usage data (costs, tokens) via the dashboard stats action to non-owners.
 **Learning:** Public visibility shouldn't imply "full transparency" of internal metrics like costs.
 **Prevention:** Always filter/redact sensitive fields in data objects based on ownership, even if the parent object is public.
+
+## 2025-02-14 - [Cron Auth Fail-Open]
+**Vulnerability:** The Cron API endpoint allowed unauthenticated access if the `CRON_SECRET` environment variable was missing, creating a "fail-open" scenario.
+**Learning:** Security checks that rely on environment variables must explicitly check for the variable's existence and fail closed if it's missing.
+**Prevention:** Always validate that required security configuration (secrets) exists before performing authorization checks.
