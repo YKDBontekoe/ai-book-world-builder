@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import { withProjectWriteAccess } from "@/lib/actions-utils";
 import { projectRepository } from "@/lib/db/repositories";
 import { projectService } from "@/lib/services/project-service";
 import { deleteProjectsSchema } from "@/lib/validation";
@@ -20,19 +21,6 @@ const renameProjectSchema = z.object({
 	description: z.string().max(500, "Description is too long").optional(),
 });
 
-// Helper for chunked inserts
-async function _chunkedInsert<T>(
-	tx: any,
-	table: any,
-	items: T[],
-	chunkSize = 1000,
-) {
-	for (let i = 0; i < items.length; i += chunkSize) {
-		const chunk = items.slice(i, i + chunkSize);
-		await tx.insert(table).values(chunk);
-	}
-}
-
 export async function createProjectAction(params: {
 	name: string;
 	description?: string;
@@ -45,7 +33,7 @@ export async function createProjectAction(params: {
 
 	const validation = createProjectSchema.safeParse(params);
 	if (!validation.success) {
-		return { error: validation.error.message };
+		return { error: validation.error.errors[0].message };
 	}
 
 	try {
@@ -67,40 +55,24 @@ export async function renameProject(
 	name: string,
 	description?: string,
 ) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
-	}
-	const userId = session.user.id;
-
 	const validation = renameProjectSchema.safeParse({ name, description });
 	if (!validation.success) {
-		return { error: validation.error.message };
+		return { error: validation.error.errors[0].message };
 	}
 
-	const existingProject = await projectRepository.findByIdWithAccess(
-		projectId,
-		userId,
-	);
-
-	if (!existingProject) {
-		return { error: "Project not found or access denied" };
-	}
-
-	if (existingProject.userId !== userId) {
-		return { error: "Only the project owner can rename it." };
-	}
-
-	try {
+	const result = await withProjectWriteAccess(projectId, async () => {
 		await projectRepository.update(projectId, validation.data);
 
 		revalidatePath("/projects");
 		revalidatePath(`/projects/${projectId}`);
 		return { success: true };
-	} catch (error) {
-		console.error("Rename project error:", error);
-		return { error: "Failed to rename project" };
+	});
+
+	if (!result.success) {
+		return { error: result.error };
 	}
+
+	return result.data;
 }
 
 export async function deleteProject(projectId: string) {
