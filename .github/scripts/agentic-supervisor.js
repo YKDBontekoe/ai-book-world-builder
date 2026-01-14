@@ -24,7 +24,7 @@ const path = require('path');
 const CONFIG = {
   LOOP_THRESHOLD: 3,
   LOG_TRUNCATE_LENGTH: 2000,
-  CODERABBIT_COMMENT_LIMIT: 10,
+  CODERABBIT_COMMENT_LIMIT: 50,
   BOT_USERS: ['google-labs-jules', 'jules', 'renovate[bot]', 'coderabbitai', 'github-actions[bot]']
 };
 
@@ -113,10 +113,19 @@ async function addLabels(number, labels) {
 
 function getCodeRabbitComments(repo, number) {
   try {
-    const commentsJSON = exec(`gh api "/repos/${repo}/pulls/${number}/comments"`);
-    if (!commentsJSON) return '';
-    
-    const comments = JSON.parse(commentsJSON);
+    // Fetch all comments using pagination
+    // gh api --paginate outputs concatenated JSON arrays (e.g. [...][...]) which JSON.parse can't handle directly
+    // We use jq to flatten them into a single array if possible, or manual string manipulation fallback
+    let comments = [];
+    try {
+        const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.' | jq -s 'add'`);
+        comments = JSON.parse(json);
+    } catch (e) {
+         const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
+         const fixed = raw.replace(/\]\[/g, ',');
+         comments = JSON.parse(fixed);
+    }
+
     const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
     
     if (rabbitComments.length === 0) return '';
@@ -282,6 +291,12 @@ async function main() {
     context.labels = event.pull_request.labels.map(l => l.name);
     context.prBody = event.pull_request.body;
     context.isDraft = event.pull_request.draft || false;
+
+    // IMMEDIATE LOOP EXIT
+    if (context.labels.includes('jules-stuck')) {
+        log('Supervisor aborted: PR is labeled jules-stuck');
+        process.exit(0);
+    }
     
     if (eventName === 'pull_request_review') {
       context.reviewAuthor = event.review.user.login;
@@ -295,6 +310,12 @@ async function main() {
     context.labels = event.issue.labels.map(l => l.name);
     context.commentBody = event.comment.body;
     context.commentAuthor = event.comment.user.login;
+
+    // IMMEDIATE LOOP EXIT
+    if (context.labels.includes('jules-stuck')) {
+        log('Supervisor aborted: Issue is labeled jules-stuck');
+        process.exit(0);
+    }
     
     if (event.issue.pull_request) {
       context.isPr = true;
@@ -455,6 +476,22 @@ ${conventions}
         if (commits.length >= 3 && commits.every(isJules)) {
             return true;
         }
+
+        // Check if the last comment is already a bot/supervisor instruction
+        const lastComments = JSON.parse(exec(`gh api "/repos/${repo}/issues/${context.number}/comments?per_page=5&sort=created&direction=desc"`));
+        if (lastComments && lastComments.length > 0) {
+            const lastComment = lastComments[0];
+            const isBot = CONFIG.BOT_USERS.some(u => lastComment.user?.login?.includes(u));
+            const hasSignature = lastComment.body.includes('Routing via Trigger') ||
+                                 lastComment.body.includes('Jules Session Starting') ||
+                                 lastComment.body.includes('Loop Detected');
+
+            // If the last comment is from the PAT user (who might look like a human) but contains our signature, treat it as a loop
+            if (hasSignature) {
+                log('Loop detected: Last comment was a Supervisor instruction.');
+                return true;
+            }
+        }
     } catch(e) {}
     return false;
   }
@@ -463,9 +500,9 @@ ${conventions}
   if (eventName === 'issue_comment') {
     const body = context.commentBody.trim();
     const commenter = context.commentAuthor;
+    const isBot = CONFIG.BOT_USERS.some(u => commenter.includes(u)) || body.includes('Routing via Trigger');
     
-    if (commenter !== 'github-actions[bot]' && commenter !== 'google-labs-jules' && 
-        (body.includes('@jules') || body.includes('@google-labs-jules') || body.includes('@src/lib/jules-client.ts'))) {
+    if (!isBot && (body.includes('@jules') || body.includes('@google-labs-jules') || body.includes('@src/lib/jules-client.ts'))) {
       const standard = getStandardMethod();
       decision.reason = 'Manual interaction';
       
