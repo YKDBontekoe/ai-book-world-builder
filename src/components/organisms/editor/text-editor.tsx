@@ -39,7 +39,6 @@ type EditorProps = {
 	readOnly?: boolean;
 	typewriterMode?: boolean;
 	mentionables?: Entity[];
-	sceneId?: string;
 };
 
 const PureEditor = forwardRef<EditorHandle, EditorProps>(
@@ -53,7 +52,6 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			readOnly = false,
 			typewriterMode = false,
 			mentionables = [],
-			sceneId,
 		},
 		ref,
 	) => {
@@ -90,7 +88,6 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			typewriterMode,
 			status,
 			onMentionStateChange: handleMentionStateChange,
-			sceneId,
 		});
 
 		// Sync local mention state with hook
@@ -309,7 +306,6 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 
 function areEqual(prevProps: EditorProps, nextProps: EditorProps) {
 	return (
-		prevProps.sceneId === nextProps.sceneId &&
 		prevProps.suggestions === nextProps.suggestions &&
 		prevProps.currentVersionIndex === nextProps.currentVersionIndex &&
 		prevProps.isCurrentVersion === nextProps.isCurrentVersion &&

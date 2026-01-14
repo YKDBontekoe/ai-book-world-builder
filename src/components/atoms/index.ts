@@ -9,9 +9,7 @@ export * from "@/components/atoms/checkbox";
 export * from "@/components/atoms/collapsible";
 export * from "@/components/atoms/dialog";
 export * from "@/components/atoms/dropdown-menu";
-export * from "@/components/atoms/entity-badge";
 export * from "@/components/atoms/hover-card";
-export * from "@/components/atoms/icon-button";
 export * from "@/components/atoms/input";
 export * from "@/components/atoms/label";
 // Design system components
@@ -32,5 +30,3 @@ export * from "@/components/atoms/toast";
 export * from "@/components/atoms/tooltip";
 export * from "@/components/molecules/empty-state";
 export * from "@/components/molecules/glass-card";
-export * from "@/components/molecules/stat-card";
-export * from "@/components/molecules/tip-card";

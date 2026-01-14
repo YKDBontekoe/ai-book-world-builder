@@ -1,8 +1,17 @@
+import { exampleSetup } from "prosemirror-example-setup";
+import { inputRules } from "prosemirror-inputrules";
+import { placeholder } from "prosemirror-placeholder";
+import { EditorState } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { useEffect, useRef, useState } from "react";
-import { handleTransaction } from "@/lib/editor/config";
+import {
+	documentSchema,
+	handleTransaction,
+	headingRule,
+} from "@/lib/editor/config";
 import { buildDocumentFromContent } from "@/lib/editor/functions";
-import { createEditorState } from "../utils/create-editor-state";
+import { mentionPlugin } from "@/lib/editor/plugins/mention";
+import { suggestionsPlugin } from "@/lib/editor/suggestions";
 import type { MentionState } from "./use-mention";
 
 interface UseProseMirrorProps {
@@ -17,7 +26,6 @@ interface UseProseMirrorProps {
 		state: MentionState | null,
 		coords: { left: number; top: number } | null,
 	) => void;
-	sceneId?: string;
 }
 
 export function useProseMirror({
@@ -29,12 +37,10 @@ export function useProseMirror({
 	typewriterMode,
 	status,
 	onMentionStateChange,
-	sceneId,
 }: UseProseMirrorProps) {
 	const editorRef = useRef<EditorView | null>(null);
 	const [mounted, setMounted] = useState(false);
 	const prevContentRef = useRef<string | null>(null);
-	const prevSceneIdRef = useRef<string | undefined>(sceneId);
 	const onMentionStateChangeRef = useRef(onMentionStateChange);
 
 	// Update ref whenever the callback changes
@@ -49,11 +55,34 @@ export function useProseMirror({
 
 		const doc = buildDocumentFromContent(content || "");
 
-		// Use the new helper to create state
-		const state = createEditorState({
+		const state = EditorState.create({
 			doc,
-			editorRef,
-			onMentionStateChangeRef,
+			plugins: [
+				...exampleSetup({ schema: documentSchema, menuBar: false }),
+				inputRules({
+					rules: [
+						headingRule(1),
+						headingRule(2),
+						headingRule(3),
+						headingRule(4),
+						headingRule(5),
+						headingRule(6),
+					],
+				}),
+				placeholder("Start writing your scene... (Type '/' for commands)"),
+				suggestionsPlugin,
+				mentionPlugin((state) => {
+					if (state?.active && state.range && editorRef.current) {
+						const coords = editorRef.current.coordsAtPos(state.range.from);
+						onMentionStateChangeRef.current(state, {
+							left: coords.left,
+							top: coords.bottom + 5,
+						});
+					} else {
+						onMentionStateChangeRef.current(null, null);
+					}
+				}),
+			],
 		});
 
 		editorRef.current = new EditorView(containerRef.current, {
@@ -62,7 +91,6 @@ export function useProseMirror({
 		});
 
 		prevContentRef.current = content;
-		prevSceneIdRef.current = sceneId;
 		setMounted(true);
 
 		return () => {
@@ -75,58 +103,29 @@ export function useProseMirror({
 
 	// Synchronize content when it changes externally
 	useEffect(() => {
-		// Skip if editor doesn't exist
-		if (!editorRef.current) {
-			return;
-		}
-
-		const isSceneChange = sceneId !== prevSceneIdRef.current;
-		const isContentChanged = prevContentRef.current !== content;
-
-		// If nothing changed, return
-		if (!isSceneChange && !isContentChanged) {
+		// Skip if content hasn't changed or editor doesn't exist
+		if (prevContentRef.current === content || !editorRef.current) {
 			return;
 		}
 
 		// If user is editing (has focus), don't overwrite their work with external updates
-		// UNLESS:
-		// 1. We are in streaming mode (additive)
-		// 2. OR The scene ID changed (user switched scene) - this overrides focus
-		const shouldOverrideFocus = status === "streaming" || isSceneChange;
-
-		if (editorRef.current.hasFocus() && !shouldOverrideFocus) {
+		// UNLESS we are in streaming mode, which is an additive process we want to show
+		if (editorRef.current.hasFocus() && status !== "streaming") {
 			return;
 		}
-
 		const newDocument = buildDocumentFromContent(content || "");
+		const transaction = editorRef.current.state.tr.replaceWith(
+			0,
+			editorRef.current.state.doc.content.size,
+			newDocument.content,
+		);
 
-		if (isSceneChange) {
-			// ⚡ Bolt Optimization:
-			// When scene changes, we reuse the existing EditorView instance but
-			// completely reset the EditorState. This is much faster than destroying
-			// and recreating the DOM/EditorView.
-			// It also ensures history (Undo/Redo) is reset for the new scene.
-			const newState = createEditorState({
-				doc: newDocument,
-				editorRef,
-				onMentionStateChangeRef,
-			});
-			editorRef.current.updateState(newState);
-		} else {
-			// Normal update: replace content in existing state (preserves history)
-			const transaction = editorRef.current.state.tr.replaceWith(
-				0,
-				editorRef.current.state.doc.content.size,
-				newDocument.content,
-			);
-			// Mark as no-save to prevent looping back
-			transaction.setMeta("no-save", true);
-			editorRef.current.dispatch(transaction);
-		}
+		// Mark as no-save to prevent looping back
+		transaction.setMeta("no-save", true);
 
+		editorRef.current.dispatch(transaction);
 		prevContentRef.current = content;
-		prevSceneIdRef.current = sceneId;
-	}, [content, status, sceneId]);
+	}, [content, status]);
 
 	useEffect(() => {
 		if (editorRef.current) {

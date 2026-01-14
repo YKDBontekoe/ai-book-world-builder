@@ -88,7 +88,13 @@ The Command Palette is driven by the `useSpotlightItems` hook (`hooks/use-spotli
 -   **Registry**: It aggregates "Actions" (static commands), "Entities" (from `useProjectEntities`), and "Scenes" (from `WriterContext`).
 -   **Filtering**: It performs client-side fuzzy filtering on the aggregated list.
 
-### 3. Smart Sync (Structure Editor)
+### 3. Time Travel (History Management)
+The Editor History is managed via the `useEditorHistory` hook (`hooks/use-editor-history.ts`), ensuring a linear undo/redo stack distinct from ProseMirror's internal history.
+-   **Snapshots**: Every content change (debounced) pushes a snapshot to a local stack.
+-   **Preview State**: Activating "Time Travel" enters a preview mode where the editor becomes read-only and displays content from the selected history index.
+-   **Restoration**: Confirming a restore creates a new snapshot at the top of the stack with the old content, preserving the forward history.
+
+### 4. Smart Sync (Structure Editor)
 The `saveProjectStructure` Server Action (`features/writer/actions/structure.ts`) implements a **Smart Sync** algorithm to allow plain-text editing of the database structure:
 1.  **Parse**: Converts the text input into a hierarchical tree (Chapters -> Scenes).
 2.  **Normalize**: Converts titles to lowercase and removes accents for fuzzy matching.
@@ -98,14 +104,14 @@ The `saveProjectStructure` Server Action (`features/writer/actions/structure.ts`
     *   *Missing*: Deletes records that are no longer in the text input.
 4.  **Transaction**: All operations occur within a single Drizzle transaction to ensure atomicity.
 
-### 4. Server Actions & Services
+### 5. Server Actions & Services
 We separate controller logic (Server Actions) from business logic (Services):
 -   **Server Actions** (`app/actions/` and `features/**/actions`): Handle auth checks, input validation, and calling services. They must check `ensureProjectAccess`.
 -   **Services** (`lib/services/`): Pure business logic, database transactions, and AI orchestration.
     -   `StoryService`: Handles scene planning and text generation.
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
 
-### 5. Software Builder (Jules Agent)
+### 6. Software Builder (Jules Agent)
 We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
 
 > **See [`docs/jules-integration.md`](jules-integration.md) for a deep dive into the architecture.**
@@ -119,7 +125,7 @@ We utilize a dedicated "Agentic" workflow for self-improvement, known as the **S
     3.  **Execution**: The agent generates `JulesArtifact`s (Git patches, bash commands).
     4.  **PR**: The agent opens a Pull Request via the configured GitHub credentials.
 
-### 6. AI Service Architecture
+### 7. AI Service Architecture
 The AI layer is structured to separate "AI Logic" from "Business Logic".
 
 **Core Components**:
@@ -132,22 +138,22 @@ Long-running AI tasks (like "Generate All Scenes") are handled in `WritingServic
 2.  **Concurrency Limit**: Runs strictly 3 generations in parallel to balance speed vs. rate limits.
 3.  **Chunking**: Breaks the task into chunks (e.g., `tasks.slice(i, i + CONCURRENCY_LIMIT)`), awaiting each chunk before proceeding.
 
-### 7. Project Analytics
+### 8. Project Analytics
 Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services/project-analytics.ts`).
 
 -   **Readiness Score**: A weighted metric (0-100) indicating how "ready" a project is for generation.
     -   Formula: `min(Chars*20, 100)*0.3 + min(Locs*25, 100)*0.2 + (HasOutline?100:0)*0.3 + min(Chaps*10, 100)*0.2`
 -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
-### 8. Structured Context (Context Builder)
-To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/ai/context-builder.ts`:
+### 9. Structured Context (Context Builder)
+To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:
 
--   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene to ensure flow.
--   **Narrative Arc**: We provide summaries (first ~200 chars) of *all* previous scenes in the current chapter to maintain the arc.
+-   **Smart Truncation**: We utilize a `smartTruncate` utility that respects sentence boundaries. This prevents feeding cut-off sentences to the LLM, which often causes it to hallucinate completions or break flow.
+-   **Immediate Continuity**: We inject the *full text* (truncated to ~2000 chars) of the immediately preceding scene to ensure stylistic continuity.
+-   **Narrative Arc**: We provide summaries of *all* previous scenes in the current chapter to maintain the plot arc.
 -   **Global Context**: Chapter notes and Outline parameters (POV, Tone) are always included.
--   *Note*: This replaces the previous "Smart Context" flooding strategy with a more deterministic approach.
 
-### 9. AI Integration & Models
+### 10. AI Integration & Models
 
 **Role-Based Routing**:
 We do not hardcode model IDs. Instead, we use a role-based system defined in `lib/ai/model-routing.ts`:

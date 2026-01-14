@@ -1,3 +1,4 @@
+
 import { describe, expect, it } from "vitest";
 import { smartTruncate } from "@/lib/services/story/story-context-builder";
 
