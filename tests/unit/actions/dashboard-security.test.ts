@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Hoisted mocks
-const { mockGetProjectByIdWithAccess, mockGetProjectStats, mockAuth } = vi.hoisted(() => ({
-	mockGetProjectByIdWithAccess: vi.fn(),
-	mockGetProjectStats: vi.fn(),
-	mockAuth: vi.fn(),
-}));
+const { mockGetProjectByIdWithAccess, mockGetProjectStats, mockAuth } =
+	vi.hoisted(() => ({
+		mockGetProjectByIdWithAccess: vi.fn(),
+		mockGetProjectStats: vi.fn(),
+		mockAuth: vi.fn(),
+	}));
 
 // Apply mocks
 vi.mock("@/lib/db/queries", () => ({
@@ -46,20 +47,18 @@ describe("Dashboard Action Security", () => {
 		// Setup: Stats containing sensitive cost info
 		mockGetProjectStats.mockResolvedValue({
 			tokenStats: {
-				totalCost: 100.50, // Sensitive!
+				totalCost: 100.5, // Sensitive!
 				totalInputTokens: 1000,
 				totalOutputTokens: 500,
 				byModel: {},
 				byFeature: {
 					chat: { cost: 50, inputTokens: 500, outputTokens: 250 },
-					generation: { cost: 50.50, inputTokens: 500, outputTokens: 250 },
+					generation: { cost: 50.5, inputTokens: 500, outputTokens: 250 },
 				},
 			},
 			entityStats: {},
 			activityStats: {},
-			usageHistory: [
-				{ date: "2023-10-27", cost: 10.50, tokens: 100 }
-			],
+			usageHistory: [{ date: "2023-10-27", cost: 10.5, tokens: 100 }],
 		});
 
 		const result = await getDashboardStatsAction({ projectId: PROJECT_ID });
