@@ -140,24 +140,10 @@ jobs:
     if: always() && github.event_name == 'pull_request'
     steps:
       - name: Evaluate Results
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           if [[ "${{ contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled') }}" == "true" ]]; then
             echo "CI pipeline failed."
-            
-            # Post a summary comment for Jules
-            gh pr comment "$PR_NUMBER" --body "🚨 **CI Failure Detected**
-            
-            One or more checks failed.
-            - **Static Checks**: ${{ needs.static-checks.result }}
-            - **Unit Tests**: ${{ needs.unit-tests.result }}
-            - **Build**: ${{ needs.build.result }}
-            - **DB Check**: ${{ needs.db-check.result }}
-            
-            The **Agentic Supervisor** will automatically analyze these failures and attempt a fix." --repo "${{ github.repository }}"
-            
+            # Note: Notification is handled by agentic-supervisor
             exit 1
           fi
           echo "CI pipeline passed!"

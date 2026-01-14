@@ -24,7 +24,7 @@ const path = require('path');
 const CONFIG = {
   LOOP_THRESHOLD: 3,
   LOG_TRUNCATE_LENGTH: 2000,
-  CODERABBIT_COMMENT_LIMIT: 10,
+  CODERABBIT_COMMENT_LIMIT: 50,
   BOT_USERS: ['google-labs-jules', 'jules', 'renovate[bot]', 'coderabbitai', 'github-actions[bot]']
 };
 
@@ -113,7 +113,7 @@ async function addLabels(number, labels) {
 
 function getCodeRabbitComments(repo, number) {
   try {
-    const commentsJSON = exec(`gh api "/repos/${repo}/pulls/${number}/comments"`);
+    const commentsJSON = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100"`);
     if (!commentsJSON) return '';
     
     const comments = JSON.parse(commentsJSON);
@@ -455,6 +455,20 @@ ${conventions}
         if (commits.length >= 3 && commits.every(isJules)) {
             return true;
         }
+
+        // Check if the last comment is already a bot/supervisor instruction
+        const lastComments = JSON.parse(exec(`gh api "/repos/${repo}/issues/${context.number}/comments?per_page=5&sort=created&direction=desc"`));
+        if (lastComments && lastComments.length > 0) {
+            const lastComment = lastComments[0];
+            const isBot = CONFIG.BOT_USERS.some(u => lastComment.user?.login?.includes(u));
+            const hasSignature = lastComment.body.includes('Routing via Trigger') || lastComment.body.includes('Jules Session Starting');
+
+            // If the last comment is from the PAT user (who might look like a human) but contains our signature, treat it as a loop
+            if (hasSignature) {
+                log('Loop detected: Last comment was a Supervisor instruction.');
+                return true;
+            }
+        }
     } catch(e) {}
     return false;
   }
@@ -463,9 +477,9 @@ ${conventions}
   if (eventName === 'issue_comment') {
     const body = context.commentBody.trim();
     const commenter = context.commentAuthor;
+    const isBot = CONFIG.BOT_USERS.some(u => commenter.includes(u)) || body.includes('Routing via Trigger');
     
-    if (commenter !== 'github-actions[bot]' && commenter !== 'google-labs-jules' && 
-        (body.includes('@jules') || body.includes('@google-labs-jules') || body.includes('@src/lib/jules-client.ts'))) {
+    if (!isBot && (body.includes('@jules') || body.includes('@google-labs-jules') || body.includes('@src/lib/jules-client.ts'))) {
       const standard = getStandardMethod();
       decision.reason = 'Manual interaction';
       
