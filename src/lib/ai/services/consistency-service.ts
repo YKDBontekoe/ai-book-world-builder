@@ -7,7 +7,7 @@
 import "server-only";
 
 import { z } from "zod";
-import { BaseAIService } from "@/lib/ai/services/base-ai-service";
+import { aiClient } from "@/lib/ai/services/ai-client";
 import {
 	clearIssuesForProject,
 	createIssues,
@@ -19,6 +19,7 @@ import type {
 	ConsistencyIssueSeverity,
 	ConsistencyIssueType,
 } from "@/lib/db/schema/issues";
+import { BaseService } from "@/lib/services/base-service";
 
 // =============================================================================
 // Schemas
@@ -44,7 +45,7 @@ const issueSchema = z.object({
 // Service
 // =============================================================================
 
-export class ConsistencyService extends BaseAIService {
+export class ConsistencyService extends BaseService {
 	/**
 	 * Analyze a project for consistency issues.
 	 */
@@ -102,12 +103,14 @@ Task: Identify inconsistencies.
 Return a list of issues.
 `;
 
-		const result = await this.generateObjectWithSystem(
-			systemPrompt,
+		const result = await aiClient.generateObject({
 			prompt,
-			issueSchema,
-			{ modelRole: "checker" },
-		);
+			schema: issueSchema,
+			options: {
+				system: systemPrompt,
+				modelRole: "checker",
+			},
+		});
 
 		if (!result.success) {
 			throw new Error(result.error);

@@ -1,7 +1,8 @@
 import "server-only";
 
-import { BaseAIService } from "@/lib/ai/services/base-ai-service";
+import { aiClient } from "@/lib/ai/services/ai-client";
 import type { AIGenerationResult } from "@/lib/ai/services/types";
+import { BaseService } from "@/lib/services/base-service";
 import {
 	type BookPlan,
 	bookPlanSchema,
@@ -10,7 +11,7 @@ import {
 	scenePlanSchema,
 } from "@/lib/services/schemas/story-schemas";
 
-export class PlanningService extends BaseAIService {
+export class PlanningService extends BaseService {
 	/**
 	 * Generate a complete book plan from a prompt.
 	 */
@@ -36,16 +37,16 @@ OUTPUT FORMAT: You must respond with valid JSON only. No markdown, no code block
 			promptText += `\nGenre: ${style.genre}\nPOV: ${style.pov}\nTone: ${style.tone}`;
 		}
 
-		const result = await this.generateObjectWithSystem(
-			systemPrompt,
-			promptText,
-			bookPlanSchema,
-			{
+		const result = await aiClient.generateObject({
+			prompt: promptText,
+			schema: bookPlanSchema,
+			options: {
+				system: systemPrompt,
 				modelId,
 				modelRole: "orchestrator",
 				maxTokens: 4500,
 			},
-		);
+		});
 
 		if (!result.success) {
 			return { error: result.error };
@@ -84,16 +85,16 @@ Chapter Summary/Notes: ${chapterSummary || "No summary provided. Create a logica
 
 Create a list of scenes with titles and beats.`;
 
-		const result = await this.generateObjectWithSystem(
-			systemPrompt,
+		const result = await aiClient.generateObject({
 			prompt,
-			scenePlanSchema,
-			{
+			schema: scenePlanSchema,
+			options: {
+				system: systemPrompt,
 				modelId,
 				modelRole: "orchestrator",
 				maxTokens: 2500,
 			},
-		);
+		});
 
 		if (!result.success) {
 			return { error: result.error };
