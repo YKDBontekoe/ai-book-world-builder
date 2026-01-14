@@ -10,7 +10,8 @@ The project uses a standard Next.js 14 App Router structure with some specific c
 src/
 ├── app/                 # Next.js App Router pages and API routes
 │   ├── (auth)/          # Authentication routes (login, register)
-│   ├── (chat)/          # Main application (Projects, Writer View)
+│   ├── (chat)/          # Core application (Project Browser, Settings)
+│   ├── (studio)/        # Writer View (Isolated Studio Environment)
 │   ├── (reader)/        # Standalone Reader Mode application
 │   ├── admin/           # Admin Dashboard (Jules, GitHub)
 │   ├── actions/         # Global Server Actions (mutations)
@@ -56,33 +57,24 @@ Then start the app with:
 DB_DRIVER=sqlite SQLITE_DB_PATH=.local/dev.sqlite pnpm dev
 ```
 
-### 1. Writer View Architecture
-The `WriterView` (`src/features/writer/components/writer-view.tsx`) is the core interface. It employs a complex 3-pane layout managed by `react-resizable-panels`:
+### 1. Writer View (Studio) Architecture
+
+The Writer View is located in `src/app/(studio)`. It uses a dedicated `StudioLayout` to provide a full-screen environment isolated from the main app shell.
+
+**Key Components**:
+The `WriterView` (`src/features/writer/components/writer-view.tsx`) employs a complex 3-pane layout managed by `react-resizable-panels`:
 
 1.  **Sidebar (Left)**: Managed by `WriterSidebar`. Contains navigation (Chapters/Scenes) and Project structure.
 2.  **Editor (Center)**: The `WriterEditor` wraps a ProseMirror instance. It is the primary workspace.
-3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`components/organisms/book-canvas`). Displays the Entity Bible, Graphs, and Context.
+3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas`. Displays the Entity Bible, Graphs, and Context.
 
 **State Management**:
-The Writer uses a **Split Context** strategy (`features/writer/components/`) to prevent unnecessary re-renders:
-1.  **Sidebar (Left)**: Managed by `WriterSidebar` (`src/features/writer/components/writer-sidebar.tsx`). Contains navigation (Chapters/Scenes) and Project structure.
-2.  **Editor (Center)**: The `WriterEditor` (`src/features/writer/components/writer-editor.tsx`) wraps a ProseMirror instance. It is the primary workspace.
-3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`src/components/organisms/book-canvas/book-canvas.tsx`). Displays the Entity Bible, relationship graphs, and other contextual panes. The `network-pane.tsx` specifically handles visualizing the entity network graph.
-
-**Embedded Canvas Sync**:
-The `BookCanvas` is typically a standalone page but is embedded in the Writer View. A small `CanvasSync` component within `writer-view.tsx` is responsible for synchronizing the `WriterContext` state (like `projectId` and `isReadOnly`) to the `BookCanvasContext`.
-1.  **Sidebar (Left)**: Managed by `WriterSidebar` (`features/writer/components/sidebar/writer-sidebar.tsx`). Contains navigation (Chapters/Scenes) and Project structure.
-2.  **Editor (Center)**: The `WriterEditor` (`features/writer/components/editor/writer-editor.tsx`) wraps a ProseMirror instance. It is the primary workspace.
-3.  **Book Canvas (Right)**: An embedded version of the `BookCanvas` (`components/organisms/book-canvas`). Displays the Entity Bible, Graphs, and Context.
-
-**State Management**:
-The Writer uses a **Split Context** strategy (`features/writer/contexts/`) to prevent unnecessary re-renders:
+The Writer uses a **Split Context** strategy to prevent unnecessary re-renders:
 -   **WriterContext**: Holds relatively stable data (`project`, `structure`, `activeSceneId`).
 -   **WriterControlContext**: Holds volatile UI state (`isChatOpen`, `isSpotlightOpen`).
 -   **WriterLayoutContext**: Handles layout toggles (`ZenMode`, `DirectorMode`, `SidebarOpen`).
 
 **Embedded Canvas Sync**:
-The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
 The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component (`features/writer/components/canvas-sync.tsx`) to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
 
 **Lazy Loading**:
@@ -148,7 +140,6 @@ Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services
 -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
 ### 8. Structured Context (Context Builder)
-### 7. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/ai/context-builder.ts`:
 
 -   **Immediate Continuity**: We inject the *full text* of the immediately preceding scene to ensure flow.
