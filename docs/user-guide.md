@@ -143,7 +143,12 @@ You can customize which AI models are used for different tasks in the **Settings
 *   **Large**: High intelligence (for complex reasoning and outlining).
 
 ### Time Travel
-Restore previous versions of your scene without losing progress. Click the **Clock** icon (Time Travel) at the bottom of the editor.
+Restore previous versions of your scene without losing progress.
+
+1.  **Activate**: Click the **Clock** icon (Time Travel) at the bottom of the editor to enter "Preview Mode".
+2.  **Preview**: Drag the slider to scroll back through your writing history. The editor will show you exactly what the scene looked like at that moment.
+3.  **Restore**: Click **Restore Version** to create a new snapshot with that content.
+    *   *Note*: This doesn't erase your current work; it adds the restored version as the newest "step" in history, so you can always undo if you change your mind.
 
 ## Troubleshooting
 

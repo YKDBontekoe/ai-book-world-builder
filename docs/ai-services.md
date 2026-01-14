@@ -35,6 +35,26 @@ RAG is primarily used for:
 1.  **Chat**: Quickly finding relevant entities in a large project during a chat session.
 2.  **Consistency Checks**: Verifying specific details against a large corpus.
 
+## Structured Context Construction
+
+While RAG is used for broad searching, narrative generation requires a highly deterministic context structure to ensure continuity. This is handled by `src/lib/services/story/story-context-builder.ts`.
+
+### Smart Truncation
+Naive truncation of text (e.g., `text.slice(-2000)`) often cuts sentences in half, leading the LLM to hallucinate the completion or become confused about the sentence structure.
+
+We employ a `smartTruncate` utility that:
+1.  Takes the last `N` characters.
+2.  Searches forward for the first valid sentence boundary (`. `, `? `, `! `, or `\n`).
+3.  Returns the text *starting from the next complete sentence*.
+
+This ensures that the "Immediately Previous Context" injected into the prompt is always grammatically complete.
+
+### Context Composition
+The prompt context for a scene generation is composed of:
+1.  **Target Chapter**: Title and Notes.
+2.  **Previous Scenes Summary**: A compiled list of summaries for all preceding scenes in the chapter (to maintain the arc).
+3.  **Immediate Predecessor**: The *full text* (smartly truncated to ~2000 chars) of the scene immediately before the target (to maintain style and flow).
+
 ## Analysis Architecture
 
 The project features a multi-layered architecture for analyzing books and extracting structured data (Entities, Relationships).
