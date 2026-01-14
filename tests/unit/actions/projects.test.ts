@@ -80,6 +80,7 @@ describe("forkProject Action", () => {
 
 		const result = await forkProject("123e4567-e89b-12d3-a456-426614174000");
 		expect(result).toEqual({
+			success: false,
 			error:
 				"Project is too large to fork instantly. Please export and import instead.",
 		});

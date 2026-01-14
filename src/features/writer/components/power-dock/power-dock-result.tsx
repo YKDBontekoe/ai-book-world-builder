@@ -36,7 +36,7 @@ export function PowerDockResult({
 							<button
 								type="button"
 								onClick={onClear}
-								aria-label="Close"
+								aria-label="Clear result"
 								className="hover:bg-white/10 p-1 rounded"
 							>
 								<X className="w-3 h-3" />
