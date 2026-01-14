@@ -36,7 +36,7 @@ export function PowerDockInput({
 	onReset,
 	onClearHistory,
 	getHistory,
-}: PowerDockInputProps) {
+}: PowerDockInputProps): JSX.Element {
 	const getPlaceholder = (tool: ToolType) => {
 		switch (tool) {
 			case "write":
@@ -47,6 +47,8 @@ export function PowerDockInput({
 				return "Paste notes or outline...";
 			case "critique":
 				return "Specific questions? (Optional)";
+			case "consistency":
+				return "Instructions (e.g., 'Ensure consistent tone and terminology')";
 			case "lore":
 				return "Describe the entity...";
 			case "search":

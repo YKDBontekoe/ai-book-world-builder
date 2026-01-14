@@ -1,7 +1,7 @@
 import "server-only";
-import { eq } from "drizzle-orm";
+import { type InferSelectModel, eq } from "drizzle-orm";
 
-import { db, type DbTransaction } from "@/lib/db";
+import { type DbTransaction, db } from "@/lib/db";
 import { projectRepository } from "@/lib/db/repositories";
 import {
 	chapter,
@@ -16,15 +16,28 @@ import {
 	volume,
 } from "@/lib/db/schema";
 
+// Type definitions for table rows
+type EntityRow = InferSelectModel<typeof entity>;
+type AttributeRow = InferSelectModel<typeof entityAttribute>;
+type RelationshipRow = InferSelectModel<typeof relationship>;
+type OutlineRow = InferSelectModel<typeof outline>;
+type VolumeRow = InferSelectModel<typeof volume>;
+type ChapterRow = InferSelectModel<typeof chapter>;
+type ChapterDraftRow = InferSelectModel<typeof chapterDraft>;
+type SceneRow = InferSelectModel<typeof scene>;
+type SceneCardRow = InferSelectModel<typeof sceneCard>;
+type ProjectRow = InferSelectModel<typeof project>;
+
 // Helper for chunked inserts
 async function chunkedInsert<T extends Record<string, unknown>, TTable>(
-	tx: DbTransaction | any,
+	tx: DbTransaction,
 	table: TTable,
 	items: T[],
 	chunkSize = 1000,
 ) {
 	for (let i = 0; i < items.length; i += chunkSize) {
 		const chunk = items.slice(i, i + chunkSize);
+		// @ts-expect-error - Drizzle types for insert are complex but this is safe
 		await tx.insert(table).values(chunk);
 	}
 }
@@ -34,7 +47,7 @@ export class ProjectDuplicationService {
 		originalProjectId: string,
 		userId: string,
 		newName?: string,
-	) {
+	): Promise<{ success: boolean; projectId?: string; error?: string }> {
 		// 1. Pre-flight check for project size
 		const [entityCount, sceneCount] = await Promise.all([
 			db.$count(entity, eq(entity.projectId, originalProjectId)),
@@ -43,6 +56,7 @@ export class ProjectDuplicationService {
 
 		if (entityCount + sceneCount > 2000) {
 			return {
+				success: false,
 				error:
 					"Project is too large to fork instantly. Please export and import instead.",
 			};
@@ -54,14 +68,14 @@ export class ProjectDuplicationService {
 		);
 
 		if (!originalProject) {
-			return { error: "Project not found or access denied" };
+			return { success: false, error: "Project not found or access denied" };
 		}
 
 		const rawName = newName || `Fork of ${originalProject.name}`;
 		const finalName = rawName.slice(0, 100);
 
 		try {
-			const result = await db.transaction(async (tx: DbTransaction | any) => {
+			const result = await db.transaction(async (tx: DbTransaction) => {
 				// 1. Create New Project
 				const newProject = await this.cloneProjectRecord(
 					tx,
@@ -135,13 +149,13 @@ export class ProjectDuplicationService {
 			return result;
 		} catch (error) {
 			console.error("Fork project error:", error);
-			return { error: "Failed to fork project" };
+			return { success: false, error: "Failed to fork project" };
 		}
 	}
 
 	private async cloneProjectRecord(
-		tx: any,
-		originalProject: any,
+		tx: DbTransaction,
+		originalProject: ProjectRow,
 		name: string,
 		userId: string,
 		forkedFromId: string,
@@ -162,7 +176,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneEntities(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		idMap: Map<string, string>,
@@ -184,7 +198,7 @@ export class ProjectDuplicationService {
 				break;
 			}
 
-			const newEntities = oldEntities.map((old: any) => {
+			const newEntities = oldEntities.map((old: EntityRow) => {
 				const newId = crypto.randomUUID();
 				idMap.set(old.id, newId);
 				const { id: _id, ...data } = old;
@@ -203,7 +217,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneAttributes(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		entityIdMap: Map<string, string>,
@@ -235,7 +249,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneRelationships(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		entityIdMap: Map<string, string>,
@@ -269,7 +283,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneOutlines(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		idMap: Map<string, string>,
@@ -280,7 +294,7 @@ export class ProjectDuplicationService {
 			.where(eq(outline.projectId, originalProjectId));
 
 		if (oldOutlines.length > 0) {
-			const newOutlines = oldOutlines.map((old: any) => {
+			const newOutlines = oldOutlines.map((old: OutlineRow) => {
 				const newId = crypto.randomUUID();
 				idMap.set(old.id, newId);
 				const { id: _id, ...data } = old;
@@ -297,7 +311,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneVolumes(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		outlineIdMap: Map<string, string>,
@@ -333,7 +347,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneChapters(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		volumeIdMap: Map<string, string>,
@@ -372,7 +386,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneChapterDrafts(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		chapterIdMap: Map<string, string>,
@@ -411,7 +425,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneScenes(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		chapterIdMap: Map<string, string>,
@@ -480,7 +494,7 @@ export class ProjectDuplicationService {
 	}
 
 	private async cloneSceneCards(
-		tx: any,
+		tx: DbTransaction,
 		originalProjectId: string,
 		newProjectId: string,
 		sceneIdMap: Map<string, string>,

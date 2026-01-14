@@ -32,7 +32,7 @@ export const ControlButton = memo(function ControlButton({
 	"data-testid": testId,
 	asChild,
 	children,
-}: ControlButtonProps) {
+}: ControlButtonProps): JSX.Element {
 	const sharedClassName = cn(
 		"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
 		"hover:bg-white/10 hover:scale-105 active:scale-95",
@@ -56,6 +56,9 @@ export const ControlButton = memo(function ControlButton({
 						className={sharedClassName}
 						onClick={onClick}
 						data-testid={testId}
+						aria-label={label}
+						// @ts-expect-error - Slot doesn't strictly type checked forwarded props but they work
+						disabled={disabled}
 					>
 						{children}
 					</Slot>
@@ -85,6 +88,8 @@ export const ControlButton = memo(function ControlButton({
 	);
 });
 
-export function ControlGroup({ children }: { children: React.ReactNode }) {
+export function ControlGroup({
+	children,
+}: { children: React.ReactNode }): JSX.Element {
 	return <div className="flex items-center gap-1">{children}</div>;
 }
