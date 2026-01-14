@@ -125,12 +125,15 @@ jobs:
           AUTHOR: ${{ needs.supervisor.outputs.author }}
           ASSIGNEE_MENTION: ${{ needs.supervisor.outputs.assignee_mention }}
         run: |
+          # Use default if empty
+          MENTION="${ASSIGNEE_MENTION:-@jules}"
+
           gh pr comment "$PR_NUMBER" --body "🔄 **Routing via Trigger**
           
-          Using ${ASSIGNEE_MENTION} (cost-optimized) instead of new API session.
+          Using ${MENTION} (cost-optimized) instead of new API session.
           
           **PR Author:** \`$AUTHOR\`
-          **Method:** GitHub Integration (${ASSIGNEE_MENTION})" --repo "${{ github.repository }}"
+          **Method:** GitHub Integration (${MENTION})" --repo "${{ github.repository }}"
 
       - name: Post ${{ needs.supervisor.outputs.assignee_mention }} with feedback
         env:
@@ -140,8 +143,11 @@ jobs:
           AUTHOR: ${{ needs.supervisor.outputs.author }}
           ASSIGNEE_MENTION: ${{ needs.supervisor.outputs.assignee_mention }}
         run: |
+          # Use default if empty
+          MENTION="${ASSIGNEE_MENTION:-@jules}"
+
           if [[ -n "$BATCHED_COMMENTS" ]]; then
-            echo "${ASSIGNEE_MENTION} Please address the following feedback:" > /tmp/comment.md
+            echo "${MENTION} Please address the following feedback:" > /tmp/comment.md
             echo "" >> /tmp/comment.md
             echo "$BATCHED_COMMENTS" >> /tmp/comment.md
             echo "" >> /tmp/comment.md
@@ -151,7 +157,7 @@ jobs:
             echo "3. Commit with message: \`fix: address review feedback\`" >> /tmp/comment.md
             gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md --repo "${{ github.repository }}"
           else
-            gh pr comment "$PR_NUMBER" --body "${ASSIGNEE_MENTION} Please review and address any pending feedback on this PR." --repo "${{ github.repository }}"
+            gh pr comment "$PR_NUMBER" --body "${MENTION} Please review and address any pending feedback on this PR." --repo "${{ github.repository }}"
           fi
 
 

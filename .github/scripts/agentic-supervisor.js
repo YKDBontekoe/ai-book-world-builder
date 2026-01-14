@@ -113,10 +113,19 @@ async function addLabels(number, labels) {
 
 function getCodeRabbitComments(repo, number) {
   try {
-    const commentsJSON = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100"`);
-    if (!commentsJSON) return '';
-    
-    const comments = JSON.parse(commentsJSON);
+    // Fetch all comments using pagination
+    // gh api --paginate outputs concatenated JSON arrays (e.g. [...][...]) which JSON.parse can't handle directly
+    // We use jq to flatten them into a single array if possible, or manual string manipulation fallback
+    let comments = [];
+    try {
+        const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.' | jq -s 'add'`);
+        comments = JSON.parse(json);
+    } catch (e) {
+         const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
+         const fixed = raw.replace(/\]\[/g, ',');
+         comments = JSON.parse(fixed);
+    }
+
     const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
     
     if (rabbitComments.length === 0) return '';
@@ -282,6 +291,12 @@ async function main() {
     context.labels = event.pull_request.labels.map(l => l.name);
     context.prBody = event.pull_request.body;
     context.isDraft = event.pull_request.draft || false;
+
+    // IMMEDIATE LOOP EXIT
+    if (context.labels.includes('jules-stuck')) {
+        log('Supervisor aborted: PR is labeled jules-stuck');
+        process.exit(0);
+    }
     
     if (eventName === 'pull_request_review') {
       context.reviewAuthor = event.review.user.login;
@@ -295,6 +310,12 @@ async function main() {
     context.labels = event.issue.labels.map(l => l.name);
     context.commentBody = event.comment.body;
     context.commentAuthor = event.comment.user.login;
+
+    // IMMEDIATE LOOP EXIT
+    if (context.labels.includes('jules-stuck')) {
+        log('Supervisor aborted: Issue is labeled jules-stuck');
+        process.exit(0);
+    }
     
     if (event.issue.pull_request) {
       context.isPr = true;
@@ -461,7 +482,9 @@ ${conventions}
         if (lastComments && lastComments.length > 0) {
             const lastComment = lastComments[0];
             const isBot = CONFIG.BOT_USERS.some(u => lastComment.user?.login?.includes(u));
-            const hasSignature = lastComment.body.includes('Routing via Trigger') || lastComment.body.includes('Jules Session Starting');
+            const hasSignature = lastComment.body.includes('Routing via Trigger') ||
+                                 lastComment.body.includes('Jules Session Starting') ||
+                                 lastComment.body.includes('Loop Detected');
 
             // If the last comment is from the PAT user (who might look like a human) but contains our signature, treat it as a loop
             if (hasSignature) {
