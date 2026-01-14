@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { SceneNavigation } from "@/features/writer/components/left-sidebar/scene-navigation";
 import type { Project } from "@/lib/db/schema";
-import type { ChapterWithScenes } from "@/lib/types";
+import type { ChapterWithScenes, SceneWithPrev } from "@/lib/types";
 
 // Mock dependencies
 vi.mock("@/features/writer/actions", () => ({
@@ -34,6 +34,24 @@ vi.mock("@/components/molecules/empty-state", () => ({
 		</div>
 	),
 }));
+
+function createMockScene(
+	overrides: Partial<SceneWithPrev> = {},
+): SceneWithPrev {
+	return {
+		id: "s1",
+		title: "Test Scene",
+		chapterId: "c1",
+		sequence: 1,
+		content: "",
+		status: "draft",
+		createdAt: new Date(),
+		updatedAt: new Date(),
+		projectId: "p1",
+		updatedBy: "user",
+		...overrides,
+	};
+}
 
 describe("SceneNavigation", () => {
 	const mockProject = { id: "p1" } as Project;
@@ -102,26 +120,18 @@ describe("SceneNavigation", () => {
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				scenes: [
-					{
+					createMockScene({
 						id: "s1",
 						title: "Battle of the Deep",
 						chapterId: "c1",
 						sequence: 1,
-						content: "",
-						status: "draft",
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					} as any,
-					{
+					}),
+					createMockScene({
 						id: "s2",
 						title: "Quiet Morning",
 						chapterId: "c1",
 						sequence: 2,
-						content: "",
-						status: "draft",
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					} as any,
+					}),
 				],
 			},
 			{
@@ -136,16 +146,12 @@ describe("SceneNavigation", () => {
 				createdAt: new Date(),
 				updatedAt: new Date(),
 				scenes: [
-					{
+					createMockScene({
 						id: "s3",
 						title: "Another Battle",
 						chapterId: "c2",
 						sequence: 1,
-						content: "",
-						status: "draft",
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					} as any,
+					}),
 				],
 			},
 		];

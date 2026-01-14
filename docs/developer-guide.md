@@ -112,6 +112,7 @@ We separate controller logic (Server Actions) from business logic (Services):
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
 
 ### 6. Software Builder (Jules Agent)
+
 We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
 
 > **See [`docs/jules-integration.md`](jules-integration.md) for a deep dive into the architecture.**
@@ -146,6 +147,7 @@ Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services
 -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
 ### 9. Structured Context (Context Builder)
+
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:
 
 -   **Smart Truncation**: We utilize a `smartTruncate` utility that respects sentence boundaries. This prevents feeding cut-off sentences to the LLM, which often causes it to hallucinate completions or break flow.

@@ -75,6 +75,7 @@ Activities can contain **Artifacts**, which are tangible outputs of the agent's 
 The UI is built to consume the Activity stream and render it interactively. The architecture is hierarchical:
 
 ### `JulesDashboard`
+
 Located in `src/components/admin/jules/jules-dashboard.tsx`.
 -   **Purpose**: The top-level container component for the admin page.
 -   **Responsibility**:
@@ -83,6 +84,7 @@ Located in `src/components/admin/jules/jules-dashboard.tsx`.
     -   Renders `CreateSessionDialog` for initializing new tasks.
 
 ### `JulesSessionList`
+
 Located in `src/components/admin/jules/jules-session-list.tsx`.
 -   **Purpose**: Displays a history of all agent sessions.
 -   **Features**:
@@ -91,6 +93,7 @@ Located in `src/components/admin/jules/jules-session-list.tsx`.
     -   Allows navigation into a specific session.
 
 ### `JulesChat`
+
 Located in `src/components/admin/jules/jules-chat.tsx`.
 -   **Purpose**: The main interaction view for a single active session.
 -   **Logic**:
@@ -99,6 +102,7 @@ Located in `src/components/admin/jules/jules-chat.tsx`.
     -   Provides controls for "Approve Plan" or "Abort" based on the current `session.state`.
 
 ### `ArtifactRenderer`
+
 Located in `src/components/admin/jules/artifact-renderer.tsx`.
 -   **Purpose**: Renders complex artifacts within the chat stream.
 -   **Features**:

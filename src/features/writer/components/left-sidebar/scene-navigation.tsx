@@ -115,15 +115,7 @@ export const SceneNavigation = memo(function SceneNavigation({
 					scene.title.toLowerCase().includes(lowerTerm),
 				);
 
-				// If chapter matches, we include it.
-				// If we want to show all scenes when chapter matches, we return chapter as is.
-				// However, filtering scenes usually helps narrowing down.
-				// Let's decide: Show chapter if title matches OR has matching scenes.
-				// AND filter scenes to only show matches, unless chapter title matches (then show all?? No, keeps it cleaner to filter).
-				// Actually, if I search "Chapter 1", I expect to see Chapter 1 and maybe its scenes.
-				// If I search "Scene A", I expect to see Chapter 1 > Scene A.
-				// Let's stick to strict filtering for scenes.
-
+				// Show a chapter if its title matches the query or it contains scenes that match; scenes are strictly filtered to only matching scenes.
 				if (matchingScenes.length > 0) {
 					return {
 						...chapter,
@@ -380,7 +372,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 								<ContextMenu>
 									<ContextMenuTrigger disabled={readOnly}>
 										<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-											<span className="truncate text-left">{chapter.title}</span>
+											<span className="truncate text-left">
+												{chapter.title}
+											</span>
 										</AccordionTrigger>
 									</ContextMenuTrigger>
 									<ContextMenuContent>
@@ -430,11 +424,7 @@ export const SceneNavigation = memo(function SceneNavigation({
 								</AccordionContent>
 							</AccordionItem>
 						))}
-						{/* Always allow adding a new chapter at the bottom, even when searching?
-                            Maybe not when searching, it might be confusing.
-                            But usually "Add" buttons should persist.
-                            Let's keep it but maybe warn user? No, standard pattern is to keep it.
-                         */}
+						{/* Keep Add Chapter visible during search */}
 						{!searchTerm && (
 							<div className="p-2">
 								<Button
