@@ -324,7 +324,7 @@ export function OutlinePane() {
 	>(null);
 
 	useEffect(() => {
-		if (outlineResult?.data?.chapters) {
+		if (outlineResult?.success && outlineResult.data?.chapters) {
 			setChapters(outlineResult.data.chapters);
 		}
 	}, [outlineResult]);
