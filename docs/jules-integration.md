@@ -72,7 +72,31 @@ Activities can contain **Artifacts**, which are tangible outputs of the agent's 
 
 ## UI Components (`components/admin/jules/`)
 
-The UI is built to consume the Activity stream and render it interactively.
+The UI is built to consume the Activity stream and render it interactively. The architecture is hierarchical:
+
+### `JulesDashboard`
+Located in `src/components/admin/jules/jules-dashboard.tsx`.
+-   **Purpose**: The top-level container component for the admin page.
+-   **Responsibility**:
+    -   Fetches available sources (repositories).
+    -   Manages the "Session List" vs "Chat" view state.
+    -   Renders `CreateSessionDialog` for initializing new tasks.
+
+### `JulesSessionList`
+Located in `src/components/admin/jules/jules-session-list.tsx`.
+-   **Purpose**: Displays a history of all agent sessions.
+-   **Features**:
+    -   Shows status badges (Running, Completed, Queued).
+    -   Displays the original prompt or "Intent".
+    -   Allows navigation into a specific session.
+
+### `JulesChat`
+Located in `src/components/admin/jules/jules-chat.tsx`.
+-   **Purpose**: The main interaction view for a single active session.
+-   **Logic**:
+    -   Polls for new activities using `useQuery`.
+    -   Differentiates between "System" events (Plans) and "Chat" events (Messages).
+    -   Provides controls for "Approve Plan" or "Abort" based on the current `session.state`.
 
 ### `ArtifactRenderer`
 Located in `src/components/admin/jules/artifact-renderer.tsx`.
@@ -80,14 +104,6 @@ Located in `src/components/admin/jules/artifact-renderer.tsx`.
 -   **Features**:
     -   **Bash Output**: Collapsible terminal view with exit codes (Green/Red).
     -   **Git Patches**: Collapsible diff view with syntax highlighting (via simple pre-wrap).
-
-### `JulesChat`
-Located in `src/components/admin/jules/jules-chat.tsx`.
--   **Purpose**: The main interaction view.
--   **Logic**:
-    -   Polls for new activities.
-    -   Differentiates between "System" events (Plans) and "Chat" events (Messages).
-    -   Provides controls for "Approve Plan" or "Abort" based on the current `session.state`.
 
 ## Server Actions
 
