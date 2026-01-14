@@ -127,7 +127,9 @@ export function WriterEditor() {
 					>
 						<Editor
 							ref={setEditorRef}
-							key={activeSceneId} // Reset editor when scene changes
+							// ⚡ Bolt: Removed key={activeSceneId} to reuse Editor instance
+							// This significantly improves performance when switching scenes
+							sceneId={activeSceneId || undefined}
 							content={previewContent ?? sceneContent}
 							onSaveContent={onEditorContentChange}
 							status="idle"
