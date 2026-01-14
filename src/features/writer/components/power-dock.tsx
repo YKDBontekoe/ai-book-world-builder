@@ -1,47 +1,26 @@
 "use client";
 
-import { Slot } from "@radix-ui/react-slot";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
-	Clock,
 	Copy,
-	History as HistoryIcon,
 	Home,
 	MessageSquare,
 	PanelRightClose,
 	PanelRightOpen,
 	Redo,
 	Search,
-	Send,
 	Sparkles,
-	Trash2,
 	Undo,
-	X,
 } from "lucide-react";
 import Link from "next/link";
 import type React from "react";
 import { memo, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuLabel,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/atoms/dropdown-menu";
 import { Separator } from "@/components/atoms/separator";
-import { Textarea } from "@/components/atoms/textarea";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/atoms/tooltip";
+import { TooltipProvider } from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { usePowerDockHistory } from "@/features/writer/components/hooks/use-power-dock-history";
-import { TOOLS } from "@/features/writer/components/tools/tool-config";
 import {
 	type ToolType,
 	toolStrategies,
@@ -50,6 +29,10 @@ import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
 import { cn } from "@/lib/utils";
+import { ControlButton, ControlGroup } from "./power-dock/control-button";
+import { PowerDockInput } from "./power-dock/power-dock-input";
+import { PowerDockResult } from "./power-dock/power-dock-result";
+import { PowerDockTray } from "./power-dock/power-dock-tray";
 
 export const PowerDock = memo(function PowerDock() {
 	const {
@@ -62,7 +45,6 @@ export const PowerDock = memo(function PowerDock() {
 
 	const { project, structure, activeChapterId, activeSceneId, sceneContent } =
 		useWriterContext();
-	// Updated: Use context object directly as 'actions' does not exist on the type
 	const layoutContext = useWriterLayoutContext();
 	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
 	const isZen = viewMode === "zen";
@@ -181,25 +163,6 @@ export const PowerDock = memo(function PowerDock() {
 		reset,
 	]);
 
-	const getPlaceholder = (tool: ToolType) => {
-		switch (tool) {
-			case "write":
-				return "Instructions (e.g., 'Make it tense')";
-			case "rewrite":
-				return "Instructions (e.g., 'Change to 1st person')";
-			case "expand":
-				return "Paste notes or outline...";
-			case "critique":
-				return "Specific questions? (Optional)";
-			case "lore":
-				return "Describe the entity...";
-			case "search":
-				return "What are you looking for?";
-			default:
-				return "Enter instructions...";
-		}
-	};
-
 	// Animation variants
 	const containerVariants: Variants = {
 		hidden: { y: 100, opacity: 0 },
@@ -238,53 +201,12 @@ export const PowerDock = memo(function PowerDock() {
 				variants={containerVariants}
 			>
 				{/* Result Popover (if any) */}
-				<AnimatePresence>
-					{result && (
-						<motion.div
-							initial={{ opacity: 0, y: 20, scale: 0.9 }}
-							animate={{ opacity: 1, y: 0, scale: 1 }}
-							exit={{ opacity: 0, y: 20, scale: 0.9 }}
-							className="mb-2 w-[500px] max-w-full"
-						>
-							<GlassCard
-								variant="liquid"
-								className="p-4 rounded-xl border-white/20 relative"
-							>
-								<div className="flex justify-between items-center mb-2">
-									<span className="text-xs font-bold uppercase text-muted-foreground">
-										Result
-									</span>
-									<button
-										type="button"
-										onClick={() => setResult(null)}
-										className="hover:bg-white/10 p-1 rounded"
-									>
-										<X className="w-3 h-3" />
-									</button>
-								</div>
-								<div className="max-h-60 overflow-y-auto text-sm font-mono bg-black/20 p-2 rounded">
-									{result}
-								</div>
-								<div className="mt-2 flex items-center justify-between gap-2">
-									<button
-										type="button"
-										onClick={handleInsertResult}
-										className="flex-1 px-3 py-1.5 text-xs font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-									>
-										Insert into Editor
-									</button>
-									<button
-										type="button"
-										onClick={handleCopyResult}
-										className="px-3 py-1.5 text-xs font-medium rounded-lg bg-muted hover:bg-muted/80 transition-colors"
-									>
-										Copy
-									</button>
-								</div>
-							</GlassCard>
-						</motion.div>
-					)}
-				</AnimatePresence>
+				<PowerDockResult
+					result={result}
+					onClear={() => setResult(null)}
+					onInsert={handleInsertResult}
+					onCopy={handleCopyResult}
+				/>
 
 				<GlassCard
 					variant="liquid"
@@ -410,230 +332,23 @@ export const PowerDock = memo(function PowerDock() {
 						</AnimatePresence>
 
 						{/* AI TOOLS TRAY */}
-						<AnimatePresence mode="popLayout">
-							{mode === "tools" && (
-								<motion.div
-									initial={{ opacity: 0, width: 0 }}
-									animate={{ opacity: 1, width: "auto" }}
-									exit={{ opacity: 0, width: 0 }}
-									className="flex items-center gap-1 overflow-hidden pl-2 border-l border-white/10 ml-1"
-								>
-									{TOOLS.map((tool) => (
-										<ControlButton
-											key={tool.id}
-											label={tool.label}
-											icon={tool.icon}
-											onClick={() => handleToolSelect(tool.id)}
-											className={tool.color}
-										/>
-									))}
-								</motion.div>
-							)}
-						</AnimatePresence>
+						<PowerDockTray mode={mode} onSelectTool={handleToolSelect} />
 
 						{/* INPUT MODE */}
-						<AnimatePresence mode="popLayout">
-							{mode === "input" && selectedTool && (
-								<motion.div
-									initial={{ opacity: 0, width: 0 }}
-									animate={{ opacity: 1, width: "auto" }}
-									exit={{ opacity: 0, width: 0 }}
-									className="flex items-center gap-2 px-1 min-w-[300px] md:min-w-[400px]"
-								>
-									<div className="flex items-center gap-2 mr-2 text-muted-foreground">
-										<Sparkles className="w-4 h-4 text-primary" />
-										<span className="text-xs font-bold uppercase">
-											{TOOLS.find((t) => t.id === selectedTool)?.label}
-										</span>
-									</div>
-
-									<div className="flex-1 relative group flex gap-2 items-start">
-										<div className="relative flex-1">
-											<Textarea
-												value={input}
-												onChange={(e) => setInput(e.target.value)}
-												placeholder={getPlaceholder(selectedTool)}
-												className="min-h-[36px] max-h-[100px] py-2 px-3 pr-10 resize-none bg-white/5 border-white/10 focus:border-primary/50 text-sm rounded-lg w-full"
-												autoFocus
-												onKeyDown={(e) => {
-													if (e.key === "Enter" && !e.shiftKey) {
-														e.preventDefault();
-														handleExecute();
-													}
-													if (e.key === "Escape") {
-														reset();
-													}
-												}}
-											/>
-											<button
-												type="button"
-												onClick={handleExecute}
-												disabled={isProcessing}
-												className="absolute right-1 top-1 p-1.5 hover:bg-primary rounded-md text-muted-foreground hover:text-primary-foreground transition-colors disabled:opacity-50"
-											>
-												{isProcessing ? (
-													<span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin block" />
-												) : (
-													<Send className="w-3 h-3" />
-												)}
-											</button>
-										</div>
-
-										<DropdownMenu>
-											<DropdownMenuTrigger asChild>
-												<button
-													type="button"
-													aria-label="Command history"
-													className={cn(
-														"p-2 rounded-lg transition-colors border border-transparent",
-														"hover:bg-white/10 text-muted-foreground hover:text-foreground",
-														getToolHistory(selectedTool).length > 0 &&
-															"text-primary/70 hover:text-primary hover:border-primary/20",
-													)}
-												>
-													<HistoryIcon className="w-4 h-4" />
-												</button>
-											</DropdownMenuTrigger>
-											<DropdownMenuContent
-												align="end"
-												side="top"
-												className="w-64 max-h-60"
-											>
-												<DropdownMenuLabel className="flex items-center justify-between text-xs font-normal text-muted-foreground">
-													<span>Recent {selectedTool} commands</span>
-													<button
-														type="button"
-														aria-label="Clear history for this tool"
-														onClick={() => clearToolHistory(selectedTool)}
-														className="p-1 hover:text-destructive transition-colors"
-														title="Clear history for this tool"
-													>
-														<Trash2 className="w-3 h-3" />
-													</button>
-												</DropdownMenuLabel>
-												<DropdownMenuSeparator />
-												{getToolHistory(selectedTool).length === 0 ? (
-													<div className="p-2 text-xs text-muted-foreground text-center italic">
-														No recent history
-													</div>
-												) : (
-													getToolHistory(selectedTool).map((item, idx) => (
-														<DropdownMenuItem
-															key={`${item.timestamp}-${idx}`}
-															onClick={() => setInput(item.input)}
-															className="flex items-start gap-2 py-2 cursor-pointer"
-														>
-															<Clock className="w-3 h-3 mt-0.5 shrink-0 opacity-50" />
-															<span className="line-clamp-2 text-xs">
-																{item.input}
-															</span>
-														</DropdownMenuItem>
-													))
-												)}
-											</DropdownMenuContent>
-										</DropdownMenu>
-									</div>
-
-									<Separator
-										orientation="vertical"
-										className="h-6 mx-1 bg-white/10"
-									/>
-
-									<button
-										type="button"
-										aria-label="Close"
-										onClick={reset}
-										className="p-2 hover:bg-white/10 rounded-lg text-muted-foreground hover:text-foreground transition-colors"
-									>
-										<X className="w-4 h-4" />
-									</button>
-								</motion.div>
-							)}
-						</AnimatePresence>
+						<PowerDockInput
+							mode={mode}
+							selectedTool={selectedTool}
+							input={input}
+							setInput={setInput}
+							isProcessing={isProcessing}
+							onExecute={handleExecute}
+							onReset={reset}
+							onClearHistory={clearToolHistory}
+							getHistory={getToolHistory}
+						/>
 					</div>
 				</GlassCard>
 			</motion.div>
 		</TooltipProvider>
-	);
-});
-
-function ControlGroup({ children }: { children: React.ReactNode }) {
-	return <div className="flex items-center gap-1">{children}</div>;
-}
-
-interface ControlButtonProps {
-	label: string;
-	icon: React.ElementType;
-	onClick?: () => void;
-	active?: boolean;
-	disabled?: boolean;
-	shortcut?: string;
-	className?: string;
-	"data-testid"?: string;
-	asChild?: boolean;
-	children?: React.ReactNode;
-}
-
-const ControlButton = memo(function ControlButton({
-	label,
-	icon: Icon,
-	onClick,
-	active,
-	disabled,
-	shortcut,
-	className,
-	"data-testid": testId,
-	asChild,
-	children,
-}: ControlButtonProps) {
-	const sharedClassName = cn(
-		"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
-		"hover:bg-white/10 hover:scale-105 active:scale-95",
-		active &&
-			"bg-primary/20 text-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]",
-		disabled &&
-			"opacity-50 cursor-not-allowed hover:bg-transparent hover:scale-100",
-		!active && !disabled && "text-muted-foreground hover:text-foreground",
-		className,
-	);
-
-	const indicator = active && (
-		<div className="absolute -bottom-1 w-1 h-1 rounded-full bg-primary" />
-	);
-
-	return (
-		<Tooltip>
-			<TooltipTrigger asChild>
-				{asChild ? (
-					<Slot
-						className={sharedClassName}
-						onClick={onClick}
-						data-testid={testId}
-					>
-						{children}
-					</Slot>
-				) : (
-					<button
-						type="button"
-						aria-label={label}
-						onClick={onClick}
-						disabled={disabled}
-						data-testid={testId}
-						className={sharedClassName}
-					>
-						<Icon className="w-5 h-5" />
-						{indicator}
-					</button>
-				)}
-			</TooltipTrigger>
-			<TooltipContent side="top" className="flex items-center gap-2">
-				<span>{label}</span>
-				{shortcut && (
-					<kbd className="px-1.5 py-0.5 rounded bg-white/10 text-[10px] font-medium text-muted-foreground">
-						{shortcut}
-					</kbd>
-				)}
-			</TooltipContent>
-		</Tooltip>
 	);
 });

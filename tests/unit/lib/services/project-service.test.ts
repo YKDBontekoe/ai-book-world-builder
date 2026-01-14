@@ -134,6 +134,7 @@ describe("ProjectService", () => {
 				userId,
 			);
 			expect(result).toEqual({
+				success: false,
 				error:
 					"Project is too large to fork instantly. Please export and import instead.",
 			});
@@ -147,7 +148,10 @@ describe("ProjectService", () => {
 				originalProjectId,
 				userId,
 			);
-			expect(result).toEqual({ error: "Project not found or access denied" });
+			expect(result).toEqual({
+				success: false,
+				error: "Project not found or access denied",
+			});
 		});
 
 		it("should successfully fork a project", async () => {
@@ -246,7 +250,10 @@ describe("ProjectService", () => {
 				originalProjectId,
 				userId,
 			);
-			expect(result).toEqual({ error: "Failed to fork project" });
+			expect(result).toEqual({
+				success: false,
+				error: "Failed to fork project",
+			});
 		});
 	});
 });

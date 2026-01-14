@@ -10,6 +10,7 @@ import { type DbTransaction, db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
 import { checkUsageQuota } from "@/lib/quota";
+import { sceneSequenceService } from "@/lib/services/scene-sequence-service";
 import {
 	createSceneInChapterSchema,
 	deleteSceneSchema,
@@ -134,60 +135,18 @@ export async function generateScene(
 		const newSceneId = crypto.randomUUID();
 
 		await db.transaction(async (tx: DbTransaction) => {
-			// Get max sequence atomically inside transaction
-			const [maxSeq] = await tx
-				.select({ max: sql<number>`max(${scene.sequence})` })
-				.from(scene)
-				.where(eq(scene.chapterId, chapterId));
-
-			const nextSequence = (maxSeq?.max ?? 0) + 1;
-
-			// Re-calculate local sequence for insertion if needed,
-			// but for appending (prevSceneId is last or undefined), max+1 is correct.
-			// However, generateScene typically appends to end or after prevSceneId.
-			// For simplicity and safety in generation, we append to end if prevSceneId logic is complex,
-			// or we need to shift.
-			// The original code calculated newSequence based on `scenes` array length/position.
-			// If we want to insert *after* a specific scene, we need shifting logic similar to createSceneInChapter.
-
-			// Let's assume strict append for generation unless sophisticated insertion is needed.
-			// If prevSceneId is provided, we should ideally insert after it.
-
-			// Use the same logic as createSceneInChapter for robust insertion
-			let finalSequence = nextSequence;
-
-			if (prevSceneId) {
-				const [prevScene] = await tx
-					.select()
-					.from(scene)
-					.where(eq(scene.id, prevSceneId));
-				if (prevScene) {
-					finalSequence = prevScene.sequence + 1;
-					// Shift subsequent scenes
-					await tx
-						.update(scene)
-						.set({
-							sequence: sql`${scene.sequence} + 1`,
-							updatedAt: new Date(),
-						})
-						.where(
-							and(
-								eq(scene.chapterId, chapterId),
-								sql`${scene.sequence} >= ${finalSequence}`,
-							),
-						);
-				}
-			}
+			const { sequence, prevSceneId: finalPrevSceneId } =
+				await sceneSequenceService.prepareInsertion(chapterId, prevSceneId, tx);
 
 			await tx.insert(scene).values({
 				id: newSceneId,
 				projectId: currentChapter.projectId,
 				chapterId,
 				title: "AI Generated Scene",
-				sequence: finalSequence,
+				sequence,
 				content: generation.text,
 				status: "drafted",
-				prevSceneId,
+				prevSceneId: finalPrevSceneId,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			});
@@ -287,63 +246,19 @@ export async function createSceneInChapter(
 		const newSceneId = crypto.randomUUID();
 
 		await db.transaction(async (tx: DbTransaction) => {
-			let newSequence = 1;
-			let prevSceneId: string | undefined;
-
-			if (insertAfterSceneId) {
-				const [insertAfterScene] = await tx
-					.select()
-					.from(scene)
-					.where(eq(scene.id, insertAfterSceneId));
-
-				if (insertAfterScene) {
-					newSequence = insertAfterScene.sequence + 1;
-					prevSceneId = insertAfterScene.id;
-
-					// Shift subsequent scenes atomically
-					await tx
-						.update(scene)
-						.set({
-							sequence: sql`${scene.sequence} + 1`,
-							updatedAt: new Date(),
-						})
-						.where(
-							and(
-								eq(scene.chapterId, chapterId),
-								sql`${scene.sequence} >= ${newSequence}`,
-							),
-						);
-				}
-			} else {
-				// Append to end
-				const [maxSeq] = await tx
-					.select({ max: sql<number>`max(${scene.sequence})` })
-					.from(scene)
-					.where(eq(scene.chapterId, chapterId));
-
-				newSequence = (maxSeq?.max ?? 0) + 1;
-
-				if (newSequence > 1) {
-					// Find the ID of the scene with sequence = newSequence - 1 to set as prevSceneId
-					const [lastScene] = await tx
-						.select()
-						.from(scene)
-						.where(
-							and(
-								eq(scene.chapterId, chapterId),
-								eq(scene.sequence, newSequence - 1),
-							),
-						);
-					prevSceneId = lastScene?.id;
-				}
-			}
+			const { sequence, prevSceneId } =
+				await sceneSequenceService.prepareInsertion(
+					chapterId,
+					insertAfterSceneId,
+					tx,
+				);
 
 			await tx.insert(scene).values({
 				id: newSceneId,
 				projectId: currentChapter.projectId,
 				chapterId,
 				title,
-				sequence: newSequence,
+				sequence,
 				content: "",
 				status: "planned",
 				prevSceneId,
@@ -401,21 +316,9 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 			}
 		}
 
-		// Update sequences using a single SQL UPDATE with CASE statement
-		// This avoids N+1 database round-trips.
-		const sqlChunks = [];
-		sqlChunks.push(sql`(case`);
-		for (let i = 0; i < sceneIds.length; i++) {
-			sqlChunks.push(sql`when ${scene.id} = ${sceneIds[i]} then ${i + 1}`);
-		}
-		sqlChunks.push(sql`else ${scene.sequence} end)`);
-
-		const finalSql = sql.join(sqlChunks, sql` `);
-
-		await db
-			.update(scene)
-			.set({ sequence: finalSql, updatedAt: new Date() })
-			.where(and(eq(scene.chapterId, chapterId), inArray(scene.id, sceneIds)));
+		await db.transaction(async (tx: DbTransaction) => {
+			await sceneSequenceService.reorderScenes(chapterId, sceneIds, tx);
+		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
