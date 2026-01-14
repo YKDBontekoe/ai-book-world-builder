@@ -99,7 +99,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, [containerRef, content, readOnly]); // Only run on mount or if dependencies change (early return if already initialized)
+	}, [containerRef]); // Only run on mount or if dependencies change (early return if already initialized)
 
 	// Synchronize content when it changes externally
 	useEffect(() => {

@@ -99,7 +99,7 @@ export function useSceneContent({
 		setIsSaving(true);
 		try {
 			const result = await updateSceneContent(id, content);
-			if (result.success) {
+			if (result?.success) {
 				setIsSaving(false);
 				setLastSaved(new Date());
 				onContentUpdate?.(id, content);
