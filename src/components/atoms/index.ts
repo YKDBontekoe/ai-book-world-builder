@@ -7,7 +7,6 @@ export * from "@/components/atoms/card";
 export * from "@/components/atoms/carousel";
 export * from "@/components/atoms/checkbox";
 export * from "@/components/atoms/collapsible";
-export * from "@/components/atoms/collapsible-section";
 export * from "@/components/atoms/dialog";
 export * from "@/components/atoms/dropdown-menu";
 export * from "@/components/atoms/entity-badge";

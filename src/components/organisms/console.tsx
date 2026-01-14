@@ -1,3 +1,5 @@
+"use client";
+
 import { Loader2Icon, TerminalIcon, XIcon } from "lucide-react";
 import {
 	type Dispatch,
