@@ -15,12 +15,18 @@ import {
 	createSceneInChapterSchema,
 	deleteSceneSchema,
 	generateSceneSchema,
+	getSceneContentSchema,
 	reorderScenesSchema,
 	updateSceneContentSchema,
 	updateSceneTitleSchema,
 } from "@/lib/validation";
 
 export async function getSceneContent(projectId: string, sceneId: string) {
+	const validation = getSceneContentSchema.safeParse({ projectId, sceneId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
 	try {
 		// 1. Verify Access (Read is sufficient)
 		await ensureProjectAccess(projectId);

@@ -96,6 +96,11 @@ export const sceneIdSchema = z.object({
 	sceneId: uuidSchema,
 });
 
+export const getSceneContentSchema = z.object({
+	projectId: uuidSchema,
+	sceneId: uuidSchema,
+});
+
 export const updateSceneContentSchema = z.object({
 	sceneId: uuidSchema,
 	content: z.string().max(200000, {
