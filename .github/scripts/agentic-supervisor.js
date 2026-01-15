@@ -701,7 +701,7 @@ ${conventions}
   // The old code incorrectly used '@src/lib/jules-client.ts' which is a FILE PATH, not a mention!
   const assigneeMention = '@jules';
 
-  // DUPLICATE CHECK
+  // DUPLICATE CHECK & POSTING LOGIC
   // Before finalizing, check if we are posting a duplicate feedback comment
   if (decision.batchedComments) {
       // PREPEND MENTION if not already present
@@ -736,10 +736,20 @@ ${conventions}
                   log('Duplicate feedback detected. Skipping repost.');
                   decision.method = 'none';
                   decision.reason = 'Duplicate Feedback';
+                  // Clear batchedComments to prevent empty posting downstream
+                  decision.batchedComments = '';
               }
           }
       } catch(e) {
           // ignore
+      }
+  } else {
+      // If there are no batched comments, ensure we don't accidentally post an empty or generic message
+      // when the intention was to report feedback.
+      if (decision.reason.includes('Feedback') || decision.reason.includes('Failure')) {
+          log('No actionable feedback content found. Aborting post to avoid spam.');
+          decision.method = 'none';
+          decision.reason = 'Empty Feedback';
       }
   }
 
