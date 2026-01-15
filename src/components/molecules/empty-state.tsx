@@ -132,6 +132,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 				<GlassCard
 					ref={ref}
 					variant="liquid"
+					data-testid="empty-state-container"
 					className={cn(
 						"flex flex-col items-center justify-center p-12 min-h-[300px]",
 						className,
@@ -146,6 +147,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 		return (
 			<div
 				ref={ref}
+				data-testid="empty-state-container"
 				className={cn(
 					"flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/5 p-12 text-center",
 					className,
