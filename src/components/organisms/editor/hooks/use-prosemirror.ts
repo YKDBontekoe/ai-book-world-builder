@@ -13,6 +13,7 @@ import { buildDocumentFromContent } from "@/lib/editor/functions";
 import { mentionPlugin } from "@/lib/editor/plugins/mention";
 import { suggestionsPlugin } from "@/lib/editor/suggestions";
 import type { MentionState } from "./use-mention";
+import { useTypewriterScroll } from "./use-typewriter-scroll";
 
 interface UseProseMirrorProps {
 	containerRef: React.RefObject<HTMLDivElement>;
@@ -42,6 +43,12 @@ export function useProseMirror({
 	const [mounted, setMounted] = useState(false);
 	const prevContentRef = useRef<string | null>(null);
 	const onMentionStateChangeRef = useRef(onMentionStateChange);
+
+	const handleTypewriterScroll = useTypewriterScroll({
+		editorRef,
+		containerRef,
+		typewriterMode,
+	});
 
 	// Update ref whenever the callback changes
 	onMentionStateChangeRef.current = onMentionStateChange;
@@ -141,23 +148,7 @@ export function useProseMirror({
 						onSelectionChange,
 					});
 
-					// Typewriter Logic
-					if (typewriterMode && transaction.selectionSet) {
-						setTimeout(() => {
-							const view = editorRef.current;
-							if (!view) return;
-							const coords = view.coordsAtPos(view.state.selection.from);
-							const scrollable =
-								containerRef.current?.closest(".overflow-y-auto");
-							if (scrollable) {
-								const containerRect = scrollable.getBoundingClientRect();
-								const relativeTop = coords.top - containerRect.top;
-								const target = containerRect.height / 2;
-								const diff = relativeTop - target;
-								scrollable.scrollBy({ top: diff, behavior: "smooth" });
-							}
-						}, 0);
-					}
+					handleTypewriterScroll(transaction.selectionSet);
 				},
 			});
 		}
