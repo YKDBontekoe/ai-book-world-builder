@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Copy, FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
@@ -22,6 +22,7 @@ interface SceneItemProps {
 	onGenerateNext: (chapterId: string, sceneId: string) => void;
 	isGenerating: boolean;
 	onRename?: (sceneId: string, newTitle: string) => void;
+	onDuplicate?: (sceneId: string) => void;
 	onDelete?: (sceneId: string) => void;
 	readOnly?: boolean;
 }
@@ -34,6 +35,7 @@ export const SceneItem = memo(function SceneItem({
 	onGenerateNext,
 	isGenerating,
 	onRename,
+	onDuplicate,
 	onDelete,
 	readOnly,
 }: SceneItemProps) {
@@ -132,6 +134,10 @@ export const SceneItem = memo(function SceneItem({
 					<ContextMenuItem onClick={() => setIsEditing(true)}>
 						<Pencil className="mr-2 h-4 w-4" />
 						Rename
+					</ContextMenuItem>
+					<ContextMenuItem onClick={() => onDuplicate?.(scene.id)}>
+						<Copy className="mr-2 h-4 w-4" />
+						Duplicate
 					</ContextMenuItem>
 					<ContextMenuSeparator />
 					<ContextMenuItem

@@ -14,6 +14,7 @@ import { sceneSequenceService } from "@/lib/services/scene-sequence-service";
 import {
 	createSceneInChapterSchema,
 	deleteSceneSchema,
+	duplicateSceneSchema,
 	generateSceneSchema,
 	reorderScenesSchema,
 	updateSceneContentSchema,
@@ -212,6 +213,58 @@ export async function deleteScene(
 	} catch (error) {
 		console.error("Failed to delete scene", error);
 		return { success: false, error: "Failed to delete scene" };
+	}
+}
+
+export async function duplicateScene(
+	sceneId: string,
+): Promise<{ success: boolean; sceneId?: string; error?: string }> {
+	const validation = duplicateSceneSchema.safeParse({ sceneId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
+	try {
+		const targetScene = await sceneRepository.findById(sceneId);
+
+		if (!targetScene) {
+			return { success: false, error: "Scene not found" };
+		}
+
+		await ensureProjectAccess(targetScene.projectId, true);
+
+		// Use a transaction to ensure atomic sequence calculation and insertion
+		const newSceneId = crypto.randomUUID();
+
+		await db.transaction(async (tx: DbTransaction) => {
+			// Calculate sequence to insert immediately after the original scene
+			const { sequence, prevSceneId } =
+				await sceneSequenceService.prepareInsertion(
+					targetScene.chapterId,
+					targetScene.id, // Insert after the original scene
+					tx,
+				);
+
+			await tx.insert(scene).values({
+				id: newSceneId,
+				projectId: targetScene.projectId,
+				chapterId: targetScene.chapterId,
+				title: `${targetScene.title} (Copy)`,
+				sequence,
+				content: targetScene.content,
+				status: "drafting",
+				prevSceneId,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			});
+		});
+
+		await invalidateCache(`project-structure:${targetScene.projectId}`);
+
+		return { success: true, sceneId: newSceneId };
+	} catch (error) {
+		console.error("Failed to duplicate scene", error);
+		return { success: false, error: "Failed to duplicate scene" };
 	}
 }
 

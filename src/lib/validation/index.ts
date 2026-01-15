@@ -153,6 +153,10 @@ export const deleteSceneSchema = z.object({
 	sceneId: uuidSchema,
 });
 
+export const duplicateSceneSchema = z.object({
+	sceneId: uuidSchema,
+});
+
 // ============================================================================
 // Chapter Schemas
 // ============================================================================
