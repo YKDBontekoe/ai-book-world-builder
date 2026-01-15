@@ -182,10 +182,11 @@ function getCodeRabbitFeedback(repo, number) {
     }
 
     const fullFeedback = (reviewSummary + inlineSummary).trim();
-    return fullFeedback;
+    // Return null if empty to simplify checks later
+    return fullFeedback.length > 0 ? fullFeedback : null;
   } catch (e) {
     logError('Failed to fetch CodeRabbit feedback', e);
-    return '';
+    return null;
   }
 }
 
@@ -543,6 +544,8 @@ ${conventions}
   if (eventName === 'issue_comment') {
     const body = context.commentBody.trim();
     const commenter = context.commentAuthor;
+
+    // Updated Bot Detection Logic
     const isBot = CONFIG.BOT_USERS.some(u => commenter.includes(u)) ||
                   body.includes('Routing via Trigger') ||
                   body.includes(CONFIG.SIGNATURE);
@@ -567,6 +570,8 @@ ${conventions}
       } else {
         decision.method = 'mention'; 
       }
+    } else if (isBot) {
+        log(`Ignoring comment from bot or self: ${commenter}`);
     }
   }
 
@@ -653,6 +658,11 @@ ${conventions}
               BATCHED_COMMENTS: combinedFeedback
             });
           }
+        } else {
+            // No actionable feedback found
+            log('No actionable feedback found from review.');
+            decision.method = 'none';
+            decision.reason = 'No Actionable Feedback';
         }
       } catch (e) {}
     }
