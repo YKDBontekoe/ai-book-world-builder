@@ -1,9 +1,8 @@
-import { FadeIn } from "@/components/atoms/animated";
+import type React from "react";
 import { Skeleton } from "@/components/atoms/skeleton";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { cn } from "@/lib/utils";
 
-export function ProjectCardSkeleton() {
+export function ProjectCardSkeleton(): React.JSX.Element {
 	return (
 		<GlassCard
 			variant="liquid"
@@ -27,7 +26,7 @@ export function ProjectCardSkeleton() {
 	);
 }
 
-export function ProjectListSkeleton() {
+export function ProjectListSkeleton(): React.JSX.Element {
 	return (
 		<GlassCard
 			variant="liquid"

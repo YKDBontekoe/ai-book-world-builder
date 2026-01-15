@@ -18,6 +18,8 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
 	action?: React.ReactNode;
 	/** Optional suggestion chips to display */
 	suggestions?: string[];
+	/** Handler for when a suggestion chip is clicked */
+	onSuggestionClick?: (suggestion: string) => void;
 	/** Visual style variant */
 	variant?: "dashed" | "glass";
 }
@@ -36,6 +38,7 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 			iconClassName,
 			action,
 			suggestions,
+			onSuggestionClick,
 			variant = "dashed",
 			...props
 		},
@@ -59,8 +62,8 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 						animate={{ opacity: 1, scale: 1 }}
 						transition={{
 							type: "spring",
-							stiffness: 300,
-							damping: 20,
+							stiffness: 400,
+							damping: 25,
 							delay: 0.2,
 						}}
 						className={cn(
@@ -109,19 +112,33 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 							variant === "glass" ? "" : "mt-4",
 						)}
 					>
-						{suggestions.map((suggestion) => (
-							<span
-								key={suggestion}
-								className={cn(
-									"rounded-full border px-3 py-1.5 transition-colors hover:border-primary/30 hover:bg-primary/5 cursor-default",
-									variant === "glass"
-										? "bg-background/50 backdrop-blur-sm shadow-sm"
-										: "",
-								)}
-							>
-								{suggestion}
-							</span>
-						))}
+						{suggestions.map((suggestion) => {
+							const Component = onSuggestionClick ? "button" : "span";
+							const interactionProps = onSuggestionClick
+								? {
+										onClick: () => onSuggestionClick(suggestion),
+										type: "button" as const,
+									}
+								: {};
+
+							return (
+								<Component
+									key={suggestion}
+									className={cn(
+										"rounded-full border px-3 py-1.5 transition-colors",
+										onSuggestionClick
+											? "cursor-pointer hover:border-primary/30 hover:bg-primary/5"
+											: "cursor-default",
+										variant === "glass"
+											? "bg-background/50 backdrop-blur-sm shadow-sm"
+											: "",
+									)}
+									{...interactionProps}
+								>
+									{suggestion}
+								</Component>
+							);
+						})}
 					</motion.div>
 				)}
 			</motion.div>
