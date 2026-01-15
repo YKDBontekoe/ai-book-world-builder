@@ -85,7 +85,9 @@ function ProjectRow({
 				interactive
 				className={cn(
 					"flex flex-row items-center justify-between gap-4 p-4 transition-all duration-300 relative cursor-pointer",
-					selected && "ring-2 ring-primary bg-primary/5 scale-[0.99]",
+					selected &&
+						"ring-2 ring-primary bg-primary/5 scale-[0.99] shadow-inner",
+					"hover:shadow-md dark:hover:shadow-primary/5",
 				)}
 				onClick={handleRowClick}
 				onKeyDown={handleKeyDown}
@@ -137,7 +139,7 @@ function ProjectRow({
 
 					{/* Content */}
 					<div className="min-w-0 flex-1">
-						<h3 className="font-bold text-base truncate tracking-tight">
+						<h3 className="font-bold text-base truncate tracking-tight text-foreground">
 							{project.name}
 						</h3>
 						{project.description && (
@@ -151,7 +153,7 @@ function ProjectRow({
 				{/* Metadata & Actions - Inside GlassCard for visuals, but handled carefully */}
 				<div className="flex items-center gap-6 shrink-0 pr-10 pointer-events-none">
 					<div className="hidden sm:flex items-center gap-2 text-xs text-muted-foreground whitespace-nowrap">
-						<CalendarIcon className="h-3.5 w-3.5" />
+						<CalendarIcon className="h-3.5 w-3.5 opacity-70" />
 						<span>
 							{formatDistanceToNow(project.createdAt, {
 								addSuffix: true,
@@ -159,7 +161,7 @@ function ProjectRow({
 						</span>
 					</div>
 					{project.visibility === "public" && (
-						<Globe className="h-3.5 w-3.5 text-muted-foreground" />
+						<Globe className="h-3.5 w-3.5 text-muted-foreground opacity-70" />
 					)}
 				</div>
 			</GlassCard>

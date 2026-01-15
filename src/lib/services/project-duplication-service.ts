@@ -1,5 +1,5 @@
 import "server-only";
-import { type InferSelectModel, eq } from "drizzle-orm";
+import { eq, type InferSelectModel } from "drizzle-orm";
 
 import { type DbTransaction, db } from "@/lib/db";
 import { projectRepository } from "@/lib/db/repositories";
@@ -93,8 +93,18 @@ export class ProjectDuplicationService {
 				const sceneIdMap = new Map<string, string>();
 
 				// 2. Clone Entities & Relations
-				await this.cloneEntities(tx, originalProjectId, newProject.id, entityIdMap);
-				await this.cloneAttributes(tx, originalProjectId, newProject.id, entityIdMap);
+				await this.cloneEntities(
+					tx,
+					originalProjectId,
+					newProject.id,
+					entityIdMap,
+				);
+				await this.cloneAttributes(
+					tx,
+					originalProjectId,
+					newProject.id,
+					entityIdMap,
+				);
 				await this.cloneRelationships(
 					tx,
 					originalProjectId,
@@ -103,7 +113,12 @@ export class ProjectDuplicationService {
 				);
 
 				// 3. Clone Structure
-				await this.cloneOutlines(tx, originalProjectId, newProject.id, outlineIdMap);
+				await this.cloneOutlines(
+					tx,
+					originalProjectId,
+					newProject.id,
+					outlineIdMap,
+				);
 				await this.cloneVolumes(
 					tx,
 					originalProjectId,

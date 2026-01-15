@@ -34,7 +34,6 @@ import {
 	createNewChapter,
 	createSceneInChapter,
 	deleteScene,
-	duplicateScene,
 	generateScene,
 	updateSceneTitle,
 } from "@/features/writer/actions";
@@ -228,27 +227,6 @@ export const SceneNavigation = memo(function SceneNavigation({
 		[onStructureUpdate],
 	);
 
-	const handleDuplicateScene = useCallback(
-		async (sceneId: string) => {
-			const toastId = toast.loading("Duplicating scene...");
-			try {
-				const result = await duplicateScene(sceneId);
-				if (result.success && result.sceneId) {
-					toast.success("Scene duplicated", { id: toastId });
-					onStructureUpdate?.();
-					onSceneSelect(result.sceneId);
-				} else {
-					toast.error(result.error || "Failed to duplicate scene", {
-						id: toastId,
-					});
-				}
-			} catch (_e) {
-				toast.error("Error duplicating scene", { id: toastId });
-			}
-		},
-		[onStructureUpdate, onSceneSelect],
-	);
-
 	const handleDeleteScene = useCallback(
 		async (sceneId: string) => {
 			const toastId = toast.loading("Deleting scene...");
@@ -402,7 +380,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 								<ContextMenu>
 									<ContextMenuTrigger disabled={readOnly}>
 										<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-											<span className="truncate text-left">{chapter.title}</span>
+											<span className="truncate text-left">
+												{chapter.title}
+											</span>
 										</AccordionTrigger>
 									</ContextMenuTrigger>
 									<ContextMenuContent>
@@ -434,7 +414,6 @@ export const SceneNavigation = memo(function SceneNavigation({
 												onGenerateNext={handleGenerateNextScene}
 												isGenerating={isGenerating}
 												onRename={handleRenameScene}
-												onDuplicate={handleDuplicateScene}
 												onDelete={handleDeleteScene}
 												readOnly={readOnly}
 											/>

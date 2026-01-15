@@ -68,11 +68,25 @@ export const PowerDock = memo(function PowerDock() {
 		setIsProcessing(false);
 	}, []);
 
-	const handleToolSelect = useCallback((toolId: string) => {
-		setSelectedTool(toolId as ToolType);
-		setMode("input");
-		setResult(null);
-	}, []);
+	const handleToolSelect = useCallback(
+		(toolId: string) => {
+			if (toolId === "export") {
+				const toolContext = {
+					project,
+					structure: structure ?? [],
+					activeChapterId: activeChapterId || null,
+					activeSceneId: activeSceneId || null,
+					sceneContent: sceneContent || null,
+				};
+				toolStrategies.export.execute(toolContext, "");
+				return;
+			}
+			setSelectedTool(toolId as ToolType);
+			setMode("input");
+			setResult(null);
+		},
+		[project, structure, activeChapterId, activeSceneId, sceneContent],
+	);
 
 	const handleCopyScene = useCallback(async () => {
 		if (sceneContent != null) {
@@ -129,6 +143,7 @@ export const PowerDock = memo(function PowerDock() {
 				structure: structure ?? [],
 				activeChapterId: activeChapterId || null,
 				activeSceneId: activeSceneId || null,
+				sceneContent: sceneContent || null,
 			};
 
 			const outcome = await strategy.execute(toolContext, currentInput);

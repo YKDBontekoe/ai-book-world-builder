@@ -18,13 +18,15 @@ export type ToolType =
 	| "critique"
 	| "consistency"
 	| "lore"
-	| "search";
+	| "search"
+	| "export";
 
 export interface ToolContext {
 	project: Project;
 	structure: ChapterWithScenes[];
 	activeChapterId: string | null;
 	activeSceneId: string | null;
+	sceneContent?: string | null;
 }
 
 export interface ToolStrategy {
@@ -215,6 +217,38 @@ export class SearchStrategy implements ToolStrategy {
 	}
 }
 
+export class ExportStrategy implements ToolStrategy {
+	async execute(context: ToolContext, _input: string) {
+		if (!context.sceneContent) {
+			toast.error("No content to export.");
+			return { success: false };
+		}
+
+		try {
+			const blob = new Blob([context.sceneContent], {
+				type: "text/markdown;charset=utf-8",
+			});
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			// Use activeSceneId or timestamp for filename
+			const timestamp = new Date().toISOString().slice(0, 10);
+			a.download = `scene-${context.activeSceneId || "export"}-${timestamp}.md`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+
+			toast.success("Scene exported successfully");
+			return { success: true };
+		} catch (error) {
+			console.error("Export failed:", error);
+			toast.error("Failed to export content");
+			return { success: false };
+		}
+	}
+}
+
 export const toolStrategies: Record<ToolType, ToolStrategy> = {
 	write: new WriteStrategy(),
 	rewrite: new RewriteStrategy(),
@@ -223,4 +257,5 @@ export const toolStrategies: Record<ToolType, ToolStrategy> = {
 	consistency: new ConsistencyStrategy(),
 	lore: new LoreStrategy(),
 	search: new SearchStrategy(),
+	export: new ExportStrategy(),
 };
