@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
- * AGENTIC SUPERVISOR (v4.6)
+ * AGENTIC SUPERVISOR (v4.7)
  * 
  * Centralized orchestration for AI agents.
  * Features:
@@ -25,7 +25,13 @@ const CONFIG = {
   LOOP_THRESHOLD: 3,
   LOG_TRUNCATE_LENGTH: 2000,
   CODERABBIT_COMMENT_LIMIT: 50,
-  BOT_USERS: ['google-labs-jules', 'jules', 'renovate[bot]', 'coderabbitai', 'github-actions[bot]']
+  BOT_USERS: ['google-labs-jules', 'jules', 'renovate[bot]', 'coderabbitai', 'github-actions[bot]'],
+  SIGNATURE: '<!-- JULES_SUPERVISOR_SIG %>',
+  IGNORE_PHRASES: [
+    'no actionable comments',
+    'looks good',
+    'lgtm'
+  ]
 };
 
 // =============================================================================
@@ -111,39 +117,76 @@ async function addLabels(number, labels) {
 
 // --- Batched Feedback Helpers ---
 
-function getCodeRabbitComments(repo, number) {
+function getCodeRabbitFeedback(repo, number) {
+  if (!number || !Number.isInteger(Number(number)) || Number(number) <= 0) {
+      logError(`Invalid PR number: ${number}`);
+      return '';
+  }
+
   try {
-    // Fetch all comments using pagination
-    // gh api --paginate outputs concatenated JSON arrays (e.g. [...][...]) which JSON.parse can't handle directly
-    // We use jq to flatten them into a single array if possible, or manual string manipulation fallback
+    let reviewSummary = '';
+    // 1. Get Review Summaries (Top-level comments)
+    try {
+        const reviewsJson = exec(`gh api "/repos/${repo}/pulls/${number}/reviews?per_page=100" --paginate`);
+        if (reviewsJson) {
+            const reviews = JSON.parse(reviewsJson);
+            const rabbitReviews = reviews
+                .filter(r => r.user?.login === 'coderabbitai' && r.state !== 'DISMISSED')
+                .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+
+            if (rabbitReviews.length > 0) {
+                const latest = rabbitReviews[0];
+                const bodyLower = (latest.body || '').toLowerCase();
+                const shouldIgnore = CONFIG.IGNORE_PHRASES.some(phrase => bodyLower.includes(phrase.toLowerCase()));
+
+                if (latest.body && latest.body.length > 10 && !shouldIgnore) {
+                    reviewSummary = `### 🐰 CodeRabbit Summary\n\n${latest.body}`;
+                }
+            }
+        }
+    } catch (e) {
+        logError('Failed to fetch CodeRabbit reviews', e);
+    }
+
+    // 2. Get Inline Comments
     let comments = [];
     try {
-        const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.' | jq -s 'add'`);
+        const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.[]' | jq -s '.'`);
         comments = JSON.parse(json);
     } catch (e) {
-         const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
-         const fixed = raw.replace(/\]\[/g, ',');
-         comments = JSON.parse(fixed);
+        // Fallback for environments without jq
+        try {
+            const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
+             if (raw) {
+                 const fixed = raw.replace(/\]\[/g, ',');
+                 comments = JSON.parse(fixed);
+             }
+        } catch (innerErr) {
+            logError('Failed to fetch comments with fallback', innerErr);
+        }
     }
 
     const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
     
-    if (rabbitComments.length === 0) return '';
-    
-    const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'} \n${c.body}`).join('\n\n---\n\n');
-    
-    let summary = '';
-    if (rabbitComments.length > CONFIG.CODERABBIT_COMMENT_LIMIT) {
-      summary = "### 🐰 CodeRabbit Review (Summary)\n\n(Showing top " + CONFIG.CODERABBIT_COMMENT_LIMIT + " of " + rabbitComments.length + " comments)\n" + 
-             formatComments(rabbitComments.slice(0, CONFIG.CODERABBIT_COMMENT_LIMIT)) + 
-             "\n\n...(and " + (rabbitComments.length - CONFIG.CODERABBIT_COMMENT_LIMIT) + " more)";
-    } else {
-      summary = "### 🐰 CodeRabbit Review\n\n" + formatComments(rabbitComments);
+    let inlineSummary = '';
+    if (rabbitComments.length > 0) {
+      const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'} \n${c.body}`).join('\n\n---\n\n');
+
+      if (rabbitComments.length > CONFIG.CODERABBIT_COMMENT_LIMIT) {
+        inlineSummary = "\n\n### 🐰 CodeRabbit Inline Comments (Summary)\n\n(Showing top " + CONFIG.CODERABBIT_COMMENT_LIMIT + " of " + rabbitComments.length + " comments)\n" +
+               formatComments(rabbitComments.slice(0, CONFIG.CODERABBIT_COMMENT_LIMIT)) +
+               "\n\n...(and " + (rabbitComments.length - CONFIG.CODERABBIT_COMMENT_LIMIT) + " more)";
+      } else {
+        inlineSummary = "\n\n### 🐰 CodeRabbit Inline Comments\n\n" + formatComments(rabbitComments);
+      }
     }
-    return summary;
+
+    const fullFeedback = (reviewSummary + inlineSummary).trim();
+    // Return null if empty to simplify checks later
+    return fullFeedback.length > 0 ? fullFeedback : null;
   } catch (e) {
-    logError('Failed to fetch CodeRabbit comments', e);
-    return '';
+    logError('Failed to fetch CodeRabbit feedback', e);
+    return null;
   }
 }
 
@@ -484,7 +527,8 @@ ${conventions}
             const isBot = CONFIG.BOT_USERS.some(u => lastComment.user?.login?.includes(u));
             const hasSignature = lastComment.body.includes('Routing via Trigger') ||
                                  lastComment.body.includes('Jules Session Starting') ||
-                                 lastComment.body.includes('Loop Detected');
+                                 lastComment.body.includes('Loop Detected') ||
+                                 lastComment.body.includes(CONFIG.SIGNATURE);
 
             // If the last comment is from the PAT user (who might look like a human) but contains our signature, treat it as a loop
             if (hasSignature) {
@@ -500,7 +544,11 @@ ${conventions}
   if (eventName === 'issue_comment') {
     const body = context.commentBody.trim();
     const commenter = context.commentAuthor;
-    const isBot = CONFIG.BOT_USERS.some(u => commenter.includes(u)) || body.includes('Routing via Trigger');
+
+    // Updated Bot Detection Logic
+    const isBot = CONFIG.BOT_USERS.some(u => commenter.includes(u)) ||
+                  body.includes('Routing via Trigger') ||
+                  body.includes(CONFIG.SIGNATURE);
     
     if (!isBot && (body.includes('@jules') || body.includes('@google-labs-jules') || body.includes('@src/lib/jules-client.ts'))) {
       const standard = getStandardMethod();
@@ -522,6 +570,8 @@ ${conventions}
       } else {
         decision.method = 'mention'; 
       }
+    } else if (isBot) {
+        log(`Ignoring comment from bot or self: ${commenter}`);
     }
   }
 
@@ -552,7 +602,7 @@ ${conventions}
       }
 
       // BATCHING: Include CodeRabbit comments if available
-      const rabbitFeedback = getCodeRabbitComments(repo, context.number);
+      const rabbitFeedback = getCodeRabbitFeedback(repo, context.number);
       const combinedFeedback = context.failedJobs + (rabbitFeedback ? "\n\n---\n\n" + rabbitFeedback : "");
 
       if (isJulesInvolved) {
@@ -588,7 +638,7 @@ ${conventions}
       decision.reason = 'Draft PR (Review ignored)';
     } else {
       try {
-        const rabbitFeedback = getCodeRabbitComments(repo, context.number);
+        const rabbitFeedback = getCodeRabbitFeedback(repo, context.number);
         
         // BATCHING: Include CI failures if available
         let ciFeedback = '';
@@ -608,6 +658,11 @@ ${conventions}
               BATCHED_COMMENTS: combinedFeedback
             });
           }
+        } else {
+            // No actionable feedback found
+            log('No actionable feedback found from review.');
+            decision.method = 'none';
+            decision.reason = 'No Actionable Feedback';
         }
       } catch (e) {}
     }
@@ -655,6 +710,58 @@ ${conventions}
   // NOTE: Always use @jules - this is the trigger that Jules responds to
   // The old code incorrectly used '@src/lib/jules-client.ts' which is a FILE PATH, not a mention!
   const assigneeMention = '@jules';
+
+  // DUPLICATE CHECK & POSTING LOGIC
+  // Before finalizing, check if we are posting a duplicate feedback comment
+  if (decision.batchedComments) {
+      // PREPEND MENTION if not already present
+      // We check for assigneeMention, or any other variation
+      if (!decision.batchedComments.includes('@jules') && !decision.batchedComments.includes('@google-labs-jules')) {
+          decision.batchedComments = `${assigneeMention}\n\n${decision.batchedComments}`;
+      }
+
+      // Append signature
+      decision.batchedComments += `\n\n${CONFIG.SIGNATURE}`;
+
+      // Check if the exact feedback was already posted recently
+      try {
+          const comments = JSON.parse(exec(`gh api "/repos/${repo}/issues/${context.number}/comments?per_page=5&sort=created&direction=desc"`));
+          const botComments = comments.filter(c => CONFIG.BOT_USERS.some(u => c.user?.login?.includes(u)) || c.body.includes(CONFIG.SIGNATURE));
+
+          if (botComments.length > 0) {
+              const lastBody = botComments[0].body;
+              // Check if the significant part of the new comment is present in the last one
+              // We remove the signature for comparison if needed, or just search substring
+              // The new comment is `decision.batchedComments`.
+              // `lastBody` might contain other text.
+
+              // Simple check: does lastBody contain the bulk of the feedback?
+              // Let's strip the signature and mention from decision.batchedComments for the search
+              const rawFeedback = decision.batchedComments
+                  .replace(CONFIG.SIGNATURE, '')
+                  .replace(assigneeMention, '')
+                  .trim();
+
+              if (rawFeedback.length > 20 && lastBody.includes(rawFeedback)) {
+                  log('Duplicate feedback detected. Skipping repost.');
+                  decision.method = 'none';
+                  decision.reason = 'Duplicate Feedback';
+                  // Clear batchedComments to prevent empty posting downstream
+                  decision.batchedComments = '';
+              }
+          }
+      } catch(e) {
+          // ignore
+      }
+  } else {
+      // If there are no batched comments, ensure we don't accidentally post an empty or generic message
+      // when the intention was to report feedback.
+      if (decision.reason.includes('Feedback') || decision.reason.includes('Failure')) {
+          log('No actionable feedback content found. Aborting post to avoid spam.');
+          decision.method = 'none';
+          decision.reason = 'Empty Feedback';
+      }
+  }
 
   log(`Final Decision: ${decision.method} (${decision.reason})`);
 
