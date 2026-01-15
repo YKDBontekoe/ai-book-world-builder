@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type * as writerContentContext from "@/features/writer/components/writer-content-context";
 import type * as writerContext from "@/features/writer/components/writer-context";
 import { WriterControlProvider } from "@/features/writer/components/writer-control-context";
 import { WriterEditor } from "@/features/writer/components/writer-editor";
@@ -113,8 +114,10 @@ vi.mock("next/navigation", () => ({
 	}),
 }));
 
-// Mock Context
+// Mock Contexts
 const mockUseWriterContext = vi.fn();
+const mockUseWriterContent = vi.fn();
+
 vi.mock(
 	"@/features/writer/components/writer-context",
 	async (importOriginal) => {
@@ -122,6 +125,17 @@ vi.mock(
 		return {
 			...actual,
 			useWriterContext: () => mockUseWriterContext(),
+		};
+	},
+);
+
+vi.mock(
+	"@/features/writer/components/writer-content-context",
+	async (importOriginal) => {
+		const actual = await importOriginal<typeof writerContentContext>();
+		return {
+			...actual,
+			useWriterContent: () => mockUseWriterContent(),
 		};
 	},
 );
@@ -145,23 +159,27 @@ const renderWithProviders = (ui: React.ReactNode) => {
 };
 
 describe("WriterEditor", () => {
-	const defaultContext = {
+	const defaultStructureContext = {
 		project: { id: "project-123" },
 		activeScene: undefined,
 		activeSceneId: null,
+		structure: [],
+		isReadOnly: false,
+	};
+
+	const defaultContentContext = {
 		sceneContent: "",
 		handleContentChange: vi.fn(),
 		handleSnapshot: vi.fn(),
 		isSnapshotting: false,
 		isSaving: false,
 		lastSaved: false,
-		structure: [],
-		isReadOnly: false,
 	};
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		mockUseWriterContext.mockReturnValue(defaultContext);
+		mockUseWriterContext.mockReturnValue(defaultStructureContext);
+		mockUseWriterContent.mockReturnValue(defaultContentContext);
 		mockUseWriterLayoutContext.mockReturnValue({
 			isSidebarOpen: true,
 			toggleSidebar: vi.fn(),
@@ -174,7 +192,7 @@ describe("WriterEditor", () => {
 
 	it("renders StoryWizard when no scene selected and hasScenes is false (and not read-only)", () => {
 		mockUseWriterContext.mockReturnValue({
-			...defaultContext,
+			...defaultStructureContext,
 			structure: [],
 		});
 		renderWithProviders(<WriterEditor />);
@@ -184,7 +202,7 @@ describe("WriterEditor", () => {
 
 	it("renders Empty State (Read Only) when no scene selected, hasScenes is false, and isReadOnly is true", () => {
 		mockUseWriterContext.mockReturnValue({
-			...defaultContext,
+			...defaultStructureContext,
 			structure: [],
 			isReadOnly: true,
 		});
@@ -197,7 +215,7 @@ describe("WriterEditor", () => {
 
 	it("renders 'No Scene Selected' when no scene selected but hasScenes is true", () => {
 		mockUseWriterContext.mockReturnValue({
-			...defaultContext,
+			...defaultStructureContext,
 			structure: [{ scenes: [{ id: "s1" }] }], // hasScenes = true
 		});
 		renderWithProviders(<WriterEditor />);
@@ -209,7 +227,7 @@ describe("WriterEditor", () => {
 
 	it("renders Editor when scene is selected", () => {
 		mockUseWriterContext.mockReturnValue({
-			...defaultContext,
+			...defaultStructureContext,
 			activeSceneId: "scene-1",
 			activeScene: { id: "scene-1", title: "Scene 1" },
 			structure: [{ scenes: [{ id: "scene-1" }] }],
@@ -222,7 +240,7 @@ describe("WriterEditor", () => {
 
 	it("calls refresh when wizard completes", async () => {
 		mockUseWriterContext.mockReturnValue({
-			...defaultContext,
+			...defaultStructureContext,
 			structure: [],
 		});
 		renderWithProviders(<WriterEditor />);

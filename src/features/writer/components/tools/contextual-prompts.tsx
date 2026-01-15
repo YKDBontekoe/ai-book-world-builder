@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,8 @@ interface ContextualPrompt {
 }
 
 export function ContextualPrompts() {
-	const { project, sceneContent, activeSceneId } = useWriterContext();
+	const { project, activeSceneId } = useWriterContext();
+	const { sceneContent } = useWriterContent();
 	const { data: entities } = useProjectEntities(project.id);
 	const [debouncedContent] = useDebounceValue(sceneContent || "", 2000);
 	const [prompts, setPrompts] = useState<ContextualPrompt[]>([]);

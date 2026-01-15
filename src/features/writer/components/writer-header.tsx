@@ -30,6 +30,7 @@ import {
 import { MetricsDisplay } from "@/features/writer/components/metrics-display";
 import { SessionInsights } from "@/features/writer/components/tools/session-insights";
 import { WritingGoals } from "@/features/writer/components/tools/writing-goals";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
@@ -76,16 +77,14 @@ function SnapshotButton({
  * responsive secondary metadata.
  */
 export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
+	const { project, activeScene, structure } = useWriterContext();
 	const {
-		project,
-		activeScene,
-		structure,
 		sceneContent,
 		handleSnapshot,
 		isSnapshotting,
 		isSaving,
 		lastSaved,
-	} = useWriterContext();
+	} = useWriterContent();
 
 	const {
 		isSidebarOpen,

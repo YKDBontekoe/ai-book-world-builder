@@ -6,6 +6,7 @@ import { useMemo } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { Badge } from "@/components/atoms/badge";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
@@ -19,7 +20,8 @@ interface StyleMetrics {
 }
 
 export function WritingStyleAnalyzer() {
-	const { project, sceneContent } = useWriterContext();
+	const { project } = useWriterContext();
+	const { sceneContent } = useWriterContent();
 	const { data: entities } = useProjectEntities(project.id);
 	const [debouncedContent] = useDebounceValue(sceneContent || "", 1500);
 	const narrativeMetrics = useNarrativeIntelligence({

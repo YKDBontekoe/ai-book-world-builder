@@ -17,6 +17,7 @@ import { useAppearance } from "@/components/providers/appearance-provider";
 import { StoryWizard } from "@/features/writer/components/story-wizard";
 import { ContextualPrompts } from "@/features/writer/components/tools/contextual-prompts";
 import { WritingStyleAnalyzer } from "@/features/writer/components/tools/writing-style-analyzer";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { WriterHeader } from "@/features/writer/components/writer-header";
@@ -26,14 +27,8 @@ import { useProjectEntities } from "@/hooks/use-project-entities";
 
 export function WriterEditor() {
 	const router = useRouter();
-	const {
-		project,
-		activeSceneId,
-		sceneContent,
-		handleContentChange,
-		structure,
-		isReadOnly,
-	} = useWriterContext();
+	const { project, activeSceneId, structure, isReadOnly } = useWriterContext();
+	const { sceneContent, handleContentChange } = useWriterContent();
 
 	const { isTypewriterMode, isDirectorMode } = useWriterLayoutContext();
 	const { registerEditorActions, toggleChat, toggleSpotlight } =

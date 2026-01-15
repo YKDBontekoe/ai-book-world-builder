@@ -25,6 +25,7 @@ import {
 	type ToolType,
 	toolStrategies,
 } from "@/features/writer/components/tools/tool-strategies";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
@@ -43,8 +44,10 @@ export const PowerDock = memo(function PowerDock() {
 		isSpotlightOpen,
 	} = useWriterControl();
 
-	const { project, structure, activeChapterId, activeSceneId, sceneContent } =
+	const { project, structure, activeChapterId, activeSceneId } =
 		useWriterContext();
+	const { sceneContent } = useWriterContent();
+
 	const layoutContext = useWriterLayoutContext();
 	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
 	const isZen = viewMode === "zen";
