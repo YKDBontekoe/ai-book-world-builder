@@ -29,6 +29,7 @@ import {
 } from "@/components/atoms/tooltip";
 import { MetricsDisplay } from "@/features/writer/components/metrics-display";
 import { SessionInsights } from "@/features/writer/components/tools/session-insights";
+import { SprintWidget } from "@/features/writer/components/tools/sprint-widget";
 import { WritingGoals } from "@/features/writer/components/tools/writing-goals";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
@@ -245,6 +246,7 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 											<>
 												<DropdownMenuSeparator />
 												<div className="flex flex-wrap items-center gap-2">
+													<SprintWidget />
 													<WritingGoals />
 													<SessionInsights />
 													<SnapshotButton
@@ -282,6 +284,7 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 							{activeScene && (
 								<>
 									<div className="h-4 w-[1px] bg-border/50 mx-1" />
+									<SprintWidget />
 									<WritingGoals />
 									<SessionInsights />
 									<div className="h-4 w-[1px] bg-border/50 mx-1" />

@@ -1,6 +1,7 @@
 import {
 	AlertTriangle,
 	BookOpenCheck,
+	Download,
 	Edit,
 	Expand,
 	Feather,
@@ -31,6 +32,12 @@ export const TOOLS = [
 	},
 	{ id: "lore", icon: Globe, label: "Lore", color: "text-pink-400" },
 	{ id: "search", icon: Search, label: "Search", color: "text-blue-400" },
+	{
+		id: "export",
+		icon: Download,
+		label: "Export",
+		color: "text-emerald-400",
+	},
 ] as const;
 
 export type ToolId = (typeof TOOLS)[number]["id"];
