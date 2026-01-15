@@ -135,10 +135,12 @@ export const SceneItem = memo(function SceneItem({
 						<Pencil className="mr-2 h-4 w-4" />
 						Rename
 					</ContextMenuItem>
-					<ContextMenuItem onClick={() => onDuplicate?.(scene.id)}>
-						<Copy className="mr-2 h-4 w-4" />
-						Duplicate
-					</ContextMenuItem>
+					{onDuplicate && (
+						<ContextMenuItem onClick={() => onDuplicate(scene.id)}>
+							<Copy className="mr-2 h-4 w-4" />
+							Duplicate
+						</ContextMenuItem>
+					)}
 					<ContextMenuSeparator />
 					<ContextMenuItem
 						className="text-destructive focus:text-destructive"

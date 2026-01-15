@@ -245,11 +245,19 @@ export async function duplicateScene(
 					tx,
 				);
 
+			// Ensure the new title doesn't exceed 200 chars (schema limit)
+			// Suffix " (Copy)" length is 7
+			const MAX_TITLE_LENGTH = 200;
+			const suffix = " (Copy)";
+			const allowedBase = MAX_TITLE_LENGTH - suffix.length;
+			const baseTitle = targetScene.title.slice(0, allowedBase);
+			const newTitle = `${baseTitle}${suffix}`;
+
 			await tx.insert(scene).values({
 				id: newSceneId,
 				projectId: targetScene.projectId,
 				chapterId: targetScene.chapterId,
-				title: `${targetScene.title} (Copy)`,
+				title: newTitle,
 				sequence,
 				content: targetScene.content,
 				status: "drafting",
