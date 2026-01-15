@@ -26,7 +26,12 @@ const CONFIG = {
   LOG_TRUNCATE_LENGTH: 2000,
   CODERABBIT_COMMENT_LIMIT: 50,
   BOT_USERS: ['google-labs-jules', 'jules', 'renovate[bot]', 'coderabbitai', 'github-actions[bot]'],
-  SIGNATURE: '<!-- JULES_SUPERVISOR_SIG -->'
+  SIGNATURE: '<!-- JULES_SUPERVISOR_SIG %>',
+  IGNORE_PHRASES: [
+    'no actionable comments',
+    'looks good',
+    'lgtm'
+  ]
 };
 
 // =============================================================================
@@ -113,6 +118,11 @@ async function addLabels(number, labels) {
 // --- Batched Feedback Helpers ---
 
 function getCodeRabbitFeedback(repo, number) {
+  if (!number || !Number.isInteger(Number(number)) || Number(number) <= 0) {
+      logError(`Invalid PR number: ${number}`);
+      return '';
+  }
+
   try {
     let reviewSummary = '';
     // 1. Get Review Summaries (Top-level comments)
@@ -126,7 +136,10 @@ function getCodeRabbitFeedback(repo, number) {
 
             if (rabbitReviews.length > 0) {
                 const latest = rabbitReviews[0];
-                if (latest.body && latest.body.length > 10 && !latest.body.includes('No actionable comments')) {
+                const bodyLower = (latest.body || '').toLowerCase();
+                const shouldIgnore = CONFIG.IGNORE_PHRASES.some(phrase => bodyLower.includes(phrase.toLowerCase()));
+
+                if (latest.body && latest.body.length > 10 && !shouldIgnore) {
                     reviewSummary = `### 🐰 CodeRabbit Summary\n\n${latest.body}`;
                 }
             }
@@ -138,14 +151,19 @@ function getCodeRabbitFeedback(repo, number) {
     // 2. Get Inline Comments
     let comments = [];
     try {
-        const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.' | jq -s 'add'`);
+        const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.[]' | jq -s '.'`);
         comments = JSON.parse(json);
     } catch (e) {
-         const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
-         if (raw) {
-             const fixed = raw.replace(/\]\[/g, ',');
-             comments = JSON.parse(fixed);
-         }
+        // Fallback for environments without jq
+        try {
+            const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
+             if (raw) {
+                 const fixed = raw.replace(/\]\[/g, ',');
+                 comments = JSON.parse(fixed);
+             }
+        } catch (innerErr) {
+            logError('Failed to fetch comments with fallback', innerErr);
+        }
     }
 
     const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
