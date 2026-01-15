@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from "framer-motion";
 import * as React from "react";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { cn } from "@/lib/utils";
@@ -15,6 +18,8 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
 	action?: React.ReactNode;
 	/** Optional suggestion chips to display */
 	suggestions?: string[];
+	/** Handler for when a suggestion chip is clicked */
+	onSuggestionClick?: (suggestion: string) => void;
 	/** Visual style variant */
 	variant?: "dashed" | "glass";
 }
@@ -33,49 +38,125 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 			iconClassName,
 			action,
 			suggestions,
+			onSuggestionClick,
 			variant = "dashed",
 			...props
 		},
 		ref,
 	) => {
+		const Content = (
+			<motion.div
+				initial={{ opacity: 0, scale: 0.95, y: 10 }}
+				animate={{ opacity: 1, scale: 1, y: 0 }}
+				transition={{
+					type: "spring",
+					stiffness: 400,
+					damping: 25,
+					delay: 0.1,
+				}}
+				className="flex flex-col items-center text-center w-full"
+			>
+				{Icon && (
+					<motion.div
+						initial={{ opacity: 0, scale: 0.8 }}
+						animate={{ opacity: 1, scale: 1 }}
+						transition={{
+							type: "spring",
+							stiffness: 400,
+							damping: 25,
+							delay: 0.2,
+						}}
+						className={cn(
+							"mb-6 flex items-center justify-center",
+							variant === "glass"
+								? "rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 p-5 ring-1 ring-primary/20 shadow-sm"
+								: "rounded-full bg-muted/20 p-4",
+						)}
+					>
+						<Icon
+							className={cn(
+								variant === "glass"
+									? "h-8 w-8 text-primary"
+									: "h-6 w-6 text-muted-foreground/50",
+								iconClassName,
+							)}
+							aria-hidden="true"
+						/>
+					</motion.div>
+				)}
+				<h4 className="font-bold text-lg tracking-tight text-foreground">
+					{title}
+				</h4>
+				{description && (
+					<p className="mt-2 max-w-sm text-sm text-muted-foreground leading-relaxed">
+						{description}
+					</p>
+				)}
+				{action && (
+					<motion.div
+						initial={{ opacity: 0, y: 5 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.3 }}
+						className={cn("mt-8", variant === "glass" ? "" : "mt-4")}
+					>
+						{action}
+					</motion.div>
+				)}
+				{suggestions && suggestions.length > 0 && (
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ delay: 0.4 }}
+						className={cn(
+							"mt-6 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground",
+							variant === "glass" ? "" : "mt-4",
+						)}
+					>
+						{suggestions.map((suggestion) => {
+							const Component = onSuggestionClick ? "button" : "span";
+							const interactionProps = onSuggestionClick
+								? {
+										onClick: () => onSuggestionClick(suggestion),
+										type: "button" as const,
+									}
+								: {};
+
+							return (
+								<Component
+									key={suggestion}
+									className={cn(
+										"rounded-full border px-3 py-1.5 transition-colors",
+										onSuggestionClick
+											? "cursor-pointer hover:border-primary/30 hover:bg-primary/5"
+											: "cursor-default",
+										variant === "glass"
+											? "bg-background/50 backdrop-blur-sm shadow-sm"
+											: "",
+									)}
+									{...interactionProps}
+								>
+									{suggestion}
+								</Component>
+							);
+						})}
+					</motion.div>
+				)}
+			</motion.div>
+		);
+
 		if (variant === "glass") {
 			return (
 				<GlassCard
 					ref={ref}
 					variant="liquid"
+					data-testid="empty-state-container"
 					className={cn(
-						"flex flex-col items-center justify-center p-12 text-center",
+						"flex flex-col items-center justify-center p-12 min-h-[300px]",
 						className,
 					)}
 					{...props}
 				>
-					{Icon && (
-						<div className="mb-6 rounded-2xl bg-primary/10 p-5 ring-1 ring-primary/20">
-							<Icon
-								className={cn("h-8 w-8 text-primary", iconClassName)}
-								aria-hidden="true"
-							/>
-						</div>
-					)}
-					<h4 className="font-bold text-lg tracking-tight">{title}</h4>
-					{description && (
-						<p className="mt-2 max-w-sm text-sm text-muted-foreground leading-relaxed">
-							{description}
-						</p>
-					)}
-					{action && <div className="mt-8">{action}</div>}
-					{suggestions && suggestions.length > 0 && (
-						<div className="mt-6 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-							{suggestions.map((suggestion) => (
-								<span
-									key={suggestion}
-									className="rounded-full bg-background/50 border px-3 py-1.5 backdrop-blur-sm"
-								>
-									{suggestion}
-								</span>
-							))}
-						</div>
-					)}
+					{Content}
 				</GlassCard>
 			);
 		}
@@ -83,36 +164,14 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 		return (
 			<div
 				ref={ref}
+				data-testid="empty-state-container"
 				className={cn(
-					"flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/10 p-8 text-center",
+					"flex flex-col items-center justify-center rounded-2xl border border-dashed bg-muted/5 p-12 text-center",
 					className,
 				)}
 				{...props}
 			>
-				{Icon && (
-					<div className="mb-4 rounded-full bg-muted/20 p-4">
-						<Icon
-							className={cn("h-6 w-6 text-muted-foreground/50", iconClassName)}
-							aria-hidden="true"
-						/>
-					</div>
-				)}
-				<h4 className="font-medium text-sm">{title}</h4>
-				{description && (
-					<p className="mt-1 max-w-xs text-xs text-muted-foreground">
-						{description}
-					</p>
-				)}
-				{action && <div className="mt-4">{action}</div>}
-				{suggestions && suggestions.length > 0 && (
-					<div className="mt-4 flex flex-wrap justify-center gap-2 text-xs text-muted-foreground">
-						{suggestions.map((suggestion) => (
-							<span key={suggestion} className="rounded-full border px-2 py-1">
-								{suggestion}
-							</span>
-						))}
-					</div>
-				)}
+				{Content}
 			</div>
 		);
 	},

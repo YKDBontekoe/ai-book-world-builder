@@ -1,7 +1,7 @@
 import { GridList } from "@/components/atoms/grid-list";
 import { Skeleton } from "@/components/atoms/skeleton";
-import { GlassCard } from "@/components/molecules/glass-card";
 import { PageContainer } from "@/components/organisms/page-container";
+import { ProjectCardSkeleton } from "@/components/organisms/projects/project-skeletons";
 
 export default function ProjectsLoading(): React.JSX.Element {
 	return (
@@ -19,34 +19,15 @@ export default function ProjectsLoading(): React.JSX.Element {
 			<div className="mt-8">
 				{/* ProjectTabs Skeleton */}
 				<div className="mb-6">
-					<Skeleton className="h-10 w-[240px] rounded-lg bg-muted" />
+					<Skeleton className="h-10 w-[240px] rounded-lg bg-muted/50" />
 				</div>
 
 				{/* Grid Content Skeleton */}
 				<div className="mt-6">
 					<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
 						{Array.from({ length: 8 }).map((_, i) => (
-							<GlassCard
-								// biome-ignore lint/suspicious/noArrayIndexKey: Skeleton list has no stable IDs
-								key={i}
-								variant="liquid"
-								className="h-[200px] p-6 flex flex-col justify-between"
-							>
-								<div className="space-y-4">
-									<div className="flex items-center gap-3 pr-8 pl-6">
-										<Skeleton className="h-12 w-12 rounded-xl" />
-										<Skeleton className="h-6 w-32 rounded-lg" />
-									</div>
-									<div className="space-y-2">
-										<Skeleton className="h-4 w-full rounded" />
-										<Skeleton className="h-4 w-2/3 rounded" />
-									</div>
-								</div>
-								<div className="flex justify-between items-center pt-4 border-t border-border/30">
-									<Skeleton className="h-3 w-24 rounded" />
-									<Skeleton className="h-3 w-3 rounded-full" />
-								</div>
-							</GlassCard>
+							// biome-ignore lint/suspicious/noArrayIndexKey: Skeleton list has no stable IDs
+							<ProjectCardSkeleton key={i} />
 						))}
 					</GridList>
 				</div>

@@ -90,6 +90,8 @@ export const ControlButton = memo(function ControlButton({
 
 export function ControlGroup({
 	children,
-}: { children: React.ReactNode }): JSX.Element {
+}: {
+	children: React.ReactNode;
+}): JSX.Element {
 	return <div className="flex items-center gap-1">{children}</div>;
 }

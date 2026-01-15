@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { ControlButton } from "./control-button";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
+import { ControlButton } from "./control-button";
 
 interface PowerDockTrayProps {
 	mode: "default" | "tools" | "input";

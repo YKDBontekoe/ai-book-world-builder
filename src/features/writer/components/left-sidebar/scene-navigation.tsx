@@ -380,7 +380,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 								<ContextMenu>
 									<ContextMenuTrigger disabled={readOnly}>
 										<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-											<span className="truncate text-left">{chapter.title}</span>
+											<span className="truncate text-left">
+												{chapter.title}
+											</span>
 										</AccordionTrigger>
 									</ContextMenuTrigger>
 									<ContextMenuContent>
