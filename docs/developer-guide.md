@@ -73,6 +73,14 @@ The Writer uses a **Split Context** strategy to prevent unnecessary re-renders:
 -   **WriterContext**: Holds relatively stable data (`project`, `structure`, `activeSceneId`).
 -   **WriterControlContext**: Holds volatile UI state (`isChatOpen`, `isSpotlightOpen`).
 -   **WriterLayoutContext**: Handles layout toggles (`ZenMode`, `DirectorMode`, `SidebarOpen`).
+-   **BookCanvasContext**: Split into `BookCanvasLayoutContext` (stable config), `BookCanvasSelectionContext` (volatile selection), and `BookCanvasActionsContext` (stable functions) to optimize performance.
+
+**Power Dock Architecture**:
+The `PowerDock` (`src/features/writer/components/power-dock/`) replaces the traditional toolbar with a modular, context-aware interaction model.
+-   **PowerDockTray**: The container that manages visibility and animations.
+-   **PowerDockInput**: Handles user text input for AI commands.
+-   **PowerDockResult**: Displays AI generation results or feedback.
+-   **ControlButton**: The individual tool buttons.
 
 **Embedded Canvas Sync**:
 The `BookCanvas` is usually a standalone page but is embedded in the Writer View. We use a `CanvasSync` component (`features/writer/components/canvas-sync.tsx`) to synchronize the `WriterContext` state (project ID, read-only status) to the `BookCanvasContext`.
@@ -110,6 +118,7 @@ We separate controller logic (Server Actions) from business logic (Services):
 -   **Services** (`lib/services/`): Pure business logic, database transactions, and AI orchestration.
     -   `StoryService`: Handles scene planning and text generation.
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
+    -   `SceneSequenceService`: Centralizes logic for scene insertion, reordering, and shifting to prevent duplication.
 
 ### 6. Software Builder (Jules Agent)
 We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
@@ -129,6 +138,7 @@ We utilize a dedicated "Agentic" workflow for self-improvement, known as the **S
 The AI layer is structured to separate "AI Logic" from "Business Logic".
 
 **Core Components**:
+-   **BaseService Pattern**: All AI services extend `BaseService` to inherit common utilities and `aiClient` access, reducing abstraction layers.
 -   **GenerationService** (`lib/ai/services/generation-service.ts`): The low-level abstraction for LLM interaction. It handles prompt construction, system message formatting, and calling the Vercel AI SDK. It is agnostic to the business domain (stories, analysis).
 -   **WritingService** (`lib/services/ai/writing-service.ts`): The domain-specific service that orchestrates generation. It calls `GenerationService` but adds business rules like batch processing, scene fetching, and access control.
 
@@ -176,9 +186,10 @@ The project adheres to a **Native macOS Aesthetic** ("Liquid Glass"):
 
 ## Verification Strategy
 
-We employ a **Dual Verification Strategy** (`AGENTS.md`) to ensure quality:
+We employ a **Testing Trophy** methodology (refer to `.agent/personas/testing-agent.md`) to ensure high quality with optimal effort:
 
-### 1. Functional Verification (Vitest)
+### 1. Integration/Unit Verification (Vitest)
+-   **Priority**: High (Base of the trophy).
 -   Located in `tests/unit/`.
 -   Run: `pnpm test:unit`
 -   **Mocking Tips**:
@@ -190,7 +201,14 @@ We employ a **Dual Verification Strategy** (`AGENTS.md`) to ensure quality:
     }));
     ```
 
-### 2. End-to-End Verification (Playwright)
+### 2. Visual & Interaction Verification (Storybook)
+-   **Priority**: Medium.
+-   Located in `src/stories/` or co-located.
+-   Run: `pnpm storybook`
+-   **Requirement**: Stories must use the `play` function for interaction testing to enable execution via Vitest.
+
+### 3. End-to-End Verification (Playwright)
+-   **Priority**: Low (Top of trophy - critical paths only).
 -   Located in `tests/e2e/`.
 -   Run: `pnpm exec playwright test`
 -   Strategy: We mock the AI responses to test the *application logic* deterministically.

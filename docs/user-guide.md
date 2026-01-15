@@ -89,45 +89,37 @@ The Writer View includes specialized AI tools to assist your creative process.
 Manage your entire book's outline as a simple text file.
 -   **Usage**: Click the **File Text** icon in the sidebar header.
 -   **Features**:
-1.  **Structure Power Editor**: Click the **File Text** icon in the sidebar header to manage your entire book's outline as a simple text file.
     -   **Bulk Editing**: Type `Chapter 1: Title` and `Scene: Title` to rapidly build structure.
     -   **Smart Format**: Automatically cleans up your text and numbering.
-2.  **Add Entities**: Go to the **Bible** pane on the right-hand Canvas. Here you can add Characters, Locations, and Lore. The more you add, the smarter the AI becomes about your world.
 
-### 2. Write & Generate
+### 2. The Power Dock (Editor Tools)
+The **Power Dock** is your context-aware toolbar located at the bottom of the editor. It provides instant access to AI writing tools.
+
+**Available Tools**:
+-   **Batch Write**: Generate content for multiple selected scenes automatically.
+-   **Rewrite**: Select text to have the AI rephrase it with a specific instruction (e.g., "Show, don't tell").
+-   **Expand**: Select a short paragraph or sentence and have the AI flesh it out with more detail.
+-   **Critique**: Get feedback on the current scene's pacing, dialogue, and tone.
+-   **Fix**: Quickly correct grammar and spelling errors.
+-   **Lore**: Instantly look up or generate lore details without leaving the editor.
+
+### 3. Write & Generate
 Once you have a structure, you can start writing.
 
-**The Writer View**
-The Project View is divided into three main panels:
-1.  **Navigation (Left)**: This sidebar lists your Chapters and Scenes. Use it to jump between different parts of your book.
-2.  **Editor (Center)**: This is your main writing space. It works like a standard document editor but is connected to the AI.
-3.  **Canvas (Right)**: A visual board for your world-building and analysis tools.
-
-**AI Writing Tools**
 -   **Generate Scenes (AI)**: Click the **Sparkles** icon next to a Chapter in the sidebar. The AI will draft content for all pending scenes in that chapter.
--   **Rewrite / Expand**: Select existing text and use the AI to refine or elaborate on it.
 -   **Project-Aware Chat**: Open the **Floating Assistant** to ask the AI questions about your world, brainstorm ideas, or draft new scenes with specific instructions.
 
-### 3. Analyze & Refine
+### 4. Analyze & Refine
 Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. The canvas is a powerful tool for visualizing your story's structure and content.
 
--   **Bible**: The central repository for all your world-building information. Here you can create, edit, and view all your characters, locations, and lore.
--   **Graph / Network**: Visualizes the relationships between your entities. See at a glance how characters are connected to each other and to various locations.
--   **Arc**: Analyzes your story's narrative arc, showing the pacing and tension across scenes and chapters.
--   **Timeline**: Tracks chronological events to ensure your plot is consistent and free of continuity errors.
--   **Map**: A visual gallery of your locations. Attach images to your location entities to create a visual reference for your world.
--   **Scenes / Kanban**: A Kanban-style board for managing the status of your scenes. Drag and drop scenes between columns like "Planned," "Drafted," and "Final" to track your progress.
--   **Context**: Shows exactly what information the AI "sees" when generating a scene. Use this to verify that the AI has the right context before you generate new content.
--   **Draft**: A scratchpad for rough ideas, snippets of dialogue, or alternative scene versions that don't yet have a place in the main manuscript.
--   **Diagnostics**: Runs health checks on your story, flagging potential issues like missing character descriptions, empty scenes, or continuity errors.
--   **Changelog**: A log of all the changes made to your project, allowing you to track your progress and easily revert to previous versions if needed.
-Use the **World Canvas** (Right Panel) to gain insights and ensure consistency.
-
--   **Graph**: Visualizes your **Entity Network**. See how characters, locations, and lore are connected.
--   **Arc**: Analyzes your story's **Pacing** and **Tension**.
+-   **Bible**: The central repository for all your world-building information.
+-   **Graph / Network**: Visualizes the relationships between your entities.
+-   **Arc**: Analyzes your story's narrative arc (pacing and tension).
 -   **Timeline**: Tracks chronological events to ensure your plot is consistent.
--   **Diagnostics**: Runs health checks on your story (e.g., "Missing Character Descriptions", "Empty Scenes").
--   **Context**: Shows exactly what the AI "sees" when generating the current scene. Use this to verify the AI has the right information.
+-   **Map**: A visual gallery of your locations.
+-   **Scenes / Kanban**: A Kanban-style board for managing the status of your scenes.
+-   **Context**: Shows exactly what information the AI "sees" when generating a scene.
+-   **Diagnostics**: Runs health checks on your story.
 
 ## Advanced Features
 
