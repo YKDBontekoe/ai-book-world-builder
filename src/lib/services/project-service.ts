@@ -2,7 +2,6 @@ import "server-only";
 import { inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
-import { projectDuplicationService } from "@/lib/services/project-duplication-service";
 import {
 	bookExport,
 	bookGeneration,
@@ -22,6 +21,7 @@ import {
 	storyState,
 	volume,
 } from "@/lib/db/schema";
+import { projectDuplicationService } from "@/lib/services/project-duplication-service";
 
 export class ProjectService {
 	async deleteProjects(projectIds: string[], userId: string) {

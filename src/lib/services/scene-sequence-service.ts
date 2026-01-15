@@ -51,11 +51,19 @@ export class SceneSequenceService {
 					.from(scene)
 					.where(eq(scene.chapterId, chapterId));
 				newSequence = (maxSeq?.max ?? 0) + 1;
-                // If appending, prevSceneId needs to be the last one
-                if (newSequence > 1) {
-                     const [lastScene] = await tx.select().from(scene).where(and(eq(scene.chapterId, chapterId), eq(scene.sequence, newSequence - 1)));
-                     prevSceneId = lastScene?.id;
-                }
+				// If appending, prevSceneId needs to be the last one
+				if (newSequence > 1) {
+					const [lastScene] = await tx
+						.select()
+						.from(scene)
+						.where(
+							and(
+								eq(scene.chapterId, chapterId),
+								eq(scene.sequence, newSequence - 1),
+							),
+						);
+					prevSceneId = lastScene?.id;
+				}
 			}
 		} else {
 			// Append to end

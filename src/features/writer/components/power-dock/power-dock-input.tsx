@@ -11,8 +11,8 @@ import {
 import { Separator } from "@/components/atoms/separator";
 import { Textarea } from "@/components/atoms/textarea";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
-import { cn } from "@/lib/utils";
 import type { ToolType } from "@/features/writer/components/tools/tool-strategies";
+import { cn } from "@/lib/utils";
 
 interface PowerDockInputProps {
 	mode: "default" | "tools" | "input";
