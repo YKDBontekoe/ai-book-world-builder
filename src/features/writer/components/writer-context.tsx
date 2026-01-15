@@ -2,16 +2,23 @@
 
 import type React from "react";
 import { createContext, useContext, useMemo } from "react";
+import { WriterContentContext } from "@/features/writer/components/writer-content-context";
 import { useWriterState } from "@/features/writer/hooks/use-writer-state";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
 
-type UseWriterStateReturnType = ReturnType<typeof useWriterState>;
-
-type WriterContextType = UseWriterStateReturnType & {
+// Stable Writer Context (Structure, Navigation, Project Config)
+type WriterContextType = {
+	structure: ChapterWithScenes[] | null;
+	structureText: string;
+	loading: boolean;
+	activeSceneId: string | null;
+	setActiveSceneId: (id: string | null) => void;
+	activeScene: (ChapterWithScenes["scenes"][number] & { content?: string }) | undefined; // Using inferred type from useWriterState would be better, but we are decoupling
+	fetchStructure: () => Promise<void>;
 	project: Project;
 	isReadOnly: boolean;
-	activeChapterId?: string; // Derived from activeScene
+	activeChapterId?: string;
 };
 
 export const WriterContext = createContext<WriterContextType | null>(null);
@@ -50,6 +57,7 @@ export function WriterProvider({
 		lastSaved,
 		isSnapshotting,
 		handleContentChange,
+		setContentDirectly,
 		handleSnapshot,
 		fetchStructure,
 	} = writerState;
@@ -65,20 +73,15 @@ export function WriterProvider({
 		return undefined;
 	}, [activeSceneId, structure]);
 
-	const value = useMemo(
+	// Stable Structure Context Value
+	const structureValue = useMemo(
 		() => ({
 			structure,
 			structureText,
 			loading,
 			activeSceneId,
 			setActiveSceneId,
-			sceneContent,
 			activeScene,
-			isSaving,
-			lastSaved,
-			isSnapshotting,
-			handleContentChange,
-			handleSnapshot,
 			fetchStructure,
 			project,
 			isReadOnly,
@@ -90,13 +93,7 @@ export function WriterProvider({
 			loading,
 			activeSceneId,
 			setActiveSceneId,
-			sceneContent,
 			activeScene,
-			isSaving,
-			lastSaved,
-			isSnapshotting,
-			handleContentChange,
-			handleSnapshot,
 			fetchStructure,
 			project,
 			isReadOnly,
@@ -104,8 +101,34 @@ export function WriterProvider({
 		],
 	);
 
+	// Volatile Content Context Value
+	const contentValue = useMemo(
+		() => ({
+			sceneContent,
+			isSaving,
+			lastSaved,
+			isSnapshotting,
+			handleContentChange,
+			setContentDirectly,
+			handleSnapshot,
+		}),
+		[
+			sceneContent,
+			isSaving,
+			lastSaved,
+			isSnapshotting,
+			handleContentChange,
+			setContentDirectly,
+			handleSnapshot,
+		],
+	);
+
 	return (
-		<WriterContext.Provider value={value}>{children}</WriterContext.Provider>
+		<WriterContext.Provider value={structureValue}>
+			<WriterContentContext.Provider value={contentValue}>
+				{children}
+			</WriterContentContext.Provider>
+		</WriterContext.Provider>
 	);
 }
 

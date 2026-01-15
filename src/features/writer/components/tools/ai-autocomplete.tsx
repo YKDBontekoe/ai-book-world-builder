@@ -5,6 +5,7 @@ import { ArrowRight, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceValue } from "usehooks-ts";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { api } from "@/lib/api-client";
 import { cn } from "@/lib/utils";
@@ -32,7 +33,8 @@ export function AIAutocomplete({
 	onSelect: (text: string) => void;
 	onDismiss: () => void;
 }) {
-	const { project, sceneContent, activeSceneId } = useWriterContext();
+	const { project, activeSceneId } = useWriterContext();
+	const { sceneContent } = useWriterContent();
 	const [debouncedContent] = useDebounceValue(sceneContent || "", 1500);
 	const [suggestions, setSuggestions] = useState<AutocompleteSuggestion[]>([]);
 	const [isLoading, setIsLoading] = useState(false);

@@ -14,6 +14,7 @@ import {
 } from "@/components/atoms/popover";
 import { Slider } from "@/components/atoms/slider";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
@@ -25,7 +26,8 @@ interface WritingGoals {
 }
 
 export function WritingGoals() {
-	const { project, sceneContent } = useWriterContext();
+	const { project } = useWriterContext();
+	const { sceneContent } = useWriterContent();
 	const { data: entities } = useProjectEntities(project.id);
 	const narrativeMetrics = useNarrativeIntelligence({
 		content: sceneContent || "",

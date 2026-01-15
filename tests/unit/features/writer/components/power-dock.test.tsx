@@ -1,6 +1,8 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowerDock } from "@/features/writer/components/power-dock";
+import type * as writerContentContext from "@/features/writer/components/writer-content-context";
+import type * as writerContext from "@/features/writer/components/writer-context";
 
 // Hoist mock functions
 const { mockExecute } = vi.hoisted(() => ({
@@ -114,6 +116,10 @@ const mockWriterContext = {
 	activeSceneId: "s1",
 };
 
+const mockWriterContent = {
+	sceneContent: "Scene Content",
+};
+
 const mockWriterLayoutContext = {
 	viewMode: "standard",
 };
@@ -124,6 +130,10 @@ vi.mock("@/features/writer/components/writer-control-context", () => ({
 
 vi.mock("@/features/writer/components/writer-context", () => ({
 	useWriterContext: () => mockWriterContext,
+}));
+
+vi.mock("@/features/writer/components/writer-content-context", () => ({
+	useWriterContent: () => mockWriterContent,
 }));
 
 vi.mock("@/features/writer/components/writer-layout-context", () => ({
