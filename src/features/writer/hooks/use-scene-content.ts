@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useDebounceCallback } from "usehooks-ts";
-import { getSceneContent, updateSceneContent } from "@/features/writer/actions";
+import { getSceneContent as fetchSceneContent, updateSceneContent } from "@/features/writer/actions";
 
 interface UseSceneContentProps {
 	projectId?: string;
@@ -16,6 +16,7 @@ export interface UseSceneContentReturn {
 	lastSaved: Date | null;
 	handleContentChange: (newContent: string) => void;
 	setContentDirectly: (content: string) => void;
+	getSceneContent: () => string;
 }
 
 export function useSceneContent({
@@ -28,6 +29,12 @@ export function useSceneContent({
 	const [sceneContent, setSceneContent] = useState(initialContent ?? "");
 	const [isSaving, setIsSaving] = useState(false);
 	const [lastSaved, setLastSaved] = useState<Date | null>(null);
+
+	// Ref to track content for stable access
+	const contentRef = useRef(sceneContent);
+	useEffect(() => {
+		contentRef.current = sceneContent;
+	}, [sceneContent]);
 
 	// Ref to track if we've edited the content locally, to prevent overwriting
 	const hasEditedRef = useRef(false);
@@ -70,7 +77,7 @@ export function useSceneContent({
 					return;
 				}
 
-				getSceneContent(projectId, activeSceneId).then((result) => {
+				fetchSceneContent(projectId, activeSceneId).then((result) => {
 					if (!isMounted) return;
 
 					// Race condition check: make sure we are still on the same scene
@@ -175,11 +182,14 @@ export function useSceneContent({
 		setSceneContent(content);
 	}, []);
 
+	const getSceneContent = useCallback(() => contentRef.current, []);
+
 	return {
 		sceneContent,
 		isSaving,
 		lastSaved,
 		handleContentChange,
 		setContentDirectly,
+		getSceneContent,
 	};
 }

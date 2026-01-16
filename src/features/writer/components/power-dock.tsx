@@ -25,7 +25,6 @@ import {
 	type ToolType,
 	toolStrategies,
 } from "@/features/writer/components/tools/tool-strategies";
-import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
@@ -44,9 +43,13 @@ export const PowerDock = memo(function PowerDock() {
 		isSpotlightOpen,
 	} = useWriterControl();
 
-	const { project, structure, activeChapterId, activeSceneId } =
-		useWriterContext();
-	const { sceneContent } = useWriterContent();
+	const {
+		project,
+		structure,
+		activeChapterId,
+		activeSceneId,
+		getSceneContent,
+	} = useWriterContext();
 
 	const layoutContext = useWriterLayoutContext();
 	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
@@ -79,7 +82,7 @@ export const PowerDock = memo(function PowerDock() {
 					structure: structure ?? [],
 					activeChapterId: activeChapterId || null,
 					activeSceneId: activeSceneId || null,
-					sceneContent: sceneContent || null,
+					sceneContent: getSceneContent() || null,
 				};
 				toolStrategies.export.execute(toolContext, "");
 				return;
@@ -88,20 +91,27 @@ export const PowerDock = memo(function PowerDock() {
 			setMode("input");
 			setResult(null);
 		},
-		[project, structure, activeChapterId, activeSceneId, sceneContent],
+		[
+			project,
+			structure,
+			activeChapterId,
+			activeSceneId,
+			getSceneContent,
+		],
 	);
 
 	const handleCopyScene = useCallback(async () => {
-		if (sceneContent != null) {
+		const content = getSceneContent();
+		if (content != null) {
 			try {
-				await navigator.clipboard.writeText(sceneContent);
+				await navigator.clipboard.writeText(content);
 				toast.success("Scene copied to clipboard");
 			} catch (error) {
 				console.error("Failed to copy scene:", error);
 				toast.error("Failed to copy scene to clipboard");
 			}
 		}
-	}, [sceneContent]);
+	}, [getSceneContent]);
 
 	// Hotkeys
 	useHotkeys(
@@ -146,7 +156,7 @@ export const PowerDock = memo(function PowerDock() {
 				structure: structure ?? [],
 				activeChapterId: activeChapterId || null,
 				activeSceneId: activeSceneId || null,
-				sceneContent: sceneContent || null,
+				sceneContent: getSceneContent() || null,
 			};
 
 			const outcome = await strategy.execute(toolContext, currentInput);
@@ -179,6 +189,7 @@ export const PowerDock = memo(function PowerDock() {
 		activeSceneId,
 		addToHistory,
 		reset,
+		getSceneContent,
 	]);
 
 	// Animation variants

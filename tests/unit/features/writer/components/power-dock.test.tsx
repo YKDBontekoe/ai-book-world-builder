@@ -114,6 +114,7 @@ const mockWriterContext = {
 	structure: [],
 	activeChapterId: "c1",
 	activeSceneId: "s1",
+	getSceneContent: vi.fn(() => "Scene Content"),
 };
 
 const mockWriterContent = {

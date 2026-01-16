@@ -14,11 +14,15 @@ type WriterContextType = {
 	loading: boolean;
 	activeSceneId: string | null;
 	setActiveSceneId: (id: string | null) => void;
-	activeScene: (ChapterWithScenes["scenes"][number] & { content?: string }) | undefined; // Using inferred type from useWriterState would be better, but we are decoupling
+	activeScene: (ChapterWithScenes["scenes"][number] & { content?: string | null }) | undefined; // Using inferred type from useWriterState would be better, but we are decoupling
 	fetchStructure: () => Promise<void>;
 	project: Project;
 	isReadOnly: boolean;
 	activeChapterId?: string;
+	getSceneContent: () => string;
+	handleContentChange: (newContent: string) => void;
+	setContentDirectly: (content: string) => void;
+	handleSnapshot: () => Promise<void>;
 };
 
 export const WriterContext = createContext<WriterContextType | null>(null);
@@ -58,6 +62,7 @@ export function WriterProvider({
 		isSnapshotting,
 		handleContentChange,
 		setContentDirectly,
+		getSceneContent,
 		handleSnapshot,
 		fetchStructure,
 	} = writerState;
@@ -86,6 +91,10 @@ export function WriterProvider({
 			project,
 			isReadOnly,
 			activeChapterId,
+			getSceneContent,
+			handleContentChange,
+			setContentDirectly,
+			handleSnapshot,
 		}),
 		[
 			structure,
@@ -98,6 +107,10 @@ export function WriterProvider({
 			project,
 			isReadOnly,
 			activeChapterId,
+			getSceneContent,
+			handleContentChange,
+			setContentDirectly,
+			handleSnapshot,
 		],
 	);
 
