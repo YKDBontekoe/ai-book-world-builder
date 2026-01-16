@@ -3,15 +3,29 @@ import { and, eq, inArray, sql } from "drizzle-orm";
 import { type DbTransaction, db } from "@/lib/db";
 import { scene } from "@/lib/db/schema";
 
+/**
+ * Service to manage the doubly-linked list structure of Scenes.
+ *
+ * Scenes in this application maintain their order via two mechanisms:
+ * 1. `sequence` (integer): A simple index for fast sorting and retrieval.
+ * 2. `prevSceneId` (UUID): A pointer to the previous scene, forming a linked list.
+ *
+ * The `sequence` is primary for UI rendering, while `prevSceneId` is crucial for
+ * resolving merge conflicts and maintaining logical flow during complex reorders.
+ */
 export class SceneSequenceService {
 	/**
-	 * Prepares for inserting a new scene by calculating its sequence and prevSceneId,
-	 * and shifting subsequent scenes if necessary.
+	 * Prepares for inserting a new scene by calculating its sequence and prevSceneId.
 	 *
-	 * @param chapterId - The chapter ID.
-	 * @param insertAfterSceneId - Optional ID of the scene to insert after. If not provided, appends to the end.
-	 * @param tx - The database transaction.
-	 * @returns Object containing the new sequence and prevSceneId.
+	 * This method ensures that the new scene fits into the linked list correctly.
+	 * If inserting in the middle, it atomically shifts the `sequence` of all subsequent
+	 * scenes to make room.
+	 *
+	 * @param chapterId - The chapter ID where the scene belongs.
+	 * @param insertAfterSceneId - Optional ID of the scene to insert after.
+	 *                             If undefined, the scene is appended to the end.
+	 * @param tx - The database transaction (REQUIRED to prevent race conditions).
+	 * @returns Object containing the new `sequence` number and `prevSceneId`.
 	 */
 	async prepareInsertion(
 		chapterId: string,
@@ -93,7 +107,14 @@ export class SceneSequenceService {
 	}
 
 	/**
-	 * Reorders scenes within a chapter.
+	 * Reorders scenes within a chapter in a single atomic operation.
+	 *
+	 * This uses a SQL `CASE` statement to update all affected rows in one query,
+	 * preventing "flicker" and ensuring data consistency.
+	 *
+	 * @param chapterId - The chapter ID.
+	 * @param sceneIds - The ordered list of all scene IDs in the chapter.
+	 * @param tx - The database transaction.
 	 */
 	async reorderScenes(
 		chapterId: string,
@@ -103,6 +124,7 @@ export class SceneSequenceService {
 		if (sceneIds.length === 0) return;
 
 		// Update sequences using a single SQL UPDATE with CASE statement
+		// This is much more performant than N individual UPDATE queries.
 		const sqlChunks = [];
 		sqlChunks.push(sql`(case`);
 		for (let i = 0; i < sceneIds.length; i++) {

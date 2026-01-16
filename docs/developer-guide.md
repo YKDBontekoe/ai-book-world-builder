@@ -118,7 +118,8 @@ We separate controller logic (Server Actions) from business logic (Services):
 -   **Services** (`lib/services/`): Pure business logic, database transactions, and AI orchestration.
     -   `StoryService`: Handles scene planning and text generation.
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
-    -   `SceneSequenceService`: Centralizes logic for scene insertion, reordering, and shifting to prevent duplication.
+    -   `SceneSequenceService`: Centralizes logic for scene insertion, reordering, and shifting. It uses a **Doubly-Linked List** strategy (`prevSceneId`) alongside a `sequence` integer to ensure robust ordering and race-condition handling.
+    -   `ProjectDuplicationService`: Handles deep-cloning of projects. It employs a **Two-Pass Strategy** for scenes to resolve circular dependencies (linked lists) and an **ID Map** system to maintain referential integrity across all 15+ database tables.
 
 ### 6. Software Builder (Jules Agent)
 We utilize a dedicated "Agentic" workflow for self-improvement, known as the **Software Builder**.
