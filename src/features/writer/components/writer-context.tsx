@@ -14,7 +14,9 @@ type WriterContextType = {
 	loading: boolean;
 	activeSceneId: string | null;
 	setActiveSceneId: (id: string | null) => void;
-	activeScene: (ChapterWithScenes["scenes"][number] & { content?: string }) | undefined; // Using inferred type from useWriterState would be better, but we are decoupling
+	activeScene:
+		| (ChapterWithScenes["scenes"][number] & { content?: string })
+		| undefined; // Using inferred type from useWriterState would be better, but we are decoupling
 	fetchStructure: () => Promise<void>;
 	project: Project;
 	isReadOnly: boolean;

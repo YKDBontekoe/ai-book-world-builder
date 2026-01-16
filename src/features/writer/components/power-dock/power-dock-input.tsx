@@ -8,6 +8,7 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/atoms/dropdown-menu";
+import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { Separator } from "@/components/atoms/separator";
 import { Textarea } from "@/components/atoms/textarea";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
@@ -80,7 +81,7 @@ export function PowerDockInput({
 								value={input}
 								onChange={(e) => setInput(e.target.value)}
 								placeholder={getPlaceholder(selectedTool)}
-								className="min-h-[36px] max-h-[100px] py-2 px-3 pr-10 resize-none bg-white/5 border-white/10 focus:border-primary/50 text-sm rounded-lg w-full"
+								className="min-h-[36px] max-h-[100px] py-2 px-3 pr-10 resize-none focus:border-primary/50 text-sm w-full shadow-none"
 								autoFocus
 								onKeyDown={(e) => {
 									if (e.key === "Enter" && !e.shiftKey) {
@@ -99,7 +100,7 @@ export function PowerDockInput({
 								className="absolute right-1 top-1 p-1.5 hover:bg-primary rounded-md text-muted-foreground hover:text-primary-foreground transition-colors disabled:opacity-50"
 							>
 								{isProcessing ? (
-									<span className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin block" />
+									<LoadingSpinner size="xs" />
 								) : (
 									<Send className="w-3 h-3" />
 								)}

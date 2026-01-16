@@ -42,7 +42,7 @@ export function PowerDockResult({
 								<X className="w-3 h-3" />
 							</button>
 						</div>
-						<div className="max-h-60 overflow-y-auto text-sm font-mono bg-black/20 p-2 rounded">
+						<div className="max-h-60 overflow-y-auto text-sm font-mono bg-muted/50 border border-border/50 p-3 rounded-lg custom-scrollbar">
 							{result}
 						</div>
 						<div className="mt-2 flex items-center justify-between gap-2">

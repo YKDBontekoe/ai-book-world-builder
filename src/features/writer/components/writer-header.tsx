@@ -79,13 +79,8 @@ function SnapshotButton({
  */
 export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 	const { project, activeScene, structure } = useWriterContext();
-	const {
-		sceneContent,
-		handleSnapshot,
-		isSnapshotting,
-		isSaving,
-		lastSaved,
-	} = useWriterContent();
+	const { sceneContent, handleSnapshot, isSnapshotting, isSaving, lastSaved } =
+		useWriterContent();
 
 	const {
 		isSidebarOpen,
