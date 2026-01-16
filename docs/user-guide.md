@@ -100,8 +100,10 @@ The **Power Dock** is your context-aware toolbar located at the bottom of the ed
 -   **Rewrite**: Select text to have the AI rephrase it with a specific instruction (e.g., "Show, don't tell").
 -   **Expand**: Select a short paragraph or sentence and have the AI flesh it out with more detail.
 -   **Critique**: Get feedback on the current scene's pacing, dialogue, and tone.
--   **Fix**: Quickly correct grammar and spelling errors.
--   **Lore**: Instantly look up or generate lore details without leaving the editor.
+-   **Check**: Analyze the chapter for plot holes, character inconsistencies, and setting errors.
+-   **Lore**: Generate new lore entities (characters, locations) based on a prompt.
+-   **Search**: Search your project's entities and content for specific details.
+-   **Export**: Download the current scene as a Markdown file.
 
 ### 3. Write & Generate
 Once you have a structure, you can start writing.

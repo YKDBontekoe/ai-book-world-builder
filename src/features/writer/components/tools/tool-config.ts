@@ -27,7 +27,7 @@ export const TOOLS = [
 	{
 		id: "consistency",
 		icon: AlertTriangle,
-		label: "Fix",
+		label: "Check",
 		color: "text-orange-400",
 	},
 	{ id: "lore", icon: Globe, label: "Lore", color: "text-pink-400" },

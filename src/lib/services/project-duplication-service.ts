@@ -42,7 +42,33 @@ async function chunkedInsert<T extends Record<string, unknown>, TTable>(
 	}
 }
 
+/**
+ * Service to handle the complex logic of deep-cloning an entire project.
+ *
+ * This service is responsible for:
+ * 1. Cloning the Project record itself.
+ * 2. Cloning all Entities, Attributes, and Relationships.
+ * 3. Cloning the Book Structure (Outlines, Volumes, Chapters).
+ * 4. Cloning Scenes and their Metadata (Cards).
+ *
+ * ## ID Mapping Strategy
+ * To maintain referential integrity (foreign keys) in the new project, we:
+ * 1. Generate new UUIDs for every record.
+ * 2. Maintain `Map<OldID, NewID>` for each entity type (Entity, Chapter, etc.).
+ * 3. When inserting dependent records (e.g., a Scene belonging to a Chapter),
+ *    we look up the new Chapter ID in the map using the old Chapter ID.
+ */
 export class ProjectDuplicationService {
+	/**
+	 * Creates a complete fork of a project.
+	 *
+	 * Uses a transaction to ensure all-or-nothing execution. If any part of the
+	 * cloning process fails, the database is rolled back to prevent partial states.
+	 *
+	 * @param originalProjectId - The source project ID.
+	 * @param userId - The user who will own the new project.
+	 * @param newName - Optional name for the new project.
+	 */
 	async forkProject(
 		originalProjectId: string,
 		userId: string,
@@ -439,6 +465,19 @@ export class ProjectDuplicationService {
 		}
 	}
 
+	/**
+	 * Clones scenes using a Two-Pass strategy to resolve linked-list dependencies.
+	 *
+	 * Scenes reference each other via `prevSceneId`. If we tried to insert them
+	 * purely sequentially, we might encounter a `prevSceneId` that hasn't been
+	 * created yet (or we wouldn't know its new ID).
+	 *
+	 * Pass 1: Fetch ALL scene IDs and generate their new counterparts immediately.
+	 *         Populate `sceneIdMap`.
+	 *
+	 * Pass 2: Fetch full scene data in batches. When inserting, we can now
+	 *         confidently resolve `prevSceneId` using the map from Pass 1.
+	 */
 	private async cloneScenes(
 		tx: DbTransaction,
 		originalProjectId: string,
