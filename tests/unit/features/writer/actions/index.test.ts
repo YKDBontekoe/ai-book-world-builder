@@ -120,9 +120,13 @@ vi.mock("@/lib/db", () => {
 	};
 });
 
-// Mock @/features/writer/actions/ai
-vi.mock("@/features/writer/actions/ai", () => ({
-	continueWriting: vi.fn().mockResolvedValue({ text: "Generated content" }),
+// Mock @/lib/ai/services
+vi.mock("@/lib/ai/services", () => ({
+	generationService: {
+		continueWriting: vi
+			.fn()
+			.mockResolvedValue({ text: "Generated content", success: true }),
+	},
 }));
 
 vi.mock("@/lib/db/repositories", () => ({

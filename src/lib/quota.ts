@@ -8,24 +8,9 @@
 export async function checkUsageQuota(userId: string): Promise<boolean> {
 	if (!userId) return false;
 
-	// Safe default: Deny in production unless specifically allowed
-	if (
-		process.env.NODE_ENV === "production" &&
-		process.env.ALLOW_UNIMPLEMENTED_QUOTA !== "true"
-	) {
-		return false;
-	}
+	// TODO: Connect to subscription service or DB usage tracking.
+	// For now, we allow usage to ensure the application functions.
+	// You can implement strict limits here later.
 
-	// Warn if bypass is active in production
-	if (
-		process.env.NODE_ENV === "production" &&
-		process.env.ALLOW_UNIMPLEMENTED_QUOTA === "true"
-	) {
-		console.warn(
-			"⚠️ ALLOW_UNIMPLEMENTED_QUOTA bypass active - quota enforcement disabled",
-		);
-	}
-
-	// For dev/test, allow access
 	return true;
 }

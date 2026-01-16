@@ -1,71 +1,118 @@
 "use server";
 
-import { type GenerationOptions, generationService } from "@/lib/ai/services";
+import { z } from "zod";
+import { createUserAction } from "@/lib/action-middleware";
+import { generationService } from "@/lib/ai/services";
+import { checkUsageQuota } from "@/lib/quota";
+
+// ============================================================================
+// Schemas
+// ============================================================================
+
+const generationOptionsSchema = z.object({
+	modelId: z.string().optional(),
+	temperature: z.number().optional(),
+	style: z.string().optional(),
+});
+
+const continueWritingSchema = z.object({
+	context: z.string().max(100000, "Context too long"),
+	previousContent: z.string().max(50000, "Previous content too long"),
+	options: generationOptionsSchema.optional(),
+});
+
+const draftSceneSchema = z.object({
+	sceneTitle: z.string().max(255, "Title too long"),
+	cardData: z.object({
+		purpose: z.string().max(5000, "Purpose too long"),
+		setting: z.string().optional(),
+		emotionalBeats: z.union([z.array(z.string()), z.string()]).optional(),
+	}),
+	instructions: z.string().optional(),
+	options: generationOptionsSchema.optional(),
+});
+
+const generateIdeasSchema = z.object({
+	context: z.string().max(100000, "Context too long"),
+	currentText: z.string().max(50000, "Current text too long"),
+	options: generationOptionsSchema.optional(),
+});
+
+const rewriteSelectionSchema = z.object({
+	selection: z.string().max(20000, "Selection too long"),
+	instruction: z.string().max(1000, "Instruction too long"),
+	options: generationOptionsSchema.optional(),
+});
+
+// ============================================================================
+// Actions
+// ============================================================================
 
 /**
  * Continues writing a story based on context and previous content.
- * (Server Action)
  */
-export async function continueWriting(
-	context: string,
-	previousContent: string,
-	options: GenerationOptions = {},
-) {
-	return generationService.continueWriting(context, previousContent, options);
-}
+export const continueWriting = createUserAction({
+	input: continueWritingSchema,
+	handler: async ({ user, input }) => {
+		if (!(await checkUsageQuota(user.id))) {
+			throw new Error("Usage quota exceeded");
+		}
+		return generationService.continueWriting(
+			input.context,
+			input.previousContent,
+			input.options,
+		);
+	},
+});
 
 /**
  * Drafts a scene from scratch using scene card details.
- * (Server Action)
  */
-export async function draftScene(
-	sceneTitle: string,
-	cardData: {
-		purpose: string;
-		setting?: string;
-		emotionalBeats?: string[] | string;
+export const draftScene = createUserAction({
+	input: draftSceneSchema,
+	handler: async ({ user, input }) => {
+		if (!(await checkUsageQuota(user.id))) {
+			throw new Error("Usage quota exceeded");
+		}
+		return generationService.draftScene(
+			input.sceneTitle,
+			input.cardData,
+			input.instructions,
+			input.options,
+		);
 	},
-	instructions?: string,
-	options: GenerationOptions = {},
-) {
-	return generationService.draftScene(
-		sceneTitle,
-		cardData,
-		instructions,
-		options,
-	);
-}
+});
 
 /**
  * Suggests plot developments.
- * (Server Action)
  */
-export async function generateIdeas(
-	context: string,
-	currentText: string,
-	options: GenerationOptions = {},
-) {
-	return generationService.generateIdeas(context, currentText, options);
-}
+export const generateIdeas = createUserAction({
+	input: generateIdeasSchema,
+	handler: async ({ user, input }) => {
+		if (!(await checkUsageQuota(user.id))) {
+			throw new Error("Usage quota exceeded");
+		}
+		return generationService.generateIdeas(
+			input.context,
+			input.currentText,
+			input.options,
+		);
+	},
+});
 
 /**
  * Rewrites a selected text.
- * (Server Action)
  */
-export async function rewriteSelection(
-	selection: string,
-	instruction: string,
-	options: GenerationOptions = {},
-) {
-	return generationService.rewriteSelection(selection, instruction, options);
-}
-
-// Re-export generationService for server-side usage if needed
-// Actually, we should probably NOT export it from a "use server" file if it's a class instance.
-// But Next.js allows exporting it if it's imported by another server-side file?
-// No, "use server" files should ONLY export async functions if they are to be consumed by Client Components.
-// If it's only consumed by other server modules, it doesn't need "use server".
-// But since Client Components DO import this file, we must strictly adhere to the async function rule.
-// Non-function exports will cause the "Only async functions are allowed" error.
-
-// We'll keep generationService in writer-service.ts for other server modules to use directly.
+export const rewriteSelection = createUserAction({
+	input: rewriteSelectionSchema,
+	handler: async ({ user, input }) => {
+		if (!(await checkUsageQuota(user.id))) {
+			throw new Error("Usage quota exceeded");
+		}
+		return generationService.rewriteSelection(
+			input.selection,
+			input.instruction,
+			input.options,
+		);
+	},
+});

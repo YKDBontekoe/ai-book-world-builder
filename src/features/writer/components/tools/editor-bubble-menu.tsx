@@ -103,16 +103,20 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 		const { from, to } = editorView.state.selection;
 		const text = editorView.state.doc.textBetween(from, to);
 
-		const result = await rewriteSelection(
-			text,
-			`Rewrite this to be more ${style}`,
-		);
+		const result = await rewriteSelection({
+			selection: text,
+			instruction: `Rewrite this to be more ${style}`,
+		});
 
 		setLoading(false);
-		if (result.text) {
-			setRewrittenText(result.text);
+		if (result.success && result.data.text) {
+			setRewrittenText(result.data.text);
 		} else {
-			toast.error("Rewrite failed");
+			toast.error(
+				result.success
+					? "Rewrite failed"
+					: result.error || "An error occurred",
+			);
 		}
 	};
 
