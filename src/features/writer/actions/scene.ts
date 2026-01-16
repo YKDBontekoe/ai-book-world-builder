@@ -2,9 +2,9 @@
 
 import { and, eq, inArray, sql } from "drizzle-orm";
 import { cookies } from "next/headers";
-import { continueWriting } from "@/features/writer/actions/ai";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
+import { generationService } from "@/lib/ai/services";
 import { invalidateCache } from "@/lib/cache";
 import { type DbTransaction, db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
@@ -130,7 +130,11 @@ export async function generateScene(
 		}
 
 		// 3. Generate Content
-		const generation = await continueWriting(context, prevContent, { modelId });
+		const generation = await generationService.continueWriting(
+			context,
+			prevContent,
+			{ modelId },
+		);
 
 		if (generation.error || !generation.text) {
 			throw new Error(generation.error || "No text generated");
