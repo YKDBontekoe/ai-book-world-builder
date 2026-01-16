@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { processDailyFeedback } from "@/lib/services/feedback-service";
 
@@ -19,15 +19,13 @@ export async function GET(request: Request) {
 	// Constant-time comparison
 	let isValid = false;
 	try {
-		const encoder = new TextEncoder();
-		const a = encoder.encode(authHeader);
-		const b = encoder.encode(expectedHeader);
+		// We hash both values to ensure they are the same length (32 bytes for sha256)
+		// This prevents length leakage via the length check required by timingSafeEqual
+		const hashA = createHash("sha256").update(authHeader).digest();
+		const hashB = createHash("sha256").update(expectedHeader).digest();
 
-		// timingSafeEqual requires same length
-		if (a.length === b.length) {
-			isValid = timingSafeEqual(a, b);
-		}
-	} catch (e) {
+		isValid = timingSafeEqual(hashA, hashB);
+	} catch (_e) {
 		isValid = false;
 	}
 
