@@ -3,13 +3,17 @@
 import { isEqual } from "lodash";
 import {
 	BookPlus,
+	CheckSquare,
 	ChevronsDown,
 	ChevronsUp,
+	Download,
 	FilePlus2,
 	Loader2,
 	Plus,
 	Search,
 	Sparkles,
+	Trash2,
+	X,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -34,7 +38,9 @@ import {
 	createNewChapter,
 	createSceneInChapter,
 	deleteScene,
+	duplicateScene,
 	generateScene,
+	getSceneContent,
 	updateSceneTitle,
 } from "@/features/writer/actions";
 import { SceneItem } from "@/features/writer/components/left-sidebar/scene-item";
@@ -65,12 +71,48 @@ export const SceneNavigation = memo(function SceneNavigation({
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
 
 	// Stable setter for expanded chapters to prevent loops
 	const handleExpandedChange = useCallback((newValues: string[]) => {
 		setExpandedChapters((prev) =>
 			isEqual(prev, newValues) ? prev : newValues,
 		);
+	}, []);
+
+	// Clear selection when exiting selection mode
+	useEffect(() => {
+		if (!isSelectionMode) {
+			setSelectedSceneIds(new Set());
+		}
+	}, [isSelectionMode]);
+
+	const handleToggleSelect = useCallback((sceneId: string, selected: boolean) => {
+		setSelectedSceneIds((prev) => {
+			const next = new Set(prev);
+			if (selected) {
+				next.add(sceneId);
+			} else {
+				next.delete(sceneId);
+			}
+			return next;
+		});
+	}, []);
+
+	const handleSelectAll = useCallback(() => {
+		if (structure) {
+			const allSceneIds = structure.flatMap((c) =>
+				c.scenes.map((s) => s.id),
+			);
+			setSelectedSceneIds(new Set(allSceneIds));
+		}
+	}, [structure]);
+
+	const handleDeselectAll = useCallback(() => {
+		setSelectedSceneIds(new Set());
 	}, []);
 
 	// ⚡ Bolt: Store activeSceneId in ref to prevent prop instability in onDelete
@@ -209,6 +251,98 @@ export const SceneNavigation = memo(function SceneNavigation({
 		[onStructureUpdate, onSceneSelect],
 	);
 
+	const handleDuplicateScene = useCallback(
+		async (sceneId: string) => {
+			const toastId = toast.loading("Duplicating scene...");
+			try {
+				const result = await duplicateScene(sceneId);
+				if (result.success) {
+					toast.success("Scene duplicated", { id: toastId });
+					onStructureUpdate?.();
+				} else {
+					toast.error(result.error || "Failed to duplicate scene", {
+						id: toastId,
+					});
+				}
+			} catch (_e) {
+				toast.error("Error duplicating scene", { id: toastId });
+			}
+		},
+		[onStructureUpdate],
+	);
+
+	const handleBulkDelete = async () => {
+		if (selectedSceneIds.size === 0) return;
+
+		const confirmed = window.confirm(
+			`Are you sure you want to delete ${selectedSceneIds.size} scenes?`,
+		);
+		if (!confirmed) return;
+
+		const toastId = toast.loading("Deleting scenes...");
+		try {
+			// Sequential deletion to avoid race conditions with linked-list structure
+			const ids = Array.from(selectedSceneIds);
+			for (const id of ids) {
+				const result = await deleteScene(id);
+				if (!result.success) {
+					throw new Error(result.error || "Failed to delete one or more scenes");
+				}
+			}
+
+			toast.success("Scenes deleted", { id: toastId });
+			onStructureUpdate?.();
+			if (activeSceneId && selectedSceneIds.has(activeSceneId)) {
+				onSceneSelect(null);
+			}
+			setIsSelectionMode(false);
+		} catch (_e) {
+			toast.error("Error deleting scenes", { id: toastId });
+		}
+	};
+
+	const handleBulkExport = async () => {
+		if (selectedSceneIds.size === 0) return;
+
+		const toastId = toast.loading("Preparing export...");
+		try {
+			const ids = Array.from(selectedSceneIds);
+			// We need to fetch content for all scenes.
+			// This might be heavy, but it's a "bulk" action.
+			const contents = await Promise.all(
+				ids.map(async (id) => {
+					// Find the scene in structure to get title
+					let sceneTitle = "Unknown Scene";
+					structure?.forEach((c) => {
+						const s = c.scenes.find((sc) => sc.id === id);
+						if (s) sceneTitle = s.title;
+					});
+
+					const res = await getSceneContent(project.id, id);
+					if (res.success) {
+						return `# ${sceneTitle}\n\n${res.content}\n\n---\n\n`;
+					}
+					return `# ${sceneTitle}\n\n(Failed to load content)\n\n---\n\n`;
+				}),
+			);
+
+			const blob = new Blob([contents.join("")], { type: "text/plain" });
+			const url = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `exported-scenes-${new Date().toISOString().slice(0, 10)}.txt`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+
+			toast.success("Export complete", { id: toastId });
+			setIsSelectionMode(false);
+		} catch (_e) {
+			toast.error("Error exporting scenes", { id: toastId });
+		}
+	};
+
 	const handleRenameScene = useCallback(
 		async (sceneId: string, newTitle: string) => {
 			const toastId = toast.loading("Renaming scene...");
@@ -321,41 +455,82 @@ export const SceneNavigation = memo(function SceneNavigation({
 	return (
 		<div className="flex flex-col h-full">
 			<div className="px-4 py-2 space-y-2">
-				<div className="relative">
-					<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
-					<Input
-						placeholder="Search scenes..."
-						aria-label="Search scenes"
-						value={searchTerm}
-						onChange={handleSearchChange}
-						className="pl-8 h-9 text-sm"
-					/>
+				<div className="flex items-center gap-2">
+					<div className="relative flex-1">
+						<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
+						<Input
+							placeholder="Search scenes..."
+							aria-label="Search scenes"
+							value={searchTerm}
+							onChange={handleSearchChange}
+							className="pl-8 h-9 text-sm"
+						/>
+					</div>
+					<Button
+						variant={isSelectionMode ? "secondary" : "ghost"}
+						size="icon"
+						className="h-9 w-9 shrink-0"
+						onClick={() => setIsSelectionMode(!isSelectionMode)}
+						title="Toggle Selection Mode"
+					>
+						{isSelectionMode ? (
+							<X className="h-4 w-4" />
+						) : (
+							<CheckSquare className="h-4 w-4" />
+						)}
+					</Button>
 				</div>
 				<div className="flex items-center justify-between">
 					<span className="text-xs font-medium text-muted-foreground">
-						{displayStructure.length} Chapters
-						{searchTerm &&
+						{isSelectionMode
+							? `${selectedSceneIds.size} selected`
+							: `${displayStructure.length} Chapters`}
+						{!isSelectionMode &&
+							searchTerm &&
 							` (${structure.length - displayStructure.length} hidden)`}
 					</span>
 					<div className="flex gap-1">
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-6 w-6"
-							onClick={handleExpandAll}
-							title="Expand All"
-						>
-							<ChevronsDown className="h-3 w-3" />
-						</Button>
-						<Button
-							variant="ghost"
-							size="icon"
-							className="h-6 w-6"
-							onClick={handleCollapseAll}
-							title="Collapse All"
-						>
-							<ChevronsUp className="h-3 w-3" />
-						</Button>
+						{isSelectionMode ? (
+							<>
+								<Button
+									variant="ghost"
+									size="xs"
+									onClick={handleSelectAll}
+									className="text-xs h-6"
+								>
+									All
+								</Button>
+								<Button
+									variant="ghost"
+									size="xs"
+									onClick={handleDeselectAll}
+									className="text-xs h-6"
+								>
+									None
+								</Button>
+							</>
+						) : (
+							<>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-6 w-6"
+									onClick={handleExpandAll}
+									title="Expand All"
+								>
+									<ChevronsDown className="h-3 w-3" />
+								</Button>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-6 w-6"
+									onClick={handleCollapseAll}
+									title="Collapse All"
+								>
+									<ChevronsUp className="h-3 w-3" />
+								</Button>
+							</>
+						)}
 					</div>
 				</div>
 			</div>
@@ -415,7 +590,11 @@ export const SceneNavigation = memo(function SceneNavigation({
 												isGenerating={isGenerating}
 												onRename={handleRenameScene}
 												onDelete={handleDeleteScene}
+												onDuplicate={handleDuplicateScene}
 												readOnly={readOnly}
+												isSelectionMode={isSelectionMode}
+												isSelected={selectedSceneIds.has(scene.id)}
+												onToggleSelect={handleToggleSelect}
 											/>
 										))}
 										<Button
@@ -458,6 +637,28 @@ export const SceneNavigation = memo(function SceneNavigation({
 					</Accordion>
 				)}
 			</ScrollArea>
+			{isSelectionMode && selectedSceneIds.size > 0 && (
+				<div className="p-2 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+					<div className="flex gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							className="flex-1"
+							onClick={handleBulkExport}
+						>
+							<Download className="mr-2 h-4 w-4" />
+							Export ({selectedSceneIds.size})
+						</Button>
+						<Button
+							variant="destructive"
+							size="sm"
+							onClick={handleBulkDelete}
+						>
+							<Trash2 className="h-4 w-4" />
+						</Button>
+					</div>
+				</div>
+			)}
 		</div>
 	);
 });

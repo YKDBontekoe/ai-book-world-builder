@@ -1,6 +1,7 @@
 "use client";
 
-import { FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Copy, FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
@@ -23,7 +24,11 @@ interface SceneItemProps {
 	isGenerating: boolean;
 	onRename?: (sceneId: string, newTitle: string) => void;
 	onDelete?: (sceneId: string) => void;
+	onDuplicate?: (sceneId: string) => void;
 	readOnly?: boolean;
+	isSelectionMode?: boolean;
+	isSelected?: boolean;
+	onToggleSelect?: (sceneId: string, selected: boolean) => void;
 }
 
 export const SceneItem = memo(function SceneItem({
@@ -35,7 +40,11 @@ export const SceneItem = memo(function SceneItem({
 	isGenerating,
 	onRename,
 	onDelete,
+	onDuplicate,
 	readOnly,
+	isSelectionMode,
+	isSelected,
+	onToggleSelect,
 }: SceneItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(scene.title);
@@ -104,9 +113,18 @@ export const SceneItem = memo(function SceneItem({
 	}
 
 	return (
-		<div className="relative">
+		<div className="relative flex items-center gap-2">
+			{isSelectionMode && (
+				<Checkbox
+					checked={isSelected}
+					onCheckedChange={(checked) =>
+						onToggleSelect?.(scene.id, checked as boolean)
+					}
+					className="h-4 w-4"
+				/>
+			)}
 			<ContextMenu>
-				<ContextMenuTrigger disabled={readOnly}>
+				<ContextMenuTrigger disabled={readOnly} className="flex-1 min-w-0">
 					<Button
 						variant={isActive ? "secondary" : "ghost"}
 						size="sm"
@@ -114,8 +132,16 @@ export const SceneItem = memo(function SceneItem({
 							"justify-start h-8 w-full px-2 text-xs font-normal",
 							isActive && "bg-secondary/50 font-medium",
 						)}
-						onClick={() => onSelect(scene.id)}
-						onDoubleClick={() => !readOnly && setIsEditing(true)}
+						onClick={() => {
+							if (isSelectionMode) {
+								onToggleSelect?.(scene.id, !isSelected);
+							} else {
+								onSelect(scene.id);
+							}
+						}}
+						onDoubleClick={() =>
+							!readOnly && !isSelectionMode && setIsEditing(true)
+						}
 					>
 						<FileText className="mr-2 h-3 w-3 opacity-70" />
 						<span className="truncate">{scene.title}</span>
@@ -133,6 +159,12 @@ export const SceneItem = memo(function SceneItem({
 						<Pencil className="mr-2 h-4 w-4" />
 						Rename
 					</ContextMenuItem>
+					{onDuplicate && (
+						<ContextMenuItem onClick={() => onDuplicate(scene.id)}>
+							<Copy className="mr-2 h-4 w-4" />
+							Duplicate Scene
+						</ContextMenuItem>
+					)}
 					<ContextMenuSeparator />
 					<ContextMenuItem
 						className="text-destructive focus:text-destructive"

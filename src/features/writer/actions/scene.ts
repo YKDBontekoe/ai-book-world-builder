@@ -17,6 +17,7 @@ import {
 	generateSceneSchema,
 	getSceneContentSchema,
 	reorderScenesSchema,
+	duplicateSceneSchema,
 	updateSceneContentSchema,
 	updateSceneTitleSchema,
 } from "@/lib/validation";
@@ -218,6 +219,56 @@ export async function deleteScene(
 	} catch (error) {
 		console.error("Failed to delete scene", error);
 		return { success: false, error: "Failed to delete scene" };
+	}
+}
+
+export async function duplicateScene(
+	sceneId: string,
+): Promise<{ success: boolean; sceneId?: string; error?: string }> {
+	const validation = duplicateSceneSchema.safeParse({ sceneId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
+	try {
+		const targetScene = await sceneRepository.findById(sceneId);
+
+		if (!targetScene) {
+			return { success: false, error: "Scene not found" };
+		}
+
+		await ensureProjectAccess(targetScene.projectId, true);
+
+		const newSceneId = crypto.randomUUID();
+
+		await db.transaction(async (tx: DbTransaction) => {
+			const { sequence, prevSceneId } =
+				await sceneSequenceService.prepareInsertion(
+					targetScene.chapterId,
+					targetScene.id, // Insert after the original scene
+					tx,
+				);
+
+			await tx.insert(scene).values({
+				id: newSceneId,
+				projectId: targetScene.projectId,
+				chapterId: targetScene.chapterId,
+				title: `${targetScene.title} (Copy)`,
+				sequence,
+				content: targetScene.content,
+				status: "drafted",
+				prevSceneId,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			});
+		});
+
+		await invalidateCache(`project-structure:${targetScene.projectId}`);
+
+		return { success: true, sceneId: newSceneId };
+	} catch (error) {
+		console.error("Failed to duplicate scene", error);
+		return { success: false, error: "Failed to duplicate scene" };
 	}
 }
 
