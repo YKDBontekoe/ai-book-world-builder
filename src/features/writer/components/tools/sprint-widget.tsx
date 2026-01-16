@@ -123,7 +123,9 @@ export function SprintWidget() {
 											{[15, 30, 60].map((m) => (
 												<Button
 													key={m}
-													variant={durationMinutes === m ? "default" : "outline"}
+													variant={
+														durationMinutes === m ? "default" : "outline"
+													}
 													size="sm"
 													onClick={() => setDurationMinutes(m)}
 													className="flex-1 text-xs h-7"
@@ -164,10 +166,7 @@ export function SprintWidget() {
 					>
 						<div className="flex items-center gap-1.5 text-xs font-mono font-medium text-primary">
 							<span
-								className={cn(
-									"animate-pulse",
-									timeLeft < 60 && "text-red-500",
-								)}
+								className={cn("animate-pulse", timeLeft < 60 && "text-red-500")}
 							>
 								{formatTime(timeLeft)}
 							</span>
