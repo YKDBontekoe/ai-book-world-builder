@@ -1,5 +1,8 @@
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
-import type { AuthenticationResponseJSON } from "@simplewebauthn/types";
+import type {
+	AuthenticationResponseJSON,
+	AuthenticatorTransportFuture,
+} from "@simplewebauthn/types";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
 import { eq } from "drizzle-orm";
@@ -89,11 +92,14 @@ export const {
 			async authorize(credentials) {
 				const email = credentials?.email;
 
-				if (!email) {
+				if (!email || typeof email !== "string") {
 					return null;
 				}
 
-				if (credentials.passkeyCredential) {
+				if (
+					credentials.passkeyCredential &&
+					typeof credentials.passkeyCredential === "string"
+				) {
 					const users = await getUser(email);
 
 					if (users.length === 0) {
@@ -143,11 +149,15 @@ export const {
 						expectedOrigin: passkeyOrigin,
 						expectedRPID: passkeyRpId,
 						requireUserVerification: true,
-						authenticator: {
-							credentialID: decodeBase64Url(storedCredential.credentialId),
-							credentialPublicKey: decodeBase64Url(storedCredential.publicKey),
+						credential: {
+							id: storedCredential.credentialId,
+							publicKey: new Uint8Array(
+								decodeBase64Url(storedCredential.publicKey),
+							),
 							counter: storedCredential.counter,
-							transports: storedCredential.transports ?? undefined,
+							transports:
+								(storedCredential.transports as AuthenticatorTransportFuture[]) ??
+								undefined,
 						},
 					});
 
@@ -166,7 +176,7 @@ export const {
 
 				const password = credentials.password;
 
-				if (!password) {
+				if (!password || typeof password !== "string") {
 					return null;
 				}
 

@@ -1,11 +1,8 @@
 import { generateAuthenticationOptions } from "@simplewebauthn/server";
+import type { AuthenticatorTransportFuture } from "@simplewebauthn/types";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import {
-	decodeBase64Url,
-	passkeyEmailSchema,
-	passkeyRpId,
-} from "@/lib/auth/passkeys";
+import { passkeyEmailSchema, passkeyRpId } from "@/lib/auth/passkeys";
 import { getUser } from "@/lib/db/queries/user";
 import {
 	createPasskeyChallenge,
@@ -39,13 +36,12 @@ export async function POST(request: Request) {
 		);
 	}
 
-	const options = generateAuthenticationOptions({
+	const options = await generateAuthenticationOptions({
 		rpID: passkeyRpId,
 		userVerification: "preferred",
 		allowCredentials: credentials.map((credential) => ({
-			id: decodeBase64Url(credential.credentialId),
-			type: "public-key",
-			transports: credential.transports ?? undefined,
+			id: credential.credentialId,
+			transports: (credential.transports as AuthenticatorTransportFuture[]) ?? undefined,
 		})),
 	});
 
