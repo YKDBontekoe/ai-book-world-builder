@@ -307,12 +307,9 @@ export function DiagnosticsPane() {
 
 			{/* CTA */}
 			<div className="flex flex-col gap-2">
-				<Button asChild className="w-full gap-2" size="lg">
-					<Link href={`/projects/${projectId}/generate`}>
-						<Sparkles className="h-4 w-4" />
-						Open Book Generator
-					</Link>
-				</Button>
+				<p className="text-center text-xs text-muted-foreground">
+					Ready to write? Use the Generator tab to create your book plan.
+				</p>
 			</div>
 		</div>
 	);
