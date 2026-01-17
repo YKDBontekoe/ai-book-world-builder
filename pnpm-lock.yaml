@@ -114,8 +114,8 @@ importers:
         specifier: 13.2.2
         version: 13.2.2
       '@simplewebauthn/types':
-        specifier: 9.0.1
-        version: 9.0.1
+        specifier: 12.0.0
+        version: 12.0.0
       '@tanstack/query-sync-storage-persister':
         specifier: 5.90.19
         version: 5.90.19
@@ -2771,6 +2771,10 @@ packages:
   '@simplewebauthn/server@13.2.2':
     resolution: {integrity: sha512-HcWLW28yTMGXpwE9VLx9J+N2KEUaELadLrkPEEI9tpI5la70xNEVEsu/C+m3u7uoq4FulLqZQhgBCzR9IZhFpA==}
     engines: {node: '>=20.0.0'}
+
+  '@simplewebauthn/types@12.0.0':
+    resolution: {integrity: sha512-q6y8MkoV8V8jB4zzp18Uyj2I7oFp2/ONL8c3j8uT06AOWu3cIChc1au71QYHrP2b+xDapkGTiv+9lX7xkTlAsA==}
+    deprecated: Package no longer supported. Contact Support at https://www.npmjs.com/support for more info.
 
   '@simplewebauthn/types@9.0.1':
     resolution: {integrity: sha512-tGSRP1QvsAvsJmnOlRQyw/mvK9gnPtjEc5fg2+m8n+QUa+D7rvrKkOYyfpy42GTs90X3RDOnqJgfHt+qO67/+w==}
@@ -8539,6 +8543,8 @@ snapshots:
       '@peculiar/asn1-schema': 2.6.0
       '@peculiar/asn1-x509': 2.6.0
       '@peculiar/x509': 1.14.3
+
+  '@simplewebauthn/types@12.0.0': {}
 
   '@simplewebauthn/types@9.0.1': {}
 
