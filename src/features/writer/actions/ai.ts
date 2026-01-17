@@ -11,8 +11,8 @@ import { checkUsageQuota } from "@/lib/quota";
 
 const generationOptionsSchema = z.object({
 	modelId: z.string().optional(),
-	temperature: z.number().optional(),
-	style: z.string().optional(),
+	temperature: z.number().min(0).max(2).optional(),
+	style: z.string().max(100, "Style description too long").optional(),
 });
 
 const continueWritingSchema = z.object({
@@ -28,7 +28,7 @@ const draftSceneSchema = z.object({
 		setting: z.string().optional(),
 		emotionalBeats: z.union([z.array(z.string()), z.string()]).optional(),
 	}),
-	instructions: z.string().optional(),
+	instructions: z.string().max(5000, "Instructions too long").optional(),
 	options: generationOptionsSchema.optional(),
 });
 
