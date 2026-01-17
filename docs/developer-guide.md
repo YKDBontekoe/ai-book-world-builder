@@ -156,7 +156,27 @@ Analytics are calculated on-the-fly via `ProjectAnalyticsService` (`lib/services
     -   Formula: `min(Chars*20, 100)*0.3 + min(Locs*25, 100)*0.2 + (HasOutline?100:0)*0.3 + min(Chaps*10, 100)*0.2`
 -   *Note*: This score is calculated backend-side and is available for future UI enhancements or gating mechanisms.
 
-### 9. Structured Context (Context Builder)
+### 9. Complex Business Logic
+
+**Scene Management (Linked Lists)**:
+Scenes are ordered using a hybrid approach in `SceneSequenceService`:
+-   **Structure**: A Doubly-Linked List (`prevSceneId`) + Integer Sequence (`sequence`).
+-   **Purpose**: The linked list (`prevSceneId`) is the source of truth for logical order, especially for resolving merge conflicts. The integer `sequence` is used for efficient database sorting and UI rendering.
+-   **Reordering**: We use a single atomic SQL transaction with a `CASE` statement to update all affected `sequence` numbers at once, preventing race conditions.
+
+**Project Forking (Deep Cloning)**:
+The `ProjectDuplicationService` implements a "Deep Clone" operation to duplicate a project and all its entities (15+ tables).
+-   **ID Mapping**: We generate new UUIDs for every record but maintain an in-memory `Map<OldID, NewID>` during the transaction. This allows us to update foreign keys (e.g., `chapter.volumeId`) correctly on the fly.
+-   **Two-Pass Insertion**: For scenes (which reference each other via `prevSceneId`), we use a two-pass strategy:
+    1.  **Pass 1**: Generate and map all new Scene IDs.
+    2.  **Pass 2**: Insert full scene records, resolving `prevSceneId` using the pre-populated map. This solves the "chicken-and-egg" problem of linked lists.
+
+**Productivity Tools Architecture**:
+The Sprint, Goals, and Insights widgets (`features/writer/components/tools/`) are purely client-side React components.
+-   **Persistence**: They use `localStorage` (via `useLocalStorage`) to persist goals and session stats across reloads.
+-   **Real-time Metrics**: They consume `WriterContext` to calculate word counts and pacing scores on the fly, without needing backend polls.
+
+### 10. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:
 
 -   **Smart Truncation**: We utilize a `smartTruncate` utility that respects sentence boundaries. This prevents feeding cut-off sentences to the LLM, which often causes it to hallucinate completions or break flow.
@@ -164,7 +184,7 @@ To enable the AI to write coherently over long contexts without a Vector DB, we 
 -   **Narrative Arc**: We provide summaries of *all* previous scenes in the current chapter to maintain the plot arc.
 -   **Global Context**: Chapter notes and Outline parameters (POV, Tone) are always included.
 
-### 10. AI Integration & Models
+### 11. AI Integration & Models
 
 **Role-Based Routing**:
 We do not hardcode model IDs. Instead, we use a role-based system defined in `lib/ai/model-routing.ts`:

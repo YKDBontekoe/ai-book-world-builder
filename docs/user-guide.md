@@ -123,6 +123,24 @@ Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. 
 -   **Context**: Shows exactly what information the AI "sees" when generating a scene.
 -   **Diagnostics**: Runs health checks on your story.
 
+### 5. Productivity Tools
+Stay focused and track your progress with built-in productivity widgets located in the editor header (or "More" menu on smaller screens).
+
+*   **Sprint Timer (Zap Icon)**:
+    *   **Goal**: Challenge yourself to write as much as possible in a set time (15, 30, or 60 minutes).
+    *   **Tracking**: The widget displays time remaining and words written during the sprint.
+    *   **Results**: When the timer ends, you get a summary of your session.
+
+*   **Writing Goals (Target Icon)**:
+    *   **Daily Targets**: Set a daily word count goal (e.g., 1000 words).
+    *   **Pacing Target**: Optionally set a "Pacing Score" target (0-100) to guide the speed/tension of your writing.
+    *   **Progress**: Visual progress bars show how close you are to your targets in real-time.
+
+*   **Session Insights (Chart Icon)**:
+    *   **Real-time Stats**: View your current session's duration, total words written, words per minute (WPM), and edit count.
+    *   **Context**: Also displays total project word count and estimated reading time.
+    *   **Reset**: You can reset the session stats at any time to start fresh.
+
 ## Advanced Features
 
 ### Command Palette (Writer Spotlight)

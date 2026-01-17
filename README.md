@@ -49,6 +49,7 @@ A step-by-step wizard to go from concept to draft:
 - **Drafting**: Write side-by-side with AI suggestions in a professional editor.
 - **World Canvas**: Visualize your entities and their relationships.
 - **Entity Management**: Organize your world's lore in a structured database.
+- **Productivity Tools**: Built-in sprint timer, daily goals, and session analytics.
 
 ## Design System
 
