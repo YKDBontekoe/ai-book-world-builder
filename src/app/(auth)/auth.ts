@@ -1,5 +1,8 @@
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
-import type { AuthenticationResponseJSON } from "@simplewebauthn/types";
+import type {
+	AuthenticationResponseJSON,
+	AuthenticatorTransportFuture,
+} from "@simplewebauthn/types";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
 import { eq } from "drizzle-orm";
@@ -147,7 +150,9 @@ export const {
 							credentialID: decodeBase64Url(storedCredential.credentialId),
 							credentialPublicKey: decodeBase64Url(storedCredential.publicKey),
 							counter: storedCredential.counter,
-							transports: storedCredential.transports ?? undefined,
+							transports:
+								(storedCredential.transports as AuthenticatorTransportFuture[]) ??
+								undefined,
 						},
 					});
 

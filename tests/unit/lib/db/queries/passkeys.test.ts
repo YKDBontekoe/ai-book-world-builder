@@ -1,5 +1,4 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockDb } from "@/tests/unit/lib/db/repositories/mock-db-helper";
 import {
 	createPasskeyChallenge,
 	createPasskeyCredential,
@@ -10,12 +9,14 @@ import {
 	updatePasskeyCredentialCounter,
 } from "@/lib/db/queries/passkeys";
 import { ChatSDKError } from "@/lib/errors";
+import { db } from "@/lib/db";
 
-const dbMocks = vi.hoisted(() => createMockDb());
-
-vi.mock("@/lib/db", () => ({
-	db: dbMocks,
-}));
+vi.mock("@/lib/db", async () => {
+	const { createMockDb } = await import("../repositories/mock-db-helper");
+	return {
+		db: createMockDb(),
+	};
+});
 
 vi.mock("drizzle-orm", () => ({
 	and: vi.fn(),
@@ -23,6 +24,8 @@ vi.mock("drizzle-orm", () => ({
 }));
 
 describe("passkey queries", () => {
+	const dbMocks = db as any;
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		dbMocks.result = [];
