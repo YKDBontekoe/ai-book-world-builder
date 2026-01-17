@@ -140,31 +140,19 @@ export async function generateScene(
 			throw new Error(generation.error || "No text generated");
 		}
 
-		// 4. Create New Scene using transaction to prevent race conditions on sequence
-		// Note: We bypass repository here to use transaction
-		const newSceneId = crypto.randomUUID();
-
-		await db.transaction(async (tx: DbTransaction) => {
-			const { sequence, prevSceneId: finalPrevSceneId } =
-				await sceneSequenceService.prepareInsertion(chapterId, prevSceneId, tx);
-
-			await tx.insert(scene).values({
-				id: newSceneId,
-				projectId: currentChapter.projectId,
-				chapterId,
-				title: "AI Generated Scene",
-				sequence,
-				content: generation.text,
-				status: "drafted",
-				prevSceneId: finalPrevSceneId,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			});
+		// 4. Create New Scene using repository with sequence handling
+		const newScene = await sceneRepository.createWithSequence({
+			projectId: currentChapter.projectId,
+			chapterId,
+			title: "AI Generated Scene",
+			content: generation.text,
+			status: "drafted",
+			insertAfterSceneId: prevSceneId,
 		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newSceneId };
+		return { success: true, sceneId: newScene.id };
 	} catch (error) {
 		console.error("Failed to generate scene", error);
 		return { success: false, error: "Generation failed" };
@@ -252,34 +240,19 @@ export async function createSceneInChapter(
 
 		await ensureProjectAccess(currentChapter.projectId, true);
 
-		// Use a transaction to ensure atomic sequence calculation and insertion
-		const newSceneId = crypto.randomUUID();
-
-		await db.transaction(async (tx: DbTransaction) => {
-			const { sequence, prevSceneId } =
-				await sceneSequenceService.prepareInsertion(
-					chapterId,
-					insertAfterSceneId,
-					tx,
-				);
-
-			await tx.insert(scene).values({
-				id: newSceneId,
-				projectId: currentChapter.projectId,
-				chapterId,
-				title,
-				sequence,
-				content: "",
-				status: "planned",
-				prevSceneId,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			});
+		// Use repository to create scene with correct sequence
+		const newScene = await sceneRepository.createWithSequence({
+			projectId: currentChapter.projectId,
+			chapterId,
+			title,
+			content: "",
+			status: "planned",
+			insertAfterSceneId,
 		});
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
-		return { success: true, sceneId: newSceneId };
+		return { success: true, sceneId: newScene.id };
 	} catch (error) {
 		console.error("Failed to create scene", error);
 		return { success: false, error: "Failed to create scene" };

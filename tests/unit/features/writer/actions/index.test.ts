@@ -145,6 +145,11 @@ vi.mock("@/lib/db/repositories", () => ({
 			title: "AI Generated Scene",
 			sequence: 2,
 		}),
+		createWithSequence: vi.fn().mockResolvedValue({
+			id: "new-scene-1",
+			title: "AI Generated Scene",
+			sequence: 2,
+		}),
 	},
 	projectRepository: {
 		findByIdWithAccess: vi.fn().mockResolvedValue({

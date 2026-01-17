@@ -1,8 +1,9 @@
 import "server-only";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { db, type DbTransaction } from "@/lib/db";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
+import { sceneSequenceService } from "@/lib/services/scene-sequence-service";
 import { BaseRepository, type FindOptions } from "./base-repository";
 
 // ============================================================================
@@ -177,6 +178,50 @@ export class SceneRepository extends BaseRepository<
 		} catch (error) {
 			console.error("SceneRepository.create error:", error);
 			throw new DatabaseError("Failed to create scene");
+		}
+	}
+
+	/**
+	 * Create a new scene with sequence handling (Transactional)
+	 */
+	async createWithSequence(
+		data: Omit<CreateSceneInput, "sequence" | "prevSceneId"> & {
+			insertAfterSceneId?: string;
+		},
+	): Promise<Scene> {
+		try {
+			// Generate ID in advance for consistency
+			const newSceneId = crypto.randomUUID();
+
+			return await db.transaction(async (tx: DbTransaction) => {
+				const { sequence, prevSceneId } =
+					await sceneSequenceService.prepareInsertion(
+						data.chapterId,
+						data.insertAfterSceneId,
+						tx,
+					);
+
+				const [created] = await tx
+					.insert(scene)
+					.values({
+						id: newSceneId,
+						projectId: data.projectId,
+						chapterId: data.chapterId,
+						title: data.title,
+						sequence,
+						content: data.content ?? "",
+						status: data.status ?? "planned",
+						prevSceneId,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					})
+					.returning();
+
+				return created;
+			});
+		} catch (error) {
+			console.error("SceneRepository.createWithSequence error:", error);
+			throw new DatabaseError("Failed to create scene with sequence");
 		}
 	}
 

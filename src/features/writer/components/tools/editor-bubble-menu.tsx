@@ -12,11 +12,11 @@ import {
 	Zap,
 } from "lucide-react";
 import type { EditorView } from "prosemirror-view";
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
+import { useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { rewriteSelection } from "@/features/writer/actions/ai";
+import { useAiRewrite } from "@/features/writer/hooks/use-ai-rewrite";
+import { useBubbleMenuPosition } from "@/features/writer/hooks/use-bubble-menu-position";
 import { cn } from "@/lib/utils";
 
 interface EditorBubbleMenuProps {
@@ -53,86 +53,25 @@ const REWRITE_STYLES = [
 ] as const;
 
 export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
-	const [position, setPosition] = useState<{
-		top: number;
-		left: number;
-	} | null>(null);
-	const [_isOpen, setIsOpen] = useState(false);
-	const [loading, setLoading] = useState(false);
-	const [rewrittenText, setRewrittenText] = useState<string | null>(null);
+	const {
+		position,
+		setIsOpen: setMenuOpen,
+		setPosition,
+	} = useBubbleMenuPosition(editorView);
+	const {
+		loading,
+		rewrittenText,
+		handleRewrite,
+		applyRewrite,
+		cancelRewrite,
+	} = useAiRewrite(editorView);
 	const [showMore, setShowMore] = useState(false);
 
-	useEffect(() => {
-		if (!editorView) return;
-
-		const updateMenu = () => {
-			const { state } = editorView;
-			const { from, to, empty } = state.selection;
-
-			if (empty || loading) {
-				setPosition(null);
-				setIsOpen(false);
-				return;
-			}
-
-			const start = editorView.coordsAtPos(from);
-			const _end = editorView.coordsAtPos(to);
-			const box = editorView.dom.getBoundingClientRect();
-
-			setPosition({
-				top: start.top - box.top - 40, // Position above selection
-				left: start.left - box.left,
-			});
-			setIsOpen(true);
-		};
-
-		editorView.dom.addEventListener("mouseup", updateMenu);
-		editorView.dom.addEventListener("keyup", updateMenu);
-		editorView.dom.addEventListener("scroll", updateMenu); // Handle scroll too
-
-		return () => {
-			editorView.dom.removeEventListener("mouseup", updateMenu);
-			editorView.dom.removeEventListener("keyup", updateMenu);
-			editorView.dom.removeEventListener("scroll", updateMenu);
-		};
-	}, [editorView, loading]);
-
-	const handleRewrite = async (style: string) => {
-		if (!editorView) return;
-		setLoading(true);
-		const { from, to } = editorView.state.selection;
-		const text = editorView.state.doc.textBetween(from, to);
-
-		const result = await rewriteSelection({
-			selection: text,
-			instruction: `Rewrite this to be more ${style}`,
+	const handleApply = () => {
+		applyRewrite(() => {
+			setMenuOpen(false);
+			setPosition(null);
 		});
-
-		setLoading(false);
-		if (result.success && result.data.text) {
-			setRewrittenText(result.data.text);
-		} else {
-			toast.error(
-				result.success
-					? "Rewrite failed"
-					: result.error || "An error occurred",
-			);
-		}
-	};
-
-	const applyRewrite = () => {
-		if (!editorView || !rewrittenText) return;
-		const { from, to } = editorView.state.selection;
-
-		editorView.dispatch(
-			editorView.state.tr.replaceWith(
-				from,
-				to,
-				editorView.state.schema.text(rewrittenText),
-			),
-		);
-		setRewrittenText(null);
-		setIsOpen(false);
 	};
 
 	if (!position || !editorView) return null;
@@ -161,7 +100,7 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 								size="icon"
 								variant="ghost"
 								className="h-8 w-8 hover:bg-green-500/20 hover:text-green-500"
-								onClick={applyRewrite}
+								onClick={handleApply}
 								title="Apply"
 							>
 								<Check className="h-4 w-4" />
@@ -170,7 +109,7 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 								size="icon"
 								variant="ghost"
 								className="h-8 w-8 hover:bg-destructive/20 hover:text-destructive"
-								onClick={() => setRewrittenText(null)}
+								onClick={cancelRewrite}
 								title="Cancel"
 							>
 								<X className="h-4 w-4" />
