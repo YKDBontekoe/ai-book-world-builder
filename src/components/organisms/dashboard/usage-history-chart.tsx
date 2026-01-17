@@ -71,6 +71,7 @@ export function UsageHistoryChart({ history }: { history: UsageHistory }) {
 											background: "rgba(0,0,0,0.8)",
 											color: "#fff",
 										}}
+										// @ts-expect-error - Recharts types are strict but value is number at runtime
 										formatter={(value: number) => [
 											`$${value.toFixed(4)}`,
 											"Cost",

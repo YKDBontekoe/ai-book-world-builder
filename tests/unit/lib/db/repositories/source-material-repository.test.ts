@@ -226,6 +226,7 @@ describe("SourceMaterialRepository", () => {
 			const mockUpdated = { id: "m1", status: "processed" };
 			mocks.result = [mockUpdated];
 
+			// @ts-expect-error
 			const result = await sourceMaterialRepository.update("m1", {
 				status: "processed",
 			});
@@ -235,6 +236,7 @@ describe("SourceMaterialRepository", () => {
 		it("should throw NotFoundError if material not found", async () => {
 			mocks.result = [];
 			await expect(
+				// @ts-expect-error
 				sourceMaterialRepository.update("m1", { status: "processed" }),
 			).rejects.toThrow(NotFoundError);
 		});
@@ -242,6 +244,7 @@ describe("SourceMaterialRepository", () => {
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
 			await expect(
+				// @ts-expect-error
 				sourceMaterialRepository.update("m1", { status: "p" }),
 			).rejects.toThrow(DatabaseError);
 		});

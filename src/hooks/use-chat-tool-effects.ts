@@ -6,6 +6,7 @@ import {
 	type CanvasPane,
 	useBookCanvasActions,
 } from "@/components/organisms/book-canvas/book-canvas-context";
+import { WriterContentContext } from "@/features/writer/components/writer-content-context";
 import { WriterContext } from "@/features/writer/components/writer-context";
 import { QUERY_KEYS } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
@@ -22,8 +23,9 @@ export function useChatToolEffects({
 	const queryClient = useQueryClient();
 	const { setActivePane } = useBookCanvasActions();
 
-	// Safely access WriterContext (it might be null if used outside WriterView)
+	// Safely access Contexts (they might be null if used outside WriterView)
 	const writerContext = useContext(WriterContext);
+	const writerContentContext = useContext(WriterContentContext);
 
 	const processedToolCallIdsRef = useRef<Set<string>>(new Set());
 
@@ -55,11 +57,11 @@ export function useChatToolEffects({
 			// 2. Handle Scene Content Updates (Live Editing)
 			if (toolName === "updateSceneContent") {
 				const res = result as any;
-				if (res?.success && res?.newContent && writerContext) {
+				if (res?.success && res?.newContent && writerContext && writerContentContext) {
 					// Directly update the editor state without a refetch
 					// Verify we are updating the active scene (basic safety)
 					if (writerContext.activeSceneId === res.sceneId) {
-						writerContext.handleContentChange(res.newContent);
+						writerContentContext.handleContentChange(res.newContent);
 					}
 				}
 			}
@@ -91,5 +93,5 @@ export function useChatToolEffects({
 			// Mark as processed
 			processedToolCallIdsRef.current.add(toolInvocation.toolCallId);
 		}
-	}, [messages, queryClient, selectedProjectId, setActivePane, writerContext]);
+	}, [messages, queryClient, selectedProjectId, setActivePane, writerContext, writerContentContext]);
 }

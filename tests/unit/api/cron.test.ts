@@ -21,7 +21,6 @@ describe("Cron API Auth", () => {
 		delete process.env.CRON_SECRET;
 
 		const request = new Request("http://localhost/api/cron/process-feedback");
-		// @ts-expect-error
 		const response = await GET(request);
 
 		// The current implementation allows access if secret is missing (returns 200)
@@ -33,7 +32,6 @@ describe("Cron API Auth", () => {
 		vi.stubEnv("CRON_SECRET", "test-secret");
 
 		const request = new Request("http://localhost/api/cron/process-feedback");
-		// @ts-expect-error
 		const response = await GET(request);
 
 		expect(response.status).toBe(401);
@@ -47,7 +45,6 @@ describe("Cron API Auth", () => {
 				Authorization: "Bearer wrong-secret",
 			},
 		});
-		// @ts-expect-error
 		const response = await GET(request);
 
 		expect(response.status).toBe(401);
@@ -61,7 +58,6 @@ describe("Cron API Auth", () => {
 				Authorization: "Bearer test-secret",
 			},
 		});
-		// @ts-expect-error
 		const response = await GET(request);
 
 		expect(response.status).toBe(200);

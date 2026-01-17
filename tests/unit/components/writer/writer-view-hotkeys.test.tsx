@@ -13,7 +13,7 @@ const mockProject: Project = {
 	description: "Test Description",
 	visibility: "private",
 	createdAt: new Date(),
-	updatedAt: new Date(),
+	updatedAt: new Date(), // This exists in Project
 	archivedAt: null,
 	deletedAt: null,
 	wordCount: 0,
