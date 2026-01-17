@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getUserDetails } from "@/app/actions/admin";
 import { UserStatusToggle } from "@/components/admin/user-status-toggle";
 import { Badge } from "@/components/atoms/badge";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
 
 export default async function UserDetailsPage({
@@ -93,7 +94,13 @@ export default async function UserDetailsPage({
 						Projects
 					</h3>
 					{projects.length === 0 ? (
-						<p className="text-muted-foreground text-sm">No projects found.</p>
+						<EmptyState
+							icon={Book}
+							title="No Projects"
+							description="This user hasn't created any projects yet."
+							variant="dashed"
+							className="py-8"
+						/>
 					) : (
 						<ul className="space-y-3">
 							{projects.map(
