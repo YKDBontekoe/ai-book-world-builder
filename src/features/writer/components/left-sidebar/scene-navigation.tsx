@@ -3,13 +3,17 @@
 import { isEqual } from "lodash";
 import {
 	BookPlus,
+	CheckSquare,
 	ChevronsDown,
 	ChevronsUp,
+	Download,
 	FilePlus2,
 	Loader2,
 	Plus,
 	Search,
 	Sparkles,
+	Trash2,
+	X,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
@@ -31,6 +35,8 @@ import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
 import {
+	bulkDeleteScenes,
+	bulkExportScenes,
 	createNewChapter,
 	createSceneInChapter,
 	deleteScene,
@@ -65,6 +71,10 @@ export const SceneNavigation = memo(function SceneNavigation({
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
 
 	// Stable setter for expanded chapters to prevent loops
 	const handleExpandedChange = useCallback((newValues: string[]) => {
@@ -269,6 +279,73 @@ export const SceneNavigation = memo(function SceneNavigation({
 		}
 	};
 
+	const toggleSelectionMode = useCallback(() => {
+		setIsSelectionMode((prev) => {
+			if (prev) {
+				setSelectedSceneIds(new Set());
+				return false;
+			}
+			return true;
+		});
+	}, []);
+
+	const toggleSceneSelect = useCallback((sceneId: string) => {
+		setSelectedSceneIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(sceneId)) {
+				next.delete(sceneId);
+			} else {
+				next.add(sceneId);
+			}
+			return next;
+		});
+	}, []);
+
+	const handleBulkExport = async () => {
+		const toastId = toast.loading("Exporting scenes...");
+		try {
+			const ids = Array.from(selectedSceneIds);
+			const result = await bulkExportScenes(ids);
+			if (result.success && result.content) {
+				await navigator.clipboard.writeText(result.content);
+				toast.success("Copied to clipboard", { id: toastId });
+				toggleSelectionMode();
+			} else {
+				toast.error(result.error || "Failed to export", { id: toastId });
+			}
+		} catch (_error) {
+			toast.error("Error exporting scenes", { id: toastId });
+		}
+	};
+
+	const handleBulkDelete = async () => {
+		if (
+			!window.confirm(
+				`Are you sure you want to delete ${selectedSceneIds.size} scenes? This cannot be undone.`,
+			)
+		) {
+			return;
+		}
+
+		const toastId = toast.loading("Deleting scenes...");
+		try {
+			const ids = Array.from(selectedSceneIds);
+			const result = await bulkDeleteScenes(ids);
+			if (result.success) {
+				toast.success("Scenes deleted", { id: toastId });
+				onStructureUpdate?.();
+				if (activeSceneId && ids.includes(activeSceneId)) {
+					onSceneSelect(null);
+				}
+				toggleSelectionMode();
+			} else {
+				toast.error(result.error || "Failed to delete", { id: toastId });
+			}
+		} catch (_error) {
+			toast.error("Error deleting scenes", { id: toastId });
+		}
+	};
+
 	if (loading) {
 		return (
 			<div className="flex items-center justify-center p-8">
@@ -338,6 +415,19 @@ export const SceneNavigation = memo(function SceneNavigation({
 							` (${structure.length - displayStructure.length} hidden)`}
 					</span>
 					<div className="flex gap-1">
+						<Button
+							variant={isSelectionMode ? "secondary" : "ghost"}
+							size="icon"
+							className="h-6 w-6"
+							onClick={toggleSelectionMode}
+							title="Select Scenes"
+						>
+							{isSelectionMode ? (
+								<X className="h-3 w-3" />
+							) : (
+								<CheckSquare className="h-3 w-3" />
+							)}
+						</Button>
 						<Button
 							variant="ghost"
 							size="icon"
@@ -416,6 +506,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 												onRename={handleRenameScene}
 												onDelete={handleDeleteScene}
 												readOnly={readOnly}
+												isSelectionMode={isSelectionMode}
+												isSelected={selectedSceneIds.has(scene.id)}
+												onToggleSelect={toggleSceneSelect}
 											/>
 										))}
 										<Button
@@ -458,6 +551,30 @@ export const SceneNavigation = memo(function SceneNavigation({
 					</Accordion>
 				)}
 			</ScrollArea>
+			{isSelectionMode && (
+				<div className="p-2 border-t bg-muted/30 flex gap-2">
+					<Button
+						size="sm"
+						variant="destructive"
+						className="flex-1 text-xs"
+						onClick={handleBulkDelete}
+						disabled={selectedSceneIds.size === 0}
+					>
+						<Trash2 className="mr-2 h-3 w-3" />
+						Delete ({selectedSceneIds.size})
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						className="flex-1 text-xs"
+						onClick={handleBulkExport}
+						disabled={selectedSceneIds.size === 0}
+					>
+						<Download className="mr-2 h-3 w-3" />
+						Export ({selectedSceneIds.size})
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 });

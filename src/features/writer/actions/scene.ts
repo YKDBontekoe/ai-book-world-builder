@@ -1,6 +1,6 @@
 "use server";
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { cookies } from "next/headers";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { buildSceneGenerationContext } from "@/lib/ai/context-builder";
@@ -12,6 +12,8 @@ import { chapter, scene } from "@/lib/db/schema";
 import { checkUsageQuota } from "@/lib/quota";
 import { sceneSequenceService } from "@/lib/services/scene-sequence-service";
 import {
+	bulkDeleteScenesSchema,
+	bulkExportScenesSchema,
 	createSceneInChapterSchema,
 	deleteSceneSchema,
 	generateSceneSchema,
@@ -336,5 +338,94 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 	} catch (error) {
 		console.error("Failed to reorder scenes", error);
 		return { success: false, error: "Failed to reorder scenes" };
+	}
+}
+
+export async function bulkExportScenes(sceneIds: string[]) {
+	const validation = bulkExportScenesSchema.safeParse({ sceneIds });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
+	try {
+		if (sceneIds.length === 0) return { success: true, content: "" };
+
+		// 1. Get first scene to verify project access
+		const firstScene = await sceneRepository.findById(sceneIds[0]);
+		if (!firstScene) {
+			return { success: false, error: "One or more scenes not found" };
+		}
+
+		await ensureProjectAccess(firstScene.projectId);
+
+		// 2. Fetch all scenes
+		const scenes = await db
+			.select({
+				id: scene.id,
+				title: scene.title,
+				content: scene.content,
+				projectId: scene.projectId,
+			})
+			.from(scene)
+			.where(inArray(scene.id, sceneIds));
+
+		// Security check
+		const unauthorized = scenes.some(
+			(s) => s.projectId !== firstScene.projectId,
+		);
+		if (unauthorized) {
+			return {
+				success: false,
+				error: "Security violation: Scenes from multiple projects",
+			};
+		}
+
+		// 3. Sort scenes based on input array order
+		const sceneMap = new Map(scenes.map((s) => [s.id, s]));
+		const sortedScenes = sceneIds.map((id) => sceneMap.get(id)).filter(Boolean);
+
+		// 4. Concatenate
+		const exportText = sortedScenes
+			.map((s) => `## ${s?.title}\n\n${s?.content || ""}`)
+			.join("\n\n***\n\n");
+
+		return { success: true, content: exportText };
+	} catch (error) {
+		console.error("Failed to export scenes", error);
+		return { success: false, error: "Failed to export scenes" };
+	}
+}
+
+export async function bulkDeleteScenes(sceneIds: string[]) {
+	const validation = bulkDeleteScenesSchema.safeParse({ sceneIds });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
+	try {
+		if (sceneIds.length === 0) return { success: true };
+
+		// 1. Check access (using first scene)
+		const firstScene = await sceneRepository.findById(sceneIds[0]);
+		if (!firstScene) {
+			return { success: false, error: "Scene not found" };
+		}
+		await ensureProjectAccess(firstScene.projectId, true);
+
+		// 2. Perform deletions sequentially
+		for (const id of sceneIds) {
+			const result = await deleteScene(id);
+			if (!result.success) {
+				return {
+					success: false,
+					error: `Failed to delete scene ${id}: ${result.error}`,
+				};
+			}
+		}
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to bulk delete scenes", error);
+		return { success: false, error: "Failed to bulk delete scenes" };
 	}
 }
