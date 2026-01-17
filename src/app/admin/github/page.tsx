@@ -4,6 +4,7 @@ import type { JSX } from "react";
 import { useState } from "react";
 import { RoadmapView } from "@/components/admin/builder/roadmap-view";
 import { TaskBoard } from "@/components/admin/builder/task-board";
+import { JulesDashboard } from "@/components/admin/jules/jules-dashboard";
 import { Button } from "@/components/atoms/button";
 import { cn } from "@/lib/utils";
 
@@ -12,7 +13,7 @@ import { cn } from "@/lib/utils";
  * @returns The GitHubAdminPage component.
  */
 export default function GitHubAdminPage(): JSX.Element {
-	const [view, setView] = useState<"board" | "roadmap">("board");
+	const [view, setView] = useState<"board" | "roadmap" | "jules">("board");
 
 	return (
 		<div className="space-y-6 h-full flex flex-col">
@@ -43,11 +44,25 @@ export default function GitHubAdminPage(): JSX.Element {
 					>
 						Roadmap
 					</Button>
+					<Button
+						variant={view === "jules" ? "secondary" : "ghost"}
+						size="sm"
+						onClick={() => setView("jules")}
+						className={cn(view === "jules" && "bg-background shadow-sm")}
+					>
+						Jules Console
+					</Button>
 				</div>
 			</div>
 
 			<div className="flex-1 min-h-0">
-				{view === "board" ? <TaskBoard /> : <RoadmapView />}
+				{view === "board" ? (
+					<TaskBoard />
+				) : view === "roadmap" ? (
+					<RoadmapView />
+				) : (
+					<JulesDashboard />
+				)}
 			</div>
 		</div>
 	);

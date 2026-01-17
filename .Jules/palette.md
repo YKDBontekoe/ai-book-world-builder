@@ -85,3 +85,18 @@ AI responses now read like editorial notes rather than opaque generations, impro
 ### Learnings
 - Structured, labeled alternatives are faster to evaluate than a single long rewrite.
 - Source-backed answers reduce the cognitive load when verifying AI guidance.
+
+## 2025-02-14 - Session metadata keeps branch context visible
+
+### Context
+The new Jules console needed to keep the selected repository and base branch visible throughout a session while also reflecting Octogit PR status updates in chat.
+
+### Solution
+Persisted repository/branch metadata alongside the session, reused it in the chat header and PR cards, and surfaced Octogit failures as recoverable system messages.
+
+### Outcome
+Admins can confirm the active repo/branch at a glance, while PR status and errors remain part of the chronological timeline.
+
+### Learnings
+- Persisting session metadata locally keeps client UI deterministic even when upstream APIs lag.
+- System messages with retry affordances reduce confusion when background polling fails.
