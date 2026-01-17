@@ -3,6 +3,7 @@
 import { FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
+import { Checkbox } from "@/components/atoms/checkbox";
 import {
 	ContextMenu,
 	ContextMenuContent,
@@ -24,6 +25,9 @@ interface SceneItemProps {
 	onRename?: (sceneId: string, newTitle: string) => void;
 	onDelete?: (sceneId: string) => void;
 	readOnly?: boolean;
+	isSelectionMode?: boolean;
+	isSelected?: boolean;
+	onToggleSelect?: (sceneId: string) => void;
 }
 
 export const SceneItem = memo(function SceneItem({
@@ -36,6 +40,9 @@ export const SceneItem = memo(function SceneItem({
 	onRename,
 	onDelete,
 	readOnly,
+	isSelectionMode,
+	isSelected,
+	onToggleSelect,
 }: SceneItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
 	const [editValue, setEditValue] = useState(scene.title);
@@ -104,9 +111,16 @@ export const SceneItem = memo(function SceneItem({
 	}
 
 	return (
-		<div className="relative">
+		<div className="relative flex items-center gap-2">
+			{isSelectionMode && (
+				<Checkbox
+					checked={isSelected}
+					onCheckedChange={() => onToggleSelect?.(scene.id)}
+					className="ml-2"
+				/>
+			)}
 			<ContextMenu>
-				<ContextMenuTrigger disabled={readOnly}>
+				<ContextMenuTrigger disabled={readOnly} className="w-full">
 					<Button
 						variant={isActive ? "secondary" : "ghost"}
 						size="sm"
@@ -114,8 +128,16 @@ export const SceneItem = memo(function SceneItem({
 							"justify-start h-8 w-full px-2 text-xs font-normal",
 							isActive && "bg-secondary/50 font-medium",
 						)}
-						onClick={() => onSelect(scene.id)}
-						onDoubleClick={() => !readOnly && setIsEditing(true)}
+						onClick={() => {
+							if (isSelectionMode) {
+								onToggleSelect?.(scene.id);
+							} else {
+								onSelect(scene.id);
+							}
+						}}
+						onDoubleClick={() =>
+							!readOnly && !isSelectionMode && setIsEditing(true)
+						}
 					>
 						<FileText className="mr-2 h-3 w-3 opacity-70" />
 						<span className="truncate">{scene.title}</span>

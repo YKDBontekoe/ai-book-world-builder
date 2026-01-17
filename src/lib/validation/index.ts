@@ -158,6 +158,14 @@ export const deleteSceneSchema = z.object({
 	sceneId: uuidSchema,
 });
 
+export const bulkExportScenesSchema = z.object({
+	sceneIds: z.array(uuidSchema).min(1, "At least one scene must be selected"),
+});
+
+export const bulkDeleteScenesSchema = z.object({
+	sceneIds: z.array(uuidSchema).min(1, "At least one scene must be selected"),
+});
+
 // ============================================================================
 // Chapter Schemas
 // ============================================================================
