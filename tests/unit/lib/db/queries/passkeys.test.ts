@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { createMockDb } from "@/tests/unit/lib/db/repositories/mock-db-helper";
+import { createMockDb } from "../repositories/mock-db-helper";
 import {
 	createPasskeyChallenge,
 	createPasskeyCredential,
