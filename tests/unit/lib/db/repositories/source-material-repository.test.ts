@@ -113,7 +113,8 @@ describe("SourceMaterialRepository", () => {
 		it("should return material with processing status", async () => {
 			const mockData = {
 				material: { id: "m1", filename: "test.pdf" },
-				processing: { id: "p1", status: "completed" },
+				// Fixed: "completed" -> "processed"
+				processing: { id: "p1", status: "processed" },
 			};
 			mocks.result = [mockData];
 
@@ -241,8 +242,10 @@ describe("SourceMaterialRepository", () => {
 
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
+			// Fixed: status "p" -> "processed" (but mocks.error is set, so it throws)
+			// TS requires valid status
 			await expect(
-				sourceMaterialRepository.update("m1", { status: "p" }),
+				sourceMaterialRepository.update("m1", { status: "processed" }),
 			).rejects.toThrow(DatabaseError);
 		});
 	});
@@ -319,11 +322,12 @@ describe("SourceMaterialRepository", () => {
 
 	describe("updateProcessing", () => {
 		it("should update processing record", async () => {
-			const updated = { id: "proc1", status: "completed" };
+			// Fixed: "completed" -> "processed"
+			const updated = { id: "proc1", status: "processed" };
 			mocks.result = [updated];
 
 			const result = await sourceMaterialRepository.updateProcessing("m1", {
-				status: "completed",
+				status: "processed",
 			});
 			expect(result).toEqual(updated);
 		});
@@ -331,7 +335,7 @@ describe("SourceMaterialRepository", () => {
 		it("should return null if not found/updated", async () => {
 			mocks.result = [];
 			const result = await sourceMaterialRepository.updateProcessing("m1", {
-				status: "completed",
+				status: "processed",
 			});
 			expect(result).toBeNull();
 		});

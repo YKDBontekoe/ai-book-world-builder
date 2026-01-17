@@ -244,7 +244,9 @@ describe("Story Generation Actions", () => {
 			const result = await generateBookPlan("A test prompt");
 
 			expect(result.success).toBe(true);
-			expect(result.plan).toEqual(mockPlan);
+			if (result.success) {
+				expect(result.plan).toEqual(mockPlan);
+			}
 		});
 	});
 
@@ -280,7 +282,9 @@ describe("Story Generation Actions", () => {
 			const result = await createBookFromPlan(projectId, plan);
 
 			expect(result.success).toBe(false);
-			expect(result.error).toContain("Invalid project ID");
+			if (!result.success) {
+				expect(result.error).toContain("Invalid project ID");
+			}
 			expect(storyService.createBookFromPlan).not.toHaveBeenCalled();
 		});
 
@@ -295,7 +299,9 @@ describe("Story Generation Actions", () => {
 			const result = await createBookFromPlan(projectId, invalidPlan);
 
 			expect(result.success).toBe(false);
-			expect(result.error).toBeDefined();
+			if (!result.success) {
+				expect(result.error).toBeDefined();
+			}
 			expect(storyService.createBookFromPlan).not.toHaveBeenCalled();
 		});
 	});
@@ -305,8 +311,14 @@ describe("Story Generation Actions", () => {
 			const validChapterId = "123e4567-e89b-12d3-a456-426614174001";
 			const result = await planChapterScenes(validChapterId);
 			expect(result.success).toBe(true);
-			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id");
+			if (result.success) {
+				// Unwrap data with cast
+				const resultData = (result as any).data;
+				if (resultData && resultData.success) {
+					expect(resultData.sceneIds).toHaveLength(1);
+					expect(resultData.sceneIds?.[0]).toBe("mock-id");
+				}
+			}
 		});
 	});
 

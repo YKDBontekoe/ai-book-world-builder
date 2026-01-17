@@ -71,8 +71,8 @@ export function UsageHistoryChart({ history }: { history: UsageHistory }) {
 											background: "rgba(0,0,0,0.8)",
 											color: "#fff",
 										}}
-										formatter={(value: number) => [
-											`$${value.toFixed(4)}`,
+										formatter={(value: number | undefined) => [
+											`$${(value || 0).toFixed(4)}`,
 											"Cost",
 										]}
 									/>
