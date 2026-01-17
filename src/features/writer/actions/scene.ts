@@ -14,6 +14,7 @@ import { sceneSequenceService } from "@/lib/services/scene-sequence-service";
 import {
 	createSceneInChapterSchema,
 	deleteSceneSchema,
+	deleteScenesSchema,
 	generateSceneSchema,
 	getSceneContentSchema,
 	reorderScenesSchema,
@@ -336,5 +337,41 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 	} catch (error) {
 		console.error("Failed to reorder scenes", error);
 		return { success: false, error: "Failed to reorder scenes" };
+	}
+}
+
+export async function deleteScenes(
+	sceneIds: string[],
+): Promise<{ success: boolean; error?: string }> {
+	const validation = deleteScenesSchema.safeParse({ sceneIds });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
+	try {
+		if (sceneIds.length === 0) return { success: true };
+
+		// Loop through and delete
+		// We fetch and verify access for each to ensure security across projects
+		const projectIdsToInvalidate = new Set<string>();
+
+		for (const id of sceneIds) {
+			const targetScene = await sceneRepository.findById(id);
+			if (!targetScene) continue;
+
+			await ensureProjectAccess(targetScene.projectId, true);
+			await sceneRepository.delete(id);
+			projectIdsToInvalidate.add(targetScene.projectId);
+		}
+
+		// Invalidate caches
+		for (const pid of projectIdsToInvalidate) {
+			await invalidateCache(`project-structure:${pid}`);
+		}
+
+		return { success: true };
+	} catch (error) {
+		console.error("Failed to delete scenes", error);
+		return { success: false, error: "Failed to delete scenes" };
 	}
 }

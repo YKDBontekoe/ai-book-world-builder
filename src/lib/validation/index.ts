@@ -158,6 +158,10 @@ export const deleteSceneSchema = z.object({
 	sceneId: uuidSchema,
 });
 
+export const deleteScenesSchema = z.object({
+	sceneIds: z.array(uuidSchema).min(1, { message: "Select at least one scene" }),
+});
+
 // ============================================================================
 // Chapter Schemas
 // ============================================================================

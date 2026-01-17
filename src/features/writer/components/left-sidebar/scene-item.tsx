@@ -1,6 +1,6 @@
 "use client";
 
-import { FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
+import { Check, FileText, Pencil, Sparkles, Trash2 } from "lucide-react";
 import { memo, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import {
@@ -17,8 +17,10 @@ import { cn } from "@/lib/utils";
 interface SceneItemProps {
 	scene: SceneWithPrev;
 	isActive: boolean;
+	isSelected?: boolean;
+	isSelectionMode?: boolean;
 	chapterId: string;
-	onSelect: (sceneId: string) => void;
+	onSelect: (sceneId: string, e?: React.MouseEvent) => void;
 	onGenerateNext: (chapterId: string, sceneId: string) => void;
 	isGenerating: boolean;
 	onRename?: (sceneId: string, newTitle: string) => void;
@@ -29,6 +31,8 @@ interface SceneItemProps {
 export const SceneItem = memo(function SceneItem({
 	scene,
 	isActive,
+	isSelected,
+	isSelectionMode,
 	chapterId,
 	onSelect,
 	onGenerateNext,
@@ -104,20 +108,34 @@ export const SceneItem = memo(function SceneItem({
 	}
 
 	return (
-		<div className="relative">
+		<div className="relative group">
 			<ContextMenu>
 				<ContextMenuTrigger disabled={readOnly}>
 					<Button
-						variant={isActive ? "secondary" : "ghost"}
+						variant={isActive || isSelected ? "secondary" : "ghost"}
 						size="sm"
 						className={cn(
-							"justify-start h-8 w-full px-2 text-xs font-normal",
+							"justify-start h-8 w-full px-2 text-xs font-normal transition-colors",
 							isActive && "bg-secondary/50 font-medium",
+							isSelected && "bg-primary/10 hover:bg-primary/20",
 						)}
-						onClick={() => onSelect(scene.id)}
+						onClick={(e) => onSelect(scene.id, e)}
 						onDoubleClick={() => !readOnly && setIsEditing(true)}
 					>
-						<FileText className="mr-2 h-3 w-3 opacity-70" />
+						{isSelectionMode || isSelected ? (
+							<div
+								className={cn(
+									"mr-2 h-3 w-3 border rounded-sm flex items-center justify-center transition-colors",
+									isSelected
+										? "bg-primary border-primary text-primary-foreground"
+										: "border-muted-foreground group-hover:border-primary",
+								)}
+							>
+								{isSelected && <Check className="h-2 w-2" />}
+							</div>
+						) : (
+							<FileText className="mr-2 h-3 w-3 opacity-70" />
+						)}
 						<span className="truncate">{scene.title}</span>
 					</Button>
 				</ContextMenuTrigger>
