@@ -9,6 +9,7 @@ export * from "@/lib/db/queries/entity";
 export * from "@/lib/db/queries/issues";
 export * from "@/lib/db/queries/message";
 export * from "@/lib/db/queries/outline";
+export * from "@/lib/db/queries/passkeys";
 export * from "@/lib/db/queries/project";
 export * from "@/lib/db/queries/scene";
 export * from "@/lib/db/queries/source-material";

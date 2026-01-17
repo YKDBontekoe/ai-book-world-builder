@@ -7,12 +7,14 @@ export function AuthForm({
 	action,
 	children,
 	defaultEmail = "",
+	onEmailChange,
 }: {
 	action: NonNullable<
 		string | ((formData: FormData) => void | Promise<void>) | undefined
 	>;
 	children: React.ReactNode;
 	defaultEmail?: string;
+	onEmailChange?: (value: string) => void;
 }) {
 	return (
 		<Form action={action} className="flex flex-col gap-4 px-4 sm:px-16">
@@ -31,6 +33,7 @@ export function AuthForm({
 					defaultValue={defaultEmail}
 					id="email"
 					name="email"
+					onChange={(event) => onEmailChange?.(event.target.value)}
 					placeholder="user@acme.com"
 					required
 					type="email"
