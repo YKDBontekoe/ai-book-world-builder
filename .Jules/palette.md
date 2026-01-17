@@ -70,3 +70,18 @@ Users can generate a passkey after signup and sign in without passwords, while p
 ### Learnings
 - Always store WebAuthn challenges server-side with short expirations to prevent replay.
 - Keep passkey buttons alongside existing auth methods to avoid blocking users on unsupported devices.
+
+## 2026-01-12 - Autopilot framing for book generation
+
+### Context
+The book generator needed to feel more autonomous while giving users clearer visual cues about the multi-step flow.
+
+### Solution
+Introduced an “Autopilot” card with toggle copy, progress stepper tiles, and curated prompt presets to communicate the automatic generation path while keeping manual review available.
+
+### Outcome
+Users now see a guided, visually rich flow that highlights automation and makes plan generation feel more intentional.
+
+### Learnings
+- Surface autonomous behaviors early with explicit UI framing to build user trust.
+- Pair automation toggles with visual progress cues to reinforce the agent’s workflow.
