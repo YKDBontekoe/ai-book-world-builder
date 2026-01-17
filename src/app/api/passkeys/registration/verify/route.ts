@@ -1,5 +1,5 @@
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
-import type { RegistrationResponseJSON } from "@simplewebauthn/types";
+import type { RegistrationResponseJSON } from "@simplewebauthn/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
@@ -46,13 +46,13 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "Verification failed" }, { status: 400 });
 	}
 
-	const { credentialID, credentialPublicKey, counter } =
+	const { credential: { id, publicKey, counter } } =
 		verification.registrationInfo;
 
 	await createPasskeyCredential({
 		userId: session.user.id,
-		credentialId: encodeBase64Url(credentialID),
-		publicKey: encodeBase64Url(credentialPublicKey),
+		credentialId: id,
+		publicKey: encodeBase64Url(publicKey),
 		counter,
 		transports: credential.response.transports ?? [],
 	});
