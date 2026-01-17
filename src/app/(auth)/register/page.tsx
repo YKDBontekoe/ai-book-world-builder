@@ -1,10 +1,16 @@
 "use client";
 
+import { startRegistration } from "@simplewebauthn/browser";
+import type {
+	PublicKeyCredentialCreationOptionsJSON,
+	RegistrationResponseJSON,
+} from "@simplewebauthn/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
 import { type RegisterActionState, register } from "@/app/(auth)/actions";
+import { Button } from "@/components/atoms/button";
 import { SubmitButton } from "@/components/atoms/submit-button";
 import { toast } from "@/components/atoms/toast";
 import { AuthForm } from "@/components/organisms/auth/auth-form";
@@ -15,6 +21,7 @@ export default function Page() {
 
 	const [email, setEmail] = useState("");
 	const [isSuccessful, setIsSuccessful] = useState(false);
+	const [isPasskeySubmitting, setIsPasskeySubmitting] = useState(false);
 
 	const [state, formAction] = useActionState<RegisterActionState, FormData>(
 		register,
@@ -23,7 +30,7 @@ export default function Page() {
 		},
 	);
 
-	const { update: updateSession } = useSession();
+	const { data: session, update: updateSession } = useSession();
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
 	useEffect(() => {
@@ -48,6 +55,74 @@ export default function Page() {
 	const handleSubmit = (formData: FormData) => {
 		setEmail(formData.get("email") as string);
 		formAction(formData);
+	};
+
+	const handleCreatePasskey = async () => {
+		if (!session?.user?.id) {
+			toast({
+				type: "error",
+				description: "Sign in before creating a passkey.",
+			});
+			return;
+		}
+
+		if (!window.PublicKeyCredential) {
+			toast({
+				type: "error",
+				description: "Passkeys are not supported on this device.",
+			});
+			return;
+		}
+
+		setIsPasskeySubmitting(true);
+
+		try {
+			const optionsResponse = await fetch(
+				"/api/passkeys/registration/options",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+				},
+			);
+
+			if (!optionsResponse.ok) {
+				const { error } = (await optionsResponse.json()) as { error?: string };
+				throw new Error(error ?? "Unable to start passkey setup.");
+			}
+
+			const options =
+				(await optionsResponse.json()) as PublicKeyCredentialCreationOptionsJSON;
+
+			const credential = (await startRegistration(
+				options,
+			)) as RegistrationResponseJSON;
+
+			const verifyResponse = await fetch(
+				"/api/passkeys/registration/verify",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ credential }),
+				},
+			);
+
+			if (!verifyResponse.ok) {
+				const { error } = (await verifyResponse.json()) as { error?: string };
+				throw new Error(error ?? "Passkey verification failed.");
+			}
+
+			toast({ type: "success", description: "Passkey saved successfully." });
+		} catch (error) {
+			toast({
+				type: "error",
+				description:
+					error instanceof Error
+						? error.message
+						: "Unable to create passkey.",
+			});
+		} finally {
+			setIsPasskeySubmitting(false);
+		}
 	};
 
 	return (
@@ -76,8 +151,25 @@ export default function Page() {
 						</div>
 					</div>
 
-					<AuthForm action={handleSubmit} defaultEmail={email}>
+					<AuthForm
+						action={handleSubmit}
+						defaultEmail={email}
+						onEmailChange={setEmail}
+					>
 						<SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
+						{session?.user?.id ? (
+							<Button
+								className="w-full"
+								disabled={isPasskeySubmitting}
+								onClick={handleCreatePasskey}
+								type="button"
+								variant="glass"
+							>
+								{isPasskeySubmitting
+									? "Creating passkey..."
+									: "Create a passkey"}
+							</Button>
+						) : null}
 					</AuthForm>
 				</div>
 
