@@ -101,14 +101,16 @@ The **Power Dock** is your context-aware toolbar located at the bottom of the ed
 -   **Expand**: Select a short paragraph or sentence and have the AI flesh it out with more detail.
 -   **Critique**: Get feedback on the current scene's pacing, dialogue, and tone.
 -   **Check**: Analyze the chapter for plot holes, character inconsistencies, and setting errors.
+-   **Dialogue Coach**: Analyze how distinct each character’s voice sounds and get targeted rewrite suggestions.
 -   **Lore**: Generate new lore entities (characters, locations) based on a prompt.
--   **Search**: Search your project's entities and content for specific details.
+-   **Ask Manuscript**: Ask questions about plot threads, character arcs, and unresolved clues with cited sources.
 -   **Export**: Download the current scene as a Markdown file.
 
 ### 3. Write & Generate
 Once you have a structure, you can start writing.
 
 -   **Generate Scenes (AI)**: Click the **Sparkles** icon next to a Chapter in the sidebar. The AI will draft content for all pending scenes in that chapter.
+-   **Inline Co-Author**: Highlight a passage and choose **Co-Author** to generate three alternative rewrites you can apply with one click.
 -   **Project-Aware Chat**: Open the **Floating Assistant** to ask the AI questions about your world, brainstorm ideas, or draft new scenes with specific instructions.
 
 ### 4. Analyze & Refine

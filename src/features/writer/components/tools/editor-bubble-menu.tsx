@@ -16,7 +16,14 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { rewriteSelection } from "@/features/writer/actions/ai";
+import {
+	type CoAuthorAlternative,
+	CoAuthorAlternativesPanel,
+} from "@/components/organisms/editor/co-author-alternatives-panel";
+import {
+	coAuthorAlternatives,
+	rewriteSelection,
+} from "@/features/writer/actions/ai";
 import { cn } from "@/lib/utils";
 
 interface EditorBubbleMenuProps {
@@ -61,6 +68,11 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 	const [loading, setLoading] = useState(false);
 	const [rewrittenText, setRewrittenText] = useState<string | null>(null);
 	const [showMore, setShowMore] = useState(false);
+	const [alternatives, setAlternatives] = useState<
+		CoAuthorAlternative[] | null
+	>(null);
+	const [isGeneratingAlternatives, setIsGeneratingAlternatives] =
+		useState(false);
 
 	useEffect(() => {
 		if (!editorView) return;
@@ -111,10 +123,34 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 		setLoading(false);
 		if (result.success && result.data.text) {
 			setRewrittenText(result.data.text);
+			setAlternatives(null);
+		} else {
+			toast.error(
+				result.success ? "Rewrite failed" : result.error || "An error occurred",
+			);
+		}
+	};
+
+	const handleCoAuthor = async () => {
+		if (!editorView) return;
+		setIsGeneratingAlternatives(true);
+		const { from, to } = editorView.state.selection;
+		const text = editorView.state.doc.textBetween(from, to);
+
+		const result = await coAuthorAlternatives({
+			selection: text,
+			guidance:
+				"Provide three distinct alternatives with varied pacing, sensory detail, and voice.",
+		});
+
+		setIsGeneratingAlternatives(false);
+		if (result.success && result.data.alternatives) {
+			setAlternatives(result.data.alternatives);
+			setRewrittenText(null);
 		} else {
 			toast.error(
 				result.success
-					? "Rewrite failed"
+					? "Could not generate alternatives"
 					: result.error || "An error occurred",
 			);
 		}
@@ -135,6 +171,23 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 		setIsOpen(false);
 	};
 
+	const applyAlternative = (alternativeId: string) => {
+		if (!editorView || !alternatives) return;
+		const alternative = alternatives.find((item) => item.id === alternativeId);
+		if (!alternative) return;
+		const { from, to } = editorView.state.selection;
+
+		editorView.dispatch(
+			editorView.state.tr.replaceWith(
+				from,
+				to,
+				editorView.state.schema.text(alternative.text),
+			),
+		);
+		setAlternatives(null);
+		setIsOpen(false);
+	};
+
 	if (!position || !editorView) return null;
 
 	return (
@@ -150,7 +203,15 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 				variant="liquid"
 				className="p-2 shadow-2xl border-primary/20 backdrop-blur-xl"
 			>
-				{rewrittenText ? (
+				{alternatives ? (
+					<CoAuthorAlternativesPanel
+						alternatives={alternatives}
+						isLoading={isGeneratingAlternatives}
+						onApply={applyAlternative}
+						onDismiss={() => setAlternatives(null)}
+						onRefresh={handleCoAuthor}
+					/>
+				) : rewrittenText ? (
 					<div className="flex items-center gap-2 max-w-md">
 						<div className="flex-1 p-2 rounded-lg bg-background/50 border border-primary/10">
 							<p className="text-xs text-muted-foreground mb-1">Preview:</p>
@@ -205,6 +266,16 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 							<Button
 								variant="ghost"
 								size="sm"
+								className="h-8 px-3 text-xs gap-1.5 text-primary"
+								onClick={handleCoAuthor}
+								disabled={isGeneratingAlternatives || loading}
+							>
+								<Sparkles className="h-3.5 w-3.5" />
+								Co-Author
+							</Button>
+							<Button
+								variant="ghost"
+								size="sm"
 								className="h-8 px-2 text-xs"
 								onClick={() => setShowMore(!showMore)}
 							>
@@ -215,6 +286,12 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 							<div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
 								<div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
 								<span>Rewriting...</span>
+							</div>
+						)}
+						{isGeneratingAlternatives && !loading && (
+							<div className="flex items-center gap-2 text-xs text-muted-foreground px-2">
+								<div className="h-3 w-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+								<span>Co-authoring alternatives...</span>
 							</div>
 						)}
 					</div>
