@@ -113,9 +113,7 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 			setRewrittenText(result.data.text);
 		} else {
 			toast.error(
-				result.success
-					? "Rewrite failed"
-					: result.error || "An error occurred",
+				result.success ? "Rewrite failed" : result.error || "An error occurred",
 			);
 		}
 	};

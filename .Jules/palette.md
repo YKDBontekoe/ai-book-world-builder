@@ -56,3 +56,17 @@ Mobile writing stays focused and visually consistent with the macOS glass aesthe
 
 ### Learnings
 - Mobile panels should be overlays so the editor remains the dominant surface.
+
+## 2026-01-17 - Revalidate deleted project paths
+
+### Context
+Deleting projects only revalidated the list route, leaving per-project pages cached and potentially visible after deletion.
+
+### Solution
+Return deleted project IDs from the service and revalidate each project path alongside the list.
+
+### Outcome
+Deleted projects no longer linger in per-project caches.
+
+### Learnings
+- Cache invalidation should include both list and detail routes when deleting records.

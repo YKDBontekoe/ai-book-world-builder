@@ -242,7 +242,7 @@ describe("SourceMaterialRepository", () => {
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
 			await expect(
-				sourceMaterialRepository.update("m1", { status: "p" }),
+				sourceMaterialRepository.update("m1", { status: "pending" }),
 			).rejects.toThrow(DatabaseError);
 		});
 	});
@@ -319,11 +319,11 @@ describe("SourceMaterialRepository", () => {
 
 	describe("updateProcessing", () => {
 		it("should update processing record", async () => {
-			const updated = { id: "proc1", status: "completed" };
+			const updated = { id: "proc1", status: "processed" };
 			mocks.result = [updated];
 
 			const result = await sourceMaterialRepository.updateProcessing("m1", {
-				status: "completed",
+				status: "processed",
 			});
 			expect(result).toEqual(updated);
 		});
@@ -331,7 +331,7 @@ describe("SourceMaterialRepository", () => {
 		it("should return null if not found/updated", async () => {
 			mocks.result = [];
 			const result = await sourceMaterialRepository.updateProcessing("m1", {
-				status: "completed",
+				status: "processed",
 			});
 			expect(result).toBeNull();
 		});

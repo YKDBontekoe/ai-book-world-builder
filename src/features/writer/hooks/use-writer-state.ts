@@ -51,7 +51,13 @@ export function useWriterState({
 	);
 
 	// 4. Content Management (Editor State)
-	const { sceneContent, isSaving, lastSaved, handleContentChange } =
+	const {
+		sceneContent,
+		isSaving,
+		lastSaved,
+		handleContentChange,
+		setContentDirectly,
+	} =
 		useSceneContent({
 			projectId,
 			activeSceneId: activeSceneId || undefined,
@@ -105,6 +111,7 @@ export function useWriterState({
 			lastSaved,
 			isSnapshotting,
 			handleContentChange,
+			setContentDirectly,
 			handleSnapshot,
 			fetchStructure,
 		}),
@@ -120,6 +127,7 @@ export function useWriterState({
 			lastSaved,
 			isSnapshotting,
 			handleContentChange,
+			setContentDirectly,
 			handleSnapshot,
 			fetchStructure,
 		],

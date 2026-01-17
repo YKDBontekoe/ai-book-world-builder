@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import type React from "react";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
 import { ControlButton } from "./control-button";
 
@@ -10,7 +11,7 @@ interface PowerDockTrayProps {
 export function PowerDockTray({
 	mode,
 	onSelectTool,
-}: PowerDockTrayProps): JSX.Element {
+}: PowerDockTrayProps): React.ReactElement {
 	return (
 		<AnimatePresence mode="popLayout">
 			{mode === "tools" && (

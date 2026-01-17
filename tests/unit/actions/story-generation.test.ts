@@ -6,8 +6,6 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { generationService } from "@/lib/ai/writer-service";
-import { db } from "@/lib/db";
 import { storyService } from "@/lib/services/story-service";
 
 // Mocks
@@ -173,7 +171,7 @@ vi.mock("@/lib/actions-utils", () => ({
 // Mock Story Service
 vi.mock("@/lib/services/story-service", () => ({
 	storyService: {
-		generateBookPlan: vi.fn((prompt) =>
+		generateBookPlan: vi.fn((_prompt) =>
 			Promise.resolve({
 				plan: {
 					title: "Mock Title",
@@ -280,7 +278,9 @@ describe("Story Generation Actions", () => {
 			const result = await createBookFromPlan(projectId, plan);
 
 			expect(result.success).toBe(false);
-			expect(result.error).toContain("Invalid project ID");
+			if (!result.success) {
+				expect(result.error).toContain("Invalid project ID");
+			}
 			expect(storyService.createBookFromPlan).not.toHaveBeenCalled();
 		});
 
@@ -295,7 +295,9 @@ describe("Story Generation Actions", () => {
 			const result = await createBookFromPlan(projectId, invalidPlan);
 
 			expect(result.success).toBe(false);
-			expect(result.error).toBeDefined();
+			if (!result.success) {
+				expect(result.error).toBeDefined();
+			}
 			expect(storyService.createBookFromPlan).not.toHaveBeenCalled();
 		});
 	});
@@ -305,8 +307,11 @@ describe("Story Generation Actions", () => {
 			const validChapterId = "123e4567-e89b-12d3-a456-426614174001";
 			const result = await planChapterScenes(validChapterId);
 			expect(result.success).toBe(true);
-			expect(result.sceneIds).toHaveLength(1);
-			expect(result.sceneIds?.[0]).toBe("mock-id");
+			if (result.success && "data" in result) {
+				expect(result.data.success).toBe(true);
+				expect(result.data.sceneIds).toHaveLength(1);
+				expect(result.data.sceneIds?.[0]).toBe("mock-id");
+			}
 		});
 	});
 

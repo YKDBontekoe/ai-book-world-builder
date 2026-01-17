@@ -63,7 +63,7 @@ describe("ProjectService", () => {
 	describe("deleteProjects", () => {
 		it("should return success immediately if projectIds array is empty", async () => {
 			const result = await projectService.deleteProjects([], userId);
-			expect(result).toEqual({ success: true });
+			expect(result).toEqual({ success: true, deletedProjectIds: [] });
 			expect(db.select).not.toHaveBeenCalled();
 		});
 
@@ -105,7 +105,10 @@ describe("ProjectService", () => {
 
 			const result = await projectService.deleteProjects(projectIds, userId);
 
-			expect(result).toEqual({ success: true });
+			expect(result).toEqual({
+				success: true,
+				deletedProjectIds: ["proj-1"],
+			});
 			expect(db.transaction).toHaveBeenCalled();
 		});
 
@@ -175,7 +178,7 @@ describe("ProjectService", () => {
 			// Mock transaction behavior
 			(db.transaction as any).mockImplementation(async (cb: any) => {
 				const mockTx = {
-					insert: vi.fn().mockImplementation((table) => {
+					insert: vi.fn().mockImplementation((_table) => {
 						// Check if inserting project to return the new project with ID
 						return createMockQB([{ id: newProjectId }]);
 					}),

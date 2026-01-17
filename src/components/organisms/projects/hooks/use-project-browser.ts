@@ -186,7 +186,7 @@ export function useProjectBrowser(projects: Project[]) {
 					pendingDeletionRef.current = null;
 					undoTimeoutRef.current = null;
 
-					if (result?.error) {
+					if (result && "error" in result) {
 						toast.error("Failed to delete projects");
 						undoDelete(idsToDelete);
 					}

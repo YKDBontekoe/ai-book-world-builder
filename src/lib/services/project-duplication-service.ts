@@ -18,15 +18,9 @@ import {
 
 // Type definitions for table rows
 type EntityRow = InferSelectModel<typeof entity>;
-type AttributeRow = InferSelectModel<typeof entityAttribute>;
-type RelationshipRow = InferSelectModel<typeof relationship>;
 type OutlineRow = InferSelectModel<typeof outline>;
-type VolumeRow = InferSelectModel<typeof volume>;
-type ChapterRow = InferSelectModel<typeof chapter>;
-type ChapterDraftRow = InferSelectModel<typeof chapterDraft>;
-type SceneRow = InferSelectModel<typeof scene>;
-type SceneCardRow = InferSelectModel<typeof sceneCard>;
 type ProjectRow = InferSelectModel<typeof project>;
+type SceneRow = InferSelectModel<typeof scene>;
 
 // Helper for chunked inserts
 async function chunkedInsert<T extends Record<string, unknown>, TTable>(
@@ -490,14 +484,11 @@ export class ProjectDuplicationService {
 		let hasMore = true;
 
 		// 1. Light fetch for ID Mapping
-		const allSceneMeta = await tx
-			.select({
-				id: scene.id,
-				prevSceneId: scene.prevSceneId,
-				chapterId: scene.chapterId,
-			})
+		type SceneMeta = Pick<SceneRow, "id" | "prevSceneId" | "chapterId">;
+		const allSceneMeta = (await tx
+			.select()
 			.from(scene)
-			.where(eq(scene.projectId, originalProjectId));
+			.where(eq(scene.projectId, originalProjectId))) as SceneMeta[];
 
 		for (const meta of allSceneMeta) {
 			sceneIdMap.set(meta.id, crypto.randomUUID());
@@ -505,12 +496,12 @@ export class ProjectDuplicationService {
 
 		// 2. Heavy fetch and insert in batches
 		while (hasMore) {
-			const batch = await tx
+			const batch = (await tx
 				.select()
 				.from(scene)
 				.where(eq(scene.projectId, originalProjectId))
 				.limit(limit)
-				.offset(offset);
+				.offset(offset)) as SceneRow[];
 
 			if (batch.length === 0) {
 				hasMore = false;
@@ -520,8 +511,8 @@ export class ProjectDuplicationService {
 			const newScenesToInsert = [];
 			for (const old of batch) {
 				const newChapterId = chapterIdMap.get(old.chapterId);
-				if (newChapterId) {
-					const newId = sceneIdMap.get(old.id);
+				const newId = sceneIdMap.get(old.id);
+				if (newChapterId && newId) {
 					// Resolve prevSceneId using the pre-filled map
 					const newPrevId = old.prevSceneId
 						? (sceneIdMap.get(old.prevSceneId) ?? null)

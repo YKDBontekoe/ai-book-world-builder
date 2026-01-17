@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { DBMessage, Document } from "@/lib/db/schema";
-import type { ChatMessage, UIMessage } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 import {
 	cn,
 	convertToUIMessages,
@@ -131,8 +131,16 @@ describe("lib/utils", () => {
 				parts: [
 					{ type: "text", text: "Check this:" },
 					{
-						type: "tool-invocation",
-						toolInvocation: { toolCallId: "1", toolName: "test", args: {} },
+						type: "tool-createDocument",
+						toolCallId: "1",
+						state: "output-available",
+						input: { title: "Doc", kind: "text" },
+						output: {
+							id: "doc-1",
+							title: "Doc",
+							kind: "text",
+							content: "Content",
+						},
 					},
 				],
 				createdAt: new Date(),
@@ -146,8 +154,16 @@ describe("lib/utils", () => {
 				role: "assistant",
 				parts: [
 					{
-						type: "tool-invocation",
-						toolInvocation: { toolCallId: "1", toolName: "test", args: {} },
+						type: "tool-createDocument",
+						toolCallId: "1",
+						state: "output-available",
+						input: { title: "Doc", kind: "text" },
+						output: {
+							id: "doc-1",
+							title: "Doc",
+							kind: "text",
+							content: "Content",
+						},
 					},
 				],
 				createdAt: new Date(),
