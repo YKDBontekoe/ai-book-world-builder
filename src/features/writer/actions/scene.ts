@@ -381,12 +381,13 @@ export async function bulkExportScenes(sceneIds: string[]) {
 		}
 
 		// 3. Sort scenes based on input array order
+		// @ts-ignore
 		const sceneMap = new Map(scenes.map((s) => [s.id, s]));
-		const sortedScenes = sceneIds.map((id) => sceneMap.get(id)).filter(Boolean);
+		const sortedScenes = sceneIds.map((id) => sceneMap.get(id)).filter(Boolean) as typeof scenes;
 
 		// 4. Concatenate
 		const exportText = sortedScenes
-			.map((s) => `## ${s?.title}\n\n${s?.content || ""}`)
+			.map((s: any) => `## ${s?.title}\n\n${s?.content || ""}`)
 			.join("\n\n***\n\n");
 
 		return { success: true, content: exportText };

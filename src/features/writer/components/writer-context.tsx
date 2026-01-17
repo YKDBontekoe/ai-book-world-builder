@@ -15,12 +15,13 @@ type WriterContextType = {
 	activeSceneId: string | null;
 	setActiveSceneId: (id: string | null) => void;
 	activeScene:
-		| (ChapterWithScenes["scenes"][number] & { content?: string })
+		| (ChapterWithScenes["scenes"][number] & { content?: string | null })
 		| undefined; // Using inferred type from useWriterState would be better, but we are decoupling
 	fetchStructure: () => Promise<void>;
 	project: Project;
 	isReadOnly: boolean;
 	activeChapterId?: string;
+	setContentDirectly?: (content: string) => void;
 };
 
 export const WriterContext = createContext<WriterContextType | null>(null);
@@ -59,7 +60,6 @@ export function WriterProvider({
 		lastSaved,
 		isSnapshotting,
 		handleContentChange,
-		setContentDirectly,
 		handleSnapshot,
 		fetchStructure,
 	} = writerState;
@@ -111,7 +111,7 @@ export function WriterProvider({
 			lastSaved,
 			isSnapshotting,
 			handleContentChange,
-			setContentDirectly,
+			setContentDirectly: handleContentChange, // Fallback to handleContentChange
 			handleSnapshot,
 		}),
 		[
@@ -120,7 +120,6 @@ export function WriterProvider({
 			lastSaved,
 			isSnapshotting,
 			handleContentChange,
-			setContentDirectly,
 			handleSnapshot,
 		],
 	);

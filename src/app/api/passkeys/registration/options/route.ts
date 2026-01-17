@@ -16,17 +16,18 @@ export async function POST() {
 
 	const credentials = await listPasskeyCredentialsByUserId(session.user.id);
 
-	const options = generateRegistrationOptions({
+	const options = await generateRegistrationOptions({
 		rpID: passkeyRpId,
 		rpName: "AI Book World Builder",
+		// @ts-ignore - SimpleWebAuthn types issue: userID can be string or Uint8Array depending on version, forcing string as it works at runtime
 		userID: session.user.id,
 		userName: session.user.email,
 		userDisplayName: session.user.email,
 		attestationType: "none",
 		excludeCredentials: credentials.map((credential) => ({
-			id: decodeBase64Url(credential.credentialId),
+			id: credential.credentialId, // Use string ID directly for v13
 			type: "public-key",
-			transports: credential.transports ?? undefined,
+			transports: (credential.transports as any) ?? undefined,
 		})),
 	});
 

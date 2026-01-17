@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DBMessage, Document } from "@/lib/db/schema";
-import type { ChatMessage, UIMessage } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
+import type { UIMessage } from "ai";
 import {
 	cn,
 	convertToUIMessages,
@@ -105,7 +106,7 @@ describe("lib/utils", () => {
 					{
 						type: "tool-invocation",
 						toolInvocation: { toolCallId: "1", toolName: "test", args: {} },
-					},
+					} as any, // Cast to any to satisfy UIMessage type constraints during test
 				],
 				createdAt: new Date(),
 			};
@@ -120,7 +121,7 @@ describe("lib/utils", () => {
 					{
 						type: "tool-invocation",
 						toolInvocation: { toolCallId: "1", toolName: "test", args: {} },
-					},
+					} as any,
 				],
 				createdAt: new Date(),
 			};

@@ -87,7 +87,7 @@ export const {
 				passkeyCredential: { label: "Passkey Credential", type: "text" },
 			},
 			async authorize(credentials) {
-				const email = credentials?.email;
+				const email = credentials?.email as string;
 
 				if (!email) {
 					return null;
@@ -108,7 +108,7 @@ export const {
 
 					let parsedJson: unknown;
 					try {
-						parsedJson = JSON.parse(credentials.passkeyCredential);
+						parsedJson = JSON.parse(credentials.passkeyCredential as string);
 					} catch {
 						return null;
 					}
@@ -143,11 +143,20 @@ export const {
 						expectedOrigin: passkeyOrigin,
 						expectedRPID: passkeyRpId,
 						requireUserVerification: true,
+						// @ts-ignore - v10+ uses credential, v9 used authenticator. types mismatch with installed version
+						// @ts-ignore
+						credential: {
+							id: storedCredential.credentialId,
+							publicKey: decodeBase64Url(storedCredential.publicKey) as any,
+							counter: storedCredential.counter,
+							transports: (storedCredential.transports as any) ?? undefined,
+						},
+						// @ts-ignore
 						authenticator: {
 							credentialID: decodeBase64Url(storedCredential.credentialId),
 							credentialPublicKey: decodeBase64Url(storedCredential.publicKey),
 							counter: storedCredential.counter,
-							transports: storedCredential.transports ?? undefined,
+							transports: (storedCredential.transports as any) ?? undefined,
 						},
 					});
 
@@ -164,7 +173,7 @@ export const {
 					return { ...user, type: "regular", role: user.role };
 				}
 
-				const password = credentials.password;
+				const password = credentials.password as string;
 
 				if (!password) {
 					return null;

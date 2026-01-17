@@ -14,7 +14,7 @@ export function PowerDockResult({
 	onClear,
 	onInsert,
 	onCopy,
-}: PowerDockResultProps): JSX.Element {
+}: PowerDockResultProps): React.ReactNode {
 	return (
 		<AnimatePresence>
 			{result && (

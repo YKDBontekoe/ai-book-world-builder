@@ -37,7 +37,7 @@ export function PowerDockInput({
 	onReset,
 	onClearHistory,
 	getHistory,
-}: PowerDockInputProps): JSX.Element {
+}: PowerDockInputProps): React.ReactNode {
 	const getPlaceholder = (tool: ToolType) => {
 		switch (tool) {
 			case "write":

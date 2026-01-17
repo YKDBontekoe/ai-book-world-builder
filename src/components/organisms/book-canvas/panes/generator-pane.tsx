@@ -23,6 +23,8 @@ import {
 import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { BookPlan } from "@/lib/services/story-service";
 
+import type { JSX } from "react";
+
 export function GeneratorPane(): JSX.Element {
 	const { projectId } = useBookCanvasLayout();
 	const queryClient = useQueryClient();
@@ -168,7 +170,7 @@ export function GeneratorPane(): JSX.Element {
 									{generatedPlan.logline}
 								</p>
 							</div>
-							<p className="text-sm">{generatedPlan.synopsis}</p>
+							<p className="text-sm">{(generatedPlan as any).synopsis || generatedPlan.summary}</p>
 
 							<div className="space-y-2">
 								<h5 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">

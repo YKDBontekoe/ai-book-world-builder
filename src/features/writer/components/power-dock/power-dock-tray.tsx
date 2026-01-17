@@ -10,7 +10,7 @@ interface PowerDockTrayProps {
 export function PowerDockTray({
 	mode,
 	onSelectTool,
-}: PowerDockTrayProps): JSX.Element {
+}: PowerDockTrayProps): React.ReactNode {
 	return (
 		<AnimatePresence mode="popLayout">
 			{mode === "tools" && (

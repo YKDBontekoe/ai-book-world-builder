@@ -14,12 +14,14 @@ import {
 } from "@/components/atoms/popover";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { useWriterContext } from "@/features/writer/components/writer-context";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 import { cn } from "@/lib/utils";
 
 export function SprintWidget() {
-	const { project, sceneContent } = useWriterContext();
+	const { project } = useWriterContext();
+	const { sceneContent } = useWriterContent();
 	const { data: entities } = useProjectEntities(project.id);
 	const narrativeMetrics = useNarrativeIntelligence({
 		content: sceneContent || "",

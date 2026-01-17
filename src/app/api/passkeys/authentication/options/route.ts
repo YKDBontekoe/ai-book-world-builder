@@ -39,13 +39,13 @@ export async function POST(request: Request) {
 		);
 	}
 
-	const options = generateAuthenticationOptions({
+	const options = await generateAuthenticationOptions({
 		rpID: passkeyRpId,
 		userVerification: "preferred",
 		allowCredentials: credentials.map((credential) => ({
-			id: decodeBase64Url(credential.credentialId),
+			id: credential.credentialId,
 			type: "public-key",
-			transports: credential.transports ?? undefined,
+			transports: (credential.transports as any) ?? undefined,
 		})),
 	});
 

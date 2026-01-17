@@ -50,7 +50,7 @@ export const manuscriptService = {
 			scenes.map<ManuscriptSceneMatch>((scene) => ({
 				id: scene.id,
 				title: scene.title,
-				content: scene.content,
+				content: scene.content ?? "",
 				updatedAt: scene.updatedAt,
 			})),
 			question,
@@ -69,7 +69,7 @@ export const manuscriptService = {
 			.filter(
 				(entity) =>
 					entity.name.toLowerCase().includes(question.toLowerCase()) ||
-					entity.summary.toLowerCase().includes(question.toLowerCase()),
+					(entity.summary || "").toLowerCase().includes(question.toLowerCase()),
 			)
 			.slice(0, MAX_ENTITIES);
 
@@ -87,7 +87,7 @@ export const manuscriptService = {
 			.map(
 				(entity) =>
 					`[Entity:${entity.id}] ${entity.name} (${entity.kind})\n${buildExcerpt(
-						entity.summary,
+						entity.summary || "",
 						MAX_ENTITY_EXCERPT,
 					)}`,
 			)

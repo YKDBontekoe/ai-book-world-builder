@@ -13,15 +13,15 @@ const mockProject: Project = {
 	description: "Test Description",
 	visibility: "private",
 	createdAt: new Date(),
-	updatedAt: new Date(),
-	archivedAt: null,
-	deletedAt: null,
-	wordCount: 0,
-	coverImage: null,
-	defaultChapterId: null,
+	// updatedAt: new Date(), // Removed as per schema
+	// archivedAt: null,
+	// deletedAt: null,
+	// wordCount: 0,
+	// coverImage: null,
+	// defaultChapterId: null,
 	lastViewedSceneId: null,
 	folders: [],
-	customMetadata: {},
+	// customMetadata: {},
 	forkedFromId: null,
 };
 

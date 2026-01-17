@@ -121,7 +121,11 @@ export class OctogitClient {
 		if ("pullRequest" in data) {
 			return data.pullRequest ?? null;
 		}
-		return data;
+		// Check if it's an OctogitPullRequest by checking for a required property
+		if ("id" in data && "number" in data) {
+			return data as OctogitPullRequest;
+		}
+		return null;
 	}
 
 	async getPullRequestStatus(params: {

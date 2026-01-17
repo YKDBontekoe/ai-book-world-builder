@@ -106,6 +106,7 @@ describe("GeneratorPane", () => {
     const mockPlan = {
       title: "Test Book",
       logline: "A test logline",
+      summary: "Test summary",
       synopsis: "Test synopsis",
       chapters: [
         { title: "Chapter 1", summary: "Summary 1" },
@@ -151,6 +152,7 @@ describe("GeneratorPane", () => {
     const mockPlan = {
       title: "Test Book",
       logline: "A test logline",
+      summary: "Test summary",
       synopsis: "Test synopsis",
       chapters: [
         { title: "Chapter 1", summary: "Summary 1" },
@@ -164,6 +166,7 @@ describe("GeneratorPane", () => {
 
     vi.mocked(StoryGenerationActions.createBookFromPlan).mockResolvedValue({
       success: true,
+      error: undefined as unknown as string, // Force type match for discriminated union
     });
 
     render(
