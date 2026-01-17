@@ -1,5 +1,6 @@
 import "server-only";
 import { inArray } from "drizzle-orm";
+import { type DbTransaction } from "@/lib/db";
 import {
 	bookExport,
 	chapter,
@@ -15,7 +16,7 @@ export class StructureRepository {
 	/**
 	 * Deletes all structure-related data (scenes, chapters, volumes, outlines, exports) for a set of projects.
 	 */
-	async deleteByProjectIds(tx: any, projectIds: string[]) {
+	async deleteByProjectIds(tx: DbTransaction, projectIds: string[]) {
 		try {
 			// 1. Book Exports
 			await tx

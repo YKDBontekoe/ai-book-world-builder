@@ -1,7 +1,7 @@
 import "server-only";
 import { inArray } from "drizzle-orm";
 
-import { db } from "@/lib/db";
+import { db, type DbTransaction } from "@/lib/db";
 import { project } from "@/lib/db/schema";
 import { entityCleanupRepository } from "@/lib/db/repositories/entity-cleanup-repository";
 import { generationRepository } from "@/lib/db/repositories/generation-repository";
@@ -33,7 +33,7 @@ export class ProjectService {
 				return { error: "No valid projects to delete" };
 			}
 
-			await db.transaction(async (tx: any) => {
+			await db.transaction(async (tx: DbTransaction) => {
 				// 1. Generation related tables (Leaf first)
 				await generationRepository.deleteByProjectIds(tx, ownedProjectIds);
 

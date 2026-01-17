@@ -1,6 +1,6 @@
 import "server-only";
 import { inArray } from "drizzle-orm";
-import { db } from "@/lib/db";
+import { type DbTransaction } from "@/lib/db";
 import {
 	bookGeneration,
 	bookGenerationAsset,
@@ -16,7 +16,7 @@ export class GenerationRepository {
 	 * Deletes all generation-related data for a set of projects.
 	 * Returns true if successful, throws error otherwise.
 	 */
-	async deleteByProjectIds(tx: any, projectIds: string[]) {
+	async deleteByProjectIds(tx: DbTransaction, projectIds: string[]) {
 		try {
 			// Find all generations linked to these projects
 			const generations = await tx
@@ -24,7 +24,7 @@ export class GenerationRepository {
 				.from(bookGeneration)
 				.where(inArray(bookGeneration.projectId, projectIds));
 
-			const generationIds = (generations as any[]).map((g: any) => g.id);
+			const generationIds = generations.map((g) => g.id);
 
 			if (generationIds.length > 0) {
 				await tx

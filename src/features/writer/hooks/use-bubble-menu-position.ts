@@ -6,7 +6,18 @@ interface Position {
 	left: number;
 }
 
-export function useBubbleMenuPosition(editorView: EditorView | null) {
+const BUBBLE_MENU_OFFSET_TOP = 40;
+
+interface UseBubbleMenuPositionReturn {
+	position: Position | null;
+	isOpen: boolean;
+	setPosition: React.Dispatch<React.SetStateAction<Position | null>>;
+	setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+export function useBubbleMenuPosition(
+	editorView: EditorView | null,
+): UseBubbleMenuPositionReturn {
 	const [position, setPosition] = useState<Position | null>(null);
 	const [isOpen, setIsOpen] = useState(false);
 
@@ -15,7 +26,7 @@ export function useBubbleMenuPosition(editorView: EditorView | null) {
 
 		const updateMenu = () => {
 			const { state } = editorView;
-			const { from, to, empty } = state.selection;
+			const { from, empty } = state.selection;
 
 			if (empty) {
 				setPosition(null);
@@ -24,21 +35,37 @@ export function useBubbleMenuPosition(editorView: EditorView | null) {
 			}
 
 			const start = editorView.coordsAtPos(from);
-			const _end = editorView.coordsAtPos(to);
 			const box = editorView.dom.getBoundingClientRect();
 
 			setPosition({
-				top: start.top - box.top - 40, // Position above selection
+				top: start.top - box.top - BUBBLE_MENU_OFFSET_TOP, // Position above selection
 				left: start.left - box.left,
 			});
 			setIsOpen(true);
 		};
 
+		const getScrollParent = (node: Node | null): HTMLElement | Window => {
+			if (!node || !(node instanceof Element)) {
+				return window;
+			}
+			const overflowY = window.getComputedStyle(node).overflowY;
+			const isScrollable = overflowY !== "visible" && overflowY !== "hidden";
+
+			if (isScrollable && node.scrollHeight > node.clientHeight) {
+				return node as HTMLElement;
+			}
+
+			return getScrollParent(node.parentNode);
+		};
+
+		const scrollContainer = getScrollParent(editorView.dom);
+		const listenerOptions: AddEventListenerOptions = { passive: true };
+
 		// Listen for multiple events that could change selection or position
 		editorView.dom.addEventListener("mouseup", updateMenu);
 		editorView.dom.addEventListener("keyup", updateMenu);
-		editorView.dom.addEventListener("scroll", updateMenu);
-		window.addEventListener("resize", updateMenu);
+		scrollContainer.addEventListener("scroll", updateMenu, listenerOptions);
+		window.addEventListener("resize", updateMenu, listenerOptions);
 
 		// Initial check
 		updateMenu();
@@ -46,8 +73,8 @@ export function useBubbleMenuPosition(editorView: EditorView | null) {
 		return () => {
 			editorView.dom.removeEventListener("mouseup", updateMenu);
 			editorView.dom.removeEventListener("keyup", updateMenu);
-			editorView.dom.removeEventListener("scroll", updateMenu);
-			window.removeEventListener("resize", updateMenu);
+			scrollContainer.removeEventListener("scroll", updateMenu, listenerOptions);
+			window.removeEventListener("resize", updateMenu, listenerOptions);
 		};
 	}, [editorView]);
 

@@ -5,13 +5,18 @@ import {
 	entityAttribute,
 	relationship,
 } from "@/lib/db/schema";
+import { type DbTransaction } from "@/lib/db";
 import { DatabaseError } from "@/lib/errors";
 
 export class EntityCleanupRepository {
 	/**
 	 * Deletes all entity-related data (entities, attributes, relationships) for a set of projects.
 	 */
-	async deleteByProjectIds(tx: any, projectIds: string[]) {
+	async deleteByProjectIds(tx: DbTransaction, projectIds: string[]) {
+		if (!projectIds || projectIds.length === 0) {
+			return;
+		}
+
 		try {
 			// 1. Relationships
 			await tx
