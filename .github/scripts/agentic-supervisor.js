@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 const path = require('path');
 
 /**
- * AGENTIC SUPERVISOR (v4.7)
+ * AGENTIC SUPERVISOR (v4.8)
  * 
  * Centralized orchestration for AI agents.
  * Features:
@@ -18,6 +18,19 @@ const path = require('path');
  */
 
 // =============================================================================
+// HELPERS
+// =============================================================================
+
+function parseListEnv(name, fallback) {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  return raw
+    .split(',')
+    .map(entry => entry.trim())
+    .filter(Boolean);
+}
+
+// =============================================================================
 // CONFIGURATION
 // =============================================================================
 
@@ -25,18 +38,25 @@ const CONFIG = {
   LOOP_THRESHOLD: 3,
   LOG_TRUNCATE_LENGTH: 2000,
   CODERABBIT_COMMENT_LIMIT: 50,
-  BOT_USERS: ['google-labs-jules', 'jules', 'renovate[bot]', 'coderabbitai', 'github-actions[bot]'],
-  SIGNATURE: '<!-- JULES_SUPERVISOR_SIG %>',
+  CODERABBIT_USERS: parseListEnv('CODERABBIT_USERS', ['coderabbitai[bot]', 'coderabbitai']),
+  CODECOV_USERS: parseListEnv('CODECOV_USERS', ['codecov[bot]', 'codecov']),
+  BOT_USERS: parseListEnv('SUPERVISOR_BOT_USERS', [
+    'google-labs-jules',
+    'jules',
+    'renovate[bot]',
+    'coderabbitai[bot]',
+    'coderabbitai',
+    'codecov[bot]',
+    'codecov',
+    'github-actions[bot]'
+  ]),
+  SIGNATURE_PREFIX: '<!-- JULES_SUPERVISOR_SIG',
   IGNORE_PHRASES: [
     'no actionable comments',
     'looks good',
     'lgtm'
   ]
 };
-
-// =============================================================================
-// HELPERS
-// =============================================================================
 
 function log(msg, data = null) {
   const timestamp = new Date().toISOString();
@@ -59,6 +79,48 @@ function logError(msg, error) {
 function sanitizeShellArg(arg) {
   if (!arg) return '';
   return String(arg).replace(/[`$\\!"']/g, '\\$&');
+}
+
+function normalizeLogin(login) {
+  return (login || '').toString().toLowerCase();
+}
+
+function isCodeRabbitUser(login) {
+  const normalized = normalizeLogin(login);
+  return CONFIG.CODERABBIT_USERS.some(user => normalized === user);
+}
+
+function isCodecovUser(login) {
+  const normalized = normalizeLogin(login);
+  return CONFIG.CODECOV_USERS.some(user => normalized === user);
+}
+
+function isBotUser(login) {
+  const normalized = normalizeLogin(login);
+  return CONFIG.BOT_USERS.some(user => normalized === user);
+}
+
+function buildSignature(context, decision) {
+  const sha = context.sha || 'n/a';
+  const reason = (decision.reason || 'n/a').replace(/\s+/g, '-').slice(0, 80);
+  return `${CONFIG.SIGNATURE_PREFIX} sha:${sha} reason:${reason} -->`;
+}
+
+function getAttemptCount(labels) {
+  if (!labels || labels.length === 0) return 0;
+  return labels.reduce((max, label) => {
+    const match = /^jules-attempt-(\d+)$/.exec(label);
+    if (!match) return max;
+    const value = Number.parseInt(match[1], 10);
+    return Number.isNaN(value) ? max : Math.max(max, value);
+  }, 0);
+}
+
+async function incrementAttemptLabel(number, labels) {
+  const current = getAttemptCount(labels);
+  const next = current + 1;
+  if (!number || next <= 0) return;
+  await addLabels(number, [`jules-attempt-${next}`]);
 }
 
 function setOutput(key, value) {
@@ -125,57 +187,64 @@ function getCodeRabbitFeedback(repo, number) {
 
   try {
     let reviewSummary = '';
+    let latestReviewTimestamp = null;
     // 1. Get Review Summaries (Top-level comments)
     try {
-        const reviewsJson = exec(`gh api "/repos/${repo}/pulls/${number}/reviews?per_page=100" --paginate`);
-        if (reviewsJson) {
-            const reviews = JSON.parse(reviewsJson);
-            const rabbitReviews = reviews
-                .filter(r => r.user?.login === 'coderabbitai' && r.state !== 'DISMISSED')
-                .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
+      const reviewsJson = exec(`gh api "/repos/${repo}/pulls/${number}/reviews?per_page=100" --paginate`);
+      if (reviewsJson) {
+        const reviews = JSON.parse(reviewsJson);
+        const rabbitReviews = reviews
+          .filter(r => isCodeRabbitUser(r.user?.login) && r.state !== 'DISMISSED')
+          .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at));
 
-            if (rabbitReviews.length > 0) {
-                const latest = rabbitReviews[0];
-                const bodyLower = (latest.body || '').toLowerCase();
-                const shouldIgnore = CONFIG.IGNORE_PHRASES.some(phrase => bodyLower.includes(phrase.toLowerCase()));
+        if (rabbitReviews.length > 0) {
+          const latest = rabbitReviews[0];
+          latestReviewTimestamp = latest.submitted_at ? new Date(latest.submitted_at) : null;
+          const bodyLower = (latest.body || '').toLowerCase();
+          const shouldIgnore = CONFIG.IGNORE_PHRASES.some(phrase => bodyLower.includes(phrase.toLowerCase()));
 
-                if (latest.body && latest.body.length > 10 && !shouldIgnore) {
-                    reviewSummary = `### 🐰 CodeRabbit Summary\n\n${latest.body}`;
-                }
-            }
+          if (latest.body && latest.body.length > 10 && !shouldIgnore) {
+            reviewSummary = `### 🐰 CodeRabbit Summary\n\n${latest.body}`;
+          }
         }
+      }
     } catch (e) {
-        logError('Failed to fetch CodeRabbit reviews', e);
+      logError('Failed to fetch CodeRabbit reviews', e);
     }
 
     // 2. Get Inline Comments
     let comments = [];
     try {
-        const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.[]' | jq -s '.'`);
-        comments = JSON.parse(json);
+      const json = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate --jq '.[]' | jq -s '.'`);
+      comments = JSON.parse(json);
     } catch (e) {
-        // Fallback for environments without jq
-        try {
-            const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
-             if (raw) {
-                 const fixed = raw.replace(/\]\[/g, ',');
-                 comments = JSON.parse(fixed);
-             }
-        } catch (innerErr) {
-            logError('Failed to fetch comments with fallback', innerErr);
+      // Fallback for environments without jq
+      try {
+        const raw = exec(`gh api "/repos/${repo}/pulls/${number}/comments?per_page=100" --paginate`);
+        if (raw) {
+          const fixed = raw.replace(/\]\[/g, ',');
+          comments = JSON.parse(fixed);
         }
+      } catch (innerErr) {
+        logError('Failed to fetch comments with fallback', innerErr);
+      }
     }
 
-    const rabbitComments = comments.filter(c => c.user?.login?.includes('coderabbitai'));
-    
+    const rabbitComments = comments
+      .filter(c => isCodeRabbitUser(c.user?.login))
+      .filter(c => {
+        if (!latestReviewTimestamp || !c.created_at) return true;
+        return new Date(c.created_at) >= latestReviewTimestamp;
+      });
+
     let inlineSummary = '';
     if (rabbitComments.length > 0) {
       const formatComments = (list) => list.map(c => `### ${c.path}:${c.line || '?'} \n${c.body}`).join('\n\n---\n\n');
 
       if (rabbitComments.length > CONFIG.CODERABBIT_COMMENT_LIMIT) {
         inlineSummary = "\n\n### 🐰 CodeRabbit Inline Comments (Summary)\n\n(Showing top " + CONFIG.CODERABBIT_COMMENT_LIMIT + " of " + rabbitComments.length + " comments)\n" +
-               formatComments(rabbitComments.slice(0, CONFIG.CODERABBIT_COMMENT_LIMIT)) +
-               "\n\n...(and " + (rabbitComments.length - CONFIG.CODERABBIT_COMMENT_LIMIT) + " more)";
+          formatComments(rabbitComments.slice(0, CONFIG.CODERABBIT_COMMENT_LIMIT)) +
+          "\n\n...(and " + (rabbitComments.length - CONFIG.CODERABBIT_COMMENT_LIMIT) + " more)";
       } else {
         inlineSummary = "\n\n### 🐰 CodeRabbit Inline Comments\n\n" + formatComments(rabbitComments);
       }
@@ -275,6 +344,7 @@ function getCIFailures(repo, sha) {
 }
 
 function areChecksInProgress(repo, sha, namePattern) {
+  if (!sha || !namePattern) return false;
   try {
     const runs = JSON.parse(exec(`gh api "/repos/${repo}/commits/${sha}/check-runs" --jq '.check_runs'`));
     const running = runs.filter(c => 
@@ -346,6 +416,17 @@ async function main() {
       context.reviewBody = event.review.body;
       context.sha = event.review.commit_id; 
     }
+  } else if (eventName === 'pull_request_review_comment') {
+    context.isPr = true;
+    context.number = event.pull_request.number;
+    context.branch = event.pull_request.head.ref;
+    context.sha = event.pull_request.head.sha;
+    context.author = event.pull_request.user.login;
+    context.labels = event.pull_request.labels.map(l => l.name);
+    context.prBody = event.pull_request.body;
+    context.isDraft = event.pull_request.draft || false;
+    context.reviewAuthor = event.comment.user.login;
+    context.reviewBody = event.comment.body;
 
   } else if (eventName === 'issue_comment') {
     context.number = event.issue.number;
@@ -417,6 +498,10 @@ async function main() {
               const codeBlock = "```";
               context.failedJobs = `### 🚨 CI Failure\n\n**Failed Jobs:**\n${failed}\n\n**Logs:**\n${codeBlock}text\n${logOutput}\n${codeBlock}${codecovSection}\n\n[View Full Log](${link})`;
             }
+          }
+          if (!context.failedJobs) {
+            const link = `${process.env.GITHUB_SERVER_URL}/${repo}/actions/runs/${runId}`;
+            context.failedJobs = `### 🚨 CI Failure\n\nThe CI workflow failed, but detailed job logs were unavailable.\n\n[View Full Log](${link})`;
           }
         }
       }
@@ -499,7 +584,8 @@ ${conventions}
     reason: ''
   };
 
-  const authorLower = (context.author || '').toLowerCase();
+  const authorLower = normalizeLogin(context.author);
+  const reviewAuthorLower = normalizeLogin(context.reviewAuthor);
   
   function getStandardMethod() {
     if (authorLower === 'google-labs-jules' || authorLower === 'jules' || authorLower.includes('google-labs-jules')) {
@@ -514,6 +600,11 @@ ${conventions}
 
   function isLooping() {
     try {
+        const attemptCount = getAttemptCount(context.labels);
+        if (attemptCount >= CONFIG.LOOP_THRESHOLD) {
+            log(`Loop detected: Attempt count ${attemptCount} exceeds threshold.`);
+            return true;
+        }
         const commits = JSON.parse(exec(`gh pr view ${context.number} --json commits --jq '[.commits[].authors[0].login] | reverse | .[0:3]'`));
         const isJules = c => c && (c.includes('jules') || c.includes('google-labs'));
         if (commits.length >= 3 && commits.every(isJules)) {
@@ -524,11 +615,11 @@ ${conventions}
         const lastComments = JSON.parse(exec(`gh api "/repos/${repo}/issues/${context.number}/comments?per_page=5&sort=created&direction=desc"`));
         if (lastComments && lastComments.length > 0) {
             const lastComment = lastComments[0];
-            const isBot = CONFIG.BOT_USERS.some(u => lastComment.user?.login?.includes(u));
+            const isBot = isBotUser(lastComment.user?.login);
             const hasSignature = lastComment.body.includes('Routing via Trigger') ||
                                  lastComment.body.includes('Jules Session Starting') ||
                                  lastComment.body.includes('Loop Detected') ||
-                                 lastComment.body.includes(CONFIG.SIGNATURE);
+                                 lastComment.body.includes(CONFIG.SIGNATURE_PREFIX);
 
             // If the last comment is from the PAT user (who might look like a human) but contains our signature, treat it as a loop
             if (hasSignature) {
@@ -544,11 +635,12 @@ ${conventions}
   if (eventName === 'issue_comment') {
     const body = context.commentBody.trim();
     const commenter = context.commentAuthor;
+    const commenterLower = normalizeLogin(commenter);
 
     // Updated Bot Detection Logic
-    const isBot = CONFIG.BOT_USERS.some(u => commenter.includes(u)) ||
+    const isBot = isBotUser(commenterLower) ||
                   body.includes('Routing via Trigger') ||
-                  body.includes(CONFIG.SIGNATURE);
+                  body.includes(CONFIG.SIGNATURE_PREFIX);
     
     if (!isBot && (body.includes('@jules') || body.includes('@google-labs-jules') || body.includes('@src/lib/jules-client.ts'))) {
       const standard = getStandardMethod();
@@ -577,63 +669,55 @@ ${conventions}
 
   // --- B: CI Failure (Enhanced with CodeRabbit) ---
   else if (context.failedJobs) {
-    if (areChecksInProgress(repo, context.sha, 'coderabbit')) {
-        log('CodeRabbit is still analyzing. Waiting for review to complete before batching.');
-        decision.method = 'none';
-        decision.reason = 'Waiting for CodeRabbit';
-    } 
-    else if (isLooping()) {
-        log('Loop detected. Aborting CI fix.');
-        decision.method = 'none';
-        decision.reason = 'Loop Protection';
-        exec(`gh pr comment ${context.number} --body "⚠️ **Loop Detected**: Jules has attempted to fix this PR 3 times without success. Pausing to allow human intervention."`);
-        await addLabels(context.number, ['jules-stuck']);
+    if (isLooping()) {
+      log('Loop detected. Aborting CI fix.');
+      decision.method = 'none';
+      decision.reason = 'Loop Protection';
+      exec(`gh pr comment ${context.number} --body "⚠️ **Loop Detected**: Jules has attempted to fix this PR 3 times without success. Pausing to allow human intervention."`);
+      await addLabels(context.number, ['jules-stuck']);
     } else if (context.isDraft) {
-        log('PR is Draft. Skipping CI auto-fix.');
-        decision.method = 'none';
-        decision.reason = 'Draft PR';
+      log('PR is Draft. Skipping CI auto-fix.');
+      decision.method = 'none';
+      decision.reason = 'Draft PR';
     } else {
       let isJulesInvolved = authorLower.includes('jules') || authorLower.includes('google-labs');
       if (!isJulesInvolved) {
-          try {
+        try {
           const commitAuthors = JSON.parse(exec(`gh pr view ${context.number} --json commits --jq '[.commits[].authors[0].login]'`));
           isJulesInvolved = commitAuthors.some(a => a && (a.toLowerCase().includes('jules') || a.toLowerCase().includes('google-labs')));
-          } catch(e) {}
+        } catch (e) {}
       }
 
-      // BATCHING: Include CodeRabbit comments if available
+      const rabbitInProgress = areChecksInProgress(repo, context.sha, 'coderabbit');
       const rabbitFeedback = getCodeRabbitFeedback(repo, context.number);
-      const combinedFeedback = context.failedJobs + (rabbitFeedback ? "\n\n---\n\n" + rabbitFeedback : "");
+      const rabbitNote = rabbitInProgress
+        ? "\n\n⚠️ CodeRabbit review is still running. Additional feedback may arrive after this CI report."
+        : '';
+      const combinedFeedback = context.failedJobs + (rabbitFeedback ? "\n\n---\n\n" + rabbitFeedback : "") + rabbitNote;
 
       if (isJulesInvolved) {
-          // Jules PR: Use @jules mention (free, Jules responds when it has commits on the PR)
-          decision.method = 'mention';
-          decision.batchedComments = combinedFeedback;
-          decision.reason = 'CI Failure (Jules PR)';
-          log('Using @jules mention for CI failure (Jules is involved)');
+        // Jules PR: Use @jules mention (free, Jules responds when it has commits on the PR)
+        decision.method = 'mention';
+        decision.batchedComments = combinedFeedback;
+        decision.reason = 'CI Failure (Jules PR)';
+        log('Using @jules mention for CI failure (Jules is involved)');
       } else {
-          // Human PR: Use API to invoke Jules with full context
-          decision.method = 'api';
-          decision.prompt = getContextualPrompt('ci-failure.md', {
-            FAILED_JOBS: combinedFeedback,
-            PR_NUMBER: context.number
-          });
-          decision.reason = 'CI Failure (Human PR)';
-          log('Using Jules API for CI failure (human PR)');
+        // Human PR: Use API to invoke Jules with full context
+        decision.method = 'api';
+        decision.prompt = getContextualPrompt('ci-failure.md', {
+          FAILED_JOBS: combinedFeedback,
+          PR_NUMBER: context.number
+        });
+        decision.reason = 'CI Failure (Human PR)';
+        log('Using Jules API for CI failure (human PR)');
       }
     }
   }
 
   // --- C: Automated Review (Enhanced with CI) ---
-  else if (eventName === 'pull_request_review' && 
-          (context.reviewAuthor.includes('coderabbitai') || context.reviewAuthor.includes('codecov'))) {
-    
-    if (areChecksInProgress(repo, context.sha, 'CI')) {
-        log('CI is still running. Waiting for completion before batching.');
-        decision.method = 'none';
-        decision.reason = 'Waiting for CI';
-    }
-    else if (context.isDraft) {
+  else if ((eventName === 'pull_request_review' || eventName === 'pull_request_review_comment') &&
+          (isCodeRabbitUser(reviewAuthorLower) || isCodecovUser(reviewAuthorLower))) {
+    if (context.isDraft) {
       decision.method = 'none';
       decision.reason = 'Draft PR (Review ignored)';
     } else {
@@ -643,12 +727,16 @@ ${conventions}
         // BATCHING: Include CI failures if available
         let ciFeedback = '';
         if (context.sha) {
-            ciFeedback = getCIFailures(repo, context.sha);
+          ciFeedback = getCIFailures(repo, context.sha);
         }
+        const ciPending = areChecksInProgress(repo, context.sha, 'CI');
+        const ciNote = ciPending
+          ? "\n\n⚠️ CI is still running. Results may change after completion."
+          : '';
 
-        const combinedFeedback = (rabbitFeedback || '') + (ciFeedback ? "\n\n---\n\n" + ciFeedback : "");
+        const combinedFeedback = (rabbitFeedback || '') + (ciFeedback ? "\n\n---\n\n" + ciFeedback : "") + ciNote;
 
-        if (combinedFeedback) {
+        if (combinedFeedback.trim()) {
           const standard = getStandardMethod();
           decision.method = standard.method;
           decision.batchedComments = combinedFeedback;
@@ -659,10 +747,10 @@ ${conventions}
             });
           }
         } else {
-            // No actionable feedback found
-            log('No actionable feedback found from review.');
-            decision.method = 'none';
-            decision.reason = 'No Actionable Feedback';
+          // No actionable feedback found
+          log('No actionable feedback found from review.');
+          decision.method = 'none';
+          decision.reason = 'No Actionable Feedback';
         }
       } catch (e) {}
     }
@@ -679,7 +767,7 @@ ${conventions}
   }
 
   // --- E: Human Changes Requested ---
-  else if (eventName === 'pull_request_review' && event.review.state === 'changes_requested' && !context.reviewAuthor.includes('bot')) {
+  else if (eventName === 'pull_request_review' && event.review.state === 'changes_requested' && !reviewAuthorLower.includes('bot') && !isCodeRabbitUser(reviewAuthorLower)) {
     if (context.isDraft) {
         decision.method = 'none';
         decision.reason = 'Draft PR (Human review ignored)';
@@ -710,6 +798,7 @@ ${conventions}
   // NOTE: Always use @jules - this is the trigger that Jules responds to
   // The old code incorrectly used '@src/lib/jules-client.ts' which is a FILE PATH, not a mention!
   const assigneeMention = '@jules';
+  const signature = buildSignature(context, decision);
 
   // DUPLICATE CHECK & POSTING LOGIC
   // Before finalizing, check if we are posting a duplicate feedback comment
@@ -721,12 +810,12 @@ ${conventions}
       }
 
       // Append signature
-      decision.batchedComments += `\n\n${CONFIG.SIGNATURE}`;
+      decision.batchedComments += `\n\n${signature}`;
 
       // Check if the exact feedback was already posted recently
       try {
           const comments = JSON.parse(exec(`gh api "/repos/${repo}/issues/${context.number}/comments?per_page=5&sort=created&direction=desc"`));
-          const botComments = comments.filter(c => CONFIG.BOT_USERS.some(u => c.user?.login?.includes(u)) || c.body.includes(CONFIG.SIGNATURE));
+          const botComments = comments.filter(c => isBotUser(c.user?.login) || c.body.includes(CONFIG.SIGNATURE_PREFIX));
 
           if (botComments.length > 0) {
               const lastBody = botComments[0].body;
@@ -738,7 +827,7 @@ ${conventions}
               // Simple check: does lastBody contain the bulk of the feedback?
               // Let's strip the signature and mention from decision.batchedComments for the search
               const rawFeedback = decision.batchedComments
-                  .replace(CONFIG.SIGNATURE, '')
+                  .replace(signature, '')
                   .replace(assigneeMention, '')
                   .trim();
 
@@ -765,6 +854,13 @@ ${conventions}
 
   log(`Final Decision: ${decision.method} (${decision.reason})`);
 
+  if (context.isPr && decision.method !== 'none') {
+    const shouldCountAttempt = decision.reason.includes('CI Failure') || decision.reason.includes('Review');
+    if (shouldCountAttempt) {
+      await incrementAttemptLabel(context.number, context.labels);
+    }
+  }
+
   setOutput('is_pr', context.isPr.toString());
   setOutput('number', context.number.toString());
   setOutput('branch', context.branch);
@@ -787,6 +883,7 @@ ${conventions}
     const decisionPath = [];
     if (eventName === 'workflow_run') decisionPath.push('Workflow Run');
     else if (eventName === 'pull_request_review') decisionPath.push('PR Review');
+    else if (eventName === 'pull_request_review_comment') decisionPath.push('PR Review Comment');
     else if (eventName === 'issue_comment') decisionPath.push('Comment');
     else if (eventName === 'pull_request') decisionPath.push('PR Event');
     else if (eventName === 'issues') decisionPath.push('Issue Event');
@@ -808,7 +905,7 @@ ${conventions}
                         decision.method === 'mention' ? '💬' : 
                         '⏹️';
 
-    const summary = `## ${statusEmoji} Agentic Supervisor Dashboard (v4.5)
+    const summary = `## ${statusEmoji} Agentic Supervisor Dashboard (v4.8)
 
 ### 📊 Event Summary
 

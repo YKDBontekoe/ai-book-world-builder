@@ -63,18 +63,16 @@ The agentic workflow automates the entire development lifecycle with **cost-opti
 ## Detection: CodeRabbit Review Complete
 
 The supervisor detects a complete CodeRabbit review by:
-1. Listening for `pull_request_review` events from `coderabbitai[bot]`
-2. Checking if the review body contains "Walkthrough"
-3. Batching ALL inline comments into a single prompt
+1. Listening for `pull_request_review` and `pull_request_review_comment` events from `coderabbitai[bot]`
+2. Pulling the latest CodeRabbit review summary (if present)
+3. Batching inline comments created **after** that review timestamp into a single prompt
+4. Posting feedback immediately (CI may still be running, and the supervisor will note that)
 
 ```bash
-# From agentic-supervisor.sh
-if [[ "$EVENT_NAME" == "pull_request_review" && 
-      "$REVIEW_AUTHOR" == "coderabbitai[bot]" ]]; then
-  if echo "$REVIEW_BODY" | grep -qi "walkthrough"; then
-    BATCHED_COMMENTS=$(collect_coderabbit_comments)
-    # ... batch and invoke
-  fi
+# From agentic-supervisor.js
+if [[ "$EVENT_NAME" == "pull_request_review" || "$EVENT_NAME" == "pull_request_review_comment" ]]; then
+  BATCHED_COMMENTS=$(collect_coderabbit_comments_since_latest_review)
+  # ... batch and invoke (includes a "CI pending" note if checks are still running)
 fi
 ```
 
@@ -88,7 +86,13 @@ The `jules-invoked` label tracks whether Jules API has been invoked for a PR:
 - **Checked before:** Any subsequent invocation decision
 - **Effect:** Switches from API to @mention for cost savings
 
+The supervisor also appends `jules-attempt-<n>` labels when it posts CI/review feedback to track retry counts and prevent infinite loops.
+
 ---
+
+## CI Failure Alerts
+
+CI failures trigger **immediately** on the `workflow_run` failure event. The supervisor no longer waits for CodeRabbit to finish its review before notifying Jules. If CodeRabbit is still running, the CI alert includes a note that additional review feedback may follow.
 
 ## Architecture
 
@@ -134,6 +138,13 @@ The `jules-invoked` label tracks whether Jules API has been invoked for a PR:
 | `.coderabbit.yaml` | CodeRabbit review settings (updated to always @jules for bots) |
 | `renovate.json` | Dependency update settings |
 | `AGENTS.md` | Instructions for AI agents |
+
+### Bot Identity Configuration
+
+The supervisor uses an allowlist of bot usernames to avoid false positives. Update these values if GitHub app names change:
+- `CODERABBIT_USERS` (default: `coderabbitai[bot],coderabbitai`)
+- `CODECOV_USERS` (default: `codecov[bot],codecov`)
+- `SUPERVISOR_BOT_USERS` (default: `google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,codecov[bot],codecov,github-actions[bot]`)
 
 ---
 

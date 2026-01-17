@@ -16,6 +16,8 @@ on:
     types: [created]
   pull_request_review:
     types: [submitted]
+  pull_request_review_comment:
+    types: [created]
   pull_request:
     types: [opened, synchronize, ready_for_review, labeled]
   workflow_run:
@@ -30,6 +32,14 @@ permissions:
   contents: write
   pull-requests: write
   issues: write
+  actions: read
+  checks: read
+  statuses: read
+
+env:
+  CODERABBIT_USERS: coderabbitai[bot],coderabbitai
+  CODECOV_USERS: codecov[bot],codecov
+  SUPERVISOR_BOT_USERS: google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,codecov[bot],codecov,github-actions[bot]
 
 jobs:
   # ==========================================================================
@@ -59,7 +69,7 @@ jobs:
       - name: Analyze Event Context
         id: analyze
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
         run: node .github/scripts/agentic-supervisor.js
 
   # ==========================================================================
@@ -74,7 +84,7 @@ jobs:
       - name: Acknowledge (Emoji)
         if: github.event_name == 'issue_comment'
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           COMMENT_ID: ${{ github.event.comment.id }}
         run: |
           gh api "/repos/${{ github.repository }}/issues/comments/$COMMENT_ID/reactions" -f content="eyes" --repo "${{ github.repository }}" 2>/dev/null || true
@@ -82,7 +92,7 @@ jobs:
       - name: Post status - Starting Jules session
         if: needs.supervisor.outputs.is_pr == 'true'
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
@@ -103,7 +113,7 @@ jobs:
       - name: Add jules-invoked label (for Renovate PRs)
         if: needs.supervisor.outputs.author == 'renovate[bot]' && needs.supervisor.outputs.is_pr == 'true'
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
         run: |
           gh pr edit "$PR_NUMBER" --add-label "jules-invoked" --repo "${{ github.repository }}" 2>/dev/null || true
@@ -120,7 +130,7 @@ jobs:
     steps:
       - name: Post status - Using ${{ needs.supervisor.outputs.assignee_mention }}
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
           ASSIGNEE_MENTION: ${{ needs.supervisor.outputs.assignee_mention }}
@@ -137,7 +147,7 @@ jobs:
 
       - name: Post ${{ needs.supervisor.outputs.assignee_mention }} with feedback
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           BATCHED_COMMENTS: ${{ needs.supervisor.outputs.batched_comments }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
@@ -172,7 +182,7 @@ jobs:
       - name: Request CodeRabbit Review
         if: needs.supervisor.outputs.number != ''
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           PR_NUMBER: ${{ needs.supervisor.outputs.number }}
           AUTHOR: ${{ needs.supervisor.outputs.author }}
         run: |
@@ -191,7 +201,7 @@ jobs:
     steps:
       - name: Post Help
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           ISSUE: ${{ github.event.issue.number }}
         run: |
           gh issue comment $ISSUE --body "🌟 **Good First Issue!**
@@ -212,7 +222,7 @@ jobs:
     steps:
       - name: Request Review
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           PR: ${{ needs.supervisor.outputs.number }}
         run: gh pr comment "$PR" --body "⚠️ Human Review Required due to sensitive labels (security, breaking-change, or large change)." --repo "${{ github.repository }}"
 
@@ -226,7 +236,7 @@ jobs:
     steps:
       - name: Update if Behind
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
           PR: ${{ needs.supervisor.outputs.number }}
         run: |
           STATUS=$(gh pr view "$PR" --json mergeStateStatus --jq '.mergeStateStatus' --repo "${{ github.repository }}" 2>/dev/null || echo "")
