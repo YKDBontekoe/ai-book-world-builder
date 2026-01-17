@@ -6,6 +6,7 @@ export * from "@/lib/db/schema/sqlite/feedback";
 export * from "@/lib/db/schema/sqlite/generation";
 export * from "@/lib/db/schema/sqlite/issues";
 export * from "@/lib/db/schema/sqlite/outlines";
+export * from "@/lib/db/schema/sqlite/passkeys";
 export * from "@/lib/db/schema/sqlite/projects";
 export * from "@/lib/db/schema/sqlite/reader";
 export * from "@/lib/db/schema/sqlite/scenes";
