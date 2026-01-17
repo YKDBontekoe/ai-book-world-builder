@@ -1,9 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { BookOpen } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import { saveReadingProgress } from "@/app/actions/reader";
+import { EmptyState } from "@/components/molecules/empty-state";
 import {
 	ReaderControls,
 	type ReaderSettings,
@@ -116,8 +118,13 @@ export function ReaderView({
 
 	if (!activeChapter) {
 		return (
-			<div className="flex items-center justify-center h-screen">
-				No content available.
+			<div className="flex items-center justify-center h-screen bg-background">
+				<EmptyState
+					icon={BookOpen}
+					title="No Content Available"
+					description="This project doesn't have any chapters to read yet."
+					variant="glass"
+				/>
 			</div>
 		);
 	}
