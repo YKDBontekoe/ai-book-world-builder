@@ -119,7 +119,7 @@
 		"prosemirror-schema-basic": "1.2.4",
 		"prosemirror-schema-list": "1.5.1",
 		"prosemirror-state": "1.4.4",
-		"prosemirror-view": "1.41.4",
+		"prosemirror-view": "1.41.5",
 		"radix-ui": "1.4.3",
 		"react": "19.2.3",
 		"react-data-grid": "7.0.0-beta.59",
