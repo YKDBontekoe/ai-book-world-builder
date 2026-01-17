@@ -15,6 +15,7 @@ import {
 	NetworkIcon,
 	SparklesIcon,
 	TrendingUpIcon,
+	Wand2Icon,
 	XIcon,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -110,6 +111,13 @@ const MapPane = dynamic(
 		),
 	{ loading: LoadingPane },
 );
+const GeneratorPane = dynamic(
+	() =>
+		import("@/components/organisms/book-canvas/panes/generator-pane").then(
+			(mod) => mod.GeneratorPane,
+		),
+	{ loading: LoadingPane },
+);
 
 export function BookCanvas({
 	variant = "sidebar",
@@ -145,12 +153,15 @@ export function BookCanvas({
 				return <BiblePane />;
 			case "changes":
 				return <ChangeLogPane />;
+			case "generator":
+				return <GeneratorPane />;
 			default:
 				return <OutlinePane />;
 		}
 	};
 
 	const tabs: { id: CanvasPane; label: string; icon: LucideIcon }[] = [
+		{ id: "generator", label: "Generate", icon: Wand2Icon },
 		{ id: "outline", label: "Outline", icon: LayoutIcon },
 		{ id: "graph", label: "Graph", icon: NetworkIcon },
 		{ id: "arc", label: "Arc", icon: TrendingUpIcon },
