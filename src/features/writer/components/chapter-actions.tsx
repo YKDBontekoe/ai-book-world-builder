@@ -65,15 +65,22 @@ export function ChapterActions({
 				return;
 			}
 
-			if (!planResult.success || !planResult.sceneIds) {
+			if (!planResult.success || !("data" in planResult)) {
 				setPhase("error");
 				setError(planResult.error || "Failed to plan scenes");
 				setLoading(false);
 				return;
 			}
 
+			if (!planResult.data.success || !planResult.data.sceneIds) {
+				setPhase("error");
+				setError("Failed to plan scenes");
+				setLoading(false);
+				return;
+			}
+
 			// Initialize scene progress with titles (we'll get titles from the response)
-			const initialScenes: SceneProgress[] = planResult.sceneIds.map(
+			const initialScenes: SceneProgress[] = planResult.data.sceneIds.map(
 				(id: string, index: number) => ({
 					id,
 					title: `Scene ${index + 1}`,
@@ -86,7 +93,7 @@ export function ChapterActions({
 			onUpdate(); // Show empty scenes immediately
 
 			// 2. Generate Content Sequentially
-			const total = planResult.sceneIds.length;
+			const total = planResult.data.sceneIds.length;
 
 			for (let i = 0; i < total; i++) {
 				if (cancelled) {
@@ -95,7 +102,7 @@ export function ChapterActions({
 					return;
 				}
 
-				const sceneId = planResult.sceneIds[i];
+				const sceneId = planResult.data.sceneIds[i];
 
 				// Update scene status to generating
 				setScenes((prev) =>

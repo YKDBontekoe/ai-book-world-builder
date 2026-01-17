@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
+import type React from "react";
 import { GlassCard } from "@/components/molecules/glass-card";
 
 interface PowerDockResultProps {
@@ -14,7 +15,7 @@ export function PowerDockResult({
 	onClear,
 	onInsert,
 	onCopy,
-}: PowerDockResultProps): JSX.Element {
+}: PowerDockResultProps): React.ReactElement {
 	return (
 		<AnimatePresence>
 			{result && (

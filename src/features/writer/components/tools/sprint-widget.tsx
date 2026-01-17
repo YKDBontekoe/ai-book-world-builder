@@ -13,13 +13,15 @@ import {
 	PopoverTrigger,
 } from "@/components/atoms/popover";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 import { cn } from "@/lib/utils";
 
 export function SprintWidget() {
-	const { project, sceneContent } = useWriterContext();
+	const { project } = useWriterContext();
+	const { sceneContent } = useWriterContent();
 	const { data: entities } = useProjectEntities(project.id);
 	const narrativeMetrics = useNarrativeIntelligence({
 		content: sceneContent || "",
@@ -139,7 +141,7 @@ export function SprintWidget() {
 											value={durationMinutes}
 											onChange={(e) =>
 												setDurationMinutes(
-													Number.parseInt(e.target.value) || 15,
+													Number.parseInt(e.target.value, 10) || 15,
 												)
 											}
 											className="h-8 text-xs"

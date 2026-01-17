@@ -13,7 +13,6 @@ import {
 	Undo,
 } from "lucide-react";
 import Link from "next/link";
-import type React from "react";
 import { memo, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
@@ -177,6 +176,7 @@ export const PowerDock = memo(function PowerDock() {
 		structure,
 		activeChapterId,
 		activeSceneId,
+		sceneContent,
 		addToHistory,
 		reset,
 	]);

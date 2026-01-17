@@ -121,44 +121,54 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			containerRef as React.RefObject<HTMLDivElement>,
 		);
 
+		const handleUndo = useCallback(() => {
+			if (editorRef.current) {
+				undo(editorRef.current.state, editorRef.current.dispatch);
+				editorRef.current.focus();
+			}
+		}, [editorRef]);
+
+		const handleRedo = useCallback(() => {
+			if (editorRef.current) {
+				redo(editorRef.current.state, editorRef.current.dispatch);
+				editorRef.current.focus();
+			}
+		}, [editorRef]);
+
+		const handleInsertText = useCallback(
+			(text: string) => {
+				if (editorRef.current) {
+					const { from, to } = editorRef.current.state.selection;
+					const tr = editorRef.current.state.tr.replaceWith(
+						from,
+						to,
+						editorRef.current.state.schema.text(text),
+					);
+					editorRef.current.dispatch(tr);
+					editorRef.current.focus();
+				}
+			},
+			[editorRef],
+		);
+
+		const handleGetSelection = useCallback(() => {
+			if (editorRef.current) {
+				const { from, to } = editorRef.current.state.selection;
+				const text = editorRef.current.state.doc.textBetween(from, to);
+				return { from, to, text };
+			}
+			return null;
+		}, [editorRef]);
+
 		useImperativeHandle(
 			ref,
-			// biome-ignore lint/correctness/useExhaustiveDependencies: Ref-based editor state requires manual dependency management
 			() => ({
-				undo: () => {
-					if (editorRef.current) {
-						undo(editorRef.current.state, editorRef.current.dispatch);
-						editorRef.current.focus();
-					}
-				},
-				redo: () => {
-					if (editorRef.current) {
-						redo(editorRef.current.state, editorRef.current.dispatch);
-						editorRef.current.focus();
-					}
-				},
-				insertText: (text: string) => {
-					if (editorRef.current) {
-						const { from, to } = editorRef.current.state.selection;
-						const tr = editorRef.current.state.tr.replaceWith(
-							from,
-							to,
-							editorRef.current.state.schema.text(text),
-						);
-						editorRef.current.dispatch(tr);
-						editorRef.current.focus();
-					}
-				},
-				getSelection: () => {
-					if (editorRef.current) {
-						const { from, to } = editorRef.current.state.selection;
-						const text = editorRef.current.state.doc.textBetween(from, to);
-						return { from, to, text };
-					}
-					return null;
-				},
+				undo: handleUndo,
+				redo: handleRedo,
+				insertText: handleInsertText,
+				getSelection: handleGetSelection,
 			}),
-			[],
+			[handleUndo, handleRedo, handleInsertText, handleGetSelection],
 		);
 
 		// Update Editor Props (Handlers) to close over latest state

@@ -6,6 +6,7 @@ import {
 	type CanvasPane,
 	useBookCanvasActions,
 } from "@/components/organisms/book-canvas/book-canvas-context";
+import { WriterContentContext } from "@/features/writer/components/writer-content-context";
 import { WriterContext } from "@/features/writer/components/writer-context";
 import { QUERY_KEYS } from "@/lib/query-options";
 import type { ChatMessage } from "@/lib/types";
@@ -24,6 +25,7 @@ export function useChatToolEffects({
 
 	// Safely access WriterContext (it might be null if used outside WriterView)
 	const writerContext = useContext(WriterContext);
+	const writerContentContext = useContext(WriterContentContext);
 
 	const processedToolCallIdsRef = useRef<Set<string>>(new Set());
 
@@ -46,7 +48,9 @@ export function useChatToolEffects({
 
 			// 1. Handle Orchestrator Pane Switching
 			if (toolName === "orchestrateBook") {
-				const res = result as any;
+				const res = result as {
+					decision?: { suggestedCanvasPane?: CanvasPane };
+				};
 				if (res?.decision?.suggestedCanvasPane) {
 					setActivePane(res.decision.suggestedCanvasPane as CanvasPane);
 				}
@@ -54,12 +58,19 @@ export function useChatToolEffects({
 
 			// 2. Handle Scene Content Updates (Live Editing)
 			if (toolName === "updateSceneContent") {
-				const res = result as any;
+				const res = result as {
+					success?: boolean;
+					newContent?: string;
+					sceneId?: string;
+				};
 				if (res?.success && res?.newContent && writerContext) {
 					// Directly update the editor state without a refetch
 					// Verify we are updating the active scene (basic safety)
-					if (writerContext.activeSceneId === res.sceneId) {
-						writerContext.handleContentChange(res.newContent);
+					if (
+						writerContentContext &&
+						writerContext.activeSceneId === res.sceneId
+					) {
+						writerContentContext.handleContentChange(res.newContent);
 					}
 				}
 			}
@@ -91,5 +102,12 @@ export function useChatToolEffects({
 			// Mark as processed
 			processedToolCallIdsRef.current.add(toolInvocation.toolCallId);
 		}
-	}, [messages, queryClient, selectedProjectId, setActivePane, writerContext]);
+	}, [
+		messages,
+		queryClient,
+		selectedProjectId,
+		setActivePane,
+		writerContext,
+		writerContentContext,
+	]);
 }

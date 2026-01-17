@@ -97,6 +97,9 @@ export async function deleteProjects(projectIds: string[]) {
 
 	if ("success" in result && result.success) {
 		revalidatePath("/projects");
+		for (const projectId of result.deletedProjectIds) {
+			revalidatePath(`/projects/${projectId}`);
+		}
 	}
 
 	return result;
