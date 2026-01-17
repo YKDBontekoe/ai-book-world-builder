@@ -6,6 +6,7 @@ import {
 	Expand,
 	Feather,
 	Globe,
+	MessageSquareText,
 	Search,
 } from "lucide-react";
 
@@ -30,8 +31,19 @@ export const TOOLS = [
 		label: "Check",
 		color: "text-orange-400",
 	},
+	{
+		id: "dialogue",
+		icon: MessageSquareText,
+		label: "Dialogue Coach",
+		color: "text-sky-400",
+	},
 	{ id: "lore", icon: Globe, label: "Lore", color: "text-pink-400" },
-	{ id: "search", icon: Search, label: "Search", color: "text-blue-400" },
+	{
+		id: "search",
+		icon: Search,
+		label: "Ask Manuscript",
+		color: "text-blue-400",
+	},
 	{
 		id: "export",
 		icon: Download,

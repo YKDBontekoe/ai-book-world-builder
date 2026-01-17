@@ -1,12 +1,13 @@
 import { toast } from "sonner";
 import {
 	analyzeConsistencyAction,
+	askManuscriptAction,
 	batchWriteChapterAction,
 	critiqueChapterAction,
+	dialogueCoachAction,
 	expandSceneAction,
 	generateLoreAction,
 	rewriteSceneAction,
-	searchProjectAction,
 } from "@/app/actions/ai-operations";
 import type { Project } from "@/lib/db/schema/projects";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -17,6 +18,7 @@ export type ToolType =
 	| "expand"
 	| "critique"
 	| "consistency"
+	| "dialogue"
 	| "lore"
 	| "search"
 	| "export";
@@ -208,12 +210,42 @@ export class LoreStrategy implements ToolStrategy {
 
 export class SearchStrategy implements ToolStrategy {
 	async execute(context: ToolContext, input: string) {
-		const res = await searchProjectAction(context.project.id, input);
-		if (res.success && "answer" in res) {
-			return { success: true, result: res.answer || undefined };
+		const res = await askManuscriptAction(context.project.id, input);
+		if (res.success && "response" in res) {
+			return { success: true, result: res.response || undefined };
 		}
 		if ("error" in res) toast.error(res.error);
 		return { success: false };
+	}
+}
+
+export class DialogueCoachStrategy implements ToolStrategy {
+	async execute(context: ToolContext, input: string) {
+		if (!context.activeSceneId) {
+			toast.error("No active scene selected.");
+			return { success: false };
+		}
+
+		const toastId = toast.loading("Coaching dialogue...", {
+			description: "Reviewing character voices",
+		});
+
+		try {
+			const res = await dialogueCoachAction(context.activeSceneId, input);
+			if (res.success && "report" in res) {
+				toast.success("Dialogue coaching complete", { id: toastId });
+				return { success: true, result: res.report };
+			}
+			if ("error" in res) {
+				toast.error(res.error || "Dialogue coaching failed", { id: toastId });
+			}
+			return { success: false };
+		} catch (_error) {
+			toast.error("An error occurred during dialogue coaching", {
+				id: toastId,
+			});
+			return { success: false };
+		}
 	}
 }
 
@@ -255,6 +287,7 @@ export const toolStrategies: Record<ToolType, ToolStrategy> = {
 	expand: new ExpandStrategy(),
 	critique: new CritiqueStrategy(),
 	consistency: new ConsistencyStrategy(),
+	dialogue: new DialogueCoachStrategy(),
 	lore: new LoreStrategy(),
 	search: new SearchStrategy(),
 	export: new ExportStrategy(),

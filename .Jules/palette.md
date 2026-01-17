@@ -70,3 +70,18 @@ Users can generate a passkey after signup and sign in without passwords, while p
 ### Learnings
 - Always store WebAuthn challenges server-side with short expirations to prevent replay.
 - Keep passkey buttons alongside existing auth methods to avoid blocking users on unsupported devices.
+
+## 2026-01-12 - AI assist panels favor structured, source-backed output
+
+### Context
+New AI writing helpers needed to feel trustworthy and immediately actionable inside the editor.
+
+### Solution
+Presented co-author alternatives as discrete, labeled options and formatted manuscript answers with explicit source excerpts so writers can validate suggestions quickly.
+
+### Outcome
+AI responses now read like editorial notes rather than opaque generations, improving adoption and confidence.
+
+### Learnings
+- Structured, labeled alternatives are faster to evaluate than a single long rewrite.
+- Source-backed answers reduce the cognitive load when verifying AI guidance.

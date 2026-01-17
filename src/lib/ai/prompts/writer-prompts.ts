@@ -21,6 +21,11 @@ export interface RewriteSelectionPromptParams {
 	instruction: string;
 }
 
+export interface CoAuthorAlternativesPromptParams {
+	selection: string;
+	guidance?: string;
+}
+
 export const writerPrompts = {
 	continueWriting: {
 		system: (style?: string) =>
@@ -66,5 +71,20 @@ Instructions: ${instructions || "Draft the scene."}
 			"You are an expert editor. Rewrite the selected text according to the user's instruction. Output ONLY the rewritten text, no explanations.",
 		user: ({ selection, instruction }: RewriteSelectionPromptParams) =>
 			`Original Text:\n"${selection || ""}"\n\nInstruction: ${instruction || "Improve text"}\n\nRewritten Text:`,
+	},
+
+	coAuthorAlternatives: {
+		system: () =>
+			`You are an expert co-author helping a novelist iterate on prose.
+Return three distinct alternatives that preserve the original meaning but vary pacing, texture, and voice.
+Each alternative should be 1-3 sentences and avoid meta commentary.
+For each alternative, provide:
+- id: a short unique id (e.g., "alt-1")
+- intent: the creative goal (e.g., "tighter pacing")
+- tone: the tonal style (e.g., "cinematic")`,
+		user: ({ selection, guidance }: CoAuthorAlternativesPromptParams) =>
+			`Selected Text:\n"${selection || ""}"\n\nGuidance: ${
+				guidance || "Vary pacing, sensory detail, and voice."
+			}\n\nProvide three alternatives:`,
 	},
 };

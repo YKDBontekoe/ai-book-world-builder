@@ -11,6 +11,7 @@
 
 import "server-only";
 
+import { z } from "zod";
 import { writerPrompts } from "@/lib/ai/prompts/writer-prompts";
 import { BaseAIService } from "@/lib/ai/services/base-ai-service";
 import type {
@@ -32,6 +33,24 @@ export interface SceneCardData {
 	setting?: string;
 	emotionalBeats?: string[] | string;
 }
+
+export interface CoAuthorAlternative {
+	id: string;
+	intent: string;
+	tone: string;
+	text: string;
+}
+
+const coAuthorAlternativesSchema = z.object({
+	alternatives: z.array(
+		z.object({
+			id: z.string(),
+			intent: z.string(),
+			tone: z.string(),
+			text: z.string(),
+		}),
+	),
+});
 
 // =============================================================================
 // Service
@@ -160,6 +179,47 @@ export class GenerationService extends BaseAIService {
 
 		return {
 			text: result.data.text,
+			usage: result.usage,
+			modelId: result.modelId,
+		};
+	}
+
+	/**
+	 * Generates multiple co-author alternatives for a selected snippet.
+	 */
+	async coAuthorAlternatives(
+		selection: string,
+		guidance?: string,
+		options: GenerationOptions = {},
+	): Promise<
+		{
+			alternatives?: CoAuthorAlternative[];
+			error?: string;
+		} & AIGenerationResult
+	> {
+		const systemPrompt = writerPrompts.coAuthorAlternatives.system();
+		const prompt = writerPrompts.coAuthorAlternatives.user({
+			selection,
+			guidance,
+		});
+
+		const result = await this.generateObjectWithSystem(
+			systemPrompt,
+			prompt,
+			coAuthorAlternativesSchema,
+			{
+				modelId: options.modelId,
+				modelRole: "writer",
+				temperature: options.temperature ?? 0.7,
+			},
+		);
+
+		if (!result.success) {
+			return { error: result.error };
+		}
+
+		return {
+			alternatives: result.data.object.alternatives,
 			usage: result.usage,
 			modelId: result.modelId,
 		};

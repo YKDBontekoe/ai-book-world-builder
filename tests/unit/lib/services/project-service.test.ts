@@ -175,7 +175,7 @@ describe("ProjectService", () => {
 			// Mock transaction behavior
 			(db.transaction as any).mockImplementation(async (cb: any) => {
 				const mockTx = {
-					insert: vi.fn().mockImplementation((table) => {
+					insert: vi.fn().mockImplementation((_table) => {
 						// Check if inserting project to return the new project with ID
 						return createMockQB([{ id: newProjectId }]);
 					}),

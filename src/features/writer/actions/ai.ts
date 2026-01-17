@@ -44,6 +44,12 @@ const rewriteSelectionSchema = z.object({
 	options: generationOptionsSchema.optional(),
 });
 
+const coAuthorAlternativesSchema = z.object({
+	selection: z.string().max(20000, "Selection too long"),
+	guidance: z.string().max(1000, "Guidance too long").optional(),
+	options: generationOptionsSchema.optional(),
+});
+
 // ============================================================================
 // Actions
 // ============================================================================
@@ -112,6 +118,23 @@ export const rewriteSelection = createUserAction({
 		return generationService.rewriteSelection(
 			input.selection,
 			input.instruction,
+			input.options,
+		);
+	},
+});
+
+/**
+ * Generates co-author alternatives for a selected text snippet.
+ */
+export const coAuthorAlternatives = createUserAction({
+	input: coAuthorAlternativesSchema,
+	handler: async ({ user, input }) => {
+		if (!(await checkUsageQuota(user.id))) {
+			throw new Error("Usage quota exceeded");
+		}
+		return generationService.coAuthorAlternatives(
+			input.selection,
+			input.guidance,
 			input.options,
 		);
 	},

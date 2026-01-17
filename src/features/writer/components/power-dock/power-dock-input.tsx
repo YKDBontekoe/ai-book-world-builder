@@ -50,10 +50,12 @@ export function PowerDockInput({
 				return "Specific questions? (Optional)";
 			case "consistency":
 				return "Instructions (e.g., 'Ensure consistent tone and terminology')";
+			case "dialogue":
+				return "Focus (e.g., 'Sharpen Character A's voice')";
 			case "lore":
 				return "Describe the entity...";
 			case "search":
-				return "What are you looking for?";
+				return "Ask about plot threads, character arcs, or unresolved clues...";
 			default:
 				return "Enter instructions...";
 		}
