@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { signIn } from "@/app/(auth)/auth";
-import { createUser, getUser } from "@/lib/db/queries";
+import { createUser } from "@/lib/db/queries";
 
 const authFormSchema = z.object({
 	email: z.string().email(),
@@ -45,7 +45,6 @@ export type RegisterActionState = {
 		| "in_progress"
 		| "success"
 		| "failed"
-		| "user_exists"
 		| "invalid_data";
 };
 
@@ -59,11 +58,10 @@ export const register = async (
 			password: formData.get("password"),
 		});
 
-		const [user] = await getUser(validatedData.email);
+		// We do not check if user exists to prevent enumeration.
+		// If the user exists, createUser will throw (unique constraint),
+		// and we return "failed".
 
-		if (user) {
-			return { status: "user_exists" } as RegisterActionState;
-		}
 		await createUser(validatedData.email, validatedData.password);
 		await signIn("credentials", {
 			email: validatedData.email,
