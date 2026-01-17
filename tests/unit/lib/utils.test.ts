@@ -5,7 +5,6 @@ import {
 	cn,
 	convertToUIMessages,
 	generateUUID,
-	getDocumentTimestampByIndex,
 	getTextFromMessage,
 	sanitizeText,
 } from "@/lib/utils";
@@ -31,33 +30,6 @@ describe("lib/utils", () => {
 			const uuid1 = generateUUID();
 			const uuid2 = generateUUID();
 			expect(uuid1).not.toBe(uuid2);
-		});
-	});
-
-	describe("getDocumentTimestampByIndex", () => {
-		const mockDocuments: Document[] = [
-			{ id: "1", createdAt: new Date("2023-01-01") } as Document,
-			{ id: "2", createdAt: new Date("2023-01-02") } as Document,
-		];
-
-		it("should return the correct timestamp for a valid index", () => {
-			const timestamp = getDocumentTimestampByIndex(mockDocuments, 0);
-			expect(timestamp).toEqual(new Date("2023-01-01"));
-		});
-
-		it("should return current date if documents array is empty", () => {
-			// We can't easily mock "new Date()" without fake timers,
-			// but we can check if it's close to now.
-			const now = new Date();
-			const timestamp = getDocumentTimestampByIndex([], 0);
-			// Allow 1 second difference
-			expect(Math.abs(timestamp.getTime() - now.getTime())).toBeLessThan(1000);
-		});
-
-		it("should return current date if index is out of bounds", () => {
-			const now = new Date();
-			const timestamp = getDocumentTimestampByIndex(mockDocuments, 5);
-			expect(Math.abs(timestamp.getTime() - now.getTime())).toBeLessThan(1000);
 		});
 	});
 
