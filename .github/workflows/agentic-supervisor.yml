@@ -38,7 +38,8 @@ permissions:
 
 env:
   CODERABBIT_USERS: coderabbitai[bot],coderabbitai
-  SUPERVISOR_BOT_USERS: google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,github-actions[bot]
+  CODECOV_USERS: codecov[bot],codecov
+  SUPERVISOR_BOT_USERS: google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,codecov[bot],codecov,github-actions[bot]
 
 jobs:
   # ==========================================================================

@@ -98,3 +98,17 @@ Supervisor now captures comment-only feedback and can halt after a configurable 
 
 ### Learnings
 - Track retries via labels to avoid brittle commit-count heuristics.
+
+## 2026-01-10 - Codecov Bot Allowlist
+
+### Context
+Review handling should rely on explicit Codecov bot identities rather than substring checks to avoid false positives.
+
+### Solution
+Added a dedicated `CODECOV_USERS` allowlist and included Codecov in the supervisor bot identity configuration.
+
+### Outcome
+Codecov review activity is now matched deterministically alongside CodeRabbit.
+
+### Learnings
+- Keep each bot identity list explicit to reduce accidental matches and drift.

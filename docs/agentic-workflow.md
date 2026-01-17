@@ -143,7 +143,8 @@ CI failures trigger **immediately** on the `workflow_run` failure event. The sup
 
 The supervisor uses an allowlist of bot usernames to avoid false positives. Update these values if GitHub app names change:
 - `CODERABBIT_USERS` (default: `coderabbitai[bot],coderabbitai`)
-- `SUPERVISOR_BOT_USERS` (default: `google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,github-actions[bot]`)
+- `CODECOV_USERS` (default: `codecov[bot],codecov`)
+- `SUPERVISOR_BOT_USERS` (default: `google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,codecov[bot],codecov,github-actions[bot]`)
 
 ---
 

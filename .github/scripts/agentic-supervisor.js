@@ -39,12 +39,15 @@ const CONFIG = {
   LOG_TRUNCATE_LENGTH: 2000,
   CODERABBIT_COMMENT_LIMIT: 50,
   CODERABBIT_USERS: parseListEnv('CODERABBIT_USERS', ['coderabbitai[bot]', 'coderabbitai']),
+  CODECOV_USERS: parseListEnv('CODECOV_USERS', ['codecov[bot]', 'codecov']),
   BOT_USERS: parseListEnv('SUPERVISOR_BOT_USERS', [
     'google-labs-jules',
     'jules',
     'renovate[bot]',
     'coderabbitai[bot]',
     'coderabbitai',
+    'codecov[bot]',
+    'codecov',
     'github-actions[bot]'
   ]),
   SIGNATURE_PREFIX: '<!-- JULES_SUPERVISOR_SIG',
@@ -85,6 +88,11 @@ function normalizeLogin(login) {
 function isCodeRabbitUser(login) {
   const normalized = normalizeLogin(login);
   return CONFIG.CODERABBIT_USERS.some(user => normalized === user);
+}
+
+function isCodecovUser(login) {
+  const normalized = normalizeLogin(login);
+  return CONFIG.CODECOV_USERS.some(user => normalized === user);
 }
 
 function isBotUser(login) {
@@ -708,7 +716,7 @@ ${conventions}
 
   // --- C: Automated Review (Enhanced with CI) ---
   else if ((eventName === 'pull_request_review' || eventName === 'pull_request_review_comment') &&
-          (isCodeRabbitUser(reviewAuthorLower) || reviewAuthorLower.includes('codecov'))) {
+          (isCodeRabbitUser(reviewAuthorLower) || isCodecovUser(reviewAuthorLower))) {
     if (context.isDraft) {
       decision.method = 'none';
       decision.reason = 'Draft PR (Review ignored)';
