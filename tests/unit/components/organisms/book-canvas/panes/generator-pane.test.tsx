@@ -4,6 +4,7 @@ import { GeneratorPane } from "@/components/organisms/book-canvas/panes/generato
 import * as BookCanvasContext from "@/components/organisms/book-canvas/book-canvas-context";
 import * as StoryGenerationActions from "@/app/actions/story-generation";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // Mock the server actions
 vi.mock("@/app/actions/story-generation", () => ({
@@ -31,6 +32,9 @@ const createTestQueryClient = () =>
       queries: {
         retry: false,
       },
+      mutations: {
+        retry: false,
+      },
     },
   });
 
@@ -41,8 +45,13 @@ describe("GeneratorPane", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     queryClient = createTestQueryClient();
-    (BookCanvasContext.useBookCanvasLayout as any).mockReturnValue({
+    vi.mocked(BookCanvasContext.useBookCanvasLayout).mockReturnValue({
       projectId: mockProjectId,
+      isOpen: true,
+      activePane: "generator",
+      overallStatus: "idle",
+      generationId: null,
+      isReadOnly: false,
     });
   });
 
@@ -59,8 +68,13 @@ describe("GeneratorPane", () => {
   });
 
   it("shows empty state when no project is selected", () => {
-    (BookCanvasContext.useBookCanvasLayout as any).mockReturnValue({
+    vi.mocked(BookCanvasContext.useBookCanvasLayout).mockReturnValue({
       projectId: null,
+      isOpen: true,
+      activePane: "generator",
+      overallStatus: "idle",
+      generationId: null,
+      isReadOnly: false,
     });
 
     render(
@@ -70,6 +84,22 @@ describe("GeneratorPane", () => {
     );
 
     expect(screen.getByText("No Project Selected")).toBeInTheDocument();
+  });
+
+  it("disables generate button when prompt is empty and enables when populated", () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GeneratorPane />
+      </QueryClientProvider>
+    );
+
+    const generateBtn = screen.getByText("Generate Plan");
+    expect(generateBtn).toBeDisabled();
+
+    const textarea = screen.getByLabelText(/What is your story about?/i);
+    fireEvent.change(textarea, { target: { value: "A test story" } });
+
+    expect(generateBtn).not.toBeDisabled();
   });
 
   it("calls generateBookPlan when form is submitted", async () => {
@@ -82,7 +112,7 @@ describe("GeneratorPane", () => {
       ],
     };
 
-    (StoryGenerationActions.generateBookPlan as any).mockResolvedValue({
+    vi.mocked(StoryGenerationActions.generateBookPlan).mockResolvedValue({
       success: true,
       plan: mockPlan,
     });
@@ -127,12 +157,12 @@ describe("GeneratorPane", () => {
       ],
     };
 
-    (StoryGenerationActions.generateBookPlan as any).mockResolvedValue({
+    vi.mocked(StoryGenerationActions.generateBookPlan).mockResolvedValue({
       success: true,
       plan: mockPlan,
     });
 
-    (StoryGenerationActions.createBookFromPlan as any).mockResolvedValue({
+    vi.mocked(StoryGenerationActions.createBookFromPlan).mockResolvedValue({
       success: true,
     });
 
@@ -162,6 +192,48 @@ describe("GeneratorPane", () => {
         mockPlan,
         expect.objectContaining({ pov: "Third Person" })
       );
+    });
+  });
+
+  it("displays error when generation returns failure", async () => {
+    vi.mocked(StoryGenerationActions.generateBookPlan).mockResolvedValue({
+      success: false,
+      error: "Generation failed",
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GeneratorPane />
+      </QueryClientProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/What is your story about?/i), {
+      target: { value: "A test story" },
+    });
+    fireEvent.click(screen.getByText("Generate Plan"));
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Generation failed");
+    });
+  });
+
+  it("displays error when generation rejects (network error)", async () => {
+    vi.mocked(StoryGenerationActions.generateBookPlan).mockRejectedValue(new Error("Network error"));
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <GeneratorPane />
+      </QueryClientProvider>
+    );
+
+    fireEvent.change(screen.getByLabelText(/What is your story about?/i), {
+      target: { value: "A test story" },
+    });
+    fireEvent.click(screen.getByText("Generate Plan"));
+
+    await waitFor(() => {
+      // The component catches the error and displays a generic message or the error message
+      expect(toast.error).toHaveBeenCalledWith("Network error");
     });
   });
 });

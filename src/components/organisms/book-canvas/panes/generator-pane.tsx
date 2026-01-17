@@ -3,7 +3,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
 	BookOpenIcon,
-	ChevronRightIcon,
 	Loader2,
 	SparklesIcon,
 	Wand2Icon,
@@ -12,7 +11,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { createBookFromPlan, generateBookPlan } from "@/app/actions/story-generation";
 import { Button } from "@/components/atoms/button";
-import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import { Textarea } from "@/components/atoms/textarea";
 import {
@@ -24,9 +22,8 @@ import {
 } from "@/components/atoms/select";
 import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { BookPlan } from "@/lib/services/story-service";
-import { cn } from "@/lib/utils";
 
-export function GeneratorPane() {
+export function GeneratorPane(): JSX.Element {
 	const { projectId } = useBookCanvasLayout();
 	const queryClient = useQueryClient();
 
@@ -37,7 +34,7 @@ export function GeneratorPane() {
 
 	const { mutate: generate, isPending: isGenerating } = useMutation({
 		mutationFn: async () => {
-			if (!prompt) return;
+			if (!prompt) throw new Error("Prompt is empty");
 			const res = await generateBookPlan(
 				prompt,
 				{ genre, tone, pov: "Third Person" }, // Defaulting POV for now
@@ -47,8 +44,10 @@ export function GeneratorPane() {
 			return res.plan;
 		},
 		onSuccess: (data) => {
-			setGeneratedPlan(data);
-			toast.success("Book plan generated successfully!");
+			if (data) {
+				setGeneratedPlan(data);
+				toast.success("Book plan generated successfully!");
+			}
 		},
 		onError: (error) => {
 			toast.error(error.message || "Failed to generate plan");
@@ -57,7 +56,8 @@ export function GeneratorPane() {
 
 	const { mutate: applyPlan, isPending: isApplying } = useMutation({
 		mutationFn: async () => {
-			if (!projectId || !generatedPlan) return;
+			if (!projectId || !generatedPlan)
+				throw new Error("Missing projectId or generatedPlan");
 			const res = await createBookFromPlan(projectId, generatedPlan, {
 				genre,
 				tone,
