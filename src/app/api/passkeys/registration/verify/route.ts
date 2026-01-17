@@ -46,14 +46,13 @@ export async function POST(request: Request) {
 		return NextResponse.json({ error: "Verification failed" }, { status: 400 });
 	}
 
-	const { credentialID, credentialPublicKey, counter } =
-		verification.registrationInfo;
+	const { credential: newCredential } = verification.registrationInfo;
 
 	await createPasskeyCredential({
 		userId: session.user.id,
-		credentialId: encodeBase64Url(credentialID),
-		publicKey: encodeBase64Url(credentialPublicKey),
-		counter,
+		credentialId: newCredential.id,
+		publicKey: encodeBase64Url(newCredential.publicKey),
+		counter: newCredential.counter,
 		transports: credential.response.transports ?? [],
 	});
 

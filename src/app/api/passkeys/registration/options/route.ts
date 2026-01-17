@@ -1,7 +1,8 @@
 import { generateRegistrationOptions } from "@simplewebauthn/server";
+import type { AuthenticatorTransportFuture } from "@simplewebauthn/types";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { decodeBase64Url, passkeyRpId } from "@/lib/auth/passkeys";
+import { passkeyRpId } from "@/lib/auth/passkeys";
 import {
 	createPasskeyChallenge,
 	listPasskeyCredentialsByUserId,
@@ -16,17 +17,18 @@ export async function POST() {
 
 	const credentials = await listPasskeyCredentialsByUserId(session.user.id);
 
-	const options = generateRegistrationOptions({
+	const options = await generateRegistrationOptions({
 		rpID: passkeyRpId,
 		rpName: "AI Book World Builder",
-		userID: session.user.id,
+		userID: new TextEncoder().encode(session.user.id),
 		userName: session.user.email,
 		userDisplayName: session.user.email,
 		attestationType: "none",
 		excludeCredentials: credentials.map((credential) => ({
-			id: decodeBase64Url(credential.credentialId),
+			id: credential.credentialId,
 			type: "public-key",
-			transports: credential.transports ?? undefined,
+			transports:
+				(credential.transports as AuthenticatorTransportFuture[]) ?? undefined,
 		})),
 	});
 
