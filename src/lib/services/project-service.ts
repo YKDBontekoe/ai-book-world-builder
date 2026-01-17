@@ -1,11 +1,11 @@
 import "server-only";
 import { inArray } from "drizzle-orm";
 
-import { db, type DbTransaction } from "@/lib/db";
-import { project } from "@/lib/db/schema";
+import { type DbTransaction, db } from "@/lib/db";
 import { entityCleanupRepository } from "@/lib/db/repositories/entity-cleanup-repository";
 import { generationRepository } from "@/lib/db/repositories/generation-repository";
 import { structureRepository } from "@/lib/db/repositories/structure-repository";
+import { project } from "@/lib/db/schema";
 import { projectDuplicationService } from "@/lib/services/project-duplication-service";
 
 export class ProjectService {

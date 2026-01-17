@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { DBMessage, Document } from "@/lib/db/schema";
-import type { ChatMessage, UIMessage } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 import {
 	cn,
 	convertToUIMessages,

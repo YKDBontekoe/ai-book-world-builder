@@ -58,13 +58,8 @@ export function EditorBubbleMenu({ editorView }: EditorBubbleMenuProps) {
 		setIsOpen: setMenuOpen,
 		setPosition,
 	} = useBubbleMenuPosition(editorView);
-	const {
-		loading,
-		rewrittenText,
-		handleRewrite,
-		applyRewrite,
-		cancelRewrite,
-	} = useAiRewrite(editorView);
+	const { loading, rewrittenText, handleRewrite, applyRewrite, cancelRewrite } =
+		useAiRewrite(editorView);
 	const [showMore, setShowMore] = useState(false);
 
 	const handleApply = () => {

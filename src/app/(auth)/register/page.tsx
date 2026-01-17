@@ -97,14 +97,11 @@ export default function Page() {
 				options,
 			)) as RegistrationResponseJSON;
 
-			const verifyResponse = await fetch(
-				"/api/passkeys/registration/verify",
-				{
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ credential }),
-				},
-			);
+			const verifyResponse = await fetch("/api/passkeys/registration/verify", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ credential }),
+			});
 
 			if (!verifyResponse.ok) {
 				const { error } = (await verifyResponse.json()) as { error?: string };
@@ -116,9 +113,7 @@ export default function Page() {
 			toast({
 				type: "error",
 				description:
-					error instanceof Error
-						? error.message
-						: "Unable to create passkey.",
+					error instanceof Error ? error.message : "Unable to create passkey.",
 			});
 		} finally {
 			setIsPasskeySubmitting(false);

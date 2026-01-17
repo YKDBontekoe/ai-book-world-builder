@@ -6,8 +6,6 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { generationService } from "@/lib/ai/writer-service";
-import { db } from "@/lib/db";
 import { storyService } from "@/lib/services/story-service";
 
 // Mocks
@@ -173,7 +171,7 @@ vi.mock("@/lib/actions-utils", () => ({
 // Mock Story Service
 vi.mock("@/lib/services/story-service", () => ({
 	storyService: {
-		generateBookPlan: vi.fn((prompt) =>
+		generateBookPlan: vi.fn((_prompt) =>
 			Promise.resolve({
 				plan: {
 					title: "Mock Title",

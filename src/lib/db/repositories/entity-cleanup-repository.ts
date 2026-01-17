@@ -1,11 +1,7 @@
 import "server-only";
 import { inArray } from "drizzle-orm";
-import {
-	entity,
-	entityAttribute,
-	relationship,
-} from "@/lib/db/schema";
-import { type DbTransaction } from "@/lib/db";
+import type { DbTransaction } from "@/lib/db";
+import { entity, entityAttribute, relationship } from "@/lib/db/schema";
 import { DatabaseError } from "@/lib/errors";
 
 export class EntityCleanupRepository {

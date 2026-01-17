@@ -11,7 +11,9 @@ interface UseAiRewriteReturn {
 	cancelRewrite: () => void;
 }
 
-export function useAiRewrite(editorView: EditorView | null): UseAiRewriteReturn {
+export function useAiRewrite(
+	editorView: EditorView | null,
+): UseAiRewriteReturn {
 	const [loading, setLoading] = useState(false);
 	const [rewrittenText, setRewrittenText] = useState<string | null>(null);
 

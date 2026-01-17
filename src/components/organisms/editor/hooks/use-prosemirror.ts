@@ -106,7 +106,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, [containerRef]); // Only run on mount or if dependencies change (early return if already initialized)
+	}, [containerRef, content, readOnly]); // Only run on mount or if dependencies change (early return if already initialized)
 
 	// Synchronize content when it changes externally
 	useEffect(() => {
@@ -152,13 +152,7 @@ export function useProseMirror({
 				},
 			});
 		}
-	}, [
-		readOnly,
-		typewriterMode,
-		onSaveContent,
-		onSelectionChange,
-		containerRef.current?.closest,
-	]);
+	}, [readOnly, onSaveContent, onSelectionChange, handleTypewriterScroll]);
 
 	return { editorRef, mounted };
 }

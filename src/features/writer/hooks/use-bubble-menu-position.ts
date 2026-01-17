@@ -73,7 +73,11 @@ export function useBubbleMenuPosition(
 		return () => {
 			editorView.dom.removeEventListener("mouseup", updateMenu);
 			editorView.dom.removeEventListener("keyup", updateMenu);
-			scrollContainer.removeEventListener("scroll", updateMenu, listenerOptions);
+			scrollContainer.removeEventListener(
+				"scroll",
+				updateMenu,
+				listenerOptions,
+			);
 			window.removeEventListener("resize", updateMenu, listenerOptions);
 		};
 	}, [editorView]);
