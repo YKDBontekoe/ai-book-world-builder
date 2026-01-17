@@ -11,11 +11,11 @@ import {
 	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
 import { Input } from "@/components/atoms/input";
-import type { SceneWithPrev } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 interface SceneItemProps {
-	scene: SceneWithPrev;
+	id: string;
+	title: string;
 	isActive: boolean;
 	chapterId: string;
 	onSelect: (sceneId: string) => void;
@@ -27,7 +27,8 @@ interface SceneItemProps {
 }
 
 export const SceneItem = memo(function SceneItem({
-	scene,
+	id,
+	title,
 	isActive,
 	chapterId,
 	onSelect,
@@ -38,13 +39,13 @@ export const SceneItem = memo(function SceneItem({
 	readOnly,
 }: SceneItemProps) {
 	const [isEditing, setIsEditing] = useState(false);
-	const [editValue, setEditValue] = useState(scene.title);
+	const [editValue, setEditValue] = useState(title);
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	// Sync state with prop if title changes externally
 	useEffect(() => {
-		setEditValue(scene.title);
-	}, [scene.title]);
+		setEditValue(title);
+	}, [title]);
 
 	const isCanceling = useRef(false);
 
@@ -67,7 +68,7 @@ export const SceneItem = memo(function SceneItem({
 			e.stopPropagation();
 			isCanceling.current = true;
 			// Don't call onRename, just reset
-			setEditValue(scene.title);
+			setEditValue(title);
 			setIsEditing(false);
 		}
 	};
@@ -78,10 +79,10 @@ export const SceneItem = memo(function SceneItem({
 		}
 
 		if (isEditing) {
-			if (editValue.trim() && editValue !== scene.title) {
-				onRename?.(scene.id, editValue.trim());
+			if (editValue.trim() && editValue !== title) {
+				onRename?.(id, editValue.trim());
 			} else {
-				setEditValue(scene.title);
+				setEditValue(title);
 			}
 			setIsEditing(false);
 		}
@@ -114,16 +115,16 @@ export const SceneItem = memo(function SceneItem({
 							"justify-start h-8 w-full px-2 text-xs font-normal",
 							isActive && "bg-secondary/50 font-medium",
 						)}
-						onClick={() => onSelect(scene.id)}
+						onClick={() => onSelect(id)}
 						onDoubleClick={() => !readOnly && setIsEditing(true)}
 					>
 						<FileText className="mr-2 h-3 w-3 opacity-70" />
-						<span className="truncate">{scene.title}</span>
+						<span className="truncate">{title}</span>
 					</Button>
 				</ContextMenuTrigger>
 				<ContextMenuContent>
 					<ContextMenuItem
-						onClick={() => onGenerateNext(chapterId, scene.id)}
+						onClick={() => onGenerateNext(chapterId, id)}
 						disabled={isGenerating}
 					>
 						<Sparkles className="mr-2 h-4 w-4" />
@@ -136,7 +137,7 @@ export const SceneItem = memo(function SceneItem({
 					<ContextMenuSeparator />
 					<ContextMenuItem
 						className="text-destructive focus:text-destructive"
-						onClick={() => onDelete?.(scene.id)}
+						onClick={() => onDelete?.(id)}
 					>
 						<Trash2 className="mr-2 h-4 w-4" />
 						Delete Scene

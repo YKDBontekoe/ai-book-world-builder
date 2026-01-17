@@ -407,7 +407,8 @@ export const SceneNavigation = memo(function SceneNavigation({
 										{chapter.scenes.map((scene) => (
 											<SceneItem
 												key={scene.id}
-												scene={scene}
+												id={scene.id}
+												title={scene.title}
 												isActive={activeSceneId === scene.id}
 												chapterId={chapter.id}
 												onSelect={onSceneSelect}

@@ -15,8 +15,8 @@ vi.mock("@/features/writer/actions", () => ({
 }));
 
 vi.mock("@/features/writer/components/left-sidebar/scene-item", () => ({
-	SceneItem: ({ scene }: { scene: { title: string } }) => (
-		<div data-testid="scene-item">{scene.title}</div>
+	SceneItem: ({ title }: { title: string }) => (
+		<div data-testid="scene-item">{title}</div>
 	),
 }));
 
