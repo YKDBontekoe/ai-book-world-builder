@@ -93,9 +93,9 @@ export default function Page() {
 			const options =
 				(await optionsResponse.json()) as PublicKeyCredentialCreationOptionsJSON;
 
-			const credential = (await startRegistration(
-				options,
-			)) as RegistrationResponseJSON;
+			const credential = (await startRegistration({
+				optionsJSON: options,
+			})) as RegistrationResponseJSON;
 
 			const verifyResponse = await fetch(
 				"/api/passkeys/registration/verify",

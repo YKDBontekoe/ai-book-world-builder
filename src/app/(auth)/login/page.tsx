@@ -92,9 +92,9 @@ export default function Page() {
 
 			const options =
 				(await optionsResponse.json()) as PublicKeyCredentialRequestOptionsJSON;
-			const credential = (await startAuthentication(
-				options,
-			)) as AuthenticationResponseJSON;
+			const credential = (await startAuthentication({
+				optionsJSON: options,
+			})) as AuthenticationResponseJSON;
 
 			const result = await signIn("credentials", {
 				email,
