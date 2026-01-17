@@ -56,3 +56,17 @@ Mobile writing stays focused and visually consistent with the macOS glass aesthe
 
 ### Learnings
 - Mobile panels should be overlays so the editor remains the dominant surface.
+## 2026-01-11 - Passkey onboarding for auth flows
+
+### Context
+Login and registration needed a stronger passwordless option without breaking existing credentials-based sign-in.
+
+### Solution
+Added passkey registration and authentication flows with WebAuthn-backed challenges, plus UI hooks on the auth screens to create and use passkeys.
+
+### Outcome
+Users can generate a passkey after signup and sign in without passwords, while preserving the existing credential login path.
+
+### Learnings
+- Always store WebAuthn challenges server-side with short expirations to prevent replay.
+- Keep passkey buttons alongside existing auth methods to avoid blocking users on unsupported devices.

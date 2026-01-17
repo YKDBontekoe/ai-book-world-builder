@@ -1,10 +1,16 @@
 "use client";
 
+import { startAuthentication } from "@simplewebauthn/browser";
+import type {
+	AuthenticationResponseJSON,
+	PublicKeyCredentialRequestOptionsJSON,
+} from "@simplewebauthn/types";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
 import { type LoginActionState, login } from "@/app/(auth)/actions";
+import { Button } from "@/components/atoms/button";
 import { SubmitButton } from "@/components/atoms/submit-button";
 import { toast } from "@/components/atoms/toast";
 import { AuthForm } from "@/components/organisms/auth/auth-form";
@@ -15,6 +21,7 @@ export default function Page() {
 
 	const [email, setEmail] = useState("");
 	const [isSuccessful, setIsSuccessful] = useState(false);
+	const [isPasskeySubmitting, setIsPasskeySubmitting] = useState(false);
 
 	const [state, formAction] = useActionState<LoginActionState, FormData>(
 		login,
@@ -49,6 +56,71 @@ export default function Page() {
 		formAction(formData);
 	};
 
+	const handlePasskeySignIn = async () => {
+		if (!email) {
+			toast({
+				type: "error",
+				description: "Enter your email to use a passkey.",
+			});
+			return;
+		}
+
+		if (!window.PublicKeyCredential) {
+			toast({
+				type: "error",
+				description: "Passkeys are not supported on this device.",
+			});
+			return;
+		}
+
+		setIsPasskeySubmitting(true);
+
+		try {
+			const optionsResponse = await fetch(
+				"/api/passkeys/authentication/options",
+				{
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ email }),
+				},
+			);
+
+			if (!optionsResponse.ok) {
+				const { error } = (await optionsResponse.json()) as { error?: string };
+				throw new Error(error ?? "Unable to start passkey login.");
+			}
+
+			const options =
+				(await optionsResponse.json()) as PublicKeyCredentialRequestOptionsJSON;
+			const credential = (await startAuthentication(
+				options,
+			)) as AuthenticationResponseJSON;
+
+			const result = await signIn("credentials", {
+				email,
+				passkeyCredential: JSON.stringify(credential),
+				redirect: false,
+			});
+
+			if (result?.error) {
+				throw new Error("Passkey verification failed.");
+			}
+
+			await updateSession();
+			router.refresh();
+		} catch (error) {
+			toast({
+				type: "error",
+				description:
+					error instanceof Error
+						? error.message
+						: "Unable to sign in with passkey.",
+			});
+		} finally {
+			setIsPasskeySubmitting(false);
+		}
+	};
+
 	return (
 		<div className="flex h-dvh w-screen items-start justify-center bg-gradient-to-br from-violet-50 via-white to-indigo-50 pt-12 md:items-center md:pt-0 dark:from-zinc-950 dark:via-zinc-900 dark:to-violet-950">
 			<div className="flex w-full max-w-md flex-col gap-8 overflow-hidden rounded-2xl border border-zinc-200/50 bg-white/80 p-8 shadow-2xl backdrop-blur-xl dark:border-zinc-800/50 dark:bg-zinc-900/80">
@@ -75,8 +147,21 @@ export default function Page() {
 						</div>
 					</div>
 
-					<AuthForm action={handleSubmit} defaultEmail={email}>
+					<AuthForm
+						action={handleSubmit}
+						defaultEmail={email}
+						onEmailChange={setEmail}
+					>
 						<SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+						<Button
+							className="w-full"
+							disabled={isPasskeySubmitting}
+							onClick={handlePasskeySignIn}
+							type="button"
+							variant="glass"
+						>
+							{isPasskeySubmitting ? "Waiting for passkey..." : "Use a passkey"}
+						</Button>
 					</AuthForm>
 				</div>
 
