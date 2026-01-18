@@ -155,7 +155,7 @@ function getPrompt(filename, replacements = {}) {
   try {
     let content = fs.readFileSync(`.github/prompts/${filename}`, 'utf8');
     for (const [key, val] of Object.entries(replacements)) {
-      content = content.replace(new RegExp(`\$${key}`, 'g'), val || '');
+      content = content.replaceAll(`$${key}`, val ?? '');
     }
     return content;
   } catch (e) {

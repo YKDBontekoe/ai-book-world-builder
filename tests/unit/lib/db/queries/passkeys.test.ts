@@ -250,9 +250,9 @@ describe("passkey queries", () => {
 
 		it("throws ChatSDKError on db error", async () => {
 			dbMocks.error = new Error("db failed");
-			await expect(
-				updatePasskeyCredentialCounter("cred-1", 5),
-			).rejects.toThrow(ChatSDKError);
+			await expect(updatePasskeyCredentialCounter("cred-1", 5)).rejects.toThrow(
+				ChatSDKError,
+			);
 		});
 	});
 });
