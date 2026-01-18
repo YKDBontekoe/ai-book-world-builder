@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
+import type { JulesSource } from "@/lib/jules-client";
 import { JulesClient } from "@/lib/jules-client";
 import { generateSessionTitleAction } from "./jules-ai";
 
@@ -261,7 +262,13 @@ export const getJulesSessionMetadataAction = createAdminAction({
  */
 export const listJulesSourcesAction = createAdminAction({
 	handler: async () => {
-		const result = await jules.listSources();
-		return result.sources;
+		const sources: JulesSource[] = [];
+		let pageToken: string | undefined;
+		do {
+			const result = await jules.listSources(50, pageToken);
+			sources.push(...result.sources);
+			pageToken = result.nextPageToken;
+		} while (pageToken);
+		return sources;
 	},
 });
