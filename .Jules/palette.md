@@ -171,6 +171,7 @@ All admin GitHub interactions now flow through Octokit while preserving the Jule
 ### Learnings
 - Centralizing GitHub calls in Octokit keeps admin flows aligned with upstream APIs.
 - Shared UI types should live outside server actions for reuse across client components.
+
 ## 2026-01-18 - Prompt placeholder replacement uses literal tokens
 
 ### Context
