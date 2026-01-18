@@ -26,6 +26,7 @@ import {
 } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import { PROJECT_TEMPLATES } from "@/lib/templates";
 
 interface CreateProjectDialogProps {
 	trigger?: React.ReactNode;
@@ -49,12 +50,14 @@ export function CreateProjectDialog({
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
 	const [visibility, setVisibility] = useState<VisibilityType>("private");
+	const [templateId, setTemplateId] = useState("blank");
 
 	useEffect(() => {
 		if (open) {
 			setName("");
 			setDescription("");
 			setVisibility("private");
+			setTemplateId("blank");
 		}
 	}, [open]);
 
@@ -68,6 +71,7 @@ export function CreateProjectDialog({
 				name,
 				description,
 				visibility,
+				templateId,
 			});
 
 			if (result.error) {
@@ -129,30 +133,47 @@ export function CreateProjectDialog({
 							submitOnCtrlEnter
 						/>
 					</div>
-					<div className="space-y-2">
-						<Label htmlFor="visibility">Visibility</Label>
-						<Select
-							value={visibility}
-							onValueChange={(v) => setVisibility(v as VisibilityType)}
-						>
-							<SelectTrigger>
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="private">
-									<div className="flex items-center gap-2">
-										<Lock className="h-4 w-4" />
-										<span>Private</span>
-									</div>
-								</SelectItem>
-								<SelectItem value="public">
-									<div className="flex items-center gap-2">
-										<Globe className="h-4 w-4" />
-										<span>Public</span>
-									</div>
-								</SelectItem>
-							</SelectContent>
-						</Select>
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-2">
+							<Label htmlFor="template">Template</Label>
+							<Select value={templateId} onValueChange={setTemplateId}>
+								<SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									{PROJECT_TEMPLATES.map((template) => (
+										<SelectItem key={template.id} value={template.id}>
+											<span className="font-medium">{template.name}</span>
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+						<div className="space-y-2">
+							<Label htmlFor="visibility">Visibility</Label>
+							<Select
+								value={visibility}
+								onValueChange={(v) => setVisibility(v as VisibilityType)}
+							>
+								<SelectTrigger>
+									<SelectValue />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="private">
+										<div className="flex items-center gap-2">
+											<Lock className="h-4 w-4" />
+											<span>Private</span>
+										</div>
+									</SelectItem>
+									<SelectItem value="public">
+										<div className="flex items-center gap-2">
+											<Globe className="h-4 w-4" />
+											<span>Public</span>
+										</div>
+									</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
 					</div>
 					<DialogFooter className="pt-4">
 						<Button
