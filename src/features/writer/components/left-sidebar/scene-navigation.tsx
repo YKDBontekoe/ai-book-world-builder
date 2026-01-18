@@ -35,8 +35,8 @@ import {
 } from "@/components/atoms/context-menu";
 import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
-import { GlassCard } from "@/components/molecules/glass-card";
 import { EmptyState } from "@/components/molecules/empty-state";
+import { GlassCard } from "@/components/molecules/glass-card";
 import {
 	bulkDeleteScenes,
 	bulkExportScenes,

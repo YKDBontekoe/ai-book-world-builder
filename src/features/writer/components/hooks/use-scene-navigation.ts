@@ -3,7 +3,7 @@ import { toast } from "sonner";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import type { ChapterWithScenes } from "@/lib/types";
 
-export function useWriterNavigation(): {
+export function useSceneNavigation(): {
 	nextScene: () => void;
 	prevScene: () => void;
 } {
