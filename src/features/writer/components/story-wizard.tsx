@@ -3,6 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import {
 	Check,
+	Info,
 	Loader2,
 	Plus,
 	RefreshCw,
@@ -30,6 +31,12 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/atoms/tooltip";
 import type {
 	BookPlan,
 	StoryStyle,
@@ -177,7 +184,22 @@ export function StoryWizard({
 								</Select>
 							</div>
 							<div className="space-y-2">
-								<Label>POV</Label>
+								<div className="flex items-center gap-2">
+									<Label>POV</Label>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Info className="w-3 h-3 text-muted-foreground cursor-help" />
+											</TooltipTrigger>
+											<TooltipContent>
+												<p className="max-w-xs">
+													Determines the narrator's perspective (e.g., First
+													Person "I", Third Person "He/She").
+												</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+								</div>
 								<Select
 									value={style.pov}
 									onValueChange={(v) => setStyle({ ...style, pov: v })}
@@ -197,7 +219,22 @@ export function StoryWizard({
 								</Select>
 							</div>
 							<div className="space-y-2">
-								<Label>Tone</Label>
+								<div className="flex items-center gap-2">
+									<Label>Tone</Label>
+									<TooltipProvider>
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<Info className="w-3 h-3 text-muted-foreground cursor-help" />
+											</TooltipTrigger>
+											<TooltipContent>
+												<p className="max-w-xs">
+													Sets the mood and atmosphere of the writing (e.g.,
+													Dark, Humorous, Epic).
+												</p>
+											</TooltipContent>
+										</Tooltip>
+									</TooltipProvider>
+								</div>
 								<Select
 									value={style.tone}
 									onValueChange={(v) => setStyle({ ...style, tone: v })}
@@ -271,7 +308,7 @@ export function StoryWizard({
 									value={plan.logline}
 									onChange={(e) => updatePlan("logline", e.target.value)}
 									className="text-muted-foreground bg-transparent border-0 px-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/50"
-									placeholder="Logline"
+									placeholder="Logline (One-sentence summary)"
 								/>
 							</div>
 							<div className="flex gap-2">

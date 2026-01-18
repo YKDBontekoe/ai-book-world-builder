@@ -65,6 +65,56 @@ sequenceDiagram
     Orch->>DB: Mark Generation Complete
 ```
 
+## Observability & Callbacks
+
+The pipeline is decoupled from the UI. Communication happens via the `GenerationCallbacks` interface (`src/lib/generation/step-logger.ts`).
+
+```typescript
+export interface GenerationCallbacks {
+  onStepStart?: (step: BookGenerationStep) => void;
+  onStepComplete?: (step: BookGenerationStep) => void;
+  onLog?: (message: string, type: "writer" | "reviewer" | "orchestrator") => void;
+  onProgress?: (completed: number, total: number) => void;
+  onError?: (error: Error, step?: BookGenerationStep) => void;
+}
+```
+
+-   **Backend**: The `StepExecutionLogger` wraps these callbacks. It logs to the console/stdout (for server logs) AND invokes the callback (for real-time UI updates via streaming or websockets).
+-   **Frontend**: When triggering a generation, the UI provides these callbacks to update progress bars, current step indicators, and log panels.
+
+## Extending the Pipeline
+
+### How to Add a New Generation Step
+
+1.  **Define the Step Type**:
+    Add a new string literal to the `step_type` enum in the database schema (`src/lib/db/schema.ts`) if necessary, or just ensure your code handles the new string key.
+
+2.  **Create the Handler**:
+    Create a new file in `src/lib/generation/steps/` (e.g., `marketing-copy.ts`) implementing `StepHandler`.
+
+    ```typescript
+    import { StepHandler, ProcessStepContext } from "./types";
+
+    export class MarketingCopyHandler implements StepHandler {
+      async process(step: BookGenerationStep, context: ProcessStepContext): Promise<void> {
+        context.log("Generating marketing copy...");
+        // 1. Construct Prompt
+        // 2. Call AI
+        // 3. Save Result
+      }
+    }
+    ```
+
+3.  **Register the Handler**:
+    Add your new handler to the `stepHandlers` map in `src/lib/generation/pipeline.ts`.
+
+    ```typescript
+    const stepHandlers: Record<string, StepHandler> = {
+      // ... existing
+      marketing_copy: new MarketingCopyHandler(),
+    };
+    ```
+
 ## Key Concepts
 
 ### Context Flooding
