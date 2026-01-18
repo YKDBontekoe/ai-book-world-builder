@@ -1,26 +1,33 @@
 "use server";
 
+import { Octokit } from "octokit";
 import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
-import {
-	OctogitClient,
-	type OctogitComment,
-	type OctogitIssue,
-	type OctogitPullRequest,
-	type OctogitRepoStats,
-} from "@/lib/octogit-client";
+import type {
+	GitHubBranch,
+	GitHubCheckStatus,
+	GitHubPullRequestStatus,
+	GitHubPullRequestSummary,
+	GitHubRepository,
+} from "@/lib/github-types";
 
 // ============================================================================
 // Types & Initialization
 // ============================================================================
 
-const getRepoDetails = (): { fullName: string } => {
-	const owner = process.env.GITHUB_OWNER || "YKDBontekoe";
-	const repo = process.env.GITHUB_REPO || "ai-book-world-builder";
-	return { fullName: `${owner}/${repo}` };
+const getOctokit = (): Octokit => {
+	const token = process.env.GITHUB_TOKEN;
+	if (!token) {
+		throw new Error("GITHUB_TOKEN is not set in environment variables");
+	}
+	return new Octokit({ auth: token });
 };
 
-const octogit = new OctogitClient();
+const getRepoDetails = (): { fullName: string; owner: string; repo: string } => {
+	const owner = process.env.GITHUB_OWNER || "YKDBontekoe";
+	const repo = process.env.GITHUB_REPO || "ai-book-world-builder";
+	return { fullName: `${owner}/${repo}`, owner, repo };
+};
 
 export type GitHubIssue = {
 	number: number;
@@ -74,6 +81,25 @@ const mergePRSchema = z.object({
 	number: z.number(),
 	method: z.enum(["merge", "squash", "rebase"]).default("merge"),
 });
+
+const repoFullNameSchema = z.object({
+	repoFullName: z.string().min(1, "Repository is required"),
+});
+
+const repoBranchSchema = z.object({
+	repoFullName: z.string().min(1, "Repository is required"),
+});
+
+const pullRequestByBranchSchema = z.object({
+	repoFullName: z.string().min(1, "Repository is required"),
+	base: z.string().min(1, "Base branch is required"),
+	head: z.string().min(1, "Head branch is required"),
+});
+
+const pullRequestStatusSchema = z.object({
+	repoFullName: z.string().min(1, "Repository is required"),
+	pullRequestNumber: z.number().int().positive(),
+});
 const executeFeaturePlanSchema = z.object({
 	parentIssue: z.object({
 		title: z.string(),
@@ -98,9 +124,14 @@ const executeFeaturePlanSchema = z.object({
  */
 export const getRepoStats = createAdminAction({
 	handler: async () => {
-		const { fullName } = getRepoDetails();
-		const data: OctogitRepoStats = await octogit.getRepoStats(fullName);
-		return data;
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		const { data } = await octokit.rest.repos.get({ owner, repo });
+		return {
+			stars: data.stargazers_count,
+			forks: data.forks_count,
+			openIssues: data.open_issues_count,
+		};
 	},
 });
 
@@ -110,10 +141,15 @@ export const getRepoStats = createAdminAction({
 export const getIssues = createAdminAction({
 	input: issueStateSchema,
 	handler: async ({ input: state }) => {
-		const { fullName } = getRepoDetails();
-		const data: OctogitIssue[] = await octogit.listIssues({
-			repoFullName: fullName,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		const { data } = await octokit.rest.issues.listForRepo({
+			owner,
+			repo,
 			state,
+			sort: "updated",
+			direction: "desc",
+			per_page: 100,
 		});
 		return data.filter((item) => !item.pull_request) as GitHubIssue[];
 	},
@@ -125,12 +161,17 @@ export const getIssues = createAdminAction({
 export const getPullRequests = createAdminAction({
 	input: issueStateSchema,
 	handler: async ({ input: state }) => {
-		const { fullName } = getRepoDetails();
-		const data: OctogitPullRequest[] = await octogit.listPullRequests({
-			repoFullName: fullName,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		const { data } = await octokit.rest.pulls.list({
+			owner,
+			repo,
 			state,
+			sort: "updated",
+			direction: "desc",
+			per_page: 100,
 		});
-		return data as GitHubPR[];
+		return data as unknown as GitHubPR[];
 	},
 });
 
@@ -140,10 +181,12 @@ export const getPullRequests = createAdminAction({
 export const getIssueDetails = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
-		const { fullName } = getRepoDetails();
-		const data: OctogitIssue = await octogit.getIssue({
-			repoFullName: fullName,
-			issueNumber: number,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		const { data } = await octokit.rest.issues.get({
+			owner,
+			repo,
+			issue_number: number,
 		});
 		return data as GitHubIssue;
 	},
@@ -155,12 +198,14 @@ export const getIssueDetails = createAdminAction({
 export const getPullRequestDetails = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
-		const { fullName } = getRepoDetails();
-		const data: OctogitPullRequest = await octogit.getPullRequest({
-			repoFullName: fullName,
-			pullRequestNumber: number,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		const { data } = await octokit.rest.pulls.get({
+			owner,
+			repo,
+			pull_number: number,
 		});
-		return data as GitHubPR;
+		return data as unknown as GitHubPR;
 	},
 });
 
@@ -170,10 +215,12 @@ export const getPullRequestDetails = createAdminAction({
 export const getComments = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
-		const { fullName } = getRepoDetails();
-		const data: OctogitComment[] = await octogit.listComments({
-			repoFullName: fullName,
-			issueNumber: number,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		const { data } = await octokit.rest.issues.listComments({
+			owner,
+			repo,
+			issue_number: number,
 		});
 		return data as GitHubComment[];
 	},
@@ -185,10 +232,12 @@ export const getComments = createAdminAction({
 export const postComment = createAdminAction({
 	input: postCommentSchema,
 	handler: async ({ input: { number, body } }) => {
-		const { fullName } = getRepoDetails();
-		const data: OctogitComment = await octogit.createComment({
-			repoFullName: fullName,
-			issueNumber: number,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		const { data } = await octokit.rest.issues.createComment({
+			owner,
+			repo,
+			issue_number: number,
 			body,
 		});
 		return data as GitHubComment;
@@ -201,10 +250,12 @@ export const postComment = createAdminAction({
 export const closeIssueOrPR = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
-		const { fullName } = getRepoDetails();
-		await octogit.updateIssue({
-			repoFullName: fullName,
-			issueNumber: number,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		await octokit.rest.issues.update({
+			owner,
+			repo,
+			issue_number: number,
 			state: "closed",
 		});
 	},
@@ -216,11 +267,13 @@ export const closeIssueOrPR = createAdminAction({
 export const mergePullRequest = createAdminAction({
 	input: mergePRSchema,
 	handler: async ({ input: { number, method } }) => {
-		const { fullName } = getRepoDetails();
-		await octogit.mergePullRequestWithMethod({
-			repoFullName: fullName,
-			pullRequestNumber: number,
-			method,
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
+		await octokit.rest.pulls.merge({
+			owner,
+			repo,
+			pull_number: number,
+			merge_method: method,
 		});
 	},
 });
@@ -231,28 +284,31 @@ export const mergePullRequest = createAdminAction({
 export const executeFeaturePlanAction = createAdminAction({
 	input: executeFeaturePlanSchema,
 	handler: async ({ input }) => {
-		const { fullName } = getRepoDetails();
+		const octokit = getOctokit();
+		const { owner, repo } = getRepoDetails();
 
 		// 1. Create Parent Issue
-		const parentRes = await octogit.createIssue({
-			repoFullName: fullName,
+		const parentRes = await octokit.rest.issues.create({
+			owner,
+			repo,
 			title: input.parentIssue.title,
 			body: input.parentIssue.body,
 			labels: input.parentIssue.labels,
 		});
 
-		const parentNumber = parentRes.number;
+		const parentNumber = parentRes.data.number;
 		const createdIssues: number[] = [parentNumber];
 
 		// 2. Create Child Issues
 		for (const child of input.childIssues) {
-			const childRes = await octogit.createIssue({
-				repoFullName: fullName,
+			const childRes = await octokit.rest.issues.create({
+				owner,
+				repo,
 				title: child.title,
 				body: `${child.body}\n\nRelated to #${parentNumber}`,
 				labels: child.labels,
 			});
-			createdIssues.push(childRes.number);
+			createdIssues.push(childRes.data.number);
 		}
 
 		// 3. Update Parent with checklist of children
@@ -260,12 +316,162 @@ export const executeFeaturePlanAction = createAdminAction({
 			.slice(1)
 			.map((num) => `- [ ] #${num}`)
 			.join("\n");
-		await octogit.updateIssue({
-			repoFullName: fullName,
-			issueNumber: parentNumber,
+		await octokit.rest.issues.update({
+			owner,
+			repo,
+			issue_number: parentNumber,
 			body: `${input.parentIssue.body}\n\n### Tasks\n${checklist}`,
 		});
 
 		return { parentNumber, createdIssues };
+	},
+});
+
+export const listGitHubRepositoriesAction = createAdminAction({
+	handler: async (): Promise<GitHubRepository[]> => {
+		const octokit = getOctokit();
+		const { data } = await octokit.rest.repos.listForAuthenticatedUser({
+			per_page: 100,
+			sort: "updated",
+		});
+		return data.map((repo) => ({
+			id: repo.id,
+			name: repo.name,
+			fullName: repo.full_name,
+			owner: repo.owner?.login ?? "",
+			defaultBranch: repo.default_branch ?? "main",
+			private: repo.private ?? false,
+			permissions: repo.permissions
+				? {
+						admin: repo.permissions.admin ?? false,
+						push: repo.permissions.push ?? false,
+						pull: repo.permissions.pull ?? false,
+					}
+				: undefined,
+		}));
+	},
+});
+
+export const listGitHubBranchesAction = createAdminAction({
+	input: repoBranchSchema,
+	handler: async ({ input }): Promise<GitHubBranch[]> => {
+		const octokit = getOctokit();
+		const [owner, repo] = input.repoFullName.split("/");
+		if (!owner || !repo) {
+			throw new Error("Invalid repository identifier");
+		}
+		const { data } = await octokit.rest.repos.listBranches({
+			owner,
+			repo,
+			per_page: 100,
+		});
+		return data.map((branch) => ({
+			name: branch.name,
+			protected: branch.protected,
+		}));
+	},
+});
+
+export const getGitHubPullRequestByBranchAction = createAdminAction({
+	input: pullRequestByBranchSchema,
+	handler: async ({ input }): Promise<GitHubPullRequestSummary | null> => {
+		const octokit = getOctokit();
+		const [owner, repo] = input.repoFullName.split("/");
+		if (!owner || !repo) {
+			throw new Error("Invalid repository identifier");
+		}
+		const { data } = await octokit.rest.pulls.list({
+			owner,
+			repo,
+			head: `${owner}:${input.head}`,
+			base: input.base,
+			per_page: 1,
+		});
+		const pr = data[0];
+		if (!pr) return null;
+		return {
+			id: pr.id,
+			number: pr.number,
+			title: pr.title,
+			url: pr.html_url,
+			base: pr.base.ref,
+			head: pr.head.ref,
+			status: {
+				state: "unknown",
+				mergeable: pr.mergeable ?? null,
+				hasConflicts: pr.mergeable_state === "dirty",
+				checks: [],
+				updatedAt: pr.updated_at ?? new Date().toISOString(),
+			},
+		};
+	},
+});
+
+export const getGitHubPullRequestStatusAction = createAdminAction({
+	input: pullRequestStatusSchema,
+	handler: async ({ input }): Promise<GitHubPullRequestStatus> => {
+		const octokit = getOctokit();
+		const [owner, repo] = input.repoFullName.split("/");
+		if (!owner || !repo) {
+			throw new Error("Invalid repository identifier");
+		}
+		const { data: pr } = await octokit.rest.pulls.get({
+			owner,
+			repo,
+			pull_number: input.pullRequestNumber,
+		});
+		const { data: checks } = await octokit.rest.checks.listForRef({
+			owner,
+			repo,
+			ref: pr.head.sha,
+		});
+
+		const mappedChecks: GitHubCheckStatus[] = checks.check_runs.map((run) => ({
+			name: run.name,
+			status: run.status,
+			conclusion: run.conclusion,
+			detailsUrl: run.html_url,
+		}));
+
+		const hasFailure = mappedChecks.some(
+			(check) => check.conclusion && check.conclusion !== "success",
+		);
+		const isPending = mappedChecks.some(
+			(check) => check.status === "queued" || check.status === "in_progress",
+		);
+
+		let state: GitHubPullRequestStatus["state"] = "unknown";
+		if (hasFailure) {
+			state = "failure";
+		} else if (isPending) {
+			state = "pending";
+		} else if (mappedChecks.length > 0) {
+			state = "success";
+		}
+
+		return {
+			state,
+			mergeable: pr.mergeable ?? null,
+			hasConflicts: pr.mergeable_state === "dirty",
+			checks: mappedChecks,
+			updatedAt: pr.updated_at ?? new Date().toISOString(),
+		};
+	},
+});
+
+export const mergeGitHubPullRequestAction = createAdminAction({
+	input: pullRequestStatusSchema,
+	handler: async ({ input }): Promise<void> => {
+		const octokit = getOctokit();
+		const [owner, repo] = input.repoFullName.split("/");
+		if (!owner || !repo) {
+			throw new Error("Invalid repository identifier");
+		}
+		await octokit.rest.pulls.merge({
+			owner,
+			repo,
+			pull_number: input.pullRequestNumber,
+			merge_method: "merge",
+		});
 	},
 });

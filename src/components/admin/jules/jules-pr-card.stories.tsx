@@ -20,7 +20,7 @@ export const Default: Story = {
 		onMerge: () => {},
 		onAskFollowUp: () => {},
 		pullRequest: {
-			id: "pr-99",
+			id: 99,
 			number: 99,
 			title: "Improve onboarding flow",
 			url: "https://github.com/YKDBontekoe/ai-book-world-builder/pull/99",

@@ -22,10 +22,10 @@ import {
 	sendJulesMessageAction,
 } from "@/app/actions/jules";
 import {
-	getOctogitPullRequestByBranchAction,
-	getOctogitPullRequestStatusAction,
-	mergeOctogitPullRequestAction,
-} from "@/app/actions/octogit";
+	getGitHubPullRequestByBranchAction,
+	getGitHubPullRequestStatusAction,
+	mergeGitHubPullRequestAction,
+} from "@/app/actions/github";
 import { reviewJulesPlanAction } from "@/app/actions/jules-ai";
 import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
@@ -33,7 +33,7 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { GlassCard } from "@/components/molecules/glass-card";
-import type { OctogitPullRequestStatus } from "@/lib/octogit-client";
+import type { GitHubPullRequestStatus } from "@/lib/github-types";
 import type { JulesActivity, JulesPlan } from "@/lib/jules-client";
 import { ArtifactRenderer } from "./artifact-renderer";
 import { JulesPullRequestCard } from "./jules-pr-card";
@@ -211,12 +211,12 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 	const headBranch = data?.session?.id ? `jules/${data.session.id}` : null;
 
 	const { data: pullRequest, error: pullRequestError } = useQuery({
-		queryKey: ["octogit", "pull-request", repoFullName, baseBranch, headBranch],
+		queryKey: ["github", "pull-request", repoFullName, baseBranch, headBranch],
 		queryFn: async () => {
 			if (!repoFullName || !baseBranch || !headBranch) {
 				return null;
 			}
-			const result = await getOctogitPullRequestByBranchAction({
+			const result = await getGitHubPullRequestByBranchAction({
 				repoFullName,
 				base: baseBranch,
 				head: headBranch,
@@ -230,7 +230,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	const { data: pullRequestStatus, error: pullRequestStatusError } = useQuery({
 		queryKey: [
-			"octogit",
+			"github",
 			"pull-request-status",
 			repoFullName,
 			pullRequest?.number,
@@ -239,7 +239,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 			if (!repoFullName || !pullRequest?.number) {
 				throw new Error("Missing PR context");
 			}
-			const result = await getOctogitPullRequestStatusAction({
+			const result = await getGitHubPullRequestStatusAction({
 				repoFullName,
 				pullRequestNumber: pullRequest.number,
 			});
@@ -255,7 +255,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 			if (!repoFullName || !pullRequest?.number) {
 				throw new Error("Missing PR context");
 			}
-			const result = await mergeOctogitPullRequestAction({
+			const result = await mergeGitHubPullRequestAction({
 				repoFullName,
 				pullRequestNumber: pullRequest.number,
 			});
@@ -299,7 +299,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 	useEffect(() => {
 		if (pullRequestError) {
 			const message =
-				"Unable to load the pull request from Octogit. Retry in a moment.";
+				"Unable to load the pull request from GitHub. Retry in a moment.";
 			if (prErrorRef.current !== message) {
 				pushSystemMessage({
 					variant: "error",
@@ -313,7 +313,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 	useEffect(() => {
 		if (pullRequestStatusError) {
 			const message =
-				"Unable to load PR status checks from Octogit. Retry in a moment.";
+				"Unable to load PR status checks from GitHub. Retry in a moment.";
 			if (prStatusErrorRef.current !== message) {
 				pushSystemMessage({
 					variant: "error",
@@ -639,7 +639,7 @@ type TimelineItem =
 			message: SystemMessage;
 	  };
 
-function serializeStatus(status: OctogitPullRequestStatus): string {
+function serializeStatus(status: GitHubPullRequestStatus): string {
 	return JSON.stringify({
 		state: status.state,
 		mergeable: status.mergeable,
@@ -652,7 +652,7 @@ function serializeStatus(status: OctogitPullRequestStatus): string {
 	});
 }
 
-function formatStatusSummary(status: OctogitPullRequestStatus): string {
+function formatStatusSummary(status: GitHubPullRequestStatus): string {
 	const checksSummary = status.checks.length
 		? `${status.checks.filter((check) => check.conclusion === "success").length}/${
 				status.checks.length

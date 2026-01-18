@@ -115,3 +115,18 @@ All GitHub data used by the admin interface now flows through Octogit, keeping S
 ### Learnings
 - Centralizing GitHub access through Octogit avoids mixing SDK patterns and keeps security boundaries clear.
 - Extending shared clients with typed helpers prevents reintroducing forbidden dependencies.
+
+## 2025-02-14 - Reverted admin GitHub flows to Octokit
+
+### Context
+The admin console needed to drop the custom Octogit client and rely on the first-party Octokit SDK instead.
+
+### Solution
+Removed Octogit actions and replaced repository, branch, PR, and status helpers with Octokit-backed server actions and shared GitHub types.
+
+### Outcome
+All admin GitHub interactions now flow through Octokit while preserving the Jules console workflows.
+
+### Learnings
+- Centralizing GitHub calls in Octokit keeps admin flows aligned with upstream APIs.
+- Shared UI types should live outside server actions for reuse across client components.

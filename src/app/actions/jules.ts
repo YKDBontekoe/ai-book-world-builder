@@ -20,7 +20,7 @@ const createSessionSchema = z.object({
 	automationMode: z.enum(["manual", "auto"]).optional(),
 	repository: z
 		.object({
-			id: z.string().min(1),
+			id: z.number().int().positive(),
 			name: z.string().min(1),
 			fullName: z.string().min(1),
 			owner: z.string().min(1),
@@ -41,7 +41,7 @@ const createAdminSessionSchema = createSessionSchema.extend({
 	startingBranch: z.string().min(1, "Base branch is required"),
 	automationMode: z.enum(["manual", "auto"]),
 	repository: z.object({
-		id: z.string().min(1),
+		id: z.number().int().positive(),
 		name: z.string().min(1),
 		fullName: z.string().min(1),
 		owner: z.string().min(1),

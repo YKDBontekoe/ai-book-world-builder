@@ -5,10 +5,10 @@ import type { JSX } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
-import type { OctogitPullRequestSummary } from "@/lib/octogit-client";
+import type { GitHubPullRequestSummary } from "@/lib/github-types";
 
 export interface JulesPullRequestCardProps {
-	pullRequest: OctogitPullRequestSummary;
+	pullRequest: GitHubPullRequestSummary;
 	repoFullName: string;
 	baseBranch: string;
 	headBranch: string;

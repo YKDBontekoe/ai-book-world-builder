@@ -7,9 +7,9 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createJulesAdminSessionAction } from "@/app/actions/jules";
 import {
-	listOctogitBranchesAction,
-	listOctogitRepositoriesAction,
-} from "@/app/actions/octogit";
+	listGitHubBranchesAction,
+	listGitHubRepositoriesAction,
+} from "@/app/actions/github";
 import { listJulesSourcesAction } from "@/app/actions/jules";
 import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
@@ -25,7 +25,7 @@ import {
 } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import { GlassCard } from "@/components/molecules/glass-card";
-import type { OctogitBranch, OctogitRepository } from "@/lib/octogit-client";
+import type { GitHubBranch, GitHubRepository } from "@/lib/github-types";
 import type { JulesSource } from "@/lib/jules-client";
 
 export interface JulesSessionSetupProps {
@@ -34,8 +34,8 @@ export interface JulesSessionSetupProps {
 }
 
 export interface JulesSessionSetupPreset {
-	repositories: OctogitRepository[];
-	branches: OctogitBranch[];
+	repositories: GitHubRepository[];
+	branches: GitHubBranch[];
 	sources: JulesSource[];
 }
 
@@ -46,7 +46,7 @@ export function JulesSessionSetup({
 	const queryClient = useQueryClient();
 	const [prompt, setPrompt] = useState("");
 	const [title, setTitle] = useState("");
-	const [selectedRepo, setSelectedRepo] = useState<OctogitRepository | null>(null);
+	const [selectedRepo, setSelectedRepo] = useState<GitHubRepository | null>(null);
 	const [selectedBranch, setSelectedBranch] = useState<string>("");
 	const [automationMode, setAutomationMode] = useState<"manual" | "auto">(
 		"manual",
@@ -69,9 +69,9 @@ export function JulesSessionSetup({
 		isLoading: isLoadingRepos,
 		error: reposError,
 	} = useQuery({
-		queryKey: ["octogit", "repositories"],
+		queryKey: ["github", "repositories"],
 		queryFn: async () => {
-			const result = await listOctogitRepositoriesAction();
+			const result = await listGitHubRepositoriesAction();
 			if (!result.success) throw new Error(result.error);
 			return result.data;
 		},
@@ -84,10 +84,10 @@ export function JulesSessionSetup({
 		isLoading: isLoadingBranches,
 		error: branchesError,
 	} = useQuery({
-		queryKey: ["octogit", "branches", selectedRepo?.fullName],
+		queryKey: ["github", "branches", selectedRepo?.fullName],
 		queryFn: async () => {
 			if (!selectedRepo) return [];
-			const result = await listOctogitBranchesAction({
+			const result = await listGitHubBranchesAction({
 				repoFullName: selectedRepo.fullName,
 			});
 			if (!result.success) throw new Error(result.error);
@@ -172,26 +172,26 @@ export function JulesSessionSetup({
 				</p>
 			</div>
 
-		{(reposError || branchesError) && (
-			<Alert variant="destructive">
-				<AlertCircle className="h-4 w-4" />
-				<AlertTitle>Unable to load GitHub data</AlertTitle>
-				<AlertDescription className="space-y-2">
-					<p>Please retry fetching repositories or branches.</p>
-					<Button
-						size="sm"
-						variant="outline"
-						onClick={() =>
-							queryClient.invalidateQueries({
-								queryKey: ["octogit"],
-							})
-						}
-					>
-						Retry
-					</Button>
-				</AlertDescription>
-			</Alert>
-		)}
+			{(reposError || branchesError) && (
+				<Alert variant="destructive">
+					<AlertCircle className="h-4 w-4" />
+					<AlertTitle>Unable to load GitHub data</AlertTitle>
+					<AlertDescription className="space-y-2">
+						<p>Please retry fetching repositories or branches.</p>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() =>
+								queryClient.invalidateQueries({
+									queryKey: ["github"],
+								})
+							}
+						>
+							Retry
+						</Button>
+					</AlertDescription>
+				</Alert>
+			)}
 
 			{errorMessage && (
 				<Alert variant="destructive">

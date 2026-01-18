@@ -1,7 +1,7 @@
 import "server-only";
 
 import { nanoid } from "nanoid";
-import type { OctogitRepository } from "@/lib/octogit-client";
+import type { GitHubRepository } from "@/lib/github-types";
 
 const METADATA_PATH = `${process.cwd()}/.data/jules-sessions.json`;
 
@@ -10,7 +10,7 @@ export type JulesAutomationPreference = "manual" | "auto";
 export interface JulesSessionMetadata {
 	id: string;
 	sessionId: string;
-	repository: OctogitRepository;
+	repository: GitHubRepository;
 	baseBranch: string;
 	automationMode: JulesAutomationPreference;
 	createdAt: string;

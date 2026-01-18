@@ -16,7 +16,7 @@ export const Default: Story = {
 		presetData: {
 			repositories: [
 				{
-					id: "repo-1",
+					id: 1,
 					name: "ai-book-world-builder",
 					fullName: "YKDBontekoe/ai-book-world-builder",
 					owner: "YKDBontekoe",
