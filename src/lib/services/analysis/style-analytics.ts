@@ -29,8 +29,12 @@ export function analyzeWritingStyle(content: string): StyleMetrics {
 		"hence",
 	];
 	const casualWords = ["gonna", "wanna", "yeah", "okay", "hey", "well"];
-	const formalCount = formalWords.filter((w) => contentLower.includes(w)).length;
-	const casualCount = casualWords.filter((w) => contentLower.includes(w)).length;
+	const formalCount = formalWords.filter((w) =>
+		contentLower.includes(w),
+	).length;
+	const casualCount = casualWords.filter((w) =>
+		contentLower.includes(w),
+	).length;
 
 	let tone: "formal" | "casual" | "neutral" = "neutral";
 	if (formalCount > casualCount && formalCount > 0) tone = "formal";

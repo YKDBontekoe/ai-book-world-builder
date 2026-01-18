@@ -6,11 +6,11 @@ import {
 	passkeyEmailSchema,
 	passkeyRpId,
 } from "@/lib/auth/passkeys";
-import { getUser } from "@/lib/db/queries/user";
 import {
 	createPasskeyChallenge,
 	listPasskeyCredentialsByUserId,
 } from "@/lib/db/queries/passkeys";
+import { getUser } from "@/lib/db/queries/user";
 
 export async function POST(request: Request) {
 	const session = await auth();

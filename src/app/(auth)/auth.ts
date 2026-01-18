@@ -1,19 +1,19 @@
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { verifyAuthenticationResponse } from "@simplewebauthn/server";
 import type { AuthenticationResponseJSON } from "@simplewebauthn/types";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
 import { eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
+import { authConfig } from "@/app/(auth)/auth.config";
 import {
 	authenticationResponseSchema,
 	decodeBase64Url,
 	passkeyOrigin,
 	passkeyRpId,
 } from "@/lib/auth/passkeys";
-import { authConfig } from "@/app/(auth)/auth.config";
 import { DUMMY_PASSWORD } from "@/lib/constants";
 import { db } from "@/lib/db";
 import {
@@ -113,15 +113,15 @@ export const {
 						return null;
 					}
 
-					const parsedCredential = authenticationResponseSchema.safeParse(
-						parsedJson,
-					);
+					const parsedCredential =
+						authenticationResponseSchema.safeParse(parsedJson);
 
 					if (!parsedCredential.success) {
 						return null;
 					}
 
-					const passkeyCredential = parsedCredential.data as AuthenticationResponseJSON;
+					const passkeyCredential =
+						parsedCredential.data as AuthenticationResponseJSON;
 
 					const storedCredential = await getPasskeyCredentialByCredentialId(
 						passkeyCredential.id,
@@ -131,7 +131,10 @@ export const {
 						return null;
 					}
 
-					const challenge = await getPasskeyChallenge(user.id, "authentication");
+					const challenge = await getPasskeyChallenge(
+						user.id,
+						"authentication",
+					);
 
 					if (!challenge || challenge.expiresAt < new Date()) {
 						return null;
