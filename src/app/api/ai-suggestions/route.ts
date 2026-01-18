@@ -67,10 +67,7 @@ ${recentChapters || "None"}
 		}
 
 		// Get last few user messages for immediate context
-		const recentMessages = messages?.slice(-3) || [];
-		const conversationContext = recentMessages
-			.map((m: any) => `${m.role}: ${m.content}`)
-			.join("\n");
+		const recentMessages = Array.isArray(messages) ? messages.slice(-3) : [];
 
 		const effectiveModelId = isChatModelId(modelId)
 			? modelId
@@ -103,13 +100,10 @@ ${recentChapters || "None"}
 					.min(3)
 					.max(5), // allow 3-5 suggestions for robustness
 			}),
-			prompt: `You are a creative writing assistant. Suggest 4 relevant next steps for the user.
+			system: `You are a creative writing assistant. Suggest 4 relevant next steps for the user.
 
 PROJECT CONTEXT:
 ${projectContext}
-
-RECENT CONVERSATION:
-${conversationContext}
 
 CRITICAL: Return a JSON object with a "suggestions" key containing an array of suggestion objects.
 Each suggestion object MUST have: "label", "prompt", "type", and "reasoning".
@@ -131,6 +125,7 @@ GUIDELINES:
 - If chapters exist, suggest drafting next chapter (type: "story")
 - Make prompts actionable
 `,
+			messages: recentMessages,
 		});
 
 		return new Response(JSON.stringify(object), {

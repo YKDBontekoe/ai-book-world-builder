@@ -5,12 +5,14 @@ import { AlertCircle, Loader2, Sparkles } from "lucide-react";
 import type { JSX } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { createJulesAdminSessionAction } from "@/app/actions/jules";
 import {
 	listGitHubBranchesAction,
 	listGitHubRepositoriesAction,
 } from "@/app/actions/github";
-import { listJulesSourcesAction } from "@/app/actions/jules";
+import {
+	createJulesAdminSessionAction,
+	listJulesSourcesAction,
+} from "@/app/actions/jules";
 import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
@@ -46,7 +48,9 @@ export function JulesSessionSetup({
 	const queryClient = useQueryClient();
 	const [prompt, setPrompt] = useState("");
 	const [title, setTitle] = useState("");
-	const [selectedRepo, setSelectedRepo] = useState<GitHubRepository | null>(null);
+	const [selectedRepo, setSelectedRepo] = useState<GitHubRepository | null>(
+		null,
+	);
 	const [selectedBranch, setSelectedBranch] = useState<string>("");
 	const [automationMode, setAutomationMode] = useState<"manual" | "auto">(
 		"manual",
@@ -167,8 +171,8 @@ export function JulesSessionSetup({
 			<div className="space-y-2">
 				<h2 className="text-lg font-semibold">Start a Jules Session</h2>
 				<p className="text-sm text-muted-foreground">
-					Select the repository, base branch, and automation mode before starting
-					your session.
+					Select the repository, base branch, and automation mode before
+					starting your session.
 				</p>
 			</div>
 
@@ -199,7 +203,11 @@ export function JulesSessionSetup({
 					<AlertTitle>Session blocked</AlertTitle>
 					<AlertDescription className="space-y-2">
 						<p>{errorMessage}</p>
-						<Button size="sm" variant="outline" onClick={() => setErrorMessage(null)}>
+						<Button
+							size="sm"
+							variant="outline"
+							onClick={() => setErrorMessage(null)}
+						>
 							Adjust configuration
 						</Button>
 					</AlertDescription>

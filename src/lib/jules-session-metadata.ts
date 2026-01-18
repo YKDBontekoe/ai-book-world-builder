@@ -59,7 +59,9 @@ export async function saveJulesSessionMetadata(
 		createdAt: new Date().toISOString(),
 		...metadata,
 	};
-	store.items = store.items.filter((item) => item.sessionId !== metadata.sessionId);
+	store.items = store.items.filter(
+		(item) => item.sessionId !== metadata.sessionId,
+	);
 	store.items.unshift(record);
 	await writeStore(store);
 	return record;

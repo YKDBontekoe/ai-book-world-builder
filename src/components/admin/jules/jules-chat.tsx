@@ -15,17 +15,17 @@ import {
 import { type FormEvent, type JSX, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
-	approveJulesPlanAction,
-	getJulesSessionMetadataAction,
-	getJulesSessionDetailsAction,
-	sendJulesPlanFeedbackAction,
-	sendJulesMessageAction,
-} from "@/app/actions/jules";
-import {
 	getGitHubPullRequestByBranchAction,
 	getGitHubPullRequestStatusAction,
 	mergeGitHubPullRequestAction,
 } from "@/app/actions/github";
+import {
+	approveJulesPlanAction,
+	getJulesSessionDetailsAction,
+	getJulesSessionMetadataAction,
+	sendJulesMessageAction,
+	sendJulesPlanFeedbackAction,
+} from "@/app/actions/jules";
 import { reviewJulesPlanAction } from "@/app/actions/jules-ai";
 import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
@@ -206,8 +206,8 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	const repoFullName = metadata?.repository?.fullName ?? null;
 	const baseBranch =
-		metadata?.baseBranch ?? data?.session?.sourceContext?.githubRepoContext
-			?.startingBranch;
+		metadata?.baseBranch ??
+		data?.session?.sourceContext?.githubRepoContext?.startingBranch;
 	const headBranch = data?.session?.id ? `jules/${data.session.id}` : null;
 
 	const { data: pullRequest, error: pullRequestError } = useQuery({
@@ -397,8 +397,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 			message,
 		})),
 	].sort(
-		(a, b) =>
-			new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+		(a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
 	);
 
 	const canMerge = !!metadata?.repository?.permissions?.push;
