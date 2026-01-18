@@ -19,6 +19,52 @@ export interface OctogitRepository {
 	permissions?: OctogitPermission;
 }
 
+export type OctogitRepoStats = {
+	stars: number;
+	forks: number;
+	openIssues: number;
+};
+
+export type OctogitIssue = {
+	number: number;
+	title: string;
+	body: string | null;
+	state: string;
+	user: {
+		login: string;
+		avatar_url: string;
+	} | null;
+	created_at: string;
+	updated_at: string;
+	html_url: string;
+	comments: number;
+	pull_request?: object;
+	labels?: Array<{ name: string }>;
+};
+
+export type OctogitPullRequest = OctogitIssue & {
+	merged_at: string | null;
+	head: {
+		ref: string;
+		sha: string;
+	};
+	base: {
+		ref: string;
+	};
+	status?: OctogitPullRequestStatus;
+};
+
+export type OctogitComment = {
+	id: number;
+	body: string | undefined;
+	user: {
+		login: string;
+		avatar_url: string;
+	} | null;
+	created_at: string;
+	html_url: string;
+};
+
 export interface OctogitBranch {
 	name: string;
 	protected: boolean;
@@ -45,7 +91,7 @@ export type OctogitPullRequestStatus = {
 	updatedAt: string;
 };
 
-export interface OctogitPullRequest {
+export interface OctogitPullRequestSummary {
 	id: string;
 	number: number;
 	title: string;
@@ -110,13 +156,13 @@ export class OctogitClient {
 		repoFullName: string;
 		base: string;
 		head: string;
-	}): Promise<OctogitPullRequest | null> {
+	}): Promise<OctogitPullRequestSummary | null> {
 		const query = new URLSearchParams({
 			base: params.base,
 			head: params.head,
 		});
 		const data = await this.request<
-			OctogitPullRequest | { pullRequest?: OctogitPullRequest }
+			OctogitPullRequestSummary | { pullRequest?: OctogitPullRequestSummary }
 		>(`/repos/${params.repoFullName}/pulls/by-branch?${query.toString()}`);
 		if ("pullRequest" in data) {
 			return data.pullRequest ?? null;
@@ -137,9 +183,125 @@ export class OctogitClient {
 		repoFullName: string;
 		pullRequestNumber: number;
 	}): Promise<void> {
-		await this.request(`/repos/${params.repoFullName}/pulls/${params.pullRequestNumber}/merge`, {
+		await this.request(
+			`/repos/${params.repoFullName}/pulls/${params.pullRequestNumber}/merge`,
+			{
+				method: "POST",
+				body: JSON.stringify({}),
+			},
+		);
+	}
+
+	async getRepoStats(repoFullName: string): Promise<OctogitRepoStats> {
+		return await this.request<OctogitRepoStats>(`/repos/${repoFullName}/stats`);
+	}
+
+	async listIssues(params: {
+		repoFullName: string;
+		state: "open" | "closed" | "all";
+	}): Promise<OctogitIssue[]> {
+		const query = new URLSearchParams({ state: params.state });
+		return await this.request<OctogitIssue[]>(
+			`/repos/${params.repoFullName}/issues?${query.toString()}`,
+		);
+	}
+
+	async listPullRequests(params: {
+		repoFullName: string;
+		state: "open" | "closed" | "all";
+	}): Promise<OctogitPullRequest[]> {
+		const query = new URLSearchParams({ state: params.state });
+		return await this.request<OctogitPullRequest[]>(
+			`/repos/${params.repoFullName}/pulls?${query.toString()}`,
+		);
+	}
+
+	async getIssue(params: {
+		repoFullName: string;
+		issueNumber: number;
+	}): Promise<OctogitIssue> {
+		return await this.request<OctogitIssue>(
+			`/repos/${params.repoFullName}/issues/${params.issueNumber}`,
+		);
+	}
+
+	async getPullRequest(params: {
+		repoFullName: string;
+		pullRequestNumber: number;
+	}): Promise<OctogitPullRequest> {
+		return await this.request<OctogitPullRequest>(
+			`/repos/${params.repoFullName}/pulls/${params.pullRequestNumber}`,
+		);
+	}
+
+	async listComments(params: {
+		repoFullName: string;
+		issueNumber: number;
+	}): Promise<OctogitComment[]> {
+		return await this.request<OctogitComment[]>(
+			`/repos/${params.repoFullName}/issues/${params.issueNumber}/comments`,
+		);
+	}
+
+	async createComment(params: {
+		repoFullName: string;
+		issueNumber: number;
+		body: string;
+	}): Promise<OctogitComment> {
+		return await this.request<OctogitComment>(
+			`/repos/${params.repoFullName}/issues/${params.issueNumber}/comments`,
+			{
+				method: "POST",
+				body: JSON.stringify({ body: params.body }),
+			},
+		);
+	}
+
+	async updateIssue(params: {
+		repoFullName: string;
+		issueNumber: number;
+		body?: string;
+		state?: "open" | "closed";
+	}): Promise<void> {
+		await this.request(
+			`/repos/${params.repoFullName}/issues/${params.issueNumber}`,
+			{
+				method: "PATCH",
+				body: JSON.stringify({
+					body: params.body,
+					state: params.state,
+				}),
+			},
+		);
+	}
+
+	async createIssue(params: {
+		repoFullName: string;
+		title: string;
+		body: string;
+		labels?: string[];
+	}): Promise<OctogitIssue> {
+		return await this.request<OctogitIssue>(`/repos/${params.repoFullName}/issues`, {
 			method: "POST",
-			body: JSON.stringify({}),
+			body: JSON.stringify({
+				title: params.title,
+				body: params.body,
+				labels: params.labels,
+			}),
 		});
+	}
+
+	async mergePullRequestWithMethod(params: {
+		repoFullName: string;
+		pullRequestNumber: number;
+		method: "merge" | "squash" | "rebase";
+	}): Promise<void> {
+		await this.request(
+			`/repos/${params.repoFullName}/pulls/${params.pullRequestNumber}/merge`,
+			{
+				method: "POST",
+				body: JSON.stringify({ method: params.method }),
+			},
+		);
 	}
 }

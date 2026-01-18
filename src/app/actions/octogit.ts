@@ -5,7 +5,7 @@ import { createAdminAction } from "@/lib/action-middleware";
 import {
 	OctogitClient,
 	type OctogitBranch,
-	type OctogitPullRequest,
+	type OctogitPullRequestSummary,
 	type OctogitPullRequestStatus,
 	type OctogitRepository,
 } from "@/lib/octogit-client";
@@ -42,7 +42,7 @@ export const listOctogitBranchesAction = createAdminAction({
 
 export const getOctogitPullRequestByBranchAction = createAdminAction({
 	input: pullRequestByBranchSchema,
-	handler: async ({ input }): Promise<OctogitPullRequest | null> => {
+	handler: async ({ input }): Promise<OctogitPullRequestSummary | null> => {
 		return await octogit.getPullRequestByBranch({
 			repoFullName: input.repoFullName,
 			base: input.base,

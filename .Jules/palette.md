@@ -100,3 +100,18 @@ Admins can confirm the active repo/branch at a glance, while PR status and error
 ### Learnings
 - Persisting session metadata locally keeps client UI deterministic even when upstream APIs lag.
 - System messages with retry affordances reduce confusion when background polling fails.
+
+## 2025-02-14 - Octogit replaces Octokit for admin GitHub actions
+
+### Context
+The admin GitHub actions still depended on the Octokit SDK, which conflicted with the requirement to route GitHub access exclusively through Octogit.
+
+### Solution
+Refactored GitHub server actions to use Octogit endpoints for issues, PRs, comments, and repo stats while expanding the Octogit client to cover required API calls.
+
+### Outcome
+All GitHub data used by the admin interface now flows through Octogit, keeping SDK usage out of the codebase and consolidating API behavior.
+
+### Learnings
+- Centralizing GitHub access through Octogit avoids mixing SDK patterns and keeps security boundaries clear.
+- Extending shared clients with typed helpers prevents reintroducing forbidden dependencies.
