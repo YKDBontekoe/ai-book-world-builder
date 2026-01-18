@@ -1,7 +1,7 @@
 "use client";
 
-import type { ReactElement } from "react";
 import { CheckCircle2, RefreshCw, X } from "lucide-react";
+import type { ReactElement } from "react";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { cn } from "@/lib/utils";

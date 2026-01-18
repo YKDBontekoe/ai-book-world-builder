@@ -1,18 +1,15 @@
 "use client";
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-	BookOpenIcon,
-	Loader2,
-	SparklesIcon,
-	Wand2Icon,
-} from "lucide-react";
+import { BookOpenIcon, Loader2, SparklesIcon, Wand2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { createBookFromPlan, generateBookPlan } from "@/app/actions/story-generation";
+import {
+	createBookFromPlan,
+	generateBookPlan,
+} from "@/app/actions/story-generation";
 import { Button } from "@/components/atoms/button";
 import { Label } from "@/components/atoms/label";
-import { Textarea } from "@/components/atoms/textarea";
 import {
 	Select,
 	SelectContent,
@@ -20,6 +17,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/atoms/select";
+import { Textarea } from "@/components/atoms/textarea";
 import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import type { BookPlan } from "@/lib/services/story-service";
 
@@ -38,7 +36,7 @@ export function GeneratorPane(): JSX.Element {
 			const res = await generateBookPlan(
 				prompt,
 				{ genre, tone, pov: "Third Person" }, // Defaulting POV for now
-				undefined // Use default model
+				undefined, // Use default model
 			);
 			if (!res.success || !res.plan) throw new Error(res.error);
 			return res.plan;
@@ -66,7 +64,9 @@ export function GeneratorPane(): JSX.Element {
 			if (!res.success) throw new Error(res.error);
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["project-structure", projectId] });
+			queryClient.invalidateQueries({
+				queryKey: ["project-structure", projectId],
+			});
 			toast.success("Book structure created from plan!");
 			setGeneratedPlan(null); // Reset after success
 		},

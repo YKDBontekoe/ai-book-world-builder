@@ -40,12 +40,7 @@ export const login = async (
 };
 
 export type RegisterActionState = {
-	status:
-		| "idle"
-		| "in_progress"
-		| "success"
-		| "failed"
-		| "invalid_data";
+	status: "idle" | "in_progress" | "success" | "failed" | "invalid_data";
 };
 
 export const register = async (
