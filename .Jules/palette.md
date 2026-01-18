@@ -1,3 +1,21 @@
+## 2026-01-18 - Mobile admin layouts favor stacked controls
+
+### Context
+
+Admin pages relied on dense horizontal layouts that became cramped on small screens, especially the user list and GitHub controls.
+
+### Solution
+
+Shifted admin layouts to stacked headings, wrapped action controls, and introduced a mobile card view for the users list while keeping the desktop table.
+
+### Outcome
+
+Admin views remain readable on mobile with touch-friendly controls and preserved desktop density.
+
+### Learnings
+
+- Provide alternate mobile structures (cards vs. tables) to keep data readable without horizontal scrolling.
+
 ## 2026-01-08 - Replaced Raw Loading Text with Skeletons
 
 ### Context

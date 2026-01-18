@@ -18,8 +18,8 @@ export default async function AdminLayout({
 	return (
 		<SidebarProvider>
 			<AdminSidebar />
-			<main className="flex-1 overflow-auto bg-background p-8">
-				<SidebarTrigger className="mb-4" />
+			<main className="flex-1 overflow-auto bg-background p-4 sm:p-6 lg:p-8">
+				<SidebarTrigger className="mb-4 md:mb-6" />
 				{children}
 			</main>
 		</SidebarProvider>

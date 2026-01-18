@@ -17,9 +17,9 @@ export default function GitHubAdminPage(): JSX.Element {
 
 	return (
 		<div className="space-y-6 h-full flex flex-col">
-			<div className="flex-shrink-0 flex justify-between items-start">
+			<div className="flex-shrink-0 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">
+					<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
 						Software Builder
 					</h1>
 					<p className="text-muted-foreground mt-2">
@@ -27,12 +27,15 @@ export default function GitHubAdminPage(): JSX.Element {
 						PRs.
 					</p>
 				</div>
-				<div className="bg-muted p-1 rounded-lg flex gap-1">
+				<div className="bg-muted p-1 rounded-lg flex flex-wrap gap-1 w-full sm:w-auto">
 					<Button
 						variant={view === "board" ? "secondary" : "ghost"}
 						size="sm"
 						onClick={() => setView("board")}
-						className={cn(view === "board" && "bg-background shadow-sm")}
+						className={cn(
+							"flex-1 sm:flex-initial",
+							view === "board" && "bg-background shadow-sm",
+						)}
 					>
 						Task Board
 					</Button>
@@ -40,7 +43,10 @@ export default function GitHubAdminPage(): JSX.Element {
 						variant={view === "roadmap" ? "secondary" : "ghost"}
 						size="sm"
 						onClick={() => setView("roadmap")}
-						className={cn(view === "roadmap" && "bg-background shadow-sm")}
+						className={cn(
+							"flex-1 sm:flex-initial",
+							view === "roadmap" && "bg-background shadow-sm",
+						)}
 					>
 						Roadmap
 					</Button>
@@ -48,7 +54,10 @@ export default function GitHubAdminPage(): JSX.Element {
 						variant={view === "jules" ? "secondary" : "ghost"}
 						size="sm"
 						onClick={() => setView("jules")}
-						className={cn(view === "jules" && "bg-background shadow-sm")}
+						className={cn(
+							"flex-1 sm:flex-initial",
+							view === "jules" && "bg-background shadow-sm",
+						)}
 					>
 						Jules Console
 					</Button>
