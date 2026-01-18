@@ -85,3 +85,17 @@ AI responses now read like editorial notes rather than opaque generations, impro
 ### Learnings
 - Structured, labeled alternatives are faster to evaluate than a single long rewrite.
 - Source-backed answers reduce the cognitive load when verifying AI guidance.
+
+## 2026-01-18 - Prompt placeholder replacement uses literal tokens
+
+### Context
+The supervisor prompt builder returned literal placeholders like `$BATCHED_COMMENTS` because the regex treated `$` as an end-of-line anchor.
+
+### Solution
+Switched to string-based `replaceAll` so placeholder tokens are replaced literally without regex escaping pitfalls.
+
+### Outcome
+Jules API prompts now receive the actual batched feedback instead of the raw placeholder token.
+
+### Learnings
+- Prefer string replacement APIs for tokenized prompt templates to avoid regex metacharacter issues.
