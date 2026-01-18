@@ -24,8 +24,8 @@ importers:
         specifier: 3.0.39
         version: 3.0.39(react@19.2.3)(zod@3.25.76)
       '@ai-sdk/xai':
-        specifier: 3.0.24
-        version: 3.0.24(zod@3.25.76)
+        specifier: 3.0.25
+        version: 3.0.25(zod@3.25.76)
       '@auth/drizzle-adapter':
         specifier: 1.11.1
         version: 1.11.1(@simplewebauthn/browser@9.0.1)(@simplewebauthn/server@13.2.2)
@@ -486,8 +486,8 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/openai-compatible@2.0.11':
-    resolution: {integrity: sha512-6rbJyCs9m/jDSe9UuDXJ2gWaETzGXdJmnoi49sbW63r1DcHISkY/rkImG7ISnoE+GUw3DjqVzQ/2ELELTu5w8w==}
+  '@ai-sdk/openai-compatible@2.0.12':
+    resolution: {integrity: sha512-dc62+pWBZOCMXJrmGm1SHmOFnYL4cQlWaQrRF+rfR0yu3LQLkhhD2fGLFBFq5ETo3t4sQK1yRIGX0ZDimrsbBw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -514,8 +514,8 @@ packages:
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
-  '@ai-sdk/xai@3.0.24':
-    resolution: {integrity: sha512-W7phzgGJUxhzjBHAJs0RSUK1gmNQOoG3Ro6oIj8zf8j3U4KnOjRAmJXMHNg3fvYKvCtFodizkUq3jm5W+dpPZg==}
+  '@ai-sdk/xai@3.0.25':
+    resolution: {integrity: sha512-luIrmPP951FvLZfdbAeuEUviGmo9Z+zBmjh72ftJoCKkDaMzWptkPSYJdOGKEXEbS2/cNOWmqyuGIwTljioIPQ==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -6395,7 +6395,7 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 3.25.76
 
-  '@ai-sdk/openai-compatible@2.0.11(zod@3.25.76)':
+  '@ai-sdk/openai-compatible@2.0.12(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 3.0.3
       '@ai-sdk/provider-utils': 4.0.7(zod@3.25.76)
@@ -6428,9 +6428,9 @@ snapshots:
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/xai@3.0.24(zod@3.25.76)':
+  '@ai-sdk/xai@3.0.25(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/openai-compatible': 2.0.11(zod@3.25.76)
+      '@ai-sdk/openai-compatible': 2.0.12(zod@3.25.76)
       '@ai-sdk/provider': 3.0.3
       '@ai-sdk/provider-utils': 4.0.7(zod@3.25.76)
       zod: 3.25.76
