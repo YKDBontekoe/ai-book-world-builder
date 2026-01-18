@@ -56,3 +56,6 @@ verification/screenshots/
 
 # Logs
 *.log
+
+# Local Jules session metadata
+.data/

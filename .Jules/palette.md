@@ -109,6 +109,50 @@ AI responses now read like editorial notes rather than opaque generations, impro
 - Structured, labeled alternatives are faster to evaluate than a single long rewrite.
 - Source-backed answers reduce the cognitive load when verifying AI guidance.
 
+## 2025-02-14 - Session metadata keeps branch context visible
+
+### Context
+The new Jules console needed to keep the selected repository and base branch visible throughout a session while also reflecting Octogit PR status updates in chat.
+
+### Solution
+Persisted repository/branch metadata alongside the session, reused it in the chat header and PR cards, and surfaced Octogit failures as recoverable system messages.
+
+### Outcome
+Admins can confirm the active repo/branch at a glance, while PR status and errors remain part of the chronological timeline.
+
+### Learnings
+- Persisting session metadata locally keeps client UI deterministic even when upstream APIs lag.
+- System messages with retry affordances reduce confusion when background polling fails.
+
+## 2025-02-14 - Octogit replaces Octokit for admin GitHub actions
+
+### Context
+The admin GitHub actions still depended on the Octokit SDK, which conflicted with the requirement to route GitHub access exclusively through Octogit.
+
+### Solution
+Refactored GitHub server actions to use Octogit endpoints for issues, PRs, comments, and repo stats while expanding the Octogit client to cover required API calls.
+
+### Outcome
+All GitHub data used by the admin interface now flows through Octogit, keeping SDK usage out of the codebase and consolidating API behavior.
+
+### Learnings
+- Centralizing GitHub access through Octogit avoids mixing SDK patterns and keeps security boundaries clear.
+- Extending shared clients with typed helpers prevents reintroducing forbidden dependencies.
+
+## 2025-02-14 - Reverted admin GitHub flows to Octokit
+
+### Context
+The admin console needed to drop the custom Octogit client and rely on the first-party Octokit SDK instead.
+
+### Solution
+Removed Octogit actions and replaced repository, branch, PR, and status helpers with Octokit-backed server actions and shared GitHub types.
+
+### Outcome
+All admin GitHub interactions now flow through Octokit while preserving the Jules console workflows.
+
+### Learnings
+- Centralizing GitHub calls in Octokit keeps admin flows aligned with upstream APIs.
+- Shared UI types should live outside server actions for reuse across client components.
 ## 2026-01-18 - Prompt placeholder replacement uses literal tokens
 
 ### Context

@@ -17,6 +17,44 @@ const createSessionSchema = z.object({
 	sourceName: z.string().min(1, "Source is required"),
 	requirePlanApproval: z.boolean().optional(),
 	startingBranch: z.string().optional(),
+	automationMode: z.enum(["manual", "auto"]).optional(),
+	repository: z
+		.object({
+			id: z.number().int().positive(),
+			name: z.string().min(1),
+			fullName: z.string().min(1),
+			owner: z.string().min(1),
+			defaultBranch: z.string().min(1),
+			private: z.boolean(),
+			permissions: z
+				.object({
+					admin: z.boolean(),
+					push: z.boolean(),
+					pull: z.boolean(),
+				})
+				.optional(),
+		})
+		.optional(),
+});
+
+const createAdminSessionSchema = createSessionSchema.extend({
+	startingBranch: z.string().min(1, "Base branch is required"),
+	automationMode: z.enum(["manual", "auto"]),
+	repository: z.object({
+		id: z.number().int().positive(),
+		name: z.string().min(1),
+		fullName: z.string().min(1),
+		owner: z.string().min(1),
+		defaultBranch: z.string().min(1),
+		private: z.boolean(),
+		permissions: z
+			.object({
+				admin: z.boolean(),
+				push: z.boolean(),
+				pull: z.boolean(),
+			})
+			.optional(),
+	}),
 });
 
 const sendMessageSchema = z.object({
@@ -96,14 +134,70 @@ export const createJulesSessionAction = createAdminAction({
 			}
 		}
 
-		return await jules.createSession({
+		const automationMode = input.automationMode ?? "manual";
+		const requirePlanApproval =
+			input.requirePlanApproval ?? automationMode === "manual";
+
+		const session = await jules.createSession({
 			prompt: input.prompt,
 			title: title,
 			sourceName: input.sourceName,
 			startingBranch,
-			automationMode: "AUTO_CREATE_PR",
-			requirePlanApproval: input.requirePlanApproval,
+			automationMode:
+				automationMode === "auto" ? "AUTO_CREATE_PR" : undefined,
+			requirePlanApproval,
 		});
+
+		if (input.repository) {
+			const { saveJulesSessionMetadata } = await import(
+				"@/lib/jules-session-metadata"
+			);
+			await saveJulesSessionMetadata({
+				sessionId: session.id,
+				repository: input.repository,
+				baseBranch: startingBranch ?? input.repository.defaultBranch,
+				automationMode,
+			});
+		}
+
+		return session;
+	},
+});
+
+/**
+ * Create a new Jules session with explicit repository/branch context.
+ */
+export const createJulesAdminSessionAction = createAdminAction({
+	input: createAdminSessionSchema,
+	handler: async ({ input }) => {
+		let title = input.title;
+		if (!title || title.trim() === "") {
+			title = await generateSessionTitleAction(input.prompt);
+		}
+
+		const requirePlanApproval = input.automationMode === "manual";
+
+		const session = await jules.createSession({
+			prompt: input.prompt,
+			title: title,
+			sourceName: input.sourceName,
+			startingBranch: input.startingBranch,
+			automationMode:
+				input.automationMode === "auto" ? "AUTO_CREATE_PR" : undefined,
+			requirePlanApproval,
+		});
+
+		const { saveJulesSessionMetadata } = await import(
+			"@/lib/jules-session-metadata"
+		);
+		await saveJulesSessionMetadata({
+			sessionId: session.id,
+			repository: input.repository,
+			baseBranch: input.startingBranch,
+			automationMode: input.automationMode,
+		});
+
+		return session;
 	},
 });
 
@@ -124,6 +218,42 @@ export const approveJulesPlanAction = createAdminAction({
 	input: sessionIdSchema,
 	handler: async ({ input }) => {
 		await jules.approvePlan(input.sessionId);
+	},
+});
+
+const planFeedbackSchema = z.object({
+	sessionId: z.string().min(1, "Session ID is required"),
+	decision: z.enum(["reject", "request_changes"]),
+	notes: z.string().optional(),
+});
+
+/**
+ * Send plan feedback to Jules when rejecting or requesting changes.
+ */
+export const sendJulesPlanFeedbackAction = createAdminAction({
+	input: planFeedbackSchema,
+	handler: async ({ input }) => {
+		const prefix =
+			input.decision === "reject"
+				? "PLAN_DECISION: REJECT"
+				: "PLAN_DECISION: REQUEST_CHANGES";
+		const message = input.notes?.trim()
+			? `${prefix}\n${input.notes.trim()}`
+			: prefix;
+		await jules.sendMessage(input.sessionId, message);
+	},
+});
+
+/**
+ * Fetch stored metadata for a Jules session.
+ */
+export const getJulesSessionMetadataAction = createAdminAction({
+	input: sessionIdSchema,
+	handler: async ({ input }) => {
+		const { getJulesSessionMetadata } = await import(
+			"@/lib/jules-session-metadata"
+		);
+		return await getJulesSessionMetadata(input.sessionId);
 	},
 });
 

@@ -1,11 +1,9 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
 import { type JSX, useState } from "react";
-import { listJulesSourcesAction } from "@/app/actions/jules";
-import { CreateSessionDialog } from "./create-session-dialog";
 import { JulesChat } from "./jules-chat";
 import { JulesSessionList } from "./jules-session-list";
+import { JulesSessionSetup } from "./jules-session-setup";
 
 /**
  * Dashboard component for managing Jules agent sessions and sources.
@@ -15,20 +13,6 @@ export function JulesDashboard(): JSX.Element {
 	const [selectedSessionId, setSelectedSessionId] = useState<string | null>(
 		null,
 	);
-
-	// Fetch sources to find the default one for the current repo
-	const { data: sources } = useQuery({
-		queryKey: ["jules", "sources"],
-		queryFn: async () => {
-			const result = await listJulesSourcesAction();
-			if (!result.success) throw new Error(result.error);
-			return result.data;
-		},
-	});
-
-	// Simple heuristic: pick the first source as default for now,
-	// or match against env vars if we had them available client-side.
-	const defaultSource = sources?.[0]?.name;
 
 	if (selectedSessionId) {
 		return (
@@ -41,17 +25,22 @@ export function JulesDashboard(): JSX.Element {
 
 	return (
 		<div className="space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h2 className="text-xl font-semibold">Jules Sessions</h2>
-					<p className="text-sm text-muted-foreground">
-						Manage your AI agent sessions and tasks.
-					</p>
-				</div>
-				{defaultSource && <CreateSessionDialog defaultSource={defaultSource} />}
+			<div>
+				<h2 className="text-xl font-semibold">Jules Console</h2>
+				<p className="text-sm text-muted-foreground">
+					Configure repositories, approve plans, and track Jules execution.
+				</p>
 			</div>
 
-			<JulesSessionList onSelectSession={setSelectedSessionId} />
+			<div className="grid gap-6 lg:grid-cols-[380px_1fr]">
+				<JulesSessionSetup onSessionCreated={setSelectedSessionId} />
+				<div className="space-y-4">
+					<div className="flex items-center justify-between">
+						<h3 className="text-lg font-semibold">Active Sessions</h3>
+					</div>
+					<JulesSessionList onSelectSession={setSelectedSessionId} />
+				</div>
+			</div>
 		</div>
 	);
 }
