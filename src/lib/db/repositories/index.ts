@@ -9,8 +9,6 @@ export { entityRepository } from "./entity-repository";
 export * from "./message-repository";
 export { messageRepository } from "./message-repository";
 export * from "./project-repository";
-
-// Re-export singleton instances for convenience
 export { projectRepository } from "./project-repository";
 export * from "./scene-repository";
 export { sceneRepository } from "./scene-repository";
@@ -20,3 +18,5 @@ export * from "./story-repository";
 export { storyRepository } from "./story-repository";
 export * from "./volume-repository";
 export { volumeRepository } from "./volume-repository";
+export * from "./generation-repository";
+export { generationRepository } from "./generation-repository";

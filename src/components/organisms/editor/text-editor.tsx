@@ -13,6 +13,7 @@ import {
 import { EditorBubbleMenu } from "@/features/writer/components/tools/editor-bubble-menu";
 import type { Entity, Suggestion } from "@/lib/db/schema";
 import { type MentionState, useMention } from "./hooks/use-mention";
+import { useEditorEvents } from "./hooks/use-editor-events";
 import { useProseMirror } from "./hooks/use-prosemirror";
 import { useSuggestions } from "./hooks/use-suggestions";
 import { MentionList } from "./mention-list";
@@ -161,50 +162,14 @@ const PureEditor = forwardRef<EditorHandle, EditorProps>(
 			[],
 		);
 
-		// Update Editor Props (Handlers) to close over latest state
-		// This is necessary because some handlers (keydown) need access to the latest react state (mentionState, activeSuggestion)
-		useEffect(() => {
-			if (editorRef.current) {
-				const view = editorRef.current;
-
-				// We access the current props of the view to merge or overwrite handlers
-				// Note: useProseMirror sets basic props, here we add interaction-specific ones
-				const currentProps = view.props;
-
-				view.setProps({
-					...currentProps,
-					handleKeyDown: (_view, event) => {
-						// Check if mention menu is active
-						if (mentionState?.active) {
-							if (event.key === "Enter") {
-								event.preventDefault();
-								if (filteredEntities.length > 0) {
-									const entityToInsert =
-										filteredEntities[mentionState.index] || filteredEntities[0];
-									insertMention(entityToInsert);
-									return true;
-								}
-								return true;
-							}
-							return false;
-						}
-						// Close suggestion popup on Escape
-						if (activeSuggestion && event.key === "Escape") {
-							setActiveSuggestion(null);
-							return true;
-						}
-						return false;
-					},
-				});
-			}
-		}, [
+		useEditorEvents({
+			editorView: editorRef.current,
 			mentionState,
 			filteredEntities,
 			insertMention,
 			activeSuggestion,
 			setActiveSuggestion,
-			editorRef.current, // Dependency on ref.current is stable but good for completeness if ref changes
-		]);
+		});
 
 		return (
 			<div

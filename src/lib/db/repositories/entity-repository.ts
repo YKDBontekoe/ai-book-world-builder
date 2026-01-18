@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
 	type Entity,
@@ -62,6 +62,19 @@ export type EntityWithDetails = Entity & {
 // ============================================================================
 // Helper Functions
 // ============================================================================
+
+// Helper for chunked inserts
+async function chunkedInsert<T extends Record<string, unknown>, TTable>(
+	tx: any,
+	table: TTable,
+	items: T[],
+	chunkSize = 1000,
+) {
+	for (let i = 0; i < items.length; i += chunkSize) {
+		const chunk = items.slice(i, i + chunkSize);
+		await tx.insert(table).values(chunk);
+	}
+}
 
 /**
  * Convert a string or Date to Date, or undefined if invalid
@@ -351,6 +364,143 @@ export class EntityRepository extends BaseRepository<
 		} catch (error) {
 			console.error("EntityRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete entity");
+		}
+	}
+
+	/**
+	 * Delete all entities and related data for multiple projects
+	 */
+	async deleteByProjectIds(projectIds: string[], tx?: any): Promise<void> {
+		if (projectIds.length === 0) return;
+		const executor = tx || db;
+
+		try {
+			// Delete relationships
+			await executor
+				.delete(relationship)
+				.where(inArray(relationship.projectId, projectIds));
+
+			// Delete attributes
+			await executor
+				.delete(entityAttribute)
+				.where(inArray(entityAttribute.projectId, projectIds));
+
+			// Delete entities
+			await executor
+				.delete(entity)
+				.where(inArray(entity.projectId, projectIds));
+		} catch (error) {
+			console.error("EntityRepository.deleteByProjectIds error:", error);
+			throw new DatabaseError("Failed to delete project entities");
+		}
+	}
+
+	/**
+	 * Duplicate all entities, attributes, and relationships for a new project.
+	 * Returns a map of Old Entity ID -> New Entity ID.
+	 */
+	async duplicateForProject(
+		originalProjectId: string,
+		newProjectId: string,
+		tx?: any,
+	): Promise<Map<string, string>> {
+		const executor = tx || db;
+		const idMap = new Map<string, string>();
+
+		try {
+			// 1. Clone Entities
+			const limit = 100;
+			let offset = 0;
+			let hasMore = true;
+
+			while (hasMore) {
+				const oldEntities = await executor
+					.select()
+					.from(entity)
+					.where(eq(entity.projectId, originalProjectId))
+					.limit(limit)
+					.offset(offset);
+
+				if (oldEntities.length === 0) {
+					hasMore = false;
+					break;
+				}
+
+				const newEntities = oldEntities.map((old: any) => {
+					const newId = crypto.randomUUID();
+					idMap.set(old.id, newId);
+					const { id: _id, ...data } = old;
+					return {
+						...data,
+						id: newId,
+						projectId: newProjectId,
+						createdAt: new Date(),
+						updatedAt: new Date(),
+					};
+				});
+
+				await chunkedInsert(executor, entity, newEntities);
+				offset += limit;
+			}
+
+			// 2. Clone Attributes
+			const oldAttributes = await executor
+				.select()
+				.from(entityAttribute)
+				.where(eq(entityAttribute.projectId, originalProjectId));
+
+			if (oldAttributes.length > 0) {
+				const newAttributes = [];
+				for (const old of oldAttributes) {
+					const newEntityId = idMap.get(old.entityId);
+					if (newEntityId) {
+						const { id: _id, ...data } = old;
+						newAttributes.push({
+							...data,
+							id: crypto.randomUUID(),
+							entityId: newEntityId,
+							projectId: newProjectId,
+							createdAt: new Date(),
+						});
+					}
+				}
+				if (newAttributes.length > 0) {
+					await chunkedInsert(executor, entityAttribute, newAttributes);
+				}
+			}
+
+			// 3. Clone Relationships
+			const oldRelationships = await executor
+				.select()
+				.from(relationship)
+				.where(eq(relationship.projectId, originalProjectId));
+
+			if (oldRelationships.length > 0) {
+				const newRelationships = [];
+				for (const old of oldRelationships) {
+					const sourceId = idMap.get(old.sourceEntityId);
+					const targetId = idMap.get(old.targetEntityId);
+					if (sourceId && targetId) {
+						const { id: _id, ...data } = old;
+						newRelationships.push({
+							...data,
+							id: crypto.randomUUID(),
+							sourceEntityId: sourceId,
+							targetEntityId: targetId,
+							projectId: newProjectId,
+							createdAt: new Date(),
+						});
+					}
+				}
+				if (newRelationships.length > 0) {
+					await chunkedInsert(executor, relationship, newRelationships);
+				}
+			}
+
+			return idMap;
+		} catch (error) {
+			console.error("EntityRepository.duplicateForProject error:", error);
+			throw new DatabaseError("Failed to duplicate entities");
 		}
 	}
 

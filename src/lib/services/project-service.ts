@@ -3,24 +3,11 @@ import { inArray } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import {
-	bookExport,
-	bookGeneration,
-	bookGenerationAsset,
-	bookGenerationStep,
-	chapter,
-	chapterDraft,
-	chapterVersion,
-	entity,
-	entityAttribute,
-	generationNote,
-	outline,
-	project,
-	relationship,
-	scene,
-	sceneCard,
-	storyState,
-	volume,
-} from "@/lib/db/schema";
+	entityRepository,
+	generationRepository,
+	storyRepository,
+} from "@/lib/db/repositories";
+import { bookExport, project } from "@/lib/db/schema";
 import { projectDuplicationService } from "@/lib/services/project-duplication-service";
 
 export class ProjectService {
@@ -50,7 +37,7 @@ export class ProjectService {
 
 			await db.transaction(async (tx: any) => {
 				// 1. Generation related tables (Leaf first)
-				await this.deleteGenerationData(tx, ownedProjectIds);
+				await generationRepository.deleteByProjectIds(ownedProjectIds, tx);
 
 				// 2. Book Exports
 				await tx
@@ -58,10 +45,10 @@ export class ProjectService {
 					.where(inArray(bookExport.projectId, ownedProjectIds));
 
 				// 3. Structure (Scenes, Chapters, etc.)
-				await this.deleteStructureData(tx, ownedProjectIds);
+				await storyRepository.deleteStructureByProjectIds(ownedProjectIds, tx);
 
 				// 4. Entities & Relationships
-				await this.deleteEntityData(tx, ownedProjectIds);
+				await entityRepository.deleteByProjectIds(ownedProjectIds, tx);
 
 				// 5. Project itself
 				await tx.delete(project).where(inArray(project.id, ownedProjectIds));
@@ -72,59 +59,6 @@ export class ProjectService {
 			console.error("Delete projects error:", error);
 			return { error: "Failed to delete projects" };
 		}
-	}
-
-	private async deleteGenerationData(tx: any, projectIds: string[]) {
-		const generations = await tx
-			.select({ id: bookGeneration.id })
-			.from(bookGeneration)
-			.where(inArray(bookGeneration.projectId, projectIds));
-
-		const generationIds = (generations as any[]).map((g: any) => g.id);
-
-		if (generationIds.length > 0) {
-			await tx
-				.delete(generationNote)
-				.where(inArray(generationNote.generationId, generationIds));
-			await tx
-				.delete(bookGenerationAsset)
-				.where(inArray(bookGenerationAsset.generationId, generationIds));
-			await tx
-				.delete(bookGenerationStep)
-				.where(inArray(bookGenerationStep.generationId, generationIds));
-			await tx
-				.delete(storyState)
-				.where(inArray(storyState.generationId, generationIds));
-			await tx
-				.delete(chapterVersion)
-				.where(inArray(chapterVersion.generationId, generationIds));
-		}
-
-		// Delete generations
-		await tx
-			.delete(bookGeneration)
-			.where(inArray(bookGeneration.projectId, projectIds));
-	}
-
-	private async deleteStructureData(tx: any, projectIds: string[]) {
-		await tx.delete(sceneCard).where(inArray(sceneCard.projectId, projectIds));
-		await tx.delete(scene).where(inArray(scene.projectId, projectIds));
-		await tx
-			.delete(chapterDraft)
-			.where(inArray(chapterDraft.projectId, projectIds));
-		await tx.delete(chapter).where(inArray(chapter.projectId, projectIds));
-		await tx.delete(volume).where(inArray(volume.projectId, projectIds));
-		await tx.delete(outline).where(inArray(outline.projectId, projectIds));
-	}
-
-	private async deleteEntityData(tx: any, projectIds: string[]) {
-		await tx
-			.delete(relationship)
-			.where(inArray(relationship.projectId, projectIds));
-		await tx
-			.delete(entityAttribute)
-			.where(inArray(entityAttribute.projectId, projectIds));
-		await tx.delete(entity).where(inArray(entity.projectId, projectIds));
 	}
 
 	async forkProject(
