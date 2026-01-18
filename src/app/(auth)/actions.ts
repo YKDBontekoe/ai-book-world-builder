@@ -17,17 +17,25 @@ export const login = async (
 	_: LoginActionState,
 	formData: FormData,
 ): Promise<LoginActionState> => {
+	// Add delay to prevent timing attacks and brute force
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
 	try {
 		const validatedData = authFormSchema.parse({
 			email: formData.get("email"),
 			password: formData.get("password"),
 		});
 
-		await signIn("credentials", {
+		const result = await signIn("credentials", {
 			email: validatedData.email,
 			password: validatedData.password,
 			redirect: false,
 		});
+
+		// Check for error in return value (when redirect: false)
+		if (result?.error) {
+			return { status: "failed" };
+		}
 
 		return { status: "success" };
 	} catch (error) {
@@ -47,6 +55,9 @@ export const register = async (
 	_: RegisterActionState,
 	formData: FormData,
 ): Promise<RegisterActionState> => {
+	// Add delay to prevent timing attacks and brute force
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
 	try {
 		const validatedData = authFormSchema.parse({
 			email: formData.get("email"),
@@ -58,11 +69,16 @@ export const register = async (
 		// and we return "failed".
 
 		await createUser(validatedData.email, validatedData.password);
-		await signIn("credentials", {
+
+		const result = await signIn("credentials", {
 			email: validatedData.email,
 			password: validatedData.password,
 			redirect: false,
 		});
+
+		if (result?.error) {
+			return { status: "failed" };
+		}
 
 		return { status: "success" };
 	} catch (error) {
