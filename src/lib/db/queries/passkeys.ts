@@ -19,7 +19,12 @@ export async function createPasskeyChallenge(
 	try {
 		await db
 			.delete(passkeyChallenge)
-			.where(and(eq(passkeyChallenge.userId, userId), eq(passkeyChallenge.type, type)));
+			.where(
+				and(
+					eq(passkeyChallenge.userId, userId),
+					eq(passkeyChallenge.type, type),
+				),
+			);
 
 		await db.insert(passkeyChallenge).values({
 			userId,
@@ -44,7 +49,12 @@ export async function getPasskeyChallenge(
 		const [challenge] = await db
 			.select()
 			.from(passkeyChallenge)
-			.where(and(eq(passkeyChallenge.userId, userId), eq(passkeyChallenge.type, type)));
+			.where(
+				and(
+					eq(passkeyChallenge.userId, userId),
+					eq(passkeyChallenge.type, type),
+				),
+			);
 		return challenge ?? null;
 	} catch (_error) {
 		throw new ChatSDKError(
