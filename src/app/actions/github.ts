@@ -23,7 +23,11 @@ const getOctokit = (): Octokit => {
 	return new Octokit({ auth: token });
 };
 
-const getRepoDetails = (): { fullName: string; owner: string; repo: string } => {
+const getRepoDetails = (): {
+	fullName: string;
+	owner: string;
+	repo: string;
+} => {
 	const owner = process.env.GITHUB_OWNER || "YKDBontekoe";
 	const repo = process.env.GITHUB_REPO || "ai-book-world-builder";
 	return { fullName: `${owner}/${repo}`, owner, repo };

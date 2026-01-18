@@ -143,8 +143,7 @@ export const createJulesSessionAction = createAdminAction({
 			title: title,
 			sourceName: input.sourceName,
 			startingBranch,
-			automationMode:
-				automationMode === "auto" ? "AUTO_CREATE_PR" : undefined,
+			automationMode: automationMode === "auto" ? "AUTO_CREATE_PR" : undefined,
 			requirePlanApproval,
 		});
 

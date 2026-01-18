@@ -54,7 +54,11 @@ export function JulesPullRequestCard({
 								? "Mergeable"
 								: "Not mergeable"}
 					</Badge>
-					<Badge variant={pullRequest.status.hasConflicts ? "destructive" : "secondary"}>
+					<Badge
+						variant={
+							pullRequest.status.hasConflicts ? "destructive" : "secondary"
+						}
+					>
 						{pullRequest.status.hasConflicts ? "Conflicts" : "No conflicts"}
 					</Badge>
 				</div>
@@ -80,7 +84,9 @@ export function JulesPullRequestCard({
 					</ul>
 				</div>
 			) : (
-				<p className="text-xs text-muted-foreground">No status checks reported.</p>
+				<p className="text-xs text-muted-foreground">
+					No status checks reported.
+				</p>
 			)}
 
 			<div className="flex flex-wrap gap-2">
