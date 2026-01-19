@@ -10,6 +10,11 @@ import {
 	listGitHubRepositoriesAction,
 } from "@/app/actions/github";
 import {
+	getJulesPreferencesAction,
+	saveJulesPreferencesAction,
+} from "@/app/actions/jules-preferences";
+import type { JulesPreferences } from "@/lib/db/schema/auth";
+import {
 	createJulesAdminSessionAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
@@ -56,6 +61,7 @@ export function JulesSessionSetup({
 		"manual",
 	);
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
+	const [hasAppliedPreferences, setHasAppliedPreferences] = useState(false);
 
 	const { data: sources } = useQuery({
 		queryKey: ["jules", "sources"],
@@ -65,6 +71,20 @@ export function JulesSessionSetup({
 			return result.data;
 		},
 		initialData: presetData?.sources,
+		enabled: !presetData,
+	});
+
+	const {
+		data: preferences,
+		isSuccess: hasPreferences,
+		isLoading: isLoadingPreferences,
+	} = useQuery({
+		queryKey: ["user-preferences", "jules"],
+		queryFn: async (): Promise<JulesPreferences> => {
+			const result = await getJulesPreferencesAction();
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
 		enabled: !presetData,
 	});
 
@@ -81,6 +101,21 @@ export function JulesSessionSetup({
 		},
 		initialData: presetData?.repositories,
 		enabled: !presetData,
+	});
+
+	const { mutate: savePreferences } = useMutation({
+		mutationFn: async (nextPreferences: JulesPreferences) => {
+			const result = await saveJulesPreferencesAction(nextPreferences);
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
+		onError: (error) => {
+			const message =
+				error instanceof Error
+					? error.message
+					: "Unable to save preferences";
+			toast.error(message);
+		},
 	});
 
 	const {
@@ -159,15 +194,86 @@ export function JulesSessionSetup({
 	const branchOptions = branches ?? [];
 
 	useEffect(() => {
-		if (selectedRepo && branchOptions.length > 0 && !selectedBranch) {
-			const defaultBranch = branchOptions.find(
-				(branch) => branch.name === selectedRepo.defaultBranch,
+		if (
+			!hasPreferences ||
+			hasAppliedPreferences ||
+			repositoriesOptions.length === 0
+		) {
+			return;
+		}
+
+		if (preferences?.repository) {
+			const repo = repositoriesOptions.find(
+				(option) => option.fullName === preferences.repository,
 			);
-			if (defaultBranch) {
-				setSelectedBranch(defaultBranch.name);
+			if (repo) {
+				setSelectedRepo(repo);
 			}
 		}
-	}, [branchOptions, selectedBranch, selectedRepo]);
+
+		setHasAppliedPreferences(true);
+	}, [
+		hasAppliedPreferences,
+		hasPreferences,
+		preferences?.repository,
+		repositoriesOptions,
+	]);
+
+	useEffect(() => {
+		if (!selectedRepo || branchOptions.length === 0) return;
+
+		const branchNames = new Set(branchOptions.map((branch) => branch.name));
+		const storedBranch =
+			preferences?.repository === selectedRepo.fullName
+				? preferences.branch
+				: null;
+
+		if (selectedBranch && branchNames.has(selectedBranch)) {
+			return;
+		}
+
+		const fallbackBranch = branchOptions.find(
+			(branch) => branch.name === selectedRepo.defaultBranch,
+		);
+		const nextBranch =
+			(storedBranch && branchNames.has(storedBranch) && storedBranch) ||
+			fallbackBranch?.name ||
+			branchOptions[0]?.name ||
+			"";
+
+		if (nextBranch && nextBranch !== selectedBranch) {
+			setSelectedBranch(nextBranch);
+		}
+	}, [
+		branchOptions,
+		preferences?.branch,
+		preferences?.repository,
+		selectedBranch,
+		selectedRepo,
+	]);
+
+	useEffect(() => {
+		if (!hasAppliedPreferences || presetData) return;
+		const repository = selectedRepo?.fullName ?? null;
+		const branch = selectedBranch || null;
+
+		if (
+			repository === preferences?.repository &&
+			branch === preferences?.branch
+		) {
+			return;
+		}
+
+		savePreferences({ repository, branch });
+	}, [
+		hasAppliedPreferences,
+		preferences?.branch,
+		preferences?.repository,
+		presetData,
+		savePreferences,
+		selectedBranch,
+		selectedRepo,
+	]);
 
 	return (
 		<GlassCard className="p-6 space-y-6">
@@ -228,8 +334,9 @@ export function JulesSessionSetup({
 							);
 							setSelectedRepo(repo ?? null);
 							setSelectedBranch("");
+							setHasAppliedPreferences(true);
 						}}
-						disabled={isLoadingRepos}
+						disabled={isLoadingRepos || isLoadingPreferences}
 					>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder="Select a repository" />
@@ -258,7 +365,9 @@ export function JulesSessionSetup({
 					<Select
 						value={selectedBranch}
 						onValueChange={setSelectedBranch}
-						disabled={!selectedRepo || isLoadingBranches}
+						disabled={
+							!selectedRepo || isLoadingBranches || isLoadingPreferences
+						}
 					>
 						<SelectTrigger className="w-full">
 							<SelectValue placeholder="Select a base branch" />
