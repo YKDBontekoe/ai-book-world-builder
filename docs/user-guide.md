@@ -13,10 +13,32 @@ There are two primary ways to begin:
 The **Story Wizard** is the fastest way to turn an idea into a complete outline.
 
 1.  **Open**: When you create a new, empty project, the Wizard will appear in the center panel.
-2.  **Input Idea**: Describe your story concept (e.g., "A cyberpunk detective story on Mars"). Select a Genre, Point of View (POV), and Tone.
-3.  **Generate Plan**: The AI will create a list of chapters and summaries based on your prompt.
-4.  **Review & Edit**: You can change chapter titles or summaries, and add or remove chapters.
-5.  **Create Story**: Once satisfied, click "Create Story" to build the actual chapters and scenes in your project.
+2.  **Input Idea**: Describe your story concept (e.g., "A cyberpunk detective story on Mars").
+3.  **Configure Settings**:
+    *   **Genre**: Sets the overall category (e.g., Fantasy, Sci-Fi).
+    *   **POV**: Determines the narrator's perspective (e.g., *Third Person Limited* focuses on one character's thoughts per scene).
+    *   **Tone**: Sets the mood (e.g., *Dark* creates a serious, gritty atmosphere; *Humorous* adds wit).
+4.  **Generate Plan**: The AI will create a title, logline, and chapter outline.
+5.  **Review & Edit**:
+    *   **Metadata**: You can edit the generated Title and Logline.
+    *   **Chapters**: Add, delete, or reorder chapters. Edit summaries to refine the plot before generation.
+6.  **Create Story**: Once satisfied, click "Create Story". The system will generate empty scenes and structure in the database, ready for writing.
+
+### Understanding Story Settings
+
+When configuring your story or generation, you'll encounter these key settings:
+
+*   **Point of View (POV)**
+    *   **First Person ("I")**: Intimate and immediate. Good for deep character study.
+    *   **Third Person Limited ("He/She")**: The most common modern style. Follows one character closely but maintains some distance.
+    *   **Third Person Omniscient**: The narrator knows everything about all characters. Good for epic scope.
+
+*   **Tone**
+    *   **Neutral**: Standard, balanced storytelling.
+    *   **Dark**: Emphasizes conflict, danger, and serious themes.
+    *   **Humorous**: Prioritizes wit, irony, and lighter situations.
+    *   **Epic**: Grand scale, formal language, and high stakes.
+    *   **Intimate**: Focuses on internal emotion and close relationships.
 
 **Option B: Manual Structuring**
 If you already have an outline, you can build it manually.
