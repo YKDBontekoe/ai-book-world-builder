@@ -128,23 +128,6 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Post status - Using ${{ needs.supervisor.outputs.assignee_mention }}
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          PR_NUMBER: ${{ needs.supervisor.outputs.number }}
-          AUTHOR: ${{ needs.supervisor.outputs.author }}
-          ASSIGNEE_MENTION: ${{ needs.supervisor.outputs.assignee_mention }}
-        run: |
-          # Use default if empty
-          MENTION="${ASSIGNEE_MENTION:-@jules}"
-
-          gh pr comment "$PR_NUMBER" --body "🔄 **Routing via Trigger**
-          
-          Using ${MENTION} (cost-optimized) instead of new API session.
-          
-          **PR Author:** \`$AUTHOR\`
-          **Method:** GitHub Integration (${MENTION})" --repo "${{ github.repository }}"
-
       - name: Post ${{ needs.supervisor.outputs.assignee_mention }} with feedback
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
@@ -156,20 +139,29 @@ jobs:
           # Use default if empty
           MENTION="${ASSIGNEE_MENTION:-@jules}"
 
+          cat <<EOF > /tmp/comment.md
+          🤖 **Jules Triggered**
+
+          Routing feedback via ${MENTION} (cost-optimized) instead of a new API session.
+
+          **PR Author:** \`$AUTHOR\`
+          **Method:** GitHub Integration (${MENTION})
+
+          EOF
+
           if [[ -n "$BATCHED_COMMENTS" ]]; then
-            echo "${MENTION} Please address the following feedback:" > /tmp/comment.md
-            echo "" >> /tmp/comment.md
-            echo "$BATCHED_COMMENTS" >> /tmp/comment.md
+            echo "${BATCHED_COMMENTS}" >> /tmp/comment.md
             echo "" >> /tmp/comment.md
             echo "Instructions:" >> /tmp/comment.md
             echo "1. Run \`pnpm lint && pnpm type-check && pnpm test:unit\`" >> /tmp/comment.md
             echo "2. Fix all issues identified above" >> /tmp/comment.md
             echo "3. Commit with message: \`fix: address review feedback\`" >> /tmp/comment.md
-            gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md --repo "${{ github.repository }}"
           else
-            gh pr comment "$PR_NUMBER" --body "${MENTION} Please review and address any pending feedback on this PR." --repo "${{ github.repository }}"
+            echo "" >> /tmp/comment.md
+            echo "${MENTION} Please review and address any pending feedback on this PR." >> /tmp/comment.md
           fi
 
+          gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md --repo "${{ github.repository }}"
 
   # ==========================================================================
   # 3. CODERABBIT TRIGGER: For Bot PRs Only (after CI passes)
