@@ -280,16 +280,20 @@ Repository sources resolve reliably across larger source lists, and the chat vie
 - Always page through external source catalogs to avoid silent mismatches.
 - Mobile scroll areas behave better when parent containers use min-height constraints and flexible sizing.
 
-## 2026-01-20 - Consolidated Jules feedback comments
+## 2026-01-19 - Consolidated Jules feedback comments
 
 ### Context
+
 The supervisor workflow posted multiple comments per feedback event, which created noise and hid the actionable details.
 
 ### Solution
+
 Merged the Jules mention status and feedback into a single comment so routing context and feedback arrive together.
 
 ### Outcome
+
 Feedback now lands in one clear comment without extra status spam.
 
 ### Learnings
+
 - Batch routing context and actionable feedback into a single comment to reduce notification fatigue.
