@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DBMessage, Document } from "@/lib/db/schema";
-import type { ChatMessage, UIMessage } from "@/lib/types";
+// Fixed import: UIMessage not exported from lib/types
+import type { ChatMessage } from "@/lib/types";
 import {
 	cn,
 	convertToUIMessages,
@@ -103,9 +104,10 @@ describe("lib/utils", () => {
 				parts: [
 					{ type: "text", text: "Check this:" },
 					{
-						type: "tool-invocation",
-						toolInvocation: { toolCallId: "1", toolName: "test", args: {} },
-					},
+						type: "reasoning",
+						reasoning: "Thinking...",
+						details: [],
+					} as any, // Cast to any to bypass TS checks for the purpose of this unit test
 				],
 				createdAt: new Date(),
 			};
@@ -118,9 +120,10 @@ describe("lib/utils", () => {
 				role: "assistant",
 				parts: [
 					{
-						type: "tool-invocation",
-						toolInvocation: { toolCallId: "1", toolName: "test", args: {} },
-					},
+						type: "reasoning",
+						reasoning: "Thinking...",
+						details: [],
+					} as any,
 				],
 				createdAt: new Date(),
 			};

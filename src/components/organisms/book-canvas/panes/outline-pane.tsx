@@ -128,10 +128,10 @@ function ChapterItem({ chapter, onEdit, onDelete }: ChapterItemProps) {
 					className="text-xs min-h-[60px]"
 				/>
 				<div className="flex justify-end gap-2">
-					<Button size="xs" variant="ghost" onClick={handleCancel}>
+					<Button size="sm" variant="ghost" onClick={handleCancel}>
 						Cancel
 					</Button>
-					<Button size="xs" onClick={handleSave}>
+					<Button size="sm" onClick={handleSave}>
 						Save
 					</Button>
 				</div>
@@ -411,7 +411,7 @@ export function OutlinePane() {
 				description="Your story structure"
 				action={
 					(reorderMutation.isPending || isLoading) && (
-						<LoadingSpinner size="xs" variant="muted" />
+						<LoadingSpinner size="sm" variant="muted" />
 					)
 				}
 			/>
@@ -454,7 +454,7 @@ export function OutlinePane() {
 						Chapters
 					</h4>
 					<Button
-						size="xs"
+						size="sm"
 						variant="ghost"
 						onClick={handleAddChapter}
 						disabled={createMutation.isPending}

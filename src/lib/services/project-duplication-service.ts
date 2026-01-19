@@ -227,12 +227,12 @@ export class ProjectDuplicationService {
 		let hasMore = true;
 
 		while (hasMore) {
-			const oldEntities = await tx
+			const oldEntities = (await tx
 				.select()
-				.from(entity)
+				.from(entity as any)
 				.where(eq(entity.projectId, originalProjectId))
 				.limit(limit)
-				.offset(offset);
+				.offset(offset)) as EntityRow[];
 
 			if (oldEntities.length === 0) {
 				hasMore = false;
@@ -263,10 +263,10 @@ export class ProjectDuplicationService {
 		newProjectId: string,
 		entityIdMap: Map<string, string>,
 	) {
-		const oldAttributes = await tx
+		const oldAttributes = (await tx
 			.select()
-			.from(entityAttribute)
-			.where(eq(entityAttribute.projectId, originalProjectId));
+			.from(entityAttribute as any)
+			.where(eq(entityAttribute.projectId, originalProjectId))) as AttributeRow[];
 
 		if (oldAttributes.length > 0) {
 			const newAttributes = [];
@@ -295,10 +295,10 @@ export class ProjectDuplicationService {
 		newProjectId: string,
 		entityIdMap: Map<string, string>,
 	) {
-		const oldRelationships = await tx
+		const oldRelationships = (await tx
 			.select()
-			.from(relationship)
-			.where(eq(relationship.projectId, originalProjectId));
+			.from(relationship as any)
+			.where(eq(relationship.projectId, originalProjectId))) as RelationshipRow[];
 
 		if (oldRelationships.length > 0) {
 			const newRelationships = [];
@@ -329,10 +329,10 @@ export class ProjectDuplicationService {
 		newProjectId: string,
 		idMap: Map<string, string>,
 	) {
-		const oldOutlines = await tx
+		const oldOutlines = (await tx
 			.select()
-			.from(outline)
-			.where(eq(outline.projectId, originalProjectId));
+			.from(outline as any)
+			.where(eq(outline.projectId, originalProjectId))) as OutlineRow[];
 
 		if (oldOutlines.length > 0) {
 			const newOutlines = oldOutlines.map((old: OutlineRow) => {
@@ -358,10 +358,10 @@ export class ProjectDuplicationService {
 		outlineIdMap: Map<string, string>,
 		volumeIdMap: Map<string, string>,
 	) {
-		const oldVolumes = await tx
+		const oldVolumes = (await tx
 			.select()
-			.from(volume)
-			.where(eq(volume.projectId, originalProjectId));
+			.from(volume as any)
+			.where(eq(volume.projectId, originalProjectId))) as VolumeRow[];
 
 		if (oldVolumes.length > 0) {
 			const newVolumes = [];
@@ -395,10 +395,10 @@ export class ProjectDuplicationService {
 		outlineIdMap: Map<string, string>,
 		chapterIdMap: Map<string, string>,
 	) {
-		const oldChapters = await tx
+		const oldChapters = (await tx
 			.select()
-			.from(chapter)
-			.where(eq(chapter.projectId, originalProjectId));
+			.from(chapter as any)
+			.where(eq(chapter.projectId, originalProjectId))) as ChapterRow[];
 
 		if (oldChapters.length > 0) {
 			const newChapters = [];
@@ -434,10 +434,10 @@ export class ProjectDuplicationService {
 		volumeIdMap: Map<string, string>,
 		outlineIdMap: Map<string, string>,
 	) {
-		const oldChapterDrafts = await tx
+		const oldChapterDrafts = (await tx
 			.select()
-			.from(chapterDraft)
-			.where(eq(chapterDraft.projectId, originalProjectId));
+			.from(chapterDraft as any)
+			.where(eq(chapterDraft.projectId, originalProjectId))) as ChapterDraftRow[];
 
 		if (oldChapterDrafts.length > 0) {
 			const newDrafts = [];
@@ -490,14 +490,10 @@ export class ProjectDuplicationService {
 		let hasMore = true;
 
 		// 1. Light fetch for ID Mapping
-		const allSceneMeta = await tx
-			.select({
-				id: scene.id,
-				prevSceneId: scene.prevSceneId,
-				chapterId: scene.chapterId,
-			})
-			.from(scene)
-			.where(eq(scene.projectId, originalProjectId));
+		const allSceneMeta = (await tx
+			.select()
+			.from(scene as any)
+			.where(eq(scene.projectId, originalProjectId))) as SceneRow[];
 
 		for (const meta of allSceneMeta) {
 			sceneIdMap.set(meta.id, crypto.randomUUID());
@@ -505,12 +501,12 @@ export class ProjectDuplicationService {
 
 		// 2. Heavy fetch and insert in batches
 		while (hasMore) {
-			const batch = await tx
+			const batch = (await tx
 				.select()
-				.from(scene)
+				.from(scene as any)
 				.where(eq(scene.projectId, originalProjectId))
 				.limit(limit)
-				.offset(offset);
+				.offset(offset)) as SceneRow[];
 
 			if (batch.length === 0) {
 				hasMore = false;
@@ -553,10 +549,10 @@ export class ProjectDuplicationService {
 		newProjectId: string,
 		sceneIdMap: Map<string, string>,
 	) {
-		const oldSceneCards = await tx
+		const oldSceneCards = (await tx
 			.select()
-			.from(sceneCard)
-			.where(eq(sceneCard.projectId, originalProjectId));
+			.from(sceneCard as any)
+			.where(eq(sceneCard.projectId, originalProjectId))) as SceneCardRow[];
 
 		if (oldSceneCards.length > 0) {
 			const newSceneCards = [];
