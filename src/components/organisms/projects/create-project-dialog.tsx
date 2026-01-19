@@ -66,6 +66,12 @@ export function CreateProjectDialog({
 		"blank",
 	);
 
+	// Fix hydration mismatch for localStorage
+	const [isMounted, setIsMounted] = useState(false);
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
 	useEffect(() => {
 		if (open) {
 			setName("");
@@ -73,6 +79,10 @@ export function CreateProjectDialog({
 			// We intentionally do NOT reset visibility and templateId to preserve user preference (Smart Defaults)
 		}
 	}, [open]);
+
+	if (!isMounted) {
+		return null;
+	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
