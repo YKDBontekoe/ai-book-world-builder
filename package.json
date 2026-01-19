@@ -168,9 +168,9 @@
 		"@types/react": "19.2.8",
 		"@types/react-dom": "19.2.3",
 		"@types/react-syntax-highlighter": "15.5.13",
-		"@vitest/browser": "4.0.16",
-		"@vitest/browser-playwright": "4.0.16",
-		"@vitest/coverage-v8": "4.0.16",
+		"@vitest/browser": "4.0.17",
+		"@vitest/browser-playwright": "4.0.17",
+		"@vitest/coverage-v8": "4.0.17",
 		"drizzle-kit": "0.31.8",
 		"jsdom": "27.4.0",
 		"lint-staged": "16.2.7",
@@ -184,7 +184,7 @@
 		"ultracite": "7.0.11",
 		"vite": "7.3.1",
 		"vite-tsconfig-paths": "6.0.4",
-		"vitest": "4.0.16"
+		"vitest": "4.0.17"
 	},
 	"packageManager": "pnpm@10.28.0",
 	"pnpm": {
