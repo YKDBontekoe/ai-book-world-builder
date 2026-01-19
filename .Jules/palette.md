@@ -193,14 +193,18 @@ Jules API prompts now receive the actual batched feedback instead of the raw pla
 ## 2025-02-15 - Jules console source/scroll resilience
 
 ### Context
+
 The Jules console struggled to map selected repositories to sources and had jerky scrolling on mobile layouts.
 
 ### Solution
+
 Paginated the Jules source listing, matched sources case-insensitively to repositories, and made the chat layout rely on flexible height constraints instead of fixed pixel heights.
 
 ### Outcome
+
 Repository sources resolve reliably across larger source lists, and the chat viewport scrolls smoothly on smaller screens.
 
 ### Learnings
+
 - Always page through external source catalogs to avoid silent mismatches.
 - Mobile scroll areas behave better when parent containers use min-height constraints and flexible sizing.

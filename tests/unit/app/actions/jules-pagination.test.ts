@@ -23,8 +23,8 @@ vi.mock("@/lib/action-middleware", async (importOriginal) => {
   return {
     ...actual,
     createAdminAction: vi.fn().mockImplementation((config) => {
-      return async (args: any) => {
-          return config.handler(args || {});
+      return async (args: Parameters<typeof config.handler>[0]) => {
+          return config.handler(args ?? {});
       };
     }),
   };
