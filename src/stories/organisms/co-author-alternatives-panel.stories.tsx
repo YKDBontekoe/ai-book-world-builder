@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { fn } from "@storybook/test";
+import { vi } from "vitest";
 import {
 	type CoAuthorAlternative,
 	CoAuthorAlternativesPanel,
@@ -32,9 +32,9 @@ const meta: Meta<typeof CoAuthorAlternativesPanel> = {
 	args: {
 		alternatives,
 		isLoading: false,
-		onApply: fn(),
-		onDismiss: fn(),
-		onRefresh: fn(),
+		onApply: vi.fn(),
+		onDismiss: vi.fn(),
+		onRefresh: vi.fn(),
 	},
 };
 

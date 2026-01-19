@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, within } from "@storybook/test";
+import { within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { expect } from "vitest";
 import { SettingsDialog } from "@/components/organisms/settings-dialog";
 
 // Mock dependencies

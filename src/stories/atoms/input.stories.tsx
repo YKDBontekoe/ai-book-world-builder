@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, within } from "@storybook/test";
+import { within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import * as React from "react";
+import { expect } from "vitest";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 
