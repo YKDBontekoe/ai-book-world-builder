@@ -50,6 +50,7 @@ const dbMocks = vi.hoisted<MockChain>(() => {
 		transaction: vi.fn((callback: (chain: MockChain) => unknown) =>
 			callback(mockChain),
 		),
+		// biome-ignore lint/suspicious/noThenProperty: mocking a thenable
 		then(onFulfilled, onRejected) {
 			const currentResult =
 				mockChain.results && mockChain.results.length > 0

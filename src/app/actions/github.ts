@@ -86,7 +86,7 @@ const mergePRSchema = z.object({
 	method: z.enum(["merge", "squash", "rebase"]).default("merge"),
 });
 
-const repoFullNameSchema = z.object({
+const _repoFullNameSchema = z.object({
 	repoFullName: z.string().min(1, "Repository is required"),
 });
 

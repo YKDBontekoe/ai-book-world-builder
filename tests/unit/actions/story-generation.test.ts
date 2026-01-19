@@ -6,8 +6,6 @@ import {
 	generateSceneText,
 	planChapterScenes,
 } from "@/app/actions/story-generation";
-import { generationService } from "@/lib/ai/writer-service";
-import { db } from "@/lib/db";
 import { storyService } from "@/lib/services/story-service";
 
 // Mocks
@@ -173,7 +171,7 @@ vi.mock("@/lib/actions-utils", () => ({
 // Mock Story Service
 vi.mock("@/lib/services/story-service", () => ({
 	storyService: {
-		generateBookPlan: vi.fn((prompt) =>
+		generateBookPlan: vi.fn((_prompt) =>
 			Promise.resolve({
 				plan: {
 					title: "Mock Title",
@@ -314,7 +312,7 @@ describe("Story Generation Actions", () => {
 			if (result.success) {
 				// Unwrap data with cast
 				const resultData = (result as any).data;
-				if (resultData && resultData.success) {
+				if (resultData?.success) {
 					expect(resultData.sceneIds).toHaveLength(1);
 					expect(resultData.sceneIds?.[0]).toBe("mock-id");
 				}

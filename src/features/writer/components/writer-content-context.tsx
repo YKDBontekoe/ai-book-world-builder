@@ -1,10 +1,6 @@
 "use client";
 
 import { createContext, useContext } from "react";
-import type { useSceneContent } from "@/features/writer/hooks/use-scene-content";
-import type { useWriterState } from "@/features/writer/hooks/use-writer-state";
-
-type UseSceneContentReturnType = ReturnType<typeof useSceneContent>;
 
 type WriterContentContextType = {
 	sceneContent: string;

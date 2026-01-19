@@ -10,11 +10,9 @@ import {
 	InfoIcon,
 	Loader2,
 	RefreshCwIcon,
-	Sparkles,
 	TrendingUpIcon,
 	UsersIcon,
 } from "lucide-react";
-import Link from "next/link";
 import { toast } from "sonner";
 import {
 	analyzeProjectAction,

@@ -43,6 +43,7 @@ export function useProseMirror({
 	const [mounted, setMounted] = useState(false);
 	const prevContentRef = useRef<string | null>(null);
 	const onMentionStateChangeRef = useRef(onMentionStateChange);
+	const readOnlyRef = useRef(readOnly);
 
 	const handleTypewriterScroll = useTypewriterScroll({
 		editorRef,
@@ -52,6 +53,7 @@ export function useProseMirror({
 
 	// Update ref whenever the callback changes
 	onMentionStateChangeRef.current = onMentionStateChange;
+	readOnlyRef.current = readOnly;
 
 	// Initialize editor once
 	useEffect(() => {
@@ -94,7 +96,7 @@ export function useProseMirror({
 
 		editorRef.current = new EditorView(containerRef.current, {
 			state,
-			editable: () => !readOnly,
+			editable: () => !readOnlyRef.current,
 		});
 
 		prevContentRef.current = content;
@@ -106,7 +108,7 @@ export function useProseMirror({
 				editorRef.current = null;
 			}
 		};
-	}, [containerRef]); // Only run on mount or if dependencies change (early return if already initialized)
+	}, [containerRef, content]);
 
 	// Synchronize content when it changes externally
 	useEffect(() => {

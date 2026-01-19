@@ -176,6 +176,7 @@ export function GeneratorPane(): JSX.Element {
 								</h5>
 								<div className="space-y-2 pl-2 border-l-2 border-primary/20">
 									{generatedPlan.chapters.map((chapter, i) => (
+										// biome-ignore lint/suspicious/noArrayIndexKey: strictly for preview
 										<div key={i} className="text-sm">
 											<span className="font-medium">
 												Chapter {i + 1}: {chapter.title}
