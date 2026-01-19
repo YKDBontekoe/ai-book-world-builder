@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/db";
-import { projectRepository } from "@/lib/db/repositories";
+import {
+	entityRepository,
+	generationRepository,
+	projectRepository,
+	storyRepository,
+} from "@/lib/db/repositories";
 import { projectService } from "@/lib/services/project-service";
 
 // Mock dependencies
@@ -17,6 +22,17 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/db/repositories", () => ({
 	projectRepository: {
 		findByIdWithAccess: vi.fn(),
+	},
+	entityRepository: {
+		deleteByProjectIds: vi.fn(),
+		duplicateForProject: vi.fn(),
+	},
+	storyRepository: {
+		deleteStructureByProjectIds: vi.fn(),
+		duplicateStructureForProject: vi.fn(),
+	},
+	generationRepository: {
+		deleteByProjectIds: vi.fn(),
 	},
 }));
 
@@ -100,13 +116,16 @@ describe("ProjectService", () => {
 					insert: vi.fn().mockReturnValue(createMockQB([])),
 					delete: vi.fn().mockReturnValue(createMockQB([])),
 				};
-				return cb(mockTx);
+				await cb(mockTx);
 			});
 
 			const result = await projectService.deleteProjects(projectIds, userId);
 
 			expect(result).toEqual({ success: true });
 			expect(db.transaction).toHaveBeenCalled();
+			expect(generationRepository.deleteByProjectIds).toHaveBeenCalled();
+			expect(storyRepository.deleteStructureByProjectIds).toHaveBeenCalled();
+			expect(entityRepository.deleteByProjectIds).toHaveBeenCalled();
 		});
 
 		it("should handle errors during deletion", async () => {
@@ -179,51 +198,11 @@ describe("ProjectService", () => {
 						// Check if inserting project to return the new project with ID
 						return createMockQB([{ id: newProjectId }]);
 					}),
-					select: vi.fn().mockImplementation(() => {
-						// For forkProject, multiple selects happen.
-						// We can return a generic QB that returns empty arrays to allow the loop to finish.
-						// To test the "copying" logic, we would need to return non-empty arrays sequentially.
-
-						// Let's create a chain that eventually returns mapped data
-						return createMockQB([
-							{ id: "item-1", projectId: originalProjectId, name: "Item 1" },
-						]);
-					}),
+					select: vi.fn().mockReturnValue(createMockQB([])),
 					delete: vi.fn().mockReturnValue(createMockQB([])),
 				};
 
-				// Refine mockTx.select to handle specific calls if we want to be precise,
-				// or just return one item so mapping loops run at least once.
-				// However, infinite loops might happen if we always return items in `while(hasMore)`.
-				// The loop condition is: `if (oldEntities.length === 0) break;`
-
-				// We need to simulate: First call -> items, Second call -> empty.
-
-				let callCount = 0;
-				mockTx.select = vi.fn().mockImplementation(() => {
-					callCount++;
-					if (callCount % 2 === 1) {
-						// Odd calls return data (1st batch)
-						return createMockQB([
-							{ id: "item-1", projectId: originalProjectId },
-						]);
-					} else {
-						// Even calls return empty (end of batch)
-						return createMockQB([]);
-					}
-				});
-
-				// Wait, there are multiple "types" of fetches (entities, attributes, relationships...).
-				// A single counter might desync.
-
-				// Let's simplify: return empty for all secondary fetches to avoid "while" loops
-				// OR mock specific calls.
-				// Since we want to ensure "success" and covering lines, passing empty arrays is safest to avoid infinite loops
-				// if we don't implement the offset logic in the mock.
-
-				mockTx.select = vi.fn().mockReturnValue(createMockQB([]));
-
-				return cb(mockTx);
+				return await cb(mockTx);
 			});
 
 			const result = await projectService.forkProject(
@@ -236,6 +215,8 @@ describe("ProjectService", () => {
 			vi.unstubAllGlobals();
 
 			expect(result).toEqual({ success: true, projectId: newProjectId });
+			expect(entityRepository.duplicateForProject).toHaveBeenCalled();
+			expect(storyRepository.duplicateStructureForProject).toHaveBeenCalled();
 		});
 
 		it("should handle errors during fork", async () => {
