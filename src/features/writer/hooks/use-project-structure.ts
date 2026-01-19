@@ -68,16 +68,27 @@ export function useProjectStructure({
 	// Callback to sync content updates from editor back to structure state
 	const updateSceneInStructure = useCallback(
 		(sceneId: string, content: string) => {
-			setStructure((prev) =>
-				prev
-					? prev.map((c) => ({
-							...c,
-							scenes: c.scenes.map((s) =>
-								s.id === sceneId ? { ...s, content } : s,
-							),
-						}))
-					: null,
-			);
+			setStructure((prev) => {
+				if (!prev) return null;
+
+				let hasUpdates = false;
+				const newStructure = prev.map((c) => {
+					// Optimization: Check if this chapter contains the scene
+					const sceneIndex = c.scenes.findIndex((s) => s.id === sceneId);
+					if (sceneIndex === -1) return c;
+
+					hasUpdates = true;
+					const newScenes = [...c.scenes];
+					newScenes[sceneIndex] = { ...newScenes[sceneIndex], content };
+
+					return {
+						...c,
+						scenes: newScenes,
+					};
+				});
+
+				return hasUpdates ? newStructure : prev;
+			});
 		},
 		[],
 	);
