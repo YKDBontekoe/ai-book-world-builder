@@ -176,9 +176,7 @@ export class EntityRepository extends BaseRepository<
 						(rel) =>
 							rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
 					)
-					.sort(
-						(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-					),
+					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
 			}));
 		} catch (error) {
 			console.error("EntityRepository.findByProjectWithDetails error:", error);
@@ -367,7 +365,9 @@ export class EntityRepository extends BaseRepository<
 			await executor
 				.delete(entityAttribute)
 				.where(inArray(entityAttribute.projectId, projectIds));
-			await executor.delete(entity).where(inArray(entity.projectId, projectIds));
+			await executor
+				.delete(entity)
+				.where(inArray(entity.projectId, projectIds));
 		} catch (error) {
 			console.error("EntityRepository.deleteByProjectIds error:", error);
 			throw new DatabaseError("Failed to delete entity data for projects");

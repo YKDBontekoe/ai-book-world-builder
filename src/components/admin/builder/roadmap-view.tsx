@@ -1,9 +1,8 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Brain, ExternalLink, Hammer, Lightbulb, Loader2 } from "lucide-react";
 import type { JSX } from "react";
-// biome-ignore lint/correctness/noUnusedImports: used for brainstorm state
 import { useState } from "react";
 import { getIssues } from "@/app/actions/github";
 import { discoverFeaturesAction } from "@/app/actions/jules-ai";
@@ -26,15 +25,17 @@ type SuggestedFeature = {
 	type: "Feature" | "Refactor" | "Test" | "Docs";
 };
 
+type RoadmapIssue = {
+	number: number;
+	title: string;
+	body: string | null;
+};
+
 // ============================================================================
 // Sub-components
 // ============================================================================
 
-function FeatureCard({
-	issue,
-}: {
-	issue: { number: number; title: string; body: string };
-}) {
+function FeatureCard({ issue }: { issue: RoadmapIssue }) {
 	// Simple heuristic: Parent issues might have checklist items in body
 	const progress = (issue.body || "").match(/- \[x\]/g)?.length || 0;
 	const total = (issue.body || "").match(/- \[ \]/g)?.length || 0;
@@ -62,6 +63,7 @@ function FeatureCard({
 					target="_blank"
 					rel="noreferrer"
 					className="text-muted-foreground hover:text-primary"
+					aria-label={`Open issue #${issue.number} on GitHub`}
 				>
 					<ExternalLink className="w-4 h-4" />
 				</a>
@@ -79,12 +81,7 @@ function FeatureCard({
 	);
 }
 
-function SuggestionCard({
-	suggestion,
-}: {
-	suggestion: SuggestedFeature;
-	onPlan: () => void;
-}) {
+function SuggestionCard({ suggestion }: { suggestion: SuggestedFeature }) {
 	return (
 		<Card className="p-4 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
 			<div className="flex justify-between items-start mb-2">
@@ -129,6 +126,11 @@ function SuggestionCard({
 // ============================================================================
 
 export function RoadmapView(): JSX.Element {
+	const [suggestions, setSuggestions] = useState<SuggestedFeature[] | null>(
+		null,
+	);
+	const [brainstormError, setBrainstormError] = useState<string | null>(null);
+
 	// Fetch active parent issues (Heuristic: Issues with 'Epics' or 'Features' labels would be better, but we'll list open issues for now)
 	const { data: issues } = useQuery({
 		queryKey: ["github", "issues", "open"],
@@ -136,26 +138,34 @@ export function RoadmapView(): JSX.Element {
 			const res = await getIssues("open");
 			if (!res.success) throw new Error(res.error);
 			// Filter for "Parent" issues - simplistic check for now: Has a task list
-			return (res.data as any[]).filter((i) =>
-				(i.body || "").includes("- [ ]"),
-			);
+			return res.data.filter((issue) => (issue.body || "").includes("- [ ]"));
 		},
 	});
 
 	// AI Suggestions State
-	const {
-		data: suggestions,
-		refetch: brainstorm,
-		isFetching: isBrainstormingLoading,
-	} = useQuery({
-		queryKey: ["jules", "suggestions"],
-		queryFn: async () => {
-			const res = await discoverFeaturesAction({});
-			if (!res.success) throw new Error(res.error);
-			return res.data;
+	const { mutate: brainstorm, isPending: isBrainstormingLoading } = useMutation(
+		{
+			mutationFn: async () => {
+				const res = await discoverFeaturesAction({});
+				if (!res.success) throw new Error(res.error);
+				return res.data;
+			},
+			onMutate: () => {
+				setBrainstormError(null);
+				setSuggestions(null);
+			},
+			onSuccess: (data) => {
+				setSuggestions(data);
+			},
+			onError: (error) => {
+				setBrainstormError(
+					error instanceof Error
+						? error.message
+						: "Something went wrong while brainstorming ideas.",
+				);
+			},
 		},
-		enabled: false, // Only run when button clicked
-	});
+	);
 
 	return (
 		<div className="h-full flex flex-col gap-6 overflow-hidden">
@@ -214,11 +224,37 @@ export function RoadmapView(): JSX.Element {
 					</h3>
 					<ScrollArea className="flex-1 border rounded-lg bg-muted/20 p-4">
 						<div className="space-y-4">
-							{!suggestions && !isBrainstormingLoading && (
+							{brainstormError && !isBrainstormingLoading && (
+								<div className="flex flex-col items-center justify-center gap-3 h-[200px] text-center">
+									<Lightbulb className="w-8 h-8 mb-1 opacity-50 text-destructive" />
+									<p className="text-sm font-medium text-destructive">
+										Brainstorm failed
+									</p>
+									<p className="text-xs text-muted-foreground max-w-xs">
+										{brainstormError}
+									</p>
+									<Button
+										variant="secondary"
+										size="sm"
+										onClick={() => brainstorm()}
+									>
+										Try again
+									</Button>
+								</div>
+							)}
+							{!suggestions && !isBrainstormingLoading && !brainstormError && (
 								<div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground text-center">
 									<Lightbulb className="w-8 h-8 mb-2 opacity-50" />
 									<p>
 										Click "Brainstorm Ideas" to let Jules analyze the project.
+									</p>
+								</div>
+							)}
+							{suggestions?.length === 0 && !isBrainstormingLoading && (
+								<div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground text-center">
+									<Lightbulb className="w-8 h-8 mb-2 opacity-50" />
+									<p>
+										No suggestions found. Try again or refine your project docs.
 									</p>
 								</div>
 							)}
@@ -233,7 +269,6 @@ export function RoadmapView(): JSX.Element {
 									// biome-ignore lint/suspicious/noArrayIndexKey: no stable id available for AI suggestions
 									key={i}
 									suggestion={suggestion}
-									onPlan={() => {}} // Handled by DialogTrigger inside
 								/>
 							))}
 						</div>

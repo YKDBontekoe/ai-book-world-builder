@@ -1,5 +1,23 @@
 # Palette
 
+## 2026-01-19 - Brainstorming states need visible error recovery
+
+### Context
+
+Admins reported that the roadmap brainstorm button appeared unresponsive when the AI action failed, because the UI only showed a neutral empty state.
+
+### Solution
+
+Added explicit error messaging and a retry affordance while clearing stale suggestions during a brainstorm request.
+
+### Outcome
+
+Failures are now visible and recoverable, making the roadmap feel responsive even when the AI service rejects a request.
+
+### Learnings
+
+- Always surface AI action failures near the trigger with a clear retry path to avoid "silent" UI stalls.
+
 ## 2026-01-19 - Persisted admin selections reduce setup friction
 
 ### Context
