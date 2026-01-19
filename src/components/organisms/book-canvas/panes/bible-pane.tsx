@@ -1,9 +1,14 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { BookOpenIcon, LinkIcon, SparklesIcon } from "lucide-react";
 import { useMemo, useState } from "react";
-import { getEntities } from "@/app/actions/entities";
+import { toast } from "sonner";
+import {
+	bulkDeleteEntitiesAction,
+	createEntityAction,
+	getEntities,
+} from "@/app/actions/entities";
 import { getRelationships } from "@/app/actions/project-stats";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
@@ -14,8 +19,10 @@ import {
 	type SortOption,
 	type ViewMode,
 } from "@/components/organisms/book-canvas/panes/bible/bible-toolbar";
+import { CreateEntityDialog } from "@/components/organisms/book-canvas/panes/bible/create-entity-dialog";
 import { EntityGroupSection } from "@/components/organisms/book-canvas/panes/bible/entity-group-section";
 import { SourceMaterialsSection } from "@/components/organisms/book-canvas/panes/bible/source-materials-section";
+import { BulkActionsBar } from "@/components/organisms/projects/bulk-actions-bar";
 import { useEntityGrouping } from "@/hooks/use-entity-grouping";
 import { QUERY_KEYS } from "@/lib/query-options";
 
@@ -28,12 +35,23 @@ import { QUERY_KEYS } from "@/lib/query-options";
  */
 export function BiblePane(): React.JSX.Element {
 	const { projectId } = useBookCanvasLayout();
+	const queryClient = useQueryClient();
 
 	// View state
 	const [searchQuery, setSearchQuery] = useState("");
 	const [typeFilter, setTypeFilter] = useState("all");
 	const [sortOption, setSortOption] = useState<SortOption>("name-asc");
 	const [viewMode, setViewMode] = useState<ViewMode>("list");
+
+	// Selection state
+	const [selectedEntityIds, setSelectedEntityIds] = useState<Set<string>>(
+		new Set(),
+	);
+	const [isProcessing, setIsProcessing] = useState(false);
+
+	// Create Dialog state
+	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+	const [isCreating, setIsCreating] = useState(false);
 
 	const { data: entities, isLoading: entitiesLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.entities(projectId) : ["entities", "null"],
@@ -83,6 +101,135 @@ export function BiblePane(): React.JSX.Element {
 
 		return filtered;
 	}, [entities, searchQuery, typeFilter]);
+
+	// Actions
+	const handleSelect = (id: string, selected: boolean) => {
+		const newSelected = new Set(selectedEntityIds);
+		if (selected) {
+			newSelected.add(id);
+		} else {
+			newSelected.delete(id);
+		}
+		setSelectedEntityIds(newSelected);
+	};
+
+	const handleSelectAll = () => {
+		if (selectedEntityIds.size === filteredEntities.length) {
+			setSelectedEntityIds(new Set());
+		} else {
+			setSelectedEntityIds(new Set(filteredEntities.map((e) => e.id)));
+		}
+	};
+
+	const handleBulkDelete = async () => {
+		if (selectedEntityIds.size === 0) return;
+
+		setIsProcessing(true);
+		const idsToDelete = Array.from(selectedEntityIds);
+
+		try {
+			// Optimistic update
+			queryClient.setQueryData(
+				QUERY_KEYS.entities(projectId || ""),
+				(old: any[]) =>
+					old?.filter((e: any) => !selectedEntityIds.has(e.id)) || [],
+			);
+
+			const result = await bulkDeleteEntitiesAction({ ids: idsToDelete });
+			if (result.success) {
+				toast.success(`Deleted ${idsToDelete.length} entities`);
+				setSelectedEntityIds(new Set());
+			} else {
+				throw new Error("Failed to delete entities");
+			}
+		} catch (error) {
+			console.error("Failed to delete entities:", error);
+			toast.error("Failed to delete entities");
+			queryClient.invalidateQueries({
+				queryKey: QUERY_KEYS.entities(projectId || ""),
+			});
+		} finally {
+			setIsProcessing(false);
+		}
+	};
+
+	const handleCreateEntity = async (values: {
+		name: string;
+		kind: string;
+		summary?: string;
+	}) => {
+		if (!projectId) return;
+
+		setIsCreating(true);
+		try {
+			const result = await createEntityAction({
+				projectId,
+				name: values.name,
+				kind: values.kind,
+				summary: values.summary,
+			});
+
+			if (result) {
+				toast.success("Entity created successfully");
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.entities(projectId),
+				});
+				setIsCreateDialogOpen(false);
+			}
+		} catch (error) {
+			console.error("Failed to create entity:", error);
+			toast.error("Failed to create entity");
+		} finally {
+			setIsCreating(false);
+		}
+	};
+
+	const handleBulkExportJson = () => {
+		const entitiesToExport = filteredEntities.filter((e) =>
+			selectedEntityIds.has(e.id),
+		);
+		const dataStr = JSON.stringify(entitiesToExport, null, 2);
+		const blob = new Blob([dataStr], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `entities_export_${new Date().toISOString().split("T")[0]}.json`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		toast.success(`Exported ${entitiesToExport.length} entities to JSON`);
+		setSelectedEntityIds(new Set());
+	};
+
+	const handleBulkExportCsv = () => {
+		const entitiesToExport = filteredEntities.filter((e) =>
+			selectedEntityIds.has(e.id),
+		);
+		const headers = ["ID", "Name", "Type", "Summary"];
+		const csvContent = [
+			headers.join(","),
+			...entitiesToExport.map((e) => {
+				const row = [
+					e.id,
+					`"${(e.name || "").replace(/"/g, '""')}"`,
+					e.kind,
+					`"${(e.summary || "").replace(/"/g, '""')}"`,
+				];
+				return row.join(",");
+			}),
+		].join("\n");
+
+		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `entities_export_${new Date().toISOString().split("T")[0]}.csv`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		toast.success(`Exported ${entitiesToExport.length} entities to CSV`);
+		setSelectedEntityIds(new Set());
+	};
 
 	// Use hook for grouping logic
 	const entityGroups = useEntityGrouping(filteredEntities);
@@ -173,28 +320,29 @@ export function BiblePane(): React.JSX.Element {
 			<SourceMaterialsSection projectId={projectId} />
 
 			{/* Toolbar - Only show if we have entities or active filter */}
-			{(totalEntities > 0 || searchQuery || typeFilter !== "all") && (
-				<BibleToolbar
-					searchQuery={searchQuery}
-					onSearchChange={setSearchQuery}
-					typeFilter={typeFilter}
-					onTypeFilterChange={setTypeFilter}
-					sortOption={sortOption}
-					onSortChange={setSortOption}
-					viewMode={viewMode}
-					onViewModeChange={setViewMode}
-				/>
-			)}
+			<BibleToolbar
+				searchQuery={searchQuery}
+				onSearchChange={setSearchQuery}
+				typeFilter={typeFilter}
+				onTypeFilterChange={setTypeFilter}
+				sortOption={sortOption}
+				onSortChange={setSortOption}
+				viewMode={viewMode}
+				onViewModeChange={setViewMode}
+				onCreate={() => setIsCreateDialogOpen(true)}
+			/>
 
 			{/* Entity groups */}
 			{sortedGroups.length > 0 ? (
-				<div className="space-y-6">
+				<div className="space-y-6 pb-20">
 					{sortedGroups.map((group) => (
 						<EntityGroupSection
 							key={group.type}
 							group={group}
 							relationshipCounts={relationshipCounts}
 							viewMode={viewMode}
+							selectedIds={selectedEntityIds}
+							onSelect={handleSelect}
 						/>
 					))}
 				</div>
@@ -214,7 +362,7 @@ export function BiblePane(): React.JSX.Element {
 							? undefined
 							: searchQuery || typeFilter !== "all"
 								? "Try adjusting your filters"
-								: "Ask the AI to create characters, locations, items, and events to populate your Story Bible."
+								: "Create your first entity manually or ask the AI to help you build your world."
 					}
 					suggestions={
 						isLoading || searchQuery || typeFilter !== "all"
@@ -222,10 +370,37 @@ export function BiblePane(): React.JSX.Element {
 							: ['"Create a protagonist"', '"Add a mysterious forest"']
 					}
 					action={
-						isLoading ? <LoadingSpinner size="md" variant="muted" /> : undefined
+						isLoading ? (
+							<LoadingSpinner size="md" variant="muted" />
+						) : (
+							<Button onClick={() => setIsCreateDialogOpen(true)}>
+								Create Entity
+							</Button>
+						)
 					}
 				/>
 			)}
+
+			<BulkActionsBar
+				selectedCount={selectedEntityIds.size}
+				isProcessing={isProcessing}
+				onClear={() => setSelectedEntityIds(new Set())}
+				onSelectAll={handleSelectAll}
+				onDelete={handleBulkDelete}
+				onDuplicate={() =>
+					toast.info("Duplicate not implemented for entities yet")
+				}
+				onExportJson={handleBulkExportJson}
+				onExportCsv={handleBulkExportCsv}
+			/>
+
+			<CreateEntityDialog
+				projectId={projectId || ""}
+				open={isCreateDialogOpen}
+				onOpenChange={setIsCreateDialogOpen}
+				onSubmit={handleCreateEntity}
+				isSubmitting={isCreating}
+			/>
 		</div>
 	);
 }

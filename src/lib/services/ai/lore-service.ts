@@ -31,6 +31,10 @@ const loreSchema = z.object({
 	),
 });
 
+const summarySchema = z.object({
+	summary: z.string(),
+});
+
 export const loreService = {
 	/**
 	 * Generates a new Lore entity based on a prompt.
@@ -73,6 +77,31 @@ export const loreService = {
 		}
 
 		return entity;
+	},
+
+	/**
+	 * Generates a summary for an entity based on its name and type.
+	 */
+	async generateEntitySummary(
+		projectId: string,
+		name: string,
+		kind: string,
+	): Promise<string> {
+		await ensureProjectAccess(projectId);
+
+		const { object } = await generateObject({
+			model: openrouter(await getSelectedModelId("light")),
+			schema: summarySchema,
+			prompt: `
+        Write a brief, creative summary (max 3 sentences) for a story entity.
+        Name: ${name}
+        Type: ${kind}
+
+        Be creative but concise.
+      `,
+		});
+
+		return object.summary;
 	},
 
 	/**

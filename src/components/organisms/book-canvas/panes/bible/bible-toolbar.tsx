@@ -4,6 +4,7 @@ import {
 	Clock,
 	LayoutGrid,
 	List,
+	Plus,
 	Search,
 	Users,
 } from "lucide-react";
@@ -37,6 +38,7 @@ interface BibleToolbarProps {
 	onSortChange: (value: SortOption) => void;
 	viewMode: ViewMode;
 	onViewModeChange: (value: ViewMode) => void;
+	onCreate: () => void;
 }
 
 /**
@@ -51,6 +53,7 @@ interface BibleToolbarProps {
  * @param props.onSortChange - Callback when the sort order changes.
  * @param props.viewMode - The current view mode ('list' or 'grid').
  * @param props.onViewModeChange - Callback when the view mode changes.
+ * @param props.onCreate - Callback when the create button is clicked.
  */
 export function BibleToolbar({
 	searchQuery,
@@ -61,6 +64,7 @@ export function BibleToolbar({
 	onSortChange,
 	viewMode,
 	onViewModeChange,
+	onCreate,
 }: BibleToolbarProps): React.JSX.Element {
 	return (
 		<div className="flex flex-col gap-3">
@@ -77,47 +81,64 @@ export function BibleToolbar({
 					/>
 				</div>
 				<TooltipProvider>
-					<fieldset
-						className="flex bg-muted/50 rounded-lg p-1 gap-1"
-						aria-label="View mode"
-					>
+					<div className="flex gap-2">
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
-									variant="ghost"
 									size="icon"
-									aria-label="List view"
-									aria-pressed={viewMode === "list"}
-									className={cn(
-										"h-8 w-8 rounded-md",
-										viewMode === "list" && "bg-background shadow-sm",
-									)}
-									onClick={() => onViewModeChange("list")}
+									variant="outline"
+									className="h-9 w-9 border-dashed"
+									onClick={onCreate}
+									aria-label="Create new entity"
 								>
-									<List className="h-4 w-4" />
+									<Plus className="h-4 w-4" />
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>List View</TooltipContent>
+							<TooltipContent>Create Entity</TooltipContent>
 						</Tooltip>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="ghost"
-									size="icon"
-									aria-label="Grid view"
-									aria-pressed={viewMode === "grid"}
-									className={cn(
-										"h-8 w-8 rounded-md",
-										viewMode === "grid" && "bg-background shadow-sm",
-									)}
-									onClick={() => onViewModeChange("grid")}
-								>
-									<LayoutGrid className="h-4 w-4" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent>Grid View</TooltipContent>
-						</Tooltip>
-					</fieldset>
+
+						<fieldset
+							className="flex bg-muted/50 rounded-lg p-1 gap-1"
+							aria-label="View mode"
+						>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										aria-label="List view"
+										aria-pressed={viewMode === "list"}
+										className={cn(
+											"h-8 w-8 rounded-md",
+											viewMode === "list" && "bg-background shadow-sm",
+										)}
+										onClick={() => onViewModeChange("list")}
+									>
+										<List className="h-4 w-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>List View</TooltipContent>
+							</Tooltip>
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<Button
+										variant="ghost"
+										size="icon"
+										aria-label="Grid view"
+										aria-pressed={viewMode === "grid"}
+										className={cn(
+											"h-8 w-8 rounded-md",
+											viewMode === "grid" && "bg-background shadow-sm",
+										)}
+										onClick={() => onViewModeChange("grid")}
+									>
+										<LayoutGrid className="h-4 w-4" />
+									</Button>
+								</TooltipTrigger>
+								<TooltipContent>Grid View</TooltipContent>
+							</Tooltip>
+						</fieldset>
+					</div>
 				</TooltipProvider>
 			</div>
 
