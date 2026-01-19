@@ -150,15 +150,15 @@ jobs:
           EOF
 
           if [[ -n "$BATCHED_COMMENTS" ]]; then
-            echo "${BATCHED_COMMENTS}" >> /tmp/comment.md
-            echo "" >> /tmp/comment.md
-            echo "Instructions:" >> /tmp/comment.md
-            echo "1. Run \`pnpm lint && pnpm type-check && pnpm test:unit\`" >> /tmp/comment.md
-            echo "2. Fix all issues identified above" >> /tmp/comment.md
-            echo "3. Commit with message: \`fix: address review feedback\`" >> /tmp/comment.md
+            printf '%s\n' "${BATCHED_COMMENTS}" >> /tmp/comment.md
+            printf '\n' >> /tmp/comment.md
+            printf '%s\n' "Instructions:" >> /tmp/comment.md
+            printf '%s\n' "1. Run \`pnpm lint && pnpm type-check && pnpm test:unit\`" >> /tmp/comment.md
+            printf '%s\n' "2. Fix all issues identified above" >> /tmp/comment.md
+            printf '%s\n' "3. Commit with message: \`fix: address review feedback\`" >> /tmp/comment.md
           else
-            echo "" >> /tmp/comment.md
-            echo "${MENTION} Please review and address any pending feedback on this PR." >> /tmp/comment.md
+            printf '\n' >> /tmp/comment.md
+            printf '%s\n' "${MENTION} Please review and address any pending feedback on this PR." >> /tmp/comment.md
           fi
 
           gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md --repo "${{ github.repository }}"
