@@ -2,7 +2,7 @@ import type { UIMessage, UIMessagePart } from "ai";
 import { type ClassValue, clsx } from "clsx";
 import { formatISO } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import type { DBMessage, Document } from "@/lib/db/schema";
+import type { DBMessage } from "@/lib/db/schema";
 import type { ChatMessage, ChatTools, CustomUIDataTypes } from "@/lib/types";
 
 export function cn(...inputs: ClassValue[]) {

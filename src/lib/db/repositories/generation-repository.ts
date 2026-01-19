@@ -32,15 +32,15 @@ export class GenerationRepository extends BaseRepository<BookGeneration> {
 		throw new Error("Method not implemented.");
 	}
 
-	async create(data: any): Promise<BookGeneration> {
+	async create(_data: any): Promise<BookGeneration> {
 		throw new Error("Method not implemented.");
 	}
 
-	async update(id: string, data: any): Promise<BookGeneration> {
+	async update(_id: string, _data: any): Promise<BookGeneration> {
 		throw new Error("Method not implemented.");
 	}
 
-	async delete(id: string): Promise<void> {
+	async delete(_id: string): Promise<void> {
 		throw new Error("Use deleteByProjectIds for now.");
 	}
 

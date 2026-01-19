@@ -12,7 +12,14 @@ import {
 	ShieldAlert,
 	ShieldCheck,
 } from "lucide-react";
-import { type FormEvent, type JSX, useEffect, useRef, useState } from "react";
+import {
+	type FormEvent,
+	type JSX,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import { toast } from "sonner";
 import {
 	getGitHubPullRequestByBranchAction,
@@ -274,6 +281,17 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 		},
 	});
 
+	const pushSystemMessage = useCallback((message: NewSystemMessage) => {
+		setSystemMessages((prev) => [
+			...prev,
+			{
+				id: crypto.randomUUID(),
+				createdAt: new Date().toISOString(),
+				...message,
+			},
+		]);
+	}, []);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: data dependency for scroll
 	useEffect(() => {
 		if (scrollRef.current) {
@@ -294,7 +312,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 			}
 			lastStatusRef.current = signature;
 		}
-	}, [pullRequestStatus, pullRequest]);
+	}, [pullRequestStatus, pullRequest, pushSystemMessage]);
 
 	useEffect(() => {
 		if (pullRequestError) {
@@ -308,7 +326,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 				prErrorRef.current = message;
 			}
 		}
-	}, [pullRequestError]);
+	}, [pullRequestError, pushSystemMessage]);
 
 	useEffect(() => {
 		if (pullRequestStatusError) {
@@ -322,7 +340,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 				prStatusErrorRef.current = message;
 			}
 		}
-	}, [pullRequestStatusError]);
+	}, [pullRequestStatusError, pushSystemMessage]);
 
 	useEffect(() => {
 		if (!data && isLoading) return;
@@ -342,18 +360,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 				lastErrorRef.current = errorMessage;
 			}
 		}
-	}, [data, isLoading, queryClient, sessionId]);
-
-	const pushSystemMessage = (message: NewSystemMessage) => {
-		setSystemMessages((prev) => [
-			...prev,
-			{
-				id: crypto.randomUUID(),
-				createdAt: new Date().toISOString(),
-				...message,
-			},
-		]);
-	};
+	}, [data, isLoading, queryClient, sessionId, pushSystemMessage]);
 
 	const handleSubmit = (e: FormEvent) => {
 		e.preventDefault();

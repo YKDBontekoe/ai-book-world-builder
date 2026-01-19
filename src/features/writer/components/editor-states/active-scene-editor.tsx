@@ -6,10 +6,8 @@ import {
 	type EditorHandle,
 } from "@/components/organisms/editor/text-editor";
 import { useAppearance } from "@/components/providers/appearance-provider";
-import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
-import { useEditorHistory } from "@/hooks/use-editor-history";
 import { useProjectEntities } from "@/hooks/use-project-entities";
 
 interface ActiveSceneEditorProps {

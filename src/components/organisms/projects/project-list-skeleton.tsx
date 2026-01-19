@@ -20,10 +20,10 @@ export function ProjectListSkeleton() {
 
 			{/* Grid Skeleton */}
 			<GridList columns={{ sm: 2, lg: 3, xl: 4 }} gap={8}>
-				{Array.from({ length: 8 }).map((_, i) => (
-					// biome-ignore lint/suspicious/noArrayIndexKey: strictly for skeleton
+				{Array.from({ length: 8 }).map((_, index) => (
 					<GlassCard
-						key={i}
+						// biome-ignore lint/suspicious/noArrayIndexKey: strictly for skeleton
+						key={index}
 						variant="liquid"
 						className="h-full flex flex-col justify-between space-y-6 p-6"
 					>
