@@ -123,6 +123,8 @@ export const updateEntityAction = createUserAction({
 			attributes: input.attributes,
 		});
 
+		revalidatePath(`/projects/${input.projectId}`);
+
 		return {
 			...updatedEntity,
 			createdAt: updatedEntity.createdAt.toISOString(),
