@@ -266,7 +266,9 @@ export class ProjectDuplicationService {
 		const oldAttributes = (await tx
 			.select()
 			.from(entityAttribute as any)
-			.where(eq(entityAttribute.projectId, originalProjectId))) as AttributeRow[];
+			.where(
+				eq(entityAttribute.projectId, originalProjectId),
+			)) as AttributeRow[];
 
 		if (oldAttributes.length > 0) {
 			const newAttributes = [];
@@ -298,7 +300,9 @@ export class ProjectDuplicationService {
 		const oldRelationships = (await tx
 			.select()
 			.from(relationship as any)
-			.where(eq(relationship.projectId, originalProjectId))) as RelationshipRow[];
+			.where(
+				eq(relationship.projectId, originalProjectId),
+			)) as RelationshipRow[];
 
 		if (oldRelationships.length > 0) {
 			const newRelationships = [];
@@ -437,7 +441,9 @@ export class ProjectDuplicationService {
 		const oldChapterDrafts = (await tx
 			.select()
 			.from(chapterDraft as any)
-			.where(eq(chapterDraft.projectId, originalProjectId))) as ChapterDraftRow[];
+			.where(
+				eq(chapterDraft.projectId, originalProjectId),
+			)) as ChapterDraftRow[];
 
 		if (oldChapterDrafts.length > 0) {
 			const newDrafts = [];

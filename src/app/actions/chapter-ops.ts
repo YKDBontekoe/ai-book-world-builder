@@ -51,10 +51,7 @@ export const reorderChaptersAction = async (
 			return { success: true };
 		} catch (error) {
 			console.error("Failed to reorder chapters:", error);
-			throw new ChatSDKError(
-				"bad_request:api",
-				"Failed to reorder chapters",
-			);
+			throw new ChatSDKError("bad_request:api", "Failed to reorder chapters");
 		}
 	});
 };
@@ -86,10 +83,7 @@ export const updateChapterAction = async (
 			return { success: true };
 		} catch (error) {
 			console.error("Failed to update chapter:", error);
-			throw new ChatSDKError(
-				"bad_request:api",
-				"Failed to update chapter",
-			);
+			throw new ChatSDKError("bad_request:api", "Failed to update chapter");
 		}
 	});
 };
@@ -165,10 +159,7 @@ export const createChapterAction = async (
 			return { success: true, data: newChapter };
 		} catch (error) {
 			console.error("Failed to create chapter:", error);
-			throw new ChatSDKError(
-				"bad_request:api",
-				"Failed to create chapter",
-			);
+			throw new ChatSDKError("bad_request:api", "Failed to create chapter");
 		}
 	});
 };
@@ -214,10 +205,7 @@ export const deleteChapterAction = async (
 			return { success: true };
 		} catch (error) {
 			console.error("Failed to delete chapter:", error);
-			throw new ChatSDKError(
-				"bad_request:api",
-				"Failed to delete chapter",
-			);
+			throw new ChatSDKError("bad_request:api", "Failed to delete chapter");
 		}
 	});
 };

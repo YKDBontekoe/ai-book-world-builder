@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { StoryWizard } from "@/features/writer/components/story-wizard";
 import { TooltipProvider } from "@/components/atoms/tooltip";
+import { StoryWizard } from "@/features/writer/components/story-wizard";
 
 const meta = {
 	title: "Features/Writer/StoryWizard",
