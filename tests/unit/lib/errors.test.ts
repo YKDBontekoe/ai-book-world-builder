@@ -144,10 +144,22 @@ describe("Error Classes", () => {
 			expect(isAppError({})).toBe(false);
 		});
 
-		it("getErrorMessage returns correct message", () => {
+		it("getErrorMessage returns correct message in dev", () => {
+			vi.stubEnv("NODE_ENV", "development");
 			expect(getErrorMessage(new UnauthorizedError("Msg"))).toBe("Msg");
 			expect(getErrorMessage(new Error("Generic"))).toBe("Generic");
 			expect(getErrorMessage("String")).toBe("An unexpected error occurred");
+			vi.unstubAllEnvs();
+		});
+
+		it("getErrorMessage masks unknown errors in production", () => {
+			vi.stubEnv("NODE_ENV", "production");
+			expect(getErrorMessage(new UnauthorizedError("Msg"))).toBe("Msg");
+			expect(getErrorMessage(new Error("Secret"))).toBe(
+				"An unexpected error occurred",
+			);
+			expect(getErrorMessage("String")).toBe("An unexpected error occurred");
+			vi.unstubAllEnvs();
 		});
 	});
 });

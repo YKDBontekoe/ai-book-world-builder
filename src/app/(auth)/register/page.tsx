@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/atoms/submit-button";
 import { toast } from "@/components/atoms/toast";
 import { AuthForm } from "@/components/organisms/auth/auth-form";
 import { GoogleSignInButton } from "@/components/organisms/auth/google-button";
+import { PasskeyRegistrationButton } from "@/components/organisms/auth/passkey-registration-button";
 
 export default function Page() {
 	const router = useRouter();
@@ -27,9 +28,7 @@ export default function Page() {
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
 	useEffect(() => {
-		if (state.status === "user_exists") {
-			toast({ type: "error", description: "Account already exists!" });
-		} else if (state.status === "failed") {
+		if (state.status === "failed") {
 			toast({ type: "error", description: "Failed to create account!" });
 		} else if (state.status === "invalid_data") {
 			toast({
@@ -76,8 +75,13 @@ export default function Page() {
 						</div>
 					</div>
 
-					<AuthForm action={handleSubmit} defaultEmail={email}>
+					<AuthForm
+						action={handleSubmit}
+						defaultEmail={email}
+						onEmailChange={setEmail}
+					>
 						<SubmitButton isSuccessful={isSuccessful}>Sign Up</SubmitButton>
+						<PasskeyRegistrationButton />
 					</AuthForm>
 				</div>
 

@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { signIn } from "@/app/(auth)/auth";
-import { createUser, getUser } from "@/lib/db/queries";
+import { createUser } from "@/lib/db/queries";
 
 const authFormSchema = z.object({
 	email: z.string().email(),
@@ -17,17 +17,25 @@ export const login = async (
 	_: LoginActionState,
 	formData: FormData,
 ): Promise<LoginActionState> => {
+	// Add delay to prevent timing attacks and brute force
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
 	try {
 		const validatedData = authFormSchema.parse({
 			email: formData.get("email"),
 			password: formData.get("password"),
 		});
 
-		await signIn("credentials", {
+		const result = await signIn("credentials", {
 			email: validatedData.email,
 			password: validatedData.password,
 			redirect: false,
 		});
+
+		// Check for error in return value (when redirect: false)
+		if (result?.error) {
+			return { status: "failed" };
+		}
 
 		return { status: "success" };
 	} catch (error) {
@@ -40,36 +48,37 @@ export const login = async (
 };
 
 export type RegisterActionState = {
-	status:
-		| "idle"
-		| "in_progress"
-		| "success"
-		| "failed"
-		| "user_exists"
-		| "invalid_data";
+	status: "idle" | "in_progress" | "success" | "failed" | "invalid_data";
 };
 
 export const register = async (
 	_: RegisterActionState,
 	formData: FormData,
 ): Promise<RegisterActionState> => {
+	// Add delay to prevent timing attacks and brute force
+	await new Promise((resolve) => setTimeout(resolve, 500));
+
 	try {
 		const validatedData = authFormSchema.parse({
 			email: formData.get("email"),
 			password: formData.get("password"),
 		});
 
-		const [user] = await getUser(validatedData.email);
+		// We do not check if user exists to prevent enumeration.
+		// If the user exists, createUser will throw (unique constraint),
+		// and we return "failed".
 
-		if (user) {
-			return { status: "user_exists" } as RegisterActionState;
-		}
 		await createUser(validatedData.email, validatedData.password);
-		await signIn("credentials", {
+
+		const result = await signIn("credentials", {
 			email: validatedData.email,
 			password: validatedData.password,
 			redirect: false,
 		});
+
+		if (result?.error) {
+			return { status: "failed" };
+		}
 
 		return { status: "success" };
 	} catch (error) {

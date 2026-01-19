@@ -1,11 +1,17 @@
 import "server-only";
 
 import { generateObject } from "ai";
+import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { openrouter } from "@/lib/ai/providers";
-import { getEntitiesForProject, getScenesForChapter } from "@/lib/db/queries";
-import { verifyProjectAccessViaScenes } from "./utils";
+import {
+	db,
+	getEntitiesForProject,
+	getScenesForChapter,
+} from "@/lib/db/queries";
+import { scene } from "@/lib/db/schema";
+import { verifyProjectAccessViaScenes, verifySceneAccess } from "./utils";
 
 // Schema Definitions
 const critiqueSchema = z.object({
@@ -32,6 +38,18 @@ const consistencySchema = z.object({
 		}),
 	),
 	overallCoherence: z.number().describe("Score from 0 to 10."),
+});
+
+const dialogueCoachSchema = z.object({
+	overview: z.string(),
+	voiceNotes: z.array(
+		z.object({
+			character: z.string(),
+			notes: z.array(z.string()),
+			sampleRewrite: z.string().optional(),
+		}),
+	),
+	quickFixes: z.array(z.string()),
 });
 
 export const analysisService = {
@@ -110,6 +128,53 @@ export const analysisService = {
 		const { object } = await generateObject({
 			model: openrouter(await getSelectedModelId("large")),
 			schema: consistencySchema,
+			prompt,
+		});
+
+		return object;
+	},
+
+	/**
+	 * Analyzes dialogue voice and differentiation for a scene.
+	 */
+	async dialogueCoach(
+		sceneId: string,
+		focus?: string,
+	): Promise<z.infer<typeof dialogueCoachSchema>> {
+		await verifySceneAccess(sceneId);
+
+		const sceneItem = await db.query.scene.findFirst({
+			where: eq(scene.id, sceneId),
+		});
+
+		if (!sceneItem) {
+			throw new Error("Scene not found");
+		}
+
+		const entities = await getEntitiesForProject({
+			projectId: sceneItem.projectId,
+		});
+
+		const characterContext = entities
+			.filter((entity) => entity.kind === "character")
+			.map((entity) => `${entity.name}: ${entity.summary}`)
+			.join("\n");
+
+		const prompt = `
+Analyze the dialogue in the following scene. Identify voice differentiation and provide actionable notes.
+${focus ? `Focus: ${focus}` : ""}
+
+Known Character Notes:
+${characterContext || "No character notes provided."}
+
+Scene Title: ${sceneItem.title}
+Scene Text:
+${sceneItem.content || "(No content yet)"}
+`;
+
+		const { object } = await generateObject({
+			model: openrouter(await getSelectedModelId("large")),
+			schema: dialogueCoachSchema,
 			prompt,
 		});
 

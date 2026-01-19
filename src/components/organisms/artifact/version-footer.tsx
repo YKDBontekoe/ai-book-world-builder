@@ -12,7 +12,6 @@ import { useArtifact } from "@/hooks/use-artifact";
 import { api } from "@/lib/api-client";
 import type { Document } from "@/lib/db/schema";
 import { QUERY_KEYS } from "@/lib/query-options";
-import { getDocumentTimestampByIndex } from "@/lib/utils";
 
 type VersionFooterProps = {
 	handleVersionChange: (type: "next" | "prev" | "toggle" | "latest") => void;
@@ -20,6 +19,17 @@ type VersionFooterProps = {
 	currentVersionIndex: number;
 	mode: "edit" | "diff";
 };
+
+function getDocumentTimestampByIndex(documents: Document[], index: number) {
+	if (!documents || documents.length === 0) {
+		return new Date();
+	}
+	if (index >= documents.length) {
+		return new Date();
+	}
+
+	return documents[index].createdAt;
+}
 
 export const VersionFooter = ({
 	handleVersionChange,

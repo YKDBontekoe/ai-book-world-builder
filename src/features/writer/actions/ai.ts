@@ -11,8 +11,8 @@ import { checkUsageQuota } from "@/lib/quota";
 
 const generationOptionsSchema = z.object({
 	modelId: z.string().optional(),
-	temperature: z.number().optional(),
-	style: z.string().optional(),
+	temperature: z.number().min(0).max(2).optional(),
+	style: z.string().max(100, "Style description too long").optional(),
 });
 
 const continueWritingSchema = z.object({
@@ -26,9 +26,12 @@ const draftSceneSchema = z.object({
 	cardData: z.object({
 		purpose: z.string().max(5000, "Purpose too long"),
 		setting: z.string().optional(),
-		emotionalBeats: z.union([z.array(z.string()), z.string()]).optional(),
+		emotionalBeats: z.union([
+			z.array(z.string().max(500, "Beat too long")).max(50, "Too many beats"),
+			z.string().max(10000, "Beats description too long"),
+		]).optional(),
 	}),
-	instructions: z.string().optional(),
+	instructions: z.string().max(5000, "Instructions too long").optional(),
 	options: generationOptionsSchema.optional(),
 });
 
@@ -41,6 +44,12 @@ const generateIdeasSchema = z.object({
 const rewriteSelectionSchema = z.object({
 	selection: z.string().max(20000, "Selection too long"),
 	instruction: z.string().max(1000, "Instruction too long"),
+	options: generationOptionsSchema.optional(),
+});
+
+const coAuthorAlternativesSchema = z.object({
+	selection: z.string().max(20000, "Selection too long"),
+	guidance: z.string().max(1000, "Guidance too long").optional(),
 	options: generationOptionsSchema.optional(),
 });
 
@@ -112,6 +121,23 @@ export const rewriteSelection = createUserAction({
 		return generationService.rewriteSelection(
 			input.selection,
 			input.instruction,
+			input.options,
+		);
+	},
+});
+
+/**
+ * Generates co-author alternatives for a selected text snippet.
+ */
+export const coAuthorAlternatives = createUserAction({
+	input: coAuthorAlternativesSchema,
+	handler: async ({ user, input }) => {
+		if (!(await checkUsageQuota(user.id))) {
+			throw new Error("Usage quota exceeded");
+		}
+		return generationService.coAuthorAlternatives(
+			input.selection,
+			input.guidance,
 			input.options,
 		);
 	},

@@ -1,5 +1,3 @@
-"use client";
-
 import { defaultMarkdownSerializer } from "prosemirror-markdown";
 import { DOMParser, type Node } from "prosemirror-model";
 import { Decoration, DecorationSet, type EditorView } from "prosemirror-view";
@@ -12,6 +10,10 @@ import type { UISuggestion } from "@/lib/editor/suggestions";
  * This uses a simple approach: convert paragraphs to HTML and parse.
  */
 export const buildDocumentFromContent = (content: string): Node => {
+	if (typeof document === "undefined") {
+		throw new Error("buildDocumentFromContent requires a DOM; call it on the client.");
+	}
+
 	const parser = DOMParser.fromSchema(documentSchema);
 	const tempContainer = document.createElement("div");
 

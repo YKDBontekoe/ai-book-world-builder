@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { getUserDetails } from "@/app/actions/admin";
 import { UserStatusToggle } from "@/components/admin/user-status-toggle";
 import { Badge } from "@/components/atoms/badge";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { GlassCard } from "@/components/molecules/glass-card";
 
 export default async function UserDetailsPage({
@@ -38,11 +39,11 @@ export default async function UserDetailsPage({
 					<ArrowLeft className="mr-2 h-4 w-4" />
 					Back to Users
 				</Link>
-				<div className="flex items-center justify-between">
-					<h1 className="text-3xl font-bold tracking-tight">
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
 						{user.name || "Unnamed User"}
 					</h1>
-					<div className="flex items-center gap-4">
+					<div className="flex flex-wrap items-center gap-2 sm:gap-4">
 						<Badge variant={user.role === "admin" ? "default" : "secondary"}>
 							{user.role}
 						</Badge>
@@ -93,7 +94,13 @@ export default async function UserDetailsPage({
 						Projects
 					</h3>
 					{projects.length === 0 ? (
-						<p className="text-muted-foreground text-sm">No projects found.</p>
+						<EmptyState
+							icon={Book}
+							title="No Projects"
+							description="This user hasn't created any projects yet."
+							variant="dashed"
+							className="py-8"
+						/>
 					) : (
 						<ul className="space-y-3">
 							{projects.map(
@@ -105,7 +112,7 @@ export default async function UserDetailsPage({
 								}) => (
 									<li
 										key={project.id}
-										className="flex items-center justify-between p-3 rounded-md bg-muted/50"
+										className="flex flex-col gap-3 p-3 rounded-md bg-muted/50 sm:flex-row sm:items-center sm:justify-between"
 									>
 										<div className="space-y-1">
 											<p className="font-medium text-sm">{project.name}</p>

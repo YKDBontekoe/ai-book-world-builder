@@ -1,4 +1,6 @@
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import { verifyAuthenticationResponse } from "@simplewebauthn/server";
+import type { AuthenticationResponseJSON } from "@simplewebauthn/types";
 import { compare } from "bcrypt-ts";
 import { eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
@@ -6,8 +8,20 @@ import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import { authConfig } from "@/app/(auth)/auth.config";
+import {
+	authenticationResponseSchema,
+	decodeBase64Url,
+	passkeyOrigin,
+	passkeyRpId,
+} from "@/lib/auth/passkeys";
 import { DUMMY_PASSWORD } from "@/lib/constants";
 import { db } from "@/lib/db";
+import {
+	deletePasskeyChallenge,
+	getPasskeyChallenge,
+	getPasskeyCredentialByCredentialId,
+	updatePasskeyCredentialCounter,
+} from "@/lib/db/queries/passkeys";
 import { getUser } from "@/lib/db/queries/user";
 import { account, user as userTable } from "@/lib/db/schema";
 import type { UserRole } from "@/lib/db/schema/auth";
@@ -67,8 +81,98 @@ export const {
 			},
 		}),
 		Credentials({
-			credentials: {},
-			async authorize({ email, password }: any) {
+			credentials: {
+				email: { label: "Email", type: "text" },
+				password: { label: "Password", type: "password" },
+				passkeyCredential: { label: "Passkey Credential", type: "text" },
+			},
+			async authorize(credentials) {
+				const email = credentials?.email;
+
+				if (!email) {
+					return null;
+				}
+
+				if (credentials.passkeyCredential) {
+					const users = await getUser(email);
+
+					if (users.length === 0) {
+						return null;
+					}
+
+					const [user] = users;
+
+					if (user.bannedAt) {
+						return null;
+					}
+
+					let parsedJson: unknown;
+					try {
+						parsedJson = JSON.parse(credentials.passkeyCredential);
+					} catch {
+						return null;
+					}
+
+					const parsedCredential =
+						authenticationResponseSchema.safeParse(parsedJson);
+
+					if (!parsedCredential.success) {
+						return null;
+					}
+
+					const passkeyCredential =
+						parsedCredential.data as AuthenticationResponseJSON;
+
+					const storedCredential = await getPasskeyCredentialByCredentialId(
+						passkeyCredential.id,
+					);
+
+					if (!storedCredential || storedCredential.userId !== user.id) {
+						return null;
+					}
+
+					const challenge = await getPasskeyChallenge(
+						user.id,
+						"authentication",
+					);
+
+					if (!challenge || challenge.expiresAt < new Date()) {
+						return null;
+					}
+
+					const verification = await verifyAuthenticationResponse({
+						response: passkeyCredential,
+						expectedChallenge: challenge.challenge,
+						expectedOrigin: passkeyOrigin,
+						expectedRPID: passkeyRpId,
+						requireUserVerification: true,
+						authenticator: {
+							credentialID: decodeBase64Url(storedCredential.credentialId),
+							credentialPublicKey: decodeBase64Url(storedCredential.publicKey),
+							counter: storedCredential.counter,
+							transports: storedCredential.transports ?? undefined,
+						},
+					});
+
+					if (!verification.verified) {
+						return null;
+					}
+
+					await updatePasskeyCredentialCounter(
+						storedCredential.id,
+						verification.authenticationInfo.newCounter,
+					);
+					await deletePasskeyChallenge(challenge.id);
+
+					return { ...user, type: "regular", role: user.role };
+				}
+
+				const password = credentials.password;
+
+				if (!password) {
+					return null;
+				}
+
 				const users = await getUser(email);
 
 				if (users.length === 0) {
@@ -108,8 +212,7 @@ export const {
 				// But NextAuth types are tricky. Let's do a quick query to be safe if 'bannedAt' isn't on the user object yet.
 				// Since we modified schema, 'user' might have it if adapter fetched it.
 				// To be safe, let's cast or check property.
-				const dbUser = user as any;
-				if (dbUser.bannedAt) return false;
+				if ("bannedAt" in user && user.bannedAt) return false;
 
 				// Double check DB if strictly needed, but for perf let's rely on adapter or basic flow.
 				// Actually, for Google login, the user is created/fetched by adapter.

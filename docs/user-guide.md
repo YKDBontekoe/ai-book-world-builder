@@ -13,10 +13,32 @@ There are two primary ways to begin:
 The **Story Wizard** is the fastest way to turn an idea into a complete outline.
 
 1.  **Open**: When you create a new, empty project, the Wizard will appear in the center panel.
-2.  **Input Idea**: Describe your story concept (e.g., "A cyberpunk detective story on Mars"). Select a Genre, Point of View (POV), and Tone.
-3.  **Generate Plan**: The AI will create a list of chapters and summaries based on your prompt.
-4.  **Review & Edit**: You can change chapter titles or summaries, and add or remove chapters.
-5.  **Create Story**: Once satisfied, click "Create Story" to build the actual chapters and scenes in your project.
+2.  **Input Idea**: Describe your story concept (e.g., "A cyberpunk detective story on Mars").
+3.  **Configure Settings**:
+    *   **Genre**: Sets the overall category (e.g., Fantasy, Sci-Fi).
+    *   **POV**: Determines the narrator's perspective (e.g., *Third Person Limited* focuses on one character's thoughts per scene).
+    *   **Tone**: Sets the mood (e.g., *Dark* creates a serious, gritty atmosphere; *Humorous* adds wit).
+4.  **Generate Plan**: The AI will create a title, logline, and chapter outline.
+5.  **Review & Edit**:
+    *   **Metadata**: You can edit the generated Title and Logline.
+    *   **Chapters**: Add, delete, or reorder chapters. Edit summaries to refine the plot before generation.
+6.  **Create Story**: Once satisfied, click "Create Story". The system will generate empty scenes and structure in the database, ready for writing.
+
+### Understanding Story Settings
+
+When configuring your story or generation, you'll encounter these key settings:
+
+*   **Point of View (POV)**
+    *   **First Person ("I")**: Intimate and immediate. Good for deep character study.
+    *   **Third Person Limited ("He/She")**: The most common modern style. Follows one character closely but maintains some distance.
+    *   **Third Person Omniscient**: The narrator knows everything about all characters. Good for epic scope.
+
+*   **Tone**
+    *   **Neutral**: Standard, balanced storytelling.
+    *   **Dark**: Emphasizes conflict, danger, and serious themes.
+    *   **Humorous**: Prioritizes wit, irony, and lighter situations.
+    *   **Epic**: Grand scale, formal language, and high stakes.
+    *   **Intimate**: Focuses on internal emotion and close relationships.
 
 **Option B: Manual Structuring**
 If you already have an outline, you can build it manually.
@@ -101,14 +123,16 @@ The **Power Dock** is your context-aware toolbar located at the bottom of the ed
 -   **Expand**: Select a short paragraph or sentence and have the AI flesh it out with more detail.
 -   **Critique**: Get feedback on the current scene's pacing, dialogue, and tone.
 -   **Check**: Analyze the chapter for plot holes, character inconsistencies, and setting errors.
+-   **Dialogue Coach**: Analyze how distinct each character’s voice sounds and get targeted rewrite suggestions.
 -   **Lore**: Generate new lore entities (characters, locations) based on a prompt.
--   **Search**: Search your project's entities and content for specific details.
+-   **Ask Manuscript**: Ask questions about plot threads, character arcs, and unresolved clues with cited sources.
 -   **Export**: Download the current scene as a Markdown file.
 
 ### 3. Write & Generate
 Once you have a structure, you can start writing.
 
 -   **Generate Scenes (AI)**: Click the **Sparkles** icon next to a Chapter in the sidebar. The AI will draft content for all pending scenes in that chapter.
+-   **Inline Co-Author**: Highlight a passage and choose **Co-Author** to generate three alternative rewrites you can apply with one click.
 -   **Project-Aware Chat**: Open the **Floating Assistant** to ask the AI questions about your world, brainstorm ideas, or draft new scenes with specific instructions.
 
 ### 4. Analyze & Refine
@@ -122,6 +146,24 @@ Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. 
 -   **Scenes / Kanban**: A Kanban-style board for managing the status of your scenes.
 -   **Context**: Shows exactly what information the AI "sees" when generating a scene.
 -   **Diagnostics**: Runs health checks on your story.
+
+### 5. Productivity Tools
+Stay focused and track your progress with built-in productivity widgets located in the editor header (or "More" menu on smaller screens).
+
+*   **Sprint Timer (Zap Icon)**:
+    *   **Goal**: Challenge yourself to write as much as possible in a set time (15, 30, or 60 minutes).
+    *   **Tracking**: The widget displays time remaining and words written during the sprint.
+    *   **Results**: When the timer ends, you get a summary of your session.
+
+*   **Writing Goals (Target Icon)**:
+    *   **Daily Targets**: Set a daily word count goal (e.g., 1000 words).
+    *   **Pacing Target**: Optionally set a "Pacing Score" target (0-100) to guide the speed/tension of your writing.
+    *   **Progress**: Visual progress bars show how close you are to your targets in real-time.
+
+*   **Session Insights (Chart Icon)**:
+    *   **Real-time Stats**: View your current session's duration, total words written, words per minute (WPM), and edit count.
+    *   **Context**: Also displays total project word count and estimated reading time.
+    *   **Reset**: You can reset the session stats at any time to start fresh.
 
 ## Advanced Features
 

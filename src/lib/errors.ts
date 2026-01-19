@@ -290,7 +290,8 @@ export function getErrorMessage(error: unknown): string {
 	if (isAppError(error)) {
 		return error.message;
 	}
-	if (error instanceof Error) {
+	// In development, we allow viewing the raw error message for debugging
+	if (error instanceof Error && process.env.NODE_ENV !== "production") {
 		return error.message;
 	}
 	return "An unexpected error occurred";

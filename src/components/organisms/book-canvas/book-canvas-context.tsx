@@ -21,7 +21,8 @@ export type CanvasPane =
 	| "changes"
 	| "arc"
 	| "context"
-	| "map";
+	| "map"
+	| "generator";
 
 export type ChatAction = {
 	type: "send_message";

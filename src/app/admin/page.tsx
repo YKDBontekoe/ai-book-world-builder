@@ -7,7 +7,7 @@ export default async function AdminDashboard() {
 
 	if (!result.success) {
 		return (
-			<div className="p-8 text-destructive">
+			<div className="p-4 sm:p-6 text-destructive">
 				Error loading stats: {result.error}
 			</div>
 		);
@@ -17,9 +17,11 @@ export default async function AdminDashboard() {
 
 	return (
 		<div className="space-y-8">
-			<h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+			<h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+				Dashboard
+			</h1>
 
-			<div className="grid gap-4 md:grid-cols-3">
+			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				<GlassCard variant="liquid" className="p-6">
 					<div className="flex flex-row items-center justify-between space-y-0 pb-2">
 						<h3 className="text-sm font-medium">Total Users</h3>

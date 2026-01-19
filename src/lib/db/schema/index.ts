@@ -6,6 +6,7 @@ export * from "@/lib/db/schema/feedback";
 export * from "@/lib/db/schema/generation";
 export * from "@/lib/db/schema/issues";
 export * from "@/lib/db/schema/outlines";
+export * from "@/lib/db/schema/passkeys";
 export * from "@/lib/db/schema/projects";
 export * from "@/lib/db/schema/reader";
 export * from "@/lib/db/schema/scenes";

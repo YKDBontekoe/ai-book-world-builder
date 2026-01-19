@@ -152,13 +152,7 @@ export function useProseMirror({
 				},
 			});
 		}
-	}, [
-		readOnly,
-		typewriterMode,
-		onSaveContent,
-		onSelectionChange,
-		containerRef.current?.closest,
-	]);
+	}, [readOnly, onSaveContent, onSelectionChange, handleTypewriterScroll]);
 
 	return { editorRef, mounted };
 }

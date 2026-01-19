@@ -5,8 +5,9 @@ import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
 import { withProjectWriteAccess } from "@/lib/actions-utils";
-import { projectRepository } from "@/lib/db/repositories";
+import { projectRepository, storyRepository } from "@/lib/db/repositories";
 import { projectService } from "@/lib/services/project-service";
+import { PROJECT_TEMPLATES } from "@/lib/templates";
 import { deleteProjectsSchema } from "@/lib/validation";
 
 // Validation Schemas
@@ -14,6 +15,7 @@ const createProjectSchema = z.object({
 	name: z.string().min(1, "Name is required").max(100, "Name is too long"),
 	description: z.string().max(500, "Description is too long").optional(),
 	visibility: z.enum(["private", "public"]),
+	templateId: z.string().optional(),
 });
 
 const renameProjectSchema = z.object({
@@ -25,6 +27,7 @@ export async function createProjectAction(params: {
 	name: string;
 	description?: string;
 	visibility: VisibilityType;
+	templateId?: string;
 }) {
 	const session = await auth();
 	if (!session?.user?.id) {
@@ -41,6 +44,23 @@ export async function createProjectAction(params: {
 			...validation.data,
 			userId: session.user.id,
 		});
+
+		if (validation.data.templateId) {
+			const template = PROJECT_TEMPLATES.find(
+				(t) => t.id === validation.data.templateId,
+			);
+			if (template && template.id !== "blank") {
+				try {
+					await storyRepository.createBookFromPlan(
+						newProject.id,
+						template.plan,
+					);
+				} catch (templateError) {
+					console.error("Failed to apply template:", templateError);
+					// Proceeding even if template fails, so user has the project
+				}
+			}
+		}
 
 		revalidatePath("/projects");
 		return { success: true, projectId: newProject.id };

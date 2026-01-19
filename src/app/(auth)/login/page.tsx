@@ -9,6 +9,7 @@ import { SubmitButton } from "@/components/atoms/submit-button";
 import { toast } from "@/components/atoms/toast";
 import { AuthForm } from "@/components/organisms/auth/auth-form";
 import { GoogleSignInButton } from "@/components/organisms/auth/google-button";
+import { PasskeyLoginButton } from "@/components/organisms/auth/passkey-login-button";
 
 export default function Page() {
 	const router = useRouter();
@@ -75,8 +76,13 @@ export default function Page() {
 						</div>
 					</div>
 
-					<AuthForm action={handleSubmit} defaultEmail={email}>
+					<AuthForm
+						action={handleSubmit}
+						defaultEmail={email}
+						onEmailChange={setEmail}
+					>
 						<SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+						<PasskeyLoginButton email={email} />
 					</AuthForm>
 				</div>
 

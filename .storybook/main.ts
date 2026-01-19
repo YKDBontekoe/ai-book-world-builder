@@ -37,6 +37,10 @@ const config: StorybookConfig = {
 					// Mock Node.js built-ins that might slip through
 					perf_hooks: resolve(__dirname, "../tests/mocks/empty.mock.ts"),
 					"node:crypto": resolve(__dirname, "../tests/mocks/empty.mock.ts"),
+					"@/app/actions/story-generation": resolve(
+						__dirname,
+						"../tests/mocks/story-generation.mock.ts",
+					),
 				},
 			},
 		});

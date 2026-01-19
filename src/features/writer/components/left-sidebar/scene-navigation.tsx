@@ -3,15 +3,21 @@
 import { isEqual } from "lodash";
 import {
 	BookPlus,
+	CheckSquare,
 	ChevronsDown,
 	ChevronsUp,
+	Download,
 	FilePlus2,
 	Loader2,
 	Plus,
 	Search,
 	Sparkles,
+	Trash2,
+	Undo2,
+	X,
 } from "lucide-react";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { useDebounceCallback } from "usehooks-ts";
 import {
@@ -30,7 +36,10 @@ import {
 import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
+import { GlassCard } from "@/components/molecules/glass-card";
 import {
+	bulkDeleteScenes,
+	bulkExportScenes,
 	createNewChapter,
 	createSceneInChapter,
 	deleteScene,
@@ -65,6 +74,16 @@ export const SceneNavigation = memo(function SceneNavigation({
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
+	const [deletedSceneIds, setDeletedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
+	const pendingDeletionsRef = useRef<Map<string | number, NodeJS.Timeout>>(
+		new Map(),
+	);
 
 	// Stable setter for expanded chapters to prevent loops
 	const handleExpandedChange = useCallback((newValues: string[]) => {
@@ -91,6 +110,31 @@ export const SceneNavigation = memo(function SceneNavigation({
 		}
 	}, [structure]); // Only depend on structure for initialization
 
+	// Cleanup deletedSceneIds when structure updates
+	useEffect(() => {
+		if (!structure) return;
+
+		setDeletedSceneIds((prev) => {
+			if (prev.size === 0) return prev;
+
+			const currentIds = new Set<string>();
+			structure.forEach((chapter) => {
+				chapter.scenes.forEach((scene) => currentIds.add(scene.id));
+			});
+
+			const next = new Set(prev);
+			let changed = false;
+			for (const id of prev) {
+				if (!currentIds.has(id)) {
+					next.delete(id);
+					changed = true;
+				}
+			}
+
+			return changed ? next : prev;
+		});
+	}, [structure]);
+
 	// Search handling
 	const updateDebouncedSearch = useCallback((value: string) => {
 		setDebouncedSearchTerm(value);
@@ -105,14 +149,17 @@ export const SceneNavigation = memo(function SceneNavigation({
 
 	const filteredStructure = useMemo(() => {
 		if (!structure) return null;
-		if (!debouncedSearchTerm) return structure;
-
+		// Even if no search term, we must filter out deleted scenes
+		const baseStructure = debouncedSearchTerm ? structure : structure;
 		const lowerTerm = debouncedSearchTerm.toLowerCase();
-		return structure
+
+		return baseStructure
 			.map((chapter) => {
 				const titleMatch = chapter.title.toLowerCase().includes(lowerTerm);
-				const matchingScenes = chapter.scenes.filter((scene) =>
-					scene.title.toLowerCase().includes(lowerTerm),
+				const matchingScenes = chapter.scenes.filter(
+					(scene) =>
+						!deletedSceneIds.has(scene.id) &&
+						scene.title.toLowerCase().includes(lowerTerm),
 				);
 
 				// If chapter matches, we include it.
@@ -133,13 +180,20 @@ export const SceneNavigation = memo(function SceneNavigation({
 
 				if (titleMatch) {
 					// If only chapter title matches, show it with all scenes (or empty? maybe better to show scenes context)
-					return chapter;
+					// But we still need to filter out deleted scenes from "all scenes"
+					const visibleScenes = chapter.scenes.filter(
+						(s) => !deletedSceneIds.has(s.id),
+					);
+					return {
+						...chapter,
+						scenes: visibleScenes,
+					};
 				}
 
 				return null;
 			})
 			.filter(Boolean) as ChapterWithScenes[];
-	}, [structure, debouncedSearchTerm]);
+	}, [structure, debouncedSearchTerm, deletedSceneIds]);
 
 	// Auto-expand on search
 	useEffect(() => {
@@ -227,28 +281,95 @@ export const SceneNavigation = memo(function SceneNavigation({
 		[onStructureUpdate],
 	);
 
-	const handleDeleteScene = useCallback(
-		async (sceneId: string) => {
-			const toastId = toast.loading("Deleting scene...");
-			try {
-				const result = await deleteScene(sceneId);
+	const undoDelete = useCallback(
+		(toastId: string | number, idsToRestore: string[]) => {
+			const timeoutId = pendingDeletionsRef.current.get(toastId);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				pendingDeletionsRef.current.delete(toastId);
+			}
+
+			setDeletedSceneIds((prev) => {
+				const next = new Set(prev);
+				idsToRestore.forEach((id) => next.delete(id));
+				return next;
+			});
+
+			toast.dismiss(toastId);
+			toast.success("Deletion undone");
+		},
+		[],
+	);
+
+	const performDelete = useCallback(
+		(idsToDelete: string[]) => {
+			// Optimistic update
+			setDeletedSceneIds((prev) => {
+				const next = new Set(prev);
+				idsToDelete.forEach((id) => next.add(id));
+				return next;
+			});
+
+			if (activeSceneId && idsToDelete.includes(activeSceneId)) {
+				onSceneSelect(null);
+			}
+
+			// Show Undo Toast
+			const toastId = toast.custom(
+				(t) => (
+					<GlassCard
+						variant="liquid"
+						className="flex items-center gap-4 p-4 w-full max-w-md mx-auto pointer-events-auto"
+					>
+						<div className="flex-1 text-sm">
+							Deleted {idsToDelete.length} scene
+							{idsToDelete.length !== 1 ? "s" : ""}
+						</div>
+						<Button
+							size="sm"
+							variant="outline"
+							className="gap-2 h-8"
+							onClick={() => undoDelete(t, idsToDelete)}
+						>
+							<Undo2 className="h-3.5 w-3.5" />
+							Undo
+						</Button>
+					</GlassCard>
+				),
+				{ duration: 4000 },
+			);
+
+			// Delayed execution
+			const timeout = setTimeout(async () => {
+				pendingDeletionsRef.current.delete(toastId);
+
+				const result = await bulkDeleteScenes(idsToDelete);
+
 				if (result.success) {
-					toast.success("Scene deleted", { id: toastId });
 					onStructureUpdate?.();
-					// Use ref to check current selection without invalidating callback
-					if (activeSceneIdRef.current === sceneId) {
-						onSceneSelect(null); // Clear selection
-					}
+					// Do not cleanup here. The useEffect above will handle it
+					// once the structure actually updates, preventing content flash.
 				} else {
-					toast.error(result.error || "Failed to delete scene", {
-						id: toastId,
+					toast.error("Failed to delete scenes");
+					// Restore on error
+					setDeletedSceneIds((prev) => {
+						const next = new Set(prev);
+						idsToDelete.forEach((id) => next.delete(id));
+						return next;
 					});
 				}
-			} catch (_e) {
-				toast.error("Error deleting scene", { id: toastId });
-			}
+			}, 4000);
+
+			pendingDeletionsRef.current.set(toastId, timeout);
 		},
-		[onStructureUpdate, onSceneSelect],
+		[activeSceneId, onSceneSelect, onStructureUpdate, undoDelete],
+	);
+
+	const handleDeleteScene = useCallback(
+		async (sceneId: string) => {
+			performDelete([sceneId]);
+		},
+		[performDelete],
 	);
 
 	const handleCreateChapter = async () => {
@@ -268,6 +389,62 @@ export const SceneNavigation = memo(function SceneNavigation({
 			setIsCreatingChapter(false);
 		}
 	};
+
+	const toggleSelectionMode = useCallback(() => {
+		setIsSelectionMode((prev) => {
+			if (prev) {
+				setSelectedSceneIds(new Set());
+				return false;
+			}
+			return true;
+		});
+	}, []);
+
+	const toggleSceneSelect = useCallback((sceneId: string) => {
+		setSelectedSceneIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(sceneId)) {
+				next.delete(sceneId);
+			} else {
+				next.add(sceneId);
+			}
+			return next;
+		});
+	}, []);
+
+	const handleBulkExport = async () => {
+		const toastId = toast.loading("Exporting scenes...");
+		try {
+			const ids = Array.from(selectedSceneIds);
+			const result = await bulkExportScenes(ids);
+			if (result.success && result.content) {
+				await navigator.clipboard.writeText(result.content);
+				toast.success("Copied to clipboard", { id: toastId });
+				toggleSelectionMode();
+			} else {
+				toast.error(result.error || "Failed to export", { id: toastId });
+			}
+		} catch (_error) {
+			toast.error("Error exporting scenes", { id: toastId });
+		}
+	};
+
+	const handleBulkDelete = useCallback(() => {
+		const ids = Array.from(selectedSceneIds);
+		if (ids.length === 0) return;
+
+		performDelete(ids);
+		toggleSelectionMode();
+	}, [selectedSceneIds, performDelete, toggleSelectionMode]);
+
+	useHotkeys(
+		"delete, backspace",
+		() => {
+			handleBulkDelete();
+		},
+		{ enabled: isSelectionMode && selectedSceneIds.size > 0 },
+		[handleBulkDelete, isSelectionMode, selectedSceneIds],
+	);
 
 	if (loading) {
 		return (
@@ -338,6 +515,19 @@ export const SceneNavigation = memo(function SceneNavigation({
 							` (${structure.length - displayStructure.length} hidden)`}
 					</span>
 					<div className="flex gap-1">
+						<Button
+							variant={isSelectionMode ? "secondary" : "ghost"}
+							size="icon"
+							className="h-6 w-6"
+							onClick={toggleSelectionMode}
+							title="Select Scenes"
+						>
+							{isSelectionMode ? (
+								<X className="h-3 w-3" />
+							) : (
+								<CheckSquare className="h-3 w-3" />
+							)}
+						</Button>
 						<Button
 							variant="ghost"
 							size="icon"
@@ -416,6 +606,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 												onRename={handleRenameScene}
 												onDelete={handleDeleteScene}
 												readOnly={readOnly}
+												isSelectionMode={isSelectionMode}
+												isSelected={selectedSceneIds.has(scene.id)}
+												onToggleSelect={toggleSceneSelect}
 											/>
 										))}
 										<Button
@@ -458,6 +651,30 @@ export const SceneNavigation = memo(function SceneNavigation({
 					</Accordion>
 				)}
 			</ScrollArea>
+			{isSelectionMode && (
+				<div className="p-2 border-t bg-muted/30 flex gap-2">
+					<Button
+						size="sm"
+						variant="destructive"
+						className="flex-1 text-xs"
+						onClick={handleBulkDelete}
+						disabled={selectedSceneIds.size === 0}
+					>
+						<Trash2 className="mr-2 h-3 w-3" />
+						Delete ({selectedSceneIds.size})
+					</Button>
+					<Button
+						size="sm"
+						variant="outline"
+						className="flex-1 text-xs"
+						onClick={handleBulkExport}
+						disabled={selectedSceneIds.size === 0}
+					>
+						<Download className="mr-2 h-3 w-3" />
+						Export ({selectedSceneIds.size})
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 });
