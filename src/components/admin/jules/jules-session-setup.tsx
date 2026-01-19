@@ -103,11 +103,14 @@ export function JulesSessionSetup({
 
 	const matchingSource = useMemo(() => {
 		if (!selectedRepo) return null;
-		return sources?.find(
-			(source) =>
-				source.githubRepo.owner === selectedRepo.owner &&
-				source.githubRepo.repo === selectedRepo.name,
-		);
+		const owner = selectedRepo.owner.toLowerCase();
+		const repo = selectedRepo.name.toLowerCase();
+		return sources?.find((source) => {
+			return (
+				source.githubRepo.owner.toLowerCase() === owner &&
+				source.githubRepo.repo.toLowerCase() === repo
+			);
+		});
 	}, [sources, selectedRepo]);
 
 	const { mutate: createSession, isPending } = useMutation({

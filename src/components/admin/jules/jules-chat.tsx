@@ -363,7 +363,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	if (isLoading && !data) {
 		return (
-			<div className="h-[600px] flex items-center justify-center">
+			<div className="flex-1 min-h-0 flex items-center justify-center">
 				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 			</div>
 		);
@@ -409,7 +409,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 		: null;
 
 	return (
-		<div className="flex flex-col h-[700px] gap-4">
+		<div className="flex flex-col min-h-0 h-full gap-4">
 			{/* Header */}
 			<div className="flex items-center justify-between pb-4 border-b">
 				<div className="flex items-center gap-3">
@@ -560,8 +560,8 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 			) : null}
 
 			{/* Chat Area */}
-			<GlassCard className="flex-1 overflow-hidden flex flex-col p-0">
-				<ScrollArea className="flex-1 p-4" ref={scrollRef}>
+			<GlassCard className="flex-1 min-h-0 overflow-hidden flex flex-col p-0">
+				<ScrollArea className="flex-1 min-h-0 p-4" ref={scrollRef}>
 					<div className="space-y-6">
 						{session?.prompt && (
 							<div className="flex flex-col gap-1 items-end">

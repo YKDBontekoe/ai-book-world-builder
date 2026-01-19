@@ -16,10 +16,12 @@ export function JulesDashboard(): JSX.Element {
 
 	if (selectedSessionId) {
 		return (
-			<JulesChat
-				sessionId={selectedSessionId}
-				onBack={() => setSelectedSessionId(null)}
-			/>
+			<div className="flex flex-col h-full min-h-0">
+				<JulesChat
+					sessionId={selectedSessionId}
+					onBack={() => setSelectedSessionId(null)}
+				/>
+			</div>
 		);
 	}
 
