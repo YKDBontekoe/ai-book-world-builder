@@ -1,6 +1,13 @@
 "use client";
 
-import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
+import {
+	Clipboard,
+	Copy,
+	Edit,
+	Link as LinkIcon,
+	MoreHorizontal,
+	Trash,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -124,6 +131,25 @@ export function ProjectActionsMenu({
 		}
 	};
 
+	const handleCopyId = async () => {
+		try {
+			await navigator.clipboard.writeText(projectId);
+			toast.success("Project ID copied to clipboard");
+		} catch {
+			toast.error("Failed to copy Project ID");
+		}
+	};
+
+	const handleCopyLink = async () => {
+		try {
+			const url = `${window.location.origin}/projects/${projectId}`;
+			await navigator.clipboard.writeText(url);
+			toast.success("Project link copied to clipboard");
+		} catch {
+			toast.error("Failed to copy Project link");
+		}
+	};
+
 	return (
 		<>
 			{/* biome-ignore lint/a11y/noStaticElementInteractions: "Stopping propagation on wrapper" */}
@@ -153,6 +179,24 @@ export function ProjectActionsMenu({
 						>
 							<Edit className="mr-2 h-4 w-4" />
 							Rename
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={(e) => {
+								e.stopPropagation();
+								handleCopyId();
+							}}
+						>
+							<Clipboard className="mr-2 h-4 w-4" />
+							Copy ID
+						</DropdownMenuItem>
+						<DropdownMenuItem
+							onClick={(e) => {
+								e.stopPropagation();
+								handleCopyLink();
+							}}
+						>
+							<LinkIcon className="mr-2 h-4 w-4" />
+							Copy Link
 						</DropdownMenuItem>
 						<DropdownMenuItem
 							onClick={(e) => {

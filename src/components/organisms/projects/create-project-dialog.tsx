@@ -1,9 +1,10 @@
 "use client";
 
-import { Globe, Loader2, Lock, Plus } from "lucide-react";
+import { Globe, Loader2, Lock, Plus, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useLocalStorage } from "usehooks-ts";
 import { createProjectAction } from "@/app/actions/projects";
 import { Button } from "@/components/atoms/button";
 import {
@@ -25,7 +26,14 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/atoms/tooltip";
 import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
+import { generateRandomTitle } from "@/lib/random-title";
 import { PROJECT_TEMPLATES } from "@/lib/templates";
 
 interface CreateProjectDialogProps {
@@ -49,17 +57,32 @@ export function CreateProjectDialog({
 
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
-	const [visibility, setVisibility] = useState<VisibilityType>("private");
-	const [templateId, setTemplateId] = useState("blank");
+	const [visibility, setVisibility] = useLocalStorage<VisibilityType>(
+		"create-project-visibility",
+		"private",
+	);
+	const [templateId, setTemplateId] = useLocalStorage<string>(
+		"create-project-template",
+		"blank",
+	);
+
+	// Fix hydration mismatch for localStorage
+	const [isMounted, setIsMounted] = useState(false);
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	useEffect(() => {
 		if (open) {
 			setName("");
 			setDescription("");
-			setVisibility("private");
-			setTemplateId("blank");
+			// We intentionally do NOT reset visibility and templateId to preserve user preference (Smart Defaults)
 		}
 	}, [open]);
+
+	if (!isMounted) {
+		return null;
+	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -112,14 +135,33 @@ export function CreateProjectDialog({
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="space-y-2">
 						<Label htmlFor="name">Name</Label>
-						<Input
-							id="name"
-							placeholder="The Great Adventure"
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							required
-							autoFocus
-						/>
+						<div className="relative">
+							<Input
+								id="name"
+								placeholder="The Great Adventure"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								required
+								autoFocus
+								className="pr-10"
+							/>
+							<TooltipProvider>
+								<Tooltip>
+									<TooltipTrigger asChild>
+										<Button
+											type="button"
+											size="icon"
+											variant="ghost"
+											className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-primary transition-colors"
+											onClick={() => setName(generateRandomTitle())}
+										>
+											<Sparkles className="h-4 w-4" />
+										</Button>
+									</TooltipTrigger>
+									<TooltipContent>Surprise me with a title</TooltipContent>
+								</Tooltip>
+							</TooltipProvider>
+						</div>
 					</div>
 					<div className="space-y-2">
 						<Label htmlFor="description">Description</Label>
