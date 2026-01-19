@@ -75,6 +75,11 @@ export async function renameProject(
 	name: string,
 	description?: string,
 ) {
+	const idValidation = z.string().uuid().safeParse(projectId);
+	if (!idValidation.success) {
+		return { error: "Invalid project ID" };
+	}
+
 	const validation = renameProjectSchema.safeParse({ name, description });
 	if (!validation.success) {
 		return { error: validation.error.errors[0].message };
