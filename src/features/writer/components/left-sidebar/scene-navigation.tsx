@@ -7,11 +7,9 @@ import {
 	ChevronsDown,
 	ChevronsUp,
 	Download,
-	FilePlus2,
 	Loader2,
 	Plus,
 	Search,
-	Sparkles,
 	Trash2,
 	Undo2,
 	X,
@@ -20,19 +18,8 @@ import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { useDebounceCallback } from "usehooks-ts";
-import {
-	Accordion,
-	AccordionContent,
-	AccordionItem,
-	AccordionTrigger,
-} from "@/components/atoms/accordion";
+import { Accordion } from "@/components/atoms/accordion";
 import { Button } from "@/components/atoms/button";
-import {
-	ContextMenu,
-	ContextMenuContent,
-	ContextMenuItem,
-	ContextMenuTrigger,
-} from "@/components/atoms/context-menu";
 import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
@@ -42,11 +29,10 @@ import {
 	bulkExportScenes,
 	createNewChapter,
 	createSceneInChapter,
-	deleteScene,
 	generateScene,
 	updateSceneTitle,
 } from "@/features/writer/actions";
-import { SceneItem } from "@/features/writer/components/left-sidebar/scene-item";
+import { SidebarChapter } from "@/features/writer/components/left-sidebar/sidebar-chapter";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
 
@@ -119,7 +105,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 
 			const currentIds = new Set<string>();
 			structure.forEach((chapter) => {
-				chapter.scenes.forEach((scene) => currentIds.add(scene.id));
+				chapter.scenes.forEach((scene) => {
+					currentIds.add(scene.id);
+				});
 			});
 
 			const next = new Set(prev);
@@ -149,8 +137,14 @@ export const SceneNavigation = memo(function SceneNavigation({
 
 	const filteredStructure = useMemo(() => {
 		if (!structure) return null;
-		// Even if no search term, we must filter out deleted scenes
-		const baseStructure = debouncedSearchTerm ? structure : structure;
+
+		// Optimization: Return original structure if no filtering is active
+		// This preserves object identity for unaffected chapters, allowing memoized SidebarChapter to skip re-renders
+		if (!debouncedSearchTerm && deletedSceneIds.size === 0) {
+			return structure;
+		}
+
+		const baseStructure = structure;
 		const lowerTerm = debouncedSearchTerm.toLowerCase();
 
 		return baseStructure
@@ -162,15 +156,6 @@ export const SceneNavigation = memo(function SceneNavigation({
 						scene.title.toLowerCase().includes(lowerTerm),
 				);
 
-				// If chapter matches, we include it.
-				// If we want to show all scenes when chapter matches, we return chapter as is.
-				// However, filtering scenes usually helps narrowing down.
-				// Let's decide: Show chapter if title matches OR has matching scenes.
-				// AND filter scenes to only show matches, unless chapter title matches (then show all?? No, keeps it cleaner to filter).
-				// Actually, if I search "Chapter 1", I expect to see Chapter 1 and maybe its scenes.
-				// If I search "Scene A", I expect to see Chapter 1 > Scene A.
-				// Let's stick to strict filtering for scenes.
-
 				if (matchingScenes.length > 0) {
 					return {
 						...chapter,
@@ -179,8 +164,6 @@ export const SceneNavigation = memo(function SceneNavigation({
 				}
 
 				if (titleMatch) {
-					// If only chapter title matches, show it with all scenes (or empty? maybe better to show scenes context)
-					// But we still need to filter out deleted scenes from "all scenes"
 					const visibleScenes = chapter.scenes.filter(
 						(s) => !deletedSceneIds.has(s.id),
 					);
@@ -200,9 +183,6 @@ export const SceneNavigation = memo(function SceneNavigation({
 		if (debouncedSearchTerm && filteredStructure) {
 			const matchingIds = filteredStructure.map((c) => c.id);
 			setExpandedChapters((prev) => {
-				// Merge existing expanded with new matches or just set matches?
-				// Usually search results should be expanded.
-				// Let's just set them to expanded.
 				return isEqual(prev, matchingIds) ? prev : matchingIds;
 			});
 		}
@@ -291,7 +271,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 
 			setDeletedSceneIds((prev) => {
 				const next = new Set(prev);
-				idsToRestore.forEach((id) => next.delete(id));
+				idsToRestore.forEach((id) => {
+					next.delete(id);
+				});
 				return next;
 			});
 
@@ -306,7 +288,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 			// Optimistic update
 			setDeletedSceneIds((prev) => {
 				const next = new Set(prev);
-				idsToDelete.forEach((id) => next.add(id));
+				idsToDelete.forEach((id) => {
+					next.add(id);
+				});
 				return next;
 			});
 
@@ -354,7 +338,9 @@ export const SceneNavigation = memo(function SceneNavigation({
 					// Restore on error
 					setDeletedSceneIds((prev) => {
 						const next = new Set(prev);
-						idsToDelete.forEach((id) => next.delete(id));
+						idsToDelete.forEach((id) => {
+							next.delete(id);
+						});
 						return next;
 					});
 				}
@@ -562,68 +548,21 @@ export const SceneNavigation = memo(function SceneNavigation({
 						className="w-full"
 					>
 						{displayStructure.map((chapter) => (
-							<AccordionItem
+							<SidebarChapter
 								key={chapter.id}
-								value={chapter.id}
-								className="border-b-0 px-2"
-							>
-								<ContextMenu>
-									<ContextMenuTrigger disabled={readOnly}>
-										<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-											<span className="truncate text-left">
-												{chapter.title}
-											</span>
-										</AccordionTrigger>
-									</ContextMenuTrigger>
-									<ContextMenuContent>
-										<ContextMenuItem
-											onClick={() => handleGenerateNextScene(chapter.id)}
-											disabled={isGenerating}
-										>
-											<Sparkles className="mr-2 h-4 w-4" />
-											Generate New Scene
-										</ContextMenuItem>
-										<ContextMenuItem
-											onClick={() => handleCreateSceneManually(chapter.id)}
-										>
-											<FilePlus2 className="mr-2 h-4 w-4" />
-											Add Scene Manually
-										</ContextMenuItem>
-									</ContextMenuContent>
-								</ContextMenu>
-
-								<AccordionContent className="pb-2 pt-0">
-									<div className="flex flex-col gap-1 pl-2 relative ml-2">
-										{chapter.scenes.map((scene) => (
-											<SceneItem
-												key={scene.id}
-												scene={scene}
-												isActive={activeSceneId === scene.id}
-												chapterId={chapter.id}
-												onSelect={onSceneSelect}
-												onGenerateNext={handleGenerateNextScene}
-												isGenerating={isGenerating}
-												onRename={handleRenameScene}
-												onDelete={handleDeleteScene}
-												readOnly={readOnly}
-												isSelectionMode={isSelectionMode}
-												isSelected={selectedSceneIds.has(scene.id)}
-												onToggleSelect={toggleSceneSelect}
-											/>
-										))}
-										<Button
-											variant="ghost"
-											size="sm"
-											className="justify-start h-8 w-full px-2 text-xs text-muted-foreground italic"
-											onClick={() => handleCreateSceneManually(chapter.id)}
-											disabled={isGenerating || readOnly}
-										>
-											<Plus className="mr-2 h-3 w-3" />
-											Add Scene
-										</Button>
-									</div>
-								</AccordionContent>
-							</AccordionItem>
+								chapter={chapter}
+								activeSceneId={activeSceneId}
+								isGenerating={isGenerating}
+								readOnly={readOnly}
+								isSelectionMode={isSelectionMode}
+								selectedSceneIds={selectedSceneIds}
+								onSceneSelect={onSceneSelect}
+								onGenerateNextScene={handleGenerateNextScene}
+								onCreateSceneManually={handleCreateSceneManually}
+								onRenameScene={handleRenameScene}
+								onDeleteScene={handleDeleteScene}
+								onToggleSceneSelect={toggleSceneSelect}
+							/>
 						))}
 						{/* Always allow adding a new chapter at the bottom, even when searching?
                             Maybe not when searching, it might be confusing.
