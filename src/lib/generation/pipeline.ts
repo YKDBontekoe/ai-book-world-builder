@@ -21,6 +21,8 @@ import type {
 	ProcessStepContext,
 	StepHandler,
 } from "@/lib/generation/steps/types";
+import { buildProjectContext } from "@/lib/project-context";
+import { buildLoreContext, outlineToPrompt } from "@/lib/story/lore";
 
 const stepHandlers: Record<string, StepHandler> = {
 	prologue: new PrologueHandler(),
@@ -57,11 +59,34 @@ export class GenerationPipeline {
 			log("Starting book generation...");
 
 			// 1. Fetch Data
-			const projectData = await getFullProjectDataForGeneration({
+			const rawProjectData = await getFullProjectDataForGeneration({
 				projectId,
 				userId,
 			});
-			if (!projectData) throw new Error("Project data not found");
+			if (!rawProjectData) throw new Error("Project data not found");
+
+			// Reconstruct context fields (Decoupled from data fetching)
+			const loreContext = buildLoreContext({
+				entities: rawProjectData.entities,
+				attributes: rawProjectData.attributes,
+				relationships: rawProjectData.relationships,
+			});
+
+			const projectContext = buildProjectContext({
+				project: rawProjectData.project,
+				entities: rawProjectData.entities,
+				attributes: rawProjectData.attributes,
+				relationships: rawProjectData.relationships,
+			});
+
+			const outlinePrompts = rawProjectData.outlines.map(outlineToPrompt);
+
+			const projectData = {
+				...rawProjectData,
+				loreContext,
+				projectContext,
+				outlinePrompts,
+			};
 
 			const steps = await db
 				.select()

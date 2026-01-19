@@ -18,6 +18,15 @@ vi.mock("@/lib/db/repositories", () => ({
 	projectRepository: {
 		findByIdWithAccess: vi.fn(),
 	},
+	entityRepository: {
+		deleteByProjectIds: vi.fn(),
+	},
+	storyRepository: {
+		deleteByProjectIds: vi.fn(),
+	},
+	generationRepository: {
+		deleteByProjectIds: vi.fn(),
+	},
 }));
 
 // Helper to create a chainable query builder mock

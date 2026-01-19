@@ -1,7 +1,15 @@
 import "server-only";
-import { asc, desc, eq } from "drizzle-orm";
+import { asc, desc, eq, inArray } from "drizzle-orm";
 import { type DbTransaction, db } from "@/lib/db";
-import { chapter, outline, scene, volume } from "@/lib/db/schema";
+import {
+	chapter,
+	chapterDraft,
+	outline,
+	scene,
+	sceneCard,
+	volume,
+} from "@/lib/db/schema";
+import { DatabaseError } from "@/lib/errors";
 import type {
 	BookPlan,
 	StoryStyle,
@@ -190,6 +198,33 @@ export class StoryRepository {
 				updatedAt: new Date(),
 			})
 			.where(eq(scene.id, sceneId));
+	}
+
+	/**
+	 * Deletes all story structure data for the given projects.
+	 * Can run within an existing transaction.
+	 */
+	async deleteByProjectIds(projectIds: string[], tx?: any) {
+		const executor = tx || db;
+		try {
+			await executor
+				.delete(sceneCard)
+				.where(inArray(sceneCard.projectId, projectIds));
+			await executor.delete(scene).where(inArray(scene.projectId, projectIds));
+			await executor
+				.delete(chapterDraft)
+				.where(inArray(chapterDraft.projectId, projectIds));
+			await executor
+				.delete(chapter)
+				.where(inArray(chapter.projectId, projectIds));
+			await executor.delete(volume).where(inArray(volume.projectId, projectIds));
+			await executor
+				.delete(outline)
+				.where(inArray(outline.projectId, projectIds));
+		} catch (error) {
+			console.error("StoryRepository.deleteByProjectIds error:", error);
+			throw new DatabaseError("Failed to delete story data");
+		}
 	}
 }
 

@@ -6,6 +6,8 @@ export * from "./chat-repository";
 export { chatRepository } from "./chat-repository";
 export * from "./entity-repository";
 export { entityRepository } from "./entity-repository";
+export * from "./generation-repository";
+export { generationRepository } from "./generation-repository";
 export * from "./message-repository";
 export { messageRepository } from "./message-repository";
 export * from "./project-repository";
