@@ -23,8 +23,6 @@ import type {
 	Volume,
 } from "@/lib/db/schema";
 import { chapter, chapterDraft, volume } from "@/lib/db/schema";
-import { buildProjectContext } from "@/lib/project-context";
-import { buildLoreContext, outlineToPrompt } from "@/lib/story/lore";
 
 export type FullProjectData = {
 	project: Project;
@@ -36,9 +34,6 @@ export type FullProjectData = {
 		Volume & { chapters: Array<Chapter & { drafts: ChapterDraft[] }> }
 	>;
 	generation: BookGeneration | null;
-	loreContext: string;
-	projectContext: string;
-	outlinePrompts: string[];
 };
 
 /**
@@ -95,22 +90,6 @@ export async function getFullProjectDataForGeneration({
 		drafts: draftsList,
 	});
 
-	// Build context strings
-	const loreContext = buildLoreContext({
-		entities,
-		attributes,
-		relationships,
-	});
-
-	const projectContext = buildProjectContext({
-		project: projectResult,
-		entities,
-		attributes,
-		relationships,
-	});
-
-	const outlinePrompts = outlines.map((o) => outlineToPrompt(o));
-
 	return {
 		project: projectResult,
 		entities,
@@ -119,8 +98,5 @@ export async function getFullProjectDataForGeneration({
 		outlines,
 		volumes: mergedVolumes,
 		generation,
-		loreContext,
-		projectContext,
-		outlinePrompts,
 	};
 }

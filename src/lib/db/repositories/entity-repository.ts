@@ -1,5 +1,5 @@
 import "server-only";
-import { and, asc, count, desc, eq, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
 	type Entity,
@@ -166,18 +166,18 @@ export class EntityRepository extends BaseRepository<
 			]);
 
 			// Map details to entities
-			return (entities as any[]).map((ent: any) => ({
+			return entities.map((ent) => ({
 				...ent,
-				attributes: (allAttributes as any[])
-					.filter((attr: any) => attr.entityId === ent.id)
-					.sort((a: any, b: any) => a.name.localeCompare(b.name)),
-				relationships: (allRelationships as any[])
+				attributes: allAttributes
+					.filter((attr) => attr.entityId === ent.id)
+					.sort((a, b) => a.name.localeCompare(b.name)),
+				relationships: allRelationships
 					.filter(
-						(rel: any) =>
+						(rel) =>
 							rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
 					)
 					.sort(
-						(a: any, b: any) => b.createdAt.getTime() - a.createdAt.getTime(),
+						(a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
 					),
 			}));
 		} catch (error) {
@@ -351,6 +351,26 @@ export class EntityRepository extends BaseRepository<
 		} catch (error) {
 			console.error("EntityRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete entity");
+		}
+	}
+
+	/**
+	 * Delete all entities and related data for multiple projects.
+	 * Can run within an existing transaction.
+	 */
+	async deleteByProjectIds(projectIds: string[], tx?: any): Promise<void> {
+		const executor = tx || db;
+		try {
+			await executor
+				.delete(relationship)
+				.where(inArray(relationship.projectId, projectIds));
+			await executor
+				.delete(entityAttribute)
+				.where(inArray(entityAttribute.projectId, projectIds));
+			await executor.delete(entity).where(inArray(entity.projectId, projectIds));
+		} catch (error) {
+			console.error("EntityRepository.deleteByProjectIds error:", error);
+			throw new DatabaseError("Failed to delete entity data for projects");
 		}
 	}
 
