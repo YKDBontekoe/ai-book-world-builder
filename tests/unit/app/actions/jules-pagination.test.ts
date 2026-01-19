@@ -67,13 +67,15 @@ describe("listJulesSourcesAction", () => {
       // Spy on console.warn
       const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
-      // Call the action
-      const result = await listJulesSourcesAction();
+      try {
+        // Call the action
+        const result = await listJulesSourcesAction();
 
-      expect(mocks.listSources).toHaveBeenCalledTimes(1000);
-      expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Hit max pages limit"));
-      expect(result).toHaveLength(1000);
-
-      consoleSpy.mockRestore();
+        expect(mocks.listSources).toHaveBeenCalledTimes(1000);
+        expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining("Hit max pages limit"));
+        expect(result).toHaveLength(1000);
+      } finally {
+        consoleSpy.mockRestore();
+      }
   }, 10000); // Increase timeout
 });
