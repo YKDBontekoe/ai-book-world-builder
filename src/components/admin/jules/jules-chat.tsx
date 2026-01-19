@@ -363,7 +363,7 @@ export function JulesChat({ sessionId, onBack }: JulesChatProps): JSX.Element {
 
 	if (isLoading && !data) {
 		return (
-			<div className="h-[600px] flex items-center justify-center">
+			<div className="flex-1 min-h-0 flex items-center justify-center">
 				<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
 			</div>
 		);
