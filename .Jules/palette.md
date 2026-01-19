@@ -1,6 +1,6 @@
 # Palette
 
-## 2025-02-18 - Brainstorming states need visible error recovery
+## 2026-01-19 - Brainstorming states need visible error recovery
 
 ### Context
 

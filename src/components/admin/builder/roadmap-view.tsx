@@ -35,11 +35,7 @@ type RoadmapIssue = {
 // Sub-components
 // ============================================================================
 
-function FeatureCard({
-	issue,
-}: {
-	issue: RoadmapIssue;
-}) {
+function FeatureCard({ issue }: { issue: RoadmapIssue }) {
 	// Simple heuristic: Parent issues might have checklist items in body
 	const progress = (issue.body || "").match(/- \[x\]/g)?.length || 0;
 	const total = (issue.body || "").match(/- \[ \]/g)?.length || 0;
@@ -67,6 +63,7 @@ function FeatureCard({
 					target="_blank"
 					rel="noreferrer"
 					className="text-muted-foreground hover:text-primary"
+					aria-label={`Open issue #${issue.number} on GitHub`}
 				>
 					<ExternalLink className="w-4 h-4" />
 				</a>
@@ -84,11 +81,7 @@ function FeatureCard({
 	);
 }
 
-function SuggestionCard({
-	suggestion,
-}: {
-	suggestion: SuggestedFeature;
-}) {
+function SuggestionCard({ suggestion }: { suggestion: SuggestedFeature }) {
 	return (
 		<Card className="p-4 border-dashed border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
 			<div className="flex justify-between items-start mb-2">
@@ -145,37 +138,34 @@ export function RoadmapView(): JSX.Element {
 			const res = await getIssues("open");
 			if (!res.success) throw new Error(res.error);
 			// Filter for "Parent" issues - simplistic check for now: Has a task list
-			return res.data.filter((issue) =>
-				(issue.body || "").includes("- [ ]"),
-			);
+			return res.data.filter((issue) => (issue.body || "").includes("- [ ]"));
 		},
 	});
 
 	// AI Suggestions State
-	const {
-		mutate: brainstorm,
-		isPending: isBrainstormingLoading,
-	} = useMutation({
-		mutationFn: async () => {
-			const res = await discoverFeaturesAction({});
-			if (!res.success) throw new Error(res.error);
-			return res.data;
+	const { mutate: brainstorm, isPending: isBrainstormingLoading } = useMutation(
+		{
+			mutationFn: async () => {
+				const res = await discoverFeaturesAction({});
+				if (!res.success) throw new Error(res.error);
+				return res.data;
+			},
+			onMutate: () => {
+				setBrainstormError(null);
+				setSuggestions(null);
+			},
+			onSuccess: (data) => {
+				setSuggestions(data);
+			},
+			onError: (error) => {
+				setBrainstormError(
+					error instanceof Error
+						? error.message
+						: "Something went wrong while brainstorming ideas.",
+				);
+			},
 		},
-		onMutate: () => {
-			setBrainstormError(null);
-			setSuggestions(null);
-		},
-		onSuccess: (data) => {
-			setSuggestions(data);
-		},
-		onError: (error) => {
-			setBrainstormError(
-				error instanceof Error
-					? error.message
-					: "Something went wrong while brainstorming ideas.",
-			);
-		},
-	});
+	);
 
 	return (
 		<div className="h-full flex flex-col gap-6 overflow-hidden">
@@ -252,13 +242,19 @@ export function RoadmapView(): JSX.Element {
 									</Button>
 								</div>
 							)}
-							{!suggestions &&
-								!isBrainstormingLoading &&
-								!brainstormError && (
+							{!suggestions && !isBrainstormingLoading && !brainstormError && (
 								<div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground text-center">
 									<Lightbulb className="w-8 h-8 mb-2 opacity-50" />
 									<p>
 										Click "Brainstorm Ideas" to let Jules analyze the project.
+									</p>
+								</div>
+							)}
+							{suggestions?.length === 0 && !isBrainstormingLoading && (
+								<div className="flex flex-col items-center justify-center h-[200px] text-muted-foreground text-center">
+									<Lightbulb className="w-8 h-8 mb-2 opacity-50" />
+									<p>
+										No suggestions found. Try again or refine your project docs.
 									</p>
 								</div>
 							)}

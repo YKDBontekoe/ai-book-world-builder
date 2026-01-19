@@ -217,7 +217,9 @@ export class StoryRepository {
 			await executor
 				.delete(chapter)
 				.where(inArray(chapter.projectId, projectIds));
-			await executor.delete(volume).where(inArray(volume.projectId, projectIds));
+			await executor
+				.delete(volume)
+				.where(inArray(volume.projectId, projectIds));
 			await executor
 				.delete(outline)
 				.where(inArray(outline.projectId, projectIds));
