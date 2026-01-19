@@ -1,4 +1,6 @@
-## 2026-02-14 - Persisted admin selections reduce setup friction
+# Palette
+
+## 2026-01-19 - Persisted admin selections reduce setup friction
 
 ### Context
 

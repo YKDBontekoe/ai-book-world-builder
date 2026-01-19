@@ -4,14 +4,14 @@ import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db";
-import { userPreferences } from "@/lib/db/schema/auth";
+import { type JulesPreferences, userPreferences } from "@/lib/db/schema/auth";
 
-const julesPreferencesSchema = z.object({
-	repository: z.string().nullable(),
-	branch: z.string().nullable(),
+export const julesPreferencesSchema = z.object({
+	repository: z.string().min(1).nullable(),
+	branch: z.string().min(1).nullable(),
 });
 
-export type JulesPreferences = z.infer<typeof julesPreferencesSchema>;
+export type { JulesPreferences };
 
 const DEFAULT_JULES_PREFERENCES: JulesPreferences = {
 	repository: null,

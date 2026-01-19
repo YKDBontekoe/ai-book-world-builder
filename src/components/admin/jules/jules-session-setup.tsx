@@ -13,6 +13,7 @@ import {
 	getJulesPreferencesAction,
 	saveJulesPreferencesAction,
 } from "@/app/actions/jules-preferences";
+import type { JulesPreferences } from "@/lib/db/schema/auth";
 import {
 	createJulesAdminSessionAction,
 	listJulesSourcesAction,
@@ -44,11 +45,6 @@ export interface JulesSessionSetupPreset {
 	branches: GitHubBranch[];
 	sources: JulesSource[];
 }
-
-type JulesPreferences = {
-	repository: string | null;
-	branch: string | null;
-};
 
 export function JulesSessionSetup({
 	onSessionCreated,
@@ -261,7 +257,10 @@ export function JulesSessionSetup({
 		const repository = selectedRepo?.fullName ?? null;
 		const branch = selectedBranch || null;
 
-		if (repository === preferences?.repository && branch === preferences.branch) {
+		if (
+			repository === preferences?.repository &&
+			branch === preferences?.branch
+		) {
 			return;
 		}
 

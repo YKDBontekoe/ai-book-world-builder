@@ -20,23 +20,11 @@ export const user = sqliteTable("User", {
 
 export type User = InferSelectModel<typeof user>;
 
-export interface ModelPreferences {
-	light: string | null;
-	middle: string | null;
-	large: string | null;
-}
-
-export interface AppearancePreferences {
-	theme: "violet" | "blue" | "emerald" | "amber" | "rose" | "slate";
-	editorFont: "sans" | "serif" | "mono";
-	editorFontSize: number;
-	editorLineHeight: number;
-}
-
-export interface JulesPreferences {
-	repository: string | null;
-	branch: string | null;
-}
+import type {
+	AppearancePreferences,
+	JulesPreferences,
+	ModelPreferences,
+} from "../auth";
 
 export const userPreferences = sqliteTable(
 	"UserPreferences",
