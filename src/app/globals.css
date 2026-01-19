@@ -352,6 +352,29 @@
 	.glass-surface {
 		@apply bg-background/50 backdrop-blur-md;
 	}
+
+	/* Shimmer Effect for Skeletons */
+	.shimmer {
+		@apply relative overflow-hidden bg-muted/50 rounded-md;
+	}
+
+	.shimmer::after {
+		@apply absolute inset-0 content-[''];
+		transform: translateX(-100%);
+		background: linear-gradient(
+			90deg,
+			transparent 0%,
+			hsl(var(--foreground) / 0.05) 50%,
+			transparent 100%
+		);
+		animation: shimmer 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+	}
+
+	@keyframes shimmer {
+		100% {
+			transform: translateX(100%);
+		}
+	}
 }
 
 @layer base {

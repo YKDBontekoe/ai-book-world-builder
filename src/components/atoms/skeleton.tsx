@@ -7,10 +7,7 @@ function Skeleton({
 }: React.HTMLAttributes<HTMLDivElement>) {
 	return (
 		<FadeIn duration={0.3}>
-			<div
-				className={cn("animate-pulse rounded-md bg-muted", className)}
-				{...props}
-			/>
+			<div className={cn("shimmer", className)} {...props} />
 		</FadeIn>
 	);
 }
