@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
 import { useWriterLayout } from "@/features/writer/components/hooks/use-writer-layout";
-import { useWriterNavigation } from "@/features/writer/components/hooks/use-writer-navigation";
+import { useSceneNavigation } from "@/features/writer/components/hooks/use-scene-navigation";
 import { PowerDock } from "@/features/writer/components/power-dock";
 import { WriterSpotlight } from "@/features/writer/components/tools/writer-spotlight";
 import { WriterProvider } from "@/features/writer/components/writer-context";
@@ -57,7 +57,7 @@ function WriterViewContent({
 	} = useWriterLayout();
 
 	const { isChatOpen, setChatOpen, toggleSpotlight } = useWriterControl();
-	const { nextScene, prevScene } = useWriterNavigation();
+	const { nextScene, prevScene } = useSceneNavigation();
 
 	// Global Hotkeys
 	useHotkeys(
