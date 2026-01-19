@@ -11,8 +11,6 @@ export const julesPreferencesSchema = z.object({
 	branch: z.string().min(1).nullable(),
 });
 
-export type { JulesPreferences };
-
 const DEFAULT_JULES_PREFERENCES: JulesPreferences = {
 	repository: null,
 	branch: null,
