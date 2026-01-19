@@ -1,3 +1,21 @@
+## 2026-02-14 - Persisted admin selections reduce setup friction
+
+### Context
+
+Admins had to reselect the Jules repository and branch every visit, which slowed down session setup and encouraged mistakes.
+
+### Solution
+
+Stored the selected repository and base branch in user preferences and reapplied them when the Jules console loads.
+
+### Outcome
+
+Returning admins land on a ready-to-run configuration with fewer repeated clicks and less chance of choosing the wrong branch.
+
+### Learnings
+
+- Persisting admin defaults can remove repeated setup steps without cluttering the UI.
+
 ## 2026-01-18 - Mobile admin layouts favor stacked controls
 
 ### Context

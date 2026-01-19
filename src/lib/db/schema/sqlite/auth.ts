@@ -33,6 +33,11 @@ export interface AppearancePreferences {
 	editorLineHeight: number;
 }
 
+export interface JulesPreferences {
+	repository: string | null;
+	branch: string | null;
+}
+
 export const userPreferences = sqliteTable(
 	"UserPreferences",
 	{
@@ -62,6 +67,12 @@ export const userPreferences = sqliteTable(
 				editorFont: "sans",
 				editorFontSize: 16,
 				editorLineHeight: 1.6,
+			}),
+		julesPreferences: text("julesPreferences", { mode: "json" })
+			.$type<JulesPreferences>()
+			.default({
+				repository: null,
+				branch: null,
 			}),
 		createdAt: integer("createdAt", { mode: "timestamp" }).notNull(),
 		updatedAt: integer("updatedAt", { mode: "timestamp" }).notNull(),

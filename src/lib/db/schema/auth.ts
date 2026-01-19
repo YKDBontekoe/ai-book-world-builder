@@ -38,6 +38,11 @@ export interface AppearancePreferences {
 	editorLineHeight: number;
 }
 
+export interface JulesPreferences {
+	repository: string | null;
+	branch: string | null;
+}
+
 export const userPreferences = pgTable(
 	"UserPreferences",
 	{
@@ -61,6 +66,12 @@ export const userPreferences = pgTable(
 				editorFont: "sans",
 				editorFontSize: 16,
 				editorLineHeight: 1.6,
+			}),
+		julesPreferences: jsonb("julesPreferences")
+			.$type<JulesPreferences>()
+			.default({
+				repository: null,
+				branch: null,
 			}),
 		createdAt: timestamp("createdAt").notNull(),
 		updatedAt: timestamp("updatedAt").notNull(),
