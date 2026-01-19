@@ -78,7 +78,7 @@ export function StoryWizard({
 				setStep("input");
 			}
 		} catch (_error) {
-			toast.error("An error occurred.");
+			toast.error("Could not generate story plan. Please try again.");
 			setStep("input");
 		}
 	};

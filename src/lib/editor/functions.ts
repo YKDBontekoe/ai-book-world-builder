@@ -11,7 +11,9 @@ import type { UISuggestion } from "@/lib/editor/suggestions";
  */
 export const buildDocumentFromContent = (content: string): Node => {
 	if (typeof document === "undefined") {
-		throw new Error("buildDocumentFromContent requires a DOM; call it on the client.");
+		throw new Error(
+			"buildDocumentFromContent requires a DOM; call it on the client.",
+		);
 	}
 
 	const parser = DOMParser.fromSchema(documentSchema);

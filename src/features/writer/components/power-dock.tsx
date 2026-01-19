@@ -162,10 +162,10 @@ export const PowerDock = memo(function PowerDock() {
 					toast.success("Action completed");
 				}
 			} else {
-				toast.error("Operation failed. Please try again.");
+				toast.error("Action couldn't be completed. Please try again.");
 			}
 		} catch (e) {
-			toast.error("Operation failed.");
+			toast.error("Something went wrong. Please check your connection.");
 			console.error(e);
 		} finally {
 			setIsProcessing(false);

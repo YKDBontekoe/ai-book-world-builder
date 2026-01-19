@@ -126,7 +126,7 @@ The **Power Dock** is your context-aware toolbar located at the bottom of the ed
 -   **Dialogue Coach**: Analyze how distinct each character’s voice sounds and get targeted rewrite suggestions.
 -   **Lore**: Generate new lore entities (characters, locations) based on a prompt.
 -   **Ask Manuscript**: Ask questions about plot threads, character arcs, and unresolved clues with cited sources.
--   **Export**: Download the current scene as a Markdown file.
+-   **Export**: Download the current scene as a Markdown file to your computer.
 
 ### 3. Write & Generate
 Once you have a structure, you can start writing.
@@ -164,6 +164,20 @@ Stay focused and track your progress with built-in productivity widgets located 
     *   **Real-time Stats**: View your current session's duration, total words written, words per minute (WPM), and edit count.
     *   **Context**: Also displays total project word count and estimated reading time.
     *   **Reset**: You can reset the session stats at any time to start fresh.
+
+## Keyboard Shortcuts
+
+Maximize your efficiency with these shortcuts:
+
+| Action | Shortcut (Mac) | Shortcut (Windows) |
+| :--- | :--- | :--- |
+| **Command Palette (Spotlight)** | `Cmd + K` | `Ctrl + K` |
+| **Toggle AI Assistant** | `Cmd + Enter` | `Ctrl + Enter` |
+| **Toggle Canvas** | `Cmd + \` | `Ctrl + \` |
+| **Copy Scene Content** | `Cmd + Shift + C` | `Ctrl + Shift + C` |
+| **Undo** | `Cmd + Z` | `Ctrl + Z` |
+| **Redo** | `Cmd + Shift + Z` | `Ctrl + Shift + Z` |
+| **Save (Auto-save is on)** | `Cmd + S` | `Ctrl + S` |
 
 ## Advanced Features
 

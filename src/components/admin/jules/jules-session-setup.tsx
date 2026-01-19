@@ -10,14 +10,13 @@ import {
 	listGitHubRepositoriesAction,
 } from "@/app/actions/github";
 import {
-	getJulesPreferencesAction,
-	saveJulesPreferencesAction,
-} from "@/app/actions/jules-preferences";
-import type { JulesPreferences } from "@/lib/db/schema/auth";
-import {
 	createJulesAdminSessionAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
+import {
+	getJulesPreferencesAction,
+	saveJulesPreferencesAction,
+} from "@/app/actions/jules-preferences";
 import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
@@ -32,6 +31,7 @@ import {
 } from "@/components/atoms/select";
 import { Textarea } from "@/components/atoms/textarea";
 import { GlassCard } from "@/components/molecules/glass-card";
+import type { JulesPreferences } from "@/lib/db/schema/auth";
 import type { GitHubBranch, GitHubRepository } from "@/lib/github-types";
 import type { JulesSource } from "@/lib/jules-client";
 
@@ -111,9 +111,7 @@ export function JulesSessionSetup({
 		},
 		onError: (error) => {
 			const message =
-				error instanceof Error
-					? error.message
-					: "Unable to save preferences";
+				error instanceof Error ? error.message : "Unable to save preferences";
 			toast.error(message);
 		},
 	});

@@ -7,8 +7,8 @@ import { toast } from "sonner";
 
 import { BookCanvas } from "@/components/organisms/book-canvas/book-canvas";
 import { useBookCanvasActions } from "@/components/organisms/book-canvas/book-canvas-context";
-import { useWriterLayout } from "@/features/writer/components/hooks/use-writer-layout";
 import { useSceneNavigation } from "@/features/writer/components/hooks/use-scene-navigation";
+import { useWriterLayout } from "@/features/writer/components/hooks/use-writer-layout";
 import { PowerDock } from "@/features/writer/components/power-dock";
 import { WriterSpotlight } from "@/features/writer/components/tools/writer-spotlight";
 import { WriterProvider } from "@/features/writer/components/writer-context";

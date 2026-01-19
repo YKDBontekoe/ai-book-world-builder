@@ -26,10 +26,12 @@ const draftSceneSchema = z.object({
 	cardData: z.object({
 		purpose: z.string().max(5000, "Purpose too long"),
 		setting: z.string().optional(),
-		emotionalBeats: z.union([
-			z.array(z.string().max(500, "Beat too long")).max(50, "Too many beats"),
-			z.string().max(10000, "Beats description too long"),
-		]).optional(),
+		emotionalBeats: z
+			.union([
+				z.array(z.string().max(500, "Beat too long")).max(50, "Too many beats"),
+				z.string().max(10000, "Beats description too long"),
+			])
+			.optional(),
 	}),
 	instructions: z.string().max(5000, "Instructions too long").optional(),
 	options: generationOptionsSchema.optional(),
