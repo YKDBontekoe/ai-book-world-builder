@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
+import { Sparkles } from "lucide-react";
 import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
-
 import { StoryWizard } from "@/features/writer/components/story-wizard";
 
 // Mock server actions
@@ -74,5 +74,52 @@ describe("StoryWizard", () => {
 		expect(screen.getByText("Fantasy")).toBeInTheDocument();
 		expect(screen.getByText("Third Person Limited")).toBeInTheDocument();
 		expect(screen.getByText("Epic")).toBeInTheDocument();
+	});
+
+	it("renders and applies custom templates via props", () => {
+		const customTemplate = {
+			label: "Custom Template",
+			description: "A custom template for testing",
+			prompt: "Custom prompt text",
+			style: {
+				genre: "Mystery",
+				pov: "First Person",
+				tone: "Dark",
+			},
+			icon: Sparkles,
+		};
+
+		render(
+			<StoryWizard
+				projectId="test-project"
+				onComplete={vi.fn()}
+				templates={[customTemplate]}
+			/>,
+		);
+
+		// Assert custom template is rendered
+		const customLabel = screen.getByText("Custom Template");
+		expect(customLabel).toBeInTheDocument();
+		// Assert default templates are NOT rendered
+		expect(screen.queryByText("The Hero's Journey")).not.toBeInTheDocument();
+
+		// Click the custom template
+		const templateButton = customLabel.closest("button");
+		expect(templateButton).toBeInTheDocument();
+
+		if (templateButton) {
+			fireEvent.click(templateButton);
+		}
+
+		// Check Prompt
+		const promptInput = screen.getByPlaceholderText(
+			/e.g. A cyberpunk detective/i,
+		) as HTMLTextAreaElement;
+		expect(promptInput.value).toBe("Custom prompt text");
+
+		// Check Style dropdowns
+		expect(screen.getByText("Mystery")).toBeInTheDocument();
+		expect(screen.getByText("First Person")).toBeInTheDocument();
+		expect(screen.getByText("Dark")).toBeInTheDocument();
 	});
 });
