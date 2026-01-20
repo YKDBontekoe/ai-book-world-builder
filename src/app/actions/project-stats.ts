@@ -9,9 +9,16 @@ import {
 	getChaptersForProject,
 	getEntitiesForProject,
 	getOutlinesForProject,
+	getProjectByIdWithAccess,
 	getRelationshipsForProject,
 } from "@/lib/db/queries";
-import { chapterDraft, type Entity, type Relationship } from "@/lib/db/schema";
+import {
+	chapter,
+	chapterDraft,
+	type Entity,
+	type Relationship,
+} from "@/lib/db/schema";
+import { ForbiddenError } from "@/lib/errors";
 
 export type EntityCounts = {
 	characters: number;
@@ -48,6 +55,16 @@ export type ProjectStats = {
 	chapterCounts: ChapterStatusCounts;
 	readiness: ReadinessScores;
 };
+
+async function ensureProjectAccess(projectId: string, userId: string) {
+	const project = await getProjectByIdWithAccess({ id: projectId, userId });
+	if (!project) {
+		throw new ForbiddenError(
+			"You do not have permission to access this project",
+		);
+	}
+	return project;
+}
 
 /**
  * Calculate readiness scores based on actual project content
@@ -138,7 +155,9 @@ function calculateReadiness(
  */
 export const getProjectStats = createUserAction({
 	input: z.object({ projectId: z.string().uuid() }),
-	handler: async ({ input: { projectId } }) => {
+	handler: async ({ input: { projectId }, user }) => {
+		await ensureProjectAccess(projectId, user.id);
+
 		const [entities, relationships, outlines, chapters] = await Promise.all([
 			getEntitiesForProject({ projectId }),
 			getRelationshipsForProject({ projectId }),
@@ -232,7 +251,9 @@ export type SerializedRelationship = {
  */
 export const getRelationships = createUserAction({
 	input: z.object({ projectId: z.string().uuid() }),
-	handler: async ({ input: { projectId } }) => {
+	handler: async ({ input: { projectId }, user }) => {
+		await ensureProjectAccess(projectId, user.id);
+
 		const relationships = await getRelationshipsForProject({ projectId });
 
 		return relationships.map((r) => ({
@@ -268,7 +289,9 @@ export type SerializedOutline = {
  */
 export const getOutlineData = createUserAction({
 	input: z.object({ projectId: z.string().uuid() }),
-	handler: async ({ input: { projectId } }) => {
+	handler: async ({ input: { projectId }, user }) => {
+		await ensureProjectAccess(projectId, user.id);
+
 		const [outlines, chapters] = await Promise.all([
 			getOutlinesForProject({ projectId }),
 			getChaptersForProject({ projectId }),
@@ -325,7 +348,9 @@ export type TimelineEvent = {
  */
 export const getTimelineEvents = createUserAction({
 	input: z.object({ projectId: z.string().uuid() }),
-	handler: async ({ input: { projectId } }) => {
+	handler: async ({ input: { projectId }, user }) => {
+		await ensureProjectAccess(projectId, user.id);
+
 		const entities = await getEntitiesForProject({ projectId });
 
 		// Filter for events or entities with dates
@@ -355,7 +380,15 @@ export const getTimelineEvents = createUserAction({
  */
 export const getChapterDraft = createUserAction({
 	input: z.object({ chapterId: z.string().uuid() }),
-	handler: async ({ input: { chapterId } }) => {
+	handler: async ({ input: { chapterId }, user }) => {
+		const [targetChapter] = await db
+			.select({ projectId: chapter.projectId })
+			.from(chapter)
+			.where(eq(chapter.id, chapterId));
+
+		if (!targetChapter) return null;
+		await ensureProjectAccess(targetChapter.projectId, user.id);
+
 		const drafts = await db
 			.select()
 			.from(chapterDraft)
@@ -373,7 +406,9 @@ export const getChapterDraft = createUserAction({
  */
 export const getGenerationLog = createUserAction({
 	input: z.object({ projectId: z.string().uuid() }),
-	handler: async ({ input: { projectId } }) => {
+	handler: async ({ input: { projectId }, user }) => {
+		await ensureProjectAccess(projectId, user.id);
+
 		const generation = await getBookGenerationForProject({ projectId });
 		if (!generation) return null;
 
