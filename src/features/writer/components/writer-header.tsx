@@ -3,73 +3,27 @@
 import {
 	Activity,
 	AlignVerticalJustifyCenter,
-	History,
+	CheckCircle2,
 	Loader2,
 	Maximize2,
 	Minimize2,
-	MoreHorizontal,
 	PanelLeftClose,
 	PanelLeftOpen,
-	Save,
 } from "lucide-react";
 import type React from "react";
 import { memo } from "react";
 import { Button } from "@/components/atoms/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/atoms/dropdown-menu";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
-import { MetricsDisplay } from "@/features/writer/components/metrics-display";
-import { SessionInsights } from "@/features/writer/components/tools/session-insights";
-import { SprintWidget } from "@/features/writer/components/tools/sprint-widget";
-import { WritingGoals } from "@/features/writer/components/tools/writing-goals";
 import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
-import { useNarrativeIntelligence } from "@/hooks/use-narrative-intelligence";
-import { useProjectEntities } from "@/hooks/use-project-entities";
+import { WriterToolsMenu } from "@/features/writer/components/writer-tools-menu";
 import { cn } from "@/lib/utils";
-
-type SnapshotButtonSize = "sm" | "xs";
-
-interface SnapshotButtonProps {
-	onClick: () => void;
-	isSnapshotting: boolean;
-	size?: SnapshotButtonSize;
-}
-
-function SnapshotButton({
-	onClick,
-	isSnapshotting,
-	size = "sm",
-}: SnapshotButtonProps): React.JSX.Element {
-	const sizeClasses = size === "xs" ? "h-6 px-2 text-xs" : "h-7 px-2 text-xs";
-
-	return (
-		<Button
-			variant="ghost"
-			size="sm"
-			className={cn(sizeClasses, "hover:bg-accent/50")}
-			onClick={onClick}
-			disabled={isSnapshotting}
-		>
-			{isSnapshotting ? (
-				<Loader2 className="mr-1 h-3 w-3 animate-spin" />
-			) : (
-				<History className="mr-1 h-3 w-3" />
-			)}
-			Snapshot
-		</Button>
-	);
-}
 
 /**
  * Header for the writer workspace with navigation, scene context, and controls.
@@ -78,9 +32,8 @@ function SnapshotButton({
  * responsive secondary metadata.
  */
 export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
-	const { project, activeScene, structure } = useWriterContext();
-	const { sceneContent, handleSnapshot, isSnapshotting, isSaving, lastSaved } =
-		useWriterContent();
+	const { activeScene, structure } = useWriterContext();
+	const { isSaving, lastSaved } = useWriterContent();
 
 	const {
 		isSidebarOpen,
@@ -93,85 +46,88 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 		toggleDirectorMode,
 	} = useWriterLayoutContext();
 
-	const { data: entities } = useProjectEntities(project.id);
-	const narrativeMetrics = useNarrativeIntelligence({
-		content: sceneContent || "",
-		entities: entities || [],
-	});
-
 	const hasScenes = structure
 		? structure.some((c) => c.scenes.length > 0)
 		: false;
 	const isZen = viewMode === "zen";
-	const saveStatus = isSaving ? (
-		<div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">
-			<Loader2 className="h-3 w-3 animate-spin" />
-			<span className="text-[10px] font-medium uppercase tracking-wider">
-				Saving
-			</span>
-		</div>
-	) : lastSaved ? (
-		<div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-accent/30 text-muted-foreground transition-opacity duration-1000">
-			<Save className="h-3 w-3" />
-			<span className="text-[10px] font-medium uppercase tracking-wider">
-				Saved
-			</span>
-		</div>
-	) : null;
-	const showSecondaryRow = !isZen && (activeScene || saveStatus);
-	const shouldShowMetrics = Boolean(
-		activeScene && narrativeMetrics.wordCount > 0,
-	);
 
 	return (
 		<TooltipProvider>
 			<div
 				className={cn(
-					"flex flex-col gap-2 px-4 py-2 shrink-0 z-10 transition-all duration-500",
+					"flex items-center justify-between gap-3 px-4 h-14 shrink-0 z-10 transition-all duration-500",
 					// Use consistent glass styling using semantic tokens
 					"border-b border-border/50 glass-surface",
 					isZen ? "opacity-0 hover:opacity-100 bg-background/80" : "",
 				)}
 			>
-				<div className="flex items-center justify-between gap-3">
-					<div className="flex items-center gap-2 min-w-0 flex-1">
-						{!isZen && (
-							<Button
-								variant="ghost"
-								size="icon"
-								className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent/50"
-								onClick={toggleSidebar}
-								aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-							>
-								{isSidebarOpen ? (
-									<PanelLeftClose className="h-4 w-4" />
-								) : (
-									<PanelLeftOpen className="h-4 w-4" />
-								)}
-							</Button>
-						)}
-						<div className="text-sm font-medium truncate min-w-0">
+				{/* LEFT: Navigation & Context */}
+				<div className="flex items-center gap-3 min-w-0 flex-1">
+					{!isZen && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Button
+									variant="ghost"
+									size="icon"
+									className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent/50"
+									onClick={toggleSidebar}
+									aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
+								>
+									{isSidebarOpen ? (
+										<PanelLeftClose className="h-4 w-4" />
+									) : (
+										<PanelLeftOpen className="h-4 w-4" />
+									)}
+								</Button>
+							</TooltipTrigger>
+							<TooltipContent side="bottom">
+								{isSidebarOpen ? "Close Sidebar" : "Open Sidebar"} (⌘B)
+							</TooltipContent>
+						</Tooltip>
+					)}
+
+					<div className="flex items-center gap-2 min-w-0">
+						<div className="text-sm font-medium truncate">
 							{activeScene?.title ||
 								(hasScenes ? "No scene selected" : "Welcome")}
 						</div>
+						{/* Subtle Save Status Indicator */}
+						{isSaving ? (
+							<Loader2 className="h-3 w-3 animate-spin text-muted-foreground/50" />
+						) : lastSaved ? (
+							<Tooltip>
+								<TooltipTrigger asChild>
+									<CheckCircle2 className="h-3 w-3 text-muted-foreground/30 transition-colors hover:text-green-500/50" />
+								</TooltipTrigger>
+								<TooltipContent side="bottom" className="text-xs">
+									Saved {lastSaved.toLocaleTimeString()}
+								</TooltipContent>
+							</Tooltip>
+						) : null}
 					</div>
-					<div className="flex items-center gap-2 shrink-0 text-xs text-muted-foreground">
+				</div>
+
+				{/* RIGHT: View Modes & Tools */}
+				<div className="flex items-center gap-1 shrink-0">
+					{/* View Mode Group */}
+					<div className="flex items-center p-0.5 bg-accent/20 rounded-lg border border-border/20 mr-2">
 						<Tooltip>
 							<TooltipTrigger asChild>
 								<Button
 									variant="ghost"
 									size="icon"
 									className={cn(
-										"h-8 w-8 hover:bg-accent/50",
-										isDirectorMode &&
-											"text-primary bg-primary/10 hover:bg-primary/20",
+										"h-7 w-7 rounded-md transition-all",
+										isDirectorMode
+											? "bg-background shadow-sm text-foreground"
+											: "text-muted-foreground hover:text-foreground hover:bg-transparent",
 									)}
 									onClick={toggleDirectorMode}
 								>
-									<Activity className="h-4 w-4" />
+									<Activity className="h-3.5 w-3.5" />
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>Director Mode (Live Analysis)</TooltipContent>
+							<TooltipContent side="bottom">Director Mode</TooltipContent>
 						</Tooltip>
 
 						<Tooltip>
@@ -180,17 +136,23 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 									variant="ghost"
 									size="icon"
 									className={cn(
-										"h-8 w-8 hover:bg-accent/50",
-										isTypewriterMode &&
-											"text-primary bg-primary/10 hover:bg-primary/20",
+										"h-7 w-7 rounded-md transition-all",
+										isTypewriterMode
+											? "bg-background shadow-sm text-foreground"
+											: "text-muted-foreground hover:text-foreground hover:bg-transparent",
 									)}
 									onClick={toggleTypewriterMode}
 								>
-									<AlignVerticalJustifyCenter className="h-4 w-4" />
+									<AlignVerticalJustifyCenter className="h-3.5 w-3.5" />
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>Typewriter Mode</TooltipContent>
+							<TooltipContent side="bottom">Typewriter Mode</TooltipContent>
 						</Tooltip>
+					</div>
+
+					{/* Tools & Zen */}
+					<div className="flex items-center gap-1">
+						{activeScene && <WriterToolsMenu />}
 
 						<Tooltip>
 							<TooltipTrigger asChild>
@@ -198,7 +160,7 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 									variant="ghost"
 									size="icon"
 									className={cn(
-										"h-8 w-8 hover:bg-accent/50",
+										"h-8 w-8 hover:bg-accent/50 text-muted-foreground",
 										isZen && "text-primary bg-primary/10 hover:bg-primary/20",
 									)}
 									onClick={toggleZenMode}
@@ -210,91 +172,12 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 									)}
 								</Button>
 							</TooltipTrigger>
-							<TooltipContent>
+							<TooltipContent side="bottom">
 								{isZen ? "Exit Zen Mode" : "Enter Zen Mode"}
 							</TooltipContent>
 						</Tooltip>
-						{showSecondaryRow && (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										variant="ghost"
-										size="icon"
-										className="h-8 w-8 md:hidden text-muted-foreground hover:text-foreground hover:bg-accent/50"
-										aria-label="More writer controls"
-									>
-										<MoreHorizontal className="h-4 w-4" />
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent align="end" className="w-72 p-2">
-									<div className="flex flex-col gap-2 text-xs text-muted-foreground">
-										{shouldShowMetrics && (
-											<MetricsDisplay
-												wordCount={narrativeMetrics.wordCount}
-												pacingScore={narrativeMetrics.pacingScore}
-												readingTimeMinutes={narrativeMetrics.readingTimeMinutes}
-												variant="compact"
-											/>
-										)}
-										{activeScene && (
-											<>
-												<DropdownMenuSeparator />
-												<div className="flex flex-wrap items-center gap-2">
-													<SprintWidget />
-													<WritingGoals />
-													<SessionInsights />
-													<SnapshotButton
-														onClick={handleSnapshot}
-														isSnapshotting={isSnapshotting}
-													/>
-												</div>
-											</>
-										)}
-										{saveStatus && (
-											<>
-												<DropdownMenuSeparator />
-												<div className="flex items-center justify-end">
-													{saveStatus}
-												</div>
-											</>
-										)}
-									</div>
-								</DropdownMenuContent>
-							</DropdownMenu>
-						)}
 					</div>
 				</div>
-				{showSecondaryRow && (
-					<div className="hidden md:flex items-center justify-between gap-4 text-xs text-muted-foreground">
-						<div className="flex items-center gap-2 flex-wrap">
-							{shouldShowMetrics && (
-								<MetricsDisplay
-									wordCount={narrativeMetrics.wordCount}
-									pacingScore={narrativeMetrics.pacingScore}
-									readingTimeMinutes={narrativeMetrics.readingTimeMinutes}
-									variant="tooltip"
-								/>
-							)}
-							{activeScene && (
-								<>
-									<div className="h-4 w-[1px] bg-border/50 mx-1" />
-									<SprintWidget />
-									<WritingGoals />
-									<SessionInsights />
-									<div className="h-4 w-[1px] bg-border/50 mx-1" />
-									<SnapshotButton
-										onClick={handleSnapshot}
-										isSnapshotting={isSnapshotting}
-										size="xs"
-									/>
-								</>
-							)}
-						</div>
-						{saveStatus && (
-							<div className="flex items-center gap-2">{saveStatus}</div>
-						)}
-					</div>
-				)}
 			</div>
 		</TooltipProvider>
 	);

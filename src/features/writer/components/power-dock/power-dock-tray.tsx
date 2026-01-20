@@ -21,14 +21,25 @@ export function PowerDockTray({
 					transition={{ type: "spring", stiffness: 400, damping: 25 }}
 					className="flex items-center gap-1 overflow-hidden pl-2 border-l border-white/10 ml-1"
 				>
-					{TOOLS.map((tool) => (
-						<ControlButton
+					{TOOLS.map((tool, index) => (
+						<motion.div
 							key={tool.id}
-							label={tool.label}
-							icon={tool.icon}
-							onClick={() => onSelectTool(tool.id)}
-							className={tool.color}
-						/>
+							initial={{ opacity: 0, scale: 0.8 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{
+								delay: index * 0.03,
+								type: "spring",
+								stiffness: 400,
+								damping: 20,
+							}}
+						>
+							<ControlButton
+								label={tool.label}
+								icon={tool.icon}
+								onClick={() => onSelectTool(tool.id)}
+								className={tool.color}
+							/>
+						</motion.div>
 					))}
 				</motion.div>
 			)}
