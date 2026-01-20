@@ -333,7 +333,6 @@ export async function mergePullRequest(
 ): ReturnType<typeof mergePullRequestAction> {
 	// Cast to any because createAdminAction expects z.infer (required method)
 	// but schema default handles it at runtime.
-	// biome-ignore lint/suspicious/noExplicitAny: Schema default handles missing fields at runtime
 	return mergePullRequestAction(input as any);
 }
 

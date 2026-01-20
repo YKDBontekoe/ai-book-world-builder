@@ -1,5 +1,5 @@
 import { Slot } from "@radix-ui/react-slot";
-import type React from "react";
+import * as ReactNamespace from "react";
 import { memo } from "react";
 import {
 	Tooltip,
@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 
 export interface ControlButtonProps {
 	label: string;
-	icon: React.ElementType;
+	icon: ReactNamespace.ElementType;
 	onClick?: () => void;
 	active?: boolean;
 	disabled?: boolean;
@@ -18,7 +18,7 @@ export interface ControlButtonProps {
 	className?: string;
 	"data-testid"?: string;
 	asChild?: boolean;
-	children?: React.ReactNode;
+	children?: ReactNamespace.ReactNode;
 }
 
 export const ControlButton = memo(function ControlButton({
@@ -32,7 +32,7 @@ export const ControlButton = memo(function ControlButton({
 	"data-testid": testId,
 	asChild,
 	children,
-}: ControlButtonProps): JSX.Element {
+}: ControlButtonProps): ReactNamespace.JSX.Element {
 	const sharedClassName = cn(
 		"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
 		"hover:bg-white/10 hover:scale-105 active:scale-95",
@@ -91,7 +91,7 @@ export const ControlButton = memo(function ControlButton({
 export function ControlGroup({
 	children,
 }: {
-	children: React.ReactNode;
-}): JSX.Element {
+	children: ReactNamespace.ReactNode;
+}): ReactNamespace.JSX.Element {
 	return <div className="flex items-center gap-1">{children}</div>;
 }

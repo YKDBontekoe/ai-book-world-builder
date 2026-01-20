@@ -1,5 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, X } from "lucide-react";
+import * as ReactNamespace from "react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
@@ -17,7 +18,7 @@ export function PowerDockResult({
 	onClear,
 	onInsert,
 	onCopy,
-}: PowerDockResultProps): JSX.Element {
+}: PowerDockResultProps): ReactNamespace.JSX.Element {
 	const [copied, setCopied] = useState(false);
 	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
