@@ -417,6 +417,14 @@ async function main() {
       context.sha = event.review.commit_id; 
     }
   } else if (eventName === 'pull_request_review_comment') {
+    // IGNORE: We rely on 'pull_request_review' (submitted) to avoid event storms from batched inline comments.
+    // This block is kept in case the YAML trigger is re-added, but we explicitly exit early for CodeRabbit.
+    const commentAuthor = event.comment.user.login;
+    if (isCodeRabbitUser(commentAuthor)) {
+       log('Ignoring pull_request_review_comment from CodeRabbit (waiting for review submit)');
+       process.exit(0);
+    }
+
     context.isPr = true;
     context.number = event.pull_request.number;
     context.branch = event.pull_request.head.ref;
@@ -425,7 +433,7 @@ async function main() {
     context.labels = event.pull_request.labels.map(l => l.name);
     context.prBody = event.pull_request.body;
     context.isDraft = event.pull_request.draft || false;
-    context.reviewAuthor = event.comment.user.login;
+    context.reviewAuthor = commentAuthor;
     context.reviewBody = event.comment.body;
 
   } else if (eventName === 'issue_comment') {
