@@ -1,21 +1,25 @@
 "use server";
 
-import type { z } from "zod";
+import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
-import type {
-	GitHubCheckStatus,
-	GitHubPullRequestStatus,
-	GitHubPullRequestSummary,
-} from "@/lib/github-types";
 import { getOctokit, getRepoDetails } from "@/lib/services/github-service";
+import type { GitHubCheckStatus, GitHubPullRequestStatus, GitHubPullRequestSummary } from "@/lib/github-types";
 import {
-	issueNumberSchema,
 	issueStateSchema,
+	issueNumberSchema,
 	mergePRSchema,
 	pullRequestByBranchSchema,
 	pullRequestStatusSchema,
 } from "./schemas";
 import type { GitHubPR } from "./types";
+
+function parseRepoFullName(repoFullName: string): { owner: string; repo: string } {
+	const [owner, repo] = repoFullName.split("/");
+	if (!owner || !repo) {
+		throw new Error("Invalid repository identifier");
+	}
+	return { owner, repo };
+}
 
 /**
  * Get pull requests for the repository
@@ -86,19 +90,18 @@ const mergePullRequestAction = createAdminAction({
 export async function mergePullRequest(
 	input: z.input<typeof mergePRSchema>,
 ): ReturnType<typeof mergePullRequestAction> {
-	// Cast to any because createAdminAction expects z.infer (required method)
-	// but schema default handles it at runtime.
-	return mergePullRequestAction(input as any);
+	return mergePullRequestAction({
+		number: input.number,
+		method: input.method ?? "merge",
+	});
 }
 
 const getGitHubPullRequestByBranchActionInternal = createAdminAction({
 	input: pullRequestByBranchSchema,
 	handler: async ({ input }): Promise<GitHubPullRequestSummary | null> => {
 		const octokit = getOctokit();
-		const [owner, repo] = input.repoFullName.split("/");
-		if (!owner || !repo) {
-			throw new Error("Invalid repository identifier");
-		}
+		const { owner, repo } = parseRepoFullName(input.repoFullName);
+
 		const { data } = await octokit.rest.pulls.list({
 			owner,
 			repo,
@@ -144,10 +147,8 @@ const getGitHubPullRequestStatusActionInternal = createAdminAction({
 	input: pullRequestStatusSchema,
 	handler: async ({ input }): Promise<GitHubPullRequestStatus> => {
 		const octokit = getOctokit();
-		const [owner, repo] = input.repoFullName.split("/");
-		if (!owner || !repo) {
-			throw new Error("Invalid repository identifier");
-		}
+		const { owner, repo } = parseRepoFullName(input.repoFullName);
+
 		const { data: pr } = await octokit.rest.pulls.get({
 			owner,
 			repo,
@@ -223,10 +224,8 @@ const mergeGitHubPullRequestActionInternal = createAdminAction({
 	input: pullRequestStatusSchema,
 	handler: async ({ input }): Promise<void> => {
 		const octokit = getOctokit();
-		const [owner, repo] = input.repoFullName.split("/");
-		if (!owner || !repo) {
-			throw new Error("Invalid repository identifier");
-		}
+		const { owner, repo } = parseRepoFullName(input.repoFullName);
+
 		await octokit.rest.pulls.merge({
 			owner,
 			repo,

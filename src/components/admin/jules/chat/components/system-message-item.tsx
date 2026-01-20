@@ -17,6 +17,10 @@ export function SystemMessageItem({
 }: {
 	item: SystemMessage;
 }): JSX.Element {
+	const date = new Date(item.createdAt);
+	// biome-ignore lint/suspicious/noGlobalIsNan: safe check for date validity
+	const isValidDate = !isNaN(date.getTime());
+
 	return (
 		<div className="flex flex-col items-center gap-2">
 			<GlassCard
@@ -36,7 +40,7 @@ export function SystemMessageItem({
 				</div>
 			</GlassCard>
 			<span className="text-[10px] text-muted-foreground">
-				System • {format(new Date(item.createdAt), "HH:mm")}
+				System • {isValidDate ? format(date, "HH:mm") : "--:--"}
 			</span>
 		</div>
 	);

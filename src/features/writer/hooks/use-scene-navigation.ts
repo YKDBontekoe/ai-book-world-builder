@@ -3,10 +3,21 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDebounceCallback } from "usehooks-ts";
 import type { ChapterWithScenes } from "@/lib/types";
 
+export interface UseSceneNavigationResult {
+	expandedChapters: string[];
+	handleExpandedChange: (newValues: string[]) => void;
+	searchTerm: string;
+	handleSearchChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	filteredStructure: ChapterWithScenes[] | null;
+	handleExpandAll: () => void;
+	handleCollapseAll: () => void;
+	clearSearch: () => void;
+}
+
 export function useSceneNavigation(
 	structure: ChapterWithScenes[] | null,
 	deletedSceneIds: Set<string>,
-) {
+): UseSceneNavigationResult {
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");

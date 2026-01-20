@@ -11,7 +11,7 @@ export type GitHubIssue = {
 	updated_at: string;
 	html_url: string;
 	comments: number;
-	pull_request?: object;
+	pull_request?: Record<string, unknown>;
 };
 
 export type GitHubPR = GitHubIssue & {
@@ -27,7 +27,7 @@ export type GitHubPR = GitHubIssue & {
 
 export type GitHubComment = {
 	id: number;
-	body: string | undefined;
+	body: string | null;
 	user: {
 		login: string;
 		avatar_url: string;

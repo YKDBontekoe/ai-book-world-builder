@@ -14,10 +14,45 @@ import {
 	sendJulesPlanFeedbackAction,
 } from "@/app/actions/jules";
 import { reviewJulesPlanAction } from "@/app/actions/jules-ai";
-import type { JulesPlan } from "@/lib/jules-client";
+import type { JulesPlan, Session } from "@/lib/jules-client";
 import type { SystemMessage } from "../components/system-message-item";
 
-export function useJulesChat(sessionId: string) {
+export interface UseJulesChatReturn {
+	input: string;
+	setInput: (value: string) => void;
+	systemMessages: SystemMessage[];
+	session: Session | undefined;
+	activities: any[]; // Using any to avoid circular deps or complex imports, matching inferred type
+	metadata: any;
+	isLoading: boolean;
+	isSending: boolean;
+	sendMessage: (message: string) => void;
+	approvePlan: () => void;
+	isApproving: boolean;
+	reviewData: {
+		riskLevel: string;
+		analysis: string;
+		recommendations: string[];
+	} | null;
+	reviewPlan: (plan: JulesPlan) => void;
+	isReviewing: boolean;
+	sendPlanFeedback: (variables: {
+		decision: "reject" | "request_changes";
+		notes?: string;
+	}) => void;
+	isSendingFeedback: boolean;
+	repoFullName: string | null;
+	baseBranch: string | undefined;
+	headBranch: string | null;
+	pullRequest: any;
+	pullRequestStatus: any;
+	mergePullRequest: () => void;
+	isMerging: boolean;
+	enhancedPullRequest: any;
+	canMerge: boolean;
+}
+
+export function useJulesChat(sessionId: string): UseJulesChatReturn {
 	const queryClient = useQueryClient();
 	const [input, setInput] = useState("");
 	const [systemMessages, setSystemMessages] = useState<SystemMessage[]>([]);
@@ -25,6 +60,12 @@ export function useJulesChat(sessionId: string) {
 	const lastErrorRef = useRef<string | null>(null);
 	const prErrorRef = useRef<string | null>(null);
 	const prStatusErrorRef = useRef<string | null>(null);
+
+	// Track the attempted message for retries
+	const attemptedMessageRef = useRef<string>("");
+
+	// Track activities in a ref for callbacks
+	const activitiesRef = useRef<any[]>([]);
 
 	const pushSystemMessage = useCallback(
 		(message: Omit<SystemMessage, "id" | "createdAt">) => {
@@ -53,6 +94,11 @@ export function useJulesChat(sessionId: string) {
 	const session = data?.session;
 	const activities = data?.activities || [];
 
+	// Keep activitiesRef in sync
+	useEffect(() => {
+		activitiesRef.current = activities;
+	}, [activities]);
+
 	const { data: metadata } = useQuery({
 		queryKey: ["jules", "session-metadata", sessionId],
 		queryFn: async () => {
@@ -65,6 +111,7 @@ export function useJulesChat(sessionId: string) {
 
 	const { mutate: sendMessage, isPending: isSending } = useMutation({
 		mutationFn: async (message: string) => {
+			attemptedMessageRef.current = message;
 			const result = await sendJulesMessageAction({
 				sessionId,
 				prompt: message,
@@ -85,7 +132,7 @@ export function useJulesChat(sessionId: string) {
 				variant: "error",
 				message: "Failed to send message to Jules.",
 				actionLabel: "Retry",
-				onAction: () => sendMessage(input),
+				onAction: () => sendMessage(attemptedMessageRef.current),
 			});
 		},
 	});
@@ -136,7 +183,9 @@ export function useJulesChat(sessionId: string) {
 				message: "AI review failed. You can retry the review.",
 				actionLabel: "Retry",
 				onAction: () => {
-					const planActivity = activities.find((a) => a.planGenerated);
+					// Use ref to get latest activities
+					const currentActivities = activitiesRef.current;
+					const planActivity = currentActivities.find((a) => a.planGenerated);
 					if (planActivity?.planGenerated?.plan) {
 						reviewPlan(planActivity.planGenerated.plan);
 					}
@@ -259,7 +308,7 @@ export function useJulesChat(sessionId: string) {
 				state: pullRequestStatus.state,
 				mergeable: pullRequestStatus.mergeable,
 				hasConflicts: pullRequestStatus.hasConflicts,
-				checks: pullRequestStatus.checks.map((check) => ({
+				checks: pullRequestStatus.checks.map((check: any) => ({
 					name: check.name,
 					status: check.status,
 					conclusion: check.conclusion,
@@ -267,7 +316,7 @@ export function useJulesChat(sessionId: string) {
 			});
 			if (lastStatusRef.current && lastStatusRef.current !== signature) {
 				const checksSummary = pullRequestStatus.checks.length
-					? `${pullRequestStatus.checks.filter((check) => check.conclusion === "success").length}/${pullRequestStatus.checks.length} checks passing`
+					? `${pullRequestStatus.checks.filter((check: any) => check.conclusion === "success").length}/${pullRequestStatus.checks.length} checks passing`
 					: "no checks";
 				const mergeable =
 					pullRequestStatus.mergeable === null

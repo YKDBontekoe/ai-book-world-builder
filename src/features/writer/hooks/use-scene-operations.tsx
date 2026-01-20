@@ -1,4 +1,3 @@
-import { Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
@@ -11,10 +10,7 @@ import {
 	updateSceneTitle,
 } from "@/features/writer/actions";
 import type { ChapterWithScenes } from "@/lib/types";
-
-// This import needs to be dynamic or adjusted if it causes circular deps,
-// but for hooks it's usually fine as long as we don't import the component itself
-// Wait, GlassCard and Button are UI components, that's fine.
+import { Undo2 } from "lucide-react";
 
 interface UseSceneOperationsProps {
 	projectId: string;
@@ -24,19 +20,31 @@ interface UseSceneOperationsProps {
 	structure: ChapterWithScenes[] | null;
 }
 
+export interface UseSceneOperationsReturn {
+	isGenerating: boolean;
+	isCreatingChapter: boolean;
+	deletedSceneIds: Set<string>;
+	handleGenerateNextScene: (chapterId: string, prevSceneId?: string) => Promise<void>;
+	handleCreateSceneManually: (chapterId: string) => Promise<void>;
+	handleRenameScene: (sceneId: string, newTitle: string) => Promise<void>;
+	handleDeleteScene: (sceneId: string) => Promise<void>;
+	performDelete: (idsToDelete: string[]) => void;
+	handleCreateChapter: () => Promise<void>;
+}
+
 export function useSceneOperations({
 	projectId,
 	activeSceneId,
 	onSceneSelect,
 	onStructureUpdate,
 	structure,
-}: UseSceneOperationsProps) {
+}: UseSceneOperationsProps): UseSceneOperationsReturn {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 	const [deletedSceneIds, setDeletedSceneIds] = useState<Set<string>>(
 		new Set(),
 	);
-	const pendingDeletionsRef = useRef<Map<string | number, NodeJS.Timeout>>(
+	const pendingDeletionsRef = useRef<Map<string | number, ReturnType<typeof setTimeout>>>(
 		new Map(),
 	);
 
@@ -233,7 +241,7 @@ export function useSceneOperations({
 		[performDelete],
 	);
 
-	const handleCreateChapter = async () => {
+	const handleCreateChapter = useCallback(async () => {
 		setIsCreatingChapter(true);
 		const toastId = toast.loading("Creating new chapter...");
 		try {
@@ -249,7 +257,7 @@ export function useSceneOperations({
 		} finally {
 			setIsCreatingChapter(false);
 		}
-	};
+	}, [projectId, onStructureUpdate]);
 
 	return {
 		isGenerating,

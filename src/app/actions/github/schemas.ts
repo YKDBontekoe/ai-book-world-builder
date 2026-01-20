@@ -1,9 +1,7 @@
 import { z } from "zod";
 
-export const issueStateSchema = z
-	.enum(["open", "closed", "all"])
-	.default("open");
-export const issueNumberSchema = z.number();
+export const issueStateSchema = z.enum(["open", "closed", "all"]).default("open");
+export const issueNumberSchema = z.number().int().positive();
 export const postCommentSchema = z.object({
 	number: z.number(),
 	body: z.string().min(1),
@@ -11,10 +9,6 @@ export const postCommentSchema = z.object({
 export const mergePRSchema = z.object({
 	number: z.number(),
 	method: z.enum(["merge", "squash", "rebase"]).default("merge"),
-});
-
-export const _repoFullNameSchema = z.object({
-	repoFullName: z.string().min(1, "Repository is required"),
 });
 
 export const repoBranchSchema = z.object({
@@ -34,14 +28,14 @@ export const pullRequestStatusSchema = z.object({
 
 export const executeFeaturePlanSchema = z.object({
 	parentIssue: z.object({
-		title: z.string(),
-		body: z.string(),
+		title: z.string().min(1),
+		body: z.string().min(1),
 		labels: z.array(z.string()).optional(),
 	}),
 	childIssues: z.array(
 		z.object({
-			title: z.string(),
-			body: z.string(),
+			title: z.string().min(1),
+			body: z.string().min(1),
 			labels: z.array(z.string()).optional(),
 		}),
 	),

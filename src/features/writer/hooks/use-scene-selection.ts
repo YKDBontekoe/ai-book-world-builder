@@ -1,9 +1,22 @@
-import { useCallback, useState } from "react";
+import { type Dispatch, type SetStateAction, useCallback, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { bulkExportScenes } from "@/features/writer/actions";
 
-export function useSceneSelection(onBulkDelete: (ids: string[]) => void) {
+export interface UseSceneSelectionReturn {
+	isSelectionMode: boolean;
+	setIsSelectionMode: Dispatch<SetStateAction<boolean>>;
+	selectedSceneIds: Set<string>;
+	setSelectedSceneIds: Dispatch<SetStateAction<Set<string>>>;
+	toggleSelectionMode: () => void;
+	toggleSceneSelect: (sceneId: string) => void;
+	handleBulkExport: () => Promise<void>;
+	handleBulkDelete: () => void;
+}
+
+export function useSceneSelection(
+	onBulkDelete: (ids: string[]) => void,
+): UseSceneSelectionReturn {
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
 	const [selectedSceneIds, setSelectedSceneIds] = useState<Set<string>>(
 		new Set(),
@@ -31,7 +44,7 @@ export function useSceneSelection(onBulkDelete: (ids: string[]) => void) {
 		});
 	}, []);
 
-	const handleBulkExport = async () => {
+	const handleBulkExport = useCallback(async () => {
 		const toastId = toast.loading("Exporting scenes...");
 		try {
 			const ids = Array.from(selectedSceneIds);
@@ -46,7 +59,7 @@ export function useSceneSelection(onBulkDelete: (ids: string[]) => void) {
 		} catch (_error) {
 			toast.error("Error exporting scenes", { id: toastId });
 		}
-	};
+	}, [selectedSceneIds, toggleSelectionMode]);
 
 	const handleBulkDelete = useCallback(() => {
 		const ids = Array.from(selectedSceneIds);
@@ -67,7 +80,9 @@ export function useSceneSelection(onBulkDelete: (ids: string[]) => void) {
 
 	return {
 		isSelectionMode,
+		setIsSelectionMode,
 		selectedSceneIds,
+		setSelectedSceneIds,
 		toggleSelectionMode,
 		toggleSceneSelect,
 		handleBulkExport,

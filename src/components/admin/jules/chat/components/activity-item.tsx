@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Check } from "lucide-react";
+import { Check, Circle, Sparkles, X } from "lucide-react";
 import type { JSX } from "react";
 import type { JulesActivity } from "@/lib/jules-client";
 import { ArtifactRenderer } from "../../artifact-renderer";
@@ -46,18 +46,14 @@ export function ActivityItem({
 						<ul className="list-disc list-inside space-y-1">
 							{activity.planGenerated.plan.steps.map((step, i) => (
 								// biome-ignore lint/suspicious/noArrayIndexKey: stable enough
-								<li key={i} className="text-xs">
-									<span
-										className={
-											step.state === "COMPLETED"
-												? "text-green-500"
-												: step.state === "IN_PROGRESS"
-													? "text-blue-500"
-													: ""
-										}
-									>
-										{step.state === "COMPLETED" ? "✅ " : "○ "}
-									</span>
+								<li key={i} className="text-xs flex items-center gap-1">
+									{step.state === "COMPLETED" ? (
+										<Check className="h-3 w-3 text-green-500" />
+									) : step.state === "IN_PROGRESS" ? (
+										<Circle className="h-3 w-3 text-blue-500 fill-blue-500/20" />
+									) : (
+										<Circle className="h-3 w-3 text-muted-foreground" />
+									)}
 									{step.description}
 								</li>
 							))}
@@ -84,15 +80,16 @@ export function ActivityItem({
 
 				{/* Error */}
 				{activity.sessionFailed && (
-					<div className="text-sm text-red-500 font-medium">
-						❌ Session Failed: {activity.sessionFailed.reason}
+					<div className="text-sm text-red-500 font-medium flex items-center gap-1">
+						<X className="h-3 w-3" /> Session Failed:{" "}
+						{activity.sessionFailed.reason}
 					</div>
 				)}
 
 				{/* Completed */}
 				{activity.sessionCompleted && (
-					<div className="text-sm text-green-600 font-medium">
-						🎉 Session Completed
+					<div className="text-sm text-green-600 font-medium flex items-center gap-1">
+						<Sparkles className="h-3 w-3" /> Session Completed
 					</div>
 				)}
 
