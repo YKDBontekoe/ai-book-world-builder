@@ -10,8 +10,9 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { auth } from "@/app/(auth)/auth";
 import { Button } from "@/components/atoms/button";
-import { db } from "@/lib/db/queries";
+import { db, getProjectByIdWithAccess } from "@/lib/db/queries";
 import { entityAttribute, entity as entityTable } from "@/lib/db/schema";
 
 interface PageProps {
@@ -45,6 +46,16 @@ const entityColors = {
 
 export default async function EntityPage({ params }: PageProps) {
 	const { id: projectId, entityId } = await params;
+	const session = await auth();
+
+	const project = await getProjectByIdWithAccess({
+		id: projectId,
+		userId: session?.user?.id,
+	});
+
+	if (!project) {
+		notFound();
+	}
 
 	const [entity] = await db
 		.select()
