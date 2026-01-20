@@ -14,6 +14,7 @@
 **Prevention:** Always validate that required security configuration (secrets) exists before performing authorization checks.
 
 ## 2025-10-30 - [Project Stats IDOR]
+
 **Vulnerability:** Project statistics and content actions accepted a `projectId` without verifying if the authenticated user had access to that project, allowing unauthorized access to private project metadata.
 **Learning:** Authentication middleware only asserts "who you are", not "what you can access". Every Server Action accepting a resource ID must perform an explicit authorization check.
 **Prevention:** Use a helper like `ensureProjectAccess` that combines resource fetching with ownership/visibility checks at the start of every action.
