@@ -1,0 +1,54 @@
+
+> ai-book-world-builder@3.1.0 type-check /app
+> tsc --noEmit --skipLibCheck
+
+src/app/(auth)/auth.ts(97,34): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/app/(auth)/auth.ts(111,31): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/app/(auth)/auth.ts(149,7): error TS2353: Object literal may only specify known properties, and 'authenticator' does not exist in type '{ response: AuthenticationResponseJSON; expectedChallenge: string | ((challenge: string) => boolean | Promise<boolean>); expectedOrigin: string | string[]; ... 4 more ...; advancedFIDOConfig?: { ...; } | undefined; }'.
+src/app/(auth)/auth.ts(176,33): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/app/(auth)/auth.ts(179,20): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/app/(auth)/auth.ts(191,20): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/app/(auth)/auth.ts(195,42): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+src/app/api/passkeys/authentication/options/route.ts(45,3): error TS2322: Type '{ id: Uint8Array<ArrayBufferLike>; type: string; transports: string[]; }[]' is not assignable to type '{ id: string; transports?: AuthenticatorTransportFuture[] | undefined; }[]'.
+  Type '{ id: Uint8Array<ArrayBufferLike>; type: string; transports: string[]; }' is not assignable to type '{ id: string; transports?: AuthenticatorTransportFuture[] | undefined; }'.
+    Types of property 'id' are incompatible.
+      Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'string'.
+src/app/api/passkeys/authentication/options/route.ts(55,11): error TS2339: Property 'challenge' does not exist on type 'Promise<PublicKeyCredentialRequestOptionsJSON>'.
+src/app/api/passkeys/registration/options/route.ts(22,3): error TS2322: Type 'string' is not assignable to type 'Uint8Array<ArrayBuffer>'.
+src/app/api/passkeys/registration/options/route.ts(26,3): error TS2322: Type '{ id: Uint8Array<ArrayBufferLike>; type: string; transports: string[]; }[]' is not assignable to type '{ id: string; transports?: AuthenticatorTransportFuture[] | undefined; }[]'.
+  Type '{ id: Uint8Array<ArrayBufferLike>; type: string; transports: string[]; }' is not assignable to type '{ id: string; transports?: AuthenticatorTransportFuture[] | undefined; }'.
+    Types of property 'id' are incompatible.
+      Type 'Uint8Array<ArrayBufferLike>' is not assignable to type 'string'.
+src/app/api/passkeys/registration/options/route.ts(36,11): error TS2339: Property 'challenge' does not exist on type 'Promise<PublicKeyCredentialCreationOptionsJSON>'.
+src/app/api/passkeys/registration/verify/route.ts(49,10): error TS2339: Property 'credentialID' does not exist on type '{ fmt: AttestationFormat; aaguid: string; credential: WebAuthnCredential; credentialType: "public-key"; attestationObject: Uint8Array<ArrayBuffer>; ... 5 more ...; authenticatorExtensionResults?: unknown; }'.
+src/app/api/passkeys/registration/verify/route.ts(49,24): error TS2339: Property 'credentialPublicKey' does not exist on type '{ fmt: AttestationFormat; aaguid: string; credential: WebAuthnCredential; credentialType: "public-key"; attestationObject: Uint8Array<ArrayBuffer>; ... 5 more ...; authenticatorExtensionResults?: unknown; }'.
+src/app/api/passkeys/registration/verify/route.ts(49,45): error TS2339: Property 'counter' does not exist on type '{ fmt: AttestationFormat; aaguid: string; credential: WebAuthnCredential; credentialType: "public-key"; attestationObject: Uint8Array<ArrayBuffer>; ... 5 more ...; authenticatorExtensionResults?: unknown; }'.
+src/components/organisms/book-canvas/panes/generator-pane.tsx(24,34): error TS2503: Cannot find namespace 'JSX'.
+src/components/organisms/book-canvas/panes/generator-pane.tsx(171,46): error TS2339: Property 'synopsis' does not exist on type '{ title: string; summary: string; chapters: { title: string; summary: string; }[]; logline: string; }'.
+src/features/writer/actions/scene.ts(374,5): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/features/writer/actions/scene.ts(384,40): error TS7006: Parameter 's' implicitly has an 'any' type.
+src/features/writer/actions/scene.ts(389,25): error TS2339: Property 'title' does not exist on type '{}'.
+src/features/writer/actions/scene.ts(389,40): error TS2339: Property 'content' does not exist on type '{}'.
+src/features/writer/components/power-dock/control-button.tsx(35,25): error TS2503: Cannot find namespace 'JSX'.
+src/features/writer/components/power-dock/control-button.tsx(95,5): error TS2503: Cannot find namespace 'JSX'.
+src/features/writer/components/power-dock/power-dock-input.tsx(40,26): error TS2503: Cannot find namespace 'JSX'.
+src/features/writer/components/power-dock/power-dock-result.tsx(17,27): error TS2503: Cannot find namespace 'JSX'.
+src/features/writer/components/power-dock/power-dock-tray.tsx(13,25): error TS2503: Cannot find namespace 'JSX'.
+src/lib/db/repositories/entity-repository.ts(169,25): error TS7006: Parameter 'ent' implicitly has an 'any' type.
+src/lib/db/repositories/entity-repository.ts(172,15): error TS7006: Parameter 'attr' implicitly has an 'any' type.
+src/lib/db/repositories/entity-repository.ts(173,13): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/lib/db/repositories/entity-repository.ts(173,16): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/lib/db/repositories/entity-repository.ts(176,8): error TS7006: Parameter 'rel' implicitly has an 'any' type.
+src/lib/db/repositories/entity-repository.ts(179,13): error TS7006: Parameter 'a' implicitly has an 'any' type.
+src/lib/db/repositories/entity-repository.ts(179,16): error TS7006: Parameter 'b' implicitly has an 'any' type.
+src/lib/services/ai/manuscript-service.ts(72,6): error TS18047: 'entity.summary' is possibly 'null'.
+src/lib/services/ai/manuscript-service.ts(90,7): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+src/lib/services/project-service.ts(31,14): error TS7006: Parameter 'p' implicitly has an 'any' type.
+src/lib/services/project-service.ts(32,11): error TS7006: Parameter 'p' implicitly has an 'any' type.
+tests/unit/components/organisms/book-canvas/panes/generator-pane.test.tsx(117,4): error TS2741: Property 'summary' is missing in type '{ title: string; logline: string; synopsis: string; chapters: { title: string; summary: string; }[]; }' but required in type '{ title: string; summary: string; chapters: { title: string; summary: string; }[]; logline: string; }'.
+tests/unit/components/organisms/book-canvas/panes/generator-pane.test.tsx(160,4): error TS2741: Property 'summary' is missing in type '{ title: string; logline: string; synopsis: string; chapters: { title: string; summary: string; }[]; }' but required in type '{ title: string; summary: string; chapters: { title: string; summary: string; }[]; logline: string; }'.
+tests/unit/components/organisms/book-canvas/panes/generator-pane.test.tsx(163,74): error TS2345: Argument of type '{ success: true; }' is not assignable to parameter of type '{ success: true; data: { success: boolean; error?: undefined; } | { success: boolean; error: string; }; } | { success: boolean; error: string; }'.
+  Property 'error' is missing in type '{ success: true; }' but required in type '{ success: boolean; error: string; }'.
+tests/unit/components/writer/writer-view-hotkeys.test.tsx(20,2): error TS2353: Object literal may only specify known properties, and 'coverImage' does not exist in type '{ name: string; id: string; userId: string; createdAt: Date; description: string | null; visibility: "public" | "private"; folders: ProjectFolder[]; forkedFromId: string | null; lastViewedSceneId: string | null; }'.
+ ELIFECYCLE  Command failed with exit code 1.

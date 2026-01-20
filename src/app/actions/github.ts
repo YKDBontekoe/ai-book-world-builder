@@ -331,10 +331,8 @@ const mergePullRequestAction = createAdminAction({
 export async function mergePullRequest(
 	input: z.input<typeof mergePRSchema>,
 ): ReturnType<typeof mergePullRequestAction> {
-	// Cast to any because createAdminAction expects z.infer (required method)
-	// but schema default handles it at runtime.
-	// biome-ignore lint/suspicious/noExplicitAny: Schema default handles missing fields at runtime
-	return mergePullRequestAction(input as any);
+	const parsed = mergePRSchema.parse(input);
+	return mergePullRequestAction(parsed);
 }
 
 /**
@@ -546,7 +544,7 @@ const getGitHubPullRequestStatusActionInternal = createAdminAction({
 		});
 
 		const hasFailure = mappedChecks.some(
-			(check) => check.conclusion && check.conclusion !== "success",
+			(check) => check.conclusion === "failure",
 		);
 		const isPending = mappedChecks.some(
 			(check) => check.status === "queued" || check.status === "in_progress",
