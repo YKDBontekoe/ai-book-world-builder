@@ -78,6 +78,23 @@ export async function generateLoreAction(
 	}
 }
 
+export async function generateEntitySummaryAction(
+	projectId: string,
+	name: string,
+	kind: string,
+) {
+	try {
+		const result = await loreService.generateEntitySuggestion(
+			projectId,
+			name,
+			kind,
+		);
+		return { success: true, data: result };
+	} catch (error) {
+		return { success: false, error: (error as Error).message };
+	}
+}
+
 export async function searchProjectAction(projectId: string, query: string) {
 	try {
 		const answer = await loreService.searchProject(projectId, query);

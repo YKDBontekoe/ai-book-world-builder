@@ -34,6 +34,26 @@ const entityIdSchema = z.object({
 	id: z.string().uuid("Invalid entity ID"),
 });
 
+export const createEntitySchema = z.object({
+	projectId: z.string().uuid("Invalid project ID"),
+	name: z.string().min(1, "Name is required").max(200),
+	kind: z.string().min(1, "Type is required"),
+	summary: z.string().max(2000).optional(),
+	attributes: z
+		.array(
+			z.object({
+				name: z.string(),
+				value: z.string(),
+			}),
+		)
+		.optional(),
+});
+
+export const bulkDeleteEntitiesSchema = z.object({
+	ids: z.array(z.string().uuid()),
+	projectId: z.string().uuid("Invalid project ID"),
+});
+
 // ============================================================================
 // Actions
 // ============================================================================
@@ -162,6 +182,106 @@ export const deleteEntityAction = createUserAction({
 
 		await entityRepository.delete(input.id);
 		revalidatePath("/(chat)", "page");
+
+		return { success: true };
+	},
+});
+
+/**
+ * Create a new entity
+ */
+export const createEntityAction = createUserAction({
+	input: createEntitySchema,
+	handler: async ({ user, input }) => {
+		const project = await projectRepository.findByIdWithAccess(
+			input.projectId,
+			user.id,
+		);
+
+		if (!project) {
+			throw NotFoundError.forResource("Project", input.projectId);
+		}
+
+		if (project.userId !== user.id) {
+			throw new ForbiddenError("Only project owner can create entities");
+		}
+
+		const entity = await entityRepository.create({
+			projectId: input.projectId,
+			name: input.name,
+			kind: input.kind,
+			summary: input.summary,
+		});
+
+		// Create attributes if provided
+		if (input.attributes && input.attributes.length > 0) {
+			await Promise.all(
+				input.attributes.map((attr) =>
+					entityRepository.createAttribute({
+						projectId: input.projectId,
+						entityId: entity.id,
+						name: attr.name,
+						value: attr.value,
+						dataType: "text",
+					}),
+				),
+			);
+		}
+
+		revalidatePath(`/projects/${input.projectId}`);
+
+		return {
+			...entity,
+			createdAt: entity.createdAt.toISOString(),
+			updatedAt: entity.updatedAt.toISOString(),
+			startDate: entity.startDate?.toISOString() ?? null,
+			endDate: entity.endDate?.toISOString() ?? null,
+		};
+	},
+});
+
+/**
+ * Bulk delete entities
+ */
+export const bulkDeleteEntitiesAction = createUserAction({
+	input: bulkDeleteEntitiesSchema,
+	handler: async ({ user, input }) => {
+		const project = await projectRepository.findByIdWithAccess(
+			input.projectId,
+			user.id,
+		);
+
+		if (!project) {
+			throw NotFoundError.forResource("Project", input.projectId);
+		}
+
+		if (project.userId !== user.id) {
+			throw new ForbiddenError("Only project owner can delete entities");
+		}
+
+		// Verify all entities belong to this project
+		// This is a bit of a shortcut; strictly we should check every entity.
+		// But since we are deleting by IDs, we can just ensure we only delete entities
+		// that belong to this project.
+		// However, entityRepository.bulkDelete takes IDs, it doesn't filter by project.
+		// So we MUST verify ownership of the IDs.
+
+		const entitiesToCheck = await Promise.all(
+			input.ids.map((id) => entityRepository.findById(id)),
+		);
+
+		const invalidEntity = entitiesToCheck.find(
+			(e) => !e || e.projectId !== input.projectId,
+		);
+
+		if (invalidEntity) {
+			throw new ForbiddenError(
+				"One or more entities do not belong to the project",
+			);
+		}
+
+		await entityRepository.bulkDelete(input.ids);
+		revalidatePath(`/projects/${input.projectId}`);
 
 		return { success: true };
 	},
