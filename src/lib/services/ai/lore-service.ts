@@ -76,6 +76,32 @@ export const loreService = {
 	},
 
 	/**
+	 * Generates a suggestion for an entity without saving it.
+	 */
+	async generateEntitySuggestion(
+		projectId: string,
+		name: string,
+		kind: string,
+	) {
+		await ensureProjectAccess(projectId);
+
+		const { object } = await generateObject({
+			model: openrouter(await getSelectedModelId("large")),
+			schema: loreSchema,
+			prompt: `
+        Generate details for a new entity in a story.
+        Name: ${name}
+        Kind: ${kind}
+
+        Return a rich summary and potential attributes.
+        Ensure the output fits the name and kind provided.
+      `,
+		});
+
+		return object;
+	},
+
+	/**
 	 * Semantically searches the project (currently simple context search).
 	 */
 	async searchProject(projectId: string, query: string): Promise<string> {

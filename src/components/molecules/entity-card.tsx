@@ -37,6 +37,9 @@ export type EntityCardProps = {
 	relationshipCount?: number;
 	className?: string;
 	onDelete?: () => void;
+	isSelectionMode?: boolean;
+	isSelected?: boolean;
+	onToggleSelect?: () => void;
 };
 
 function EntityActions({
@@ -148,14 +151,25 @@ export function EntityCard({
 	relationshipCount = 0,
 	className,
 	onDelete,
+	isSelectionMode,
+	isSelected,
+	onToggleSelect,
 }: EntityCardProps) {
 	return (
 		<Card
 			variant="interactive"
 			className={cn(
-				"group relative p-3 pr-8 glass-surface border-border/50",
+				"group relative p-3 glass-surface border-border/50 transition-all duration-200",
+				isSelectionMode && "cursor-pointer",
+				isSelected && "ring-2 ring-primary border-primary bg-primary/5",
+				!isSelectionMode && "pr-8",
 				className,
 			)}
+			onClick={() => {
+				if (isSelectionMode && onToggleSelect) {
+					onToggleSelect();
+				}
+			}}
 		>
 			<div className="flex items-start justify-between gap-2">
 				<div className="flex-1 min-w-0">
@@ -166,19 +180,31 @@ export function EntityCard({
 						</p>
 					)}
 				</div>
-				{relationshipCount > 0 && (
+				{relationshipCount > 0 && !isSelectionMode && (
 					<div className="flex items-center gap-0.5 rounded-full bg-muted/60 px-1.5 py-0.5 text-muted-foreground">
 						<LinkIcon className="h-3 w-3" />
 						<span className="text-xs font-medium">{relationshipCount}</span>
 					</div>
 				)}
 			</div>
-			<EntityActions
-				entityId={entity.id}
-				projectId={entity.projectId}
-				entityName={entity.name}
-				onDeleteSuccess={onDelete}
-			/>
+			{!isSelectionMode && (
+				<EntityActions
+					entityId={entity.id}
+					projectId={entity.projectId}
+					entityName={entity.name}
+					onDeleteSuccess={onDelete}
+				/>
+			)}
+			{isSelectionMode && (
+				<div
+					className={cn(
+						"absolute top-2 right-2 h-5 w-5 rounded-full border border-primary/50 flex items-center justify-center transition-colors",
+						isSelected ? "bg-primary border-primary" : "bg-transparent",
+					)}
+				>
+					{isSelected && <div className="h-2 w-2 rounded-full bg-background" />}
+				</div>
+			)}
 		</Card>
 	);
 }
