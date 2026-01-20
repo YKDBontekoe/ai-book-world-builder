@@ -135,7 +135,11 @@ Once you have a structure, you can start writing.
 -   **Inline Co-Author**: Highlight a passage and choose **Co-Author** to generate three alternative rewrites you can apply with one click.
 -   **Project-Aware Chat**: Open the **Floating Assistant** to ask the AI questions about your world, brainstorm ideas, or draft new scenes with specific instructions.
 
-### 4. Analyze & Refine
+### 4. Smart Defaults
+The system is designed to learn from your preferences to speed up your workflow.
+-   **Project Creation**: When you create a new project, the system remembers your last used **Visibility** (Public/Private) and **Template** settings, so you don't have to re-select them every time.
+
+### 5. Analyze & Refine
 Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. The canvas is a powerful tool for visualizing your story's structure and content.
 
 -   **Bible**: The central repository for all your world-building information.
