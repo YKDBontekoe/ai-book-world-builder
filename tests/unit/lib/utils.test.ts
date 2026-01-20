@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { DBMessage, Document } from "@/lib/db/schema";
-import type { ChatMessage, UIMessage } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 import {
 	cn,
 	convertToUIMessages,
@@ -138,7 +138,7 @@ describe("lib/utils", () => {
 							toolName: "test",
 							args: {},
 						},
-					},
+					} as any,
 				],
 				createdAt: new Date(),
 			};
@@ -158,7 +158,7 @@ describe("lib/utils", () => {
 							toolName: "test",
 							args: {},
 						},
-					},
+					} as any,
 				],
 				createdAt: new Date(),
 			};

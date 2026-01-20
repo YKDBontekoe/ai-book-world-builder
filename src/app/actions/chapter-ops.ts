@@ -29,7 +29,7 @@ export const reorderChaptersAction = async (
 		if (updates.length === 0) return { success: true };
 
 		try {
-			await db.transaction(async (tx) => {
+			await db.transaction(async (tx: any) => {
 				// 1. Temporarily set sequences to negative to avoid unique constraint violations
 				for (const update of updates) {
 					await tx
@@ -51,7 +51,7 @@ export const reorderChaptersAction = async (
 			return { success: true };
 		} catch (error) {
 			console.error("Failed to reorder chapters:", error);
-			throw new ChatSDKError("bad_request", "Failed to reorder chapters");
+			throw new ChatSDKError("bad_request:api", "Failed to reorder chapters");
 		}
 	});
 };
@@ -83,7 +83,7 @@ export const updateChapterAction = async (
 			return { success: true };
 		} catch (error) {
 			console.error("Failed to update chapter:", error);
-			throw new ChatSDKError("bad_request", "Failed to update chapter");
+			throw new ChatSDKError("bad_request:api", "Failed to update chapter");
 		}
 	});
 };
@@ -106,7 +106,7 @@ export const createChapterAction = async (
 				.limit(1);
 
 			if (outlines.length === 0) {
-				throw new ChatSDKError("not_found", "Project outline not found");
+				throw new ChatSDKError("not_found:document", "Project outline not found");
 			}
 			const currentOutline = outlines[0];
 
@@ -159,7 +159,7 @@ export const createChapterAction = async (
 			return { success: true, data: newChapter };
 		} catch (error) {
 			console.error("Failed to create chapter:", error);
-			throw new ChatSDKError("bad_request", "Failed to create chapter");
+			throw new ChatSDKError("bad_request:api", "Failed to create chapter");
 		}
 	});
 };
@@ -174,7 +174,7 @@ export const deleteChapterAction = async (
 ) => {
 	return withProjectWriteAccess(input.projectId, async () => {
 		try {
-			await db.transaction(async (tx) => {
+			await db.transaction(async (tx: any) => {
 				// 1. Get chapter to delete to find its sequence and volume
 				const [target] = await tx
 					.select()
@@ -205,7 +205,7 @@ export const deleteChapterAction = async (
 			return { success: true };
 		} catch (error) {
 			console.error("Failed to delete chapter:", error);
-			throw new ChatSDKError("bad_request", "Failed to delete chapter");
+			throw new ChatSDKError("bad_request:api", "Failed to delete chapter");
 		}
 	});
 };

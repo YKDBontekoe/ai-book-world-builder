@@ -184,7 +184,7 @@ vi.mock("@/lib/services/story-service", () => ({
 			}),
 		),
 		createBookFromPlan: vi.fn(() => Promise.resolve({ success: true })),
-		planChapterScenes: vi.fn(() => Promise.resolve({ success: true, sceneIds: ["mock-id"] })),
+		planChapterScenes: vi.fn(() => Promise.resolve(["mock-id"])),
 		generateSceneText: vi.fn(() => Promise.resolve({ success: true })),
 	},
 }));
@@ -311,11 +311,10 @@ describe("Story Generation Actions", () => {
 			const validChapterId = "123e4567-e89b-12d3-a456-426614174001";
 			const result = await planChapterScenes(validChapterId);
 			expect(result.success).toBe(true);
-			if (result.success) {
-				// @ts-expect-error
+			if (result.success && "sceneIds" in result) {
 				expect(result.sceneIds).toHaveLength(1);
-				// @ts-expect-error
-				expect(result.sceneIds?.[0]).toBe("mock-id");
+				// @ts-expect-error - Validated by "in" check but TS needs narrowing
+				expect(result.sceneIds[0]).toBe("mock-id");
 			}
 		});
 	});

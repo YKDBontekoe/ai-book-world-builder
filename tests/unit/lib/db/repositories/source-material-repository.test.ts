@@ -113,7 +113,7 @@ describe("SourceMaterialRepository", () => {
 		it("should return material with processing status", async () => {
 			const mockData = {
 				material: { id: "m1", filename: "test.pdf" },
-				processing: { id: "p1", status: "completed" },
+				processing: { id: "p1", status: "processed" },
 			};
 			mocks.result = [mockData];
 
@@ -226,7 +226,6 @@ describe("SourceMaterialRepository", () => {
 			const mockUpdated = { id: "m1", status: "processed" };
 			mocks.result = [mockUpdated];
 
-			// @ts-expect-error
 			const result = await sourceMaterialRepository.update("m1", {
 				status: "processed",
 			});
@@ -236,7 +235,6 @@ describe("SourceMaterialRepository", () => {
 		it("should throw NotFoundError if material not found", async () => {
 			mocks.result = [];
 			await expect(
-				// @ts-expect-error
 				sourceMaterialRepository.update("m1", { status: "processed" }),
 			).rejects.toThrow(NotFoundError);
 		});
@@ -244,8 +242,7 @@ describe("SourceMaterialRepository", () => {
 		it("should throw DatabaseError on failure", async () => {
 			mocks.error = new Error("DB Error");
 			await expect(
-				// @ts-expect-error
-				sourceMaterialRepository.update("m1", { status: "p" }),
+				sourceMaterialRepository.update("m1", { status: "processed" }),
 			).rejects.toThrow(DatabaseError);
 		});
 	});
@@ -322,11 +319,11 @@ describe("SourceMaterialRepository", () => {
 
 	describe("updateProcessing", () => {
 		it("should update processing record", async () => {
-			const updated = { id: "proc1", status: "completed" };
+			const updated = { id: "proc1", status: "processed" };
 			mocks.result = [updated];
 
 			const result = await sourceMaterialRepository.updateProcessing("m1", {
-				status: "completed",
+				status: "processed",
 			});
 			expect(result).toEqual(updated);
 		});
@@ -334,7 +331,7 @@ describe("SourceMaterialRepository", () => {
 		it("should return null if not found/updated", async () => {
 			mocks.result = [];
 			const result = await sourceMaterialRepository.updateProcessing("m1", {
-				status: "completed",
+				status: "processed",
 			});
 			expect(result).toBeNull();
 		});

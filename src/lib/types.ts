@@ -116,6 +116,9 @@ export type ChatMessage = UIMessage<
 	createdAt?: string | Date;
 };
 
+// Re-export UIMessage to satisfy tests if needed (though ChatMessage covers it)
+export type { UIMessage };
+
 export type Attachment = {
 	name: string;
 	url: string;

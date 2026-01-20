@@ -13,16 +13,10 @@ const mockProject: Project = {
 	description: "Test Description",
 	visibility: "private",
 	createdAt: new Date(),
-	updatedAt: new Date(), // This exists in Project
-	archivedAt: null,
-	deletedAt: null,
-	wordCount: 0,
-	coverImage: null,
-	defaultChapterId: null,
-	lastViewedSceneId: null,
+	// updatedAt removed - it does NOT exist in Project schema in src/lib/db/schema/projects.ts
 	folders: [],
-	customMetadata: {},
 	forkedFromId: null,
+	lastViewedSceneId: null,
 };
 
 // Mock dependencies

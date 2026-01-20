@@ -113,7 +113,6 @@ export function ChapterActions({
 
 					if (!result.success) {
 						// Mark scene as error but continue with others
-						// @ts-expect-error
 						console.error(`Failed to generate scene ${i + 1}:`, result.error);
 						setScenes((prev) =>
 							prev.map((s, idx) =>
