@@ -1,0 +1,10 @@
+import{j as a}from"./jsx-runtime-Bf9FPa4M.js";import{A as e,a as c,b as o}from"./avatar-C8HixepO.js";import"./iframe-07iE-qFD.js";import"./preload-helper-PPVm8Dsz.js";import"./_commonjsHelpers-CE1G-McA.js";import"./utils-CDN07tui.js";import"./index-BrqA26Gq.js";import"./index-DD0WAFfw.js";import"./index-B3Oq8Y2u.js";import"./index-Bn2y-BiL.js";import"./index-K51Klugg.js";import"./index-DHsAhiMk.js";import"./index-Br1d-Fm2.js";const j={title:"Design System/Atoms/Avatar",component:e,tags:["autodocs"]},r={render:s=>a.jsxs(e,{...s,children:[a.jsx(c,{src:"https://github.com/shadcn.png",alt:"@shadcn"}),a.jsx(o,{children:"CN"})]})},t={render:s=>a.jsx(e,{...s,children:a.jsx(o,{children:"CN"})})};r.parameters={...r.parameters,docs:{...r.parameters?.docs,source:{originalSource:`{
+  render: args => <Avatar {...args}>
+            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+            <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
+}`,...r.parameters?.docs?.source}}};t.parameters={...t.parameters,docs:{...t.parameters?.docs,source:{originalSource:`{
+  render: args => <Avatar {...args}>
+            <AvatarFallback>CN</AvatarFallback>
+        </Avatar>
+}`,...t.parameters?.docs?.source}}};const k=["Default","Fallback"];export{r as Default,t as Fallback,k as __namedExportsOrder,j as default};
