@@ -54,7 +54,7 @@ importers:
         specifier: 3.2.2
         version: 3.2.2(react@19.2.3)
       '@hookform/resolvers':
-        specifier: ^5.2.2
+        specifier: 5.2.2
         version: 5.2.2(react-hook-form@7.71.1(react@19.2.3))
       '@icons-pack/react-simple-icons':
         specifier: 13.8.0
@@ -442,7 +442,7 @@ importers:
         specifier: 2.12.7
         version: 2.12.7(@types/node@24.10.9)(typescript@5.9.3)
       msw-storybook-addon:
-        specifier: ^2.0.6
+        specifier: 2.0.6
         version: 2.0.6(msw@2.12.7(@types/node@24.10.9)(typescript@5.9.3))
       playwright:
         specifier: 1.57.0
