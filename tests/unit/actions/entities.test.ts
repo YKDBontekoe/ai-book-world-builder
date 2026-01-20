@@ -200,7 +200,7 @@ describe("entities server actions", () => {
 		unwrap(await deleteEntityAction({ id: entity.id }));
 
 		expect(mockedDelete).toHaveBeenCalledWith(entity.id);
-		expect(mockedRevalidatePath).toHaveBeenCalledWith("/(chat)", "page");
+    expect(mockedRevalidatePath).toHaveBeenCalledWith("/(studio)", "layout");
 	});
 
 	it("fails deletion when the user cannot access the project", async () => {
