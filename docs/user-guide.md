@@ -136,12 +136,10 @@ Once you have a structure, you can start writing.
 -   **Project-Aware Chat**: Open the **Floating Assistant** to ask the AI questions about your world, brainstorm ideas, or draft new scenes with specific instructions.
 
 ### 4. Smart Defaults
-
 The system is designed to learn from your preferences to speed up your workflow.
 -   **Project Creation**: When you create a new project, the system remembers your last used **Visibility** (Public/Private) and **Template** settings, so you don't have to re-select them every time.
 
 ### 5. Analyze & Refine
-
 Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. The canvas is a powerful tool for visualizing your story's structure and content.
 
 -   **Bible**: The central repository for all your world-building information.
@@ -153,7 +151,7 @@ Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. 
 -   **Context**: Shows exactly what information the AI "sees" when generating a scene.
 -   **Diagnostics**: Runs health checks on your story.
 
-### 6. Productivity Tools
+### 5. Productivity Tools
 Stay focused and track your progress with built-in productivity widgets located in the editor header (or "More" menu on smaller screens).
 
 *   **Sprint Timer (Zap Icon)**:

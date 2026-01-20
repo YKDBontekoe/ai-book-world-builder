@@ -9,6 +9,9 @@ interface EntityGroupSectionProps {
 	group: EntityGroup;
 	relationshipCounts: Map<string, number>;
 	viewMode: ViewMode;
+	isSelectionMode?: boolean;
+	selectedIds?: Set<string>;
+	onToggleSelect?: (id: string) => void;
 }
 
 /**
@@ -18,11 +21,17 @@ interface EntityGroupSectionProps {
  * @param props.group - The group of entities to display, including metadata like label and color.
  * @param props.relationshipCounts - A map of entity IDs to their relationship counts, used to display connection metrics.
  * @param props.viewMode - The current layout mode ('list' or 'grid'), affecting the grid column count.
+ * @param props.isSelectionMode - Whether selection mode is active.
+ * @param props.selectedIds - The set of selected entity IDs.
+ * @param props.onToggleSelect - Callback to toggle selection of an entity.
  */
 export function EntityGroupSection({
 	group,
 	relationshipCounts,
 	viewMode,
+	isSelectionMode,
+	selectedIds,
+	onToggleSelect,
 }: EntityGroupSectionProps): React.JSX.Element {
 	const Icon = group.icon;
 
@@ -51,6 +60,9 @@ export function EntityGroupSection({
 						entity={entity}
 						relationshipCount={relationshipCounts.get(entity.id) || 0}
 						className={cn(viewMode === "grid" && "h-full")}
+						isSelectionMode={isSelectionMode}
+						isSelected={selectedIds?.has(entity.id)}
+						onToggleSelect={() => onToggleSelect?.(entity.id)}
 					/>
 				))}
 			</div>

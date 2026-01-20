@@ -158,7 +158,12 @@ export class EntityRepository extends BaseRepository<
 				db
 					.select()
 					.from(entityAttribute)
-					.where(eq(entityAttribute.projectId, projectId)),
+					.where(
+						inArray(
+							entityAttribute.entityId,
+							entities.map((e) => e.id),
+						),
+					),
 				db
 					.select()
 					.from(relationship)
@@ -349,6 +354,38 @@ export class EntityRepository extends BaseRepository<
 		} catch (error) {
 			console.error("EntityRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete entity");
+		}
+	}
+
+	/**
+	 * Delete multiple entities and their related data
+	 */
+	async bulkDelete(ids: string[]): Promise<void> {
+		if (ids.length === 0) return;
+
+		try {
+			await db.transaction(async (tx: any) => {
+				// Delete related attributes
+				await tx
+					.delete(entityAttribute)
+					.where(inArray(entityAttribute.entityId, ids));
+
+				// Delete related relationships
+				await tx
+					.delete(relationship)
+					.where(
+						or(
+							inArray(relationship.sourceEntityId, ids),
+							inArray(relationship.targetEntityId, ids),
+						),
+					);
+
+				// Delete the entities
+				await tx.delete(entity).where(inArray(entity.id, ids));
+			});
+		} catch (error) {
+			console.error("EntityRepository.bulkDelete error:", error);
+			throw new DatabaseError("Failed to bulk delete entities");
 		}
 	}
 

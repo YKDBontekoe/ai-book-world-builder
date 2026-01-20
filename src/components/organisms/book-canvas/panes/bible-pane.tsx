@@ -1,12 +1,25 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
-import { BookOpenIcon, LinkIcon, SparklesIcon } from "lucide-react";
-import { useMemo, useState } from "react";
-import { getEntities } from "@/app/actions/entities";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	BookOpenIcon,
+	CheckSquare,
+	LinkIcon,
+	SparklesIcon,
+	Undo2,
+	X,
+} from "lucide-react";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
+import {
+	bulkDeleteEntitiesAction,
+	getEntities,
+} from "@/app/actions/entities";
 import { getRelationships } from "@/app/actions/project-stats";
+import { Button } from "@/components/atoms/button";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
+import { GlassCard } from "@/components/molecules/glass-card";
 import { SectionHeader } from "@/components/molecules/section-header";
 import { useBookCanvasLayout } from "@/components/organisms/book-canvas/book-canvas-context";
 import {
@@ -14,6 +27,8 @@ import {
 	type SortOption,
 	type ViewMode,
 } from "@/components/organisms/book-canvas/panes/bible/bible-toolbar";
+import { BulkActionsBar } from "@/components/organisms/book-canvas/panes/bible/bulk-actions-bar";
+import { CreateEntityDialog } from "@/components/organisms/book-canvas/panes/bible/create-entity-dialog";
 import { EntityGroupSection } from "@/components/organisms/book-canvas/panes/bible/entity-group-section";
 import { SourceMaterialsSection } from "@/components/organisms/book-canvas/panes/bible/source-materials-section";
 import { useEntityGrouping } from "@/hooks/use-entity-grouping";
@@ -28,12 +43,20 @@ import { QUERY_KEYS } from "@/lib/query-options";
  */
 export function BiblePane(): React.JSX.Element {
 	const { projectId } = useBookCanvasLayout();
+	const queryClient = useQueryClient();
 
 	// View state
 	const [searchQuery, setSearchQuery] = useState("");
 	const [typeFilter, setTypeFilter] = useState("all");
 	const [sortOption, setSortOption] = useState<SortOption>("name-asc");
 	const [viewMode, setViewMode] = useState<ViewMode>("list");
+
+	// Selection state
+	const [isSelectionMode, setIsSelectionMode] = useState(false);
+	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+	const pendingDeletionsRef = useRef<Map<string | number, NodeJS.Timeout>>(
+		new Map(),
+	);
 
 	const { data: entities, isLoading: entitiesLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.entities(projectId) : ["entities", "null"],
@@ -129,6 +152,183 @@ export function BiblePane(): React.JSX.Element {
 		});
 	}, [entityGroups, sortOption, relationshipCounts]);
 
+	const toggleSelectionMode = useCallback(() => {
+		setIsSelectionMode((prev) => {
+			if (prev) {
+				setSelectedIds(new Set());
+				return false;
+			}
+			return true;
+		});
+	}, []);
+
+	const toggleEntitySelect = useCallback((entityId: string) => {
+		setSelectedIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(entityId)) {
+				next.delete(entityId);
+			} else {
+				next.add(entityId);
+			}
+			return next;
+		});
+	}, []);
+
+	const undoDelete = useCallback(
+		(toastId: string | number, idsToRestore: string[]) => {
+			const timeoutId = pendingDeletionsRef.current.get(toastId);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				pendingDeletionsRef.current.delete(toastId);
+			}
+
+			// Invalidate queries immediately to restore view if optimistic update was applied on cache
+			// But here we rely on server revalidation or cache invalidation.
+			// Since we haven't actually deleted yet, just dismissing toast is enough IF we didn't optimistic update locally.
+			// Ideally we should optimistic delete locally.
+			// But since we rely on `entities` from useQuery, we can't easily mutate it optimistically without complex logic.
+			// However, SceneNavigation used `deletedSceneIds` state to hide them. I should do the same.
+			// But I haven't implemented `deletedIds` filtering yet.
+
+			// Let's implement `deletedIds` state for optimistic hiding.
+			toast.dismiss(toastId);
+			toast.success("Deletion undone");
+		},
+		[],
+	);
+
+	// TODO: Add `deletedIds` state for proper optimistic UI if needed.
+	// For now, the toast just delays the API call. The user still sees the entities until the toast finishes.
+	// Wait, that's bad UX. The user expects them to disappear immediately.
+	// I should add `hiddenIds` state.
+
+	const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
+
+	const handleUndo = useCallback(
+		(toastId: string | number, idsToRestore: string[]) => {
+			const timeoutId = pendingDeletionsRef.current.get(toastId);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				pendingDeletionsRef.current.delete(toastId);
+			}
+
+			setHiddenIds((prev) => {
+				const next = new Set(prev);
+				idsToRestore.forEach((id) => next.delete(id));
+				return next;
+			});
+
+			toast.dismiss(toastId);
+			toast.success("Deletion undone");
+		},
+		[],
+	);
+
+	const handleBulkDelete = useCallback(() => {
+		const idsToDelete = Array.from(selectedIds);
+		if (idsToDelete.length === 0 || !projectId) return;
+
+		// Optimistic hide
+		setHiddenIds((prev) => {
+			const next = new Set(prev);
+			idsToDelete.forEach((id) => next.add(id));
+			return next;
+		});
+
+		toggleSelectionMode(); // Exit selection mode
+
+		// Show Undo Toast
+		const toastId = toast.custom(
+			(t) => (
+				<GlassCard
+					variant="liquid"
+					className="flex items-center gap-4 p-4 w-full max-w-md mx-auto pointer-events-auto"
+				>
+					<div className="flex-1 text-sm">
+						Deleted {idsToDelete.length} entities
+					</div>
+					<Button
+						size="sm"
+						variant="outline"
+						className="gap-2 h-8"
+						onClick={() => handleUndo(t, idsToDelete)}
+					>
+						<Undo2 className="h-3.5 w-3.5" />
+						Undo
+					</Button>
+				</GlassCard>
+			),
+			{ duration: 4000 },
+		);
+
+		// Delayed execution
+		const timeout = setTimeout(async () => {
+			pendingDeletionsRef.current.delete(toastId);
+
+			try {
+				const result = await bulkDeleteEntitiesAction({
+					projectId,
+					ids: idsToDelete,
+				});
+
+				if (result.success) {
+					// Invalidate queries to ensure sync
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.entities(projectId),
+					});
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.relationships(projectId),
+					});
+					// Cleanup hiddenIds
+					setHiddenIds((prev) => {
+						const next = new Set(prev);
+						idsToDelete.forEach((id) => next.delete(id));
+						return next;
+					});
+				} else {
+					toast.error("Failed to delete entities");
+					// Restore
+					handleUndo(toastId, idsToDelete);
+				}
+			} catch (error) {
+				toast.error("Error deleting entities");
+				handleUndo(toastId, idsToDelete);
+			}
+		}, 4000);
+
+		pendingDeletionsRef.current.set(toastId, timeout);
+	}, [selectedIds, projectId, toggleSelectionMode, handleUndo, queryClient]);
+
+	const handleBulkExport = useCallback(async () => {
+		const idsToExport = Array.from(selectedIds);
+		if (idsToExport.length === 0) return;
+
+		// Find entities to export
+		const entitiesToExport = entities?.filter((e) => idsToExport.includes(e.id));
+		if (!entitiesToExport) return;
+
+		// Format as JSON or text
+		const exportData = JSON.stringify(entitiesToExport, null, 2);
+
+		try {
+			await navigator.clipboard.writeText(exportData);
+			toast.success(`Copied ${entitiesToExport.length} entities to clipboard`);
+			toggleSelectionMode();
+		} catch (error) {
+			toast.error("Failed to copy to clipboard");
+		}
+	}, [selectedIds, entities, toggleSelectionMode]);
+
+	// Filter out hidden entities
+	const visibleSortedGroups = useMemo(() => {
+		return sortedGroups
+			.map((group) => ({
+				...group,
+				entities: group.entities.filter((e) => !hiddenIds.has(e.id)),
+			}))
+			.filter((group) => group.entities.length > 0);
+	}, [sortedGroups, hiddenIds]);
+
 	if (!projectId) {
 		return (
 			<div className="flex h-full flex-col items-center justify-center p-8 text-center">
@@ -145,8 +345,8 @@ export function BiblePane(): React.JSX.Element {
 	const totalRelationships = relationships?.length ?? 0;
 
 	return (
-		<div className="flex flex-col gap-6 p-4">
-			{/* Header with stats */}
+		<div className="flex flex-col gap-6 p-4 pb-20 relative">
+			{/* Header with stats and actions */}
 			<SectionHeader
 				title="Story Bible"
 				description="Your world's entities and connections"
@@ -165,7 +365,25 @@ export function BiblePane(): React.JSX.Element {
 					) : undefined
 				}
 				action={
-					isLoading && !entities && <LoadingSpinner size="sm" variant="muted" />
+					<div className="flex items-center gap-2">
+						{isLoading && !entities && (
+							<LoadingSpinner size="sm" variant="muted" />
+						)}
+						<Button
+							variant={isSelectionMode ? "secondary" : "ghost"}
+							size="icon"
+							className="h-8 w-8"
+							onClick={toggleSelectionMode}
+							title={isSelectionMode ? "Cancel Selection" : "Select Entities"}
+						>
+							{isSelectionMode ? (
+								<X className="h-4 w-4" />
+							) : (
+								<CheckSquare className="h-4 w-4" />
+							)}
+						</Button>
+						<CreateEntityDialog projectId={projectId} defaultType={typeFilter === 'all' ? undefined : typeFilter} />
+					</div>
 				}
 			/>
 
@@ -187,14 +405,17 @@ export function BiblePane(): React.JSX.Element {
 			)}
 
 			{/* Entity groups */}
-			{sortedGroups.length > 0 ? (
+			{visibleSortedGroups.length > 0 ? (
 				<div className="space-y-6">
-					{sortedGroups.map((group) => (
+					{visibleSortedGroups.map((group) => (
 						<EntityGroupSection
 							key={group.type}
 							group={group}
 							relationshipCounts={relationshipCounts}
 							viewMode={viewMode}
+							isSelectionMode={isSelectionMode}
+							selectedIds={selectedIds}
+							onToggleSelect={toggleEntitySelect}
 						/>
 					))}
 				</div>
@@ -222,10 +443,29 @@ export function BiblePane(): React.JSX.Element {
 							: ['"Create a protagonist"', '"Add a mysterious forest"']
 					}
 					action={
-						isLoading ? <LoadingSpinner size="md" variant="muted" /> : undefined
+						isLoading ? (
+							<LoadingSpinner size="md" variant="muted" />
+						) : (
+							<CreateEntityDialog
+								projectId={projectId}
+								trigger={
+									<Button>
+										<SparklesIcon className="mr-2 h-4 w-4" />
+										Start Creating
+									</Button>
+								}
+							/>
+						)
 					}
 				/>
 			)}
+
+			<BulkActionsBar
+				selectedCount={selectedIds.size}
+				onDelete={handleBulkDelete}
+				onExport={handleBulkExport}
+				onClearSelection={toggleSelectionMode}
+			/>
 		</div>
 	);
 }

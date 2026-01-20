@@ -8,11 +8,27 @@ import { BiblePane } from "@/components/organisms/book-canvas/panes/bible-pane";
 // Mock dependencies
 vi.mock("@tanstack/react-query", () => ({
 	useQuery: vi.fn(),
+	useQueryClient: vi.fn().mockReturnValue({ invalidateQueries: vi.fn() }),
 }));
 
-vi.mock("@/app/actions/entities", () => ({
-	getEntities: vi.fn(),
-}));
+const zMock = vi.hoisted(async () => {
+    const zod = await import("zod");
+    return zod;
+});
+
+vi.mock("@/app/actions/entities", async () => {
+    const { z } = await zMock;
+    return {
+        getEntities: vi.fn(),
+        bulkDeleteEntitiesAction: vi.fn(),
+        createEntityAction: vi.fn(),
+        createEntitySchema: z.object({
+            name: z.string(),
+            kind: z.string(),
+            summary: z.string().optional(),
+        }),
+    }
+});
 
 vi.mock("@/app/actions/project-stats", () => ({
 	getRelationships: vi.fn(),
