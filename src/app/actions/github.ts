@@ -213,7 +213,7 @@ const getIssueDetailsAction = createAdminAction({
 });
 
 export async function getIssueDetails(
-	input?: z.infer<typeof issueNumberSchema>,
+	input: z.infer<typeof issueNumberSchema>,
 ): ReturnType<typeof getIssueDetailsAction> {
 	return getIssueDetailsAction(input);
 }
@@ -236,7 +236,7 @@ const getPullRequestDetailsAction = createAdminAction({
 });
 
 export async function getPullRequestDetails(
-	input?: z.infer<typeof issueNumberSchema>,
+	input: z.infer<typeof issueNumberSchema>,
 ): ReturnType<typeof getPullRequestDetailsAction> {
 	return getPullRequestDetailsAction(input);
 }
@@ -259,7 +259,7 @@ const getCommentsAction = createAdminAction({
 });
 
 export async function getComments(
-	input?: z.infer<typeof issueNumberSchema>,
+	input: z.infer<typeof issueNumberSchema>,
 ): ReturnType<typeof getCommentsAction> {
 	return getCommentsAction(input);
 }
@@ -283,7 +283,7 @@ const postCommentAction = createAdminAction({
 });
 
 export async function postComment(
-	input?: z.infer<typeof postCommentSchema>,
+	input: z.infer<typeof postCommentSchema>,
 ): ReturnType<typeof postCommentAction> {
 	return postCommentAction(input);
 }
@@ -306,7 +306,7 @@ const closeIssueOrPRAction = createAdminAction({
 });
 
 export async function closeIssueOrPR(
-	input?: z.infer<typeof issueNumberSchema>,
+	input: z.infer<typeof issueNumberSchema>,
 ): ReturnType<typeof closeIssueOrPRAction> {
 	return closeIssueOrPRAction(input);
 }
@@ -329,9 +329,12 @@ const mergePullRequestAction = createAdminAction({
 });
 
 export async function mergePullRequest(
-	input?: z.infer<typeof mergePRSchema>,
+	input: z.input<typeof mergePRSchema>,
 ): ReturnType<typeof mergePullRequestAction> {
-	return mergePullRequestAction(input);
+	// Cast to any because createAdminAction expects z.infer (required method)
+	// but schema default handles it at runtime.
+	// biome-ignore lint/suspicious/noExplicitAny: Schema default handles missing fields at runtime
+	return mergePullRequestAction(input as any);
 }
 
 /**
@@ -384,7 +387,7 @@ const executeFeaturePlanActionInternal = createAdminAction({
 });
 
 export async function executeFeaturePlanAction(
-	input?: z.infer<typeof executeFeaturePlanSchema>,
+	input: z.infer<typeof executeFeaturePlanSchema>,
 ): ReturnType<typeof executeFeaturePlanActionInternal> {
 	return executeFeaturePlanActionInternal(input);
 }
@@ -441,7 +444,7 @@ const listGitHubBranchesActionInternal = createAdminAction({
 });
 
 export async function listGitHubBranchesAction(
-	input?: z.infer<typeof repoBranchSchema>,
+	input: z.infer<typeof repoBranchSchema>,
 ): ReturnType<typeof listGitHubBranchesActionInternal> {
 	return listGitHubBranchesActionInternal(input);
 }
@@ -461,8 +464,16 @@ const getGitHubPullRequestByBranchActionInternal = createAdminAction({
 			base: input.base,
 			per_page: 1,
 		});
-		const pr = data[0];
-		if (!pr) return null;
+		const prSummary = data[0];
+		if (!prSummary) return null;
+
+		// Fetch full details to get mergeable status
+		const { data: pr } = await octokit.rest.pulls.get({
+			owner,
+			repo,
+			pull_number: prSummary.number,
+		});
+
 		return {
 			id: pr.id,
 			number: pr.number,
@@ -482,7 +493,7 @@ const getGitHubPullRequestByBranchActionInternal = createAdminAction({
 });
 
 export async function getGitHubPullRequestByBranchAction(
-	input?: z.infer<typeof pullRequestByBranchSchema>,
+	input: z.infer<typeof pullRequestByBranchSchema>,
 ): ReturnType<typeof getGitHubPullRequestByBranchActionInternal> {
 	return getGitHubPullRequestByBranchActionInternal(input);
 }
@@ -506,12 +517,33 @@ const getGitHubPullRequestStatusActionInternal = createAdminAction({
 			ref: pr.head.sha,
 		});
 
-		const mappedChecks: GitHubCheckStatus[] = checks.check_runs.map((run) => ({
-			name: run.name,
-			status: run.status,
-			conclusion: run.conclusion,
-			detailsUrl: run.html_url,
-		}));
+		const mappedChecks: GitHubCheckStatus[] = checks.check_runs.map((run) => {
+			let status: GitHubCheckStatus["status"] = "queued";
+			if (run.status === "completed") status = "completed";
+			else if (run.status === "in_progress") status = "in_progress";
+
+			let conclusion: GitHubCheckStatus["conclusion"] = null;
+			switch (run.conclusion) {
+				case "success":
+				case "failure":
+				case "neutral":
+				case "cancelled":
+				case "skipped":
+					conclusion = run.conclusion;
+					break;
+				case "timed_out":
+				case "action_required":
+					conclusion = "failure";
+					break;
+			}
+
+			return {
+				name: run.name,
+				status,
+				conclusion,
+				detailsUrl: run.html_url ?? undefined,
+			};
+		});
 
 		const hasFailure = mappedChecks.some(
 			(check) => check.conclusion && check.conclusion !== "success",
@@ -540,7 +572,7 @@ const getGitHubPullRequestStatusActionInternal = createAdminAction({
 });
 
 export async function getGitHubPullRequestStatusAction(
-	input?: z.infer<typeof pullRequestStatusSchema>,
+	input: z.infer<typeof pullRequestStatusSchema>,
 ): ReturnType<typeof getGitHubPullRequestStatusActionInternal> {
 	return getGitHubPullRequestStatusActionInternal(input);
 }
@@ -563,7 +595,7 @@ const mergeGitHubPullRequestActionInternal = createAdminAction({
 });
 
 export async function mergeGitHubPullRequestAction(
-	input?: z.infer<typeof pullRequestStatusSchema>,
+	input: z.infer<typeof pullRequestStatusSchema>,
 ): ReturnType<typeof mergeGitHubPullRequestActionInternal> {
 	return mergeGitHubPullRequestActionInternal(input);
 }
