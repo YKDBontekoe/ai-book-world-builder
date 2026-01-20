@@ -1,6 +1,6 @@
 import "server-only";
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { type DbTransaction } from "@/lib/db";
+import type { DbTransaction } from "@/lib/db";
 import { scene } from "@/lib/db/schema";
 
 /**

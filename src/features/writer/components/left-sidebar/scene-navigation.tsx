@@ -10,6 +10,7 @@ import {
 	Loader2,
 	Plus,
 	Search,
+	SearchX,
 	Trash2,
 	Undo2,
 	X,
@@ -32,6 +33,7 @@ import {
 	generateScene,
 	updateSceneTitle,
 } from "@/features/writer/actions";
+import { SceneNavigationSkeleton } from "@/features/writer/components/left-sidebar/scene-navigation-skeleton";
 import { SidebarChapter } from "@/features/writer/components/left-sidebar/sidebar-chapter";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -433,11 +435,7 @@ export const SceneNavigation = memo(function SceneNavigation({
 	);
 
 	if (loading) {
-		return (
-			<div className="flex items-center justify-center p-8">
-				<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-			</div>
-		);
+		return <SceneNavigationSkeleton />;
 	}
 
 	if (!structure) {
@@ -537,8 +535,27 @@ export const SceneNavigation = memo(function SceneNavigation({
 			</div>
 			<ScrollArea className="flex-1">
 				{displayStructure.length === 0 && searchTerm ? (
-					<div className="p-4 text-center text-sm text-muted-foreground">
-						No chapters or scenes found matching "{searchTerm}"
+					<div className="flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in-95 duration-200">
+						<div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted/20 mb-3">
+							<SearchX className="h-6 w-6 text-muted-foreground/50" />
+						</div>
+						<p className="text-sm font-medium text-foreground">
+							No matches found
+						</p>
+						<p className="text-xs text-muted-foreground mt-1 max-w-[180px]">
+							No chapters or scenes match "{searchTerm}"
+						</p>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="mt-4 h-7 text-xs"
+							onClick={() => {
+								setSearchTerm("");
+								debouncedSearch("");
+							}}
+						>
+							Clear Search
+						</Button>
 					</div>
 				) : (
 					<Accordion
