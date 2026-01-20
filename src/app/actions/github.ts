@@ -126,7 +126,7 @@ const executeFeaturePlanSchema = z.object({
 /**
  * Get repository statistics
  */
-export const getRepoStats = createAdminAction({
+const getRepoStatsAction = createAdminAction({
 	handler: async () => {
 		const octokit = getOctokit();
 		const { owner, repo } = getRepoDetails();
@@ -139,10 +139,14 @@ export const getRepoStats = createAdminAction({
 	},
 });
 
+export async function getRepoStats(): ReturnType<typeof getRepoStatsAction> {
+	return getRepoStatsAction();
+}
+
 /**
  * Get issues for the repository
  */
-export const getIssues = createAdminAction({
+const getIssuesAction = createAdminAction({
 	input: issueStateSchema,
 	handler: async ({ input: state }) => {
 		const octokit = getOctokit();
@@ -159,10 +163,16 @@ export const getIssues = createAdminAction({
 	},
 });
 
+export async function getIssues(
+	input?: z.infer<typeof issueStateSchema>,
+): ReturnType<typeof getIssuesAction> {
+	return getIssuesAction(input);
+}
+
 /**
  * Get pull requests for the repository
  */
-export const getPullRequests = createAdminAction({
+const getPullRequestsAction = createAdminAction({
 	input: issueStateSchema,
 	handler: async ({ input: state }) => {
 		const octokit = getOctokit();
@@ -179,10 +189,16 @@ export const getPullRequests = createAdminAction({
 	},
 });
 
+export async function getPullRequests(
+	input?: z.infer<typeof issueStateSchema>,
+): ReturnType<typeof getPullRequestsAction> {
+	return getPullRequestsAction(input);
+}
+
 /**
  * Get details for a specific issue
  */
-export const getIssueDetails = createAdminAction({
+const getIssueDetailsAction = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
 		const octokit = getOctokit();
@@ -196,10 +212,16 @@ export const getIssueDetails = createAdminAction({
 	},
 });
 
+export async function getIssueDetails(
+	input?: z.infer<typeof issueNumberSchema>,
+): ReturnType<typeof getIssueDetailsAction> {
+	return getIssueDetailsAction(input);
+}
+
 /**
  * Get details for a specific pull request
  */
-export const getPullRequestDetails = createAdminAction({
+const getPullRequestDetailsAction = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
 		const octokit = getOctokit();
@@ -213,10 +235,16 @@ export const getPullRequestDetails = createAdminAction({
 	},
 });
 
+export async function getPullRequestDetails(
+	input?: z.infer<typeof issueNumberSchema>,
+): ReturnType<typeof getPullRequestDetailsAction> {
+	return getPullRequestDetailsAction(input);
+}
+
 /**
  * Get comments for an issue or pull request
  */
-export const getComments = createAdminAction({
+const getCommentsAction = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
 		const octokit = getOctokit();
@@ -230,10 +258,16 @@ export const getComments = createAdminAction({
 	},
 });
 
+export async function getComments(
+	input?: z.infer<typeof issueNumberSchema>,
+): ReturnType<typeof getCommentsAction> {
+	return getCommentsAction(input);
+}
+
 /**
  * Post a comment on an issue or pull request
  */
-export const postComment = createAdminAction({
+const postCommentAction = createAdminAction({
 	input: postCommentSchema,
 	handler: async ({ input: { number, body } }) => {
 		const octokit = getOctokit();
@@ -248,10 +282,16 @@ export const postComment = createAdminAction({
 	},
 });
 
+export async function postComment(
+	input?: z.infer<typeof postCommentSchema>,
+): ReturnType<typeof postCommentAction> {
+	return postCommentAction(input);
+}
+
 /**
  * Close an issue or pull request
  */
-export const closeIssueOrPR = createAdminAction({
+const closeIssueOrPRAction = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
 		const octokit = getOctokit();
@@ -265,10 +305,16 @@ export const closeIssueOrPR = createAdminAction({
 	},
 });
 
+export async function closeIssueOrPR(
+	input?: z.infer<typeof issueNumberSchema>,
+): ReturnType<typeof closeIssueOrPRAction> {
+	return closeIssueOrPRAction(input);
+}
+
 /**
  * Merge a pull request
  */
-export const mergePullRequest = createAdminAction({
+const mergePullRequestAction = createAdminAction({
 	input: mergePRSchema,
 	handler: async ({ input: { number, method } }) => {
 		const octokit = getOctokit();
@@ -282,10 +328,16 @@ export const mergePullRequest = createAdminAction({
 	},
 });
 
+export async function mergePullRequest(
+	input?: z.infer<typeof mergePRSchema>,
+): ReturnType<typeof mergePullRequestAction> {
+	return mergePullRequestAction(input);
+}
+
 /**
  * Executes a feature plan by creating a parent issue and child task issues.
  */
-export const executeFeaturePlanAction = createAdminAction({
+const executeFeaturePlanActionInternal = createAdminAction({
 	input: executeFeaturePlanSchema,
 	handler: async ({ input }) => {
 		const octokit = getOctokit();
@@ -331,7 +383,13 @@ export const executeFeaturePlanAction = createAdminAction({
 	},
 });
 
-export const listGitHubRepositoriesAction = createAdminAction({
+export async function executeFeaturePlanAction(
+	input?: z.infer<typeof executeFeaturePlanSchema>,
+): ReturnType<typeof executeFeaturePlanActionInternal> {
+	return executeFeaturePlanActionInternal(input);
+}
+
+const listGitHubRepositoriesActionInternal = createAdminAction({
 	handler: async (): Promise<GitHubRepository[]> => {
 		const octokit = getOctokit();
 		const { data } = await octokit.rest.repos.listForAuthenticatedUser({
@@ -356,7 +414,13 @@ export const listGitHubRepositoriesAction = createAdminAction({
 	},
 });
 
-export const listGitHubBranchesAction = createAdminAction({
+export async function listGitHubRepositoriesAction(): ReturnType<
+	typeof listGitHubRepositoriesActionInternal
+> {
+	return listGitHubRepositoriesActionInternal();
+}
+
+const listGitHubBranchesActionInternal = createAdminAction({
 	input: repoBranchSchema,
 	handler: async ({ input }): Promise<GitHubBranch[]> => {
 		const octokit = getOctokit();
@@ -376,7 +440,13 @@ export const listGitHubBranchesAction = createAdminAction({
 	},
 });
 
-export const getGitHubPullRequestByBranchAction = createAdminAction({
+export async function listGitHubBranchesAction(
+	input?: z.infer<typeof repoBranchSchema>,
+): ReturnType<typeof listGitHubBranchesActionInternal> {
+	return listGitHubBranchesActionInternal(input);
+}
+
+const getGitHubPullRequestByBranchActionInternal = createAdminAction({
 	input: pullRequestByBranchSchema,
 	handler: async ({ input }): Promise<GitHubPullRequestSummary | null> => {
 		const octokit = getOctokit();
@@ -411,7 +481,13 @@ export const getGitHubPullRequestByBranchAction = createAdminAction({
 	},
 });
 
-export const getGitHubPullRequestStatusAction = createAdminAction({
+export async function getGitHubPullRequestByBranchAction(
+	input?: z.infer<typeof pullRequestByBranchSchema>,
+): ReturnType<typeof getGitHubPullRequestByBranchActionInternal> {
+	return getGitHubPullRequestByBranchActionInternal(input);
+}
+
+const getGitHubPullRequestStatusActionInternal = createAdminAction({
 	input: pullRequestStatusSchema,
 	handler: async ({ input }): Promise<GitHubPullRequestStatus> => {
 		const octokit = getOctokit();
@@ -463,7 +539,13 @@ export const getGitHubPullRequestStatusAction = createAdminAction({
 	},
 });
 
-export const mergeGitHubPullRequestAction = createAdminAction({
+export async function getGitHubPullRequestStatusAction(
+	input?: z.infer<typeof pullRequestStatusSchema>,
+): ReturnType<typeof getGitHubPullRequestStatusActionInternal> {
+	return getGitHubPullRequestStatusActionInternal(input);
+}
+
+const mergeGitHubPullRequestActionInternal = createAdminAction({
 	input: pullRequestStatusSchema,
 	handler: async ({ input }): Promise<void> => {
 		const octokit = getOctokit();
@@ -479,3 +561,9 @@ export const mergeGitHubPullRequestAction = createAdminAction({
 		});
 	},
 });
+
+export async function mergeGitHubPullRequestAction(
+	input?: z.infer<typeof pullRequestStatusSchema>,
+): ReturnType<typeof mergeGitHubPullRequestActionInternal> {
+	return mergeGitHubPullRequestActionInternal(input);
+}
