@@ -11,6 +11,7 @@ export const bookPlanSchema = z.object({
 				summary: z.string().describe("What happens in this chapter"),
 			}),
 		)
+		.max(100, "Too many chapters")
 		.describe("The list of chapters for the book"),
 });
 
@@ -23,12 +24,14 @@ export interface StoryStyle {
 }
 
 export const scenePlanSchema = z.object({
-	scenes: z.array(
-		z.object({
-			title: z.string(),
-			beat: z.string().describe("What happens in this scene"),
-		}),
-	),
+	scenes: z
+		.array(
+			z.object({
+				title: z.string(),
+				beat: z.string().describe("What happens in this scene"),
+			}),
+		)
+		.max(50, "Too many scenes"),
 });
 
 export type ScenePlan = z.infer<typeof scenePlanSchema>;
