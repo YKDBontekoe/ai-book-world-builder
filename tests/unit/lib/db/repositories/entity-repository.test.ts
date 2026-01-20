@@ -70,6 +70,7 @@ vi.mock("drizzle-orm", () => ({
 	desc: vi.fn(),
 	eq: vi.fn(),
 	or: vi.fn(),
+	inArray: vi.fn(),
 	count: vi.fn(() => ({ name: "count" })),
 }));
 
@@ -168,6 +169,7 @@ describe("EntityRepository", () => {
 		});
 
 		it("should map attributes and relationships to entities", async () => {
+			const { inArray } = await import("drizzle-orm");
 			const entities = [
 				{ id: "e1", name: "E1" },
 				{ id: "e2", name: "E2" },
@@ -203,6 +205,12 @@ describe("EntityRepository", () => {
 			expect(e2?.attributes).toHaveLength(1);
 			expect(e2?.attributes[0].id).toBe("a2");
 			expect(e2?.relationships).toHaveLength(1); // Involved in r1
+
+			// Optimization verification: should use inArray with entity IDs
+			expect(inArray).toHaveBeenCalledWith(
+				expect.anything(),
+				expect.arrayContaining(["e1", "e2"]),
+			);
 		});
 
 		it("should throw DatabaseError on failure", async () => {

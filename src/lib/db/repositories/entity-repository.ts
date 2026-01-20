@@ -158,7 +158,12 @@ export class EntityRepository extends BaseRepository<
 				db
 					.select()
 					.from(entityAttribute)
-					.where(eq(entityAttribute.projectId, projectId)),
+					.where(
+						inArray(
+							entityAttribute.entityId,
+							entities.map((e) => e.id),
+						),
+					),
 				db
 					.select()
 					.from(relationship)
