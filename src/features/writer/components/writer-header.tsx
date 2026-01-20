@@ -97,7 +97,13 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 						) : lastSaved ? (
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<CheckCircle2 className="h-3 w-3 text-muted-foreground/30 transition-colors hover:text-green-500/50" />
+									<button
+										type="button"
+										className="flex items-center justify-center h-3 w-3 text-muted-foreground/30 hover:text-green-500/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500/50 rounded-full"
+										aria-label={`Saved at ${lastSaved.toLocaleTimeString()}`}
+									>
+										<CheckCircle2 className="h-3 w-3" />
+									</button>
 								</TooltipTrigger>
 								<TooltipContent side="bottom" className="text-xs">
 									Saved {lastSaved.toLocaleTimeString()}

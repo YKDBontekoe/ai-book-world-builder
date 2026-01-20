@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { cn } from "@/lib/utils";
@@ -19,11 +19,28 @@ export function PowerDockResult({
 	onCopy,
 }: PowerDockResultProps): JSX.Element {
 	const [copied, setCopied] = useState(false);
+	const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	useEffect(() => {
+		return () => {
+			if (timeoutRef.current) {
+				clearTimeout(timeoutRef.current);
+			}
+		};
+	}, []);
 
 	const handleCopy = () => {
 		onCopy();
 		setCopied(true);
-		setTimeout(() => setCopied(false), 2000);
+
+		if (timeoutRef.current) {
+			clearTimeout(timeoutRef.current);
+		}
+
+		timeoutRef.current = setTimeout(() => {
+			setCopied(false);
+			timeoutRef.current = null;
+		}, 2000);
 	};
 
 	return (

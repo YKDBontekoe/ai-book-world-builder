@@ -1,6 +1,7 @@
 "use client";
 
 import { History, Loader2, Sparkles } from "lucide-react";
+import type React from "react";
 import { Button } from "@/components/atoms/button";
 import {
 	Popover,
@@ -37,7 +38,7 @@ function SnapshotButton({ onClick, isSnapshotting }: SnapshotButtonProps) {
 	);
 }
 
-export function WriterToolsMenu() {
+export function WriterToolsMenu(): React.ReactElement {
 	const { handleSnapshot, isSnapshotting } = useWriterContent();
 
 	return (

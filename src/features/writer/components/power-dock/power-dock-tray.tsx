@@ -30,7 +30,7 @@ export function PowerDockTray({
 								delay: index * 0.03,
 								type: "spring",
 								stiffness: 400,
-								damping: 20,
+								damping: 25,
 							}}
 						>
 							<ControlButton
