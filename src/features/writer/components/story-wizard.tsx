@@ -46,9 +46,18 @@ import type {
 	StoryStyle,
 } from "@/lib/services/schemas/story-schemas";
 
+export interface StoryTemplate {
+	label: string;
+	description: string;
+	prompt: string;
+	style: StoryStyle;
+	icon: React.ElementType;
+}
+
 interface StoryWizardProps {
 	projectId: string;
 	onComplete: () => void;
+	templates?: StoryTemplate[];
 }
 
 const DEFAULT_STYLE: StoryStyle = {
@@ -57,7 +66,7 @@ const DEFAULT_STYLE: StoryStyle = {
 	tone: "Neutral",
 };
 
-const STORY_TEMPLATES = [
+export const STORY_TEMPLATES: StoryTemplate[] = [
 	{
 		label: "The Hero's Journey",
 		description: "A classic adventure where an unlikely hero saves the world.",
@@ -99,6 +108,7 @@ const STORY_TEMPLATES = [
 export function StoryWizard({
 	projectId,
 	onComplete,
+	templates = STORY_TEMPLATES,
 }: StoryWizardProps): React.JSX.Element {
 	const [step, setStep] = useState<
 		"input" | "generating" | "review" | "creating"
@@ -148,7 +158,7 @@ export function StoryWizard({
 		}
 	};
 
-	const applyTemplate = (template: (typeof STORY_TEMPLATES)[0]) => {
+	const applyTemplate = (template: StoryTemplate) => {
 		setPrompt(template.prompt);
 		setStyle(template.style);
 		toast.success(`Applied "${template.label}" template`);
@@ -213,7 +223,7 @@ export function StoryWizard({
 
 						{/* Templates Grid */}
 						<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-							{STORY_TEMPLATES.map((template) => (
+							{templates.map((template) => (
 								<button
 									key={template.label}
 									type="button"
