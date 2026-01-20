@@ -129,6 +129,11 @@ The analysis features are broken down into specialized micro-services under `src
 -   `entity-detector.ts`: Identifies *existing* entities mentioned in a scene to update the "Context" pane.
 -   `style-analytics.ts`: Computes metrics like reading ease and tone.
 
+**AI Operations (`app/actions/ai-operations.ts`)**:
+This file acts as the primary gateway for the frontend to access AI features. It wraps the service layer calls with error handling and response formatting.
+-   **Purpose**: Expose capabilities like "Lore Generation", "Chapter Critique", and "Search" to Client Components.
+-   **Error Handling**: Most actions return a unified `{ success: boolean, error?: string, data?: any }` structure. Raw errors are logged to the server console but masked from the user with friendly messages.
+
 ### 8. Generation Architecture
 The generation pipeline is a complex state machine managed by the `GenerationOrchestrator`. It supports long-running, multi-step processes (Outline -> Chapter -> Review -> Epilogue) that persist state to the database.
 
@@ -188,6 +193,12 @@ The `ProjectDuplicationService` implements a "Deep Clone" operation to duplicate
 The Sprint, Goals, and Insights widgets (`features/writer/components/tools/`) are purely client-side React components.
 -   **Persistence**: They use `localStorage` (via `useLocalStorage`) to persist goals and session stats across reloads.
 -   **Real-time Metrics**: They consume `WriterContext` to calculate word counts and pacing scores on the fly, without needing backend polls.
+
+**Smart Defaults (User Preferences)**:
+We use a lightweight "Smart Defaults" pattern to improve UX by persisting user choices.
+-   **Implementation**: `useLocalStorage` hook (from `usehooks-ts`).
+-   **Example**: `CreateProjectDialog` remembers `visibility` and `templateId`.
+-   **Hydration**: Components using this must handle hydration mismatches (e.g., by waiting for `mounted` state) or use client-only rendering for the dependent parts.
 
 ### 13. Structured Context (Context Builder)
 To enable the AI to write coherently over long contexts without a Vector DB, we use a **Structured Context** strategy defined in `lib/services/story/story-context-builder.ts`:

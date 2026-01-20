@@ -12,7 +12,11 @@ export async function batchWriteChapterAction(
 	try {
 		return await writingService.batchWriteChapter(chapterId, instructions);
 	} catch (error) {
-		return { success: false, error: (error as Error).message };
+		console.error("[AI Operations] Batch Write Error:", error);
+		return {
+			success: false,
+			error: "Failed to generate scenes. Please try again later.",
+		};
 	}
 }
 
@@ -23,7 +27,8 @@ export async function rewriteSceneAction(
 	try {
 		return await writingService.rewriteScene(sceneId, instructions);
 	} catch (error) {
-		return { error: (error as Error).message };
+		console.error("[AI Operations] Rewrite Error:", error);
+		return { error: "Failed to rewrite scene. Please try again." };
 	}
 }
 
@@ -31,7 +36,8 @@ export async function expandSceneAction(sceneId: string, notes: string) {
 	try {
 		return await writingService.expandScene(sceneId, notes);
 	} catch (error) {
-		return { error: (error as Error).message };
+		console.error("[AI Operations] Expand Error:", error);
+		return { error: "Failed to expand scene. Please try again." };
 	}
 }
 
@@ -40,7 +46,11 @@ export async function critiqueChapterAction(chapterId: string) {
 		const result = await analysisService.critiqueChapter(chapterId);
 		return { success: true, data: result };
 	} catch (error) {
-		return { success: false, error: (error as Error).message };
+		console.error("[AI Operations] Critique Error:", error);
+		return {
+			success: false,
+			error: "Failed to analyze chapter. Please try again.",
+		};
 	}
 }
 
@@ -49,7 +59,11 @@ export async function analyzeConsistencyAction(chapterId: string) {
 		const result = await analysisService.analyzeConsistency(chapterId);
 		return { success: true, data: result };
 	} catch (error) {
-		return { success: false, error: (error as Error).message };
+		console.error("[AI Operations] Consistency Error:", error);
+		return {
+			success: false,
+			error: "Failed to check consistency. Please try again.",
+		};
 	}
 }
 
@@ -61,7 +75,11 @@ export async function dialogueCoachAction(
 		const result = await analysisService.dialogueCoach(sceneId, focus);
 		return { success: true, report: formatDialogueReport(result) };
 	} catch (error) {
-		return { success: false, error: (error as Error).message };
+		console.error("[AI Operations] Dialogue Coach Error:", error);
+		return {
+			success: false,
+			error: "Failed to analyze dialogue. Please try again.",
+		};
 	}
 }
 
@@ -74,7 +92,11 @@ export async function generateLoreAction(
 		const entity = await loreService.generateLore(projectId, prompt, category);
 		return { success: true, entity };
 	} catch (error) {
-		return { success: false, error: (error as Error).message };
+		console.error("[AI Operations] Lore Generation Error:", error);
+		return {
+			success: false,
+			error: "Failed to generate lore. Please try again.",
+		};
 	}
 }
 
@@ -83,7 +105,8 @@ export async function searchProjectAction(projectId: string, query: string) {
 		const answer = await loreService.searchProject(projectId, query);
 		return { success: true, answer };
 	} catch (error) {
-		return { success: false, error: (error as Error).message };
+		console.error("[AI Operations] Search Error:", error);
+		return { success: false, error: "Failed to search project." };
 	}
 }
 
@@ -95,7 +118,11 @@ export async function askManuscriptAction(
 		const result = await manuscriptService.askManuscript(projectId, question);
 		return { success: true, response: formatManuscriptAnswer(result) };
 	} catch (error) {
-		return { success: false, error: (error as Error).message };
+		console.error("[AI Operations] Ask Manuscript Error:", error);
+		return {
+			success: false,
+			error: "Failed to get answer from manuscript.",
+		};
 	}
 }
 
