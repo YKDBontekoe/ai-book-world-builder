@@ -24,6 +24,8 @@ The **Story Wizard** is the fastest way to turn an idea into a complete outline.
     *   **Chapters**: Add, delete, or reorder chapters. Edit summaries to refine the plot before generation.
 6.  **Create Story**: Once satisfied, click "Create Story". The system will generate empty scenes and structure in the database, ready for writing.
 
+> **Note**: The Story Wizard creates your *Outline* and empty scenes. It does **not** write the prose immediately. You will use the **Batch Write** tool in the Writer View to generate the actual content scene-by-scene.
+
 ### Understanding Story Settings
 
 When configuring your story or generation, you'll encounter these key settings:
@@ -121,25 +123,32 @@ The **Power Dock** is your context-aware toolbar located at the bottom of the ed
 -   **Batch Write**: Generate content for multiple selected scenes automatically.
 -   **Rewrite**: Select text to have the AI rephrase it with a specific instruction (e.g., "Show, don't tell").
 -   **Expand**: Select a short paragraph or sentence and have the AI flesh it out with more detail.
--   **Critique**: Get feedback on the current scene's pacing, dialogue, and tone.
--   **Check**: Analyze the chapter for plot holes, character inconsistencies, and setting errors.
--   **Dialogue Coach**: Analyze how distinct each character’s voice sounds and get targeted rewrite suggestions.
--   **Lore**: Generate new lore entities (characters, locations) based on a prompt.
+-   **Lore**: Use the **Magic Fill** capability to generate new entities (characters, locations) based on a simple prompt.
 -   **Ask Manuscript**: Ask questions about plot threads, character arcs, and unresolved clues with cited sources.
 -   **Export**: Download the current scene as a Markdown file to your computer.
 
-### 3. Write & Generate
+### 3. Refining Your Story
+Ensure your draft is polished and consistent using the analysis tools in the Power Dock.
+
+*   **Critique**: Get an AI editor's perspective on your scene.
+    *   *Usage*: Click **Critique** to analyze pacing, dialogue balance, and tonal consistency.
+*   **Check (Consistency)**: Find plot holes before they become a problem.
+    *   *Usage*: Click **Check** to scan the current chapter for contradictions with your Bible (e.g., "John was in London in Scene 1 but is now in Paris without travel").
+*   **Dialogue Coach**: Perfect your character voices.
+    *   *Usage*: Click **Dialogue Coach** to receive a report on how distinct each character sounds, with specific rewrite suggestions to match their defined personality.
+
+### 4. Write & Generate
 Once you have a structure, you can start writing.
 
 -   **Generate Scenes (AI)**: Click the **Sparkles** icon next to a Chapter in the sidebar. The AI will draft content for all pending scenes in that chapter.
 -   **Inline Co-Author**: Highlight a passage and choose **Co-Author** to generate three alternative rewrites you can apply with one click.
 -   **Project-Aware Chat**: Open the **Floating Assistant** to ask the AI questions about your world, brainstorm ideas, or draft new scenes with specific instructions.
 
-### 4. Smart Defaults
+### 5. Smart Defaults
 The system is designed to learn from your preferences to speed up your workflow.
 -   **Project Creation**: When you create a new project, the system remembers your last used **Visibility** (Public/Private) and **Template** settings, so you don't have to re-select them every time.
 
-### 5. Analyze & Refine
+### 6. Analyze & Refine
 Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. The canvas is a powerful tool for visualizing your story's structure and content.
 
 -   **Bible**: The central repository for all your world-building information.
@@ -151,7 +160,7 @@ Use the **World Canvas** (Right Panel) to gain insights and ensure consistency. 
 -   **Context**: Shows exactly what information the AI "sees" when generating a scene.
 -   **Diagnostics**: Runs health checks on your story.
 
-### 5. Productivity Tools
+### 7. Productivity Tools
 Stay focused and track your progress with built-in productivity widgets located in the editor header (or "More" menu on smaller screens).
 
 *   **Sprint Timer (Zap Icon)**:
