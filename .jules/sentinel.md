@@ -18,3 +18,8 @@
 **Vulnerability:** Project statistics and content actions accepted a `projectId` without verifying if the authenticated user had access to that project, allowing unauthorized access to private project metadata.
 **Learning:** Authentication middleware only asserts "who you are", not "what you can access". Every Server Action accepting a resource ID must perform an explicit authorization check.
 **Prevention:** Use a helper like `ensureProjectAccess` that combines resource fetching with ownership/visibility checks at the start of every action.
+
+## 2025-02-23 - [Chapter Operations IDOR]
+**Vulnerability:** Chapter update, delete, and reorder operations were vulnerable to IDOR because they did not verify that the target chapter ID belonged to the authenticated project ID in the database query.
+**Learning:** Validating ownership of the *parent* resource (Project) is insufficient if the *child* resource (Chapter) operation does not also scope the query to that parent.
+**Prevention:** Always include the parent ID (e.g., `projectId`) in the `WHERE` clause of UPDATE/DELETE operations for child resources to enforce ownership boundaries at the database level.

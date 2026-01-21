@@ -35,7 +35,12 @@ export const reorderChaptersAction = async (
 					await tx
 						.update(chapter)
 						.set({ sequence: -update.sequence })
-						.where(eq(chapter.id, update.id));
+						.where(
+							and(
+								eq(chapter.id, update.id),
+								eq(chapter.projectId, input.projectId),
+							),
+						);
 				}
 
 				// 2. Set to the new positive sequences
@@ -43,7 +48,12 @@ export const reorderChaptersAction = async (
 					await tx
 						.update(chapter)
 						.set({ sequence: update.sequence })
-						.where(eq(chapter.id, update.id));
+						.where(
+							and(
+								eq(chapter.id, update.id),
+								eq(chapter.projectId, input.projectId),
+							),
+						);
 				}
 			});
 
@@ -77,7 +87,12 @@ export const updateChapterAction = async (
 					...input.data,
 					updatedAt: new Date(),
 				})
-				.where(eq(chapter.id, input.chapterId));
+				.where(
+					and(
+						eq(chapter.id, input.chapterId),
+						eq(chapter.projectId, input.projectId),
+					),
+				);
 
 			revalidatePath(`/projects/${input.projectId}`);
 			return { success: true };
@@ -185,7 +200,14 @@ export const deleteChapterAction = async (
 				if (!target) return; // Already deleted
 
 				// 2. Delete the chapter
-				await tx.delete(chapter).where(eq(chapter.id, input.chapterId));
+				await tx
+					.delete(chapter)
+					.where(
+						and(
+							eq(chapter.id, input.chapterId),
+							eq(chapter.projectId, input.projectId),
+						),
+					);
 
 				// 3. Shift subsequent chapters down
 				await tx
