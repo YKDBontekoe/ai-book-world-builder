@@ -13,17 +13,13 @@ import {
 	Undo,
 } from "lucide-react";
 import Link from "next/link";
-import { memo, useCallback, useState } from "react";
+import { memo, useCallback } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { Separator } from "@/components/atoms/separator";
 import { TooltipProvider } from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { usePowerDockHistory } from "@/features/writer/components/hooks/use-power-dock-history";
-import {
-	type ToolType,
-	toolStrategies,
-} from "@/features/writer/components/tools/tool-strategies";
+import { usePowerDock } from "@/features/writer/components/hooks/use-power-dock";
 import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
@@ -43,52 +39,28 @@ export const PowerDock = memo(function PowerDock() {
 		isSpotlightOpen,
 	} = useWriterControl();
 
-	const { project, structure, activeChapterId, activeSceneId } =
-		useWriterContext();
+	const { activeSceneId } = useWriterContext();
 	const { sceneContent } = useWriterContent();
 
 	const layoutContext = useWriterLayoutContext();
 	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
 	const isZen = viewMode === "zen";
 
-	const { addToHistory, getToolHistory, clearToolHistory } =
-		usePowerDockHistory();
-
-	// Dock States
-	const [mode, setMode] = useState<"default" | "tools" | "input">("default");
-	const [selectedTool, setSelectedTool] = useState<ToolType | null>(null);
-	const [input, setInput] = useState("");
-	const [isProcessing, setIsProcessing] = useState(false);
-	const [result, setResult] = useState<string | null>(null);
-
-	// Reset when closing or changing modes
-	const reset = useCallback(() => {
-		setMode("default");
-		setSelectedTool(null);
-		setInput("");
-		setResult(null);
-		setIsProcessing(false);
-	}, []);
-
-	const handleToolSelect = useCallback(
-		(toolId: string) => {
-			if (toolId === "export") {
-				const toolContext = {
-					project,
-					structure: structure ?? [],
-					activeChapterId: activeChapterId || null,
-					activeSceneId: activeSceneId || null,
-					sceneContent: sceneContent || null,
-				};
-				toolStrategies.export.execute(toolContext, "");
-				return;
-			}
-			setSelectedTool(toolId as ToolType);
-			setMode("input");
-			setResult(null);
-		},
-		[project, structure, activeChapterId, activeSceneId, sceneContent],
-	);
+	const {
+		mode,
+		setMode,
+		selectedTool,
+		input,
+		setInput,
+		isProcessing,
+		result,
+		setResult,
+		reset,
+		handleToolSelect,
+		handleExecute,
+		getToolHistory,
+		clearToolHistory,
+	} = usePowerDock();
 
 	const handleCopyScene = useCallback(async () => {
 		if (sceneContent != null) {
@@ -125,61 +97,6 @@ export const PowerDock = memo(function PowerDock() {
 		{ enableOnFormTags: true, description: "Copy Scene" },
 		[handleCopyScene],
 	);
-
-	const handleExecute = useCallback(async () => {
-		if (!project?.id || !selectedTool) return;
-		setIsProcessing(true);
-		setResult(null);
-
-		const currentInput = input; // Capture input before potential reset
-
-		try {
-			const strategy = toolStrategies[selectedTool];
-			if (!strategy) {
-				toast.error("Tool not implemented yet.");
-				return;
-			}
-
-			const toolContext = {
-				project,
-				structure: structure ?? [],
-				activeChapterId: activeChapterId || null,
-				activeSceneId: activeSceneId || null,
-				sceneContent: sceneContent || null,
-			};
-
-			const outcome = await strategy.execute(toolContext, currentInput);
-
-			if (outcome.success) {
-				addToHistory(selectedTool, currentInput);
-				if (outcome.result) {
-					setResult(outcome.result);
-					toast.success("Action completed");
-				} else {
-					// If no result text (e.g. direct edit), close the dock
-					reset();
-					toast.success("Action completed");
-				}
-			} else {
-				toast.error("Action couldn't be completed. Please try again.");
-			}
-		} catch (e) {
-			toast.error("Something went wrong. Please check your connection.");
-			console.error(e);
-		} finally {
-			setIsProcessing(false);
-		}
-	}, [
-		project,
-		selectedTool,
-		input,
-		structure,
-		activeChapterId,
-		activeSceneId,
-		addToHistory,
-		reset,
-		sceneContent,
-	]);
 
 	// Animation variants
 	const containerVariants: Variants = {
