@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Info, Sparkles, Wand2 } from "lucide-react";
 import type React from "react";
+import type { JSX } from "react";
 import { Button } from "@/components/atoms/button";
 import { Label } from "@/components/atoms/label";
 import {
@@ -40,7 +41,7 @@ export function WizardInputStep({
 	onStyleChange,
 	onApplyTemplate,
 	onGenerate,
-}: WizardInputStepProps) {
+}: WizardInputStepProps): JSX.Element {
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}

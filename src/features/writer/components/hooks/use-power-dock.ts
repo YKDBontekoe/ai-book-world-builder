@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { usePowerDockHistory } from "@/features/writer/components/hooks/use-power-dock-history";
 import {
@@ -10,7 +10,24 @@ import { useWriterContext } from "@/features/writer/components/writer-context";
 
 export type DockMode = "default" | "tools" | "input";
 
-export function usePowerDock() {
+export interface UsePowerDockReturn {
+	mode: DockMode;
+	setMode: (mode: DockMode) => void;
+	selectedTool: ToolType | null;
+	input: string;
+	setInput: (input: string) => void;
+	isProcessing: boolean;
+	result: string | null;
+	setResult: (result: string | null) => void;
+	reset: () => void;
+	handleToolSelect: (toolId: ToolType) => Promise<void>;
+	handleExecute: () => Promise<void>;
+	getToolHistory: (tool: ToolType) => string[];
+	clearToolHistory: (tool: ToolType) => void;
+	activeSceneId: string | null;
+}
+
+export function usePowerDock(): UsePowerDockReturn {
 	const { project, structure, activeChapterId, activeSceneId } =
 		useWriterContext();
 	const { sceneContent } = useWriterContent();
@@ -31,24 +48,34 @@ export function usePowerDock() {
 		setIsProcessing(false);
 	}, []);
 
+	// Memoize tool context to ensure stability
+	const toolContext = useMemo(
+		() => ({
+			project,
+			structure: structure ?? [],
+			activeChapterId: activeChapterId || null,
+			activeSceneId: activeSceneId || null,
+			sceneContent: sceneContent || null,
+		}),
+		[project, structure, activeChapterId, activeSceneId, sceneContent],
+	);
+
 	const handleToolSelect = useCallback(
-		(toolId: string) => {
+		async (toolId: ToolType) => {
 			if (toolId === "export") {
-				const toolContext = {
-					project,
-					structure: structure ?? [],
-					activeChapterId: activeChapterId || null,
-					activeSceneId: activeSceneId || null,
-					sceneContent: sceneContent || null,
-				};
-				toolStrategies.export.execute(toolContext, "");
+				try {
+					await toolStrategies.export.execute(toolContext, "");
+				} catch (error) {
+					console.error("Export failed:", error);
+					toast.error("Failed to export content");
+				}
 				return;
 			}
-			setSelectedTool(toolId as ToolType);
+			setSelectedTool(toolId);
 			setMode("input");
 			setResult(null);
 		},
-		[project, structure, activeChapterId, activeSceneId, sceneContent],
+		[toolContext],
 	);
 
 	const handleExecute = useCallback(async () => {
@@ -64,14 +91,6 @@ export function usePowerDock() {
 				toast.error("Tool not implemented yet.");
 				return;
 			}
-
-			const toolContext = {
-				project,
-				structure: structure ?? [],
-				activeChapterId: activeChapterId || null,
-				activeSceneId: activeSceneId || null,
-				sceneContent: sceneContent || null,
-			};
 
 			const outcome = await strategy.execute(toolContext, currentInput);
 
@@ -94,17 +113,7 @@ export function usePowerDock() {
 		} finally {
 			setIsProcessing(false);
 		}
-	}, [
-		project,
-		selectedTool,
-		input,
-		structure,
-		activeChapterId,
-		activeSceneId,
-		addToHistory,
-		reset,
-		sceneContent,
-	]);
+	}, [project, selectedTool, input, addToHistory, reset, toolContext]);
 
 	return {
 		mode,
@@ -120,5 +129,6 @@ export function usePowerDock() {
 		handleExecute,
 		getToolHistory,
 		clearToolHistory,
+		activeSceneId,
 	};
 }

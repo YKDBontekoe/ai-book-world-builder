@@ -18,7 +18,19 @@ import type {
 // Re-export types for backward compatibility if needed, or consumers should update imports
 export type { Category, SpotlightItem };
 
-export function useSpotlightItems() {
+export interface UseSpotlightItemsReturn {
+	query: string;
+	setQuery: (query: string) => void;
+	activeCategory: Category;
+	setActiveCategory: (category: Category) => void;
+	selectedIndex: number;
+	setSelectedIndex: (index: number | ((prev: number) => number)) => void;
+	filteredItems: SpotlightItem[];
+	isSpotlightOpen: boolean;
+	toggleSpotlight: () => void;
+}
+
+export function useSpotlightItems(): UseSpotlightItemsReturn {
 	const { isSpotlightOpen, toggleSpotlight, setChatOpen } = useWriterControl();
 	const { project, structure, setActiveSceneId } = useWriterContext();
 	const { toggleZenMode, toggleTypewriterMode } = useWriterLayoutContext();

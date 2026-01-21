@@ -2,8 +2,15 @@
 
 import { motion } from "framer-motion";
 import { Loader2 } from "lucide-react";
+import type { JSX } from "react";
 
-export function WizardGeneratingStep() {
+interface WizardGeneratingStepProps {
+	message?: string;
+}
+
+export function WizardGeneratingStep({
+	message,
+}: WizardGeneratingStepProps): JSX.Element {
 	return (
 		<motion.div
 			initial={{ opacity: 0, scale: 0.95 }}
@@ -14,7 +21,7 @@ export function WizardGeneratingStep() {
 		>
 			<Loader2 className="w-12 h-12 animate-spin text-primary" />
 			<p className="text-lg font-medium animate-pulse">
-				Designing your story structure...
+				{message || "Designing your story structure..."}
 			</p>
 		</motion.div>
 	);

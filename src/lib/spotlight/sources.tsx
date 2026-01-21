@@ -16,6 +16,8 @@ const MapPinIcon = ({ className }: { className?: string }) => (
 		strokeLinecap="round"
 		strokeLinejoin="round"
 		className={className}
+		aria-hidden="true"
+		focusable="false"
 	>
 		<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
 		<circle cx="12" cy="10" r="3" />
@@ -31,7 +33,7 @@ export class ActionSpotlightSource implements SpotlightSource {
 				label: "Ask AI Assistant",
 				subLabel: "Open chat with current context",
 				icon: MessageSquare,
-				type: "action",
+				type: "actions",
 				category: "actions",
 				onSelect: () => {
 					actions.setChatOpen(true);
@@ -43,7 +45,7 @@ export class ActionSpotlightSource implements SpotlightSource {
 				label: "Toggle Zen Mode",
 				subLabel: "Focus on writing",
 				icon: Target,
-				type: "action",
+				type: "actions",
 				category: "actions",
 				onSelect: () => {
 					actions.toggleZenMode();
@@ -55,7 +57,7 @@ export class ActionSpotlightSource implements SpotlightSource {
 				label: "Toggle Typewriter Mode",
 				subLabel: "Keep cursor centered",
 				icon: FileText,
-				type: "action",
+				type: "actions",
 				category: "actions",
 				onSelect: () => {
 					actions.toggleTypewriterMode();
@@ -81,7 +83,7 @@ export class EntitySpotlightSource implements SpotlightSource {
 				icon: entityType === "Character" ? User : MapPinIcon,
 				type: "entities",
 				category: "entities",
-				keywords: [entityType, ...attributes.map((a) => a.value)],
+				keywords: [entityType, ...attributes.map((a: any) => a.value)],
 				onSelect: () => {
 					actions.setChatOpen(true);
 					actions.toggleSpotlight();

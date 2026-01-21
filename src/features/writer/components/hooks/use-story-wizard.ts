@@ -12,13 +12,37 @@ import type { StoryTemplate } from "@/lib/story-templates";
 
 const DEFAULT_STYLE: StoryStyle = {
 	genre: "General Fiction",
-	pov: "Third Person",
+	pov: "Third Person Limited",
 	tone: "Neutral",
 };
 
 export type WizardStep = "input" | "generating" | "review" | "creating";
 
-export function useStoryWizard(projectId: string, onComplete: () => void) {
+export interface UseStoryWizardReturn {
+	step: WizardStep;
+	setStep: (step: WizardStep) => void;
+	prompt: string;
+	setPrompt: (prompt: string) => void;
+	style: StoryStyle;
+	setStyle: (style: StoryStyle) => void;
+	plan: BookPlan | null;
+	handleGeneratePlan: () => Promise<void>;
+	handleCreateStory: () => Promise<void>;
+	applyTemplate: (template: StoryTemplate) => void;
+	updatePlan: (field: keyof BookPlan, value: string) => void;
+	updateChapter: (
+		index: number,
+		field: "title" | "summary",
+		value: string,
+	) => void;
+	deleteChapter: (index: number) => void;
+	addChapter: () => void;
+}
+
+export function useStoryWizard(
+	projectId: string,
+	onComplete: () => void,
+): UseStoryWizardReturn {
 	const [step, setStep] = useState<WizardStep>("input");
 	const [prompt, setPrompt] = useState("");
 	const [style, setStyle] = useState<StoryStyle>(DEFAULT_STYLE);

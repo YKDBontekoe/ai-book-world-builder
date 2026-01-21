@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Check, Plus, RefreshCw, Trash2 } from "lucide-react";
+import type { JSX } from "react";
 import { Button } from "@/components/atoms/button";
 import { Card } from "@/components/atoms/card";
 import { Input } from "@/components/atoms/input";
@@ -32,7 +33,7 @@ export function WizardReviewStep({
 	onAddChapter,
 	onRestart,
 	onCreateStory,
-}: WizardReviewStepProps) {
+}: WizardReviewStepProps): JSX.Element {
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}

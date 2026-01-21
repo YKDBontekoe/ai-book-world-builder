@@ -1,4 +1,4 @@
-import type { ElementType } from "react";
+import type React from "react";
 import type {
 	Entity,
 	EntityAttribute,
@@ -13,7 +13,7 @@ export interface SpotlightItem {
 	id: string;
 	label: string;
 	subLabel?: string;
-	icon: ElementType;
+	icon: React.ComponentType<{ className?: string }>;
 	type: Category | "action";
 	category: Category;
 	keywords?: string[];

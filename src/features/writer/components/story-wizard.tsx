@@ -53,7 +53,9 @@ export function StoryWizard({
 
 				{step === "generating" && <WizardGeneratingStep />}
 
-				{step === "creating" && <WizardGeneratingStep />}
+				{step === "creating" && (
+					<WizardGeneratingStep message="Building your story structure..." />
+				)}
 
 				{step === "review" && plan && (
 					<WizardReviewStep
