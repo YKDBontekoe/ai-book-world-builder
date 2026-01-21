@@ -18,6 +18,12 @@ import type {
 // Re-export types for backward compatibility if needed, or consumers should update imports
 export type { Category, SpotlightItem };
 
+const SOURCES = [
+	new ActionSpotlightSource(),
+	new EntitySpotlightSource(),
+	new SceneSpotlightSource(),
+];
+
 export interface UseSpotlightItemsReturn {
 	query: string;
 	setQuery: (query: string) => void;
@@ -84,13 +90,7 @@ export function useSpotlightItems(): UseSpotlightItemsReturn {
 
 	// Build Items using Strategies
 	const items = useMemo<SpotlightItem[]>(() => {
-		const sources = [
-			new ActionSpotlightSource(),
-			new EntitySpotlightSource(),
-			new SceneSpotlightSource(),
-		];
-
-		return sources.flatMap((source) => source.getItems(context));
+		return SOURCES.flatMap((source) => source.getItems(context));
 	}, [context]);
 
 	// Filter

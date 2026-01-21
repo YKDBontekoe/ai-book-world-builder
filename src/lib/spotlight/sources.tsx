@@ -1,4 +1,5 @@
 import { BookOpen, FileText, MessageSquare, Target, User } from "lucide-react";
+import type { EntityAttribute } from "@/lib/db/schema/entities";
 import type {
 	SpotlightContext,
 	SpotlightItem,
@@ -73,6 +74,15 @@ export class EntitySpotlightSource implements SpotlightSource {
 		const { entities, actions } = context;
 		if (!entities) return [];
 
+		const getEntityIcon = (kind: string) => {
+			switch (kind) {
+				case "Character":
+					return User;
+				default:
+					return MapPinIcon;
+			}
+		};
+
 		return entities.map((entity) => {
 			const entityType = entity.kind || "Unknown";
 			const attributes = entity.attributes || [];
@@ -80,10 +90,13 @@ export class EntitySpotlightSource implements SpotlightSource {
 				id: `ent-${entity.id}`,
 				label: entity.name,
 				subLabel: `${entityType} • ${attributes.length} attributes`,
-				icon: entityType === "Character" ? User : MapPinIcon,
+				icon: getEntityIcon(entityType),
 				type: "entities",
 				category: "entities",
-				keywords: [entityType, ...attributes.map((a: any) => a.value)],
+				keywords: [
+					entityType,
+					...attributes.map((a: EntityAttribute) => a.value),
+				],
 				onSelect: () => {
 					actions.setChatOpen(true);
 					actions.toggleSpotlight();

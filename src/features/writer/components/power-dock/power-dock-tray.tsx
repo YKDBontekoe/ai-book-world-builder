@@ -1,16 +1,18 @@
 import { AnimatePresence, motion } from "framer-motion";
+import * as ReactNamespace from "react";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
+import type { ToolType } from "@/features/writer/components/tools/tool-strategies";
 import { ControlButton } from "./control-button";
 
 interface PowerDockTrayProps {
 	mode: "default" | "tools" | "input";
-	onSelectTool: (toolId: string) => void;
+	onSelectTool: (toolId: ToolType) => void;
 }
 
 export function PowerDockTray({
 	mode,
 	onSelectTool,
-}: PowerDockTrayProps): JSX.Element {
+}: PowerDockTrayProps): ReactNamespace.JSX.Element {
 	return (
 		<AnimatePresence mode="popLayout">
 			{mode === "tools" && (
@@ -36,7 +38,7 @@ export function PowerDockTray({
 							<ControlButton
 								label={tool.label}
 								icon={tool.icon}
-								onClick={() => onSelectTool(tool.id)}
+								onClick={() => onSelectTool(tool.id as ToolType)}
 								className={tool.color}
 							/>
 						</motion.div>

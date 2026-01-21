@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { usePowerDockHistory } from "@/features/writer/components/hooks/use-power-dock-history";
+import {
+	type HistoryItem,
+	usePowerDockHistory,
+} from "@/features/writer/components/hooks/use-power-dock-history";
 import {
 	type ToolType,
 	toolStrategies,
@@ -22,7 +25,7 @@ export interface UsePowerDockReturn {
 	reset: () => void;
 	handleToolSelect: (toolId: ToolType) => Promise<void>;
 	handleExecute: () => Promise<void>;
-	getToolHistory: (tool: ToolType) => string[];
+	getToolHistory: (tool: ToolType) => HistoryItem[];
 	clearToolHistory: (tool: ToolType) => void;
 	activeSceneId: string | null;
 }
@@ -89,6 +92,7 @@ export function usePowerDock(): UsePowerDockReturn {
 			const strategy = toolStrategies[selectedTool];
 			if (!strategy) {
 				toast.error("Tool not implemented yet.");
+				setIsProcessing(false);
 				return;
 			}
 
@@ -102,7 +106,7 @@ export function usePowerDock(): UsePowerDockReturn {
 				} else {
 					// If no result text (e.g. direct edit), close the dock
 					reset();
-					toast.success("Action completed");
+					toast.success("Edit applied — no result to display");
 				}
 			} else {
 				toast.error("Action couldn't be completed. Please try again.");
