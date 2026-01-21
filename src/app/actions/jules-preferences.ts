@@ -1,15 +1,10 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db";
 import { type JulesPreferences, userPreferences } from "@/lib/db/schema/auth";
-
-export const julesPreferencesSchema = z.object({
-	repository: z.string().min(1).nullable(),
-	branch: z.string().min(1).nullable(),
-});
+import { julesPreferencesSchema } from "./jules-preferences-schemas";
 
 const DEFAULT_JULES_PREFERENCES: JulesPreferences = {
 	repository: null,
