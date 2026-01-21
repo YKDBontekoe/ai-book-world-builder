@@ -8,7 +8,8 @@ import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import type { z } from "zod";
 import { generateEntitySummaryAction } from "@/app/actions/ai-operations";
-import { createEntityAction, createEntitySchema } from "@/app/actions/entities";
+import { createEntityAction } from "@/app/actions/entities";
+import { createEntitySchema } from "@/app/actions/entities-schemas";
 import { Button } from "@/components/atoms/button";
 import {
 	Dialog,

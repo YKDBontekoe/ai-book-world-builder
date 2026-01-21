@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { julesPreferencesSchema } from "@/app/actions/jules-preferences";
+import { julesPreferencesSchema } from "@/app/actions/jules-preferences-schemas";
 
 describe("julesPreferencesSchema", () => {
 	it("should allow valid preferences", () => {

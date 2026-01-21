@@ -5,6 +5,10 @@ import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { entityRepository, projectRepository } from "@/lib/db/repositories";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
+import {
+	bulkDeleteEntitiesSchema,
+	createEntitySchema,
+} from "./entities-schemas";
 
 // ============================================================================
 // Validation Schemas
@@ -32,26 +36,6 @@ const updateEntitySchema = z.object({
 
 const entityIdSchema = z.object({
 	id: z.string().uuid("Invalid entity ID"),
-});
-
-export const createEntitySchema = z.object({
-	projectId: z.string().uuid("Invalid project ID"),
-	name: z.string().min(1, "Name is required").max(200),
-	kind: z.string().min(1, "Type is required"),
-	summary: z.string().max(2000).optional(),
-	attributes: z
-		.array(
-			z.object({
-				name: z.string(),
-				value: z.string(),
-			}),
-		)
-		.optional(),
-});
-
-export const bulkDeleteEntitiesSchema = z.object({
-	ids: z.array(z.string().uuid()),
-	projectId: z.string().uuid("Invalid project ID"),
 });
 
 // ============================================================================
