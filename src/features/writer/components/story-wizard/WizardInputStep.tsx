@@ -54,9 +54,7 @@ export function WizardInputStep({
 				<div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4">
 					<Wand2 className="w-6 h-6 text-primary" />
 				</div>
-				<h2 className="text-2xl font-bold tracking-tight">
-					Generate Your Story
-				</h2>
+				<h2 className="text-2xl font-bold tracking-tight">Generate Your Story</h2>
 				<p className="text-muted-foreground">
 					Choose a template to get started quickly, or describe your own idea.
 				</p>
@@ -112,8 +110,8 @@ export function WizardInputStep({
 								</TooltipTrigger>
 								<TooltipContent>
 									<p className="max-w-xs">
-										Determines the narrator's perspective (e.g., First Person
-										"I", Third Person "He/She").
+										Determines the narrator's perspective (e.g., First Person "I",
+										Third Person "He/She").
 									</p>
 								</TooltipContent>
 							</Tooltip>

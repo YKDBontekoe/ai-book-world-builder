@@ -56,8 +56,7 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 				className={cn(
 					"flex items-center justify-between gap-4 px-4 h-14 shrink-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
 					"border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60",
-					isZen &&
-						"opacity-0 hover:opacity-100 -mt-14 hover:mt-0 bg-background/90 border-b-border/60",
+					isZen && "opacity-0 hover:opacity-100 -mt-14 hover:mt-0 bg-background/90 border-b-border/60",
 				)}
 			>
 				{/* LEFT: Navigation & Context */}
@@ -71,9 +70,7 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 										size="icon"
 										className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
 										onClick={toggleSidebar}
-										aria-label={
-											isSidebarOpen ? "Close Sidebar" : "Open Sidebar"
-										}
+										aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
 									>
 										{isSidebarOpen ? (
 											<PanelLeftClose className="h-4.5 w-4.5" />
@@ -98,8 +95,7 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 						<div className="flex flex-col min-w-0 justify-center">
 							<div className="flex items-center gap-2">
 								<span className="text-sm font-semibold truncate text-foreground/90">
-									{activeScene?.title ||
-										(hasScenes ? "No scene selected" : "Welcome")}
+									{activeScene?.title || (hasScenes ? "No scene selected" : "Welcome")}
 								</span>
 
 								{/* Save Status - Subtle & Integrated */}
@@ -114,11 +110,7 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 												</div>
 											</TooltipTrigger>
 											<TooltipContent side="right" className="text-xs">
-												Saved{" "}
-												{lastSaved.toLocaleTimeString([], {
-													hour: "2-digit",
-													minute: "2-digit",
-												})}
+												Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
 											</TooltipContent>
 										</Tooltip>
 									) : null}
