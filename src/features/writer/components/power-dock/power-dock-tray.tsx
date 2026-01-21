@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import * as ReactNamespace from "react";
+import type * as ReactNamespace from "react";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
 import type { ToolType } from "@/features/writer/components/tools/tool-strategies";
 import { ControlButton } from "./control-button";

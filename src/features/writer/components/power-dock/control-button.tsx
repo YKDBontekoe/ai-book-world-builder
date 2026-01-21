@@ -1,7 +1,7 @@
 import { Slot } from "@radix-ui/react-slot";
+import type * as ReactNamespace from "react";
 import type React from "react";
 import { memo } from "react";
-import * as ReactNamespace from "react";
 import {
 	Tooltip,
 	TooltipContent,

@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Check, Copy, X } from "lucide-react";
-import * as ReactNamespace from "react";
+import type * as ReactNamespace from "react";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";

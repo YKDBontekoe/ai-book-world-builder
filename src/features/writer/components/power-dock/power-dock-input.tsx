@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Clock, HistoryIcon, Send, Sparkles, Trash2, X } from "lucide-react";
-import * as ReactNamespace from "react";
+import type * as ReactNamespace from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
