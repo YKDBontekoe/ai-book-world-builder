@@ -59,6 +59,14 @@ export function useSceneOperations({
 		Map<string | number, ReturnType<typeof setTimeout>>
 	>(new Map());
 
+	// Cleanup pending deletions on unmount
+	useEffect(() => {
+		return () => {
+			pendingDeletionsRef.current.forEach((timeout) => clearTimeout(timeout));
+			pendingDeletionsRef.current.clear();
+		};
+	}, []);
+
 	// Store activeSceneId in ref to prevent prop instability in performDelete
 	const activeSceneIdRef = useRef(activeSceneId);
 	useEffect(() => {
