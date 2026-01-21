@@ -300,11 +300,11 @@ export function BiblePane(): React.JSX.Element {
 	// Shortcuts
 	useHotkeys(
 		"meta+a, ctrl+a",
-		(e) => {
-			e.preventDefault();
+		(event) => {
+			event.preventDefault();
 			if (!filteredEntities) return;
 			setIsSelectionMode(true);
-			setSelectedIds(new Set(filteredEntities.map((e) => e.id)));
+			setSelectedIds(new Set(filteredEntities.map((entity) => entity.id)));
 		},
 		{ enabled: !!filteredEntities && filteredEntities.length > 0 },
 		[filteredEntities],
