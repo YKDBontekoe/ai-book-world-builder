@@ -17,6 +17,7 @@ export interface UseSceneNavigationResult {
 export function useSceneNavigation(
 	structure: ChapterWithScenes[] | null,
 	deletedSceneIds: Set<string>,
+	deletedChapterIds?: Set<string>,
 ): UseSceneNavigationResult {
 	const [expandedChapters, setExpandedChapters] = useState<string[]>([]);
 	const [searchTerm, setSearchTerm] = useState("");
@@ -55,7 +56,11 @@ export function useSceneNavigation(
 	const filteredStructure = useMemo(() => {
 		if (!structure) return null;
 
-		if (!debouncedSearchTerm && deletedSceneIds.size === 0) {
+		if (
+			!debouncedSearchTerm &&
+			deletedSceneIds.size === 0 &&
+			(!deletedChapterIds || deletedChapterIds.size === 0)
+		) {
 			return structure;
 		}
 
@@ -63,6 +68,7 @@ export function useSceneNavigation(
 		const lowerTerm = debouncedSearchTerm.toLowerCase();
 
 		return baseStructure
+			.filter((chapter) => !deletedChapterIds?.has(chapter.id))
 			.map((chapter) => {
 				const titleMatch = chapter.title.toLowerCase().includes(lowerTerm);
 				const matchingScenes = chapter.scenes.filter(
@@ -91,7 +97,7 @@ export function useSceneNavigation(
 				return null;
 			})
 			.filter(Boolean) as ChapterWithScenes[];
-	}, [structure, debouncedSearchTerm, deletedSceneIds]);
+	}, [structure, debouncedSearchTerm, deletedSceneIds, deletedChapterIds]);
 
 	// Auto-expand on search
 	useEffect(() => {

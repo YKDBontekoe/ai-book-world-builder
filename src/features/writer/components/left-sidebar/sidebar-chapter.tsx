@@ -1,7 +1,7 @@
 "use client";
 
-import { FilePlus2, Plus, Sparkles } from "lucide-react";
-import { memo } from "react";
+import { FilePlus2, Pencil, Plus, Sparkles, Trash2 } from "lucide-react";
+import { memo, useEffect, useRef, useState } from "react";
 import {
 	AccordionContent,
 	AccordionItem,
@@ -12,8 +12,10 @@ import {
 	ContextMenu,
 	ContextMenuContent,
 	ContextMenuItem,
+	ContextMenuSeparator,
 	ContextMenuTrigger,
 } from "@/components/atoms/context-menu";
+import { Input } from "@/components/atoms/input";
 import { SceneItem } from "@/features/writer/components/left-sidebar/scene-item";
 import type { ChapterWithScenes } from "@/lib/types";
 
@@ -30,6 +32,8 @@ interface SidebarChapterProps {
 	onRenameScene: (sceneId: string, newTitle: string) => void;
 	onDeleteScene: (sceneId: string) => void;
 	onToggleSceneSelect: (sceneId: string) => void;
+	onRenameChapter?: (chapterId: string, newTitle: string) => void;
+	onDeleteChapter?: (chapterId: string) => void;
 }
 
 export const SidebarChapter = memo(function SidebarChapter({
@@ -45,13 +49,69 @@ export const SidebarChapter = memo(function SidebarChapter({
 	onRenameScene,
 	onDeleteScene,
 	onToggleSceneSelect,
+	onRenameChapter,
+	onDeleteChapter,
 }: SidebarChapterProps) {
+	const [isEditing, setIsEditing] = useState(false);
+	const [editValue, setEditValue] = useState(chapter.title);
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	// Sync state
+	useEffect(() => {
+		setEditValue(chapter.title);
+	}, [chapter.title]);
+
+	// Focus logic
+	useEffect(() => {
+		if (isEditing && inputRef.current) {
+			inputRef.current.focus();
+			inputRef.current.select();
+		}
+	}, [isEditing]);
+
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter") {
+			e.preventDefault();
+			// Trigger blur to save
+			inputRef.current?.blur();
+		} else if (e.key === "Escape") {
+			e.preventDefault();
+			e.stopPropagation();
+			setEditValue(chapter.title);
+			setIsEditing(false);
+		}
+	};
+
+	const handleBlur = () => {
+		if (isEditing) {
+			if (editValue.trim() && editValue !== chapter.title) {
+				onRenameChapter?.(chapter.id, editValue.trim());
+			} else {
+				setEditValue(chapter.title);
+			}
+			setIsEditing(false);
+		}
+	};
+
 	return (
 		<AccordionItem value={chapter.id} className="border-b-0 px-2">
 			<ContextMenu>
 				<ContextMenuTrigger disabled={readOnly}>
 					<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
-						<span className="truncate text-left">{chapter.title}</span>
+						{isEditing ? (
+							<Input
+								ref={inputRef}
+								value={editValue}
+								onChange={(e) => setEditValue(e.target.value)}
+								onKeyDown={handleKeyDown}
+								onBlur={handleBlur}
+								onClick={(e) => e.stopPropagation()} // Prevent accordion toggle
+								className="h-6 text-sm px-1 font-medium bg-background"
+								aria-label="Chapter title"
+							/>
+						) : (
+							<span className="truncate text-left">{chapter.title}</span>
+						)}
 					</AccordionTrigger>
 				</ContextMenuTrigger>
 				<ContextMenuContent>
@@ -65,6 +125,18 @@ export const SidebarChapter = memo(function SidebarChapter({
 					<ContextMenuItem onClick={() => onCreateSceneManually(chapter.id)}>
 						<FilePlus2 className="mr-2 h-4 w-4" />
 						Add Scene Manually
+					</ContextMenuItem>
+					<ContextMenuSeparator />
+					<ContextMenuItem onClick={() => setIsEditing(true)}>
+						<Pencil className="mr-2 h-4 w-4" />
+						Rename Chapter
+					</ContextMenuItem>
+					<ContextMenuItem
+						onClick={() => onDeleteChapter?.(chapter.id)}
+						className="text-destructive focus:text-destructive"
+					>
+						<Trash2 className="mr-2 h-4 w-4" />
+						Delete Chapter
 					</ContextMenuItem>
 				</ContextMenuContent>
 			</ContextMenu>
