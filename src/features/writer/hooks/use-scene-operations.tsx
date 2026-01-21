@@ -330,6 +330,15 @@ export function useSceneOperations({
 
 	const handleDeleteChapter = useCallback(
 		(chapterId: string) => {
+			// Check if active scene belongs to this chapter
+			const chapterToDelete = structure?.find((c) => c.id === chapterId);
+			if (
+				activeSceneIdRef.current &&
+				chapterToDelete?.scenes.some((s) => s.id === activeSceneIdRef.current)
+			) {
+				onSceneSelect(null);
+			}
+
 			// Optimistic update
 			setDeletedChapterIds((prev) => {
 				const next = new Set(prev);
@@ -380,7 +389,7 @@ export function useSceneOperations({
 
 			pendingDeletionsRef.current.set(toastId, timeout);
 		},
-		[undoDeleteChapter, onStructureUpdate],
+		[undoDeleteChapter, onStructureUpdate, structure, onSceneSelect],
 	);
 
 	return {
