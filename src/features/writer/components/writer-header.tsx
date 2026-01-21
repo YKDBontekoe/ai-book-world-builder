@@ -1,12 +1,10 @@
 "use client";
 
 import {
-	Activity,
-	AlignVerticalJustifyCenter,
 	CheckCircle2,
+	ChevronRight,
+	FileText,
 	Loader2,
-	Maximize2,
-	Minimize2,
 	PanelLeftClose,
 	PanelLeftOpen,
 } from "lucide-react";
@@ -19,6 +17,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { WriterViewControls } from "@/features/writer/components/header/writer-view-controls";
 import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
@@ -53,138 +52,101 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 
 	return (
 		<TooltipProvider>
-			<div
+			<header
 				className={cn(
-					"flex items-center justify-between gap-3 px-4 h-14 shrink-0 z-10 transition-all duration-500",
-					// Use consistent glass styling using semantic tokens
-					"border-b border-border/50 glass-surface",
-					isZen ? "opacity-0 hover:opacity-100 bg-background/80" : "",
+					"flex items-center justify-between gap-4 px-4 h-14 shrink-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
+					"border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60",
+					isZen && "opacity-0 hover:opacity-100 -mt-14 hover:mt-0 bg-background/90 border-b-border/60",
 				)}
 			>
 				{/* LEFT: Navigation & Context */}
 				<div className="flex items-center gap-3 min-w-0 flex-1">
 					{!isZen && (
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="ghost"
-									size="icon"
-									className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground hover:bg-accent/50"
-									onClick={toggleSidebar}
-									aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
-								>
-									{isSidebarOpen ? (
-										<PanelLeftClose className="h-4 w-4" />
-									) : (
-										<PanelLeftOpen className="h-4 w-4" />
-									)}
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent side="bottom">
-								{isSidebarOpen ? "Close Sidebar" : "Open Sidebar"} (⌘B)
-							</TooltipContent>
-						</Tooltip>
-					)}
-
-					<div className="flex items-center gap-2 min-w-0">
-						<div className="text-sm font-medium truncate">
-							{activeScene?.title ||
-								(hasScenes ? "No scene selected" : "Welcome")}
-						</div>
-						{/* Subtle Save Status Indicator */}
-						{isSaving ? (
-							<Loader2 className="h-3 w-3 animate-spin text-muted-foreground/50" />
-						) : lastSaved ? (
+						<div className="flex items-center">
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<button
-										type="button"
-										className="flex items-center justify-center h-3 w-3 text-muted-foreground/30 hover:text-green-500/50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-green-500/50 rounded-full"
-										aria-label={`Saved at ${lastSaved.toLocaleTimeString()}`}
+									<Button
+										variant="ghost"
+										size="icon"
+										className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground"
+										onClick={toggleSidebar}
+										aria-label={isSidebarOpen ? "Close Sidebar" : "Open Sidebar"}
 									>
-										<CheckCircle2 className="h-3 w-3" />
-									</button>
+										{isSidebarOpen ? (
+											<PanelLeftClose className="h-4.5 w-4.5" />
+										) : (
+											<PanelLeftOpen className="h-4.5 w-4.5" />
+										)}
+									</Button>
 								</TooltipTrigger>
-								<TooltipContent side="bottom" className="text-xs">
-									Saved {lastSaved.toLocaleTimeString()}
+								<TooltipContent side="bottom">
+									{isSidebarOpen ? "Close Sidebar" : "Open Sidebar"} (⌘B)
 								</TooltipContent>
 							</Tooltip>
-						) : null}
+							<div className="h-5 w-px bg-border/40 mx-1.5" />
+						</div>
+					)}
+
+					<div className="flex items-center gap-2 min-w-0 group">
+						<div className="flex items-center justify-center h-8 w-8 rounded-lg bg-primary/5 text-primary">
+							<FileText className="h-4 w-4" />
+						</div>
+
+						<div className="flex flex-col min-w-0 justify-center">
+							<div className="flex items-center gap-2">
+								<span className="text-sm font-semibold truncate text-foreground/90">
+									{activeScene?.title || (hasScenes ? "No scene selected" : "Welcome")}
+								</span>
+
+								{/* Save Status - Subtle & Integrated */}
+								<div className="flex items-center w-4 h-4 justify-center">
+									{isSaving ? (
+										<Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+									) : lastSaved ? (
+										<Tooltip>
+											<TooltipTrigger asChild>
+												<div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+													<CheckCircle2 className="h-3 w-3 text-emerald-500/80" />
+												</div>
+											</TooltipTrigger>
+											<TooltipContent side="right" className="text-xs">
+												Saved {lastSaved.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+											</TooltipContent>
+										</Tooltip>
+									) : null}
+								</div>
+							</div>
+
+							{activeScene && (
+								<div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium uppercase tracking-wider">
+									<span>Scene</span>
+									<ChevronRight className="h-2.5 w-2.5 opacity-50" />
+									<span className="truncate max-w-[150px]">Draft</span>
+								</div>
+							)}
+						</div>
 					</div>
 				</div>
 
 				{/* RIGHT: View Modes & Tools */}
-				<div className="flex items-center gap-1 shrink-0">
-					{/* View Mode Group */}
-					<div className="flex items-center p-0.5 bg-accent/20 rounded-lg border border-border/20 mr-2">
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="ghost"
-									size="icon"
-									className={cn(
-										"h-7 w-7 rounded-md transition-all",
-										isDirectorMode
-											? "bg-background shadow-sm text-foreground"
-											: "text-muted-foreground hover:text-foreground hover:bg-transparent",
-									)}
-									onClick={toggleDirectorMode}
-								>
-									<Activity className="h-3.5 w-3.5" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent side="bottom">Director Mode</TooltipContent>
-						</Tooltip>
+				<div className="flex items-center gap-3 shrink-0">
+					{activeScene && (
+						<>
+							<WriterToolsMenu />
+							<div className="h-5 w-px bg-border/40" />
+						</>
+					)}
 
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="ghost"
-									size="icon"
-									className={cn(
-										"h-7 w-7 rounded-md transition-all",
-										isTypewriterMode
-											? "bg-background shadow-sm text-foreground"
-											: "text-muted-foreground hover:text-foreground hover:bg-transparent",
-									)}
-									onClick={toggleTypewriterMode}
-								>
-									<AlignVerticalJustifyCenter className="h-3.5 w-3.5" />
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent side="bottom">Typewriter Mode</TooltipContent>
-						</Tooltip>
-					</div>
-
-					{/* Tools & Zen */}
-					<div className="flex items-center gap-1">
-						{activeScene && <WriterToolsMenu />}
-
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button
-									variant="ghost"
-									size="icon"
-									className={cn(
-										"h-8 w-8 hover:bg-accent/50 text-muted-foreground",
-										isZen && "text-primary bg-primary/10 hover:bg-primary/20",
-									)}
-									onClick={toggleZenMode}
-								>
-									{isZen ? (
-										<Minimize2 className="h-4 w-4" />
-									) : (
-										<Maximize2 className="h-4 w-4" />
-									)}
-								</Button>
-							</TooltipTrigger>
-							<TooltipContent side="bottom">
-								{isZen ? "Exit Zen Mode" : "Enter Zen Mode"}
-							</TooltipContent>
-						</Tooltip>
-					</div>
+					<WriterViewControls
+						isDirectorMode={isDirectorMode}
+						toggleDirectorMode={toggleDirectorMode}
+						isTypewriterMode={isTypewriterMode}
+						toggleTypewriterMode={toggleTypewriterMode}
+						isZenMode={isZen}
+						toggleZenMode={toggleZenMode}
+					/>
 				</div>
-			</div>
+			</header>
 		</TooltipProvider>
 	);
 });
