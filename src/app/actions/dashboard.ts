@@ -12,6 +12,8 @@ import { NotFoundError } from "@/lib/errors";
 
 const dashboardStatsSchema = z.object({
 	projectId: z.string().uuid().optional(),
+	from: z.string().datetime().optional(),
+	to: z.string().datetime().optional(),
 });
 
 // ============================================================================
@@ -24,6 +26,11 @@ const dashboardStatsSchema = z.object({
 export const getDashboardStatsAction = createUserAction({
 	input: dashboardStatsSchema,
 	handler: async ({ user, input }) => {
+		const dateRange = {
+			from: input.from ? new Date(input.from) : undefined,
+			to: input.to ? new Date(input.to) : undefined,
+		};
+
 		if (input.projectId) {
 			const project = await getProjectByIdWithAccess({
 				id: input.projectId,
@@ -34,7 +41,7 @@ export const getDashboardStatsAction = createUserAction({
 				throw NotFoundError.forResource("Project", input.projectId);
 			}
 
-			const stats = await getProjectStats(input.projectId);
+			const stats = await getProjectStats(input.projectId, dateRange);
 
 			// Security: Redact sensitive billing/usage info for non-owners (public viewers)
 			if (project.userId !== user.id) {
@@ -59,7 +66,7 @@ export const getDashboardStatsAction = createUserAction({
 		}
 
 		// Global Scope
-		const stats = await getGlobalStats(user.id);
+		const stats = await getGlobalStats(user.id, dateRange);
 		return { stats };
 	},
 });

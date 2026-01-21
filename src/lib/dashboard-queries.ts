@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, eq, gte, inArray, lte, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
 	bookGeneration,
@@ -55,12 +55,26 @@ export type UsageHistory = {
 	tokens: number;
 }[];
 
-export async function getProjectStats(projectId: string): Promise<{
+export async function getProjectStats(
+	projectId: string,
+	dateRange?: { from?: Date; to?: Date },
+): Promise<{
 	tokenStats: TokenStats;
 	entityStats: EntityStats;
 	activityStats: ActivityStats;
 	usageHistory: UsageHistory;
 }> {
+	// Date filters
+	const fromDate = dateRange?.from;
+	const toDate = dateRange?.to;
+
+	const genUsageWhere = and(
+		eq(bookGeneration.projectId, projectId),
+		sql`${bookGenerationStep.usage} is not null`,
+		fromDate ? gte(bookGenerationStep.createdAt, fromDate) : undefined,
+		toDate ? lte(bookGenerationStep.createdAt, toDate) : undefined,
+	);
+
 	const [
 		byKindRaw,
 		entities,
@@ -112,12 +126,7 @@ export async function getProjectStats(projectId: string): Promise<{
 				bookGeneration,
 				eq(bookGenerationStep.generationId, bookGeneration.id),
 			)
-			.where(
-				and(
-					eq(bookGeneration.projectId, projectId),
-					sql`${bookGenerationStep.usage} is not null`,
-				),
-			)
+			.where(genUsageWhere)
 			.groupBy(sql`${bookGenerationStep.usage}->>'modelId'`),
 
 		// 5. Activity Stats
@@ -150,12 +159,7 @@ export async function getProjectStats(projectId: string): Promise<{
 			bookGeneration,
 			eq(bookGenerationStep.generationId, bookGeneration.id),
 		)
-		.where(
-			and(
-				eq(bookGeneration.projectId, projectId),
-				sql`${bookGenerationStep.usage} is not null`,
-			),
-		)
+		.where(genUsageWhere)
 		.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
 		.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`);
 
@@ -241,12 +245,33 @@ export async function getProjectStats(projectId: string): Promise<{
 	return { tokenStats, entityStats, activityStats, usageHistory };
 }
 
-export async function getGlobalStats(userId: string): Promise<{
+export async function getGlobalStats(
+	userId: string,
+	dateRange?: { from?: Date; to?: Date },
+): Promise<{
 	tokenStats: TokenStats;
 	entityStats: EntityStats;
 	activityStats: ActivityStats;
 	usageHistory: UsageHistory;
 }> {
+	// Date filters
+	const fromDate = dateRange?.from;
+	const toDate = dateRange?.to;
+
+	const genUsageWhere = and(
+		eq(project.userId, userId),
+		sql`${bookGenerationStep.usage} is not null`,
+		fromDate ? gte(bookGenerationStep.createdAt, fromDate) : undefined,
+		toDate ? lte(bookGenerationStep.createdAt, toDate) : undefined,
+	);
+
+	const chatUsageWhere = and(
+		eq(chat.userId, userId),
+		sql`${message.usage} is not null`,
+		fromDate ? gte(message.createdAt, fromDate) : undefined,
+		toDate ? lte(message.createdAt, toDate) : undefined,
+	);
+
 	const [userProjects, genUsage, chatUsage, totalWordsRaw] = await Promise.all([
 		db
 			.select({ id: project.id })
@@ -265,12 +290,7 @@ export async function getGlobalStats(userId: string): Promise<{
 				eq(bookGenerationStep.generationId, bookGeneration.id),
 			)
 			.innerJoin(project, eq(bookGeneration.projectId, project.id))
-			.where(
-				and(
-					eq(project.userId, userId),
-					sql`${bookGenerationStep.usage} is not null`,
-				),
-			)
+			.where(genUsageWhere)
 			.groupBy(sql`${bookGenerationStep.usage}->>'modelId'`),
 		db
 			.select({
@@ -281,7 +301,7 @@ export async function getGlobalStats(userId: string): Promise<{
 			})
 			.from(message)
 			.innerJoin(chat, eq(message.chatId, chat.id))
-			.where(and(eq(chat.userId, userId), sql`${message.usage} is not null`))
+			.where(chatUsageWhere)
 			.groupBy(sql`${message.usage}->>'modelId'`),
 		db
 			.select({ words: sql<number>`sum(${scene.wordCount})` })
@@ -308,12 +328,7 @@ export async function getGlobalStats(userId: string): Promise<{
 			eq(bookGenerationStep.generationId, bookGeneration.id),
 		)
 		.innerJoin(project, eq(bookGeneration.projectId, project.id))
-		.where(
-			and(
-				eq(project.userId, userId),
-				sql`${bookGenerationStep.usage} is not null`,
-			),
-		)
+		.where(genUsageWhere)
 		.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
 		.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`);
 

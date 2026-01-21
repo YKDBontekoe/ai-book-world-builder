@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getDashboardStatsAction } from "@/app/actions/dashboard";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { DashboardControls } from "@/components/organisms/dashboard/dashboard-controls";
 import { EntityInsights } from "@/components/organisms/dashboard/entity-insights";
 import { UsageChart } from "@/components/organisms/dashboard/usage-chart";
 
@@ -10,11 +11,19 @@ export const metadata = {
 
 export default async function ProjectDashboardPage({
 	params,
+	searchParams,
 }: {
 	params: Promise<{ id: string }>;
+	searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
 	const { id } = await params;
-	const result = await getDashboardStatsAction({ projectId: id });
+	const { from, to } = await searchParams;
+
+	const result = await getDashboardStatsAction({
+		projectId: id,
+		from: typeof from === "string" ? from : undefined,
+		to: typeof to === "string" ? to : undefined,
+	});
 
 	if (!result.success) {
 		return (
@@ -43,6 +52,7 @@ export default async function ProjectDashboardPage({
 						Insights and metrics for your story
 					</p>
 				</div>
+				<DashboardControls projectId={id} stats={stats} />
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
