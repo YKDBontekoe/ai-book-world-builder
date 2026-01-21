@@ -1,184 +1,52 @@
 # Agentic Workflow Documentation
 
-This document describes the fully automated, AI-driven CI/CD and development workflow for AI Book World Builder. The system minimizes human intervention while maintaining code quality and security.
+Simplified AI-driven CI/CD workflow for AI Book World Builder.
 
-## Overview
-
-The agentic workflow automates the entire development lifecycle with **cost-optimized Jules invocations**:
+## Flow Diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                    AUTHOR-BASED INVOCATION STRATEGY                         │
-├─────────────────────────────────────────────────────────────────────────────┤
-│                                                                             │
-│  PR Author = Jules?     →  @jules mention (FREE via GitHub integration)    │
-│  PR Author = Renovate?  →  API once, then @jules mentions                  │
-│  PR Author = Human?     →  API invoke (full context needed)                │
-│                                                                             │
-└─────────────────────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────────┐
+│                     AUTHOR-BASED ROUTING                          │
+├───────────────────────────────────────────────────────────────────┤
+│                                                                   │
+│  PR Opens → CI Runs                                               │
+│       │                                                           │
+│       ├── Fail? ─┬── Jules PR → @jules mention (free)            │
+│       │          └── Bot/Human PR → Jules API                     │
+│       │                                                           │
+│       └── Pass? → Trigger CodeRabbit                              │
+│                          │                                        │
+│                          └── Parse "Fix all issues"               │
+│                                     │                             │
+│                          ┌──────────┴──────────┐                  │
+│                          │                     │                  │
+│                     Jules PR            Bot/Human PR              │
+│                          │                     │                  │
+│                   @jules mention         Jules API                │
+│                                                                   │
+└───────────────────────────────────────────────────────────────────┘
 ```
 
-## Key Components
+## Author Types
 
-### 1. AI Agents
+| Author | Detection | Invocation Method |
+|--------|-----------|-------------------|
+| `google-labs-jules` | Contains "jules" | `@jules` mention (free) |
+| `renovate[bot]` | Ends with `[bot]` | Jules API (full context) |
+| `dependabot[bot]` | Ends with `[bot]` | Jules API (full context) |
+| Human users | No bot suffix | Jules API (full context) |
 
-| Agent | Role | Cost Strategy |
-|-------|------|---------------|
-| **Jules** (Google) | Implements features, fixes issues | API for new context, @mentions for existing |
-| **CodeRabbit** | AI code review | Free (GitHub App) |
-| **Renovate** | Dependency updates | N/A |
+## Workflow Triggers
 
-### 2. Workflow Files
+| Event | Action |
+|-------|--------|
+| CI fails | Notify Jules (@mention or API based on author) |
+| CI passes | Trigger `@coderabbitai review` |
+| CodeRabbit submits review | Parse "Fix all issues" → forward to Jules |
 
-| Workflow | Purpose |
-|----------|---------|
-| `agentic-supervisor.yml` | Central orchestrator with author-based invocation |
-| `pr-jules-ci-fix.yml` | CI failure fixes with same author-based logic |
-| `pr-auto-merge.yml` | Auto-merge rules |
-| `security-audit.yml` | Nightly security scan |
-| `stale-branch-cleanup.yml` | Weekly cleanup of abandoned Jules branches |
-| `ci.yml` | CI checks |
-
----
-
-## Author-Based Invocation Strategy
-
-### Jules PRs (`google-labs-jules`)
-- **NEVER** uses Jules API (prevents recursive sessions)
-- Always uses `@jules` comment mentions
-- GitHub integration handles the mention natively
-- **Cost: $0**
-
-### Renovate PRs (`renovate[bot]`)
-- First failure/review: Uses Jules API + adds `jules-invoked` label
-- Subsequent issues: Uses `@jules` mentions
-- **Cost: 1 API call per PR maximum**
-
-### Human PRs
-- Always uses Jules API (needs full codebase context)
-- Standard cost per invocation
-
----
-
-## Detection: CodeRabbit Review Complete
-
-The supervisor detects a complete CodeRabbit review by:
-1. Listening for `pull_request_review` and `pull_request_review_comment` events from `coderabbitai[bot]`
-2. Pulling the latest CodeRabbit review summary (if present)
-3. Batching inline comments created **after** that review timestamp into a single prompt
-4. Posting feedback immediately (CI may still be running, and the supervisor will note that)
-
-```bash
-# From agentic-supervisor.js
-if [[ "$EVENT_NAME" == "pull_request_review" || "$EVENT_NAME" == "pull_request_review_comment" ]]; then
-  BATCHED_COMMENTS=$(collect_coderabbit_comments_since_latest_review)
-  # ... batch and invoke (includes a "CI pending" note if checks are still running)
-fi
-```
-
----
-
-## Tracking: `jules-invoked` Label
-
-The `jules-invoked` label tracks whether Jules API has been invoked for a PR:
-
-- **Added when:** First Jules API invocation on a Renovate PR
-- **Checked before:** Any subsequent invocation decision
-- **Effect:** Switches from API to @mention for cost savings
-
-The supervisor also appends `jules-attempt-<n>` labels when it posts CI/review feedback to track retry counts and prevent infinite loops.
-
----
-
-## CI Failure Alerts
-
-CI failures trigger **immediately** on the `workflow_run` failure event. The supervisor no longer waits for CodeRabbit to finish its review before notifying Jules. If CodeRabbit is still running, the CI alert includes a note that additional review feedback may follow.
-
-## Architecture
-
-```
-                              ┌─────────────────┐
-                              │     GitHub      │
-                              │   Repository    │
-                              └────────┬────────┘
-                                       │
-           ┌───────────────────────────┼───────────────────────────┐
-           │                           │                           │
-           ▼                           ▼                           ▼
-   ┌───────────────┐          ┌───────────────┐          ┌───────────────┐
-   │    Issues     │          │ Pull Requests │          │   Scheduled   │
-   │               │          │               │          │    Scans      │
-   └───────┬───────┘          └───────┬───────┘          └───────┬───────┘
-           │                           │                           │
-           ▼                           ▼                           ▼
-   ┌─────────────────────────────────────────────────────────────────────┐
-   │                       AGENTIC SUPERVISOR                            │
-   │                                                                     │
-   │   1. Context Resolution (PR vs Issue, Author)                       │
-   │   2. Invocation Method Selection (API vs Mention)                   │
-   │   3. Comments Batching                                              │
-   └──────────────────────────────┬──────────────────────────────────────┘
-                                  │
-               ┌──────────────────┼──────────────────┐
-               ▼                  ▼                  ▼
-       ┌───────────────┐  ┌───────────────┐  ┌───────────────┐
-       │ jules-api-    │  │ jules-mention │  │  coderabbit-  │
-       │ invoke        │  │               │  │  trigger      │
-       │ (Human, first │  │ (@jules       │  │               │
-       │  Renovate)    │  │  comment)     │  │               │
-       └───────────────┘  └───────────────┘  └───────────────┘
-```
-
----
-
-## Configuration Files
+## Files
 
 | File | Purpose |
 |------|---------|
-| `.coderabbit.yaml` | CodeRabbit review settings (updated to always @jules for bots) |
-| `renovate.json` | Dependency update settings |
-| `AGENTS.md` | Instructions for AI agents |
-
-### Bot Identity Configuration
-
-The supervisor uses an allowlist of bot usernames to avoid false positives. Update these values if GitHub app names change:
-- `CODERABBIT_USERS` (default: `coderabbitai[bot],coderabbitai`)
-- `CODECOV_USERS` (default: `codecov[bot],codecov`)
-- `SUPERVISOR_BOT_USERS` (default: `google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,codecov[bot],codecov,github-actions[bot]`)
-
----
-
-### 3. Prompt Management
-
-Prompts are externalized in `.github/prompts/` for easier maintenance:
-- `manual-issue.md` & `manual-pr.md`: Human triggers
-- `renovate-review.md`: Enhanced instructions for dependency updates
-- `ci-failure.md`: Context for CI fixes
-- `code-rabbit-review.md`: Code review feedback
-
-### 4. Observability
-
-The `agentic-supervisor` workflow outputs a rich **GitHub Job Summary** table, showing:
-- Context (PR/Issue) and Author
-- Selected Invocation Method
-- Number of batched comments
-- Decision reasoning
-
----
-
-## Maintenance
-
-### Stale Branch Cleanup
-- **Schedule:** Sundays at 01:00 UTC
-- **Action:** Deletes `jules/*` and `agent/*` branches older than 7 days **if** they have no open PRs.
-
----
-
-## Version History
-
-| Version | Date | Changes |
-|---------|------|---------|
-| 2.1.0 | 2026-01-01 | Added Stale Branch Cleanup, Job Summaries, External Prompts |
-| 2.0.0 | 2026-01-01 | Author-based invocation strategy, cost optimization |
-| 1.1.0 | 2025-05-20 | Unified Agentic Supervisor |
-| 1.0.0 | 2024-12-27 | Initial agentic workflow |
+| `.github/workflows/agentic-supervisor.yml` | Main workflow |
+| `.github/scripts/supervisor.ts` | Decision logic |
