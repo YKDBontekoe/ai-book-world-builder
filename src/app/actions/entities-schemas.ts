@@ -8,8 +8,8 @@ export const createEntitySchema = z.object({
 	attributes: z
 		.array(
 			z.object({
-				name: z.string(),
-				value: z.string(),
+				name: z.string().min(1, "Attribute name is required"),
+				value: z.string().min(1, "Attribute value is required"),
 			}),
 		)
 		.optional(),
