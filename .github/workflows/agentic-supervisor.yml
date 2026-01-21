@@ -1,240 +1,86 @@
 name: Agentic Supervisor
 
-# Centralized orchestration for AI agents (Jules & CodeRabbit) & Workflow Automation
-#
-# Capabilities:
-# 1. SUPERVISOR: Detects context (Issue vs PR) and routes instructions
-# 2. JULES-API: Invokes Jules API for new contexts (human PRs, first-time Renovate)
-# 3. JULES-MENTION: Posts @jules comments for existing contexts (Jules PRs, Renovate after first)
-# 4. TRIAGE: Auto-labels new issues
-# 5. MAINTENANCE: Auto-updates branches
+# Simplified supervisor with author-based routing:
+# - Jules PRs: Use @jules mentions (free)
+# - Bot/Human PRs: Use Jules API (full context)
 
 on:
-  issues:
-    types: [opened, labeled]
-  issue_comment:
-    types: [created]
-  pull_request_review:
-    types: [submitted]
-  pull_request:
-    types: [opened, synchronize, ready_for_review, labeled]
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI", "E2E Nightly", "Security Audit"]
     types: [completed]
 
+  pull_request_review:
+    types: [submitted]
+
+  issue_comment:
+    types: [created]
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.issue.number || github.event.pull_request.number || github.run_id }}
+  group: supervisor-${{ github.event.pull_request.number || github.event.workflow_run.head_sha || github.run_id }}
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
-  issues: write
   actions: read
-  checks: read
-  statuses: read
-
-env:
-  CODERABBIT_USERS: coderabbitai[bot],coderabbitai
-  CODECOV_USERS: codecov[bot],codecov
-  SUPERVISOR_BOT_USERS: google-labs-jules,jules,renovate[bot],coderabbitai[bot],coderabbitai,codecov[bot],codecov,github-actions[bot]
 
 jobs:
-  # ==========================================================================
-  # 1. SUPERVISOR: Analyze Context & Determine Intent
-  # ==========================================================================
   supervisor:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     outputs:
-      is_pr: ${{ steps.analyze.outputs.is_pr }}
-      number: ${{ steps.analyze.outputs.number }}
-      branch: ${{ steps.analyze.outputs.branch }}
-      author: ${{ steps.analyze.outputs.author }}
-      labels: ${{ steps.analyze.outputs.labels }}
-      invocation_method: ${{ steps.analyze.outputs.invocation_method }}
-      jules_prompt: ${{ steps.analyze.outputs.jules_prompt }}
-      batched_comments: ${{ steps.analyze.outputs.batched_comments }}
-      should_trigger_coderabbit: ${{ steps.analyze.outputs.should_trigger_coderabbit }}
-      assignee_mention: ${{ steps.analyze.outputs.assignee_mention }}
+      action: ${{ steps.run.outputs.action }}
+      pr_number: ${{ steps.run.outputs.pr_number }}
+      branch: ${{ steps.run.outputs.branch }}
+      prompt: ${{ steps.run.outputs.prompt }}
+      author_type: ${{ steps.run.outputs.author_type }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          fetch-depth: 1
+          node-version: "20"
 
-      - name: Analyze Event Context
-        id: analyze
+      - name: Install tsx
+        run: npm install -g tsx
+
+      - name: Run Supervisor
+        id: run
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-        run: node .github/scripts/agentic-supervisor.js
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_EVENT_PATH: ${{ github.event_path }}
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: tsx .github/scripts/supervisor.ts
 
-  # ==========================================================================
-  # 2a. JULES API INVOKE: For humans and first-time Renovate PRs
-  # ==========================================================================
-  jules-api-invoke:
+  # Invoke Jules API for bot/human PRs
+  invoke-jules:
     needs: supervisor
-    if: needs.supervisor.outputs.invocation_method == 'api'
+    if: needs.supervisor.outputs.action == 'invoke_jules_api'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
-      - name: Acknowledge (Emoji)
-        if: github.event_name == 'issue_comment'
+      - name: Post status comment
         env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          COMMENT_ID: ${{ github.event.comment.id }}
-        run: |
-          gh api "/repos/${{ github.repository }}/issues/comments/$COMMENT_ID/reactions" -f content="eyes" --repo "${{ github.repository }}" 2>/dev/null || true
-
-      - name: Post status - Starting Jules session
-        if: needs.supervisor.outputs.is_pr == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          PR_NUMBER: ${{ needs.supervisor.outputs.number }}
-          AUTHOR: ${{ needs.supervisor.outputs.author }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.supervisor.outputs.pr_number }}
+          AUTHOR_TYPE: ${{ needs.supervisor.outputs.author_type }}
         run: |
           gh pr comment "$PR_NUMBER" --body "🤖 **Jules Session Starting**
           
-          Creating a new Jules session to address the feedback. This may take a few minutes.
+          Creating a new Jules session to address the issues.
           
-          **PR Author:** \`$AUTHOR\`
-          **Method:** API Invoke (new session)" --repo "${{ github.repository }}"
+          **Author Type:** \`$AUTHOR_TYPE\`
+          **Method:** API Invoke (full context)" --repo "${{ github.repository }}"
 
       - name: Invoke Jules API
-        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
+        uses: google-labs-code/jules-action@v1
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ needs.supervisor.outputs.branch }}
-          prompt: ${{ needs.supervisor.outputs.jules_prompt }}
-
-      - name: Add jules-invoked label (for Renovate PRs)
-        if: needs.supervisor.outputs.author == 'renovate[bot]' && needs.supervisor.outputs.is_pr == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          PR_NUMBER: ${{ needs.supervisor.outputs.number }}
-        run: |
-          gh pr edit "$PR_NUMBER" --add-label "jules-invoked" --repo "${{ github.repository }}" 2>/dev/null || true
-          gh pr comment "$PR_NUMBER" --body "📝 Added \`jules-invoked\` label. Future feedback will use @jules mentions instead of new API sessions (cost optimization)." --repo "${{ github.repository }}"
-
-  # ==========================================================================
-  # 2b. JULES MENTION: For Jules PRs and subsequent Renovate feedback
-  # ==========================================================================
-  jules-mention:
-    needs: supervisor
-    if: needs.supervisor.outputs.invocation_method == 'mention'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - name: Post ${{ needs.supervisor.outputs.assignee_mention }} with feedback
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          PR_NUMBER: ${{ needs.supervisor.outputs.number }}
-          BATCHED_COMMENTS: ${{ needs.supervisor.outputs.batched_comments }}
-          AUTHOR: ${{ needs.supervisor.outputs.author }}
-          ASSIGNEE_MENTION: ${{ needs.supervisor.outputs.assignee_mention }}
-        run: |
-          # Use default if empty
-          MENTION="${ASSIGNEE_MENTION:-@jules}"
-
-          cat <<EOF > /tmp/comment.md
-          🤖 **Jules Triggered**
-
-          Routing feedback via ${MENTION} (cost-optimized) instead of a new API session.
-
-          **PR Author:** \`$AUTHOR\`
-          **Method:** GitHub Integration (${MENTION})
-
-          <details>
-          <summary>🔍 <b>View Feedback & Instructions</b></summary>
-
-          EOF
-
-          if [[ -n "$BATCHED_COMMENTS" ]]; then
-            printf '\n%s\n' "${BATCHED_COMMENTS}" >> /tmp/comment.md
-            printf '\n' >> /tmp/comment.md
-            printf '%s\n' "### Instructions:" >> /tmp/comment.md
-            printf '%s\n' "1. Run \`pnpm lint && pnpm type-check && pnpm test:unit\`" >> /tmp/comment.md
-            printf '%s\n' "2. Fix all issues identified above" >> /tmp/comment.md
-            printf '%s\n' "3. Commit with message: \`fix: address review feedback\`" >> /tmp/comment.md
-          else
-            printf '\n' >> /tmp/comment.md
-            printf '%s\n' "${MENTION} Please review and address any pending feedback on this PR." >> /tmp/comment.md
-          fi
-
-          printf '\n%s\n' "</details>" >> /tmp/comment.md
-
-          gh pr comment "$PR_NUMBER" --body-file /tmp/comment.md --repo "${{ github.repository }}"
-
-  # ==========================================================================
-  # 3. CODERABBIT TRIGGER: For Bot PRs Only (after CI passes)
-  # ==========================================================================
-  coderabbit-trigger:
-    needs: supervisor
-    if: needs.supervisor.outputs.should_trigger_coderabbit == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Request CodeRabbit Review
-        if: needs.supervisor.outputs.number != ''
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          PR_NUMBER: ${{ needs.supervisor.outputs.number }}
-          AUTHOR: ${{ needs.supervisor.outputs.author }}
-        run: |
-          gh pr comment "$PR_NUMBER" --body "🐰 **Requesting CodeRabbit Review**
-          
-          CI passed for bot PR (Author: \`$AUTHOR\`). Triggering full code review.
-          
-          @coderabbitai review" --repo "${{ github.repository }}"
-
-  # ==========================================================================
-  # 5. ONBOARDING: Good First Issue
-  # ==========================================================================
-  good-first-issue:
-    if: github.event_name == 'issues' && github.event.action == 'labeled' && github.event.label.name == 'good first issue'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Post Help
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          ISSUE: ${{ github.event.issue.number }}
-        run: |
-          gh issue comment $ISSUE --body "🌟 **Good First Issue!**
-          1. Fork & Clone
-          2. Branch: \`fix/issue-$ISSUE\`
-          3. Mention \`@jules\` if stuck!" --repo "${{ github.repository }}"
-
-  # ==========================================================================
-  # 6. REVIEW: Request Human Review
-  # ==========================================================================
-  request-human-review:
-    needs: supervisor
-    if: |
-      needs.supervisor.outputs.is_pr == 'true' &&
-      github.event.action == 'labeled' &&
-      (contains(github.event.label.name, 'security') || contains(github.event.label.name, 'breaking-change') || contains(github.event.label.name, 'size/xl'))
-    runs-on: ubuntu-latest
-    steps:
-      - name: Request Review
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          PR: ${{ needs.supervisor.outputs.number }}
-        run: gh pr comment "$PR" --body "⚠️ Human Review Required due to sensitive labels (security, breaking-change, or large change)." --repo "${{ github.repository }}"
-
-  # ==========================================================================
-  # 7. MAINTENANCE: Update Branch
-  # ==========================================================================
-  update-branch:
-    needs: supervisor
-    if: needs.supervisor.outputs.is_pr == 'true' && (github.event.action == 'synchronize' || github.event.action == 'opened')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Update if Behind
-        env:
-          GH_TOKEN: ${{ secrets.CUSTOM_PAT || github.token }}
-          PR: ${{ needs.supervisor.outputs.number }}
-        run: |
-          STATUS=$(gh pr view "$PR" --json mergeStateStatus --jq '.mergeStateStatus' --repo "${{ github.repository }}" 2>/dev/null || echo "")
-          if [[ "$STATUS" == "BEHIND" ]]; then
-            gh pr update-branch "$PR" --rebase --repo "${{ github.repository }}" || true
-          fi
+          prompt: ${{ needs.supervisor.outputs.prompt }}
+          include_last_commit: true
+          include_commit_log: true
