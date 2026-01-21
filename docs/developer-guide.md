@@ -92,6 +92,8 @@ The Power Dock uses the **Strategy Pattern** to manage diverse AI tools without 
 -   **Registry**: Tools are registered in `toolStrategies` object in `src/features/writer/components/tools/tool-strategies.ts`.
 -   **Execution**: The `PowerDock` component simply looks up the strategy by ID and calls `execute`. This makes adding new tools purely a matter of creating a new class and registering it, respecting the Open-Closed Principle.
 
+See [`docs/ai-tools.md`](ai-tools.md) for a detailed technical reference of available tools.
+
 ### 3. Command Palette (Writer Spotlight)
 The Command Palette is driven by the `useSpotlightItems` hook (`hooks/use-spotlight-items.tsx`).
 -   **Registry**: It aggregates "Actions" (static commands), "Entities" (from `useProjectEntities`), and "Scenes" (from `WriterContext`).
@@ -121,6 +123,11 @@ We separate controller logic (Server Actions) from business logic (Services):
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
     -   `SceneSequenceService`: Centralizes logic for scene insertion, reordering, and shifting. It uses a **Doubly-Linked List** strategy (`prevSceneId`) alongside a `sequence` integer to ensure robust ordering and race-condition handling.
     -   `ProjectDuplicationService`: Handles deep-cloning of projects. It employs a **Two-Pass Strategy** for scenes to resolve circular dependencies (linked lists) and an **ID Map** system to maintain referential integrity across all 15+ database tables.
+
+### StoryService vs GenerationOrchestrator
+It is important to distinguish between these two key services:
+-   **`StoryService`**: Handles **interactive, synchronous** operations triggered by the user in the Writer View (e.g., "Batch Write", "Plan Chapter"). It focuses on immediate feedback and user-guided generation.
+-   **`GenerationOrchestrator`**: Manages the **long-running, stateful** generation pipeline (e.g., generating a full book from scratch). It persists state to the database to handle timeouts and resume operations.
 
 ### 7. Analysis Pipeline
 The analysis features are broken down into specialized micro-services under `src/lib/services/analysis/`:
