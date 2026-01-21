@@ -10,6 +10,7 @@ import {
 	X,
 } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
 import { bulkDeleteEntitiesAction, getEntities } from "@/app/actions/entities";
 import { getRelationships } from "@/app/actions/project-stats";
@@ -295,6 +296,39 @@ export function BiblePane(): React.JSX.Element {
 
 		pendingDeletionsRef.current.set(toastId, timeout);
 	}, [selectedIds, projectId, toggleSelectionMode, handleUndo, queryClient]);
+
+	// Shortcuts
+	useHotkeys(
+		"meta+a, ctrl+a",
+		(e) => {
+			e.preventDefault();
+			if (!filteredEntities) return;
+			setIsSelectionMode(true);
+			setSelectedIds(new Set(filteredEntities.map((e) => e.id)));
+		},
+		{ enabled: !!filteredEntities && filteredEntities.length > 0 },
+		[filteredEntities],
+	);
+
+	useHotkeys(
+		"delete, backspace",
+		() => {
+			handleBulkDelete();
+		},
+		{ enabled: isSelectionMode && selectedIds.size > 0 },
+		[handleBulkDelete, isSelectionMode, selectedIds],
+	);
+
+	useHotkeys(
+		"escape",
+		() => {
+			if (isSelectionMode) {
+				toggleSelectionMode();
+			}
+		},
+		{ enabled: isSelectionMode },
+		[isSelectionMode, toggleSelectionMode],
+	);
 
 	const handleBulkExport = useCallback(async () => {
 		const idsToExport = Array.from(selectedIds);

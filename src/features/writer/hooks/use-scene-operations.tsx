@@ -7,7 +7,9 @@ import {
 	bulkDeleteScenes,
 	createNewChapter,
 	createSceneInChapter,
+	deleteChapter,
 	generateScene,
+	updateChapterTitle,
 	updateSceneTitle,
 } from "@/features/writer/actions";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -24,6 +26,7 @@ export interface UseSceneOperationsReturn {
 	isGenerating: boolean;
 	isCreatingChapter: boolean;
 	deletedSceneIds: Set<string>;
+	deletedChapterIds: Set<string>;
 	handleGenerateNextScene: (
 		chapterId: string,
 		prevSceneId?: string,
@@ -33,6 +36,8 @@ export interface UseSceneOperationsReturn {
 	handleDeleteScene: (sceneId: string) => Promise<void>;
 	performDelete: (idsToDelete: string[]) => void;
 	handleCreateChapter: () => Promise<void>;
+	handleRenameChapter: (chapterId: string, newTitle: string) => Promise<void>;
+	handleDeleteChapter: (chapterId: string) => void;
 }
 
 export function useSceneOperations({
@@ -45,6 +50,9 @@ export function useSceneOperations({
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [isCreatingChapter, setIsCreatingChapter] = useState(false);
 	const [deletedSceneIds, setDeletedSceneIds] = useState<Set<string>>(
+		new Set(),
+	);
+	const [deletedChapterIds, setDeletedChapterIds] = useState<Set<string>>(
 		new Set(),
 	);
 	const pendingDeletionsRef = useRef<
@@ -69,6 +77,26 @@ export function useSceneOperations({
 				chapter.scenes.forEach((scene) => {
 					currentIds.add(scene.id);
 				});
+			});
+
+			const next = new Set(prev);
+			let changed = false;
+			for (const id of prev) {
+				if (!currentIds.has(id)) {
+					next.delete(id);
+					changed = true;
+				}
+			}
+
+			return changed ? next : prev;
+		});
+
+		setDeletedChapterIds((prev) => {
+			if (prev.size === 0) return prev;
+
+			const currentIds = new Set<string>();
+			structure.forEach((chapter) => {
+				currentIds.add(chapter.id);
 			});
 
 			const next = new Set(prev);
@@ -159,6 +187,26 @@ export function useSceneOperations({
 				idsToRestore.forEach((id) => {
 					next.delete(id);
 				});
+				return next;
+			});
+
+			toast.dismiss(toastId);
+			toast.success("Deletion undone");
+		},
+		[],
+	);
+
+	const undoDeleteChapter = useCallback(
+		(toastId: string | number, idToRestore: string) => {
+			const timeoutId = pendingDeletionsRef.current.get(toastId);
+			if (timeoutId) {
+				clearTimeout(timeoutId);
+				pendingDeletionsRef.current.delete(toastId);
+			}
+
+			setDeletedChapterIds((prev) => {
+				const next = new Set(prev);
+				next.delete(idToRestore);
 				return next;
 			});
 
@@ -262,15 +310,91 @@ export function useSceneOperations({
 		}
 	}, [projectId, onStructureUpdate]);
 
+	const handleRenameChapter = useCallback(
+		async (chapterId: string, newTitle: string) => {
+			const toastId = toast.loading("Renaming chapter...");
+			try {
+				const result = await updateChapterTitle(chapterId, newTitle);
+				if (result.success) {
+					toast.success("Chapter renamed", { id: toastId });
+					onStructureUpdate?.();
+				} else {
+					toast.error("Failed to rename chapter", { id: toastId });
+				}
+			} catch (_e) {
+				toast.error("Error renaming chapter", { id: toastId });
+			}
+		},
+		[onStructureUpdate],
+	);
+
+	const handleDeleteChapter = useCallback(
+		(chapterId: string) => {
+			// Optimistic update
+			setDeletedChapterIds((prev) => {
+				const next = new Set(prev);
+				next.add(chapterId);
+				return next;
+			});
+
+			// Show Undo Toast
+			const toastId = toast.custom(
+				(t) => (
+					<GlassCard
+						variant="liquid"
+						className="flex items-center gap-4 p-4 w-full max-w-md mx-auto pointer-events-auto"
+					>
+						<div className="flex-1 text-sm">Deleted chapter</div>
+						<Button
+							size="sm"
+							variant="outline"
+							className="gap-2 h-8"
+							onClick={() => undoDeleteChapter(t, chapterId)}
+						>
+							<Undo2 className="h-3.5 w-3.5" />
+							Undo
+						</Button>
+					</GlassCard>
+				),
+				{ duration: 4000 },
+			);
+
+			// Delayed execution
+			const timeout = setTimeout(async () => {
+				pendingDeletionsRef.current.delete(toastId);
+
+				const result = await deleteChapter(chapterId);
+
+				if (result.success) {
+					onStructureUpdate?.();
+				} else {
+					toast.error("Failed to delete chapter");
+					// Restore on error
+					setDeletedChapterIds((prev) => {
+						const next = new Set(prev);
+						next.delete(chapterId);
+						return next;
+					});
+				}
+			}, 4000);
+
+			pendingDeletionsRef.current.set(toastId, timeout);
+		},
+		[undoDeleteChapter, onStructureUpdate],
+	);
+
 	return {
 		isGenerating,
 		isCreatingChapter,
 		deletedSceneIds,
+		deletedChapterIds,
 		handleGenerateNextScene,
 		handleCreateSceneManually,
 		handleRenameScene,
 		handleDeleteScene,
 		performDelete,
 		handleCreateChapter,
+		handleRenameChapter,
+		handleDeleteChapter,
 	};
 }

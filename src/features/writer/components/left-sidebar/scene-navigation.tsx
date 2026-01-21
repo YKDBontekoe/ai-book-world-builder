@@ -54,12 +54,15 @@ export const SceneNavigation = memo(function SceneNavigation({
 		isGenerating,
 		isCreatingChapter,
 		deletedSceneIds,
+		deletedChapterIds,
 		handleGenerateNextScene,
 		handleCreateSceneManually,
 		handleRenameScene,
 		handleDeleteScene,
 		performDelete,
 		handleCreateChapter,
+		handleRenameChapter,
+		handleDeleteChapter,
 	} = useSceneOperations({
 		projectId: project.id,
 		activeSceneId,
@@ -78,7 +81,7 @@ export const SceneNavigation = memo(function SceneNavigation({
 		handleExpandAll,
 		handleCollapseAll,
 		clearSearch,
-	} = useSceneNavigation(structure, deletedSceneIds);
+	} = useSceneNavigation(structure, deletedSceneIds, deletedChapterIds);
 
 	// Selection Hook (Bulk Actions)
 	const {
@@ -232,6 +235,8 @@ export const SceneNavigation = memo(function SceneNavigation({
 								onRenameScene={handleRenameScene}
 								onDeleteScene={handleDeleteScene}
 								onToggleSceneSelect={toggleSceneSelect}
+								onRenameChapter={handleRenameChapter}
+								onDeleteChapter={handleDeleteChapter}
 							/>
 						))}
 						{!searchTerm && (

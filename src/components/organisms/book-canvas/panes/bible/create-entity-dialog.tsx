@@ -5,6 +5,7 @@ import { Loader2, Plus, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useLocalStorage } from "usehooks-ts";
 import type { z } from "zod";
 import { generateEntitySummaryAction } from "@/app/actions/ai-operations";
 import { createEntityAction, createEntitySchema } from "@/app/actions/entities";
@@ -54,6 +55,15 @@ export function CreateEntityDialog({
 }: CreateEntityDialogProps) {
 	const [open, setOpen] = useState(false);
 	const [isMagicFilling, setIsMagicFilling] = useState(false);
+	const [lastUsedType, setLastUsedType] = useLocalStorage<string>(
+		"create-entity-last-type",
+		defaultType,
+	);
+	const [isMounted, setIsMounted] = useState(false);
+
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
 
 	const {
 		register,
@@ -77,14 +87,14 @@ export function CreateEntityDialog({
 
 	// Reset form when dialog opens/closes
 	useEffect(() => {
-		if (open) {
+		if (open && isMounted) {
 			reset({
 				name: "",
-				kind: defaultType,
+				kind: lastUsedType || defaultType,
 				summary: "",
 			});
 		}
-	}, [open, defaultType, reset]);
+	}, [open, defaultType, reset, lastUsedType, isMounted]);
 
 	const handleOpenChange = (newOpen: boolean) => {
 		setOpen(newOpen);
@@ -130,6 +140,7 @@ export function CreateEntityDialog({
 				...values,
 			});
 
+			setLastUsedType(values.kind);
 			toast.success("Entity created successfully", { id: toastId });
 			handleOpenChange(false);
 		} catch (error) {
