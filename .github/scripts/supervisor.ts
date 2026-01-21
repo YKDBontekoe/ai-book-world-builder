@@ -87,7 +87,10 @@ function getAuthorType(login: string): AuthorType {
 
 function postComment(prNumber: number, body: string): void {
   const escaped = body.replace(/'/g, "'\\''");
-  exec(`gh pr comment ${prNumber} --body '${escaped}'`);
+  const result = exec(`gh pr comment ${prNumber} --body '${escaped}'`);
+  if (result === "") {
+    log(`Warning: Failed to post comment to PR #${prNumber}. The command may have failed.`);
+  }
 }
 
 function getFailedJobs(runId: number): string {
@@ -135,7 +138,6 @@ function extractRelevantLogs(fullLogs: string): string {
      return fullLogs.slice(0, CONFIG.MAX_LOG_LENGTH) + "\n... (fallback to tail)";
   }
 
-  return result;
   return result;
 }
 
@@ -454,19 +456,10 @@ function handleIssueComment(event: GitHubEvent): SupervisorResult {
   // Ensure it's a PR comment
   if (!comment || !issue?.pull_request) return { action: "none" };
 
-  // Only process Codecov comments
-  if (comment.user.login.toLowerCase() !== CONFIG.CODECOV_BOT) {
-    return { action: "none" };
-  }
-
-  // Check if coverage decreased or warns about missing tests
-  if (!comment.body.includes("Coverage") && !comment.body.includes("missing")) {
-    return { action: "none" };
-  }
-
   const prNumber = issue.number;
-  // We need to fetch the PR to get the branch name since issue_comment payload doesn't have it
   const repo = process.env.GITHUB_REPOSITORY;
+
+  // Fetch PR data first as it's needed for both commands and Codecov
   const prJson = exec(`gh pr view ${prNumber} --json headRefName,author --repo ${repo}`);
   if (!prJson) return { action: "none" };
   
@@ -474,15 +467,37 @@ function handleIssueComment(event: GitHubEvent): SupervisorResult {
   const branch = prData.headRefName;
   const authorType = getAuthorType(prData.author.login);
 
-  log(`Codecov comment on PR #${prNumber} (branch: ${branch})`);
+  // 1. Handle User Commands (Restore automation features)
+  const body = comment.body.toLowerCase();
+  if (body.includes(CONFIG.JULES_MENTION.toLowerCase())) {
+    let commandType = "";
+    if (body.includes("/refactor")) commandType = "refactor";
+    else if (body.includes("/test")) commandType = "test";
 
-  if (authorType === "jules") {
-     const message = `${CONFIG.JULES_MENTION} Codecov reports missing coverage. Please add tests.`;
-     return { action: "mention_jules", prNumber, branch, message, authorType };
-  } else {
-     const prompt = buildPrompt("codecov", comment.body, prNumber);
-     return { action: "invoke_jules_api", prNumber, branch, prompt, authorType };
+    if (commandType) {
+      log(`User requested ${commandType} on PR #${prNumber} (branch: ${branch})`);
+      const prompt = `User requested ${commandType} on PR #${prNumber}.\n\nComment: ${comment.body}\n\nBranch: ${branch}`;
+      return { action: "invoke_jules_api", prNumber, branch, prompt, authorType };
+    }
   }
+
+  // 2. Handle Codecov Bot
+  if (comment.user.login.toLowerCase() === CONFIG.CODECOV_BOT) {
+    // Check if coverage decreased or warns about missing tests
+    if (comment.body.includes("Coverage") || comment.body.includes("missing")) {
+      log(`Codecov comment on PR #${prNumber} (branch: ${branch})`);
+
+      if (authorType === "jules") {
+         const message = `${CONFIG.JULES_MENTION} Codecov reports missing coverage. Please add tests.`;
+         return { action: "mention_jules", prNumber, branch, message, authorType };
+      } else {
+         const prompt = buildPrompt("codecov", comment.body, prNumber);
+         return { action: "invoke_jules_api", prNumber, branch, prompt, authorType };
+      }
+    }
+  }
+
+  return { action: "none" };
 }
 
 // =============================================================================
