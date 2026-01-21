@@ -1,19 +1,26 @@
 "use server";
 
-import { z } from "zod";
+import type { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
+import type {
+	GitHubCheckStatus,
+	GitHubPullRequestStatus,
+	GitHubPullRequestSummary,
+} from "@/lib/github-types";
 import { getOctokit, getRepoDetails } from "@/lib/services/github-service";
-import type { GitHubCheckStatus, GitHubPullRequestStatus, GitHubPullRequestSummary } from "@/lib/github-types";
 import {
-	issueStateSchema,
 	issueNumberSchema,
+	issueStateSchema,
 	mergePRSchema,
 	pullRequestByBranchSchema,
 	pullRequestStatusSchema,
 } from "./schemas";
 import type { GitHubPR } from "./types";
 
-function parseRepoFullName(repoFullName: string): { owner: string; repo: string } {
+function parseRepoFullName(repoFullName: string): {
+	owner: string;
+	repo: string;
+} {
 	const [owner, repo] = repoFullName.split("/");
 	if (!owner || !repo) {
 		throw new Error("Invalid repository identifier");

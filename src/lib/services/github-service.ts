@@ -22,7 +22,9 @@ export const getRepoDetails = (): {
 	const repo = process.env.GITHUB_REPO;
 
 	if (!owner || !repo) {
-		throw new Error("GITHUB_OWNER and GITHUB_REPO must be set in environment variables");
+		throw new Error(
+			"GITHUB_OWNER and GITHUB_REPO must be set in environment variables",
+		);
 	}
 
 	return { fullName: `${owner}/${repo}`, owner, repo };

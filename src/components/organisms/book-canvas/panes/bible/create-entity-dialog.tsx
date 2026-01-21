@@ -5,7 +5,7 @@ import { Loader2, Plus, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
-import { z } from "zod";
+import type { z } from "zod";
 import { generateEntitySummaryAction } from "@/app/actions/ai-operations";
 import { createEntityAction, createEntitySchema } from "@/app/actions/entities";
 import { Button } from "@/components/atoms/button";
@@ -227,10 +227,7 @@ export function CreateEntityDialog({
 					</div>
 
 					<DialogFooter>
-						<Button
-							type="submit"
-							disabled={isSubmitting || isMagicFilling}
-						>
+						<Button type="submit" disabled={isSubmitting || isMagicFilling}>
 							{isSubmitting && (
 								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
 							)}

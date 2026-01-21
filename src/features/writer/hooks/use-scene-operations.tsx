@@ -1,3 +1,4 @@
+import { Undo2 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
@@ -10,7 +11,6 @@ import {
 	updateSceneTitle,
 } from "@/features/writer/actions";
 import type { ChapterWithScenes } from "@/lib/types";
-import { Undo2 } from "lucide-react";
 
 interface UseSceneOperationsProps {
 	projectId: string;
@@ -24,7 +24,10 @@ export interface UseSceneOperationsReturn {
 	isGenerating: boolean;
 	isCreatingChapter: boolean;
 	deletedSceneIds: Set<string>;
-	handleGenerateNextScene: (chapterId: string, prevSceneId?: string) => Promise<void>;
+	handleGenerateNextScene: (
+		chapterId: string,
+		prevSceneId?: string,
+	) => Promise<void>;
 	handleCreateSceneManually: (chapterId: string) => Promise<void>;
 	handleRenameScene: (sceneId: string, newTitle: string) => Promise<void>;
 	handleDeleteScene: (sceneId: string) => Promise<void>;
@@ -44,9 +47,9 @@ export function useSceneOperations({
 	const [deletedSceneIds, setDeletedSceneIds] = useState<Set<string>>(
 		new Set(),
 	);
-	const pendingDeletionsRef = useRef<Map<string | number, ReturnType<typeof setTimeout>>>(
-		new Map(),
-	);
+	const pendingDeletionsRef = useRef<
+		Map<string | number, ReturnType<typeof setTimeout>>
+	>(new Map());
 
 	// Store activeSceneId in ref to prevent prop instability in performDelete
 	const activeSceneIdRef = useRef(activeSceneId);

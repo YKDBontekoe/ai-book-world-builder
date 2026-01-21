@@ -10,9 +10,9 @@ const repositoriesMock = vi.hoisted(() => ({
 		findByProject: vi.fn(),
 		update: vi.fn(),
 		delete: vi.fn(),
-        create: vi.fn(),
-        createAttribute: vi.fn(),
-        bulkDelete: vi.fn(),
+		create: vi.fn(),
+		createAttribute: vi.fn(),
+		bulkDelete: vi.fn(),
 	},
 	projectRepository: {
 		findByIdWithAccess: vi.fn(),
@@ -29,8 +29,8 @@ vi.mock("next/cache", () => ({
 import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
 import {
+	bulkDeleteEntitiesAction,
 	createEntityAction,
-    bulkDeleteEntitiesAction,
 } from "@/app/actions/entities";
 import { entityRepository, projectRepository } from "@/lib/db/repositories";
 import type { Entity, Project } from "@/lib/db/schema";
@@ -52,9 +52,9 @@ function buildSession() {
 	return {
 		user: {
 			id: userId,
-            email: null,
+			email: null,
 			name: "Test User",
-            image: null,
+			image: null,
 			type: "regular",
 		},
 		expires: new Date().toISOString(),
@@ -65,106 +65,120 @@ function buildProject(overrides?: Partial<Project>): Project {
 	return {
 		id: projectId,
 		name: "Test Project",
-        description: null,
+		description: null,
 		userId,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+		createdAt: new Date(),
+		updatedAt: new Date(),
 		visibility: "private",
-        folders: [],
+		folders: [],
 		...overrides,
 	} as Project;
 }
 
 describe("extended entities actions", () => {
-    afterEach(() => {
-        vi.clearAllMocks();
-    });
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
 
-    describe("createEntityAction", () => {
-        it("creates entity and attributes", async () => {
-            mockedAuth.mockResolvedValue(buildSession());
-            mockedFindByIdWithAccess.mockResolvedValue(buildProject());
+	describe("createEntityAction", () => {
+		it("creates entity and attributes", async () => {
+			mockedAuth.mockResolvedValue(buildSession());
+			mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 
-            const newEntity = {
-                id: "entity-1",
-                projectId,
-                name: "Gandalf",
-                kind: "character",
-                summary: "Wizard",
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                startDate: null,
-                endDate: null,
-            } as Entity;
+			const newEntity = {
+				id: "entity-1",
+				projectId,
+				name: "Gandalf",
+				kind: "character",
+				summary: "Wizard",
+				createdAt: new Date(),
+				updatedAt: new Date(),
+				startDate: null,
+				endDate: null,
+			} as Entity;
 
-            mockedCreate.mockResolvedValue(newEntity);
-            mockedCreateAttribute.mockResolvedValue({} as any);
+			mockedCreate.mockResolvedValue(newEntity);
+			mockedCreateAttribute.mockResolvedValue({} as any);
 
-            const result = unwrap(await createEntityAction({
-                projectId,
-                name: "Gandalf",
-                kind: "character",
-                summary: "Wizard",
-                attributes: [{ name: "Role", value: "Wizard" }]
-            }));
+			const result = unwrap(
+				await createEntityAction({
+					projectId,
+					name: "Gandalf",
+					kind: "character",
+					summary: "Wizard",
+					attributes: [{ name: "Role", value: "Wizard" }],
+				}),
+			);
 
-            expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
-            expect(mockedCreate).toHaveBeenCalledWith(expect.objectContaining({
-                name: "Gandalf",
-                kind: "character"
-            }));
-            expect(mockedCreateAttribute).toHaveBeenCalled();
-            expect(result.id).toBe("entity-1");
-        });
+			expect(mockedFindByIdWithAccess).toHaveBeenCalledWith(projectId, userId);
+			expect(mockedCreate).toHaveBeenCalledWith(
+				expect.objectContaining({
+					name: "Gandalf",
+					kind: "character",
+				}),
+			);
+			expect(mockedCreateAttribute).toHaveBeenCalled();
+			expect(result.id).toBe("entity-1");
+		});
 
-        it("fails if not owner", async () => {
-            mockedAuth.mockResolvedValue(buildSession());
-            mockedFindByIdWithAccess.mockResolvedValue(buildProject({ userId: "other" }));
+		it("fails if not owner", async () => {
+			mockedAuth.mockResolvedValue(buildSession());
+			mockedFindByIdWithAccess.mockResolvedValue(
+				buildProject({ userId: "other" }),
+			);
 
-            const result = await createEntityAction({
-                projectId,
-                name: "Gandalf",
-                kind: "character"
-            });
+			const result = await createEntityAction({
+				projectId,
+				name: "Gandalf",
+				kind: "character",
+			});
 
-            expect(result.success).toBe(false);
-            expect(mockedCreate).not.toHaveBeenCalled();
-        });
-    });
+			expect(result.success).toBe(false);
+			expect(mockedCreate).not.toHaveBeenCalled();
+		});
+	});
 
-    describe("bulkDeleteEntitiesAction", () => {
-        it("deletes entities if all belong to project and user owns project", async () => {
-            mockedAuth.mockResolvedValue(buildSession());
-            mockedFindByIdWithAccess.mockResolvedValue(buildProject());
+	describe("bulkDeleteEntitiesAction", () => {
+		it("deletes entities if all belong to project and user owns project", async () => {
+			mockedAuth.mockResolvedValue(buildSession());
+			mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 
-            mockedFindById.mockResolvedValue({ projectId } as Entity); // for all calls
+			mockedFindById.mockResolvedValue({ projectId } as Entity); // for all calls
 
-            const ids = ["550e8400-e29b-41d4-a716-446655440011", "550e8400-e29b-41d4-a716-446655440012"];
-            const result = unwrap(await bulkDeleteEntitiesAction({
-                projectId,
-                ids
-            }));
+			const ids = [
+				"550e8400-e29b-41d4-a716-446655440011",
+				"550e8400-e29b-41d4-a716-446655440012",
+			];
+			const result = unwrap(
+				await bulkDeleteEntitiesAction({
+					projectId,
+					ids,
+				}),
+			);
 
-            expect(mockedFindById).toHaveBeenCalledTimes(2);
-            expect(mockedBulkDelete).toHaveBeenCalledWith(ids);
-            expect(result.success).toBe(true);
-        });
+			expect(mockedFindById).toHaveBeenCalledTimes(2);
+			expect(mockedBulkDelete).toHaveBeenCalledWith(ids);
+			expect(result.success).toBe(true);
+		});
 
-        it("fails if one entity belongs to another project", async () => {
-            mockedAuth.mockResolvedValue(buildSession());
-            mockedFindByIdWithAccess.mockResolvedValue(buildProject());
+		it("fails if one entity belongs to another project", async () => {
+			mockedAuth.mockResolvedValue(buildSession());
+			mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 
-            mockedFindById
-                .mockResolvedValueOnce({ projectId } as Entity)
-                .mockResolvedValueOnce({ projectId: "other" } as Entity);
+			mockedFindById
+				.mockResolvedValueOnce({ projectId } as Entity)
+				.mockResolvedValueOnce({ projectId: "other" } as Entity);
 
-            const result = await bulkDeleteEntitiesAction({
-                projectId,
-                ids: ["550e8400-e29b-41d4-a716-446655440011", "550e8400-e29b-41d4-a716-446655440012"]
-            });
+			const result = await bulkDeleteEntitiesAction({
+				projectId,
+				ids: [
+					"550e8400-e29b-41d4-a716-446655440011",
+					"550e8400-e29b-41d4-a716-446655440012",
+				],
+			});
 
-            expect(result.success).toBe(false);
-            expect(mockedBulkDelete).not.toHaveBeenCalled();
-        });
-    });
+			expect(result.success).toBe(false);
+			expect(mockedBulkDelete).not.toHaveBeenCalled();
+		});
+	});
 });

@@ -1,17 +1,7 @@
 "use client";
 
-import {
-	ArrowLeft,
-	ExternalLink,
-	Loader2,
-	Send,
-} from "lucide-react";
-import {
-	type FormEvent,
-	type JSX,
-	useEffect,
-	useRef,
-} from "react";
+import { ArrowLeft, ExternalLink, Loader2, Send } from "lucide-react";
+import { type FormEvent, type JSX, useEffect, useRef } from "react";
 
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";

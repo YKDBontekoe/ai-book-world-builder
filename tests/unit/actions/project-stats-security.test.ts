@@ -67,7 +67,9 @@ describe("Project Stats Security", () => {
 		mockGetProjectByIdWithAccess.mockResolvedValue(null);
 
 		// Setup: Data queries would return data if called
-		mockGetEntitiesForProject.mockResolvedValue([{ id: "e1", kind: "character" }]);
+		mockGetEntitiesForProject.mockResolvedValue([
+			{ id: "e1", kind: "character" },
+		]);
 
 		const result = await getProjectStats({ projectId: PROJECT_ID });
 
