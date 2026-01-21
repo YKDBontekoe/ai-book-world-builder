@@ -12,22 +12,22 @@ vi.mock("@tanstack/react-query", () => ({
 }));
 
 const zMock = vi.hoisted(async () => {
-    const zod = await import("zod");
-    return zod;
+	const zod = await import("zod");
+	return zod;
 });
 
 vi.mock("@/app/actions/entities", async () => {
-    const { z } = await zMock;
-    return {
-        getEntities: vi.fn(),
-        bulkDeleteEntitiesAction: vi.fn(),
-        createEntityAction: vi.fn(),
-        createEntitySchema: z.object({
-            name: z.string(),
-            kind: z.string(),
-            summary: z.string().optional(),
-        }),
-    }
+	const { z } = await zMock;
+	return {
+		getEntities: vi.fn(),
+		bulkDeleteEntitiesAction: vi.fn(),
+		createEntityAction: vi.fn(),
+		createEntitySchema: z.object({
+			name: z.string(),
+			kind: z.string(),
+			summary: z.string().optional(),
+		}),
+	};
 });
 
 vi.mock("@/app/actions/project-stats", () => ({

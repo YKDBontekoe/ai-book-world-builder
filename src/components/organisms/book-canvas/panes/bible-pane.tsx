@@ -11,10 +11,7 @@ import {
 } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
-import {
-	bulkDeleteEntitiesAction,
-	getEntities,
-} from "@/app/actions/entities";
+import { bulkDeleteEntitiesAction, getEntities } from "@/app/actions/entities";
 import { getRelationships } from "@/app/actions/project-stats";
 import { Button } from "@/components/atoms/button";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
@@ -304,7 +301,9 @@ export function BiblePane(): React.JSX.Element {
 		if (idsToExport.length === 0) return;
 
 		// Find entities to export
-		const entitiesToExport = entities?.filter((e) => idsToExport.includes(e.id));
+		const entitiesToExport = entities?.filter((e) =>
+			idsToExport.includes(e.id),
+		);
 		if (!entitiesToExport) return;
 
 		// Format as JSON or text
@@ -382,7 +381,10 @@ export function BiblePane(): React.JSX.Element {
 								<CheckSquare className="h-4 w-4" />
 							)}
 						</Button>
-						<CreateEntityDialog projectId={projectId} defaultType={typeFilter === 'all' ? undefined : typeFilter} />
+						<CreateEntityDialog
+							projectId={projectId}
+							defaultType={typeFilter === "all" ? undefined : typeFilter}
+						/>
 					</div>
 				}
 			/>

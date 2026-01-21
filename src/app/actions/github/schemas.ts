@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-export const issueStateSchema = z.enum(["open", "closed", "all"]).default("open");
+export const issueStateSchema = z
+	.enum(["open", "closed", "all"])
+	.default("open");
 export const issueNumberSchema = z.number().int().positive();
 export const postCommentSchema = z.object({
 	number: z.number(),

@@ -1,10 +1,4 @@
-import {
-	Check,
-	Loader2,
-	Shield,
-	ShieldAlert,
-	ShieldCheck,
-} from "lucide-react";
+import { Check, Loader2, Shield, ShieldAlert, ShieldCheck } from "lucide-react";
 import type { JSX } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/atoms/alert";
 import { Button } from "@/components/atoms/button";
