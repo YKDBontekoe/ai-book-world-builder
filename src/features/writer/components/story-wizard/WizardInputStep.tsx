@@ -108,13 +108,7 @@ export function WizardInputStep({
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<button
-										type="button"
-										className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-										aria-label="POV information"
-									>
-										<Info className="w-3 h-3 text-muted-foreground cursor-help" />
-									</button>
+									<Info className="w-3 h-3 text-muted-foreground cursor-help" />
 								</TooltipTrigger>
 								<TooltipContent>
 									<p className="max-w-xs">
@@ -149,13 +143,7 @@ export function WizardInputStep({
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<button
-										type="button"
-										className="rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-										aria-label="Tone information"
-									>
-										<Info className="w-3 h-3 text-muted-foreground cursor-help" />
-									</button>
+									<Info className="w-3 h-3 text-muted-foreground cursor-help" />
 								</TooltipTrigger>
 								<TooltipContent>
 									<p className="max-w-xs">

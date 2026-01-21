@@ -14,7 +14,7 @@ export interface SpotlightItem {
 	label: string;
 	subLabel?: string;
 	icon: React.ComponentType<{ className?: string }>;
-	type: Category;
+	type: Category | "action";
 	category: Category;
 	keywords?: string[];
 	onSelect: () => void;

@@ -1,6 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Clock, HistoryIcon, Send, Sparkles, Trash2, X } from "lucide-react";
-import type * as ReactNamespace from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -38,7 +37,7 @@ export function PowerDockInput({
 	onReset,
 	onClearHistory,
 	getHistory,
-}: PowerDockInputProps): ReactNamespace.JSX.Element {
+}: PowerDockInputProps): JSX.Element {
 	const getPlaceholder = (tool: ToolType) => {
 		switch (tool) {
 			case "write":

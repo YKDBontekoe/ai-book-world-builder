@@ -1,5 +1,4 @@
 import { Slot } from "@radix-ui/react-slot";
-import type * as ReactNamespace from "react";
 import type React from "react";
 import { memo } from "react";
 import {
@@ -33,7 +32,7 @@ export const ControlButton = memo(function ControlButton({
 	"data-testid": testId,
 	asChild,
 	children,
-}: ControlButtonProps): ReactNamespace.JSX.Element {
+}: ControlButtonProps): JSX.Element {
 	const sharedClassName = cn(
 		"relative flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200",
 		"hover:bg-white/10 hover:scale-105 active:scale-95",
@@ -93,6 +92,6 @@ export function ControlGroup({
 	children,
 }: {
 	children: React.ReactNode;
-}): ReactNamespace.JSX.Element {
+}): JSX.Element {
 	return <div className="flex items-center gap-1">{children}</div>;
 }

@@ -34,7 +34,6 @@ export function StoryWizard({
 		updateChapter,
 		deleteChapter,
 		addChapter,
-		resetWizard,
 	} = useStoryWizard(projectId, onComplete);
 
 	return (
@@ -65,7 +64,7 @@ export function StoryWizard({
 						onUpdateChapter={updateChapter}
 						onDeleteChapter={deleteChapter}
 						onAddChapter={addChapter}
-						onRestart={resetWizard}
+						onRestart={() => setStep("input")}
 						onCreateStory={handleCreateStory}
 					/>
 				)}

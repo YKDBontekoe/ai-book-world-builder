@@ -37,7 +37,6 @@ export interface UseStoryWizardReturn {
 	) => void;
 	deleteChapter: (index: number) => void;
 	addChapter: () => void;
-	resetWizard: () => void;
 }
 
 export function useStoryWizard(
@@ -48,13 +47,6 @@ export function useStoryWizard(
 	const [prompt, setPrompt] = useState("");
 	const [style, setStyle] = useState<StoryStyle>(DEFAULT_STYLE);
 	const [plan, setPlan] = useState<BookPlan | null>(null);
-
-	const resetWizard = () => {
-		setStep("input");
-		setPrompt("");
-		setStyle(DEFAULT_STYLE);
-		setPlan(null);
-	};
 
 	const handleGeneratePlan = async () => {
 		if (!prompt.trim()) return;
@@ -151,6 +143,5 @@ export function useStoryWizard(
 		updateChapter,
 		deleteChapter,
 		addChapter,
-		resetWizard,
 	};
 }

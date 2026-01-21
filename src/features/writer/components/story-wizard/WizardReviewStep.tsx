@@ -106,7 +106,6 @@ export function WizardReviewStep({
 											size="icon"
 											className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
 											onClick={() => onDeleteChapter(i)}
-											aria-label={`Delete chapter ${i + 1}`}
 										>
 											<Trash2 className="w-4 h-4" />
 										</Button>
