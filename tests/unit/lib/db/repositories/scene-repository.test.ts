@@ -70,6 +70,7 @@ describe("SceneRepository", () => {
 		vi.spyOn(console, "error").mockImplementation(() => {});
 		mocks.result = [];
 		mocks.error = null;
+		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	afterEach(() => {

@@ -77,6 +77,7 @@ describe("ChapterRepository", () => {
 		mocks.result = [];
 		mocks.results = null;
 		mocks.error = null;
+		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
