@@ -1,3 +1,4 @@
+import * as motion from "framer-motion/client";
 import { BookOpen, Code, Settings2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -32,8 +33,33 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 		<div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-violet-50/50 via-white to-indigo-50/50 p-8 dark:from-zinc-950 dark:via-zinc-900 dark:to-violet-950/30">
 			{/* Background Elements - Subtle and Calm */}
 			<div className="pointer-events-none absolute inset-0 overflow-hidden">
-				<div className="-left-1/4 absolute top-0 h-[800px] w-[800px] animate-pulse rounded-full bg-violet-300/10 blur-[120px] dark:bg-violet-500/5" />
-				<div className="-right-1/4 absolute bottom-0 h-[600px] w-[600px] animate-pulse rounded-full bg-indigo-300/10 blur-[100px] delay-1000 dark:bg-indigo-500/5" />
+				<motion.div
+					initial={{ opacity: 0.5, scale: 0.8 }}
+					animate={{ opacity: 0.8, scale: 1.2 }}
+					transition={{
+						type: "spring",
+						stiffness: 400,
+						damping: 25,
+						repeat: Number.POSITIVE_INFINITY,
+						repeatType: "reverse",
+						duration: 5,
+					}}
+					className="-left-1/4 absolute top-0 h-[800px] w-[800px] rounded-full bg-violet-300/10 blur-[120px] dark:bg-violet-500/5"
+				/>
+				<motion.div
+					initial={{ opacity: 0.5, scale: 0.8 }}
+					animate={{ opacity: 0.8, scale: 1.2 }}
+					transition={{
+						type: "spring",
+						stiffness: 400,
+						damping: 25,
+						repeat: Number.POSITIVE_INFINITY,
+						repeatType: "reverse",
+						duration: 5,
+						delay: 1,
+					}}
+					className="-right-1/4 absolute bottom-0 h-[600px] w-[600px] rounded-full bg-indigo-300/10 blur-[100px] dark:bg-indigo-500/5"
+				/>
 			</div>
 
 			<div className="relative z-10 mx-auto max-w-5xl space-y-16 py-12">
@@ -59,7 +85,7 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 
 				{/* Applications Grid */}
 				<FadeIn delay={0.4}>
-					<StaggerList className="grid gap-8 md:grid-cols-2 lg:grid-cols-2 max-w-4xl mx-auto">
+					<StaggerList className="grid gap-8 md:grid-cols-2 max-w-4xl mx-auto">
 						{/* AI Book Writer */}
 						<StaggerItem>
 							<Link
@@ -122,7 +148,7 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 							) : (
 								<div
 									aria-disabled="true"
-									className="group block h-full opacity-60 grayscale transition-all duration-300 hover:opacity-100 hover:grayscale-0"
+									className="group block h-full cursor-not-allowed opacity-60 grayscale transition-all duration-300"
 								>
 									<GlassCard variant="subtle" className="h-full border-dashed">
 										<CardHeader>
