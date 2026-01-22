@@ -70,12 +70,35 @@ Activities can contain **Artifacts**, which are tangible outputs of the agent's 
 -   `changeSet`: A Git patch (diff) showing code changes.
 -   `bashOutput`: The stdout/stderr of a command executed by the agent.
 
-## UI Components (`components/admin/jules/`)
+## The Software Builder Interface
+
+The "Software Builder" (located at `/builder`) is the admin-facing interface for managing development tasks. It is composed of two main views:
+
+### 1. Roadmap View (`src/components/builder/roadmap-view.tsx`)
+This component helps in high-level planning and feature discovery.
+-   **Product Roadmap**: Displays active "Parent" issues (features) and their completion status.
+-   **AI Brainstorming**: Uses `discoverFeaturesAction` to analyze the codebase and suggest new features or refactors.
+-   **Feature Creation**: Allows admins to convert an AI suggestion into a formal GitHub issue directly.
+
+### 2. Task Board (`src/components/builder/task-board.tsx`)
+A Kanban-style board for operational management of the development lifecycle. It aggregates data from GitHub (Issues, PRs) and Jules Sessions.
+
+**Columns:**
+-   **Backlog**: Open GitHub Issues.
+-   **In Progress (Jules)**: Active Jules Sessions (where the agent is working).
+-   **Review**: Open Pull Requests.
+-   **Done**: Closed Issues and merged PRs.
+
+**Interactions:**
+-   **Fix with Jules**: Admins can drag an issue or click "Fix" to spawn a new Jules Session for that issue.
+-   **Chat Integration**: Clicking a session card opens the `JulesChat` interface to converse with the agent.
+
+## UI Components (`src/components/builder/jules/`)
 
 The UI is built to consume the Activity stream and render it interactively. The architecture is hierarchical:
 
 ### `JulesDashboard`
-Located in `src/components/admin/jules/jules-dashboard.tsx`.
+Located in `src/components/builder/jules/jules-dashboard.tsx`.
 -   **Purpose**: The top-level container component for the admin page.
 -   **Responsibility**:
     -   Fetches available sources (repositories).
@@ -83,7 +106,7 @@ Located in `src/components/admin/jules/jules-dashboard.tsx`.
     -   Renders `CreateSessionDialog` for initializing new tasks.
 
 ### `JulesSessionList`
-Located in `src/components/admin/jules/jules-session-list.tsx`.
+Located in `src/components/builder/jules/jules-session-list.tsx`.
 -   **Purpose**: Displays a history of all agent sessions.
 -   **Features**:
     -   Shows status badges (Running, Completed, Queued).
@@ -91,7 +114,7 @@ Located in `src/components/admin/jules/jules-session-list.tsx`.
     -   Allows navigation into a specific session.
 
 ### `JulesChat`
-Located in `src/components/admin/jules/jules-chat.tsx`.
+Located in `src/components/builder/jules/jules-chat.tsx`.
 -   **Purpose**: The main interaction view for a single active session.
 -   **Logic**:
     -   Polls for new activities using `useQuery`.
@@ -99,7 +122,7 @@ Located in `src/components/admin/jules/jules-chat.tsx`.
     -   Provides controls for "Approve Plan" or "Abort" based on the current `session.state`.
 
 ### `ArtifactRenderer`
-Located in `src/components/admin/jules/artifact-renderer.tsx`.
+Located in `src/components/builder/jules/artifact-renderer.tsx`.
 -   **Purpose**: Renders complex artifacts within the chat stream.
 -   **Features**:
     -   **Bash Output**: Collapsible terminal view with exit codes (Green/Red).
