@@ -35,19 +35,31 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 	const userName = session.user.name?.split(" ")[0] || "Creator";
 
 	// Fetch data for model settings
-	const [modelsResult, prefsResult] = await Promise.all([
-		getAvailableModels(),
-		getModelPreferences(),
-	]);
+	let availableModels: any[] = [];
+	let initialPreferences = {
+		light: null as string | null,
+		middle: null as string | null,
+		large: null as string | null,
+	};
 
-	const availableModels = modelsResult.success ? modelsResult.data : [];
-	const initialPreferences = prefsResult.success
-		? {
+	try {
+		const [modelsResult, prefsResult] = await Promise.all([
+			getAvailableModels(),
+			getModelPreferences(),
+		]);
+
+		availableModels = modelsResult.success ? modelsResult.data : [];
+		if (prefsResult.success) {
+			initialPreferences = {
 				light: prefsResult.data.light || null,
 				middle: prefsResult.data.middle || null,
 				large: prefsResult.data.large || null,
-			}
-		: { light: null, middle: null, large: null };
+			};
+		}
+	} catch (error) {
+		console.error("Failed to fetch model settings:", error);
+		// Defaults are already set
+	}
 
 	return (
 		<div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-violet-50/50 via-white to-indigo-50/50 p-8 dark:from-zinc-950 dark:via-zinc-900 dark:to-violet-950/30">

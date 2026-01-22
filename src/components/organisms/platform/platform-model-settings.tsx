@@ -1,7 +1,7 @@
 "use client";
 
 import { Sparkles } from "lucide-react";
-import { useState } from "react";
+import { type JSX, useState } from "react";
 import { toast } from "sonner";
 import { saveModelPreferences } from "@/app/actions/settings";
 import { Label } from "@/components/atoms/label";
@@ -21,22 +21,27 @@ interface PlatformModelSettingsProps {
 export function PlatformModelSettings({
 	availableModels,
 	initialPreferences,
-}: PlatformModelSettingsProps) {
+}: PlatformModelSettingsProps): JSX.Element {
 	const [preferences, setPreferences] = useState(initialPreferences);
 
 	const handleModelChange = async (
 		type: "light" | "middle" | "large",
 		value: string,
 	) => {
-		const newPrefs = { ...preferences, [type]: value };
-		setPreferences(newPrefs); // Optimistic update
+		setPreferences((prev) => ({ ...prev, [type]: value })); // Optimistic update via functional update
 
 		try {
-			await saveModelPreferences(newPrefs);
+			await saveModelPreferences({ ...preferences, [type]: value });
 			toast.success("Preference saved");
 		} catch (_error) {
 			toast.error("Failed to save preference");
-			setPreferences(preferences); // Revert
+			// Only revert if state still matches the failed attempt (simple check)
+			// In a more complex scenario we might check ID, but here reverting to previous 'preferences' closure capture is generally safe enough for a simple toggle/select
+			// provided the user hasn't made another change in the meantime that we want to keep.
+			// Using functional update to revert only this field could be better but 'preferences' here is stale from closure?
+			// Actually 'preferences' is from the render scope when handleModelChange was created.
+			// If we want to be safe against rapid changes, we should use the previous value.
+			setPreferences((prev) => ({ ...prev, [type]: preferences[type] }));
 		}
 	};
 
