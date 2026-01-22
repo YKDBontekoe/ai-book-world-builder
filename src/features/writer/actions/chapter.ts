@@ -67,7 +67,7 @@ export async function createChapterSnapshot(chapterId: string) {
 export async function createNewChapter(projectId: string) {
 	const validation = createNewChapterActionSchema.safeParse({ projectId });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -101,15 +101,16 @@ export async function createNewChapter(projectId: string) {
 		}
 
 		// 2. Determine sequence and Create Chapter (Atomic with Locking)
-		let newChapterId: string;
+		let newChapterId: string | undefined;
 
-		await db.transaction(async (tx) => {
+		await db.transaction(async (tx: DbTransaction) => {
 			// Lock the volume to prevent concurrent sequence generation
-			await tx
-				.select()
-				.from(volume)
-				.where(eq(volume.id, volumeId))
-				.for("update");
+			await (
+				tx
+					.select()
+					.from(volume)
+					.where(eq(volume.id, volumeId)) as any
+			).for("update");
 
 			const existingChapters = await tx
 				.select()
@@ -136,10 +137,13 @@ export async function createNewChapter(projectId: string) {
 			newChapterId = newChapter.id;
 		});
 
+		if (!newChapterId) {
+			throw new Error("Failed to create chapter");
+		}
+
 		await invalidateCache(`project-structure:${projectId}`);
 
-		// biome-ignore lint/style/noNonNullAssertion: "Guaranteed by transaction logic"
-		return { success: true, chapterId: newChapterId! };
+		return { success: true, chapterId: newChapterId };
 	} catch (error) {
 		console.error("Failed to create new chapter", error);
 		return { success: false };
@@ -152,7 +156,7 @@ export async function updateChapterTitle(
 ): Promise<{ success: boolean; error?: string }> {
 	const validation = updateChapterTitleSchema.safeParse({ chapterId, title });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -211,7 +215,7 @@ export async function deleteChapter(chapterId: string) {
 export async function reorderChapters(chapterIds: string[], volumeId: string) {
 	const validation = reorderChaptersSchema.safeParse({ chapterIds, volumeId });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
