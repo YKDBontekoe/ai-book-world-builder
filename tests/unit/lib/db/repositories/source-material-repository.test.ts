@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sourceMaterialRepository } from "@/lib/db/repositories/source-material-repository";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
 
@@ -81,9 +81,14 @@ vi.mock("drizzle-orm", () => ({
 describe("SourceMaterialRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
 		mocks.result = [];
 		mocks.results = null;
 		mocks.error = null;
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	describe("findById", () => {

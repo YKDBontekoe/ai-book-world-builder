@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { storyRepository } from "@/lib/db/repositories/story-repository";
 
 const mocks = vi.hoisted(() => {
@@ -69,9 +69,14 @@ vi.mock("drizzle-orm", () => ({
 describe("StoryRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
 		mocks.result = [];
 		mocks.results = null;
 		mocks.error = null;
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	describe("createBookFromPlan", () => {
