@@ -11,7 +11,12 @@ import {
 } from "@/lib/db/queries/volume";
 import { chapterRepository, sceneRepository } from "@/lib/db/repositories";
 import { chapter, chapterVersion } from "@/lib/db/schema";
-import { updateChapterTitleSchema } from "@/lib/validation";
+import { volume } from "@/lib/db/schema/outlines";
+import {
+	createNewChapterActionSchema,
+	reorderChaptersSchema,
+	updateChapterTitleSchema,
+} from "@/lib/validation";
 
 export async function createChapterSnapshot(chapterId: string) {
 	try {
@@ -60,6 +65,11 @@ export async function createChapterSnapshot(chapterId: string) {
 }
 
 export async function createNewChapter(projectId: string) {
+	const validation = createNewChapterActionSchema.safeParse({ projectId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.issues[0].message };
+	}
+
 	try {
 		await ensureProjectAccess(projectId, true);
 
@@ -90,33 +100,49 @@ export async function createNewChapter(projectId: string) {
 			volumeId = newVolume.id;
 		}
 
-		// 2. Determine sequence
-		const existingChapters = await db
-			.select()
-			.from(chapter)
-			.where(eq(chapter.volumeId, volumeId))
-			.orderBy(desc(chapter.sequence));
+		// 2. Determine sequence and Create Chapter (Atomic with Locking)
+		let newChapterId: string | undefined;
 
-		const nextSequence = (existingChapters[0]?.sequence ?? 0) + 1;
+		await db.transaction(async (tx: DbTransaction) => {
+			// Lock the volume to prevent concurrent sequence generation
+			await tx
+				.select()
+				.from(volume)
+				.where(eq(volume.id, volumeId))
+				.for("update");
 
-		// 3. Create Chapter
-		const [newChapter] = await db
-			.insert(chapter)
-			.values({
-				projectId,
-				volumeId,
-				outlineId,
-				title: `Chapter ${nextSequence}`,
-				sequence: nextSequence,
-				status: "planned",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			})
-			.returning();
+			const existingChapters = await tx
+				.select()
+				.from(chapter)
+				.where(eq(chapter.volumeId, volumeId))
+				.orderBy(desc(chapter.sequence));
+
+			const nextSequence = (existingChapters[0]?.sequence ?? 0) + 1;
+
+			const [newChapter] = await tx
+				.insert(chapter)
+				.values({
+					projectId,
+					volumeId,
+					outlineId,
+					title: `Chapter ${nextSequence}`,
+					sequence: nextSequence,
+					status: "planned",
+					createdAt: new Date(),
+					updatedAt: new Date(),
+				})
+				.returning();
+
+			newChapterId = newChapter.id;
+		});
+
+		if (!newChapterId) {
+			throw new Error("Failed to create chapter");
+		}
 
 		await invalidateCache(`project-structure:${projectId}`);
 
-		return { success: true, chapterId: newChapter.id };
+		return { success: true, chapterId: newChapterId };
 	} catch (error) {
 		console.error("Failed to create new chapter", error);
 		return { success: false };
@@ -129,7 +155,7 @@ export async function updateChapterTitle(
 ): Promise<{ success: boolean; error?: string }> {
 	const validation = updateChapterTitleSchema.safeParse({ chapterId, title });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -145,7 +171,11 @@ export async function updateChapterTitle(
 
 		await ensureProjectAccess(currentChapter.projectId, true);
 
-		await chapterRepository.update(chapterId, { title });
+		await chapterRepository.update(
+			chapterId,
+			{ title },
+			currentChapter.projectId,
+		);
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
@@ -170,7 +200,7 @@ export async function deleteChapter(chapterId: string) {
 
 		await ensureProjectAccess(currentChapter.projectId, true);
 
-		await chapterRepository.delete(chapterId);
+		await chapterRepository.delete(chapterId, currentChapter.projectId);
 
 		await invalidateCache(`project-structure:${currentChapter.projectId}`);
 
@@ -182,6 +212,11 @@ export async function deleteChapter(chapterId: string) {
 }
 
 export async function reorderChapters(chapterIds: string[], volumeId: string) {
+	const validation = reorderChaptersSchema.safeParse({ chapterIds, volumeId });
+	if (!validation.success) {
+		return { success: false, error: validation.error.issues[0].message };
+	}
+
 	try {
 		if (chapterIds.length === 0) return { success: true };
 
@@ -217,13 +252,20 @@ export async function reorderChapters(chapterIds: string[], volumeId: string) {
 		await ensureProjectAccess(projectId, true);
 
 		// 5. Inside the transaction update chapters
+		// Note: Sequential execution is safer for avoiding "Query is already in progress" errors
+		// with some drivers in transactions.
 		await db.transaction(async (tx: DbTransaction) => {
 			for (let i = 0; i < chapterIds.length; i++) {
+				// Prevent IDOR by ensuring the chapter belongs to the project
 				await tx
 					.update(chapter)
 					.set({ sequence: i + 1, updatedAt: new Date() })
 					.where(
-						and(eq(chapter.id, chapterIds[i]), eq(chapter.volumeId, volumeId)),
+						and(
+							eq(chapter.id, chapterIds[i]),
+							eq(chapter.volumeId, volumeId),
+							eq(chapter.projectId, projectId),
+						),
 					);
 			}
 		});

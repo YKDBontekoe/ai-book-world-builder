@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
 	type Chapter,
@@ -164,15 +164,23 @@ export class ChapterRepository extends BaseRepository<
 	/**
 	 * Update an existing chapter
 	 */
-	async update(id: string, data: UpdateChapterInput): Promise<Chapter> {
+	async update(
+		id: string,
+		data: UpdateChapterInput,
+		projectId?: string,
+	): Promise<Chapter> {
 		try {
+			const whereClause = projectId
+				? and(eq(chapter.id, id), eq(chapter.projectId, projectId))
+				: eq(chapter.id, id);
+
 			const [updatedChapter] = await db
 				.update(chapter)
 				.set({
 					...data,
 					updatedAt: new Date(),
 				})
-				.where(eq(chapter.id, id))
+				.where(whereClause)
 				.returning();
 
 			if (!updatedChapter) {
@@ -205,10 +213,19 @@ export class ChapterRepository extends BaseRepository<
 	/**
 	 * Delete a chapter by ID
 	 */
-	async delete(id: string): Promise<void> {
+	async delete(id: string, projectId?: string): Promise<void> {
 		try {
-			await db.delete(chapter).where(eq(chapter.id, id));
+			const whereClause = projectId
+				? and(eq(chapter.id, id), eq(chapter.projectId, projectId))
+				: eq(chapter.id, id);
+
+			const [deleted] = await db.delete(chapter).where(whereClause).returning();
+
+			if (!deleted) {
+				throw NotFoundError.forResource("Chapter", id);
+			}
 		} catch (error) {
+			if (error instanceof NotFoundError) throw error;
 			console.error("ChapterRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete chapter");
 		}

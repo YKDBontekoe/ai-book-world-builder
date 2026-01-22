@@ -197,6 +197,20 @@ export const updateChapterTitleSchema = z.object({
 		.max(200, { message: "Chapter title must be 200 characters or less" }),
 });
 
+export const createNewChapterActionSchema = z.object({
+	projectId: uuidSchema,
+});
+
+export const reorderChaptersSchema = z.object({
+	chapterIds: z
+		.array(uuidSchema)
+		.max(500, { message: "Too many chapters to reorder" })
+		.refine((items) => new Set(items).size === items.length, {
+			message: "Duplicate chapter IDs not allowed",
+		}),
+	volumeId: uuidSchema,
+});
+
 export const generateSceneSchema = z.object({
 	chapterId: uuidSchema,
 	prevSceneId: uuidSchema.optional(),

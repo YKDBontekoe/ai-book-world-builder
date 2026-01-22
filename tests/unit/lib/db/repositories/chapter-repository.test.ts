@@ -297,9 +297,18 @@ describe("ChapterRepository", () => {
 
 	describe("delete", () => {
 		it("should delete chapter", async () => {
-			mocks.result = [];
+			// .delete().where().returning()
+			// Mock successful deletion returning the deleted record
+			mocks.result = [{ id: "c1" }];
 			await chapterRepository.delete("c1");
 			expect(mocks.delete).toHaveBeenCalled();
+		});
+
+		it("should throw NotFoundError if no rows deleted", async () => {
+			mocks.result = []; // No rows returned
+			await expect(chapterRepository.delete("c1")).rejects.toThrow(
+				NotFoundError,
+			);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
