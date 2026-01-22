@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { projectRepository } from "@/lib/db/repositories/project-repository";
 import { DatabaseError, ForbiddenError, NotFoundError } from "@/lib/errors";
 
@@ -72,9 +72,14 @@ vi.mock("drizzle-orm", () => ({
 describe("ProjectRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
 		mocks.result = [];
 		mocks.results = null;
 		mocks.error = null;
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	describe("findById", () => {
