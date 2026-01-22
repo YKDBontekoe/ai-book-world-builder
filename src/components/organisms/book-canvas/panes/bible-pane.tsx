@@ -315,8 +315,9 @@ export function BiblePane(): React.JSX.Element {
 		() => {
 			// Don't trigger if user is typing in an input
 			const activeEl = document.activeElement;
-			if (activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA")
+			if (activeEl?.tagName === "INPUT" || activeEl?.tagName === "TEXTAREA") {
 				return;
+			}
 			handleBulkDelete();
 		},
 		{ enabled: isSelectionMode && selectedIds.size > 0 },

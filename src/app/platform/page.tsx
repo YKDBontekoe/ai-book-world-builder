@@ -1,6 +1,7 @@
 import { BookOpen, Code, Settings2 } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { JSX } from "react";
 import { auth } from "@/app/(auth)/auth";
 import {
 	CardContent,
@@ -11,7 +12,7 @@ import {
 import { GlassCard } from "@/components/molecules/glass-card";
 import { isAdmin } from "@/lib/auth/utils";
 
-export default async function PlatformPage() {
+export default async function PlatformPage(): Promise<JSX.Element> {
 	const session = await auth();
 
 	if (!session?.user) {
@@ -58,43 +59,59 @@ export default async function PlatformPage() {
 					</Link>
 
 					{/* Software Builder */}
-					<Link
-						href={isUserAdmin ? "/builder" : "#"}
-						className={`group block h-full ${
-							!isUserAdmin
-								? "opacity-50 cursor-not-allowed pointer-events-none"
-								: ""
-						}`}
-					>
-						<GlassCard
-							variant="liquid"
-							className="h-full transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer"
+					{isUserAdmin ? (
+						<Link href="/builder" className="group block h-full">
+							<GlassCard
+								variant="liquid"
+								className="h-full transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/10 cursor-pointer"
+							>
+								<CardHeader>
+									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
+										<Code className="h-6 w-6" />
+									</div>
+									<CardTitle className="text-2xl">Software Builder</CardTitle>
+									<CardDescription className="text-base mt-2">
+										Manage software development lifecycles, GitHub integration,
+										and AI coding agents.
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<div className="flex items-center justify-between">
+										<div className="flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400">
+											Launch Application &rarr;
+										</div>
+									</div>
+								</CardContent>
+							</GlassCard>
+						</Link>
+					) : (
+						<div
+							aria-disabled="true"
+							className="group block h-full opacity-50 cursor-not-allowed pointer-events-none"
 						>
-							<CardHeader>
-								<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors duration-300">
-									<Code className="h-6 w-6" />
-								</div>
-								<CardTitle className="text-2xl">Software Builder</CardTitle>
-								<CardDescription className="text-base mt-2">
-									Manage software development lifecycles, GitHub integration,
-									and AI coding agents.
-								</CardDescription>
-							</CardHeader>
-							<CardContent>
-								<div className="flex items-center justify-between">
-									<div className="flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400">
-										{isUserAdmin ? (
-											<>Launch Application &rarr;</>
-										) : (
+							<GlassCard variant="liquid" className="h-full">
+								<CardHeader>
+									<div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400 transition-colors duration-300">
+										<Code className="h-6 w-6" />
+									</div>
+									<CardTitle className="text-2xl">Software Builder</CardTitle>
+									<CardDescription className="text-base mt-2">
+										Manage software development lifecycles, GitHub integration,
+										and AI coding agents.
+									</CardDescription>
+								</CardHeader>
+								<CardContent>
+									<div className="flex items-center justify-between">
+										<div className="flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400">
 											<span className="flex items-center gap-2">
 												<Settings2 className="h-4 w-4" /> Admin Access Only
 											</span>
-										)}
+										</div>
 									</div>
-								</div>
-							</CardContent>
-						</GlassCard>
-					</Link>
+								</CardContent>
+							</GlassCard>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

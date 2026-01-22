@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import type { JSX } from "react";
 import { auth } from "@/app/(auth)/auth";
 import { Button } from "@/components/atoms/button";
 import { isAdmin } from "@/lib/auth/utils";
@@ -9,7 +10,7 @@ export default async function BuilderLayout({
 	children,
 }: {
 	children: React.ReactNode;
-}) {
+}): Promise<JSX.Element> {
 	const session = await auth();
 
 	if (!session?.user || !isAdmin(session.user.role)) {
