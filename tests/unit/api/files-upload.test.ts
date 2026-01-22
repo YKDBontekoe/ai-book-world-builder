@@ -48,7 +48,7 @@ const mockedMarkSourceMaterialAsUploaded = vi.mocked(
 );
 const mockedMarkSourceMaterialAsFailed = vi.mocked(markSourceMaterialAsFailed);
 const mockedPut = vi.mocked(put);
-const projectId = "11111111-1111-1111-1111-111111111111";
+const projectId = "11111111-1111-4111-8111-111111111111";
 
 function buildSession(userId: string): any {
 	return {

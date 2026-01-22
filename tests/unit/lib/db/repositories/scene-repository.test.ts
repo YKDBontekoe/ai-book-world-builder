@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { sceneRepository } from "@/lib/db/repositories/scene-repository";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
 
@@ -67,8 +67,13 @@ vi.mock("drizzle-orm", () => ({
 describe("SceneRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
 		mocks.result = [];
 		mocks.error = null;
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	describe("findById", () => {
