@@ -260,14 +260,20 @@ export class SceneRepository extends BaseRepository<
 	 */
 	async delete(id: string, projectId?: string): Promise<void> {
 		try {
-			await db
+			const [deleted] = await db
 				.delete(scene)
 				.where(
 					projectId
 						? and(eq(scene.id, id), eq(scene.projectId, projectId))
 						: eq(scene.id, id),
-				);
+				)
+				.returning();
+
+			if (!deleted) {
+				throw NotFoundError.forResource("Scene", id);
+			}
 		} catch (error) {
+			if (error instanceof NotFoundError) throw error;
 			console.error("SceneRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete scene");
 		}

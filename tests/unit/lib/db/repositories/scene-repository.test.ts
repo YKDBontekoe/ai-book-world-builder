@@ -280,9 +280,14 @@ describe("SceneRepository", () => {
 
 	describe("delete", () => {
 		it("should delete scene", async () => {
-			mocks.result = [];
+			mocks.result = [{ id: "s1" }];
 			await sceneRepository.delete("s1");
 			expect(mocks.delete).toHaveBeenCalled();
+		});
+
+		it("should throw NotFoundError if scene does not exist", async () => {
+			mocks.result = [];
+			await expect(sceneRepository.delete("s1")).rejects.toThrow(NotFoundError);
 		});
 
 		it("should throw DatabaseError on failure", async () => {
