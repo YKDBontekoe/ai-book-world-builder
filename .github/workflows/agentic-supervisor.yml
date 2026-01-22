@@ -15,6 +15,9 @@ on:
   issue_comment:
     types: [created]
 
+  pull_request:
+    types: [opened, reopened, ready_for_review]
+
 concurrency:
   group: supervisor-${{ github.event.pull_request.number || github.event.workflow_run.head_sha || github.run_id }}
   cancel-in-progress: false
@@ -50,7 +53,7 @@ jobs:
       - name: Run Supervisor
         id: run
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           GITHUB_EVENT_PATH: ${{ github.event_path }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_REPOSITORY: ${{ github.repository }}
@@ -65,7 +68,7 @@ jobs:
     steps:
       - name: Post status comment
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
           PR_NUMBER: ${{ needs.supervisor.outputs.pr_number }}
           AUTHOR_TYPE: ${{ needs.supervisor.outputs.author_type }}
         run: |

@@ -319,6 +319,28 @@ interface GitHubEvent {
   };
 }
 
+function handlePullRequest(event: GitHubEvent): SupervisorResult {
+  const pr = event.pull_request;
+  if (!pr) return { action: "none" };
+
+  if (pr.draft) {
+    log(`Skipping draft PR #${pr.number}`);
+    return { action: "none" };
+  }
+
+  const authorType = getAuthorType(pr.user.login);
+  if (authorType !== "jules") return { action: "none" };
+
+  log(`PR #${pr.number} author: ${pr.user.login} (${authorType})`);
+
+  return {
+    action: "trigger_coderabbit",
+    prNumber: pr.number,
+    branch: pr.head.ref,
+    authorType,
+  };
+}
+
 function handleWorkflowRun(event: GitHubEvent): SupervisorResult {
   const run = event.workflow_run;
   if (!run) return { action: "none" };
@@ -523,6 +545,8 @@ async function main(): Promise<void> {
     result = handleReview(event);
   } else if (eventName === "issue_comment") {
     result = handleIssueComment(event);
+  } else if (eventName === "pull_request") {
+    result = handlePullRequest(event);
   } else {
     log(`Unhandled event: ${eventName}`);
     result = { action: "none" };
