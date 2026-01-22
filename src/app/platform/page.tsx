@@ -22,6 +22,7 @@ import {
 } from "@/components/atoms/card";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { PlatformModelSettings } from "@/components/organisms/platform/platform-model-settings";
+import type { ChatModel } from "@/lib/ai/models";
 import { isAdmin } from "@/lib/auth/utils";
 
 export default async function PlatformPage(): Promise<JSX.Element> {
@@ -35,7 +36,7 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 	const userName = session.user.name?.split(" ")[0] || "Creator";
 
 	// Fetch data for model settings
-	let availableModels: any[] = [];
+	let availableModels: ChatModel[] = [];
 	let initialPreferences = {
 		light: null as string | null,
 		middle: null as string | null,
