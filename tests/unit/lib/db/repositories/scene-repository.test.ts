@@ -69,6 +69,7 @@ describe("SceneRepository", () => {
 		vi.clearAllMocks();
 		mocks.result = [];
 		mocks.error = null;
+		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	describe("findById", () => {

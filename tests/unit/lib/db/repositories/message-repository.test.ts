@@ -81,6 +81,7 @@ describe("MessageRepository", () => {
 		mocks.result = [];
 		mocks.results = null;
 		mocks.error = null;
+		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	describe("findById", () => {
