@@ -30,7 +30,7 @@ const options = [
 	{ id: "weekly", label: "Weekly" },
 	{ id: "monthly", label: "Monthly" },
 	{ id: "yearly", label: "Yearly" },
-];
+] as const;
 
 export const Default: Story = {
 	render: (args) => {
@@ -115,7 +115,7 @@ export const Success: Story = {
 	},
 };
 
-export const Error: Story = {
+export const WithError: Story = {
 	render: (args) => {
 		const [value, setValue] = useState("daily");
 		return (

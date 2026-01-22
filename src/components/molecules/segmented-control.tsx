@@ -45,8 +45,8 @@ export function SegmentedControl<T extends string = string>({
 				// Glass effect
 				"glass",
 				// Variant styles (border color)
-				variant === "success" && "border-green-500/50",
-				variant === "error" && "border-red-500/50",
+				variant === "success" && "border border-green-500/50",
+				variant === "error" && "border border-red-500/50",
 				isLoading && "opacity-70 pointer-events-none cursor-wait",
 				className,
 			)}
@@ -61,7 +61,12 @@ export function SegmentedControl<T extends string = string>({
 						className={cn(
 							"relative z-10 px-3 py-1.5 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-lg",
 							isActive
-								? "text-foreground"
+								? cn(
+										"text-foreground",
+										variant === "success" &&
+											"text-green-700 dark:text-green-400",
+										variant === "error" && "text-red-700 dark:text-red-400",
+									)
 								: "text-muted-foreground hover:text-foreground/80",
 							size === "md" && "py-2 px-4 text-base",
 						)}
@@ -73,8 +78,8 @@ export function SegmentedControl<T extends string = string>({
 								layoutId={activeLayoutId}
 								className={cn(
 									"absolute inset-0 bg-background shadow-sm rounded-lg -z-10",
-									variant === "success" && "bg-green-500/10 text-green-700",
-									variant === "error" && "bg-red-500/10 text-red-700",
+									variant === "success" && "bg-green-500/10",
+									variant === "error" && "bg-red-500/10",
 								)}
 								transition={{
 									type: "spring",
