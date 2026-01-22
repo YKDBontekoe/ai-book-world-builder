@@ -68,7 +68,12 @@ export async function updateSceneContent(sceneId: string, content: string) {
 		await ensureProjectAccess(targetScene.projectId, true);
 
 		// 3. Update using repository
-		await sceneRepository.updateContent(sceneId, content, "drafting");
+		await sceneRepository.updateContent(
+			sceneId,
+			content,
+			"drafting",
+			targetScene.projectId,
+		);
 
 		// Note: Content updates do not invalidate structure, only titles/ordering do.
 
@@ -216,7 +221,7 @@ export async function deleteScene(
 
 		await ensureProjectAccess(targetScene.projectId, true);
 
-		await sceneRepository.delete(sceneId);
+		await sceneRepository.delete(sceneId, targetScene.projectId);
 
 		await invalidateCache(`project-structure:${targetScene.projectId}`);
 
