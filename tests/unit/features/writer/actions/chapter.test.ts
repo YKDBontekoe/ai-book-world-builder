@@ -82,7 +82,9 @@ describe("Chapter Actions", () => {
 		(db.delete as Mock).mockReturnValue(mockChain);
 
 		// Mock transaction to execute callback
-		(db.transaction as Mock).mockImplementation(async (cb: any) => cb(db));
+		(db.transaction as Mock).mockImplementation(
+			async (cb: (tx: unknown) => Promise<unknown>) => cb(db),
+		);
 	});
 
 	afterEach(() => {
