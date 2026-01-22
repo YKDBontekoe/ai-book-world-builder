@@ -62,7 +62,10 @@ describe("Chapter Ops Security", () => {
 
 		// Setup successful project access check
 		mockWithProjectWriteAccess.mockImplementation((projectId, callback) => {
-			return callback({ project: { id: projectId, userId: ATTACKER_ID }, user: { id: ATTACKER_ID } });
+			return callback({
+				project: { id: projectId, userId: ATTACKER_ID },
+				user: { id: ATTACKER_ID },
+			});
 		});
 
 		// Setup generic db mock chaining
@@ -90,8 +93,21 @@ describe("Chapter Ops Security", () => {
 		// We expect `eq(chapter.projectId, input.projectId)` to be called.
 
 		const eqCalls = mockEq.mock.calls;
-		const projectIdCheck = eqCalls.some(args => {
-			 return args[1] === PROJECT_ID;
+		// Verify we check for project ownership by ensuring one of the eq calls
+		// checks the projectId column against our PROJECT_ID.
+		// The first argument to eq is typically the column object/definition.
+		// Since we don't have the real column object here (it's from the schema import),
+		// we check if the column name or string representation is correct, or just verify the value match
+		// is paired with something that looks like the column we expect if possible.
+		// Given we mocked Drizzle, args[0] is the column.
+		// We'll trust that the code uses the correct column, but we MUST verify the value match.
+		// To be more robust as requested, we check that args[0] is likely the column (truthy)
+		// and args[1] is the PROJECT_ID.
+		const projectIdCheck = eqCalls.some((args) => {
+			// args[0] is the column, args[1] is the value
+			// We check if args[0] exists (is the column) and args[1] matches the project ID.
+			// Ideally we would check args[0].name === 'projectId' but that depends on implementation details of the column object.
+			return args[0] && args[1] === PROJECT_ID;
 		});
 
 		expect(projectIdCheck).toBe(true);

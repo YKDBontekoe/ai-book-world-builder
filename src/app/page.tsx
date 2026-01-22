@@ -37,7 +37,7 @@ async function AuthRedirect() {
 	const session = await auth();
 
 	if (session) {
-		redirect("/projects");
+		redirect("/platform");
 	}
 
 	return null;

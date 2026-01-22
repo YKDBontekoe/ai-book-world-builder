@@ -31,11 +31,6 @@ const items = [
 		url: "/admin/features",
 		icon: Settings2,
 	},
-	{
-		title: "GitHub",
-		url: "/admin/github",
-		icon: Github,
-	},
 ];
 
 export function AdminSidebar() {
@@ -70,9 +65,9 @@ export function AdminSidebar() {
 						<SidebarMenu>
 							<SidebarMenuItem>
 								<SidebarMenuButton asChild>
-									<Link href="/projects">
+									<Link href="/platform">
 										<Home />
-										<span>Back to App</span>
+										<span>Back to Platform</span>
 									</Link>
 								</SidebarMenuButton>
 							</SidebarMenuItem>

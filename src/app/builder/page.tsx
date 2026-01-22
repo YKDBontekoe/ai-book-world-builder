@@ -2,10 +2,10 @@
 
 import type { JSX } from "react";
 import { useState } from "react";
-import { RoadmapView } from "@/components/admin/builder/roadmap-view";
-import { TaskBoard } from "@/components/admin/builder/task-board";
-import { JulesDashboard } from "@/components/admin/jules/jules-dashboard";
 import { Button } from "@/components/atoms/button";
+import { JulesDashboard } from "@/components/builder/jules/jules-dashboard";
+import { RoadmapView } from "@/components/builder/roadmap-view";
+import { TaskBoard } from "@/components/builder/task-board";
 import { cn } from "@/lib/utils";
 
 /**

@@ -1,6 +1,6 @@
 import { Cpu, Rocket, Search, Sword } from "lucide-react";
-import type { StoryStyle } from "@/lib/services/schemas/story-schemas";
 import type { ElementType } from "react";
+import type { StoryStyle } from "@/lib/services/schemas/story-schemas";
 
 export interface StoryTemplate {
 	label: string;

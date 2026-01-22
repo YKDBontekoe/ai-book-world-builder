@@ -66,7 +66,7 @@ export default function FeaturesPage() {
 							</span>
 						</div>
 						<Button className="w-full" variant="outline" asChild>
-							<Link href="/admin/github">Manage Repository</Link>
+							<Link href="/builder">Manage Repository</Link>
 						</Button>
 					</CardContent>
 				</GlassCard>
