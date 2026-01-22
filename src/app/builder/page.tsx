@@ -2,11 +2,10 @@
 
 import type { JSX } from "react";
 import { useState } from "react";
-import { Button } from "@/components/atoms/button";
 import { JulesDashboard } from "@/components/builder/jules/jules-dashboard";
 import { RoadmapView } from "@/components/builder/roadmap-view";
 import { TaskBoard } from "@/components/builder/task-board";
-import { cn } from "@/lib/utils";
+import { SegmentedControl } from "@/components/molecules/segmented-control";
 
 /**
  * Admin page for managing Software Builder tasks (GitHub & Jules).
@@ -14,6 +13,12 @@ import { cn } from "@/lib/utils";
  */
 export default function GitHubAdminPage(): JSX.Element {
 	const [view, setView] = useState<"board" | "roadmap" | "jules">("board");
+
+	const options = [
+		{ id: "board", label: "Task Board" },
+		{ id: "roadmap", label: "Roadmap" },
+		{ id: "jules", label: "Jules Console" },
+	] as const;
 
 	return (
 		<div className="space-y-6 h-full flex flex-col">
@@ -27,41 +32,13 @@ export default function GitHubAdminPage(): JSX.Element {
 						PRs.
 					</p>
 				</div>
-				<div className="bg-muted p-1 rounded-lg flex flex-wrap gap-1 w-full sm:w-auto">
-					<Button
-						variant={view === "board" ? "secondary" : "ghost"}
-						size="sm"
-						onClick={() => setView("board")}
-						className={cn(
-							"flex-1 sm:flex-initial",
-							view === "board" && "bg-background shadow-sm",
-						)}
-					>
-						Task Board
-					</Button>
-					<Button
-						variant={view === "roadmap" ? "secondary" : "ghost"}
-						size="sm"
-						onClick={() => setView("roadmap")}
-						className={cn(
-							"flex-1 sm:flex-initial",
-							view === "roadmap" && "bg-background shadow-sm",
-						)}
-					>
-						Roadmap
-					</Button>
-					<Button
-						variant={view === "jules" ? "secondary" : "ghost"}
-						size="sm"
-						onClick={() => setView("jules")}
-						className={cn(
-							"flex-1 sm:flex-initial",
-							view === "jules" && "bg-background shadow-sm",
-						)}
-					>
-						Jules Console
-					</Button>
-				</div>
+				<SegmentedControl
+					options={options}
+					value={view}
+					onChange={setView}
+					className="w-full sm:w-auto"
+					ariaLabel="View Selection"
+				/>
 			</div>
 
 			<div className="flex-1 min-h-0">
