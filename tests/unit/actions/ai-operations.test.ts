@@ -1,8 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as aiOperations from "@/app/actions/ai-operations";
 import { analysisService } from "@/lib/services/ai/analysis-service";
-import { loreService } from "@/lib/services/ai/lore-service";
-import { manuscriptService } from "@/lib/services/ai/manuscript-service";
 import { writingService } from "@/lib/services/ai/writing-service";
 
 // Mock dependencies

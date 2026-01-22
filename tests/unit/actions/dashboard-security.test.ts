@@ -71,7 +71,7 @@ describe("Dashboard Action Security", () => {
 			expect(stats.tokenStats.totalCost).toBe(0);
 			expect(stats.usageHistory[0].cost).toBe(0);
 		} else {
-			throw new Error("Action failed unexpectedly: " + result.error);
+			throw new Error(`Action failed unexpectedly: ${result.error}`);
 		}
 	});
 });

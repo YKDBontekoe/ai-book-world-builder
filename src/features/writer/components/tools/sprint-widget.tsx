@@ -141,7 +141,7 @@ export function SprintWidget() {
 											value={durationMinutes}
 											onChange={(e) =>
 												setDurationMinutes(
-													Number.parseInt(e.target.value) || 15,
+													Number.parseInt(e.target.value, 10) || 15,
 												)
 											}
 											className="h-8 text-xs"
