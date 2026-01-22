@@ -11,6 +11,7 @@ export const openrouter = createOpenAI({
 export const myProvider = isTestEnvironment
 	? (() => {
 			// Mock provider for tests
+			// eslint-disable-next-line @typescript-eslint/no-var-requires
 			const { chatModel, liteModel, reasoningModel } = require("./models.mock");
 			return customProvider({
 				languageModels: {
