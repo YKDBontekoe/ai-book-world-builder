@@ -1,10 +1,13 @@
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { julesPreferencesSchema } from "@/app/actions/jules-preferences-schemas";
-import { getJulesPreferencesAction, saveJulesPreferencesAction } from "@/app/actions/jules-preferences";
-import { db } from "@/lib/db";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { auth } from "@/app/(auth)/auth";
+import {
+	getJulesPreferencesAction,
+	saveJulesPreferencesAction,
+} from "@/app/actions/jules-preferences";
+import { julesPreferencesSchema } from "@/app/actions/jules-preferences-schemas";
+import { db } from "@/lib/db";
 
-// Explicitly mock db to satisfy code review strictness, though global setup covers it.
+// Explicitly mock db to satisfy code review strictness
 vi.mock("@/lib/db", () => ({
 	db: {
 		select: vi.fn().mockReturnThis(),
@@ -17,7 +20,7 @@ vi.mock("@/lib/db", () => ({
 		update: vi.fn().mockReturnThis(),
 		set: vi.fn().mockReturnThis(),
 		delete: vi.fn().mockReturnThis(),
-        onConflictDoUpdate: vi.fn().mockReturnThis(),
+		onConflictDoUpdate: vi.fn().mockReturnThis(),
 		transaction: vi.fn().mockImplementation((cb) =>
 			cb({
 				select: vi.fn().mockReturnThis(),
@@ -74,16 +77,23 @@ describe("getJulesPreferencesAction", () => {
 	};
 
 	beforeEach(() => {
+		// Proper mock types for auth
 		vi.mocked(auth).mockResolvedValue({
 			user: mockUser,
-		} as any);
+			expires: "new Date()",
+		});
+	});
+
+	afterEach(() => {
+		vi.clearAllMocks();
 	});
 
 	it("should handle missing column error (42703) gracefully", async () => {
-		// Mock db.select to throw the specific Postgres error
-		const dbError = new Error("column julesPreferences does not exist");
-		// @ts-ignore
-		dbError.code = "42703";
+		// Mock db.select to throw a properly typed Postgres error
+		const dbError = Object.assign(
+			new Error("column julesPreferences does not exist"),
+			{ code: "42703" },
+		);
 
 		vi.mocked(db.select).mockImplementationOnce(() => {
 			throw dbError;
@@ -103,35 +113,42 @@ describe("getJulesPreferencesAction", () => {
 });
 
 describe("saveJulesPreferencesAction", () => {
-    const mockUser = {
+	const mockUser = {
 		id: "user-123",
 		email: "test@example.com",
 		role: "user",
 	};
 
 	beforeEach(() => {
+		// Proper mock types for auth
 		vi.mocked(auth).mockResolvedValue({
 			user: mockUser,
-		} as any);
+			expires: "new Date()",
+		});
 	});
 
-    it("should handle missing column error (42703) gracefully by returning an error", async () => {
-        // Mock db.insert to throw the specific Postgres error
-		const dbError = new Error("column julesPreferences does not exist");
-		// @ts-ignore
-		dbError.code = "42703";
+	afterEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it("should handle missing column error (42703) gracefully by returning an error", async () => {
+		// Mock db.insert to throw a properly typed Postgres error
+		const dbError = Object.assign(
+			new Error("column julesPreferences does not exist"),
+			{ code: "42703" },
+		);
 
 		vi.mocked(db.insert).mockImplementationOnce(() => {
 			throw dbError;
 		});
 
-        const input = { repository: "owner/repo", branch: "main" };
-        const result = await saveJulesPreferencesAction(input);
+		const input = { repository: "owner/repo", branch: "main" };
+		const result = await saveJulesPreferencesAction(input);
 
-        // After refinement: this should return failure with a user friendly message
-        expect(result.success).toBe(false);
-        if (!result.success) {
-            expect(result.error).toContain("System maintenance in progress");
-        }
-    });
+		// After refinement: this should return failure with a user friendly message
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			expect(result.error).toContain("System maintenance in progress");
+		}
+	});
 });

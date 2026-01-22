@@ -4,13 +4,23 @@ import { eq } from "drizzle-orm";
 import { createUserAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db";
 import { type JulesPreferences, userPreferences } from "@/lib/db/schema/auth";
+import { DatabaseError } from "@/lib/errors";
 import { julesPreferencesSchema } from "./jules-preferences-schemas";
-import { AppError } from "@/lib/errors";
 
 const DEFAULT_JULES_PREFERENCES: JulesPreferences = {
 	repository: null,
 	branch: null,
 };
+
+// Type guard for database errors with code
+function isDbError(error: unknown): error is { code: string; message: string } {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"code" in error &&
+		typeof (error as Record<string, unknown>).code === "string"
+	);
+}
 
 export const getJulesPreferencesAction = createUserAction({
 	handler: async ({ user }): Promise<JulesPreferences> => {
@@ -21,10 +31,10 @@ export const getJulesPreferencesAction = createUserAction({
 				.where(eq(userPreferences.userId, user.id));
 
 			return prefs?.julesPreferences || DEFAULT_JULES_PREFERENCES;
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Handle missing column error (code 42703) gracefully
 			// This can happen if migrations haven't run yet
-			if (error?.code === "42703") {
+			if (isDbError(error) && error.code === "42703") {
 				console.warn(
 					"Jules preferences column missing, returning defaults:",
 					error.message,
@@ -57,15 +67,17 @@ export const saveJulesPreferencesAction = createUserAction({
 				});
 
 			return input;
-		} catch (error: any) {
+		} catch (error: unknown) {
 			// Handle missing column error (code 42703) gracefully
-			if (error?.code === "42703") {
+			if (isDbError(error) && error.code === "42703") {
 				console.warn(
 					"Jules preferences column missing, cannot save:",
 					error.message,
 				);
-                // Throw an error that the middleware will convert to a result { success: false, error: ... }
-                throw new AppError("System maintenance in progress. Preferences could not be saved. Please try again later.");
+				// Throw a DatabaseError that the middleware will convert to a result { success: false, error: ... }
+				throw new DatabaseError(
+					"System maintenance in progress. Preferences could not be saved. Please try again later.",
+				);
 			}
 			throw error;
 		}
