@@ -26,7 +26,6 @@ vi.mock("next/cache", () => ({
 	revalidatePath: vi.fn(),
 }));
 
-import { revalidatePath } from "next/cache";
 import { auth } from "@/app/(auth)/auth";
 import {
 	bulkDeleteEntitiesAction,

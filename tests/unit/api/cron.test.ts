@@ -17,7 +17,6 @@ describe("Cron API Auth", () => {
 
 	it("should return 500 if CRON_SECRET is not set", async () => {
 		// Ensure CRON_SECRET is undefined
-		// biome-ignore lint/performance/noDelete: "Test cleanup"
 		delete process.env.CRON_SECRET;
 
 		const request = new Request("http://localhost/api/cron/process-feedback");
