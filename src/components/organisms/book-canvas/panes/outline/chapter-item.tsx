@@ -6,6 +6,7 @@ import {
 	PenIcon,
 	TrashIcon,
 } from "lucide-react";
+import type React from "react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/atoms/button";
@@ -63,12 +64,17 @@ export interface ChapterItemProps {
 	onDelete: (id: string) => void;
 }
 
-export function ChapterItem({ chapter, onEdit, onDelete }: ChapterItemProps) {
+export function ChapterItem({
+	chapter,
+	onEdit,
+	onDelete,
+}: ChapterItemProps): React.JSX.Element {
 	const [expanded, setExpanded] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editTitle, setEditTitle] = useState(chapter.title);
 	const [editNotes, setEditNotes] = useState(chapter.notes || "");
 	const status = statusConfig[chapter.status] || statusConfig.planned;
+	const notesId = `chapter-notes-${chapter.id}`;
 
 	const handleSave = () => {
 		onEdit(chapter.id, { title: editTitle, notes: editNotes });
@@ -96,12 +102,14 @@ export function ChapterItem({ chapter, onEdit, onDelete }: ChapterItemProps) {
 					placeholder="Chapter Title"
 					className="h-8 text-sm font-medium"
 					autoFocus
+					aria-label="Chapter title"
 				/>
 				<Textarea
 					value={editNotes}
 					onChange={(e) => setEditNotes(e.target.value)}
 					placeholder="Chapter notes..."
 					className="text-xs min-h-[60px]"
+					aria-label="Chapter notes"
 				/>
 				<div className="flex justify-end gap-2">
 					<Button size="sm" variant="ghost" onClick={handleCancel}>
@@ -128,6 +136,8 @@ export function ChapterItem({ chapter, onEdit, onDelete }: ChapterItemProps) {
 						type="button"
 						onClick={() => setExpanded(!expanded)}
 						className="flex items-center gap-2 flex-1 min-w-0"
+						aria-expanded={expanded}
+						aria-controls={notesId}
 					>
 						<ChevronRightIcon
 							className={cn(
@@ -159,6 +169,7 @@ export function ChapterItem({ chapter, onEdit, onDelete }: ChapterItemProps) {
 								variant="ghost"
 								size="icon"
 								className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+								aria-label="Chapter options"
 							>
 								<MoreHorizontalIcon className="h-3.5 w-3.5" />
 							</Button>
@@ -179,7 +190,10 @@ export function ChapterItem({ chapter, onEdit, onDelete }: ChapterItemProps) {
 					</DropdownMenu>
 				</div>
 				{expanded && chapter.notes && (
-					<div className="ml-8 mt-1 rounded-lg border-l-2 border-muted bg-muted/20 p-3">
+					<div
+						id={notesId}
+						className="ml-8 mt-1 rounded-lg border-l-2 border-muted bg-muted/20 p-3"
+					>
 						<p className="text-xs text-muted-foreground">{chapter.notes}</p>
 					</div>
 				)}

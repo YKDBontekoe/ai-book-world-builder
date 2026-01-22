@@ -9,6 +9,12 @@ import {
 } from "@/lib/db/schema";
 import type { TokenStats, UsageHistory } from "./types";
 
+interface HistoryRow {
+	date: string;
+	cost: number;
+	tokens: number;
+}
+
 export async function getProjectTokenStats(
 	projectId: string,
 	dateRange?: { from?: Date; to?: Date },
@@ -24,7 +30,7 @@ export async function getProjectTokenStats(
 	);
 
 	// Run parallel queries
-	const [genUsage, historyRaw] = await Promise.all([
+	const [genUsage, historyRaw] = (await Promise.all([
 		db
 			.select({
 				modelId: sql<string>`${bookGenerationStep.usage}->>'modelId'`,
@@ -56,10 +62,30 @@ export async function getProjectTokenStats(
 			)
 			.where(genUsageWhere)
 			.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
-			.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`),
-	]);
+			.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
+			.then((rows: unknown) => rows as HistoryRow[]),
+	])) as [
+		{ modelId: string | null; cost: number; input: number; output: number }[],
+		HistoryRow[],
+	];
 
-	const usageHistory: UsageHistory = (historyRaw as any[]).map((row: any) => ({
+	// TODO: Fetch chat history as well and merge. For now we only track generation history.
+	// Since getProjectTokenStats is specific to a project, but chat is often project-scoped too.
+	// But the schema implies chat is separate or linked differently.
+	// Assuming chat is global or we need a similar query.
+	// But `getProjectTokenStats` is scoped to `bookGeneration`.
+	// If `chat` has `projectId` we could include it. `chat` schema has `projectId`.
+	// Let's check `src/lib/db/schema/index.ts` or just `schema`.
+	// I see `chat` imported.
+	// But `getProjectTokenStats` didn't include chat history originally.
+	// The CodeRabbit comment was about `getGlobalTokenStats`.
+	// So `getProjectTokenStats` might be fine?
+	// Actually the CodeRabbit comment said "The usageHistory currently maps only historyRaw (bookGenerationStep) so chat messages are omitted while genUsage+chatUsage totals include chat".
+	// This applies to `getGlobalTokenStats`.
+	// For `getProjectTokenStats`, `genUsage` only queries `bookGenerationStep`.
+	// So `getProjectTokenStats` usageHistory is consistent with its totals (only generation).
+
+	const usageHistory: UsageHistory = historyRaw.map((row) => ({
 		date: row.date,
 		cost: Number(row.cost || 0),
 		tokens: Number(row.tokens || 0),
@@ -126,7 +152,7 @@ export async function getGlobalTokenStats(
 		toDate ? lte(message.createdAt, toDate) : undefined,
 	);
 
-	const [genUsage, chatUsage, historyRaw] = await Promise.all([
+	const [genUsage, chatUsage, historyRaw, chatHistoryRaw] = (await Promise.all([
 		db
 			.select({
 				modelId: sql<string>`${bookGenerationStep.usage}->>'modelId'`,
@@ -170,14 +196,48 @@ export async function getGlobalTokenStats(
 			.innerJoin(project, eq(bookGeneration.projectId, project.id))
 			.where(genUsageWhere)
 			.groupBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
-			.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`),
-	]);
+			.orderBy(sql`to_char(${bookGenerationStep.createdAt}, 'YYYY-MM-DD')`)
+			.then((rows: unknown) => rows as HistoryRow[]),
+		db
+			.select({
+				date: sql<string>`to_char(${message.createdAt}, 'YYYY-MM-DD')`,
+				cost: sql<number>`sum(cast(${message.usage}->>'totalCost' as numeric))`,
+				tokens: sql<number>`sum(
+					cast(${message.usage}->>'promptTokens' as numeric) +
+					cast(${message.usage}->>'completionTokens' as numeric)
+				)`,
+			})
+			.from(message)
+			.innerJoin(chat, eq(message.chatId, chat.id))
+			.where(chatUsageWhere)
+			.groupBy(sql`to_char(${message.createdAt}, 'YYYY-MM-DD')`)
+			.orderBy(sql`to_char(${message.createdAt}, 'YYYY-MM-DD')`)
+			.then((rows: unknown) => rows as HistoryRow[]),
+	])) as [
+		{ modelId: string | null; cost: number; input: number; output: number }[],
+		{ modelId: string | null; cost: number; input: number; output: number }[],
+		HistoryRow[],
+		HistoryRow[],
+	];
 
-	const usageHistory: UsageHistory = (historyRaw as any[]).map((row: any) => ({
-		date: row.date,
-		cost: Number(row.cost || 0),
-		tokens: Number(row.tokens || 0),
-	}));
+	// Aggregate history by date
+	const historyMap = new Map<string, { cost: number; tokens: number }>();
+
+	for (const row of [...historyRaw, ...chatHistoryRaw]) {
+		const existing = historyMap.get(row.date) || { cost: 0, tokens: 0 };
+		historyMap.set(row.date, {
+			cost: existing.cost + Number(row.cost || 0),
+			tokens: existing.tokens + Number(row.tokens || 0),
+		});
+	}
+
+	const usageHistory: UsageHistory = Array.from(historyMap.entries())
+		.sort((a, b) => a[0].localeCompare(b[0]))
+		.map(([date, stats]) => ({
+			date,
+			cost: stats.cost,
+			tokens: stats.tokens,
+		}));
 
 	const tokenStats: TokenStats = {
 		totalCost: 0,

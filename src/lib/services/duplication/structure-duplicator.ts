@@ -16,10 +16,10 @@ export class StructureDuplicator {
 		originalProjectId: string,
 		newProjectId: string,
 		idMap: Map<string, string>,
-	) {
+	): Promise<void> {
 		const oldOutlines = (await this.tx
 			.select()
-			.from(outline as any)
+			.from(outline)
 			.where(eq(outline.projectId, originalProjectId))) as OutlineRow[];
 
 		if (oldOutlines.length > 0) {
@@ -44,10 +44,10 @@ export class StructureDuplicator {
 		newProjectId: string,
 		outlineIdMap: Map<string, string>,
 		volumeIdMap: Map<string, string>,
-	) {
+	): Promise<void> {
 		const oldVolumes = (await this.tx
 			.select()
-			.from(volume as any)
+			.from(volume)
 			.where(eq(volume.projectId, originalProjectId))) as VolumeRow[];
 
 		if (oldVolumes.length > 0) {
@@ -80,10 +80,10 @@ export class StructureDuplicator {
 		volumeIdMap: Map<string, string>,
 		outlineIdMap: Map<string, string>,
 		chapterIdMap: Map<string, string>,
-	) {
+	): Promise<void> {
 		const oldChapters = (await this.tx
 			.select()
-			.from(chapter as any)
+			.from(chapter)
 			.where(eq(chapter.projectId, originalProjectId))) as ChapterRow[];
 
 		if (oldChapters.length > 0) {
@@ -118,10 +118,10 @@ export class StructureDuplicator {
 		chapterIdMap: Map<string, string>,
 		volumeIdMap: Map<string, string>,
 		outlineIdMap: Map<string, string>,
-	) {
+	): Promise<void> {
 		const oldChapterDrafts = (await this.tx
 			.select()
-			.from(chapterDraft as any)
+			.from(chapterDraft)
 			.where(
 				eq(chapterDraft.projectId, originalProjectId),
 			)) as ChapterDraftRow[];

@@ -1,9 +1,14 @@
 "use client";
 
 import { FileTextIcon } from "lucide-react";
+import type React from "react";
 import type { SerializedOutline } from "@/app/actions/project-stats";
 
-export function OutlineHeader({ outline }: { outline: SerializedOutline }) {
+export function OutlineHeader({
+	outline,
+}: {
+	outline: SerializedOutline;
+}): React.JSX.Element {
 	return (
 		<div className="rounded-xl border glass-panel p-4">
 			<div className="flex items-start justify-between gap-3">

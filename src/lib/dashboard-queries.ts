@@ -51,19 +51,21 @@ export async function getGlobalStats(
 	activityStats: ActivityStats;
 	usageHistory: UsageHistory;
 }> {
-	const [userProjects, totalWordsRaw] = await Promise.all([
+	const [userProjects, totalWordsRaw] = (await Promise.all([
 		db
 			.select({ id: project.id })
 			.from(project)
-			.where(eq(project.userId, userId)),
+			.where(eq(project.userId, userId))
+			.then((rows: unknown) => rows as { id: string }[]),
 		db
 			.select({ words: sql<number>`sum(${scene.wordCount})` })
 			.from(scene)
 			.innerJoin(project, eq(scene.projectId, project.id))
-			.where(eq(project.userId, userId)),
-	]);
+			.where(eq(project.userId, userId))
+			.then((rows: unknown) => rows as { words: number }[]),
+	])) as [{ id: string }[], { words: number }[]];
 
-	const projectIds = (userProjects as any[]).map((p: any) => p.id);
+	const projectIds = userProjects.map((p) => p.id);
 	const totalWords = Number(totalWordsRaw[0]?.words || 0);
 
 	const [{ tokenStats, usageHistory }, entityStats, activityStats] =

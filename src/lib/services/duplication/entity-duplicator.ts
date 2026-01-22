@@ -15,7 +15,7 @@ export class EntityDuplicator {
 		originalProjectId: string,
 		newProjectId: string,
 		idMap: Map<string, string>,
-	) {
+	): Promise<void> {
 		const limit = 100;
 		let offset = 0;
 		let hasMore = true;
@@ -23,7 +23,7 @@ export class EntityDuplicator {
 		while (hasMore) {
 			const oldEntities = (await this.tx
 				.select()
-				.from(entity as any)
+				.from(entity)
 				.where(eq(entity.projectId, originalProjectId))
 				.limit(limit)
 				.offset(offset)) as EntityRow[];
@@ -55,15 +55,24 @@ export class EntityDuplicator {
 		originalProjectId: string,
 		newProjectId: string,
 		entityIdMap: Map<string, string>,
-	) {
-		const oldAttributes = (await this.tx
-			.select()
-			.from(entityAttribute as any)
-			.where(
-				eq(entityAttribute.projectId, originalProjectId),
-			)) as AttributeRow[];
+	): Promise<void> {
+		const limit = 100;
+		let offset = 0;
+		let hasMore = true;
 
-		if (oldAttributes.length > 0) {
+		while (hasMore) {
+			const oldAttributes = (await this.tx
+				.select()
+				.from(entityAttribute)
+				.where(eq(entityAttribute.projectId, originalProjectId))
+				.limit(limit)
+				.offset(offset)) as AttributeRow[];
+
+			if (oldAttributes.length === 0) {
+				hasMore = false;
+				break;
+			}
+
 			const newAttributes = [];
 			for (const old of oldAttributes) {
 				const newEntityId = entityIdMap.get(old.entityId);
@@ -81,6 +90,7 @@ export class EntityDuplicator {
 			if (newAttributes.length > 0) {
 				await chunkedInsert(this.tx, entityAttribute, newAttributes);
 			}
+			offset += limit;
 		}
 	}
 
@@ -88,15 +98,24 @@ export class EntityDuplicator {
 		originalProjectId: string,
 		newProjectId: string,
 		entityIdMap: Map<string, string>,
-	) {
-		const oldRelationships = (await this.tx
-			.select()
-			.from(relationship as any)
-			.where(
-				eq(relationship.projectId, originalProjectId),
-			)) as RelationshipRow[];
+	): Promise<void> {
+		const limit = 100;
+		let offset = 0;
+		let hasMore = true;
 
-		if (oldRelationships.length > 0) {
+		while (hasMore) {
+			const oldRelationships = (await this.tx
+				.select()
+				.from(relationship)
+				.where(eq(relationship.projectId, originalProjectId))
+				.limit(limit)
+				.offset(offset)) as RelationshipRow[];
+
+			if (oldRelationships.length === 0) {
+				hasMore = false;
+				break;
+			}
+
 			const newRelationships = [];
 			for (const old of oldRelationships) {
 				const sourceId = entityIdMap.get(old.sourceEntityId);
@@ -116,6 +135,7 @@ export class EntityDuplicator {
 			if (newRelationships.length > 0) {
 				await chunkedInsert(this.tx, relationship, newRelationships);
 			}
+			offset += limit;
 		}
 	}
 }

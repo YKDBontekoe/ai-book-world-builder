@@ -3,10 +3,26 @@ import { db } from "@/lib/db";
 import { entity, relationship } from "@/lib/db/schema";
 import type { EntityStats } from "./types";
 
+interface ByKindRow {
+	kind: string;
+	count: number;
+}
+
+interface EntityRow {
+	id: string;
+	name: string;
+	kind: string;
+}
+
+interface RelRow {
+	s: string;
+	t: string;
+}
+
 export async function getProjectEntityStats(
 	projectId: string,
 ): Promise<EntityStats> {
-	const [byKindRaw, entities, rels] = await Promise.all([
+	const [byKindRaw, entities, rels] = (await Promise.all([
 		// 1. Entity Stats
 		db
 			.select({
@@ -15,7 +31,8 @@ export async function getProjectEntityStats(
 			})
 			.from(entity)
 			.where(eq(entity.projectId, projectId))
-			.groupBy(entity.kind),
+			.groupBy(entity.kind)
+			.then((rows: unknown) => rows as ByKindRow[]),
 
 		// 2. Entities List
 		db
@@ -25,7 +42,8 @@ export async function getProjectEntityStats(
 				kind: entity.kind,
 			})
 			.from(entity)
-			.where(eq(entity.projectId, projectId)),
+			.where(eq(entity.projectId, projectId))
+			.then((rows: unknown) => rows as EntityRow[]),
 
 		// 3. Relationships
 		db
@@ -34,8 +52,9 @@ export async function getProjectEntityStats(
 				t: relationship.targetEntityId,
 			})
 			.from(relationship)
-			.where(eq(relationship.projectId, projectId)),
-	]);
+			.where(eq(relationship.projectId, projectId))
+			.then((rows: unknown) => rows as RelRow[]),
+	])) as [ByKindRow[], EntityRow[], RelRow[]];
 
 	// Process Entity Stats
 	const byKind: Record<string, number> = {};
@@ -52,9 +71,9 @@ export async function getProjectEntityStats(
 		connCounts[r.t] = (connCounts[r.t] || 0) + 1;
 	}
 
-	const mostConnected = (entities as any[])
-		.map((e: any) => ({ ...e, connections: connCounts[e.id] || 0 }))
-		.sort((a: any, b: any) => b.connections - a.connections)
+	const mostConnected = entities
+		.map((e) => ({ ...e, connections: connCounts[e.id] || 0 }))
+		.sort((a, b) => b.connections - a.connections)
 		.slice(0, 5);
 
 	return {

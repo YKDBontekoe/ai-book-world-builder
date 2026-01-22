@@ -15,26 +15,16 @@ export class SceneDuplicator {
 		newProjectId: string,
 		chapterIdMap: Map<string, string>,
 		sceneIdMap: Map<string, string>,
-	) {
+	): Promise<void> {
 		const limit = 50;
 		let offset = 0;
 		let hasMore = true;
 
-		// 1. Light fetch for ID Mapping
-		const allSceneMeta = (await this.tx
-			.select()
-			.from(scene as any)
-			.where(eq(scene.projectId, originalProjectId))) as SceneRow[];
-
-		for (const meta of allSceneMeta) {
-			sceneIdMap.set(meta.id, crypto.randomUUID());
-		}
-
-		// 2. Heavy fetch and insert in batches
+		// Fetch and insert in batches, building the map as we go
 		while (hasMore) {
 			const batch = (await this.tx
 				.select()
-				.from(scene as any)
+				.from(scene)
 				.where(eq(scene.projectId, originalProjectId))
 				.limit(limit)
 				.offset(offset)) as SceneRow[];
@@ -44,18 +34,34 @@ export class SceneDuplicator {
 				break;
 			}
 
-			const newScenesToInsert = [];
+			// Refined Single-Pass Strategy:
+			// Iterate batch.
+			// For each scene:
+			// 1. Ensure IT has a new ID (check map, if not, generate).
+			// 2. Ensure its PREV has a new ID (check map, if not, generate).
+			// 3. Insert.
+
+			const currentBatchInserts = [];
 			for (const old of batch) {
 				const newChapterId = chapterIdMap.get(old.chapterId);
 				if (newChapterId) {
+					// 1. Ensure current scene ID
+					if (!sceneIdMap.has(old.id)) {
+						sceneIdMap.set(old.id, crypto.randomUUID());
+					}
 					const newId = sceneIdMap.get(old.id);
-					// Resolve prevSceneId using the pre-filled map
-					const newPrevId = old.prevSceneId
-						? (sceneIdMap.get(old.prevSceneId) ?? null)
-						: null;
+
+					// 2. Resolve prevSceneId
+					let newPrevId = null;
+					if (old.prevSceneId) {
+						if (!sceneIdMap.has(old.prevSceneId)) {
+							sceneIdMap.set(old.prevSceneId, crypto.randomUUID());
+						}
+						newPrevId = sceneIdMap.get(old.prevSceneId) ?? null;
+					}
 
 					const { id: _id, ...data } = old;
-					newScenesToInsert.push({
+					currentBatchInserts.push({
 						...data,
 						id: newId,
 						chapterId: newChapterId,
@@ -67,8 +73,8 @@ export class SceneDuplicator {
 				}
 			}
 
-			if (newScenesToInsert.length > 0) {
-				await chunkedInsert(this.tx, scene, newScenesToInsert);
+			if (currentBatchInserts.length > 0) {
+				await chunkedInsert(this.tx, scene, currentBatchInserts);
 			}
 			offset += limit;
 		}
@@ -78,10 +84,10 @@ export class SceneDuplicator {
 		originalProjectId: string,
 		newProjectId: string,
 		sceneIdMap: Map<string, string>,
-	) {
+	): Promise<void> {
 		const oldSceneCards = (await this.tx
 			.select()
-			.from(sceneCard as any)
+			.from(sceneCard)
 			.where(eq(sceneCard.projectId, originalProjectId))) as SceneCardRow[];
 
 		if (oldSceneCards.length > 0) {

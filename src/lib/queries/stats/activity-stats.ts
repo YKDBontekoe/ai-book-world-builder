@@ -30,14 +30,21 @@ export async function getProjectActivityStats(
 	};
 }
 
+/**
+ * Calculates global activity stats for a user.
+ *
+ * Note: `totalChapters` and `totalScenes` are currently returned as 0 because calculating
+ * them globally across all projects is expensive without a dedicated aggregate table.
+ * These fields are intentionally omitted/uncomputed to optimize dashboard load performance.
+ */
 export async function getGlobalActivityStats(
 	totalProjects: number,
 	totalWords: number,
 ): Promise<ActivityStats> {
 	return {
 		totalProjects,
-		totalChapters: 0, // Expensive to calculate globally without aggregate table
-		totalScenes: 0, // Same here
+		totalChapters: 0,
+		totalScenes: 0,
 		totalWords,
 		lastActive: new Date(),
 	};

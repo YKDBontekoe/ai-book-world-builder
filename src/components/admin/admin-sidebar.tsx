@@ -33,7 +33,9 @@ const items = [
 	},
 ];
 
-export function AdminSidebar() {
+import type React from "react";
+
+export function AdminSidebar(): React.JSX.Element {
 	const pathname = usePathname();
 
 	return (

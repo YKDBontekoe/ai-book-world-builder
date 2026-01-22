@@ -79,10 +79,6 @@ export class ProjectDuplicationService {
 					originalProjectId,
 				);
 
-				const entityDuplicator = new EntityDuplicator(tx);
-				const structureDuplicator = new StructureDuplicator(tx);
-				const sceneDuplicator = new SceneDuplicator(tx);
-
 				// ID Maps
 				const entityIdMap = new Map<string, string>();
 				const outlineIdMap = new Map<string, string>();
@@ -91,6 +87,7 @@ export class ProjectDuplicationService {
 				const sceneIdMap = new Map<string, string>();
 
 				// 2. Clone Entities & Relations
+				const entityDuplicator = new EntityDuplicator(tx);
 				await entityDuplicator.cloneEntities(
 					originalProjectId,
 					newProject.id,
@@ -108,6 +105,7 @@ export class ProjectDuplicationService {
 				);
 
 				// 3. Clone Structure
+				const structureDuplicator = new StructureDuplicator(tx);
 				await structureDuplicator.cloneOutlines(
 					originalProjectId,
 					newProject.id,
@@ -135,6 +133,7 @@ export class ProjectDuplicationService {
 				);
 
 				// 4. Clone Scenes
+				const sceneDuplicator = new SceneDuplicator(tx);
 				await sceneDuplicator.cloneScenes(
 					originalProjectId,
 					newProject.id,

@@ -161,7 +161,7 @@ export class EntityRepository extends BaseRepository<
 					.where(
 						inArray(
 							entityAttribute.entityId,
-							entities.map((e) => e.id),
+							entities.map((e: Entity) => e.id),
 						),
 					),
 				db
@@ -171,17 +171,22 @@ export class EntityRepository extends BaseRepository<
 			]);
 
 			// Map details to entities
-			return entities.map((ent) => ({
+			return entities.map((ent: Entity) => ({
 				...ent,
 				attributes: allAttributes
-					.filter((attr) => attr.entityId === ent.id)
-					.sort((a, b) => a.name.localeCompare(b.name)),
+					.filter((attr: EntityAttribute) => attr.entityId === ent.id)
+					.sort((a: EntityAttribute, b: EntityAttribute) =>
+						a.name.localeCompare(b.name),
+					),
 				relationships: allRelationships
 					.filter(
-						(rel) =>
+						(rel: Relationship) =>
 							rel.sourceEntityId === ent.id || rel.targetEntityId === ent.id,
 					)
-					.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime()),
+					.sort(
+						(a: Relationship, b: Relationship) =>
+							b.createdAt.getTime() - a.createdAt.getTime(),
+					),
 			}));
 		} catch (error) {
 			console.error("EntityRepository.findByProjectWithDetails error:", error);
