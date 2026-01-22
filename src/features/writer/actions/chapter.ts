@@ -138,6 +138,7 @@ export async function createNewChapter(projectId: string) {
 
 		await invalidateCache(`project-structure:${projectId}`);
 
+		// biome-ignore lint/style/noNonNullAssertion: "Guaranteed by transaction logic"
 		return { success: true, chapterId: newChapterId! };
 	} catch (error) {
 		console.error("Failed to create new chapter", error);
@@ -252,11 +253,16 @@ export async function reorderChapters(chapterIds: string[], volumeId: string) {
 		// with some drivers in transactions.
 		await db.transaction(async (tx: DbTransaction) => {
 			for (let i = 0; i < chapterIds.length; i++) {
+				// Prevent IDOR by ensuring the chapter belongs to the project
 				await tx
 					.update(chapter)
 					.set({ sequence: i + 1, updatedAt: new Date() })
 					.where(
-						and(eq(chapter.id, chapterIds[i]), eq(chapter.volumeId, volumeId)),
+						and(
+							eq(chapter.id, chapterIds[i]),
+							eq(chapter.volumeId, volumeId),
+							eq(chapter.projectId, projectId),
+						),
 					);
 			}
 		});
