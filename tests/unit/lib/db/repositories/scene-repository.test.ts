@@ -133,8 +133,12 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.findAll()).rejects.toThrow(DatabaseError);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -148,10 +152,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.findByChapter("c1")).rejects.toThrow(
 				DatabaseError,
 			);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -173,10 +181,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.findByProject("p1")).rejects.toThrow(
 				DatabaseError,
 			);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -198,10 +210,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.create(validInput)).rejects.toThrow(
 				DatabaseError,
 			);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -236,10 +252,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(
 				sceneRepository.update("s1", { title: "Up" }),
 			).rejects.toThrow(DatabaseError);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -274,10 +294,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.updateContent("s1", "C")).rejects.toThrow(
 				DatabaseError,
 			);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -289,8 +313,12 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.delete("s1")).rejects.toThrow(DatabaseError);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -310,10 +338,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.getLastInChapter("c1")).rejects.toThrow(
 				DatabaseError,
 			);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -348,10 +380,14 @@ describe("SceneRepository", () => {
 			});
 
 			it("should throw DatabaseError on failure", async () => {
+				const consoleSpy = vi
+					.spyOn(console, "error")
+					.mockImplementation(() => {});
 				mocks.error = new Error("DB Error");
 				await expect(sceneRepository.getSceneCard("s1")).rejects.toThrow(
 					DatabaseError,
 				);
+				consoleSpy.mockRestore();
 			});
 		});
 
@@ -368,10 +404,14 @@ describe("SceneRepository", () => {
 			});
 
 			it("should throw DatabaseError on failure", async () => {
+				const consoleSpy = vi
+					.spyOn(console, "error")
+					.mockImplementation(() => {});
 				mocks.error = new Error("DB Error");
 				await expect(
 					sceneRepository.createSceneCard(validInput),
 				).rejects.toThrow(DatabaseError);
+				consoleSpy.mockRestore();
 			});
 		});
 
@@ -395,10 +435,14 @@ describe("SceneRepository", () => {
 			});
 
 			it("should throw DatabaseError on failure", async () => {
+				const consoleSpy = vi
+					.spyOn(console, "error")
+					.mockImplementation(() => {});
 				mocks.error = new Error("DB Error");
 				await expect(
 					sceneRepository.updateSceneCard("s1", { purpose: "Up" }),
 				).rejects.toThrow(DatabaseError);
+				consoleSpy.mockRestore();
 			});
 		});
 	});
