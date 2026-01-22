@@ -105,12 +105,11 @@ export async function createNewChapter(projectId: string) {
 
 		await db.transaction(async (tx: DbTransaction) => {
 			// Lock the volume to prevent concurrent sequence generation
-			await (
-				tx
-					.select()
-					.from(volume)
-					.where(eq(volume.id, volumeId)) as any
-			).for("update");
+			await tx
+				.select()
+				.from(volume)
+				.where(eq(volume.id, volumeId))
+				.for("update");
 
 			const existingChapters = await tx
 				.select()

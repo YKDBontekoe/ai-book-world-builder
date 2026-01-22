@@ -202,7 +202,12 @@ export const createNewChapterActionSchema = z.object({
 });
 
 export const reorderChaptersSchema = z.object({
-	chapterIds: z.array(uuidSchema),
+	chapterIds: z
+		.array(uuidSchema)
+		.max(500, { message: "Too many chapters to reorder" })
+		.refine((items) => new Set(items).size === items.length, {
+			message: "Duplicate chapter IDs not allowed",
+		}),
 	volumeId: uuidSchema,
 });
 
