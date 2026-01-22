@@ -46,7 +46,6 @@ vi.mock("@/app/(auth)/auth", () => ({
 
 // Import the action under test
 import {
-	getChapterDraft,
 	getGenerationLog,
 	getOutlineData,
 	getProjectStats,
@@ -143,7 +142,7 @@ describe("Project Stats Security", () => {
 
 	it("should fail getChapterDraft when accessing a private project belonging to another user", async () => {
 		mockGetProjectByIdWithAccess.mockResolvedValue(null);
-		const chapterId = "chapter-123";
+		const _chapterId = "chapter-123";
 
 		// The helper gets the project from the chapter first.
 		// We need to simulate that part in the actual action if we want to test fully,

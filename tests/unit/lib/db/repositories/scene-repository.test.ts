@@ -67,6 +67,7 @@ vi.mock("drizzle-orm", () => ({
 describe("SceneRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
 		mocks.result = [];
 		mocks.error = null;
 	});
