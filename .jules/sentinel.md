@@ -23,3 +23,8 @@
 **Vulnerability:** Chapter update, delete, and reorder operations were vulnerable to IDOR because they did not verify that the target chapter ID belonged to the authenticated project ID in the database query.
 **Learning:** Validating ownership of the *parent* resource (Project) is insufficient if the *child* resource (Chapter) operation does not also scope the query to that parent.
 **Prevention:** Always include the parent ID (e.g., `projectId`) in the `WHERE` clause of UPDATE/DELETE operations for child resources to enforce ownership boundaries at the database level.
+
+## 2025-02-24 - [Scene Operations IDOR]
+**Vulnerability:** Scene deletion and content updates were vulnerable to IDOR because the repository methods accepted an ID and performed the operation without checking if the scene belonged to the authenticated user's project, trusting only the service layer's check.
+**Learning:** Defense in depth requires database repositories to also support and enforce ownership scoping, preventing vulnerabilities if the service layer check is bypassed or malformed.
+**Prevention:** Extend repository methods (update/delete) to accept an optional parent ID (e.g., `projectId`) and include it in the `WHERE` clause to strictly scope the operation to the authorized context.

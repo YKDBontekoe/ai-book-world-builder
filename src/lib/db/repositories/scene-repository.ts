@@ -226,6 +226,7 @@ export class SceneRepository extends BaseRepository<
 		id: string,
 		content: string,
 		status?: string,
+		projectId?: string,
 	): Promise<Scene> {
 		try {
 			const [updated] = await db
@@ -235,7 +236,11 @@ export class SceneRepository extends BaseRepository<
 					status: status ?? "drafted",
 					updatedAt: new Date(),
 				})
-				.where(eq(scene.id, id))
+				.where(
+					projectId
+						? and(eq(scene.id, id), eq(scene.projectId, projectId))
+						: eq(scene.id, id),
+				)
 				.returning();
 
 			if (!updated) {
@@ -253,9 +258,15 @@ export class SceneRepository extends BaseRepository<
 	/**
 	 * Delete a scene by ID
 	 */
-	async delete(id: string): Promise<void> {
+	async delete(id: string, projectId?: string): Promise<void> {
 		try {
-			await db.delete(scene).where(eq(scene.id, id));
+			await db
+				.delete(scene)
+				.where(
+					projectId
+						? and(eq(scene.id, id), eq(scene.projectId, projectId))
+						: eq(scene.id, id),
+				);
 		} catch (error) {
 			console.error("SceneRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete scene");
