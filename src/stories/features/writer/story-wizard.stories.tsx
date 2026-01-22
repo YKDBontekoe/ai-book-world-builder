@@ -1,10 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "@storybook/test";
 import { TooltipProvider } from "@/components/atoms/tooltip";
-import {
-	STORY_TEMPLATES,
-	StoryWizard,
-} from "@/features/writer/components/story-wizard";
+import { StoryWizard } from "@/features/writer/components/story-wizard";
+import { STORY_TEMPLATES } from "@/lib/story-templates";
 
 const meta = {
 	title: "Features/Writer/StoryWizard",
