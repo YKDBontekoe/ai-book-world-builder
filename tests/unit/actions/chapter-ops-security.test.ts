@@ -62,7 +62,10 @@ describe("Chapter Ops Security", () => {
 
 		// Setup successful project access check
 		mockWithProjectWriteAccess.mockImplementation((projectId, callback) => {
-			return callback({ project: { id: projectId, userId: ATTACKER_ID }, user: { id: ATTACKER_ID } });
+			return callback({
+				project: { id: projectId, userId: ATTACKER_ID },
+				user: { id: ATTACKER_ID },
+			});
 		});
 
 		// Setup generic db mock chaining
@@ -90,8 +93,8 @@ describe("Chapter Ops Security", () => {
 		// We expect `eq(chapter.projectId, input.projectId)` to be called.
 
 		const eqCalls = mockEq.mock.calls;
-		const projectIdCheck = eqCalls.some(args => {
-			 return args[1] === PROJECT_ID;
+		const projectIdCheck = eqCalls.some((args) => {
+			return args[1] === PROJECT_ID;
 		});
 
 		expect(projectIdCheck).toBe(true);

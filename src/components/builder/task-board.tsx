@@ -10,9 +10,9 @@ import {
 	getJulesSessionsAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
-import { ItemDetail } from "../github/item-detail";
-import { JulesChat } from "../jules/jules-chat";
+import { ItemDetail } from "../admin/github/item-detail";
 import { CreateFeatureDialog } from "./create-feature-dialog";
+import { JulesChat } from "./jules/jules-chat";
 import { TaskCard, type TaskItem } from "./task-card";
 
 type ColumnType = "backlog" | "in_progress" | "review" | "done";

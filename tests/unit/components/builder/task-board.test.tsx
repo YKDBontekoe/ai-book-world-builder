@@ -16,7 +16,7 @@ import {
 	getJulesSessionsAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
-import { TaskBoard } from "@/components/admin/builder/task-board";
+import { TaskBoard } from "@/components/builder/task-board";
 
 // Mock dependencies
 vi.mock("@/app/actions/github", () => ({
@@ -45,6 +45,11 @@ vi.mock("lucide-react", () => ({
 	AlertCircle: () => <span data-testid="icon-alert" />,
 	Bot: () => <span data-testid="icon-bot" />,
 	GitPullRequest: () => <span data-testid="icon-pr" />,
+	Loader2: () => <span data-testid="icon-loader" />,
+	ArrowLeft: () => <span data-testid="icon-arrow-left" />,
+	Send: () => <span data-testid="icon-send" />,
+	X: () => <span data-testid="icon-x" />,
+	Paperclip: () => <span data-testid="icon-paperclip" />,
 }));
 
 // Mock GlassCard to forward onClick
@@ -77,7 +82,7 @@ vi.mock("@/components/admin/github/item-detail", () => ({
 	),
 }));
 
-vi.mock("@/components/admin/jules/jules-chat", () => ({
+vi.mock("@/components/builder/jules/jules-chat", () => ({
 	JulesChat: ({ onBack }: { onBack: () => void }) => (
 		<div>
 			<h1>Jules Chat</h1>
@@ -88,7 +93,7 @@ vi.mock("@/components/admin/jules/jules-chat", () => ({
 	),
 }));
 
-vi.mock("@/components/admin/builder/create-feature-dialog", () => ({
+vi.mock("@/components/builder/create-feature-dialog", () => ({
 	CreateFeatureDialog: () => <button type="button">Create Feature</button>,
 }));
 
