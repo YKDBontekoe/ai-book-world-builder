@@ -41,6 +41,15 @@ interface RunGenerationOptions {
 	callbacks?: GenerationCallbacks;
 }
 
+/**
+ * The GenerationPipeline orchestrates the entire book generation process.
+ * It manages state, fetches necessary context (Lore, Outline), and executes
+ * a sequence of steps defined in the database.
+ *
+ * @example
+ * const pipeline = new GenerationPipeline({ ...options });
+ * await pipeline.execute();
+ */
 export class GenerationPipeline {
 	private logger: StepExecutionLogger;
 
@@ -51,6 +60,15 @@ export class GenerationPipeline {
 		);
 	}
 
+	/**
+	 * Executes the generation pipeline.
+	 * 1. Fetches project data (entities, outlines).
+	 * 2. Builds the context (Lore, Project context).
+	 * 3. Fetches the sequence of steps from the DB.
+	 * 4. Iterates through each step, invoking the appropriate handler.
+	 *
+	 * @throws {Error} If project data is missing or a critical error occurs.
+	 */
 	async execute() {
 		const { generationId, projectId, userId, settings } = this.options;
 		const log = this.logger.log.bind(this.logger);

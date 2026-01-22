@@ -127,6 +127,17 @@ The **Power Dock** is your context-aware toolbar located at the bottom of the ed
 -   **Ask Manuscript**: Ask questions about plot threads, character arcs, and unresolved clues with cited sources.
 -   **Export**: Download the current scene as a Markdown file to your computer.
 
+#### Using Magic Fill (Lore Generator)
+Magic Fill allows you to instantly create detailed characters, locations, or items from a single sentence.
+
+1.  **Open Power Dock**: Click the "Lore" (Magic Wand) icon in the bottom toolbar.
+2.  **Select Category**: Choose whether you are creating a *Character*, *Location*, or *Item*.
+3.  **Enter Prompt**: Describe your entity in plain English.
+    *   *Example*: "A grumpy cyborg shopkeeper who sells cursed antiques."
+    *   *Example*: "A floating island city made of glass, powered by storm lightning."
+4.  **Generate**: The AI will generate a name, physical description, backstory, and relevant traits.
+5.  **Save**: Click "Add to Bible" to save this entity to your project database. It is now available for the AI to use in future generations.
+
 ### 3. Refining Your Story
 Ensure your draft is polished and consistent using the analysis tools in the Power Dock.
 

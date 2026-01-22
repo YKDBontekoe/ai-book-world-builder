@@ -4,9 +4,11 @@ The Book Generation system in AI Book World Builder is a **state-driven, multi-a
 
 ## Core Components
 
-### 1. Generation Orchestrator
-The `GenerationOrchestrator` (`lib/generation/generation-orchestrator.ts`) is the central engine. It does not run in a single long-lived process but rather executes a sequence of database-persisted steps.
+### 1. Generation Orchestrator & Pipeline
+The generation workflow is split between the entry point `runGeneration` (`lib/generation/generation-orchestrator.ts`) and the `GenerationPipeline` class (`lib/generation/pipeline.ts`).
 
+- **Orchestrator**: Entry point that accepts options and initializes the pipeline.
+- **Pipeline**: The execution engine that fetches data, prepares context, and iterates through the steps.
 - **State Machine**: The generation process is defined by a series of `bookGenerationStep` records in the database.
 - **Resiliency**: Because state is persisted, the generation can be paused, resumed, or recovered after a server restart.
 - **Context Management**: The orchestrator builds a `ProcessStepContext` containing the project's lore, outline, and global notes, which is passed to every step.
@@ -22,12 +24,12 @@ interface StepHandler {
 ```
 
 **Available Steps:**
-- **Prologue**: Generates an introductory scene.
-- **Chapter Writing**: The core step. Uses the `WriterAgent` to generate a chapter based on the outline.
-- **Chapter Reviewing**: Uses a separate "Reviewer" model to critique the generated chapter and suggest improvements (or auto-fix).
-- **Epilogue**: Generates the concluding scene.
-- **Consistency Check**: Analyzes the generated content against the project's entity database to find contradictions.
-- **Back Cover**: Generates a blurb or marketing copy for the book.
+- **Prologue** (`prologue`): Generates an introductory scene.
+- **Chapter Writing** (`chapter_writing`): The core step. Uses the `WriterAgent` to generate a chapter based on the outline.
+- **Chapter Reviewing** (`chapter_reviewing`): Uses a separate "Reviewer" model to critique the generated chapter and suggest improvements (or auto-fix).
+- **Epilogue** (`epilogue`): Generates the concluding scene.
+- **Consistency Check** (`consistency_check`): Analyzes the generated content against the project's entity database to find contradictions.
+- **Back Cover** (`back_cover`): Generates a blurb or marketing copy for the book.
 
 ### 3. Writer Agent
 The `WriterAgent` (`lib/generation/writer-agent.ts`) is responsible for the actual prose generation. It operates on a "Context Flooding" principle.
