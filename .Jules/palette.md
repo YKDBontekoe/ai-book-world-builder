@@ -1,5 +1,23 @@
 # Palette
 
+## 2026-01-22 - CodeRabbit triggers require PAT-authored comments
+
+### Context
+
+Non-human PRs (like Jules-created branches) were posting review-trigger comments via the default GitHub Actions token, which can be ignored by downstream automations.
+
+### Solution
+
+Moved supervisor comments to the custom PAT and added an explicit CodeRabbit trigger on Jules-authored PR open events.
+
+### Outcome
+
+CodeRabbit reviews now start reliably for Jules PRs without relying on CI-only triggers.
+
+### Learnings
+
+- Use a PAT identity for automation comments that must trigger third-party bots.
+
 ## 2026-01-19 - Brainstorming states need visible error recovery
 
 ### Context
