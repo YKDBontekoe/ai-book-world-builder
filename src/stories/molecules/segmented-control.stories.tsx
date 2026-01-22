@@ -12,6 +12,13 @@ const meta: Meta<typeof SegmentedControl> = {
 			control: { type: "select" },
 			options: ["sm", "md"],
 		},
+		variant: {
+			control: { type: "select" },
+			options: ["default", "success", "error"],
+		},
+		isLoading: {
+			control: { type: "boolean" },
+		},
 	},
 };
 
@@ -73,6 +80,51 @@ export const TwoOptions: Story = {
 				]}
 				value={value}
 				onChange={setValue}
+			/>
+		);
+	},
+};
+
+export const Loading: Story = {
+	render: (args) => {
+		const [value, setValue] = useState("daily");
+		return (
+			<SegmentedControl
+				{...args}
+				options={options}
+				value={value}
+				onChange={setValue}
+				isLoading={true}
+			/>
+		);
+	},
+};
+
+export const Success: Story = {
+	render: (args) => {
+		const [value, setValue] = useState("daily");
+		return (
+			<SegmentedControl
+				{...args}
+				options={options}
+				value={value}
+				onChange={setValue}
+				variant="success"
+			/>
+		);
+	},
+};
+
+export const Error: Story = {
+	render: (args) => {
+		const [value, setValue] = useState("daily");
+		return (
+			<SegmentedControl
+				{...args}
+				options={options}
+				value={value}
+				onChange={setValue}
+				variant="error"
 			/>
 		);
 	},

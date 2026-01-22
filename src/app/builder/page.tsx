@@ -14,6 +14,12 @@ import { SegmentedControl } from "@/components/molecules/segmented-control";
 export default function GitHubAdminPage(): JSX.Element {
 	const [view, setView] = useState<"board" | "roadmap" | "jules">("board");
 
+	const options = [
+		{ id: "board", label: "Task Board" },
+		{ id: "roadmap", label: "Roadmap" },
+		{ id: "jules", label: "Jules Console" },
+	] as const;
+
 	return (
 		<div className="space-y-6 h-full flex flex-col">
 			<div className="flex-shrink-0 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -27,14 +33,11 @@ export default function GitHubAdminPage(): JSX.Element {
 					</p>
 				</div>
 				<SegmentedControl
-					options={[
-						{ id: "board", label: "Task Board" },
-						{ id: "roadmap", label: "Roadmap" },
-						{ id: "jules", label: "Jules Console" },
-					]}
+					options={options}
 					value={view}
-					onChange={(v) => setView(v as "board" | "roadmap" | "jules")}
+					onChange={setView}
 					className="w-full sm:w-auto"
+					ariaLabel="View Selection"
 				/>
 			</div>
 
