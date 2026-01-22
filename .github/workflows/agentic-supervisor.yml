@@ -80,7 +80,7 @@ jobs:
           **Method:** API Invoke (full context)" --repo "${{ github.repository }}"
 
       - name: Invoke Jules API
-        uses: google-labs-code/jules-action@v1
+        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
         with:
           jules_api_key: ${{ secrets.JULES_API_KEY }}
           starting_branch: ${{ needs.supervisor.outputs.branch }}
