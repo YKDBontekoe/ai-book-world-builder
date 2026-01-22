@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Bot, GitPullRequest } from "lucide-react";
-import type { JSX } from "react";
+import { type JSX, memo } from "react";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import { GlassCard } from "@/components/molecules/glass-card";
 import type { JulesSession } from "@/lib/jules-client";
@@ -17,7 +17,7 @@ interface TaskCardProps {
 	onFix?: (issue: GitHubIssue) => void;
 }
 
-export function TaskCard({
+export const TaskCard = memo(function TaskCard({
 	item,
 	onSelect,
 	onFix,
@@ -136,4 +136,4 @@ export function TaskCard({
 			{renderContent()}
 		</GlassCard>
 	);
-}
+});

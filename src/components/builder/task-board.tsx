@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type JSX, useMemo, useState } from "react";
+import { type JSX, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { startFixSessionAction } from "@/app/actions/builder";
 import type { GitHubIssue } from "@/app/actions/github";
@@ -105,60 +105,76 @@ export function TaskBoard(): JSX.Element {
 
 	// --- Data Organization ---
 
-	const columns: Column[] = useMemo(() => {
-		const backlogItems: TaskItem[] = (Array.isArray(issues) ? issues : []).map(
-			(i) => ({
+	const backlogItems: TaskItem[] = useMemo(
+		() =>
+			(Array.isArray(issues) ? issues : []).map((i) => ({
 				type: "issue",
 				data: i,
-			}),
-		);
+			})),
+		[issues],
+	);
 
-		const sessionItems: TaskItem[] = (Array.isArray(sessions) ? sessions : [])
-			.filter(
-				(s) =>
-					s.state !== "COMPLETED" &&
-					s.state !== "FAILED" &&
-					s.state !== "PAUSED",
-			)
-			.map((s) => ({ type: "session", data: s }));
+	const sessionItems: TaskItem[] = useMemo(
+		() =>
+			(Array.isArray(sessions) ? sessions : [])
+				.filter(
+					(s) =>
+						s.state !== "COMPLETED" &&
+						s.state !== "FAILED" &&
+						s.state !== "PAUSED",
+				)
+				.map((s) => ({ type: "session", data: s })),
+		[sessions],
+	);
 
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : []).map(
-			(p) => ({
+	const reviewItems: TaskItem[] = useMemo(
+		() =>
+			(Array.isArray(prs) ? prs : []).map((p) => ({
 				type: "pr",
 				data: p,
-			}),
-		);
-
-		const doneItems: TaskItem[] = [
-			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
-				type: "pr" as const,
-				data: p,
 			})),
-			...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
-				type: "issue" as const,
-				data: i,
-			})),
-		].sort(
-			(a, b) =>
-				new Date(b.data.updated_at).getTime() -
-				new Date(a.data.updated_at).getTime(),
-		);
+		[prs],
+	);
 
-		return [
+	const doneItems: TaskItem[] = useMemo(
+		() =>
+			[
+				...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
+					type: "pr" as const,
+					data: p,
+				})),
+				...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
+					type: "issue" as const,
+					data: i,
+				})),
+			].sort(
+				(a, b) =>
+					new Date(b.data.updated_at).getTime() -
+					new Date(a.data.updated_at).getTime(),
+			),
+		[closedPrs, closedIssues],
+	);
+
+	const columns: Column[] = useMemo(
+		() => [
 			{ id: "backlog", title: "Backlog", items: backlogItems },
 			{ id: "in_progress", title: "In Progress (Jules)", items: sessionItems },
 			{ id: "review", title: "Review", items: reviewItems },
 			{ id: "done", title: "Done", items: doneItems },
-		];
-	}, [issues, closedIssues, prs, closedPrs, sessions]);
+		],
+		[backlogItems, sessionItems, reviewItems, doneItems],
+	);
 
 	// --- Interaction ---
 
-	const handleFix = (issue: GitHubIssue) => {
-		if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
-			startFix(issue);
-		}
-	};
+	const handleFix = useCallback(
+		(issue: GitHubIssue) => {
+			if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
+				startFix(issue);
+			}
+		},
+		[startFix],
+	);
 
 	if (selectedItem) {
 		if (selectedItem.type === "session") {
