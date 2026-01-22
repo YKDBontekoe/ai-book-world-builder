@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { volumeRepository } from "@/lib/db/repositories/volume-repository";
 import { DatabaseError, NotFoundError } from "@/lib/errors";
 
@@ -71,9 +71,14 @@ vi.mock("drizzle-orm", () => ({
 describe("VolumeRepository", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
 		mocks.result = [];
 		mocks.results = null;
 		mocks.error = null;
+	});
+
+	afterEach(() => {
+		vi.restoreAllMocks();
 	});
 
 	describe("findById", () => {
