@@ -64,6 +64,8 @@ describe("Chapter Actions", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		(ensureProjectAccess as Mock).mockResolvedValue(undefined);
+
 		// Setup db chain mocks
 		mockChain = {
 			from: vi.fn().mockReturnThis(),
