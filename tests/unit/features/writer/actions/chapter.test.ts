@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
 import * as chapterActions from "@/features/writer/actions/chapter";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { db } from "@/lib/db";
@@ -44,12 +44,23 @@ vi.mock("@/lib/db/repositories", () => ({
 	},
 }));
 
+interface MockChain {
+	from: Mock;
+	where: Mock;
+	orderBy: Mock;
+	limit: Mock;
+	values: Mock;
+	set: Mock;
+	returning: Mock;
+	for: Mock;
+}
+
 describe("Chapter Actions", () => {
 	const projectId = "123e4567-e89b-12d3-a456-426614174000";
 	const chapterId = "123e4567-e89b-12d3-a456-426614174001";
 	const volumeId = "123e4567-e89b-12d3-a456-426614174002";
 
-	let mockChain: any;
+	let mockChain: MockChain;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -65,13 +76,13 @@ describe("Chapter Actions", () => {
 			for: vi.fn().mockReturnThis(),
 		};
 
-		(db.select as any).mockReturnValue(mockChain);
-		(db.insert as any).mockReturnValue(mockChain);
-		(db.update as any).mockReturnValue(mockChain);
-		(db.delete as any).mockReturnValue(mockChain);
+		(db.select as Mock).mockReturnValue(mockChain);
+		(db.insert as Mock).mockReturnValue(mockChain);
+		(db.update as Mock).mockReturnValue(mockChain);
+		(db.delete as Mock).mockReturnValue(mockChain);
 
 		// Mock transaction to execute callback
-		(db.transaction as any).mockImplementation(async (cb: any) => cb(db));
+		(db.transaction as Mock).mockImplementation(async (cb: any) => cb(db));
 	});
 
 	afterEach(() => {
@@ -101,7 +112,7 @@ describe("Chapter Actions", () => {
 				...mockChain,
 				returning: vi.fn().mockReturnValue([]),
 			};
-			(db.insert as any).mockReturnValue(failingChain);
+			(db.insert as Mock).mockReturnValue(failingChain);
 
 			const result = await chapterActions.createNewChapter(projectId);
 			expect(result.success).toBe(false);
@@ -119,7 +130,7 @@ describe("Chapter Actions", () => {
 
 		it("should update chapter title successfully", async () => {
 			// Mock finding the chapter
-			(db.select as any).mockReturnValue({
+			(db.select as Mock).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
 						limit: vi.fn().mockResolvedValue([{ id: chapterId, projectId }]),
@@ -141,7 +152,7 @@ describe("Chapter Actions", () => {
 		});
 
 		it("should return error if chapter not found", async () => {
-			(db.select as any).mockReturnValue({
+			(db.select as Mock).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
 						limit: vi.fn().mockResolvedValue([]),
@@ -161,7 +172,7 @@ describe("Chapter Actions", () => {
 	describe("deleteChapter", () => {
 		it("should delete chapter if user has access", async () => {
 			// Mock finding the chapter
-			(db.select as any).mockReturnValue({
+			(db.select as Mock).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
 						limit: vi.fn().mockResolvedValue([{ id: chapterId, projectId }]),
@@ -179,7 +190,7 @@ describe("Chapter Actions", () => {
 		});
 
 		it("should return error if chapter not found", async () => {
-			(db.select as any).mockReturnValue({
+			(db.select as Mock).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockReturnValue({
 						limit: vi.fn().mockResolvedValue([]),
@@ -200,7 +211,7 @@ describe("Chapter Actions", () => {
 			const chapterIds = [c1, c2];
 
 			// Mock finding chapters
-			(db.select as any).mockReturnValue({
+			(db.select as Mock).mockReturnValue({
 				from: vi.fn().mockReturnValue({
 					where: vi.fn().mockResolvedValue([
 						{ id: c1, projectId },
