@@ -87,10 +87,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(sceneRepository.findById("s1")).rejects.toThrow(
 				DatabaseError,
 			);
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -109,10 +113,14 @@ describe("SceneRepository", () => {
 		});
 
 		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(
 				sceneRepository.findByIdInProject("s1", "p1"),
 			).rejects.toThrow(DatabaseError);
+			consoleSpy.mockRestore();
 		});
 	});
 

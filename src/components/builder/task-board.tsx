@@ -134,10 +134,11 @@ export function TaskBoard(): JSX.Element {
 						? item.data.title || item.data.prompt
 						: item.data.title
 				)?.toLowerCase();
-				const id =
-					item.type === "session" ? item.data.id : item.data.number.toString();
+				const id = (
+					item.type === "session" ? item.data.id : item.data.number.toString()
+				)?.toLowerCase();
 
-				if (!title?.includes(query) && !id.includes(query)) return false;
+				if (!title?.includes(query) && !id?.includes(query)) return false;
 			}
 
 			return true;
@@ -229,6 +230,7 @@ export function TaskBoard(): JSX.Element {
 						value={searchQuery}
 						onChange={(e) => setSearchQuery(e.target.value)}
 						className="pl-9 h-9 bg-background/50"
+						aria-label="Filter tasks"
 					/>
 				</div>
 
