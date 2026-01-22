@@ -5,6 +5,10 @@ import { redirect } from "next/navigation";
 import type { JSX } from "react";
 import { auth } from "@/app/(auth)/auth";
 import {
+	getAvailableModels,
+	getModelPreferences,
+} from "@/app/actions/settings";
+import {
 	FadeIn,
 	SlideIn,
 	StaggerItem,
@@ -17,6 +21,7 @@ import {
 	CardTitle,
 } from "@/components/atoms/card";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { PlatformModelSettings } from "@/components/organisms/platform/platform-model-settings";
 import { isAdmin } from "@/lib/auth/utils";
 
 export default async function PlatformPage(): Promise<JSX.Element> {
@@ -28,6 +33,21 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 
 	const isUserAdmin = isAdmin(session.user.role);
 	const userName = session.user.name?.split(" ")[0] || "Creator";
+
+	// Fetch data for model settings
+	const [modelsResult, prefsResult] = await Promise.all([
+		getAvailableModels(),
+		getModelPreferences(),
+	]);
+
+	const availableModels = modelsResult.success ? modelsResult.data : [];
+	const initialPreferences = prefsResult.success
+		? {
+				light: prefsResult.data.light || null,
+				middle: prefsResult.data.middle || null,
+				large: prefsResult.data.large || null,
+			}
+		: { light: null, middle: null, large: null };
 
 	return (
 		<div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-violet-50/50 via-white to-indigo-50/50 p-8 dark:from-zinc-950 dark:via-zinc-900 dark:to-violet-950/30">
@@ -174,6 +194,16 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 							)}
 						</StaggerItem>
 					</StaggerList>
+				</FadeIn>
+
+				{/* Global Model Settings */}
+				<FadeIn delay={0.5}>
+					<div className="max-w-4xl mx-auto">
+						<PlatformModelSettings
+							availableModels={availableModels}
+							initialPreferences={initialPreferences}
+						/>
+					</div>
 				</FadeIn>
 			</div>
 		</div>

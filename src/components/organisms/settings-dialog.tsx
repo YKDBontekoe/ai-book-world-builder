@@ -1,21 +1,9 @@
 "use client";
 
-import {
-	Check,
-	Loader2,
-	Palette,
-	SparklesIcon,
-	Type,
-	UserIcon,
-} from "lucide-react";
+import { Check, Loader2, Palette, Type, UserIcon } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import {
-	getAvailableModels,
-	getModelPreferences,
-	saveModelPreferences,
-} from "@/app/actions/settings";
 import { getConnectedAccounts } from "@/app/actions/user";
 import { Button } from "@/components/atoms/button";
 import { Dialog, DialogContent } from "@/components/atoms/dialog";
@@ -29,7 +17,6 @@ import {
 } from "@/components/atoms/select";
 import { Slider } from "@/components/atoms/slider";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { SettingsModelSelector } from "@/components/organisms/settings/settings-model-selector";
 import { useAppearance } from "@/components/providers/appearance-provider";
 import { cn } from "@/lib/utils";
 
@@ -43,14 +30,6 @@ export function SettingsDialog({
 	const [activeTab, setActiveTab] = useState("account");
 	const [connectedAccounts, setConnectedAccounts] = useState<string[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
-
-	// Model Settings State
-	const [availableModels, setAvailableModels] = useState<any[]>([]);
-	const [modelPreferences, setModelPreferences] = useState({
-		light: "",
-		middle: "",
-		large: "",
-	});
 
 	const {
 		theme,
@@ -77,49 +56,11 @@ export function SettingsDialog({
 		}
 	}, []);
 
-	const loadModelSettings = useCallback(async () => {
-		try {
-			const [modelsResult, prefsResult] = await Promise.all([
-				getAvailableModels(),
-				getModelPreferences(),
-			]);
-			if (modelsResult.success) {
-				setAvailableModels(modelsResult.data);
-			}
-			if (prefsResult.success) {
-				setModelPreferences({
-					light: prefsResult.data.light || "",
-					middle: prefsResult.data.middle || "",
-					large: prefsResult.data.large || "",
-				});
-			}
-		} catch (_error) {
-			toast.error("Failed to load model settings");
-		}
-	}, []);
-
 	useEffect(() => {
 		if (open) {
 			loadAccounts();
-			loadModelSettings();
 		}
-	}, [open, loadAccounts, loadModelSettings]);
-
-	const handleModelChange = async (
-		type: "light" | "middle" | "large",
-		value: string,
-	) => {
-		const newPrefs = { ...modelPreferences, [type]: value };
-		setModelPreferences(newPrefs); // Optimistic update
-
-		try {
-			await saveModelPreferences(newPrefs);
-			toast.success("Preference saved");
-		} catch (_error) {
-			toast.error("Failed to save preference");
-			// Revert if needed, but for settings simple toast is usually enough
-		}
-	};
+	}, [open, loadAccounts]);
 
 	const handleConnectGoogle = async () => {
 		try {
@@ -166,7 +107,6 @@ export function SettingsDialog({
 
 					<SidebarItem id="account" label="Account" icon={UserIcon} />
 					<SidebarItem id="appearance" label="Appearance" icon={Palette} />
-					<SidebarItem id="models" label="AI Models" icon={SparklesIcon} />
 				</div>
 
 				{/* Content Area */}
@@ -382,62 +322,6 @@ export function SettingsDialog({
 											</Button>
 										)}
 									</GlassCard>
-								</div>
-							</div>
-						)}
-
-						{activeTab === "models" && (
-							<div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-								<div>
-									<h3 className="text-xl font-semibold mb-1">
-										Model Configuration
-									</h3>
-									<p className="text-sm text-muted-foreground">
-										Select models for different complexity levels. Changes save
-										automatically.
-									</p>
-								</div>
-
-								<div className="space-y-6">
-									<div className="space-y-3">
-										<Label className="text-base font-medium">Light Model</Label>
-										<p className="text-sm text-muted-foreground">
-											Used for simple tasks like title generation and quick
-											suggestions.
-										</p>
-										<SettingsModelSelector
-											availableModels={availableModels}
-											selectedModelId={modelPreferences.light}
-											onModelChange={(val) => handleModelChange("light", val)}
-										/>
-									</div>
-
-									<div className="space-y-3">
-										<Label className="text-base font-medium">
-											Middle Model
-										</Label>
-										<p className="text-sm text-muted-foreground">
-											The default for chat and standard editing tasks.
-										</p>
-										<SettingsModelSelector
-											availableModels={availableModels}
-											selectedModelId={modelPreferences.middle}
-											onModelChange={(val) => handleModelChange("middle", val)}
-										/>
-									</div>
-
-									<div className="space-y-3">
-										<Label className="text-base font-medium">Large Model</Label>
-										<p className="text-sm text-muted-foreground">
-											Used for deep story planning, analysis, and high-quality
-											prose generation.
-										</p>
-										<SettingsModelSelector
-											availableModels={availableModels}
-											selectedModelId={modelPreferences.large}
-											onModelChange={(val) => handleModelChange("large", val)}
-										/>
-									</div>
 								</div>
 							</div>
 						)}
