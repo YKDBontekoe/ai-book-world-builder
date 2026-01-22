@@ -62,7 +62,9 @@ export function useSceneOperations({
 	// Cleanup pending deletions on unmount
 	useEffect(() => {
 		return () => {
-			pendingDeletionsRef.current.forEach((timeout) => clearTimeout(timeout));
+			pendingDeletionsRef.current.forEach((timeout) => {
+				clearTimeout(timeout);
+			});
 			pendingDeletionsRef.current.clear();
 		};
 	}, []);

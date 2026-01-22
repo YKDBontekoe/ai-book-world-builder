@@ -125,7 +125,7 @@ export function CreateEntityDialog({
 					id: toastId,
 				});
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Magic Fill failed", { id: toastId });
 		} finally {
 			setIsMagicFilling(false);
@@ -144,7 +144,7 @@ export function CreateEntityDialog({
 			setLastUsedType(values.kind);
 			toast.success("Entity created successfully", { id: toastId });
 			handleOpenChange(false);
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to create entity", { id: toastId });
 		}
 	}

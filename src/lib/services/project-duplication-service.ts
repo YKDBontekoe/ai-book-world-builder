@@ -3,44 +3,12 @@ import { eq, type InferSelectModel } from "drizzle-orm";
 
 import { type DbTransaction, db } from "@/lib/db";
 import { projectRepository } from "@/lib/db/repositories";
-import {
-	chapter,
-	chapterDraft,
-	entity,
-	entityAttribute,
-	outline,
-	project,
-	relationship,
-	scene,
-	sceneCard,
-	volume,
-} from "@/lib/db/schema";
+import { entity, project, scene } from "@/lib/db/schema";
+import { EntityDuplicator } from "./duplication/entity-duplicator";
+import { SceneDuplicator } from "./duplication/scene-duplicator";
+import { StructureDuplicator } from "./duplication/structure-duplicator";
 
-// Type definitions for table rows
-type EntityRow = InferSelectModel<typeof entity>;
-type AttributeRow = InferSelectModel<typeof entityAttribute>;
-type RelationshipRow = InferSelectModel<typeof relationship>;
-type OutlineRow = InferSelectModel<typeof outline>;
-type VolumeRow = InferSelectModel<typeof volume>;
-type ChapterRow = InferSelectModel<typeof chapter>;
-type ChapterDraftRow = InferSelectModel<typeof chapterDraft>;
-type SceneRow = InferSelectModel<typeof scene>;
-type SceneCardRow = InferSelectModel<typeof sceneCard>;
 type ProjectRow = InferSelectModel<typeof project>;
-
-// Helper for chunked inserts
-async function chunkedInsert<T extends Record<string, unknown>, TTable>(
-	tx: DbTransaction,
-	table: TTable,
-	items: T[],
-	chunkSize = 1000,
-) {
-	for (let i = 0; i < items.length; i += chunkSize) {
-		const chunk = items.slice(i, i + chunkSize);
-		// @ts-expect-error - Drizzle types for insert are complex but this is safe
-		await tx.insert(table).values(chunk);
-	}
-}
 
 /**
  * Service to handle the complex logic of deep-cloning an entire project.
@@ -111,6 +79,10 @@ export class ProjectDuplicationService {
 					originalProjectId,
 				);
 
+				const entityDuplicator = new EntityDuplicator(tx);
+				const structureDuplicator = new StructureDuplicator(tx);
+				const sceneDuplicator = new SceneDuplicator(tx);
+
 				// ID Maps
 				const entityIdMap = new Map<string, string>();
 				const outlineIdMap = new Map<string, string>();
@@ -119,49 +91,42 @@ export class ProjectDuplicationService {
 				const sceneIdMap = new Map<string, string>();
 
 				// 2. Clone Entities & Relations
-				await this.cloneEntities(
-					tx,
+				await entityDuplicator.cloneEntities(
 					originalProjectId,
 					newProject.id,
 					entityIdMap,
 				);
-				await this.cloneAttributes(
-					tx,
+				await entityDuplicator.cloneAttributes(
 					originalProjectId,
 					newProject.id,
 					entityIdMap,
 				);
-				await this.cloneRelationships(
-					tx,
+				await entityDuplicator.cloneRelationships(
 					originalProjectId,
 					newProject.id,
 					entityIdMap,
 				);
 
 				// 3. Clone Structure
-				await this.cloneOutlines(
-					tx,
+				await structureDuplicator.cloneOutlines(
 					originalProjectId,
 					newProject.id,
 					outlineIdMap,
 				);
-				await this.cloneVolumes(
-					tx,
+				await structureDuplicator.cloneVolumes(
 					originalProjectId,
 					newProject.id,
 					outlineIdMap,
 					volumeIdMap,
 				);
-				await this.cloneChapters(
-					tx,
+				await structureDuplicator.cloneChapters(
 					originalProjectId,
 					newProject.id,
 					volumeIdMap,
 					outlineIdMap,
 					chapterIdMap,
 				);
-				await this.cloneChapterDrafts(
-					tx,
+				await structureDuplicator.cloneChapterDrafts(
 					originalProjectId,
 					newProject.id,
 					chapterIdMap,
@@ -170,15 +135,13 @@ export class ProjectDuplicationService {
 				);
 
 				// 4. Clone Scenes
-				await this.cloneScenes(
-					tx,
+				await sceneDuplicator.cloneScenes(
 					originalProjectId,
 					newProject.id,
 					chapterIdMap,
 					sceneIdMap,
 				);
-				await this.cloneSceneCards(
-					tx,
+				await sceneDuplicator.cloneSceneCards(
 					originalProjectId,
 					newProject.id,
 					sceneIdMap,
@@ -214,372 +177,6 @@ export class ProjectDuplicationService {
 			})
 			.returning();
 		return newProject;
-	}
-
-	private async cloneEntities(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		idMap: Map<string, string>,
-	) {
-		const limit = 100;
-		let offset = 0;
-		let hasMore = true;
-
-		while (hasMore) {
-			const oldEntities = (await tx
-				.select()
-				.from(entity as any)
-				.where(eq(entity.projectId, originalProjectId))
-				.limit(limit)
-				.offset(offset)) as EntityRow[];
-
-			if (oldEntities.length === 0) {
-				hasMore = false;
-				break;
-			}
-
-			const newEntities = oldEntities.map((old: EntityRow) => {
-				const newId = crypto.randomUUID();
-				idMap.set(old.id, newId);
-				const { id: _id, ...data } = old;
-				return {
-					...data,
-					id: newId,
-					projectId: newProjectId,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				};
-			});
-
-			await chunkedInsert(tx, entity, newEntities);
-			offset += limit;
-		}
-	}
-
-	private async cloneAttributes(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		entityIdMap: Map<string, string>,
-	) {
-		const oldAttributes = (await tx
-			.select()
-			.from(entityAttribute as any)
-			.where(
-				eq(entityAttribute.projectId, originalProjectId),
-			)) as AttributeRow[];
-
-		if (oldAttributes.length > 0) {
-			const newAttributes = [];
-			for (const old of oldAttributes) {
-				const newEntityId = entityIdMap.get(old.entityId);
-				if (newEntityId) {
-					const { id: _id, ...data } = old;
-					newAttributes.push({
-						...data,
-						id: crypto.randomUUID(),
-						entityId: newEntityId,
-						projectId: newProjectId,
-						createdAt: new Date(),
-					});
-				}
-			}
-			if (newAttributes.length > 0) {
-				await chunkedInsert(tx, entityAttribute, newAttributes);
-			}
-		}
-	}
-
-	private async cloneRelationships(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		entityIdMap: Map<string, string>,
-	) {
-		const oldRelationships = (await tx
-			.select()
-			.from(relationship as any)
-			.where(
-				eq(relationship.projectId, originalProjectId),
-			)) as RelationshipRow[];
-
-		if (oldRelationships.length > 0) {
-			const newRelationships = [];
-			for (const old of oldRelationships) {
-				const sourceId = entityIdMap.get(old.sourceEntityId);
-				const targetId = entityIdMap.get(old.targetEntityId);
-				if (sourceId && targetId) {
-					const { id: _id, ...data } = old;
-					newRelationships.push({
-						...data,
-						id: crypto.randomUUID(),
-						sourceEntityId: sourceId,
-						targetEntityId: targetId,
-						projectId: newProjectId,
-						createdAt: new Date(),
-					});
-				}
-			}
-			if (newRelationships.length > 0) {
-				await chunkedInsert(tx, relationship, newRelationships);
-			}
-		}
-	}
-
-	private async cloneOutlines(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		idMap: Map<string, string>,
-	) {
-		const oldOutlines = (await tx
-			.select()
-			.from(outline as any)
-			.where(eq(outline.projectId, originalProjectId))) as OutlineRow[];
-
-		if (oldOutlines.length > 0) {
-			const newOutlines = oldOutlines.map((old: OutlineRow) => {
-				const newId = crypto.randomUUID();
-				idMap.set(old.id, newId);
-				const { id: _id, ...data } = old;
-				return {
-					...data,
-					id: newId,
-					projectId: newProjectId,
-					createdAt: new Date(),
-					updatedAt: new Date(),
-				};
-			});
-			await chunkedInsert(tx, outline, newOutlines);
-		}
-	}
-
-	private async cloneVolumes(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		outlineIdMap: Map<string, string>,
-		volumeIdMap: Map<string, string>,
-	) {
-		const oldVolumes = (await tx
-			.select()
-			.from(volume as any)
-			.where(eq(volume.projectId, originalProjectId))) as VolumeRow[];
-
-		if (oldVolumes.length > 0) {
-			const newVolumes = [];
-			for (const old of oldVolumes) {
-				const newOutlineId = outlineIdMap.get(old.outlineId);
-				if (newOutlineId) {
-					const newId = crypto.randomUUID();
-					volumeIdMap.set(old.id, newId);
-					const { id: _id, ...data } = old;
-					newVolumes.push({
-						...data,
-						id: newId,
-						outlineId: newOutlineId,
-						projectId: newProjectId,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					});
-				}
-			}
-			if (newVolumes.length > 0) {
-				await chunkedInsert(tx, volume, newVolumes);
-			}
-		}
-	}
-
-	private async cloneChapters(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		volumeIdMap: Map<string, string>,
-		outlineIdMap: Map<string, string>,
-		chapterIdMap: Map<string, string>,
-	) {
-		const oldChapters = (await tx
-			.select()
-			.from(chapter as any)
-			.where(eq(chapter.projectId, originalProjectId))) as ChapterRow[];
-
-		if (oldChapters.length > 0) {
-			const newChapters = [];
-			for (const old of oldChapters) {
-				const newVolumeId = volumeIdMap.get(old.volumeId);
-				const newOutlineId = outlineIdMap.get(old.outlineId);
-				if (newVolumeId && newOutlineId) {
-					const newId = crypto.randomUUID();
-					chapterIdMap.set(old.id, newId);
-					const { id: _id, ...data } = old;
-					newChapters.push({
-						...data,
-						id: newId,
-						volumeId: newVolumeId,
-						outlineId: newOutlineId,
-						projectId: newProjectId,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					});
-				}
-			}
-			if (newChapters.length > 0) {
-				await chunkedInsert(tx, chapter, newChapters);
-			}
-		}
-	}
-
-	private async cloneChapterDrafts(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		chapterIdMap: Map<string, string>,
-		volumeIdMap: Map<string, string>,
-		outlineIdMap: Map<string, string>,
-	) {
-		const oldChapterDrafts = (await tx
-			.select()
-			.from(chapterDraft as any)
-			.where(
-				eq(chapterDraft.projectId, originalProjectId),
-			)) as ChapterDraftRow[];
-
-		if (oldChapterDrafts.length > 0) {
-			const newDrafts = [];
-			for (const old of oldChapterDrafts) {
-				const newChapterId = chapterIdMap.get(old.chapterId);
-				const newVolumeId = volumeIdMap.get(old.volumeId);
-				const newOutlineId = outlineIdMap.get(old.outlineId);
-				if (newChapterId && newVolumeId && newOutlineId) {
-					const { id: _id, ...data } = old;
-					newDrafts.push({
-						...data,
-						id: crypto.randomUUID(),
-						chapterId: newChapterId,
-						volumeId: newVolumeId,
-						outlineId: newOutlineId,
-						projectId: newProjectId,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					});
-				}
-			}
-			if (newDrafts.length > 0) {
-				await chunkedInsert(tx, chapterDraft, newDrafts);
-			}
-		}
-	}
-
-	/**
-	 * Clones scenes using a Two-Pass strategy to resolve linked-list dependencies.
-	 *
-	 * Scenes reference each other via `prevSceneId`. If we tried to insert them
-	 * purely sequentially, we might encounter a `prevSceneId` that hasn't been
-	 * created yet (or we wouldn't know its new ID).
-	 *
-	 * Pass 1: Fetch ALL scene IDs and generate their new counterparts immediately.
-	 *         Populate `sceneIdMap`.
-	 *
-	 * Pass 2: Fetch full scene data in batches. When inserting, we can now
-	 *         confidently resolve `prevSceneId` using the map from Pass 1.
-	 */
-	private async cloneScenes(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		chapterIdMap: Map<string, string>,
-		sceneIdMap: Map<string, string>,
-	) {
-		const limit = 50;
-		let offset = 0;
-		let hasMore = true;
-
-		// 1. Light fetch for ID Mapping
-		const allSceneMeta = (await tx
-			.select()
-			.from(scene as any)
-			.where(eq(scene.projectId, originalProjectId))) as SceneRow[];
-
-		for (const meta of allSceneMeta) {
-			sceneIdMap.set(meta.id, crypto.randomUUID());
-		}
-
-		// 2. Heavy fetch and insert in batches
-		while (hasMore) {
-			const batch = (await tx
-				.select()
-				.from(scene as any)
-				.where(eq(scene.projectId, originalProjectId))
-				.limit(limit)
-				.offset(offset)) as SceneRow[];
-
-			if (batch.length === 0) {
-				hasMore = false;
-				break;
-			}
-
-			const newScenesToInsert = [];
-			for (const old of batch) {
-				const newChapterId = chapterIdMap.get(old.chapterId);
-				if (newChapterId) {
-					const newId = sceneIdMap.get(old.id);
-					// Resolve prevSceneId using the pre-filled map
-					const newPrevId = old.prevSceneId
-						? (sceneIdMap.get(old.prevSceneId) ?? null)
-						: null;
-
-					const { id: _id, ...data } = old;
-					newScenesToInsert.push({
-						...data,
-						id: newId,
-						chapterId: newChapterId,
-						prevSceneId: newPrevId,
-						projectId: newProjectId,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					});
-				}
-			}
-
-			if (newScenesToInsert.length > 0) {
-				await chunkedInsert(tx, scene, newScenesToInsert);
-			}
-			offset += limit;
-		}
-	}
-
-	private async cloneSceneCards(
-		tx: DbTransaction,
-		originalProjectId: string,
-		newProjectId: string,
-		sceneIdMap: Map<string, string>,
-	) {
-		const oldSceneCards = (await tx
-			.select()
-			.from(sceneCard as any)
-			.where(eq(sceneCard.projectId, originalProjectId))) as SceneCardRow[];
-
-		if (oldSceneCards.length > 0) {
-			const newSceneCards = [];
-			for (const old of oldSceneCards) {
-				const newSceneId = sceneIdMap.get(old.sceneId);
-				if (newSceneId) {
-					const { id: _id, ...data } = old;
-					newSceneCards.push({
-						...data,
-						id: crypto.randomUUID(),
-						sceneId: newSceneId,
-						projectId: newProjectId,
-						createdAt: new Date(),
-						updatedAt: new Date(),
-					});
-				}
-			}
-			if (newSceneCards.length > 0) {
-				await chunkedInsert(tx, sceneCard, newSceneCards);
-			}
-		}
 	}
 }
 

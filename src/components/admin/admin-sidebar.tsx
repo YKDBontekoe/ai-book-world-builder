@@ -1,6 +1,6 @@
 "use client";
 
-import { Github, Home, LayoutDashboard, Settings2, Users } from "lucide-react";
+import { Home, LayoutDashboard, Settings2, Users } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {

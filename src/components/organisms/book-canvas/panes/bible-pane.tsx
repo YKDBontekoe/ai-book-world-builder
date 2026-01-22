@@ -172,29 +172,6 @@ export function BiblePane(): React.JSX.Element {
 		});
 	}, []);
 
-	const undoDelete = useCallback(
-		(toastId: string | number, idsToRestore: string[]) => {
-			const timeoutId = pendingDeletionsRef.current.get(toastId);
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-				pendingDeletionsRef.current.delete(toastId);
-			}
-
-			// Invalidate queries immediately to restore view if optimistic update was applied on cache
-			// But here we rely on server revalidation or cache invalidation.
-			// Since we haven't actually deleted yet, just dismissing toast is enough IF we didn't optimistic update locally.
-			// Ideally we should optimistic delete locally.
-			// But since we rely on `entities` from useQuery, we can't easily mutate it optimistically without complex logic.
-			// However, SceneNavigation used `deletedSceneIds` state to hide them. I should do the same.
-			// But I haven't implemented `deletedIds` filtering yet.
-
-			// Let's implement `deletedIds` state for optimistic hiding.
-			toast.dismiss(toastId);
-			toast.success("Deletion undone");
-		},
-		[],
-	);
-
 	// TODO: Add `deletedIds` state for proper optimistic UI if needed.
 	// For now, the toast just delays the API call. The user still sees the entities until the toast finishes.
 	// Wait, that's bad UX. The user expects them to disappear immediately.
@@ -212,7 +189,9 @@ export function BiblePane(): React.JSX.Element {
 
 			setHiddenIds((prev) => {
 				const next = new Set(prev);
-				idsToRestore.forEach((id) => next.delete(id));
+				idsToRestore.forEach((id) => {
+					next.delete(id);
+				});
 				return next;
 			});
 
@@ -229,7 +208,9 @@ export function BiblePane(): React.JSX.Element {
 		// Optimistic hide
 		setHiddenIds((prev) => {
 			const next = new Set(prev);
-			idsToDelete.forEach((id) => next.add(id));
+			idsToDelete.forEach((id) => {
+				next.add(id);
+			});
 			return next;
 		});
 
@@ -280,7 +261,9 @@ export function BiblePane(): React.JSX.Element {
 					// Cleanup hiddenIds
 					setHiddenIds((prev) => {
 						const next = new Set(prev);
-						idsToDelete.forEach((id) => next.delete(id));
+						idsToDelete.forEach((id) => {
+							next.delete(id);
+						});
 						return next;
 					});
 				} else {
@@ -288,7 +271,7 @@ export function BiblePane(): React.JSX.Element {
 					// Restore
 					handleUndo(toastId, idsToDelete);
 				}
-			} catch (error) {
+			} catch (_error) {
 				toast.error("Error deleting entities");
 				handleUndo(toastId, idsToDelete);
 			}
@@ -352,7 +335,7 @@ export function BiblePane(): React.JSX.Element {
 			await navigator.clipboard.writeText(exportData);
 			toast.success(`Copied ${entitiesToExport.length} entities to clipboard`);
 			toggleSelectionMode();
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to copy to clipboard");
 		}
 	}, [selectedIds, entities, toggleSelectionMode]);
