@@ -212,7 +212,9 @@ export function BiblePane(): React.JSX.Element {
 
 			setHiddenIds((prev) => {
 				const next = new Set(prev);
-				idsToRestore.forEach((id) => next.delete(id));
+				idsToRestore.forEach((id) => {
+					next.delete(id);
+				});
 				return next;
 			});
 
@@ -229,7 +231,9 @@ export function BiblePane(): React.JSX.Element {
 		// Optimistic hide
 		setHiddenIds((prev) => {
 			const next = new Set(prev);
-			idsToDelete.forEach((id) => next.add(id));
+			idsToDelete.forEach((id) => {
+				next.add(id);
+			});
 			return next;
 		});
 
@@ -280,7 +284,9 @@ export function BiblePane(): React.JSX.Element {
 					// Cleanup hiddenIds
 					setHiddenIds((prev) => {
 						const next = new Set(prev);
-						idsToDelete.forEach((id) => next.delete(id));
+						idsToDelete.forEach((id) => {
+							next.delete(id);
+						});
 						return next;
 					});
 				} else {

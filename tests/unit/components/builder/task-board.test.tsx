@@ -50,6 +50,14 @@ vi.mock("lucide-react", () => ({
 	Send: () => <span data-testid="icon-send" />,
 	X: () => <span data-testid="icon-x" />,
 	Paperclip: () => <span data-testid="icon-paperclip" />,
+	Search: () => <span data-testid="icon-search" />,
+	Filter: () => <span data-testid="icon-filter" />,
+	LayoutList: () => <span data-testid="icon-layout-list" />,
+	Maximize2: () => <span data-testid="icon-maximize2" />,
+	Minimize2: () => <span data-testid="icon-minimize2" />,
+	ChevronDown: () => <span data-testid="icon-chevron-down" />,
+	ChevronUp: () => <span data-testid="icon-chevron-up" />,
+	Check: () => <span data-testid="icon-check" />,
 }));
 
 // Mock GlassCard to forward onClick
@@ -193,7 +201,7 @@ describe("TaskBoard", () => {
 
 		await waitFor(() => {
 			expect(screen.getByText("Backlog")).toBeInTheDocument();
-			expect(screen.getAllByText("No items")).toHaveLength(4);
+			expect(screen.getAllByText("No items found")).toHaveLength(4);
 		});
 	});
 
@@ -215,7 +223,7 @@ describe("TaskBoard", () => {
 
 		await waitFor(() => {
 			expect(screen.getByText("Backlog")).toBeInTheDocument();
-			expect(screen.getAllByText("No items")).toHaveLength(4);
+			expect(screen.getAllByText("No items found")).toHaveLength(4);
 		});
 	});
 
