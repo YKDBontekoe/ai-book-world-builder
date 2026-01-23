@@ -162,6 +162,7 @@ describe("GeneratorPane", () => {
 
 		vi.mocked(StoryGenerationActions.createBookFromPlan).mockResolvedValue({
 			success: true,
+			data: { success: true },
 		});
 
 		render(

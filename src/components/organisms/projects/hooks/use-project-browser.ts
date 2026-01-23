@@ -130,7 +130,7 @@ export function useProjectBrowser(projects: Project[]) {
 			if (pendingDeletionRef.current && pendingDeletionRef.current.size > 0) {
 				const ids = Array.from(pendingDeletionRef.current);
 				// We use void to fire-and-forget, but catch errors to log them
-				deleteProjects(ids).catch((err) =>
+				deleteProjects({ projectIds: ids }).catch((err) =>
 					console.error("Failed to delete pending projects on unmount", err),
 				);
 				pendingDeletionRef.current = null;
@@ -182,11 +182,11 @@ export function useProjectBrowser(projects: Project[]) {
 
 			undoTimeoutRef.current = setTimeout(async () => {
 				try {
-					const result = await deleteProjects(idsToDelete);
+					const result = await deleteProjects({ projectIds: idsToDelete });
 					pendingDeletionRef.current = null;
 					undoTimeoutRef.current = null;
 
-					if (result?.error) {
+					if (!result.success) {
 						toast.error("Failed to delete projects");
 						undoDelete(idsToDelete);
 					}
@@ -208,11 +208,11 @@ export function useProjectBrowser(projects: Project[]) {
 		toast.info(`Duplicating ${idsToDuplicate.length} projects...`);
 
 		const results = await Promise.allSettled(
-			idsToDuplicate.map((id) => forkProject(id, undefined)),
+			idsToDuplicate.map((id) => forkProject({ originalProjectId: id })),
 		);
 
 		const successCount = results.filter(
-			(r) => r.status === "fulfilled" && !("error" in r.value),
+			(r) => r.status === "fulfilled" && r.value.success,
 		).length;
 		const failureCount = idsToDuplicate.length - successCount;
 
