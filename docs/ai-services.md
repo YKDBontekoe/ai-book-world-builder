@@ -20,40 +20,39 @@ While these defaults are hardcoded in `ROLE_MODEL_MAP`, the system is designed t
 
 ## Retrieval-Augmented Generation (RAG)
 
-The project currently employs a **Session-Scoped In-Memory RAG** implemented in `lib/ai/rag.ts`.
+The project employs a persistent **Semantic Cache** strategy implemented in `lib/ai/semantic-cache.ts` to power RAG operations.
 
-### Current Implementation
-- **Storage**: `Map<string, number[]>` (In-Memory Cache).
-- **Scope**: Per-request/Per-generation.
-- **Embedding Model**: `text-embedding-3-small`.
-- **Strategy**: "Just-in-Time" embedding. When a context selection is made, we embed the candidates on the fly and cache them for the duration of the session.
+### Architecture
+-   **Storage**: Vercel Blob (`projects/${projectId}/semantic-cache.json`).
+-   **Structure**: A JSON file containing embeddings for Scenes, Characters, and Chapters.
+-   **Updates**: The cache is lazy-loaded and updated via `updateCache(projectId)`. It syncs with the database (checking `updatedAt` timestamps) and only generates new embeddings for modified content.
+-   **TTL**: 5 minutes (in-memory optimization to avoid fetching Blob on every request).
 
-### Why In-Memory?
-For many "Book Generation" tasks, we can fit the entire relevant context (Entity Bible + Outline) into the context window of modern LLMs (200k+ tokens). We rely on **Context Flooding** rather than retrieval for the primary generation loop to avoid "retrieval misses."
+### Usage
+RAG is primarily used to "flood" the context window with relevant story elements during generation, ensuring the AI respects established lore without manual input.
 
-RAG is primarily used for:
-1.  **Chat**: Quickly finding relevant entities in a large project during a chat session.
-2.  **Consistency Checks**: Verifying specific details against a large corpus.
+## Context Strategies
 
-## Structured Context Construction
+We employ two distinct strategies for context construction, depending on the generation mode:
 
-While RAG is used for broad searching, narrative generation requires a highly deterministic context structure to ensure continuity. This is handled by `src/lib/services/story/story-context-builder.ts`.
+### 1. Deterministic Context (Standard)
+*File: `src/lib/services/story/story-context-builder.ts`*
 
-### Smart Truncation
-Naive truncation of text (e.g., `text.slice(-2000)`) often cuts sentences in half, leading the LLM to hallucinate the completion or become confused about the sentence structure.
+Used by the **Batch Writer** (`StoryService`). It prioritizes narrative structure over semantic relevance.
+-   **Composition**:
+    1.  Target Chapter Notes.
+    2.  Summaries of *all* previous scenes in the chapter (Narrative Arc).
+    3.  Full text of the *immediately preceding* scene (Continuity).
+-   **Smart Truncation**: A utility that trims text to ~2000 chars but strictly respects sentence boundaries to prevent hallucinations.
 
-We employ a `smartTruncate` utility that:
-1.  Takes the last `N` characters.
-2.  Searches forward for the first valid sentence boundary (`. `, `? `, `! `, or `\n`).
-3.  Returns the text *starting from the next complete sentence*.
+### 2. Semantic Context (Advanced)
+*File: `src/lib/ai/context-builder.ts`*
 
-This ensures that the "Immediately Previous Context" injected into the prompt is always grammatically complete.
-
-### Context Composition
-The prompt context for a scene generation is composed of:
-1.  **Target Chapter**: Title and Notes.
-2.  **Previous Scenes Summary**: A compiled list of summaries for all preceding scenes in the chapter (to maintain the arc).
-3.  **Immediate Predecessor**: The *full text* (smartly truncated to ~2000 chars) of the scene immediately before the target (to maintain style and flow).
+Used by the **Writer View** (`generateScene` action) for interactive generation. It combines deterministic continuity with semantic search.
+-   **Composition**:
+    1.  Target Chapter & Previous Scene (Deterministic).
+    2.  **Semantic Injection**: Queries the `SemanticCache` for the top 5 most relevant Entities, Plot Points, and Past Scenes based on the current chapter context.
+-   **Benefit**: This allows the AI to recall a character mentioned 10 chapters ago if they are relevant to the current scene's themes.
 
 ## Analysis Architecture
 

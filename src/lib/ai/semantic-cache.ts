@@ -30,6 +30,17 @@ export const SemanticCacheSchema = z.object({
 export type CacheElement = z.infer<typeof CacheElementSchema>;
 export type SemanticCache = z.infer<typeof SemanticCacheSchema>;
 
+/**
+ * Manages the persistent semantic cache for a project using Vercel Blob storage.
+ *
+ * Architecture:
+ * - **Storage**: JSON file stored in Blob (`projects/{projectId}/semantic-cache.json`).
+ * - **Content**: Embeddings for Scenes, Characters, and Chapters.
+ * - **Sync Strategy**: "Lazy Sync". Checks `updatedAt` timestamps in DB against the cache
+ *   to only re-embed modified items.
+ * - **Obscurity**: Uses `addRandomSuffix: true` for Blob URLs to prevent enumeration,
+ *   relying on `list()` to find the latest version.
+ */
 export class SemanticCacheService {
 	private getCachePrefix(projectId: string): string {
 		return `projects/${projectId}/semantic-cache.json`;
