@@ -1,53 +1,78 @@
-import { list, put } from "@vercel/blob";
+import { del, list, put } from "@vercel/blob";
 import { cosineSimilarity } from "ai";
 import { and, eq } from "drizzle-orm";
+import { z } from "zod";
 
 import { generateEmbeddings } from "@/lib/ai/rag";
 import { db } from "@/lib/db";
 import { chapter, entity, scene, sceneCard } from "@/lib/db/schema";
 
-// Types
-export interface CacheElement {
-	id: string;
-	type: "scene" | "character" | "plot_point";
-	content: string; // The text that was embedded
-	embedding: number[];
-	metadata: Record<string, unknown>;
-	updatedAt: string; // ISO timestamp
-}
-
-export interface SemanticCache {
-	version: string;
-	elements: CacheElement[];
-	lastSynced: string;
-}
-
+// Constants
 const CACHE_VERSION = "1.0";
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+
+// Zod Schemas
+export const CacheElementSchema = z.object({
+	id: z.string(),
+	type: z.enum(["scene", "character", "plot_point"]),
+	content: z.string(),
+	embedding: z.array(z.number()),
+	metadata: z.record(z.string(), z.unknown()),
+	updatedAt: z.string(),
+});
+
+export const SemanticCacheSchema = z.object({
+	version: z.string(),
+	elements: z.array(CacheElementSchema),
+	lastSynced: z.string(),
+});
+
+export type CacheElement = z.infer<typeof CacheElementSchema>;
+export type SemanticCache = z.infer<typeof SemanticCacheSchema>;
 
 export class SemanticCacheService {
-	private getCachePath(projectId: string): string {
+	private getCachePrefix(projectId: string): string {
 		return `projects/${projectId}/semantic-cache.json`;
 	}
 
 	/**
 	 * Fetches the semantic cache from Blob storage.
+	 * Returns the latest cache if multiple exist.
 	 */
 	async getCache(projectId: string): Promise<SemanticCache | null> {
 		try {
-			const path = this.getCachePath(projectId);
-			const { blobs } = await list({ prefix: path, limit: 1 });
+			const path = this.getCachePrefix(projectId);
+			// List all blobs with this prefix
+			const { blobs } = await list({ prefix: path });
 
 			if (blobs.length === 0) {
 				return null;
 			}
 
-			const response = await fetch(blobs[0].url);
+			// Sort by uploadedAt descending (newest first)
+			const sortedBlobs = blobs.sort(
+				(a, b) =>
+					new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+			);
+			const latestBlob = sortedBlobs[0];
+
+			const response = await fetch(latestBlob.url);
 			if (!response.ok) {
 				throw new Error("Failed to fetch cache file");
 			}
 
-			const cache = (await response.json()) as SemanticCache;
-			return cache;
+			const raw = await response.json();
+			const parsed = SemanticCacheSchema.safeParse(raw);
+
+			if (!parsed.success) {
+				console.warn(
+					"Semantic cache schema mismatch:",
+					JSON.stringify(parsed.error.issues, null, 2),
+				);
+				return null;
+			}
+
+			return parsed.data;
 		} catch (error) {
 			console.warn("Failed to retrieve semantic cache:", error);
 			return null;
@@ -56,18 +81,50 @@ export class SemanticCacheService {
 
 	/**
 	 * Saves the semantic cache to Blob storage.
+	 * Uses addRandomSuffix: true for obscurity.
+	 * Cleans up old blobs to prevent clutter.
 	 */
 	async saveCache(projectId: string, cache: SemanticCache): Promise<void> {
 		try {
-			const path = this.getCachePath(projectId);
-			await put(path, JSON.stringify(cache), {
+			const path = this.getCachePrefix(projectId);
+			const cacheString = JSON.stringify(cache);
+
+			// 1. Upload new cache with random suffix for obscurity
+			await put(path, cacheString, {
 				access: "public",
-				addRandomSuffix: false, // Overwrite existing file
+				addRandomSuffix: true, // Non-deterministic URL
 				contentType: "application/json",
 			});
+
+			// 2. Clean up old blobs (fire and forget)
+			// We list again to find everything except the one we just uploaded?
+			// Actually put returns the new blob.
+			// Let's do it simply: list all, sort, keep latest 1 or 2, delete rest.
+			this.cleanupOldCaches(projectId).catch((err) =>
+				console.error("Failed to cleanup old caches:", err),
+			);
 		} catch (error) {
 			console.error("Failed to save semantic cache:", error);
-			// Don't throw, just log. We don't want to break the app if cache fails.
+		}
+	}
+
+	private async cleanupOldCaches(projectId: string) {
+		const path = this.getCachePrefix(projectId);
+		const { blobs } = await list({ prefix: path });
+
+		if (blobs.length <= 1) return;
+
+		// Sort by date descending
+		const sortedBlobs = blobs.sort(
+			(a, b) =>
+				new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+		);
+
+		// Keep the newest one, delete the rest
+		const toDelete = sortedBlobs.slice(1).map((b) => b.url);
+
+		if (toDelete.length > 0) {
+			await del(toDelete);
 		}
 	}
 
@@ -79,15 +136,13 @@ export class SemanticCacheService {
 		let currentCache = await this.getCache(projectId);
 
 		// Optimization: Avoid frequent re-syncs.
-		// If cache is fresh (less than 5 minutes old), return it immediately.
 		if (
 			currentCache &&
 			currentCache.version === CACHE_VERSION &&
 			currentCache.lastSynced
 		) {
 			const lastSyncTime = new Date(currentCache.lastSynced).getTime();
-			// 5 minutes TTL
-			if (Date.now() - lastSyncTime < 5 * 60 * 1000) {
+			if (Date.now() - lastSyncTime < CACHE_TTL_MS) {
 				return currentCache;
 			}
 		}
