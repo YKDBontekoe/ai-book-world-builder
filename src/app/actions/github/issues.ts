@@ -2,6 +2,11 @@
 
 import type { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
+import {
+	getCached,
+	invalidateCache,
+	invalidateCachePattern,
+} from "@/lib/cache";
 import { getOctokit, getRepoDetails } from "@/lib/services/github-service";
 import {
 	executeFeaturePlanSchema,
@@ -17,17 +22,23 @@ import type { GitHubComment, GitHubIssue } from "./types";
 const getIssuesAction = createAdminAction({
 	input: issueStateSchema,
 	handler: async ({ input: state }) => {
-		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
-		const { data } = await octokit.rest.issues.listForRepo({
-			owner,
-			repo,
-			state,
-			sort: "updated",
-			direction: "desc",
-			per_page: 100,
-		});
-		return data.filter((item) => !item.pull_request) as GitHubIssue[];
+		return getCached(
+			`github:issues:${state}`,
+			async () => {
+				const octokit = getOctokit();
+				const { owner, repo } = getRepoDetails();
+				const { data } = await octokit.rest.issues.listForRepo({
+					owner,
+					repo,
+					state,
+					sort: "updated",
+					direction: "desc",
+					per_page: 100,
+				});
+				return data.filter((item) => !item.pull_request) as GitHubIssue[];
+			},
+			60,
+		);
 	},
 });
 
@@ -43,14 +54,20 @@ export async function getIssues(
 const getIssueDetailsAction = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
-		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
-		const { data } = await octokit.rest.issues.get({
-			owner,
-			repo,
-			issue_number: number,
-		});
-		return data as GitHubIssue;
+		return getCached(
+			`github:issue:${number}`,
+			async () => {
+				const octokit = getOctokit();
+				const { owner, repo } = getRepoDetails();
+				const { data } = await octokit.rest.issues.get({
+					owner,
+					repo,
+					issue_number: number,
+				});
+				return data as GitHubIssue;
+			},
+			60,
+		);
 	},
 });
 
@@ -66,14 +83,20 @@ export async function getIssueDetails(
 const getCommentsAction = createAdminAction({
 	input: issueNumberSchema,
 	handler: async ({ input: number }) => {
-		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
-		const { data } = await octokit.rest.issues.listComments({
-			owner,
-			repo,
-			issue_number: number,
-		});
-		return data as GitHubComment[];
+		return getCached(
+			`github:comments:${number}`,
+			async () => {
+				const octokit = getOctokit();
+				const { owner, repo } = getRepoDetails();
+				const { data } = await octokit.rest.issues.listComments({
+					owner,
+					repo,
+					issue_number: number,
+				});
+				return data as GitHubComment[];
+			},
+			60,
+		);
 	},
 });
 
@@ -97,6 +120,15 @@ const postCommentAction = createAdminAction({
 			issue_number: number,
 			body,
 		});
+
+		// Invalidate caches
+		await Promise.all([
+			invalidateCachePattern("github:issues:*"),
+			invalidateCachePattern("github:prs:*"),
+			invalidateCache(`github:issue:${number}`),
+			invalidateCache(`github:comments:${number}`),
+		]);
+
 		return data as GitHubComment;
 	},
 });
@@ -121,6 +153,13 @@ const closeIssueOrPRAction = createAdminAction({
 			issue_number: number,
 			state: "closed",
 		});
+
+		// Invalidate caches
+		await Promise.all([
+			invalidateCachePattern("github:issues:*"),
+			invalidateCachePattern("github:prs:*"),
+			invalidateCache(`github:issue:${number}`),
+		]);
 	},
 });
 
@@ -174,6 +213,9 @@ const executeFeaturePlanActionInternal = createAdminAction({
 			issue_number: parentNumber,
 			body: `${input.parentIssue.body}\n\n### Tasks\n${checklist}`,
 		});
+
+		// Invalidate caches
+		await invalidateCachePattern("github:issues:*");
 
 		return { parentNumber, createdIssues };
 	},

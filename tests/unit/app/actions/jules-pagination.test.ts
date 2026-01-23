@@ -16,6 +16,12 @@ vi.mock("@/lib/jules-client", () => {
 	};
 });
 
+// Mock cache to bypass caching
+vi.mock("@/lib/cache", () => ({
+	getCached: vi.fn(async (_key, fn) => fn()),
+	invalidateCachePattern: vi.fn(),
+}));
+
 // Mock action-middleware
 vi.mock("@/lib/action-middleware", async (importOriginal) => {
 	const actual =

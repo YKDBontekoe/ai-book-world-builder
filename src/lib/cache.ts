@@ -71,7 +71,7 @@ export async function invalidateCachePattern(pattern: string): Promise<void> {
 			// Scan returns { cursor: number, keys: string[] } in node-redis v4+
 			// Use 'any' cast to satisfy strict union type of RedisArgument, as numbers are valid at runtime
 			// but strict types might demand Buffer | string.
-			const reply = await redis.scan(cursor as any, {
+			const reply = await redis.scan(cursor as unknown as any, {
 				MATCH: pattern,
 				COUNT: 100,
 			});
