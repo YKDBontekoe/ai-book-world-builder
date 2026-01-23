@@ -280,7 +280,11 @@ export class EntityRepository extends BaseRepository<
 	/**
 	 * Update an existing entity
 	 */
-	async update(id: string, data: UpdateEntityInput): Promise<Entity> {
+	async update(
+		id: string,
+		data: UpdateEntityInput,
+		projectId?: string,
+	): Promise<Entity> {
 		validateDateRange(data.startDate, data.endDate);
 
 		try {
@@ -295,7 +299,11 @@ export class EntityRepository extends BaseRepository<
 				const [updated] = await tx
 					.update(entity)
 					.set(updateData)
-					.where(eq(entity.id, id))
+					.where(
+						projectId
+							? and(eq(entity.id, id), eq(entity.projectId, projectId))
+							: eq(entity.id, id),
+					)
 					.returning();
 
 				if (!updated) {
@@ -335,26 +343,47 @@ export class EntityRepository extends BaseRepository<
 	/**
 	 * Delete an entity and all related data
 	 */
-	async delete(id: string): Promise<void> {
+	async delete(id: string, projectId?: string): Promise<void> {
 		try {
 			await db.transaction(async (tx: any) => {
 				// Delete related attributes first
 				await tx
 					.delete(entityAttribute)
-					.where(eq(entityAttribute.entityId, id));
+					.where(
+						projectId
+							? and(
+									eq(entityAttribute.entityId, id),
+									eq(entityAttribute.projectId, projectId),
+								)
+							: eq(entityAttribute.entityId, id),
+					);
 
 				// Delete related relationships
 				await tx
 					.delete(relationship)
 					.where(
-						or(
-							eq(relationship.sourceEntityId, id),
-							eq(relationship.targetEntityId, id),
-						),
+						projectId
+							? and(
+									or(
+										eq(relationship.sourceEntityId, id),
+										eq(relationship.targetEntityId, id),
+									),
+									eq(relationship.projectId, projectId),
+								)
+							: or(
+									eq(relationship.sourceEntityId, id),
+									eq(relationship.targetEntityId, id),
+								),
 					);
 
 				// Delete the entity
-				await tx.delete(entity).where(eq(entity.id, id));
+				await tx
+					.delete(entity)
+					.where(
+						projectId
+							? and(eq(entity.id, id), eq(entity.projectId, projectId))
+							: eq(entity.id, id),
+					);
 			});
 		} catch (error) {
 			console.error("EntityRepository.delete error:", error);
@@ -365,7 +394,7 @@ export class EntityRepository extends BaseRepository<
 	/**
 	 * Delete multiple entities and their related data
 	 */
-	async bulkDelete(ids: string[]): Promise<void> {
+	async bulkDelete(ids: string[], projectId?: string): Promise<void> {
 		if (ids.length === 0) return;
 
 		try {
@@ -373,20 +402,41 @@ export class EntityRepository extends BaseRepository<
 				// Delete related attributes
 				await tx
 					.delete(entityAttribute)
-					.where(inArray(entityAttribute.entityId, ids));
+					.where(
+						projectId
+							? and(
+									inArray(entityAttribute.entityId, ids),
+									eq(entityAttribute.projectId, projectId),
+								)
+							: inArray(entityAttribute.entityId, ids),
+					);
 
 				// Delete related relationships
 				await tx
 					.delete(relationship)
 					.where(
-						or(
-							inArray(relationship.sourceEntityId, ids),
-							inArray(relationship.targetEntityId, ids),
-						),
+						projectId
+							? and(
+									or(
+										inArray(relationship.sourceEntityId, ids),
+										inArray(relationship.targetEntityId, ids),
+									),
+									eq(relationship.projectId, projectId),
+								)
+							: or(
+									inArray(relationship.sourceEntityId, ids),
+									inArray(relationship.targetEntityId, ids),
+								),
 					);
 
 				// Delete the entities
-				await tx.delete(entity).where(inArray(entity.id, ids));
+				await tx
+					.delete(entity)
+					.where(
+						projectId
+							? and(inArray(entity.id, ids), eq(entity.projectId, projectId))
+							: inArray(entity.id, ids),
+					);
 			});
 		} catch (error) {
 			console.error("EntityRepository.bulkDelete error:", error);
