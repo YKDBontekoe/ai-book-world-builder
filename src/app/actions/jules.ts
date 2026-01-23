@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
+import { getCached, invalidateCachePattern } from "@/lib/cache";
 import type { JulesSource } from "@/lib/jules-client";
 import { JulesClient } from "@/lib/jules-client";
 import { generateSessionTitleAction } from "./jules-ai";
@@ -86,7 +87,13 @@ const sessionIdSchema = z.object({
 export const getJulesSessionsAction = createAdminAction({
 	input: paginationSchema,
 	handler: async ({ input }) => {
-		return await jules.listSessions(input.pageSize, input.pageToken);
+		return getCached(
+			`jules:sessions:${input.pageSize}:${input.pageToken ?? "start"}`,
+			async () => {
+				return await jules.listSessions(input.pageSize, input.pageToken);
+			},
+			5,
+		);
 	},
 });
 
@@ -96,14 +103,20 @@ export const getJulesSessionsAction = createAdminAction({
 export const getJulesSessionDetailsAction = createAdminAction({
 	input: sessionIdSchema,
 	handler: async ({ input }) => {
-		const [session, activitiesResult] = await Promise.all([
-			jules.getSession(input.sessionId),
-			jules.listActivities(input.sessionId),
-		]);
-		return {
-			session,
-			activities: activitiesResult.activities,
-		};
+		return getCached(
+			`jules:session:${input.sessionId}`,
+			async () => {
+				const [session, activitiesResult] = await Promise.all([
+					jules.getSession(input.sessionId),
+					jules.listActivities(input.sessionId),
+				]);
+				return {
+					session,
+					activities: activitiesResult.activities,
+				};
+			},
+			5,
+		);
 	},
 });
 
@@ -122,6 +135,9 @@ export const createJulesSessionAction = createAdminAction({
 		let startingBranch = input.startingBranch;
 		if (!startingBranch) {
 			try {
+				// Use cached sources if possible, though getSource might not be listSources.
+				// But here we need specific source.
+				// We can rely on listSources cache if we implement a find helper, but jules client has getSource.
 				const source = await jules.getSource(input.sourceName);
 				startingBranch =
 					source.githubRepo?.defaultBranch?.displayName ||
@@ -160,6 +176,8 @@ export const createJulesSessionAction = createAdminAction({
 			});
 		}
 
+		await invalidateCachePattern("jules:sessions:*");
+
 		return session;
 	},
 });
@@ -197,6 +215,8 @@ export const createJulesAdminSessionAction = createAdminAction({
 			automationMode: input.automationMode,
 		});
 
+		await invalidateCachePattern("jules:sessions:*");
+
 		return session;
 	},
 });
@@ -208,6 +228,9 @@ export const sendJulesMessageAction = createAdminAction({
 	input: sendMessageSchema,
 	handler: async ({ input }) => {
 		await jules.sendMessage(input.sessionId, input.prompt);
+		await invalidateCachePattern(`jules:session:${input.sessionId}`);
+		// Session list might show last message or status, so invalidate it too
+		await invalidateCachePattern("jules:sessions:*");
 	},
 });
 
@@ -218,6 +241,8 @@ export const approveJulesPlanAction = createAdminAction({
 	input: sessionIdSchema,
 	handler: async ({ input }) => {
 		await jules.approvePlan(input.sessionId);
+		await invalidateCachePattern(`jules:session:${input.sessionId}`);
+		await invalidateCachePattern("jules:sessions:*");
 	},
 });
 
@@ -241,6 +266,8 @@ export const sendJulesPlanFeedbackAction = createAdminAction({
 			? `${prefix}\n${input.notes.trim()}`
 			: prefix;
 		await jules.sendMessage(input.sessionId, message);
+		await invalidateCachePattern(`jules:session:${input.sessionId}`);
+		await invalidateCachePattern("jules:sessions:*");
 	},
 });
 
@@ -253,6 +280,9 @@ export const getJulesSessionMetadataAction = createAdminAction({
 		const { getJulesSessionMetadata } = await import(
 			"@/lib/jules-session-metadata"
 		);
+		// Metadata is stored in DB, not Redis cached usually?
+		// We can cache it if it's heavy, but DB is fast.
+		// Let's leave it as is for now unless requested.
 		return await getJulesSessionMetadata(input.sessionId);
 	},
 });
@@ -262,23 +292,29 @@ export const getJulesSessionMetadataAction = createAdminAction({
  */
 export const listJulesSourcesAction = createAdminAction({
 	handler: async () => {
-		const sources: JulesSource[] = [];
-		let pageToken: string | undefined;
-		let pagesFetched = 0;
-		const MAX_PAGES = 1000;
+		return getCached(
+			"jules:sources",
+			async () => {
+				const sources: JulesSource[] = [];
+				let pageToken: string | undefined;
+				let pagesFetched = 0;
+				const MAX_PAGES = 1000;
 
-		do {
-			if (pagesFetched >= MAX_PAGES) {
-				console.warn(
-					`listJulesSourcesAction: Hit max pages limit (${MAX_PAGES}). Stopping pagination.`,
-				);
-				break;
-			}
-			const result = await jules.listSources(50, pageToken);
-			sources.push(...result.sources);
-			pageToken = result.nextPageToken;
-			pagesFetched++;
-		} while (pageToken);
-		return sources;
+				do {
+					if (pagesFetched >= MAX_PAGES) {
+						console.warn(
+							`listJulesSourcesAction: Hit max pages limit (${MAX_PAGES}). Stopping pagination.`,
+						);
+						break;
+					}
+					const result = await jules.listSources(50, pageToken);
+					sources.push(...result.sources);
+					pageToken = result.nextPageToken;
+					pagesFetched++;
+				} while (pageToken);
+				return sources;
+			},
+			3600,
+		); // Cache for 1 hour
 	},
 });

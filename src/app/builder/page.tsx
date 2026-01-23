@@ -1,7 +1,7 @@
 "use client";
 
 import type { JSX } from "react";
-import { useState } from "react";
+import { useLocalStorage } from "usehooks-ts";
 import { JulesDashboard } from "@/components/builder/jules/jules-dashboard";
 import { RoadmapView } from "@/components/builder/roadmap-view";
 import { TaskBoard } from "@/components/builder/task-board";
@@ -12,7 +12,10 @@ import { SegmentedControl } from "@/components/molecules/segmented-control";
  * @returns The GitHubAdminPage component.
  */
 export default function GitHubAdminPage(): JSX.Element {
-	const [view, setView] = useState<"board" | "roadmap" | "jules">("board");
+	const [view, setView] = useLocalStorage<"board" | "roadmap" | "jules">(
+		"builder-view-mode",
+		"board",
+	);
 
 	const options = [
 		{ id: "board", label: "Task Board" },

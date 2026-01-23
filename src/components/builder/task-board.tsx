@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Filter, LayoutList, Maximize2, Minimize2, Search } from "lucide-react";
 import { type JSX, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { useLocalStorage } from "usehooks-ts";
 import { startFixSessionAction } from "@/app/actions/builder";
 import type { GitHubIssue } from "@/app/actions/github";
 import { getIssues, getPullRequests } from "@/app/actions/github";
@@ -37,10 +38,13 @@ interface Column {
 export function TaskBoard(): JSX.Element {
 	const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [typeFilter, setTypeFilter] = useState<
+	const [typeFilter, setTypeFilter] = useLocalStorage<
 		"all" | "issue" | "pr" | "session"
-	>("all");
-	const [isCompact, setIsCompact] = useState(false);
+	>("builder-type-filter", "all");
+	const [isCompact, setIsCompact] = useLocalStorage(
+		"builder-compact-mode",
+		false,
+	);
 	const queryClient = useQueryClient();
 
 	// --- Data Fetching ---
