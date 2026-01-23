@@ -24,6 +24,26 @@ GITHUB_REPO=ai-book-world-builder # Target Repository Name
 JULES_API_KEY=AIza...       # API Key for Jules (Google)
 ```
 
+## Software Builder Interface
+
+The interface (`/builder`) is designed for high-density information and features two primary views:
+
+### 1. Task Board
+The default Kanban view for managing active development.
+-   **Power Toolbar**:
+    -   **Search**: Filter tasks by title or ID.
+    -   **Type Filter**: Toggle between Issues, PRs, and Jules Sessions.
+    -   **Compact Mode**: A toggle to reduce card size for higher information density.
+-   **Columns**: Organized by lifecycle stage (Backlog -> In Progress -> Review -> Done).
+
+### 2. Planner Chat
+A specialized chat interface for brainstorming and architecting new features before they become issues.
+-   **Access**: Click the "Planner Chat" toggle in the top toolbar.
+-   **Workflow**:
+    1.  **Discuss**: Chat with the "Architect" agent to flesh out a feature idea.
+    2.  **Propose**: The agent uses the `propose_plan` tool to structure the idea into a Title, Description, and Sub-tasks.
+    3.  **Execute**: Approving a plan automatically creates the GitHub Issue (Epic) and sub-issues, then immediately spawns a Jules Session to begin implementation.
+
 ## The Workflow
 
 ### 1. Backlog (GitHub Issues)

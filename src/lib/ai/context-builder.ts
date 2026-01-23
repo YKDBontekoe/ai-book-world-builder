@@ -1,6 +1,19 @@
 import { semanticCache } from "@/lib/ai/semantic-cache";
 import type { Chapter, Scene } from "@/lib/db/schema";
 
+/**
+ * Builds the generation context by combining deterministic narrative flow with semantic search.
+ *
+ * Strategy:
+ * 1. **Continuity**: Injects the full text of the immediately preceding scene.
+ * 2. **Narrative Arc**: Includes summaries of all previous scenes in the current chapter.
+ * 3. **Semantic Flooding**: Queries the `SemanticCache` (RAG) to find relevant Entities,
+ *    Plot Points, and Past Scenes that are semantically similar to the current context.
+ *
+ * @param chapter The target chapter.
+ * @param scenes All scenes in the chapter (used to find predecessors).
+ * @param prevSceneId The ID of the scene immediately before the new one (optional).
+ */
 export async function buildSceneGenerationContext(
 	chapter: Chapter,
 	scenes: Scene[],
