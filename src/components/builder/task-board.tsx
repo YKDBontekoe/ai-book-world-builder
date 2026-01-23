@@ -20,7 +20,9 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/atoms/select";
+import { Skeleton } from "@/components/atoms/skeleton";
 import { Switch } from "@/components/atoms/switch";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { ItemDetail } from "../admin/github/item-detail";
 import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
@@ -45,7 +47,7 @@ export function TaskBoard(): JSX.Element {
 
 	// --- Data Fetching ---
 
-	const { data: sources } = useQuery({
+	const { data: sources, isLoading: isSourcesLoading } = useQuery({
 		queryKey: ["jules", "sources"],
 		queryFn: async () => {
 			const res = await listJulesSourcesAction();
@@ -57,7 +59,7 @@ export function TaskBoard(): JSX.Element {
 	// Use the first available source for feature planning
 	const defaultSource = sources?.[0]?.name;
 
-	const { data: issues } = useQuery({
+	const { data: issues, isLoading: isIssuesLoading } = useQuery({
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
@@ -65,7 +67,7 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: closedIssues } = useQuery({
+	const { data: closedIssues, isLoading: isClosedIssuesLoading } = useQuery({
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
 			const res = await getIssues("closed");
@@ -73,7 +75,7 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: prs } = useQuery({
+	const { data: prs, isLoading: isPrsLoading } = useQuery({
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
 			const res = await getPullRequests("open");
@@ -81,7 +83,7 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: closedPrs } = useQuery({
+	const { data: closedPrs, isLoading: isClosedPrsLoading } = useQuery({
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
 			const res = await getPullRequests("closed");
@@ -89,7 +91,7 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: sessions } = useQuery({
+	const { data: sessions, isLoading: isSessionsLoading } = useQuery({
 		queryKey: ["jules", "sessions"],
 		queryFn: async () => {
 			const res = await getJulesSessionsAction({ pageSize: 50 });
@@ -99,6 +101,14 @@ export function TaskBoard(): JSX.Element {
 		},
 		refetchInterval: 10000, // Poll for session updates
 	});
+
+	const isAnyLoading =
+		isSourcesLoading ||
+		isIssuesLoading ||
+		isClosedIssuesLoading ||
+		isPrsLoading ||
+		isClosedPrsLoading ||
+		isSessionsLoading;
 
 	// --- Mutations ---
 
@@ -296,11 +306,20 @@ export function TaskBoard(): JSX.Element {
 							</div>
 
 							<div className="flex-1 overflow-y-auto pr-2 space-y-3">
-								{col.items.length === 0 ? (
-									<div className="flex flex-col items-center justify-center h-40 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/10">
-										<LayoutList className="h-8 w-8 mb-2 opacity-50" />
-										<p className="text-xs">No items found</p>
-									</div>
+								{isAnyLoading ? (
+									<>
+										<Skeleton className="h-32 w-full rounded-xl mb-3" />
+										<Skeleton className="h-32 w-full rounded-xl mb-3" />
+										<Skeleton className="h-32 w-full rounded-xl" />
+									</>
+								) : col.items.length === 0 ? (
+									<EmptyState
+										variant="dashed"
+										className="p-6 min-h-[160px]"
+										icon={LayoutList}
+										title="No items found"
+										description="This list is empty"
+									/>
 								) : (
 									col.items.map((item) => (
 										<TaskCard

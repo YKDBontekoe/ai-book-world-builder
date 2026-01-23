@@ -19,6 +19,14 @@ import {
 import { TaskBoard } from "@/components/builder/task-board";
 
 // Mock dependencies
+vi.mock("@/components/atoms/skeleton", () => ({
+	Skeleton: () => <div data-testid="skeleton" />,
+}));
+
+vi.mock("@/components/molecules/empty-state", () => ({
+	EmptyState: ({ title }: { title: string }) => <div>{title}</div>,
+}));
+
 vi.mock("@/app/actions/github", () => ({
 	getIssues: vi.fn(),
 	getPullRequests: vi.fn(),
