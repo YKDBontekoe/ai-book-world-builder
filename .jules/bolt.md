@@ -51,3 +51,7 @@
 ## 2025-06-16 - Splitting Visualization Layout from Styling
 **Learning:** Expensive layout algorithms (like `dagre` in graph visualizations) are often coupled with cheap styling logic (like theme colors) in a single `useMemo`. This causes the expensive algorithm to re-run unnecessarily when only the cheap style changes.
 **Action:** Split the logic into two `useMemo` hooks: one for structure/layout (expensive, depends on data) and one for styling (cheap, depends on theme/layout). This preserves the expensive calculation across theme switches and can also preserve state (like user-dragged node positions).
+
+## 2025-10-27 - Monolithic UseMemo Instability
+**Learning:** Deriving multiple lists in a single `useMemo` (e.g., columns in a Kanban board) links their reference stability. If one list's dependency updates (e.g., polling new sessions), the monolithic object is recreated, breaking reference equality for ALL lists. This forces re-renders of unrelated components (e.g., Backlog items re-rendering when In Progress updates).
+**Action:** Split monolithic `useMemo` into granular `useMemo` hooks for each derived dataset. This ensures that updates to one dataset do not destabilize the props for components rendering other datasets.

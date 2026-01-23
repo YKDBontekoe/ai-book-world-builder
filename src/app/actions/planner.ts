@@ -1,15 +1,18 @@
 "use server";
 
-import { z } from "zod";
 import { generateText, tool } from "ai";
+import { and, desc, eq } from "drizzle-orm";
+import { z } from "zod";
+import { executeFeaturePlanAction } from "@/app/actions/github";
+import {
+	createJulesSessionAction,
+	listJulesSourcesAction,
+} from "@/app/actions/jules";
 import { createAdminAction } from "@/lib/action-middleware";
-import { db } from "@/lib/db";
-import { chat, message } from "@/lib/db/schema/chat";
-import { eq, desc, and } from "drizzle-orm";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { myProvider } from "@/lib/ai/providers";
-import { executeFeaturePlanAction } from "@/app/actions/github";
-import { createJulesSessionAction, listJulesSourcesAction } from "@/app/actions/jules";
+import { db } from "@/lib/db";
+import { chat, message } from "@/lib/db/schema/chat";
 
 // ============================================================================
 // Schemas
@@ -40,7 +43,7 @@ const executePlanSchema = z.object({
 			}),
 		),
 	}),
-    sourceName: z.string().optional(),
+	sourceName: z.string().optional(),
 });
 
 const messagePartSchema = z.discriminatedUnion("type", [
@@ -144,11 +147,15 @@ export const chatWithPlannerAction = createAdminAction({
 
 		const response = await generateText({
 			model: myProvider.languageModel(modelId),
-			system: "You are a helpful assistant helping the user plan software features. You can propose plans using the 'propose_plan' tool.",
+			system:
+				"You are a helpful assistant helping the user plan software features. You can propose plans using the 'propose_plan' tool.",
 			messages: history.reverse().map((m) => {
 				const parsedParts = z.array(messagePartSchema).safeParse(m.parts);
 				const content = parsedParts.success
-					? parsedParts.data.filter(p => p.type === "text").map(p => p.text).join("")
+					? parsedParts.data
+							.filter((p) => p.type === "text")
+							.map((p) => p.text)
+							.join("")
 					: "";
 				return {
 					role: m.role as "user" | "assistant",
@@ -157,14 +164,17 @@ export const chatWithPlannerAction = createAdminAction({
 			}),
 			tools: {
 				propose_plan: tool({
-					description: "Propose a feature plan with a title, description, and list of tasks.",
+					description:
+						"Propose a feature plan with a title, description, and list of tasks.",
 					parameters: z.object({
 						title: z.string(),
 						description: z.string(),
-						tasks: z.array(z.object({
-							title: z.string(),
-							description: z.string(),
-						})),
+						tasks: z.array(
+							z.object({
+								title: z.string(),
+								description: z.string(),
+							}),
+						),
 					}),
 				}),
 			},
@@ -187,13 +197,16 @@ export const chatWithPlannerAction = createAdminAction({
 		// Validate parts before insert (though we constructed them safely above)
 		const validatedParts = z.array(messagePartSchema).parse(parts);
 
-		const [assistantMessage] = await db.insert(message).values({
-			chatId: input.sessionId,
-			role: "assistant",
-			parts: validatedParts,
-			attachments: [],
-			createdAt: new Date(),
-		}).returning();
+		const [assistantMessage] = await db
+			.insert(message)
+			.values({
+				chatId: input.sessionId,
+				role: "assistant",
+				parts: validatedParts,
+				attachments: [],
+				createdAt: new Date(),
+			})
+			.returning();
 
 		return assistantMessage;
 	},
@@ -214,16 +227,16 @@ export const executePlannerPlanAction = createAdminAction({
 			throw new Error("Session not found or access denied");
 		}
 
-        // 1. Determine Source
-        let sourceName = input.sourceName;
-        if (!sourceName) {
-            const sourcesRes = await listJulesSourcesAction();
-            if (sourcesRes.success && sourcesRes.data.length > 0) {
-                sourceName = sourcesRes.data[0].name;
-            } else {
-                throw new Error("No Jules sources available to execute plan.");
-            }
-        }
+		// 1. Determine Source
+		let sourceName = input.sourceName;
+		if (!sourceName) {
+			const sourcesRes = await listJulesSourcesAction();
+			if (sourcesRes.success && sourcesRes.data.length > 0) {
+				sourceName = sourcesRes.data[0].name;
+			} else {
+				throw new Error("No Jules sources available to execute plan.");
+			}
+		}
 
 		// 2. Create GitHub Issues
 		const featurePlan = {
@@ -232,7 +245,7 @@ export const executePlannerPlanAction = createAdminAction({
 				body: input.plan.description,
 				labels: ["enhancement", "jules-epic"],
 			},
-			childIssues: input.plan.tasks.map(t => ({
+			childIssues: input.plan.tasks.map((t) => ({
 				title: t.title,
 				body: t.description,
 				labels: ["jules-task"],
@@ -245,31 +258,31 @@ export const executePlannerPlanAction = createAdminAction({
 		}
 
 		// 3. Start Jules Session
-        const prompt = `Implement the feature "${input.plan.title}".
+		const prompt = `Implement the feature "${input.plan.title}".
 
         Refers to GitHub Issue #${executionResult.data.parentNumber}.
 
         Description: ${input.plan.description}
 
         Sub-tasks:
-        ${input.plan.tasks.map(t => `- ${t.title}`).join("\n")}
+        ${input.plan.tasks.map((t) => `- ${t.title}`).join("\n")}
         `;
 
-        const sessionResult = await createJulesSessionAction({
-            prompt: prompt,
-            title: `Impl: ${input.plan.title}`,
-            sourceName: sourceName,
-            automationMode: "auto", // Default to auto for "send out to jules"
-            requirePlanApproval: true, // Safety check
-        });
+		const sessionResult = await createJulesSessionAction({
+			prompt: prompt,
+			title: `Impl: ${input.plan.title}`,
+			sourceName: sourceName,
+			automationMode: "auto", // Default to auto for "send out to jules"
+			requirePlanApproval: true, // Safety check
+		});
 
-        if (!sessionResult.success) {
-            throw new Error(sessionResult.error);
-        }
+		if (!sessionResult.success) {
+			throw new Error(sessionResult.error);
+		}
 
-        return {
-            issues: executionResult.data,
-            session: sessionResult.data
-        };
+		return {
+			issues: executionResult.data,
+			session: sessionResult.data,
+		};
 	},
 });
