@@ -1,5 +1,6 @@
 "use client";
 
+import type { JSX } from "react";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "./use-planner-chat";
@@ -8,7 +9,7 @@ interface ChatMessageListProps {
     messages: Message[];
 }
 
-export function ChatMessageList({ messages }: ChatMessageListProps) {
+export function ChatMessageList({ messages }: ChatMessageListProps): JSX.Element {
     const scrollRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {

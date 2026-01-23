@@ -5,7 +5,7 @@ import { generateText, tool } from "ai";
 import { createAdminAction } from "@/lib/action-middleware";
 import { db } from "@/lib/db";
 import { chat, message } from "@/lib/db/schema/chat";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { getSelectedModelId } from "@/lib/ai/models";
 import { myProvider } from "@/lib/ai/providers";
 import { executeFeaturePlanAction } from "@/app/actions/github";
@@ -43,6 +43,21 @@ const executePlanSchema = z.object({
     sourceName: z.string().optional(),
 });
 
+const messagePartSchema = z.discriminatedUnion("type", [
+	z.object({
+		type: z.literal("text"),
+		text: z.string(),
+	}),
+	z.object({
+		type: z.literal("tool-invocation"),
+		toolCallId: z.string(),
+		toolName: z.string(),
+		args: z.any(),
+	}),
+]);
+
+type MessagePart = z.infer<typeof messagePartSchema>;
+
 // ============================================================================
 // Actions
 // ============================================================================
@@ -72,9 +87,9 @@ export const createPlannerSessionAction = createAdminAction({
  */
 export const getPlannerSessionAction = createAdminAction({
 	input: getSessionSchema,
-	handler: async ({ input }) => {
+	handler: async ({ input, ctx }) => {
 		const session = await db.query.chat.findFirst({
-			where: eq(chat.id, input.sessionId),
+			where: and(eq(chat.id, input.sessionId), eq(chat.userId, ctx.user.id)),
 		});
 
 		if (!session) {
@@ -99,6 +114,15 @@ export const getPlannerSessionAction = createAdminAction({
 export const chatWithPlannerAction = createAdminAction({
 	input: chatMessageSchema,
 	handler: async ({ input, ctx }) => {
+		// Verify ownership
+		const session = await db.query.chat.findFirst({
+			where: and(eq(chat.id, input.sessionId), eq(chat.userId, ctx.user.id)),
+		});
+
+		if (!session) {
+			throw new Error("Session not found or access denied");
+		}
+
 		// 1. Save User Message
 		await db.insert(message).values({
 			chatId: input.sessionId,
@@ -121,10 +145,16 @@ export const chatWithPlannerAction = createAdminAction({
 		const response = await generateText({
 			model: myProvider.languageModel(modelId),
 			system: "You are a helpful assistant helping the user plan software features. You can propose plans using the 'propose_plan' tool.",
-			messages: history.reverse().map((m) => ({
-				role: m.role as "user" | "assistant",
-				content: (m.parts as any[]).map(p => p.text).join(""),
-			})),
+			messages: history.reverse().map((m) => {
+				const parsedParts = z.array(messagePartSchema).safeParse(m.parts);
+				const content = parsedParts.success
+					? parsedParts.data.filter(p => p.type === "text").map(p => p.text).join("")
+					: "";
+				return {
+					role: m.role as "user" | "assistant",
+					content,
+				};
+			}),
 			tools: {
 				propose_plan: tool({
 					description: "Propose a feature plan with a title, description, and list of tasks.",
@@ -141,7 +171,7 @@ export const chatWithPlannerAction = createAdminAction({
 		});
 
 		// 4. Save Assistant Response
-		const parts: any[] = [{ type: "text", text: response.text }];
+		const parts: MessagePart[] = [{ type: "text", text: response.text }];
 
 		if (response.toolCalls && response.toolCalls.length > 0) {
 			for (const toolCall of response.toolCalls) {
@@ -154,10 +184,13 @@ export const chatWithPlannerAction = createAdminAction({
 			}
 		}
 
+		// Validate parts before insert (though we constructed them safely above)
+		const validatedParts = z.array(messagePartSchema).parse(parts);
+
 		const [assistantMessage] = await db.insert(message).values({
 			chatId: input.sessionId,
 			role: "assistant",
-			parts: parts,
+			parts: validatedParts,
 			attachments: [],
 			createdAt: new Date(),
 		}).returning();
@@ -171,7 +204,16 @@ export const chatWithPlannerAction = createAdminAction({
  */
 export const executePlannerPlanAction = createAdminAction({
 	input: executePlanSchema,
-	handler: async ({ input }) => {
+	handler: async ({ input, ctx }) => {
+		// Verify ownership
+		const session = await db.query.chat.findFirst({
+			where: and(eq(chat.id, input.sessionId), eq(chat.userId, ctx.user.id)),
+		});
+
+		if (!session) {
+			throw new Error("Session not found or access denied");
+		}
+
         // 1. Determine Source
         let sourceName = input.sourceName;
         if (!sourceName) {
@@ -203,9 +245,6 @@ export const executePlannerPlanAction = createAdminAction({
 		}
 
 		// 3. Start Jules Session
-        // We create a session pointing to the newly created parent issue (Epic).
-        // The `createJulesSessionAction` expects a prompt. We'll construct one.
-
         const prompt = `Implement the feature "${input.plan.title}".
 
         Refers to GitHub Issue #${executionResult.data.parentNumber}.

@@ -91,7 +91,7 @@ export function usePlannerChat(initialSessionId?: string) {
 
             const res = await chatWithPlannerAction({ sessionId: currentSessionId!, content });
             if (!res.success) throw new Error(res.error);
-            return res.data;
+            return { data: res.data, sessionId: currentSessionId! };
         },
         onMutate: async (content) => {
             // Optimistic update
@@ -107,11 +107,8 @@ export function usePlannerChat(initialSessionId?: string) {
             setInput("");
             return { tempId };
         },
-        onSuccess: (data, _vars, context) => {
-            // Replace optimistic message or just invalidate?
-            // Better to invalidate to get the full correct state including the assistant response which usually comes quickly in this request-response model.
-            // But `chatWithPlannerAction` returns the *assistant* message.
-            // So we can append the assistant message.
+        onSuccess: (result, _vars, context) => {
+            const { data, sessionId: usedSessionId } = result;
 
             // Check for tool calls in the response
             const toolCall = data.parts?.find((p: any) => p.type === "tool-invocation" && p.toolName === "propose_plan");
@@ -136,7 +133,7 @@ export function usePlannerChat(initialSessionId?: string) {
             });
 
             // Invalidate to be sure
-             queryClient.invalidateQueries({ queryKey: ["planner", "session", sessionId] });
+             queryClient.invalidateQueries({ queryKey: ["planner", "session", usedSessionId] });
         },
         onError: (err, _vars, context) => {
             toast.error("Failed to send message");

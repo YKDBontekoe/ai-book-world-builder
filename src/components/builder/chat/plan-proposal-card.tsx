@@ -1,5 +1,6 @@
 "use client";
 
+import type { JSX } from "react";
 import { CheckCircle, Hammer, Loader2, Play } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/atoms/card";
@@ -12,7 +13,7 @@ interface PlanProposalCardProps {
     isExecuting: boolean;
 }
 
-export function PlanProposalCard({ plan, onExecute, isExecuting }: PlanProposalCardProps) {
+export function PlanProposalCard({ plan, onExecute, isExecuting }: PlanProposalCardProps): JSX.Element {
     return (
         <Card className="w-full border-primary/20 bg-primary/5 shadow-sm">
             <CardHeader className="pb-3">

@@ -1,6 +1,7 @@
 "use client";
 
-import { Loader2, Send, Plus, Trash2 } from "lucide-react";
+import type { JSX } from "react";
+import { Loader2, Send, Plus } from "lucide-react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { ChatMessageList } from "./chat-message-list";
@@ -8,7 +9,7 @@ import { PlanProposalCard } from "./plan-proposal-card";
 import { usePlannerChat } from "./use-planner-chat";
 import { GlassCard } from "@/components/molecules/glass-card";
 
-export function BuilderChatView() {
+export function BuilderChatView(): JSX.Element {
     const {
         messages,
         input,
@@ -58,6 +59,7 @@ export function BuilderChatView() {
                                 type="submit"
                                 size="icon"
                                 disabled={!input.trim() || isSending}
+                                aria-label="Send message"
                             >
                                 {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
                             </Button>
