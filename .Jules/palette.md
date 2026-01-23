@@ -337,18 +337,22 @@ Feedback now lands in one clear comment without extra status spam.
 ## 2026-01-23 - TaskCard Button Standardization
 
 ### Context
+
 The `TaskCard` component used a raw HTML `<button>` for the "Fix" action, creating visual inconsistency (incorrect border radius of 4px instead of 16px) and bypassing the design system's interactive states.
 
 ### Solution
+
 Replaced the raw button with the shared `Button` component:
 - Used `variant="ghost"` and `size="sm"`.
 - Applied custom utility classes (`h-6 px-2 text-[10px]`) to maintain the necessary information density and compactness required by the "Power Toolbar" pattern in the Builder interface.
 - Verified that `Button` correctly merges `className` props, allowing for these granular overrides while preserving the base `rounded-lg` token.
 
 ### Outcome
+
 - Standardized interaction model (hover, focus rings).
 - Consistent `rounded-lg` geometry across the Builder UI.
 - Improved maintainability by removing ad-hoc styles.
 
 ### Learnings
+
 - Standard components like `Button` should be flexible enough to handle "micro" use cases without needing a new component, as long as the base geometry (`rounded-lg`) is respected.
