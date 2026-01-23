@@ -34,7 +34,7 @@ const sources = [
 export const Default: Story = {
 	render: () => (
 		<div className="p-10 text-sm">
-			<p>
+			<div>
 				React is a free and open-source front-end JavaScript library.
 				<InlineCitation>
 					<InlineCitationCard>
@@ -71,7 +71,7 @@ export const Default: Story = {
 						</InlineCitationCardBody>
 					</InlineCitationCard>
 				</InlineCitation>
-			</p>
+			</div>
 		</div>
 	),
 };

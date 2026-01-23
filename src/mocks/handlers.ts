@@ -23,4 +23,9 @@ export const handlers: HttpHandler[] = [
 			],
 		});
 	}),
+
+	// Handler for GitHub avatars
+	http.get("https://github.com/*", () => {
+		return new HttpResponse(null, { status: 200 });
+	}),
 ];
