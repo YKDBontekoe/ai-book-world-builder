@@ -28,3 +28,8 @@
 **Vulnerability:** Scene deletion and content updates were vulnerable to IDOR because the repository methods accepted an ID and performed the operation without checking if the scene belonged to the authenticated user's project, trusting only the service layer's check.
 **Learning:** Defense in depth requires database repositories to also support and enforce ownership scoping, preventing vulnerabilities if the service layer check is bypassed or malformed.
 **Prevention:** Extend repository methods (update/delete) to accept an optional parent ID (e.g., `projectId`) and include it in the `WHERE` clause to strictly scope the operation to the authorized context.
+
+## 2025-02-25 - [Entity Operations IDOR]
+**Vulnerability:** Entity update, delete, and bulk delete operations were vulnerable to IDOR because the repository methods relied solely on the entity ID, trusting the service layer's ownership check without enforcing scoping at the database level.
+**Learning:** Consistent application of "Defense in Depth" is critical. Even if similar patterns were fixed elsewhere (Scenes, Chapters), every resource repository must be audited and hardened individually.
+**Prevention:** Extend `EntityRepository` methods (`update`, `delete`, `bulkDelete`) to accept an optional `projectId` and include it in the `WHERE` clause to strictly scope the operation to the authorized context.
