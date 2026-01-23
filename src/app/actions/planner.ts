@@ -67,12 +67,12 @@ type MessagePart = z.infer<typeof messagePartSchema>;
  */
 export const createPlannerSessionAction = createAdminAction({
 	input: createSessionSchema,
-	handler: async ({ input, ctx }) => {
+	handler: async ({ input, user }) => {
 		const [newChat] = await db
 			.insert(chat)
 			.values({
 				title: input.title || "New Plan",
-				userId: ctx.user.id,
+				userId: user.id,
 				createdAt: new Date(),
 				visibility: "private",
 			})
@@ -87,9 +87,9 @@ export const createPlannerSessionAction = createAdminAction({
  */
 export const getPlannerSessionAction = createAdminAction({
 	input: getSessionSchema,
-	handler: async ({ input, ctx }) => {
+	handler: async ({ input, user }) => {
 		const session = await db.query.chat.findFirst({
-			where: and(eq(chat.id, input.sessionId), eq(chat.userId, ctx.user.id)),
+			where: and(eq(chat.id, input.sessionId), eq(chat.userId, user.id)),
 		});
 
 		if (!session) {
@@ -113,10 +113,10 @@ export const getPlannerSessionAction = createAdminAction({
  */
 export const chatWithPlannerAction = createAdminAction({
 	input: chatMessageSchema,
-	handler: async ({ input, ctx }) => {
+	handler: async ({ input, user }) => {
 		// Verify ownership
 		const session = await db.query.chat.findFirst({
-			where: and(eq(chat.id, input.sessionId), eq(chat.userId, ctx.user.id)),
+			where: and(eq(chat.id, input.sessionId), eq(chat.userId, user.id)),
 		});
 
 		if (!session) {
@@ -204,10 +204,10 @@ export const chatWithPlannerAction = createAdminAction({
  */
 export const executePlannerPlanAction = createAdminAction({
 	input: executePlanSchema,
-	handler: async ({ input, ctx }) => {
+	handler: async ({ input, user }) => {
 		// Verify ownership
 		const session = await db.query.chat.findFirst({
-			where: and(eq(chat.id, input.sessionId), eq(chat.userId, ctx.user.id)),
+			where: and(eq(chat.id, input.sessionId), eq(chat.userId, user.id)),
 		});
 
 		if (!session) {
