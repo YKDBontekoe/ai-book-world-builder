@@ -120,7 +120,7 @@ export async function generateScene(
 		const scenes = await sceneRepository.findByChapter(chapterId);
 
 		// Use shared context builder
-		const { context, prevContent } = buildSceneGenerationContext(
+		const { context, prevContent } = await buildSceneGenerationContext(
 			currentChapter,
 			scenes,
 			prevSceneId,
