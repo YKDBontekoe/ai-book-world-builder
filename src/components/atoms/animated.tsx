@@ -5,7 +5,6 @@ import * as React from "react";
 import {
 	fadeIn,
 	fastStaggerContainer,
-	scaleIn,
 	slideDown,
 	slideLeft,
 	slideRight,
@@ -80,25 +79,6 @@ export const SlideIn = React.forwardRef<HTMLDivElement, SlideInProps>(
 	},
 );
 SlideIn.displayName = "SlideIn";
-
-// --- ScaleIn ---
-
-export const ScaleIn = React.forwardRef<HTMLDivElement, HTMLMotionProps<"div">>(
-	({ className, variants, ...props }, ref) => {
-		return (
-			<motion.div
-				ref={ref}
-				initial="hidden"
-				animate="visible"
-				exit="hidden"
-				variants={variants || scaleIn}
-				className={cn(className)}
-				{...props}
-			/>
-		);
-	},
-);
-ScaleIn.displayName = "ScaleIn";
 
 // --- Stagger Lists ---
 
