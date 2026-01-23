@@ -7,9 +7,10 @@ import {
 	screen,
 	waitFor,
 } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import type { JSX, ReactNode } from "react";
 import { toast } from "sonner";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { startFixSessionAction } from "@/app/actions/builder";
 import { getIssues, getPullRequests } from "@/app/actions/github";
 import {
@@ -55,6 +56,7 @@ vi.mock("lucide-react", () => ({
 	LayoutList: () => <span data-testid="icon-layout-list" />,
 	Maximize2: () => <span data-testid="icon-maximize2" />,
 	Minimize2: () => <span data-testid="icon-minimize2" />,
+	ArrowUpDown: () => <span data-testid="icon-arrow-up-down" />,
 	ChevronDown: () => <span data-testid="icon-chevron-down" />,
 	ChevronUp: () => <span data-testid="icon-chevron-up" />,
 	Check: () => <span data-testid="icon-check" />,
@@ -161,8 +163,13 @@ const createMockSession = (overrides = {}) => ({
 });
 
 describe("TaskBoard", () => {
+	beforeAll(() => {
+		Element.prototype.scrollIntoView = vi.fn();
+	});
+
 	beforeEach(() => {
 		vi.resetAllMocks();
+		window.localStorage.clear();
 
 		// Default successful mocks
 		vi.mocked(listJulesSourcesAction).mockResolvedValue({
@@ -402,5 +409,59 @@ describe("TaskBoard", () => {
 			},
 			{ timeout: 3000 },
 		);
+	});
+
+	it("sorts issues by newest (default) and oldest", async () => {
+		const user = userEvent.setup();
+		// Create issues with different dates
+		const oldIssue = createMockIssue({
+			number: 1,
+			title: "Old Issue",
+			created_at: "2023-01-01T00:00:00Z",
+		});
+		const newIssue = createMockIssue({
+			number: 2,
+			title: "New Issue",
+			created_at: "2023-01-02T00:00:00Z",
+		});
+
+		vi.mocked(getIssues).mockImplementation((state) => {
+			if (state === "open") {
+				return Promise.resolve({
+					success: true,
+					data: [oldIssue, newIssue],
+				});
+			}
+			return Promise.resolve({ success: true, data: [] });
+		});
+
+		renderWithClient(<TaskBoard />);
+
+		await waitFor(() => {
+			expect(screen.getByText("New Issue")).toBeInTheDocument();
+			expect(screen.getByText("Old Issue")).toBeInTheDocument();
+		});
+
+		// Check default order (Newest First)
+		// Let's verify by finding text elements and their order.
+		let cards = screen.getAllByTestId("glass-card");
+		expect(cards[0]).toHaveTextContent("New Issue");
+		expect(cards[1]).toHaveTextContent("Old Issue");
+
+		// Click sort button
+		// Placeholder "Sort by" might be hidden if value is selected.
+		// The default value "Newest First" should be visible in the button.
+		const trigger = screen.getByRole("combobox", { name: "Sort by" });
+
+		await user.click(trigger);
+
+		// Select "Oldest First"
+		const oldestOption = await screen.findByText("Oldest First");
+		await user.click(oldestOption);
+
+		// Verify order changed
+		cards = screen.getAllByTestId("glass-card");
+		expect(cards[0]).toHaveTextContent("Old Issue");
+		expect(cards[1]).toHaveTextContent("New Issue");
 	});
 });

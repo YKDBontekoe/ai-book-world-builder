@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, LayoutList, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
+import { ArrowUpDown, Filter, LayoutList, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
 import { type JSX, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
@@ -37,6 +37,29 @@ interface Column {
 	items: TaskItem[];
 }
 
+type SortOption = "newest" | "oldest" | "updated" | "comments";
+
+function getItemDate(item: TaskItem): number {
+	if (item.type === "session") {
+		return new Date(item.data.createTime).getTime();
+	}
+	return new Date(item.data.created_at).getTime();
+}
+
+function getItemUpdated(item: TaskItem): number {
+	if (item.type === "session") {
+		return new Date(item.data.updateTime).getTime();
+	}
+	return new Date(item.data.updated_at).getTime();
+}
+
+function getItemComments(item: TaskItem): number {
+	if (item.type === "session") {
+		return 0;
+	}
+	return item.data.comments;
+}
+
 export function TaskBoard(): JSX.Element {
 	const [activeTab, setActiveTab] = useState<"board" | "chat">("board");
 	const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
@@ -47,6 +70,10 @@ export function TaskBoard(): JSX.Element {
 	const [isCompact, setIsCompact] = useLocalStorage(
 		"builder-compact-mode",
 		false,
+	);
+	const [sortOption, setSortOption] = useLocalStorage<SortOption>(
+		"builder-sort",
+		"newest",
 	);
 	const queryClient = useQueryClient();
 
@@ -151,14 +178,31 @@ export function TaskBoard(): JSX.Element {
 			return true;
 		};
 
-		const backlogItems: TaskItem[] = (Array.isArray(issues) ? issues : [])
+		const sortItems = (items: TaskItem[]) => {
+			return items.sort((a, b) => {
+				switch (sortOption) {
+					case "newest":
+						return getItemDate(b) - getItemDate(a);
+					case "oldest":
+						return getItemDate(a) - getItemDate(b);
+					case "updated":
+						return getItemUpdated(b) - getItemUpdated(a);
+					case "comments":
+						return getItemComments(b) - getItemComments(a);
+					default:
+						return 0;
+				}
+			});
+		};
+
+		const backlogItems: TaskItem[] = sortItems((Array.isArray(issues) ? issues : [])
 			.map((i) => ({
 				type: "issue" as const,
 				data: i,
 			}))
-			.filter(filterItem);
+			.filter(filterItem));
 
-		const sessionItems: TaskItem[] = (Array.isArray(sessions) ? sessions : [])
+		const sessionItems: TaskItem[] = sortItems((Array.isArray(sessions) ? sessions : [])
 			.filter(
 				(s) =>
 					s.state !== "COMPLETED" &&
@@ -166,16 +210,16 @@ export function TaskBoard(): JSX.Element {
 					s.state !== "PAUSED",
 			)
 			.map((s) => ({ type: "session" as const, data: s }))
-			.filter(filterItem);
+			.filter(filterItem));
 
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : [])
+		const reviewItems: TaskItem[] = sortItems((Array.isArray(prs) ? prs : [])
 			.map((p) => ({
 				type: "pr" as const,
 				data: p,
 			}))
-			.filter(filterItem);
+			.filter(filterItem));
 
-		const doneItems: TaskItem[] = [
+		const doneItems: TaskItem[] = sortItems([
 			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
 				type: "pr" as const,
 				data: p,
@@ -185,12 +229,7 @@ export function TaskBoard(): JSX.Element {
 				data: i,
 			})),
 		]
-			.filter(filterItem)
-			.sort(
-				(a, b) =>
-					new Date(b.data.updated_at).getTime() -
-					new Date(a.data.updated_at).getTime(),
-			);
+			.filter(filterItem));
 
 		return [
 			{ id: "backlog", title: "Backlog", items: backlogItems },
@@ -198,7 +237,7 @@ export function TaskBoard(): JSX.Element {
 			{ id: "review", title: "Review", items: reviewItems },
 			{ id: "done", title: "Done", items: doneItems },
 		];
-	}, [issues, closedIssues, prs, closedPrs, sessions, searchQuery, typeFilter]);
+	}, [issues, closedIssues, prs, closedPrs, sessions, searchQuery, typeFilter, sortOption]);
 
 	// --- Interaction ---
 
@@ -266,6 +305,24 @@ export function TaskBoard(): JSX.Element {
 						</div>
 
 						<div className="flex items-center gap-4 w-full sm:w-auto">
+							<div className="flex items-center gap-2">
+								<ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+								<Select
+									value={sortOption}
+									onValueChange={(v) => setSortOption(v as SortOption)}
+								>
+									<SelectTrigger className="w-[140px] h-9 bg-background/50" aria-label="Sort by">
+										<SelectValue placeholder="Sort by" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="newest">Newest First</SelectItem>
+										<SelectItem value="oldest">Oldest First</SelectItem>
+										<SelectItem value="updated">Recently Updated</SelectItem>
+										<SelectItem value="comments">Most Comments</SelectItem>
+									</SelectContent>
+								</Select>
+							</div>
+
 							<div className="flex items-center gap-2">
 								<Filter className="h-4 w-4 text-muted-foreground" />
 								<Select
