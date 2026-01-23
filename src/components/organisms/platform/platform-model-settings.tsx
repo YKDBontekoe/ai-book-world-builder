@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { saveModelPreferences } from "@/app/actions/settings";
 import { Label } from "@/components/atoms/label";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { ModelDetails } from "@/components/molecules/model-details";
 import { SettingsModelSelector } from "@/components/organisms/settings/settings-model-selector";
 import type { ChatModel } from "@/lib/ai/models";
 
@@ -45,6 +46,9 @@ export function PlatformModelSettings({
 		}
 	};
 
+	const getModel = (id: string | null) =>
+		availableModels.find((m) => m.id === id);
+
 	return (
 		<GlassCard variant="subtle" className="p-6 md:p-8">
 			<div className="flex items-center gap-3 mb-6">
@@ -61,43 +65,52 @@ export function PlatformModelSettings({
 			</div>
 
 			<div className="grid gap-8 md:grid-cols-3">
-				<div className="space-y-3">
-					<Label className="text-base font-medium">Light Model</Label>
-					<p className="text-sm text-muted-foreground min-h-[40px]">
-						Fast and efficient. Best for simple tasks, quick edits, and
-						autocomplete.
-					</p>
-					<SettingsModelSelector
-						availableModels={availableModels}
-						selectedModelId={preferences.light}
-						onModelChange={(val) => handleModelChange("light", val)}
-					/>
+				<div className="space-y-3 flex flex-col">
+					<div className="space-y-3">
+						<Label className="text-base font-medium">Light Model</Label>
+						<p className="text-sm text-muted-foreground min-h-[40px]">
+							Fast and efficient. Best for simple tasks, quick edits, and
+							autocomplete.
+						</p>
+						<SettingsModelSelector
+							availableModels={availableModels}
+							selectedModelId={preferences.light}
+							onModelChange={(val) => handleModelChange("light", val)}
+						/>
+					</div>
+					<ModelDetails model={getModel(preferences.light)} className="flex-1" />
 				</div>
 
-				<div className="space-y-3">
-					<Label className="text-base font-medium">Middle Model</Label>
-					<p className="text-sm text-muted-foreground min-h-[40px]">
-						Balanced performance. The default for most chat interactions and
-						drafting.
-					</p>
-					<SettingsModelSelector
-						availableModels={availableModels}
-						selectedModelId={preferences.middle}
-						onModelChange={(val) => handleModelChange("middle", val)}
-					/>
+				<div className="space-y-3 flex flex-col">
+					<div className="space-y-3">
+						<Label className="text-base font-medium">Middle Model</Label>
+						<p className="text-sm text-muted-foreground min-h-[40px]">
+							Balanced performance. The default for most chat interactions and
+							drafting.
+						</p>
+						<SettingsModelSelector
+							availableModels={availableModels}
+							selectedModelId={preferences.middle}
+							onModelChange={(val) => handleModelChange("middle", val)}
+						/>
+					</div>
+					<ModelDetails model={getModel(preferences.middle)} className="flex-1" />
 				</div>
 
-				<div className="space-y-3">
-					<Label className="text-base font-medium">Large Model</Label>
-					<p className="text-sm text-muted-foreground min-h-[40px]">
-						Maximum reasoning power. Use for deep analysis, planning, and
-						complex writing.
-					</p>
-					<SettingsModelSelector
-						availableModels={availableModels}
-						selectedModelId={preferences.large}
-						onModelChange={(val) => handleModelChange("large", val)}
-					/>
+				<div className="space-y-3 flex flex-col">
+					<div className="space-y-3">
+						<Label className="text-base font-medium">Large Model</Label>
+						<p className="text-sm text-muted-foreground min-h-[40px]">
+							Maximum reasoning power. Use for deep analysis, planning, and
+							complex writing.
+						</p>
+						<SettingsModelSelector
+							availableModels={availableModels}
+							selectedModelId={preferences.large}
+							onModelChange={(val) => handleModelChange("large", val)}
+						/>
+					</div>
+					<ModelDetails model={getModel(preferences.large)} className="flex-1" />
 				</div>
 			</div>
 		</GlassCard>

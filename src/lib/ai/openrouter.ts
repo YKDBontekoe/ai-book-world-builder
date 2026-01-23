@@ -12,6 +12,8 @@ export const getOpenRouterModels = async (): Promise<ChatModel[]> => {
 				}
 				const data = await response.json();
 
+				const onlyFreeModels = process.env.ONLY_FREE_MODELS === "true";
+
 				return data.data
 					.map((model: any): ChatModel => {
 						const provider = model.id.split("/")[0] || "openrouter";
@@ -36,6 +38,13 @@ export const getOpenRouterModels = async (): Promise<ChatModel[]> => {
 								cachedInputTokens: model.pricing?.request || "0",
 							},
 						};
+					})
+					.filter((model: ChatModel) => {
+						if (!onlyFreeModels) return true;
+						// Check if pricing is strictly 0
+						const inputPrice = parseFloat(model.pricing?.input || "0");
+						const outputPrice = parseFloat(model.pricing?.output || "0");
+						return inputPrice === 0 && outputPrice === 0;
 					})
 					.sort((a: ChatModel, b: ChatModel) => a.name.localeCompare(b.name));
 			} catch (error) {
