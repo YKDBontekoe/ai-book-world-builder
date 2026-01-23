@@ -1,19 +1,41 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+	type UseMutateFunction,
+	useMutation,
+	useQuery,
+	useQueryClient,
+} from "@tanstack/react-query";
 import { toast } from "sonner";
 import { startFixSessionAction } from "@/app/actions/builder";
-import type { GitHubIssue } from "@/app/actions/github";
+import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import { getIssues, getPullRequests } from "@/app/actions/github";
 import {
 	getJulesSessionsAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
+import type { JulesSession, JulesSource } from "@/lib/jules-client";
 
-export function useTaskBoardData() {
+export interface TaskBoardDataResult {
+	sources: JulesSource[] | undefined;
+	issues: GitHubIssue[] | undefined;
+	closedIssues: GitHubIssue[] | undefined;
+	prs: GitHubPR[] | undefined;
+	closedPrs: GitHubPR[] | undefined;
+	sessions: JulesSession[] | undefined;
+	startFix: UseMutateFunction<JulesSession, Error, GitHubIssue, unknown>;
+	isLoading: boolean;
+	isError: boolean;
+}
+
+export function useTaskBoardData(): TaskBoardDataResult {
 	const queryClient = useQueryClient();
 
-	const { data: sources } = useQuery({
+	const {
+		data: sources,
+		isLoading: isLoadingSources,
+		isError: isErrorSources,
+	} = useQuery({
 		queryKey: ["jules", "sources"],
 		queryFn: async () => {
 			const res = await listJulesSourcesAction();
@@ -22,43 +44,76 @@ export function useTaskBoardData() {
 		},
 	});
 
-	const { data: issues } = useQuery({
+	const {
+		data: issues,
+		isLoading: isLoadingIssues,
+		isError: isErrorIssues,
+	} = useQuery({
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			if (!Array.isArray(res.data))
+				throw new Error("Invalid response format for issues");
+			return res.data;
 		},
 	});
 
-	const { data: closedIssues } = useQuery({
+	const {
+		data: closedIssues,
+		isLoading: isLoadingClosedIssues,
+		isError: isErrorClosedIssues,
+	} = useQuery({
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
 			const res = await getIssues("closed");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			if (!Array.isArray(res.data))
+				throw new Error("Invalid response format for issues");
+			return res.data;
 		},
 	});
 
-	const { data: prs } = useQuery({
+	const {
+		data: prs,
+		isLoading: isLoadingPrs,
+		isError: isErrorPrs,
+	} = useQuery({
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
 			const res = await getPullRequests("open");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			if (!Array.isArray(res.data))
+				throw new Error("Invalid response format for PRs");
+			return res.data;
 		},
 	});
 
-	const { data: closedPrs } = useQuery({
+	const {
+		data: closedPrs,
+		isLoading: isLoadingClosedPrs,
+		isError: isErrorClosedPrs,
+	} = useQuery({
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
 			const res = await getPullRequests("closed");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			if (!Array.isArray(res.data))
+				throw new Error("Invalid response format for PRs");
+			return res.data;
 		},
 	});
 
-	const { data: sessions } = useQuery({
+	const {
+		data: sessions,
+		isLoading: isLoadingSessions,
+		isError: isErrorSessions,
+	} = useQuery({
 		queryKey: ["jules", "sessions"],
 		queryFn: async () => {
 			const res = await getJulesSessionsAction({ pageSize: 50 });
-			return res.success && res.data && Array.isArray(res.data.sessions)
+			if (!res.success) throw new Error(res.error);
+			return res.data && Array.isArray(res.data.sessions)
 				? res.data.sessions
 				: [];
 		},
@@ -80,6 +135,22 @@ export function useTaskBoardData() {
 		},
 	});
 
+	const isLoading =
+		isLoadingSources ||
+		isLoadingIssues ||
+		isLoadingClosedIssues ||
+		isLoadingPrs ||
+		isLoadingClosedPrs ||
+		isLoadingSessions;
+
+	const isError =
+		isErrorSources ||
+		isErrorIssues ||
+		isErrorClosedIssues ||
+		isErrorPrs ||
+		isErrorClosedPrs ||
+		isErrorSessions;
+
 	return {
 		sources,
 		issues,
@@ -88,5 +159,7 @@ export function useTaskBoardData() {
 		closedPrs,
 		sessions,
 		startFix,
+		isLoading,
+		isError,
 	};
 }

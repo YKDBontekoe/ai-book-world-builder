@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type Dispatch, type SetStateAction, useMemo, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import type { TaskItem } from "@/components/builder/task-card";
 import type { JulesSession } from "@/lib/jules-client";
 
 type ColumnType = "backlog" | "in_progress" | "review" | "done";
+type FilterType = "all" | "issue" | "pr" | "session";
 
 export interface Column {
 	id: ColumnType;
@@ -22,17 +23,26 @@ interface UseTaskBoardFilterProps {
 	sessions: JulesSession[] | undefined;
 }
 
+export interface UseTaskBoardFilterReturn {
+	searchQuery: string;
+	setSearchQuery: Dispatch<SetStateAction<string>>;
+	typeFilter: FilterType;
+	setTypeFilter: Dispatch<SetStateAction<FilterType>>;
+	columns: Column[];
+}
+
 export function useTaskBoardFilter({
 	issues,
 	closedIssues,
 	prs,
 	closedPrs,
 	sessions,
-}: UseTaskBoardFilterProps) {
+}: UseTaskBoardFilterProps): UseTaskBoardFilterReturn {
 	const [searchQuery, setSearchQuery] = useState("");
-	const [typeFilter, setTypeFilter] = useLocalStorage<
-		"all" | "issue" | "pr" | "session"
-	>("builder-type-filter", "all");
+	const [typeFilter, setTypeFilter] = useLocalStorage<FilterType>(
+		"builder-type-filter",
+		"all",
+	);
 
 	const columns: Column[] = useMemo(() => {
 		const filterItem = (item: TaskItem) => {

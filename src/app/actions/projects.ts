@@ -109,16 +109,12 @@ export const forkProject = createUserAction({
 			input.newName,
 		);
 
-		if ('error' in result && result.error) {
+		if (result.error) {
 			throw new Error(result.error);
 		}
 
 		revalidatePath("/projects");
-		// forkProject returns { success: true, projectId: ... } or { error }
-		// We want to return the data part if it exists
-		if ('projectId' in result) {
-			return { projectId: result.projectId };
-		}
-		return result;
+
+		return result.projectId ? { projectId: result.projectId } : undefined;
 	},
 });
