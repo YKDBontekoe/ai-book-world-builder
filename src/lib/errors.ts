@@ -277,6 +277,20 @@ export class RateLimitError extends AppError {
 }
 
 /**
+ * Error thrown when GitHub configuration is missing
+ */
+export class GitHubConfigError extends AppError {
+	readonly statusCode = 400;
+	readonly code = "GITHUB_CONFIG_MISSING";
+
+	constructor(
+		message = "GITHUB_OWNER and GITHUB_REPO must be set in environment variables or user preferences",
+	) {
+		super(message);
+	}
+}
+
+/**
  * Type guard to check if an error is an AppError
  */
 export function isAppError(error: unknown): error is AppError {

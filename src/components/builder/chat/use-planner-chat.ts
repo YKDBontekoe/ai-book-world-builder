@@ -9,12 +9,13 @@ import {
 	executePlannerPlanAction,
 	getPlannerSessionAction,
 } from "@/app/actions/planner";
+import type { MessagePart } from "@/lib/types/message";
 
 export interface Message {
 	id: string;
 	role: "user" | "assistant";
 	content: string;
-	parts?: any[];
+	parts?: MessagePart[];
 	createdAt: Date;
 	isOptimistic?: boolean;
 }
@@ -49,25 +50,28 @@ export function usePlannerChat(initialSessionId?: string) {
 	// Update local messages when data is loaded
 	useEffect(() => {
 		if (data?.messages) {
-			const mappedMessages: Message[] = data.messages.map((m: any) => {
-				// Check for tool calls in parts
-				const toolCall = m.parts?.find(
-					(p: any) =>
-						p.type === "tool-invocation" && p.toolName === "propose_plan",
-				);
-				if (toolCall) {
-					setProposedPlan(toolCall.args);
-				}
+			const mappedMessages: Message[] = data.messages.map((m: any) => ({
+				id: m.id,
+				role: m.role as "user" | "assistant",
+				content: m.parts?.find((p: any) => p.type === "text")?.text || "",
+				parts: m.parts as MessagePart[],
+				createdAt: new Date(m.createdAt),
+			}));
 
-				return {
-					id: m.id,
-					role: m.role as "user" | "assistant",
-					content: m.parts?.find((p: any) => p.type === "text")?.text || "",
-					parts: m.parts,
-					createdAt: new Date(m.createdAt),
-				};
-			});
 			setMessages(mappedMessages);
+
+			// Find latest plan proposal (moved outside map to avoid side effects in map)
+			const latestToolCall = mappedMessages
+				.flatMap((m) => m.parts || [])
+				.filter(
+					(p): p is MessagePart & { type: "tool-invocation" } =>
+						p.type === "tool-invocation" && p.toolName === "propose_plan",
+				)
+				.pop();
+
+			if (latestToolCall) {
+				setProposedPlan(latestToolCall.args);
+			}
 		}
 	}, [data]);
 
@@ -88,8 +92,6 @@ export function usePlannerChat(initialSessionId?: string) {
 				const session = await createSession();
 				currentSessionId = session.id;
 				setSessionId(currentSessionId);
-				// Update URL without refresh? Or assume parent handles it?
-				// For now, local state is enough.
 			}
 
 			if (!currentSessionId) throw new Error("Failed to initialize session");
@@ -131,15 +133,12 @@ export function usePlannerChat(initialSessionId?: string) {
 				id: data.id,
 				role: "assistant",
 				content: data.parts?.find((p: any) => p.type === "text")?.text || "",
-				parts: data.parts as any[], // Casting for now
+				parts: data.parts as MessagePart[],
 				createdAt: new Date(data.createdAt),
 			};
 
 			setMessages((prev) => {
 				// Remove optimistic user message (optional, or update ID)
-				// Actually, since we don't return the USER message from the action,
-				// we should keep the optimistic one but mark it non-optimistic?
-				// Or better: invalidate query.
 				return prev
 					.map((m) =>
 						m.id === context?.tempId ? { ...m, isOptimistic: false } : m,
@@ -162,23 +161,26 @@ export function usePlannerChat(initialSessionId?: string) {
 	const { mutate: executePlan, isPending: isExecuting } = useMutation({
 		mutationFn: async () => {
 			if (!sessionId || !proposedPlan) throw new Error("No plan to execute");
+
+			// Capture plan before async operation to avoid race conditions
+			const currentPlan = proposedPlan;
+
 			const res = await executePlannerPlanAction({
 				sessionId,
-				plan: proposedPlan,
+				plan: currentPlan,
 			});
 			if (!res.success) throw new Error(res.error);
-			return res.data;
+			return { data: res.data, plan: currentPlan };
 		},
-		onSuccess: (data) => {
+		onSuccess: ({ data, plan }) => {
 			toast.success(`Plan executed! Created Epic #${data.issues.parentNumber}`);
-			setProposedPlan(null); // Clear plan after execution? Or keep it?
-			// Maybe add a system message saying it was executed?
+			setProposedPlan(null);
 
 			// Add a local system message for feedback
 			const sysMsg: Message = {
 				id: crypto.randomUUID(),
 				role: "assistant",
-				content: `Plan executed successfully! \n\nStarted working on **${proposedPlan?.title}**.\n\n[View Epic #${data.issues.parentNumber}](/builder)`, // We can linkify this later
+				content: `Plan executed successfully! \n\nStarted working on **${plan.title}**.\n\n[View Epic #${data.issues.parentNumber}](/builder)`,
 				createdAt: new Date(),
 			};
 			setMessages((prev) => [...prev, sysMsg]);

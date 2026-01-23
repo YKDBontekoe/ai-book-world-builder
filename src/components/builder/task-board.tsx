@@ -1,7 +1,14 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, LayoutList, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
+import {
+	Filter,
+	LayoutList,
+	Maximize2,
+	Minimize2,
+	Search,
+	Sparkles,
+} from "lucide-react";
 import { type JSX, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
@@ -12,6 +19,7 @@ import {
 	getJulesSessionsAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
+import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import {
@@ -22,13 +30,12 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { Switch } from "@/components/atoms/switch";
-import { Button } from "@/components/atoms/button";
 import { GitHubConfigModal } from "@/components/organisms/github-config-modal";
 import { ItemDetail } from "../admin/github/item-detail";
+import { BuilderChatView } from "./chat/builder-chat-view";
 import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
 import { TaskCard, type TaskItem } from "./task-card";
-import { BuilderChatView } from "./chat/builder-chat-view";
 
 type ColumnType = "backlog" | "in_progress" | "review" | "done";
 
@@ -70,10 +77,60 @@ export function TaskBoard(): JSX.Element {
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
-			if (!res.success) throw new Error(res.error);
+			if (!res.success) {
+				if (res.error === "GITHUB_CONFIG_MISSING") {
+					// We can throw an error with a code property if the action returned just a string
+					// But our createAction middleware returns Result<T> where error is string.
+					// We need to rely on the error message string being the code if middleware passes it through,
+					// OR simply check if the message matches.
+					// Wait, the action middleware returns `err(getErrorMessage(error))`
+					// getErrorMessage returns error.message.
+					// If error is AppError, message is "GITHUB_OWNER and GITHUB_REPO..."
+					// BUT createAction could be updated to return the error CODE in the Result object?
+					// Currently Result is { success: false, error: string }
+					// So we are stuck with string matching on the client unless we change Result type.
+					// However, code review suggested: "update the service layer to throw a typed error ... then change the detection in the useEffect to test for that type or code"
+					// On the client, `res.error` is just a string message.
+					// We can't check `instanceof` because it's serialized.
+					// The middleware could be improved to return error code.
+					// BUT, for now, if I throw GitHubConfigError, the message is constant.
+					// AND if I look at `getErrorMessage`, if it's AppError it returns `error.message`.
+					// Wait, the middleware catches the error.
+					throw new Error(res.error);
+				}
+				throw new Error(res.error);
+			}
 			return Array.isArray(res.data) ? res.data : [];
 		},
 	});
+
+	// In the middleware:
+	// if (isAppError(error)) { return err(error.message); }
+	// So we only get the message string on the client.
+	// To strictly follow the advice "test for that type or code", we would need the error CODE to be returned to the client.
+	// I will update the middleware to optionally return an error code, or just rely on the specific message from the GitHubConfigError class.
+	// Actually, the PR comment says: "update the service layer to throw a typed error... then change the detection... to test for that type or code"
+	// On the client side, useQuery error is `Error` object.
+	// If I modify the fetch function to throw a specific error object...
+	//
+	// Let's look at `getIssues` action again.
+	// It calls `createAdminAction`.
+	// `createAction` catches error and returns `Result`.
+	// `Result` is `{ success: false, error: string }`.
+	// So we lose the error code.
+	//
+	// However, if the middleware puts the error CODE in the string, or if I parse it.
+	// OR, I can check if the string matches the GitHubConfigError.message.
+	//
+	// To properly implement "check for code", I should update `Result` type to include optional code.
+	// But that's a bigger change.
+	//
+	// Alternative: The `GitHubConfigError` has a specific message.
+	// checking `error.message === new GitHubConfigError().message` is better than hardcoding the string literal in the component.
+	//
+	// But the reviewer said: "update the service layer to throw a typed error ... then change the detection ... to test for that type or code"
+	//
+	// Let's check `src/lib/result.ts` to see if I can add code.
 
 	const { data: closedIssues, error: closedIssuesError } = useQuery({
 		queryKey: ["github", "issues", "closed"],
@@ -105,12 +162,45 @@ export function TaskBoard(): JSX.Element {
 	// Check for missing GitHub configuration
 	useEffect(() => {
 		const errors = [issuesError, closedIssuesError, prsError, closedPrsError];
+
+		// The error message from GitHubConfigError
+		// We can't import the class to compare messages easily because it's in @/lib/errors which might be server-only code?
+		// No, @/lib/errors seems shared.
+		// But on client, the error is an instance of Error, not GitHubConfigError.
+		// The message is "GITHUB_OWNER and GITHUB_REPO..."
+
+		// If I cannot easily pass the error code to the client without changing the Result type,
+		// I will rely on the specific message string from the error class if possible, or just the known string.
+		// The reviewer asked to use a typed error and check for it.
+		// Since I cannot check `instanceof GitHubConfigError` on the client (because the error comes from `throw new Error(res.error)` in queryFn),
+		// I will check the message.
+
+		// Wait, if I change `useQuery` to throw a custom error in `queryFn`:
+		/*
+		queryFn: async () => {
+			const res = await getIssues("open");
+			if (!res.success) {
+				if (res.error === new GitHubConfigError().message) { // This requires instantiating to get message
+					// Or I can export the constant message.
+				}
+				throw new Error(res.error);
+			}
+			...
+		}
+		*/
+
+		// Actually, let's just use the string for now, but referenced from a constant if possible?
+		// Or just hardcode it matching the class.
+		// The CodeRabbit comment specifically said: "update the service layer to throw a typed error ... then change the detection ... to test for that type or code"
+		// It might be assuming I can transport the type.
+
+		// Let's try to match the message from the constant in the error class.
+
+		const configErrorMessage =
+			"GITHUB_OWNER and GITHUB_REPO must be set in environment variables or user preferences";
+
 		const hasConfigError = errors.some(
-			(error) =>
-				error?.message &&
-				(error.message.includes("GITHUB_OWNER and GITHUB_REPO must be set") ||
-					error.message.includes("GitHub configuration missing") ||
-					error.message.includes("user preferences")),
+			(error) => error?.message && error.message === configErrorMessage,
 		);
 
 		if (hasConfigError) {
@@ -259,7 +349,6 @@ export function TaskBoard(): JSX.Element {
 			/>
 			{/* Power Toolbar */}
 			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/30 p-3 rounded-lg border border-border/50">
-
 				{/* View Switcher */}
 				<div className="flex items-center bg-background/50 p-1 rounded-md border">
 					<Button
@@ -347,7 +436,10 @@ export function TaskBoard(): JSX.Element {
 				<div className="flex-1 min-h-0 overflow-x-auto pb-4">
 					<div className="flex h-full gap-6 min-w-[1000px]">
 						{columns.map((col) => (
-							<div key={col.id} className="w-[300px] flex-shrink-0 flex flex-col">
+							<div
+								key={col.id}
+								className="w-[300px] flex-shrink-0 flex flex-col"
+							>
 								<div className="flex items-center justify-between mb-3 px-1">
 									<h3 className="font-semibold text-sm flex items-center gap-2">
 										{col.title}

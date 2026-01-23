@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { Octokit } from "octokit";
 import { db } from "@/lib/db";
 import { userPreferences } from "@/lib/db/schema/auth";
+import { GitHubConfigError } from "@/lib/errors";
 
 let cachedOctokit: Octokit | null = null;
 
@@ -51,9 +52,7 @@ export const getRepoDetails = async (
 	const repo = process.env.GITHUB_REPO;
 
 	if (!owner || !repo) {
-		throw new Error(
-			"GITHUB_OWNER and GITHUB_REPO must be set in environment variables or user preferences",
-		);
+		throw new GitHubConfigError();
 	}
 
 	return { fullName: `${owner}/${repo}`, owner, repo };

@@ -106,13 +106,13 @@ export function GitHubConfigModal({
 
 				<div className="space-y-4 py-4">
 					<div className="space-y-2">
-						<Label>Repository</Label>
+						<Label htmlFor="repo-select-trigger">Repository</Label>
 						<Select
 							value={selectedRepo}
 							onValueChange={setSelectedRepo}
 							disabled={isLoadingRepos || isSaving}
 						>
-							<SelectTrigger>
+							<SelectTrigger id="repo-select-trigger">
 								<SelectValue placeholder="Select a repository" />
 							</SelectTrigger>
 							<SelectContent>
