@@ -3,6 +3,7 @@
 import { AlertCircle, Bot, GitPullRequest } from "lucide-react";
 import type { JSX } from "react";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
+import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
 import type { JulesSession } from "@/lib/jules-client";
 
@@ -62,17 +63,18 @@ export function TaskCard({
 									</span>
 								</div>
 								{onFix && (
-									<button
-										type="button"
+									<Button
+										variant="ghost"
+										size="sm"
 										onClick={(e) => {
 											e.stopPropagation();
 											onFix(item.data);
 										}}
-										className="flex items-center gap-1 text-[10px] bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary/20 transition-colors"
+										className="h-6 px-2 text-[10px] bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary gap-1"
 									>
 										<Bot className="h-3 w-3" />
 										Fix
-									</button>
+									</Button>
 								)}
 							</div>
 						)}
