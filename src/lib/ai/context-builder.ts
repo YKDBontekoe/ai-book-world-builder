@@ -1,6 +1,7 @@
+import { semanticCache } from "@/lib/ai/semantic-cache";
 import type { Chapter, Scene } from "@/lib/db/schema";
 
-export function buildSceneGenerationContext(
+export async function buildSceneGenerationContext(
 	chapter: Chapter,
 	scenes: Scene[],
 	prevSceneId?: string | null,
@@ -25,6 +26,50 @@ export function buildSceneGenerationContext(
 		const lastScene = scenes[scenes.length - 1];
 		prevContent = lastScene.content || "";
 		newSequence = lastScene.sequence + 1;
+	}
+
+	// Semantic Context Injection
+	try {
+		// Ensure cache is up to date and fetch it
+		const cache = await semanticCache.updateCache(chapter.projectId);
+
+		// Build a query based on the current chapter and immediate previous content
+		const query = `Chapter: ${chapter.title}. Notes: ${chapter.notes || ""}. Context: ${prevContent.substring(0, 500)}`;
+
+		const relevantItems = await semanticCache.findRelevant(query, cache);
+
+		if (relevantItems.length > 0) {
+			context += "\n\n=== RELEVANT STORY ELEMENTS (Semantic Search) ===\n";
+
+			// Group by type for better organization
+			const characters = relevantItems.filter((i) => i.type === "character");
+			const plotPoints = relevantItems.filter((i) => i.type === "plot_point");
+			const relevantScenes = relevantItems.filter((i) => i.type === "scene");
+
+			if (characters.length) {
+				context +=
+					"CHARACTERS:\n" +
+					characters.map((c) => `- ${c.content}`).join("\n") +
+					"\n";
+			}
+			if (plotPoints.length) {
+				context +=
+					"PLOT POINTS:\n" +
+					plotPoints.map((p) => `- ${p.content}`).join("\n") +
+					"\n";
+			}
+			if (relevantScenes.length) {
+				context +=
+					"RELATED SCENES:\n" +
+					relevantScenes
+						.map((s) => `- ${s.content.substring(0, 300)}...`)
+						.join("\n") +
+					"\n";
+			}
+		}
+	} catch (error) {
+		console.warn("Failed to inject semantic context:", error);
+		// Proceed without it
 	}
 
 	return { context, prevContent, newSequence };
