@@ -78,7 +78,9 @@ describe("forkProject Action", () => {
 		// Setup: Mock counts to exceed limit
 		mockDb.$count.mockResolvedValueOnce(1500).mockResolvedValueOnce(600); // Total 2100
 
-		const result = await forkProject("123e4567-e89b-12d3-a456-426614174000");
+		const result = await forkProject({
+			originalProjectId: "123e4567-e89b-12d3-a456-426614174000",
+		});
 		expect(result).toEqual({
 			success: false,
 			error:
@@ -122,9 +124,14 @@ describe("forkProject Action", () => {
 			return resolve(response);
 		});
 
-		const result = await forkProject("123e4567-e89b-12d3-a456-426614174000");
+		const result = await forkProject({
+			originalProjectId: "123e4567-e89b-12d3-a456-426614174000",
+		});
 
-		expect(result).toEqual({ success: true, projectId: "new-proj-id" });
+		expect(result).toEqual({
+			success: true,
+			data: { projectId: "new-proj-id" },
+		});
 		expect(mockDb.transaction).toHaveBeenCalled();
 	});
 });

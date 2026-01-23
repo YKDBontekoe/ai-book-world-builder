@@ -1,17 +1,9 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Filter, LayoutList, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
-import { type JSX, useMemo, useState } from "react";
-import { toast } from "sonner";
+import { type JSX, useState } from "react";
 import { useLocalStorage } from "usehooks-ts";
-import { startFixSessionAction } from "@/app/actions/builder";
 import type { GitHubIssue } from "@/app/actions/github";
-import { getIssues, getPullRequests } from "@/app/actions/github";
-import {
-	getJulesSessionsAction,
-	listJulesSourcesAction,
-} from "@/app/actions/jules";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import {
@@ -28,180 +20,46 @@ import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
 import { TaskCard, type TaskItem } from "./task-card";
 import { BuilderChatView } from "./chat/builder-chat-view";
-
-type ColumnType = "backlog" | "in_progress" | "review" | "done";
-
-interface Column {
-	id: ColumnType;
-	title: string;
-	items: TaskItem[];
-}
+import { useTaskBoardData } from "./hooks/use-task-board-data";
+import { useTaskBoardFilter } from "./hooks/use-task-board-filter";
 
 export function TaskBoard(): JSX.Element {
 	const [activeTab, setActiveTab] = useState<"board" | "chat">("board");
 	const [selectedItem, setSelectedItem] = useState<TaskItem | null>(null);
-	const [searchQuery, setSearchQuery] = useState("");
-	const [typeFilter, setTypeFilter] = useLocalStorage<
-		"all" | "issue" | "pr" | "session"
-	>("builder-type-filter", "all");
 	const [isCompact, setIsCompact] = useLocalStorage(
 		"builder-compact-mode",
 		false,
 	);
-	const queryClient = useQueryClient();
 
-	// --- Data Fetching ---
+	// --- Custom Hooks ---
+	const {
+		sources,
+		issues,
+		closedIssues,
+		prs,
+		closedPrs,
+		sessions,
+		startFix,
+	} = useTaskBoardData();
 
-	const { data: sources } = useQuery({
-		queryKey: ["jules", "sources"],
-		queryFn: async () => {
-			const res = await listJulesSourcesAction();
-			if (!res.success) throw new Error(res.error);
-			return res.data;
-		},
+	const {
+		searchQuery,
+		setSearchQuery,
+		typeFilter,
+		setTypeFilter,
+		columns,
+	} = useTaskBoardFilter({
+		issues,
+		closedIssues,
+		prs,
+		closedPrs,
+		sessions,
 	});
 
 	// Use the first available source for feature planning
 	const defaultSource = sources?.[0]?.name;
 
-	const { data: issues } = useQuery({
-		queryKey: ["github", "issues", "open"],
-		queryFn: async () => {
-			const res = await getIssues("open");
-			return res.success && Array.isArray(res.data) ? res.data : [];
-		},
-	});
-
-	const { data: closedIssues } = useQuery({
-		queryKey: ["github", "issues", "closed"],
-		queryFn: async () => {
-			const res = await getIssues("closed");
-			return res.success && Array.isArray(res.data) ? res.data : [];
-		},
-	});
-
-	const { data: prs } = useQuery({
-		queryKey: ["github", "prs", "open"],
-		queryFn: async () => {
-			const res = await getPullRequests("open");
-			return res.success && Array.isArray(res.data) ? res.data : [];
-		},
-	});
-
-	const { data: closedPrs } = useQuery({
-		queryKey: ["github", "prs", "closed"],
-		queryFn: async () => {
-			const res = await getPullRequests("closed");
-			return res.success && Array.isArray(res.data) ? res.data : [];
-		},
-	});
-
-	const { data: sessions } = useQuery({
-		queryKey: ["jules", "sessions"],
-		queryFn: async () => {
-			const res = await getJulesSessionsAction({ pageSize: 50 });
-			return res.success && res.data && Array.isArray(res.data.sessions)
-				? res.data.sessions
-				: [];
-		},
-		refetchInterval: 10000, // Poll for session updates
-	});
-
-	// --- Mutations ---
-
-	const { mutate: startFix } = useMutation({
-		mutationFn: async (issue: GitHubIssue) => {
-			const res = await startFixSessionAction({ issueNumber: issue.number });
-			if (!res.success) throw new Error(res.error);
-			return res.data;
-		},
-		onSuccess: (_newSession) => {
-			toast.success("Jules is working on the fix!");
-			queryClient.invalidateQueries({ queryKey: ["jules", "sessions"] });
-			// Optionally switch to the new session immediately?
-			// For now, let it appear in "In Progress"
-		},
-		onError: (err) => {
-			toast.error(`Failed to start fix: ${err.message}`);
-		},
-	});
-
-	// --- Data Organization ---
-
-	const columns: Column[] = useMemo(() => {
-		const filterItem = (item: TaskItem) => {
-			// Type Filter
-			if (typeFilter !== "all" && item.type !== typeFilter) return false;
-
-			// Search Filter
-			if (searchQuery) {
-				const query = searchQuery.toLowerCase();
-				const title = (
-					item.type === "session"
-						? item.data.title || item.data.prompt
-						: item.data.title
-				)?.toLowerCase();
-				const id = (
-					item.type === "session" ? item.data.id : item.data.number.toString()
-				)?.toLowerCase();
-
-				if (!title?.includes(query) && !id?.includes(query)) return false;
-			}
-
-			return true;
-		};
-
-		const backlogItems: TaskItem[] = (Array.isArray(issues) ? issues : [])
-			.map((i) => ({
-				type: "issue" as const,
-				data: i,
-			}))
-			.filter(filterItem);
-
-		const sessionItems: TaskItem[] = (Array.isArray(sessions) ? sessions : [])
-			.filter(
-				(s) =>
-					s.state !== "COMPLETED" &&
-					s.state !== "FAILED" &&
-					s.state !== "PAUSED",
-			)
-			.map((s) => ({ type: "session" as const, data: s }))
-			.filter(filterItem);
-
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : [])
-			.map((p) => ({
-				type: "pr" as const,
-				data: p,
-			}))
-			.filter(filterItem);
-
-		const doneItems: TaskItem[] = [
-			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
-				type: "pr" as const,
-				data: p,
-			})),
-			...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
-				type: "issue" as const,
-				data: i,
-			})),
-		]
-			.filter(filterItem)
-			.sort(
-				(a, b) =>
-					new Date(b.data.updated_at).getTime() -
-					new Date(a.data.updated_at).getTime(),
-			);
-
-		return [
-			{ id: "backlog", title: "Backlog", items: backlogItems },
-			{ id: "in_progress", title: "In Progress (Jules)", items: sessionItems },
-			{ id: "review", title: "Review", items: reviewItems },
-			{ id: "done", title: "Done", items: doneItems },
-		];
-	}, [issues, closedIssues, prs, closedPrs, sessions, searchQuery, typeFilter]);
-
 	// --- Interaction ---
-
 	const handleFix = (issue: GitHubIssue) => {
 		if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
 			startFix(issue);

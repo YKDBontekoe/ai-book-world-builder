@@ -2,9 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/app/(auth)/auth";
-import type { VisibilityType } from "@/components/organisms/chat/visibility-selector";
-import { withProjectWriteAccess } from "@/lib/actions-utils";
+import { createUserAction } from "@/lib/action-middleware";
+import { ensureProjectAccess } from "@/lib/actions-utils";
 import { projectRepository, storyRepository } from "@/lib/db/repositories";
 import { projectService } from "@/lib/services/project-service";
 import { PROJECT_TEMPLATES } from "@/lib/templates";
@@ -19,36 +18,21 @@ const createProjectSchema = z.object({
 });
 
 const renameProjectSchema = z.object({
+	projectId: z.string().uuid(),
 	name: z.string().min(1, "Name is required").max(100, "Name is too long"),
 	description: z.string().max(500, "Description is too long").optional(),
 });
 
-export async function createProjectAction(params: {
-	name: string;
-	description?: string;
-	visibility: VisibilityType;
-	templateId?: string;
-}) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
-	}
-
-	const validation = createProjectSchema.safeParse(params);
-	if (!validation.success) {
-		return { error: validation.error.errors[0].message };
-	}
-
-	try {
+export const createProjectAction = createUserAction({
+	input: createProjectSchema,
+	handler: async ({ input, user }) => {
 		const newProject = await projectRepository.create({
-			...validation.data,
-			userId: session.user.id,
+			...input,
+			userId: user.id,
 		});
 
-		if (validation.data.templateId) {
-			const template = PROJECT_TEMPLATES.find(
-				(t) => t.id === validation.data.templateId,
-			);
+		if (input.templateId) {
+			const template = PROJECT_TEMPLATES.find((t) => t.id === input.templateId);
 			if (template && template.id !== "blank") {
 				try {
 					await storyRepository.createBookFromPlan(
@@ -57,98 +41,84 @@ export async function createProjectAction(params: {
 					);
 				} catch (templateError) {
 					console.error("Failed to apply template:", templateError);
-					// Proceeding even if template fails, so user has the project
 				}
 			}
 		}
 
 		revalidatePath("/projects");
-		return { success: true, projectId: newProject.id };
-	} catch (error) {
-		console.error("Create project error:", error);
-		return { error: "Failed to create project" };
-	}
-}
+		return { projectId: newProject.id };
+	},
+});
 
-export async function renameProject(
-	projectId: string,
-	name: string,
-	description?: string,
-) {
-	const idValidation = z.string().uuid().safeParse(projectId);
-	if (!idValidation.success) {
-		return { error: "Invalid project ID" };
-	}
+export const renameProject = createUserAction({
+	input: renameProjectSchema,
+	handler: async ({ input }) => {
+		const { projectId, name, description } = input;
 
-	const validation = renameProjectSchema.safeParse({ name, description });
-	if (!validation.success) {
-		return { error: validation.error.errors[0].message };
-	}
+		// Ensure ownership (write access)
+		await ensureProjectAccess(projectId, true);
 
-	const result = await withProjectWriteAccess(projectId, async () => {
-		await projectRepository.update(projectId, validation.data);
+		await projectRepository.update(projectId, { name, description });
 
 		revalidatePath("/projects");
 		revalidatePath(`/projects/${projectId}`);
-		return { success: true };
-	});
+	},
+});
 
-	if (!result.success) {
-		return { error: result.error };
-	}
+export const deleteProject = createUserAction({
+	input: z.object({ projectId: z.string().uuid() }),
+	handler: async ({ input, user }) => {
+		const result = await projectService.deleteProjects(
+			[input.projectId],
+			user.id,
+		);
 
-	return result.data;
-}
+		if (result.error) {
+			throw new Error(result.error);
+		}
 
-export async function deleteProject(projectId: string) {
-	return deleteProjects([projectId]);
-}
-
-export async function deleteProjects(projectIds: string[]) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
-	}
-
-	const validation = deleteProjectsSchema.safeParse({ projectIds });
-	if (!validation.success) {
-		return { error: validation.error.errors[0].message };
-	}
-
-	const result = await projectService.deleteProjects(
-		validation.data.projectIds,
-		session.user.id,
-	);
-
-	if ("success" in result && result.success) {
 		revalidatePath("/projects");
-	}
+	},
+});
 
-	return result;
-}
+export const deleteProjects = createUserAction({
+	input: deleteProjectsSchema,
+	handler: async ({ input, user }) => {
+		const result = await projectService.deleteProjects(
+			input.projectIds,
+			user.id,
+		);
 
-export async function forkProject(originalProjectId: string, newName?: string) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		return { error: "Unauthorized" };
-	}
+		if (result.error) {
+			throw new Error(result.error);
+		}
 
-	// Validate originalProjectId is a valid UUID
-	const idSchema = z.string().uuid();
-	const validation = idSchema.safeParse(originalProjectId);
-	if (!validation.success) {
-		return { error: "Invalid project id" };
-	}
-
-	const result = await projectService.forkProject(
-		originalProjectId,
-		session.user.id,
-		newName,
-	);
-
-	if ("success" in result && result.success) {
 		revalidatePath("/projects");
-	}
+	},
+});
 
-	return result;
-}
+export const forkProject = createUserAction({
+	input: z.object({
+		originalProjectId: z.string().uuid(),
+		newName: z.string().optional(),
+	}),
+	handler: async ({ input, user }) => {
+		const result = await projectService.forkProject(
+			input.originalProjectId,
+			user.id,
+			input.newName,
+		);
+
+		if ('error' in result && result.error) {
+			throw new Error(result.error);
+		}
+
+		revalidatePath("/projects");
+		// forkProject returns { success: true, projectId: ... } or { error }
+		// We want to return the data part if it exists
+		if ('projectId' in result) {
+			return { projectId: result.projectId };
+		}
+		return result;
+	},
+});

@@ -83,9 +83,9 @@ export function ProjectActionsMenu({
 		// Fallback to traditional delete if no optimistic handler provided
 		setIsDeleting(true);
 		try {
-			const result = await deleteProject(projectId);
-			if (result && typeof result === "object" && "error" in result) {
-				toast.error(String(result.error));
+			const result = await deleteProject({ projectId });
+			if (!result.success) {
+				toast.error(result.error);
 			} else {
 				toast.success("Project deleted");
 			}
@@ -101,9 +101,9 @@ export function ProjectActionsMenu({
 		setIsForking(true);
 		toast.info("Forking project...");
 		try {
-			const result = await forkProject(projectId);
-			if (result && typeof result === "object" && "error" in result) {
-				toast.error(String(result.error));
+			const result = await forkProject({ originalProjectId: projectId });
+			if (!result.success) {
+				toast.error(result.error);
 			} else {
 				toast.success("Project forked successfully");
 			}
@@ -117,9 +117,13 @@ export function ProjectActionsMenu({
 	const handleRename = async () => {
 		setIsRenaming(true);
 		try {
-			const result = await renameProject(projectId, newName, newDescription);
-			if (result && typeof result === "object" && "error" in result) {
-				toast.error(String(result.error));
+			const result = await renameProject({
+				projectId,
+				name: newName,
+				description: newDescription,
+			});
+			if (!result.success) {
+				toast.error(result.error);
 			} else {
 				toast.success("Project renamed");
 				setShowRenameDialog(false);

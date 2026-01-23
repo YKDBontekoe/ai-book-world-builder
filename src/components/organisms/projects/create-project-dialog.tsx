@@ -97,15 +97,15 @@ export function CreateProjectDialog({
 				templateId,
 			});
 
-			if (result.error) {
+			if (!result.success) {
 				toast.error(result.error);
 				return;
 			}
 
-			if (result.projectId) {
+			if (result.data.projectId) {
 				toast.success("Project created successfully");
 				setOpen(false);
-				router.push(`/projects/${result.projectId}`);
+				router.push(`/projects/${result.data.projectId}`);
 			}
 		} catch (_error) {
 			toast.error("Failed to create project");
