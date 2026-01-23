@@ -2,7 +2,11 @@
 
 import type { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
-import { getCached, invalidateCachePattern } from "@/lib/cache";
+import {
+	getCached,
+	invalidateCache,
+	invalidateCachePattern,
+} from "@/lib/cache";
 import type {
 	GitHubCheckStatus,
 	GitHubPullRequestStatus,
@@ -109,7 +113,7 @@ const mergePullRequestAction = createAdminAction({
 		await Promise.all([
 			invalidateCachePattern("github:issues:*"),
 			invalidateCachePattern("github:prs:*"),
-			invalidateCachePattern(`github:pr:${number}`),
+			invalidateCache(`github:pr:${number}`),
 		]);
 	},
 });
@@ -284,6 +288,7 @@ const mergeGitHubPullRequestActionInternal = createAdminAction({
 			invalidateCachePattern(`github:pr:branch:${input.repoFullName}:*`),
 			invalidateCachePattern("github:prs:*"),
 			invalidateCachePattern("github:issues:*"),
+			invalidateCache(`github:pr:${input.pullRequestNumber}`), // Also invalidate specific PR
 		]);
 	},
 });

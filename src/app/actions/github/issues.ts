@@ -2,7 +2,11 @@
 
 import type { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
-import { getCached, invalidateCachePattern } from "@/lib/cache";
+import {
+	getCached,
+	invalidateCache,
+	invalidateCachePattern,
+} from "@/lib/cache";
 import { getOctokit, getRepoDetails } from "@/lib/services/github-service";
 import {
 	executeFeaturePlanSchema,
@@ -121,8 +125,8 @@ const postCommentAction = createAdminAction({
 		await Promise.all([
 			invalidateCachePattern("github:issues:*"),
 			invalidateCachePattern("github:prs:*"),
-			invalidateCachePattern(`github:issue:${number}`),
-			invalidateCachePattern(`github:comments:${number}`),
+			invalidateCache(`github:issue:${number}`),
+			invalidateCache(`github:comments:${number}`),
 		]);
 
 		return data as GitHubComment;
@@ -154,7 +158,7 @@ const closeIssueOrPRAction = createAdminAction({
 		await Promise.all([
 			invalidateCachePattern("github:issues:*"),
 			invalidateCachePattern("github:prs:*"),
-			invalidateCachePattern(`github:issue:${number}`),
+			invalidateCache(`github:issue:${number}`),
 		]);
 	},
 });

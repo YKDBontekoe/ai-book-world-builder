@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, type Mock, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type Mock,
+	vi,
+} from "vitest";
 import * as chapterActions from "@/features/writer/actions/chapter";
 import { ensureProjectAccess } from "@/lib/actions-utils";
 import { db } from "@/lib/db";

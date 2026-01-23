@@ -2,7 +2,11 @@
 
 import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
-import { getCached, invalidateCachePattern } from "@/lib/cache";
+import {
+	getCached,
+	invalidateCache,
+	invalidateCachePattern,
+} from "@/lib/cache";
 import type { JulesSource } from "@/lib/jules-client";
 import { JulesClient } from "@/lib/jules-client";
 import { generateSessionTitleAction } from "./jules-ai";
@@ -228,7 +232,7 @@ export const sendJulesMessageAction = createAdminAction({
 	input: sendMessageSchema,
 	handler: async ({ input }) => {
 		await jules.sendMessage(input.sessionId, input.prompt);
-		await invalidateCachePattern(`jules:session:${input.sessionId}`);
+		await invalidateCache(`jules:session:${input.sessionId}`);
 		// Session list might show last message or status, so invalidate it too
 		await invalidateCachePattern("jules:sessions:*");
 	},
@@ -241,7 +245,7 @@ export const approveJulesPlanAction = createAdminAction({
 	input: sessionIdSchema,
 	handler: async ({ input }) => {
 		await jules.approvePlan(input.sessionId);
-		await invalidateCachePattern(`jules:session:${input.sessionId}`);
+		await invalidateCache(`jules:session:${input.sessionId}`);
 		await invalidateCachePattern("jules:sessions:*");
 	},
 });
@@ -266,7 +270,7 @@ export const sendJulesPlanFeedbackAction = createAdminAction({
 			? `${prefix}\n${input.notes.trim()}`
 			: prefix;
 		await jules.sendMessage(input.sessionId, message);
-		await invalidateCachePattern(`jules:session:${input.sessionId}`);
+		await invalidateCache(`jules:session:${input.sessionId}`);
 		await invalidateCachePattern("jules:sessions:*");
 	},
 });
