@@ -33,15 +33,30 @@ const config: StorybookConfig = {
 			resolve: {
 				alias: {
 					// Mock database drivers to prevent bundling them
-					postgres: resolve(__dirname, "../tests/mocks/postgres.mock.ts"),
+					postgres: resolve(__dirname, "../src/mocks/postgres.mock.ts"),
 					// Mock Node.js built-ins that might slip through
-					perf_hooks: resolve(__dirname, "../tests/mocks/empty.mock.ts"),
-					"node:crypto": resolve(__dirname, "../tests/mocks/empty.mock.ts"),
+					perf_hooks: resolve(__dirname, "../src/mocks/empty.mock.ts"),
+					"node:crypto": resolve(__dirname, "../src/mocks/empty.mock.ts"),
 					"@/app/actions/story-generation": resolve(
 						__dirname,
-						"../tests/mocks/story-generation.mock.ts",
+						"../src/mocks/story-generation.mock.ts",
 					),
+					"@/app/actions/user": resolve(
+						__dirname,
+						"../src/mocks/user-actions.mock.ts",
+					),
+					"@/app/actions/appearance": resolve(
+						__dirname,
+						"../src/mocks/appearance.mock.ts",
+					),
+					redis: resolve(__dirname, "../src/mocks/empty.mock.ts"),
+					"server-only": resolve(__dirname, "../src/mocks/empty.mock.ts"),
+					"@/lib/db": resolve(__dirname, "../src/mocks/db.mock.ts"),
+					"@/lib/db/drizzle": resolve(__dirname, "../src/mocks/db.mock.ts"),
 				},
+			},
+			define: {
+				__dirname: JSON.stringify(""),
 			},
 		});
 	},
