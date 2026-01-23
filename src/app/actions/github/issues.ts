@@ -21,12 +21,13 @@ import type { GitHubComment, GitHubIssue } from "./types";
  */
 const getIssuesAction = createAdminAction({
 	input: issueStateSchema,
-	handler: async ({ input: state }) => {
+	handler: async ({ user, input: state }) => {
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
+
 		return getCached(
-			`github:issues:${state}`,
+			`github:issues:${fullName}:${state}`,
 			async () => {
 				const octokit = getOctokit();
-				const { owner, repo } = getRepoDetails();
 				const { data } = await octokit.rest.issues.listForRepo({
 					owner,
 					repo,
@@ -53,12 +54,13 @@ export async function getIssues(
  */
 const getIssueDetailsAction = createAdminAction({
 	input: issueNumberSchema,
-	handler: async ({ input: number }) => {
+	handler: async ({ user, input: number }) => {
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
+
 		return getCached(
-			`github:issue:${number}`,
+			`github:issue:${fullName}:${number}`,
 			async () => {
 				const octokit = getOctokit();
-				const { owner, repo } = getRepoDetails();
 				const { data } = await octokit.rest.issues.get({
 					owner,
 					repo,
@@ -82,12 +84,13 @@ export async function getIssueDetails(
  */
 const getCommentsAction = createAdminAction({
 	input: issueNumberSchema,
-	handler: async ({ input: number }) => {
+	handler: async ({ user, input: number }) => {
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
+
 		return getCached(
-			`github:comments:${number}`,
+			`github:comments:${fullName}:${number}`,
 			async () => {
 				const octokit = getOctokit();
-				const { owner, repo } = getRepoDetails();
 				const { data } = await octokit.rest.issues.listComments({
 					owner,
 					repo,
@@ -111,9 +114,9 @@ export async function getComments(
  */
 const postCommentAction = createAdminAction({
 	input: postCommentSchema,
-	handler: async ({ input: { number, body } }) => {
+	handler: async ({ user, input: { number, body } }) => {
 		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
 		const { data } = await octokit.rest.issues.createComment({
 			owner,
 			repo,
@@ -123,10 +126,10 @@ const postCommentAction = createAdminAction({
 
 		// Invalidate caches
 		await Promise.all([
-			invalidateCachePattern("github:issues:*"),
-			invalidateCachePattern("github:prs:*"),
-			invalidateCache(`github:issue:${number}`),
-			invalidateCache(`github:comments:${number}`),
+			invalidateCachePattern(`github:issues:${fullName}:*`),
+			invalidateCachePattern(`github:prs:${fullName}:*`),
+			invalidateCache(`github:issue:${fullName}:${number}`),
+			invalidateCache(`github:comments:${fullName}:${number}`),
 		]);
 
 		return data as GitHubComment;
@@ -144,9 +147,9 @@ export async function postComment(
  */
 const closeIssueOrPRAction = createAdminAction({
 	input: issueNumberSchema,
-	handler: async ({ input: number }) => {
+	handler: async ({ user, input: number }) => {
 		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
 		await octokit.rest.issues.update({
 			owner,
 			repo,
@@ -156,9 +159,9 @@ const closeIssueOrPRAction = createAdminAction({
 
 		// Invalidate caches
 		await Promise.all([
-			invalidateCachePattern("github:issues:*"),
-			invalidateCachePattern("github:prs:*"),
-			invalidateCache(`github:issue:${number}`),
+			invalidateCachePattern(`github:issues:${fullName}:*`),
+			invalidateCachePattern(`github:prs:${fullName}:*`),
+			invalidateCache(`github:issue:${fullName}:${number}`),
 		]);
 	},
 });
@@ -174,9 +177,9 @@ export async function closeIssueOrPR(
  */
 const executeFeaturePlanActionInternal = createAdminAction({
 	input: executeFeaturePlanSchema,
-	handler: async ({ input }) => {
+	handler: async ({ user, input }) => {
 		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
 
 		// 1. Create Parent Issue
 		const parentRes = await octokit.rest.issues.create({
@@ -215,7 +218,7 @@ const executeFeaturePlanActionInternal = createAdminAction({
 		});
 
 		// Invalidate caches
-		await invalidateCachePattern("github:issues:*");
+		await invalidateCachePattern(`github:issues:${fullName}:*`);
 
 		return { parentNumber, createdIssues };
 	},

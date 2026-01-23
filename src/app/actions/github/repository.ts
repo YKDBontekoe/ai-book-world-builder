@@ -10,9 +10,9 @@ import { repoBranchSchema } from "./schemas";
  * Get repository statistics
  */
 const getRepoStatsAction = createAdminAction({
-	handler: async () => {
+	handler: async ({ user }) => {
 		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
+		const { owner, repo } = await getRepoDetails(user.id);
 		const { data } = await octokit.rest.repos.get({ owner, repo });
 		return {
 			stars: data.stargazers_count,

@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Filter, LayoutList, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
-import { type JSX, useMemo, useState } from "react";
+import { type JSX, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import { startFixSessionAction } from "@/app/actions/builder";
@@ -23,6 +23,7 @@ import {
 } from "@/components/atoms/select";
 import { Switch } from "@/components/atoms/switch";
 import { Button } from "@/components/atoms/button";
+import { GitHubConfigModal } from "@/components/organisms/github-config-modal";
 import { ItemDetail } from "../admin/github/item-detail";
 import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
@@ -48,6 +49,7 @@ export function TaskBoard(): JSX.Element {
 		"builder-compact-mode",
 		false,
 	);
+	const [showConfigModal, setShowConfigModal] = useState(false);
 	const queryClient = useQueryClient();
 
 	// --- Data Fetching ---
@@ -64,37 +66,57 @@ export function TaskBoard(): JSX.Element {
 	// Use the first available source for feature planning
 	const defaultSource = sources?.[0]?.name;
 
-	const { data: issues } = useQuery({
+	const { data: issues, error: issuesError } = useQuery({
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return Array.isArray(res.data) ? res.data : [];
 		},
 	});
 
-	const { data: closedIssues } = useQuery({
+	const { data: closedIssues, error: closedIssuesError } = useQuery({
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
 			const res = await getIssues("closed");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return Array.isArray(res.data) ? res.data : [];
 		},
 	});
 
-	const { data: prs } = useQuery({
+	const { data: prs, error: prsError } = useQuery({
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
 			const res = await getPullRequests("open");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return Array.isArray(res.data) ? res.data : [];
 		},
 	});
 
-	const { data: closedPrs } = useQuery({
+	const { data: closedPrs, error: closedPrsError } = useQuery({
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
 			const res = await getPullRequests("closed");
-			return res.success && Array.isArray(res.data) ? res.data : [];
+			if (!res.success) throw new Error(res.error);
+			return Array.isArray(res.data) ? res.data : [];
 		},
 	});
+
+	// Check for missing GitHub configuration
+	useEffect(() => {
+		const errors = [issuesError, closedIssuesError, prsError, closedPrsError];
+		const hasConfigError = errors.some(
+			(error) =>
+				error?.message &&
+				(error.message.includes("GITHUB_OWNER and GITHUB_REPO must be set") ||
+					error.message.includes("GitHub configuration missing") ||
+					error.message.includes("user preferences")),
+		);
+
+		if (hasConfigError) {
+			setShowConfigModal(true);
+		}
+	}, [issuesError, closedIssuesError, prsError, closedPrsError]);
 
 	const { data: sessions } = useQuery({
 		queryKey: ["jules", "sessions"],
@@ -228,6 +250,13 @@ export function TaskBoard(): JSX.Element {
 
 	return (
 		<div className="flex flex-col h-full gap-4">
+			<GitHubConfigModal
+				isOpen={showConfigModal}
+				onOpenChange={setShowConfigModal}
+				onSuccess={() => {
+					queryClient.invalidateQueries({ queryKey: ["github"] });
+				}}
+			/>
 			{/* Power Toolbar */}
 			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/30 p-3 rounded-lg border border-border/50">
 

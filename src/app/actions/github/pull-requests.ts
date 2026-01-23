@@ -38,12 +38,13 @@ function parseRepoFullName(repoFullName: string): {
  */
 const getPullRequestsAction = createAdminAction({
 	input: issueStateSchema,
-	handler: async ({ input: state }) => {
+	handler: async ({ user, input: state }) => {
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
+
 		return getCached(
-			`github:prs:${state}`,
+			`github:prs:${fullName}:${state}`,
 			async () => {
 				const octokit = getOctokit();
-				const { owner, repo } = getRepoDetails();
 				const { data } = await octokit.rest.pulls.list({
 					owner,
 					repo,
@@ -70,12 +71,13 @@ export async function getPullRequests(
  */
 const getPullRequestDetailsAction = createAdminAction({
 	input: issueNumberSchema,
-	handler: async ({ input: number }) => {
+	handler: async ({ user, input: number }) => {
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
+
 		return getCached(
-			`github:pr:${number}`,
+			`github:pr:${fullName}:${number}`,
 			async () => {
 				const octokit = getOctokit();
-				const { owner, repo } = getRepoDetails();
 				const { data } = await octokit.rest.pulls.get({
 					owner,
 					repo,
@@ -99,9 +101,9 @@ export async function getPullRequestDetails(
  */
 const mergePullRequestAction = createAdminAction({
 	input: mergePRSchema,
-	handler: async ({ input: { number, method } }) => {
+	handler: async ({ user, input: { number, method } }) => {
 		const octokit = getOctokit();
-		const { owner, repo } = getRepoDetails();
+		const { owner, repo, fullName } = await getRepoDetails(user.id);
 		await octokit.rest.pulls.merge({
 			owner,
 			repo,
@@ -111,9 +113,9 @@ const mergePullRequestAction = createAdminAction({
 
 		// Invalidate caches
 		await Promise.all([
-			invalidateCachePattern("github:issues:*"),
-			invalidateCachePattern("github:prs:*"),
-			invalidateCache(`github:pr:${number}`),
+			invalidateCachePattern(`github:issues:${fullName}:*`),
+			invalidateCachePattern(`github:prs:${fullName}:*`),
+			invalidateCache(`github:pr:${fullName}:${number}`),
 		]);
 	},
 });
@@ -286,9 +288,11 @@ const mergeGitHubPullRequestActionInternal = createAdminAction({
 		await Promise.all([
 			invalidateCachePattern(`github:pr:status:${input.repoFullName}:*`),
 			invalidateCachePattern(`github:pr:branch:${input.repoFullName}:*`),
-			invalidateCachePattern("github:prs:*"),
-			invalidateCachePattern("github:issues:*"),
-			invalidateCache(`github:pr:${input.pullRequestNumber}`), // Also invalidate specific PR
+			invalidateCachePattern(`github:prs:${input.repoFullName}:*`),
+			invalidateCachePattern(`github:issues:${input.repoFullName}:*`),
+			invalidateCache(
+				`github:pr:${input.repoFullName}:${input.pullRequestNumber}`,
+			), // Also invalidate specific PR
 		]);
 	},
 });
