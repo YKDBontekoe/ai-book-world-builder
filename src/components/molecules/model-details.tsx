@@ -1,21 +1,19 @@
-import {
-	BrainIcon,
-	CoinsIcon,
-	EyeIcon,
-	ZapIcon,
-} from "lucide-react";
+import { BrainIcon, CoinsIcon, EyeIcon, ZapIcon } from "lucide-react";
 import type { JSX } from "react";
 import { ProviderIcon } from "@/components/organisms/chat/provider-icon";
+import { isModelFree } from "@/lib/ai/model-utils";
 import type { ChatModel } from "@/lib/ai/models";
 import { cn } from "@/lib/utils";
 
 function getPricePerMillion(price: string | number): number {
 	const parsedPrice = typeof price === "string" ? parseFloat(price) : price;
-	return parsedPrice < 0.01 ? parsedPrice * 1_000_000 : parsedPrice;
+	if (Number.isNaN(parsedPrice)) return 0;
+	return parsedPrice * 1_000_000;
 }
 
 function formatPrice(value: string | number): string {
 	const price = getPricePerMillion(value);
+	// Small prices might still need precision
 	return price < 0.01 ? price.toFixed(4) : price.toFixed(2);
 }
 
@@ -30,9 +28,7 @@ export function ModelDetails({
 }: ModelDetailsProps): JSX.Element | null {
 	if (!model) return null;
 
-	const isFree =
-		parseFloat(model.pricing?.input || "0") === 0 &&
-		parseFloat(model.pricing?.output || "0") === 0;
+	const isFree = isModelFree(model);
 
 	return (
 		<div
@@ -55,7 +51,7 @@ export function ModelDetails({
 
 				{/* Badges / Capabilities */}
 				<div className="flex flex-wrap gap-2">
-					{model.supportsImages && (
+					{model.supportsImages === true && (
 						<div className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 px-2 py-0.5 text-xs text-violet-600 dark:text-violet-400 border border-violet-500/20">
 							<EyeIcon className="h-3 w-3" />
 							<span>Vision</span>

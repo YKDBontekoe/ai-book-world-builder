@@ -19,6 +19,43 @@ interface PlatformModelSettingsProps {
 	};
 }
 
+interface ModelSectionProps {
+	label: string;
+	description: string;
+	type: "light" | "middle" | "large";
+	selectedModelId: string | null;
+	availableModels: ChatModel[];
+	onModelChange: (type: "light" | "middle" | "large", value: string) => void;
+	getModel: (id: string | null) => ChatModel | undefined;
+}
+
+function ModelSection({
+	label,
+	description,
+	type,
+	selectedModelId,
+	availableModels,
+	onModelChange,
+	getModel,
+}: ModelSectionProps) {
+	return (
+		<div className="space-y-3 flex flex-col">
+			<div className="space-y-3">
+				<Label className="text-base font-medium">{label}</Label>
+				<p className="text-sm text-muted-foreground min-h-[40px]">
+					{description}
+				</p>
+				<SettingsModelSelector
+					availableModels={availableModels}
+					selectedModelId={selectedModelId}
+					onModelChange={(val) => onModelChange(type, val)}
+				/>
+			</div>
+			<ModelDetails model={getModel(selectedModelId)} className="flex-1" />
+		</div>
+	);
+}
+
 export function PlatformModelSettings({
 	availableModels,
 	initialPreferences,
@@ -37,11 +74,6 @@ export function PlatformModelSettings({
 		} catch (_error) {
 			toast.error("Failed to save preference");
 			// Only revert if state still matches the failed attempt (simple check)
-			// In a more complex scenario we might check ID, but here reverting to previous 'preferences' closure capture is generally safe enough for a simple toggle/select
-			// provided the user hasn't made another change in the meantime that we want to keep.
-			// Using functional update to revert only this field could be better but 'preferences' here is stale from closure?
-			// Actually 'preferences' is from the render scope when handleModelChange was created.
-			// If we want to be safe against rapid changes, we should use the previous value.
 			setPreferences((prev) => ({ ...prev, [type]: preferences[type] }));
 		}
 	};
@@ -65,53 +97,35 @@ export function PlatformModelSettings({
 			</div>
 
 			<div className="grid gap-8 md:grid-cols-3">
-				<div className="space-y-3 flex flex-col">
-					<div className="space-y-3">
-						<Label className="text-base font-medium">Light Model</Label>
-						<p className="text-sm text-muted-foreground min-h-[40px]">
-							Fast and efficient. Best for simple tasks, quick edits, and
-							autocomplete.
-						</p>
-						<SettingsModelSelector
-							availableModels={availableModels}
-							selectedModelId={preferences.light}
-							onModelChange={(val) => handleModelChange("light", val)}
-						/>
-					</div>
-					<ModelDetails model={getModel(preferences.light)} className="flex-1" />
-				</div>
+				<ModelSection
+					label="Light Model"
+					description="Fast and efficient. Best for simple tasks, quick edits, and autocomplete."
+					type="light"
+					selectedModelId={preferences.light}
+					availableModels={availableModels}
+					onModelChange={handleModelChange}
+					getModel={getModel}
+				/>
 
-				<div className="space-y-3 flex flex-col">
-					<div className="space-y-3">
-						<Label className="text-base font-medium">Middle Model</Label>
-						<p className="text-sm text-muted-foreground min-h-[40px]">
-							Balanced performance. The default for most chat interactions and
-							drafting.
-						</p>
-						<SettingsModelSelector
-							availableModels={availableModels}
-							selectedModelId={preferences.middle}
-							onModelChange={(val) => handleModelChange("middle", val)}
-						/>
-					</div>
-					<ModelDetails model={getModel(preferences.middle)} className="flex-1" />
-				</div>
+				<ModelSection
+					label="Middle Model"
+					description="Balanced performance. The default for most chat interactions and drafting."
+					type="middle"
+					selectedModelId={preferences.middle}
+					availableModels={availableModels}
+					onModelChange={handleModelChange}
+					getModel={getModel}
+				/>
 
-				<div className="space-y-3 flex flex-col">
-					<div className="space-y-3">
-						<Label className="text-base font-medium">Large Model</Label>
-						<p className="text-sm text-muted-foreground min-h-[40px]">
-							Maximum reasoning power. Use for deep analysis, planning, and
-							complex writing.
-						</p>
-						<SettingsModelSelector
-							availableModels={availableModels}
-							selectedModelId={preferences.large}
-							onModelChange={(val) => handleModelChange("large", val)}
-						/>
-					</div>
-					<ModelDetails model={getModel(preferences.large)} className="flex-1" />
-				</div>
+				<ModelSection
+					label="Large Model"
+					description="Maximum reasoning power. Use for deep analysis, planning, and complex writing."
+					type="large"
+					selectedModelId={preferences.large}
+					availableModels={availableModels}
+					onModelChange={handleModelChange}
+					getModel={getModel}
+				/>
 			</div>
 		</GlassCard>
 	);
