@@ -311,7 +311,7 @@ export function TaskBoard(): JSX.Element {
 									value={sortOption}
 									onValueChange={(v) => setSortOption(v as SortOption)}
 								>
-									<SelectTrigger className="w-[140px] h-9 bg-background/50">
+									<SelectTrigger className="w-[140px] h-9 bg-background/50" aria-label="Sort by">
 										<SelectValue placeholder="Sort by" />
 									</SelectTrigger>
 									<SelectContent>

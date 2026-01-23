@@ -169,6 +169,7 @@ describe("TaskBoard", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
+		window.localStorage.clear();
 
 		// Default successful mocks
 		vi.mocked(listJulesSourcesAction).mockResolvedValue({
@@ -450,9 +451,7 @@ describe("TaskBoard", () => {
 		// Click sort button
 		// Placeholder "Sort by" might be hidden if value is selected.
 		// The default value "Newest First" should be visible in the button.
-		const triggerText = screen.getByText("Newest First");
-		const trigger = triggerText.closest('button');
-		if (!trigger) throw new Error("Could not find trigger button");
+		const trigger = screen.getByRole("combobox", { name: "Sort by" });
 
 		await user.click(trigger);
 
