@@ -1,8 +1,15 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Filter, LayoutList, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
-import { type JSX, useMemo, useState } from "react";
+import {
+	Filter,
+	LayoutList,
+	Maximize2,
+	Minimize2,
+	Search,
+	Sparkles,
+} from "lucide-react";
+import { type JSX, useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import { startFixSessionAction } from "@/app/actions/builder";
@@ -12,6 +19,7 @@ import {
 	getJulesSessionsAction,
 	listJulesSourcesAction,
 } from "@/app/actions/jules";
+import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { Label } from "@/components/atoms/label";
 import {
@@ -22,12 +30,11 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { Switch } from "@/components/atoms/switch";
-import { Button } from "@/components/atoms/button";
 import { ItemDetail } from "../admin/github/item-detail";
+import { BuilderChatView } from "./chat/builder-chat-view";
 import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
 import { TaskCard, type TaskItem } from "./task-card";
-import { BuilderChatView } from "./chat/builder-chat-view";
 
 type ColumnType = "backlog" | "in_progress" | "review" | "done";
 
@@ -128,8 +135,8 @@ export function TaskBoard(): JSX.Element {
 
 	// --- Data Organization ---
 
-	const columns: Column[] = useMemo(() => {
-		const filterItem = (item: TaskItem) => {
+	const filterItem = useCallback(
+		(item: TaskItem) => {
 			// Type Filter
 			if (typeFilter !== "all" && item.type !== typeFilter) return false;
 
@@ -149,64 +156,87 @@ export function TaskBoard(): JSX.Element {
 			}
 
 			return true;
-		};
+		},
+		[searchQuery, typeFilter],
+	);
 
-		const backlogItems: TaskItem[] = (Array.isArray(issues) ? issues : [])
-			.map((i) => ({
-				type: "issue" as const,
-				data: i,
-			}))
-			.filter(filterItem);
+	const backlogItems: TaskItem[] = useMemo(
+		() =>
+			(Array.isArray(issues) ? issues : [])
+				.map((i) => ({
+					type: "issue" as const,
+					data: i,
+				}))
+				.filter(filterItem),
+		[issues, filterItem],
+	);
 
-		const sessionItems: TaskItem[] = (Array.isArray(sessions) ? sessions : [])
-			.filter(
-				(s) =>
-					s.state !== "COMPLETED" &&
-					s.state !== "FAILED" &&
-					s.state !== "PAUSED",
-			)
-			.map((s) => ({ type: "session" as const, data: s }))
-			.filter(filterItem);
+	const sessionItems: TaskItem[] = useMemo(
+		() =>
+			(Array.isArray(sessions) ? sessions : [])
+				.filter(
+					(s) =>
+						s.state !== "COMPLETED" &&
+						s.state !== "FAILED" &&
+						s.state !== "PAUSED",
+				)
+				.map((s) => ({ type: "session" as const, data: s }))
+				.filter(filterItem),
+		[sessions, filterItem],
+	);
 
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : [])
-			.map((p) => ({
-				type: "pr" as const,
-				data: p,
-			}))
-			.filter(filterItem);
+	const reviewItems: TaskItem[] = useMemo(
+		() =>
+			(Array.isArray(prs) ? prs : [])
+				.map((p) => ({
+					type: "pr" as const,
+					data: p,
+				}))
+				.filter(filterItem),
+		[prs, filterItem],
+	);
 
-		const doneItems: TaskItem[] = [
-			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
-				type: "pr" as const,
-				data: p,
-			})),
-			...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
-				type: "issue" as const,
-				data: i,
-			})),
-		]
-			.filter(filterItem)
-			.sort(
-				(a, b) =>
-					new Date(b.data.updated_at).getTime() -
-					new Date(a.data.updated_at).getTime(),
-			);
+	const doneItems: TaskItem[] = useMemo(
+		() =>
+			[
+				...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
+					type: "pr" as const,
+					data: p,
+				})),
+				...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
+					type: "issue" as const,
+					data: i,
+				})),
+			]
+				.filter(filterItem)
+				.sort(
+					(a, b) =>
+						new Date(b.data.updated_at).getTime() -
+						new Date(a.data.updated_at).getTime(),
+				),
+		[closedPrs, closedIssues, filterItem],
+	);
 
-		return [
+	const columns: Column[] = useMemo(
+		() => [
 			{ id: "backlog", title: "Backlog", items: backlogItems },
 			{ id: "in_progress", title: "In Progress (Jules)", items: sessionItems },
 			{ id: "review", title: "Review", items: reviewItems },
 			{ id: "done", title: "Done", items: doneItems },
-		];
-	}, [issues, closedIssues, prs, closedPrs, sessions, searchQuery, typeFilter]);
+		],
+		[backlogItems, sessionItems, reviewItems, doneItems],
+	);
 
 	// --- Interaction ---
 
-	const handleFix = (issue: GitHubIssue) => {
-		if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
-			startFix(issue);
-		}
-	};
+	const handleFix = useCallback(
+		(issue: GitHubIssue) => {
+			if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
+				startFix(issue);
+			}
+		},
+		[startFix],
+	);
 
 	if (selectedItem) {
 		if (selectedItem.type === "session") {
@@ -230,7 +260,6 @@ export function TaskBoard(): JSX.Element {
 		<div className="flex flex-col h-full gap-4">
 			{/* Power Toolbar */}
 			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/30 p-3 rounded-lg border border-border/50">
-
 				{/* View Switcher */}
 				<div className="flex items-center bg-background/50 p-1 rounded-md border">
 					<Button
@@ -318,7 +347,10 @@ export function TaskBoard(): JSX.Element {
 				<div className="flex-1 min-h-0 overflow-x-auto pb-4">
 					<div className="flex h-full gap-6 min-w-[1000px]">
 						{columns.map((col) => (
-							<div key={col.id} className="w-[300px] flex-shrink-0 flex flex-col">
+							<div
+								key={col.id}
+								className="w-[300px] flex-shrink-0 flex flex-col"
+							>
 								<div className="flex items-center justify-between mb-3 px-1">
 									<h3 className="font-semibold text-sm flex items-center gap-2">
 										{col.title}

@@ -1,7 +1,7 @@
 "use client";
 
 import { AlertCircle, Bot, GitPullRequest } from "lucide-react";
-import type { JSX } from "react";
+import { type JSX, memo } from "react";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
@@ -21,7 +21,7 @@ interface TaskCardProps {
 	compact?: boolean;
 }
 
-export function TaskCard({
+export const TaskCard = memo(function TaskCard({
 	item,
 	onSelect,
 	onFix,
@@ -166,4 +166,4 @@ export function TaskCard({
 			{renderContent()}
 		</GlassCard>
 	);
-}
+});
