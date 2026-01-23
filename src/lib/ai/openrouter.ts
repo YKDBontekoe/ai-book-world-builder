@@ -1,5 +1,20 @@
+import { isModelFree } from "@/lib/ai/model-utils";
 import type { ChatModel } from "@/lib/ai/models";
 import { getCached } from "@/lib/cache";
+
+interface OpenRouterModelResponse {
+	id: string;
+	name: string;
+	context_length?: number;
+	architecture?: {
+		modality?: string;
+	};
+	pricing?: {
+		prompt?: string;
+		completion?: string;
+		request?: string;
+	};
+}
 
 export const getOpenRouterModels = async (): Promise<ChatModel[]> => {
 	return getCached(
@@ -12,14 +27,15 @@ export const getOpenRouterModels = async (): Promise<ChatModel[]> => {
 				}
 				const data = await response.json();
 
+				const onlyFreeModels = process.env.ONLY_FREE_MODELS === "true";
+
 				return data.data
-					.map((model: any): ChatModel => {
+					.map((model: OpenRouterModelResponse): ChatModel => {
 						const provider = model.id.split("/")[0] || "openrouter";
 						const supportsImages =
 							model.architecture?.modality?.includes("image") ||
 							model.id.includes("vision") ||
-							model.name.toLowerCase().includes("vision") ||
-							true; // Default to true as most modern models support it or fail gracefully
+							model.name.toLowerCase().includes("vision");
 
 						return {
 							id: model.id,
@@ -36,6 +52,10 @@ export const getOpenRouterModels = async (): Promise<ChatModel[]> => {
 								cachedInputTokens: model.pricing?.request || "0",
 							},
 						};
+					})
+					.filter((model: ChatModel) => {
+						if (!onlyFreeModels) return true;
+						return isModelFree(model);
 					})
 					.sort((a: ChatModel, b: ChatModel) => a.name.localeCompare(b.name));
 			} catch (error) {
