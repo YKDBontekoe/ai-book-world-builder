@@ -6,7 +6,12 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getConnectedAccounts } from "@/app/actions/user";
 import { Button } from "@/components/atoms/button";
-import { Dialog, DialogContent } from "@/components/atoms/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogTitle,
+	DialogDescription,
+} from "@/components/atoms/dialog";
 import { Label } from "@/components/atoms/label";
 import {
 	Select,
@@ -96,13 +101,16 @@ export function SettingsDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className="max-w-4xl h-[600px] p-0 gap-0 overflow-hidden outline-none flex rounded-2xl border border-white/10 shadow-2xl bg-background/80 backdrop-blur-xl">
+			<DialogContent className="max-w-4xl h-[600px] p-0 gap-0 overflow-hidden outline-none flex shadow-2xl">
+				<DialogDescription className="sr-only">
+					Manage your account settings and appearance preferences.
+				</DialogDescription>
 				{/* Sidebar */}
 				<div className="w-64 bg-muted/30 border-r border-white/5 flex flex-col p-4 gap-1 shrink-0">
 					<div className="px-4 py-4 mb-2">
-						<h2 className="text-lg font-semibold tracking-tight text-foreground">
+						<DialogTitle className="text-lg font-semibold tracking-tight text-foreground">
 							Settings
-						</h2>
+						</DialogTitle>
 					</div>
 
 					<SidebarItem id="account" label="Account" icon={UserIcon} />
