@@ -1,9 +1,6 @@
 import type { ComponentProps } from "react";
 import { Badge } from "@/components/atoms/badge";
-import {
-	CarouselContent,
-	CarouselItem,
-} from "@/components/atoms/carousel";
+import { CarouselContent, CarouselItem } from "@/components/atoms/carousel";
 import {
 	HoverCard,
 	HoverCardContent,
@@ -14,10 +11,10 @@ import { cn } from "@/lib/utils";
 export {
 	InlineCitationCarousel,
 	InlineCitationCarouselIndex,
-	InlineCitationCarouselNext,
-	InlineCitationCarouselPrev,
 	type InlineCitationCarouselIndexProps,
+	InlineCitationCarouselNext,
 	type InlineCitationCarouselNextProps,
+	InlineCitationCarouselPrev,
 	type InlineCitationCarouselPrevProps,
 	type InlineCitationCarouselProps,
 } from "./inline-citation-client";

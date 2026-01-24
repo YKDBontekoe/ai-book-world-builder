@@ -9,10 +9,7 @@ import {
 	useEffect,
 	useState,
 } from "react";
-import {
-	Carousel,
-	type CarouselApi,
-} from "@/components/atoms/carousel";
+import { Carousel, type CarouselApi } from "@/components/atoms/carousel";
 import { cn } from "@/lib/utils";
 
 const CarouselApiContext = createContext<CarouselApi | undefined>(undefined);
@@ -28,7 +25,7 @@ export const InlineCitationCarousel = ({
 	className,
 	children,
 	...props
-}: InlineCitationCarouselProps) => {
+}: InlineCitationCarouselProps): JSX.Element => {
 	const [api, setApi] = useState<CarouselApi>();
 
 	return (
@@ -46,7 +43,7 @@ export const InlineCitationCarouselIndex = ({
 	children,
 	className,
 	...props
-}: InlineCitationCarouselIndexProps) => {
+}: InlineCitationCarouselIndexProps): JSX.Element => {
 	const api = useCarouselApi();
 	const [current, setCurrent] = useState(0);
 	const [count, setCount] = useState(0);
@@ -59,9 +56,15 @@ export const InlineCitationCarouselIndex = ({
 		setCount(api.scrollSnapList().length);
 		setCurrent(api.selectedScrollSnap() + 1);
 
-		api.on("select", () => {
+		const onSelect = () => {
 			setCurrent(api.selectedScrollSnap() + 1);
-		});
+		};
+
+		api.on("select", onSelect);
+
+		return () => {
+			api.off("select", onSelect);
+		};
 	}, [api]);
 
 	return (
@@ -82,7 +85,7 @@ export type InlineCitationCarouselPrevProps = ComponentProps<"button">;
 export const InlineCitationCarouselPrev = ({
 	className,
 	...props
-}: InlineCitationCarouselPrevProps) => {
+}: InlineCitationCarouselPrevProps): JSX.Element => {
 	const api = useCarouselApi();
 
 	const handleClick = useCallback(() => {
@@ -94,7 +97,7 @@ export const InlineCitationCarouselPrev = ({
 	return (
 		<button
 			aria-label="Previous"
-			className={cn("shrink-0", className)}
+			className={cn("shrink-0 rounded-lg", className)}
 			onClick={handleClick}
 			type="button"
 			{...props}
@@ -109,7 +112,7 @@ export type InlineCitationCarouselNextProps = ComponentProps<"button">;
 export const InlineCitationCarouselNext = ({
 	className,
 	...props
-}: InlineCitationCarouselNextProps) => {
+}: InlineCitationCarouselNextProps): JSX.Element => {
 	const api = useCarouselApi();
 
 	const handleClick = useCallback(() => {
@@ -121,7 +124,7 @@ export const InlineCitationCarouselNext = ({
 	return (
 		<button
 			aria-label="Next"
-			className={cn("shrink-0", className)}
+			className={cn("shrink-0 rounded-lg", className)}
 			onClick={handleClick}
 			type="button"
 			{...props}

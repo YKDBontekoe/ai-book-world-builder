@@ -123,7 +123,7 @@ export function GridList({
 				columns.md && mdCols[columns.md],
 				columns.lg && lgCols[columns.lg],
 				columns.xl && xlCols[columns.xl],
-				gaps[gap] || `gap-${gap}`,
+				gaps[gap] || gaps[4],
 				className,
 			)}
 			{...props}
