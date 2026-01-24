@@ -9,8 +9,8 @@ import { Button } from "@/components/atoms/button";
 import {
 	Dialog,
 	DialogContent,
-	DialogTitle,
 	DialogDescription,
+	DialogTitle,
 } from "@/components/atoms/dialog";
 import { Label } from "@/components/atoms/label";
 import {

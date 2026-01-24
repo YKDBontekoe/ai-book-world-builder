@@ -1,5 +1,5 @@
-import { AlertDialog as AlertDialogPrimitive } from "radix-ui";
 import { motion } from "framer-motion";
+import { AlertDialog as AlertDialogPrimitive } from "radix-ui";
 import * as React from "react";
 import { buttonVariants } from "@/components/atoms/button";
 import { cn } from "@/lib/utils";
@@ -19,7 +19,7 @@ const AlertDialogOverlay = React.forwardRef<
 			ref={ref}
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
-			transition={{ duration: 0.2 }}
+			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			className={cn(
 				"fixed inset-0 z-50 bg-black/80 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
 				className,
