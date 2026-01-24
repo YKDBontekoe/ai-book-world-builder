@@ -306,7 +306,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         await saveGameState(stateRef.current);
         toast.success('Game saved');
       } catch (error) {
-        toast.error(`Failed to save game: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        console.error("Failed to save game", error);
+        toast.error('Failed to save game. Please try again.');
       }
   }, []);
 

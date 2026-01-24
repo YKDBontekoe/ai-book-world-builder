@@ -29,11 +29,6 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
   const playSound = (type: SoundType) => {
     if (muted) return;
     
-    // Fallback visual log if no audio
-    if (process.env.NODE_ENV !== 'production') {
-        // console.log(`[Audio] Playing ${type}`);
-    }
-    
     // Real implementation:
     // const audio = audioRefs.current[type];
     // if (audio) {

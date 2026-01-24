@@ -5,13 +5,25 @@ import { GameState, BuildingEntity } from '../../../src/features/factory-tycoon/
 
 describe('Factory Tycoon Engine', () => {
   describe('calculateCapacity', () => {
-    it('calculates total capacity correctly', () => {
-        const warehouse: BuildingEntity = { id: '1', type: 'Warehouse', x: 0, y: 0, status: 'IDLE', direction: 'N' };
-        const mine: BuildingEntity = { id: '2', type: 'Mine', x: 0, y: 0, status: 'IDLE', direction: 'N' };
+    it('calculates total capacity correctly with multiple warehouses', () => {
+        const warehouse1: BuildingEntity = { id: '1', type: 'Warehouse', x: 0, y: 0, status: 'IDLE', direction: 'N' };
+        const warehouse2: BuildingEntity = { id: '2', type: 'Warehouse', x: 1, y: 0, status: 'IDLE', direction: 'N' };
 
-        expect(calculateCapacity([], 50)).toBe(50);
-        expect(calculateCapacity([warehouse], 50)).toBe(100);
-        expect(calculateCapacity([warehouse, mine], 50)).toBe(100); // Mine adds no capacity
+        // Base 50 + 50 (Warehouse) + 50 (Warehouse) = 150
+        expect(calculateCapacity([warehouse1, warehouse2], 50)).toBe(150);
+    });
+
+    it('returns base capacity for buildings with no capacity bonus', () => {
+        const belt: BuildingEntity = { id: '1', type: 'Belt', x: 0, y: 0, status: 'IDLE', direction: 'N' };
+
+        expect(calculateCapacity([belt], 50)).toBe(50);
+    });
+
+    it('returns base capacity for buildings with invalid/missing types', () => {
+        // @ts-expect-error Testing invalid type
+        const invalidBuilding: BuildingEntity = { id: '1', type: 'Invalid', x: 0, y: 0, status: 'IDLE', direction: 'N' };
+
+        expect(calculateCapacity([invalidBuilding], 50)).toBe(50);
     });
   });
 

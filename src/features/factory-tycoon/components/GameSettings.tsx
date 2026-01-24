@@ -2,13 +2,13 @@
 
 import React, { useState } from 'react';
 import { useGame } from '../store';
-import { Trash2, Volume2, VolumeX, X, AlertTriangle, Check, X as XIcon } from 'lucide-react';
+import { Trash2, Volume2, VolumeX, X, AlertTriangle, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveGameState } from '../actions';
 import { INITIAL_STATE } from '../config';
 import { useSound } from '../audio/SoundContext';
 
-export function GameSettings({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function GameSettings({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }): JSX.Element | null {
   const { state, setIsRunning } = useGame();
   const { muted, toggleMute } = useSound();
   const [showResetConfirm, setShowResetConfirm] = useState(false);

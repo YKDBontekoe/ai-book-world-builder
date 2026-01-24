@@ -164,6 +164,7 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
               else if (b.direction === 'N') { itemX += 0.5; itemY += (1 - p); }
               else {
                   // Fallback for invalid direction
+                  console.warn(`Invalid direction '${b.direction}' for Belt at ${b.x},${b.y}`);
                   itemX += 0.5;
                   itemY += 0.5;
               }

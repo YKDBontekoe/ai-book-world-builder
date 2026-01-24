@@ -88,14 +88,10 @@ export const createJulesTask = () =>
 				const sources = sourcesResult.sources || [];
 
 				// Try to find a source that matches the repo
-				const selectedSource = sources[0];
-				let matchingSource = sources.find(
-					(s) => s.githubRepo?.owner === owner && s.githubRepo?.repo === repo,
-				);
-
-				if (!matchingSource && selectedSource) {
-					matchingSource = selectedSource;
-				}
+				const matchingSource =
+					sources.find(
+						(s) => s.githubRepo?.owner === owner && s.githubRepo?.repo === repo,
+					) || sources[0];
 
 				if (!matchingSource) {
 					return `Created GitHub Issue #${issueNumber}, but failed to start Jules session: No Jules sources available.`;

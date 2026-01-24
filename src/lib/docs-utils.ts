@@ -32,24 +32,33 @@ export async function searchMarkdownContent(
 	const results: SearchResult[] = [];
 
 	for (const file of files) {
-		const content = await fs.readFile(file, "utf-8");
-		const relativePath = path.relative(process.cwd(), file);
+		try {
+			const content = await fs.readFile(file, "utf-8");
+			const relativePath = path.relative(process.cwd(), file);
 
-		if (
-			relativePath.toLowerCase().includes(query.toLowerCase()) ||
-			content.toLowerCase().includes(query.toLowerCase())
-		) {
-			let resultContent = content;
-			if (options.maxContentLength && content.length > options.maxContentLength) {
-				resultContent =
-					content.slice(0, options.maxContentLength) + "\n\n[TRUNCATED]";
+			if (
+				relativePath.toLowerCase().includes(query.toLowerCase()) ||
+				content.toLowerCase().includes(query.toLowerCase())
+			) {
+				let resultContent = content;
+				if (
+					options.maxContentLength &&
+					content.length > options.maxContentLength
+				) {
+					resultContent =
+						content.slice(0, options.maxContentLength) + "\n\n[TRUNCATED]";
+				}
+
+				results.push({
+					file: relativePath,
+					content: resultContent,
+					similarity: 1,
+				});
 			}
-
-			results.push({
-				file: relativePath,
-				content: resultContent,
-				similarity: 1,
-			});
+		} catch (error) {
+			// Skip files that cannot be read
+			console.warn(`Failed to read file ${file} during search:`, error);
+			continue;
 		}
 	}
 

@@ -31,19 +31,24 @@ export const searchDocsAction = createAdminAction({
 		const chunks: { content: string; metadata: { file: string } }[] = [];
 
 		for (const file of mdFiles) {
-			const content = await fs.readFile(file, "utf-8");
-			// Split by headers or paragraphs. Simple split by double newline for now.
-			const fileChunks = content
-				.split("\n\n")
-				.filter((c) => c.trim().length > 50);
+			try {
+				const content = await fs.readFile(file, "utf-8");
+				// Split by headers or paragraphs. Simple split by double newline for now.
+				const fileChunks = content
+					.split("\n\n")
+					.filter((c) => c.trim().length > 50);
 
-			const relativePath = path.relative(process.cwd(), file);
+				const relativePath = path.relative(process.cwd(), file);
 
-			for (const chunk of fileChunks) {
-				chunks.push({
-					content: chunk,
-					metadata: { file: relativePath },
-				});
+				for (const chunk of fileChunks) {
+					chunks.push({
+						content: chunk,
+						metadata: { file: relativePath },
+					});
+				}
+			} catch (error) {
+				console.warn(`Failed to read or process file ${file}:`, error);
+				continue;
 			}
 		}
 

@@ -41,7 +41,7 @@ export interface BuildingPaletteProps {
   onSelect: (t: BuildingType | null) => void;
 }
 
-export function BuildingPalette({ selected, onSelect }: BuildingPaletteProps) {
+export function BuildingPalette({ selected, onSelect }: BuildingPaletteProps): JSX.Element {
   const { state } = useGame();
 
   const unlockedByCategory = Object.entries(BUILDING_CATEGORIES).map(([category, types]) => ({
