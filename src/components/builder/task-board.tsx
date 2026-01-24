@@ -10,7 +10,7 @@ import {
 	Search,
 	Sparkles,
 } from "lucide-react";
-import { type JSX, useEffect, useMemo, useState } from "react";
+import { type JSX, useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useLocalStorage } from "usehooks-ts";
 import { startFixSessionAction } from "@/app/actions/builder";
@@ -178,6 +178,57 @@ export function TaskBoard(): JSX.Element {
 
 	// --- Data Organization ---
 
+	// Memoize raw data transformation to avoid re-mapping on every render or filter change
+	const rawBacklogItems = useMemo(
+		() =>
+			(Array.isArray(issues) ? issues : []).map((i) => ({
+				type: "issue" as const,
+				data: i,
+			})),
+		[issues],
+	);
+
+	const rawSessionItems = useMemo(
+		() =>
+			(Array.isArray(sessions) ? sessions : [])
+				.filter(
+					(s) =>
+						s.state !== "COMPLETED" &&
+						s.state !== "FAILED" &&
+						s.state !== "PAUSED",
+				)
+				.map((s) => ({ type: "session" as const, data: s })),
+		[sessions],
+	);
+
+	const rawReviewItems = useMemo(
+		() =>
+			(Array.isArray(prs) ? prs : []).map((p) => ({
+				type: "pr" as const,
+				data: p,
+			})),
+		[prs],
+	);
+
+	const rawDoneItems = useMemo(
+		() =>
+			[
+				...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
+					type: "pr" as const,
+					data: p,
+				})),
+				...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
+					type: "issue" as const,
+					data: i,
+				})),
+			].sort(
+				(a, b) =>
+					new Date(b.data.updated_at).getTime() -
+					new Date(a.data.updated_at).getTime(),
+			),
+		[closedPrs, closedIssues],
+	);
+
 	const columns: Column[] = useMemo(() => {
 		const filterItem = (item: TaskItem) => {
 			// Type Filter
@@ -201,62 +252,47 @@ export function TaskBoard(): JSX.Element {
 			return true;
 		};
 
-		const backlogItems: TaskItem[] = (Array.isArray(issues) ? issues : [])
-			.map((i) => ({
-				type: "issue" as const,
-				data: i,
-			}))
-			.filter(filterItem);
-
-		const sessionItems: TaskItem[] = (Array.isArray(sessions) ? sessions : [])
-			.filter(
-				(s) =>
-					s.state !== "COMPLETED" &&
-					s.state !== "FAILED" &&
-					s.state !== "PAUSED",
-			)
-			.map((s) => ({ type: "session" as const, data: s }))
-			.filter(filterItem);
-
-		const reviewItems: TaskItem[] = (Array.isArray(prs) ? prs : [])
-			.map((p) => ({
-				type: "pr" as const,
-				data: p,
-			}))
-			.filter(filterItem);
-
-		const doneItems: TaskItem[] = [
-			...(Array.isArray(closedPrs) ? closedPrs : []).map((p) => ({
-				type: "pr" as const,
-				data: p,
-			})),
-			...(Array.isArray(closedIssues) ? closedIssues : []).map((i) => ({
-				type: "issue" as const,
-				data: i,
-			})),
-		]
-			.filter(filterItem)
-			.sort(
-				(a, b) =>
-					new Date(b.data.updated_at).getTime() -
-					new Date(a.data.updated_at).getTime(),
-			);
-
 		return [
-			{ id: "backlog", title: "Backlog", items: backlogItems },
-			{ id: "in_progress", title: "In Progress (Jules)", items: sessionItems },
-			{ id: "review", title: "Review", items: reviewItems },
-			{ id: "done", title: "Done", items: doneItems },
+			{
+				id: "backlog",
+				title: "Backlog",
+				items: rawBacklogItems.filter(filterItem),
+			},
+			{
+				id: "in_progress",
+				title: "In Progress (Jules)",
+				items: rawSessionItems.filter(filterItem),
+			},
+			{
+				id: "review",
+				title: "Review",
+				items: rawReviewItems.filter(filterItem),
+			},
+			{
+				id: "done",
+				title: "Done",
+				items: rawDoneItems.filter(filterItem),
+			},
 		];
-	}, [issues, closedIssues, prs, closedPrs, sessions, searchQuery, typeFilter]);
+	}, [
+		rawBacklogItems,
+		rawSessionItems,
+		rawReviewItems,
+		rawDoneItems,
+		searchQuery,
+		typeFilter,
+	]);
 
 	// --- Interaction ---
 
-	const handleFix = (issue: GitHubIssue) => {
-		if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
-			startFix(issue);
-		}
-	};
+	const handleFix = useCallback(
+		(issue: GitHubIssue) => {
+			if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
+				startFix(issue);
+			}
+		},
+		[startFix],
+	);
 
 	const isLoading =
 		issuesLoading ||

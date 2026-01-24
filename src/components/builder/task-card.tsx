@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { AlertCircle, Bot, GitPullRequest } from "lucide-react";
-import type { JSX } from "react";
+import { type JSX, memo } from "react";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import { Button } from "@/components/atoms/button";
 import { GlassCard } from "@/components/molecules/glass-card";
@@ -23,7 +23,7 @@ interface TaskCardProps {
 
 const MotionGlassCard = motion.create(GlassCard);
 
-export function TaskCard({
+export const TaskCard = memo(function TaskCard({
 	item,
 	onSelect,
 	onFix,
@@ -195,4 +195,4 @@ export function TaskCard({
 			{renderContent()}
 		</MotionGlassCard>
 	);
-}
+});
