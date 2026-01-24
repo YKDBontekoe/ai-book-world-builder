@@ -34,7 +34,7 @@ describe("TaskCard", () => {
 
 		// Verify classes that I added
 		expect(fixButton).toHaveClass("h-6");
-		expect(fixButton).toHaveClass("px-2");
+		expect(fixButton).toHaveClass("px-2.5");
 		expect(fixButton).toHaveClass("text-[10px]");
 
 		// Click and verify propagation stop

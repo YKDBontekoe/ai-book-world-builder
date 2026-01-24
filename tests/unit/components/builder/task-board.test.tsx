@@ -209,7 +209,10 @@ describe("TaskBoard", () => {
 
 		await waitFor(() => {
 			expect(screen.getByText("Backlog")).toBeInTheDocument();
-			expect(screen.getAllByText("No items found")).toHaveLength(4);
+			expect(screen.getByText("No items in Backlog")).toBeInTheDocument();
+			expect(
+				screen.getByText("No items in In Progress (Jules)"),
+			).toBeInTheDocument();
 		});
 	});
 
@@ -231,16 +234,17 @@ describe("TaskBoard", () => {
 
 		await waitFor(() => {
 			expect(screen.getByText("Backlog")).toBeInTheDocument();
-			expect(screen.getAllByText("No items found")).toHaveLength(4);
+			expect(screen.getByText("No items in Backlog")).toBeInTheDocument();
 		});
 	});
 
 	it("renders items and handles navigation to details", async () => {
 		const mockIssue = createMockIssue();
-		vi.mocked(getIssues).mockResolvedValue({
-			success: true,
-			data: [mockIssue],
-		} as any);
+		vi.mocked(getIssues).mockImplementation(async (state) => {
+			if (state === "open")
+				return { success: true, data: [mockIssue] } as any;
+			return { success: true, data: [] } as any;
+		});
 
 		renderWithClient(<TaskBoard />);
 
@@ -255,8 +259,9 @@ describe("TaskBoard", () => {
 		});
 
 		// Click the card (glass-card div)
-		const cards = screen.getAllByTestId("glass-card");
-		fireEvent.click(cards[0]);
+		// cards[0] is the toolbar, cards[1] is the task card
+		const issueText = screen.getByText("Test Issue");
+		fireEvent.click(issueText);
 
 		// Wait for navigation
 		await waitFor(
@@ -282,8 +287,8 @@ describe("TaskBoard", () => {
 
 		await screen.findByText(/Test Session Title/);
 
-		const cards = screen.getAllByTestId("glass-card");
-		fireEvent.click(cards[0]);
+		const sessionText = screen.getByText("Test Session Title");
+		fireEvent.click(sessionText);
 
 		await screen.findByText(/Jules Chat/);
 	});

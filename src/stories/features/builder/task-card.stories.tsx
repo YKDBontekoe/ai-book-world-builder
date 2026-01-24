@@ -82,7 +82,7 @@ export const Session: Story = {
 			data: {
 				id: "session-123",
 				title: "Brainstorming new features",
-				state: "STATE_RUNNING",
+				state: "IN_PROGRESS",
 				prompt: "Help me design a new feature",
 				createTime: "2023-10-25T12:00:00Z",
 				updateTime: "2023-10-25T12:00:00Z",
