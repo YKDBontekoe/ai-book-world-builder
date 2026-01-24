@@ -28,3 +28,8 @@
 **Vulnerability:** Scene deletion and content updates were vulnerable to IDOR because the repository methods accepted an ID and performed the operation without checking if the scene belonged to the authenticated user's project, trusting only the service layer's check.
 **Learning:** Defense in depth requires database repositories to also support and enforce ownership scoping, preventing vulnerabilities if the service layer check is bypassed or malformed.
 **Prevention:** Extend repository methods (update/delete) to accept an optional parent ID (e.g., `projectId`) and include it in the `WHERE` clause to strictly scope the operation to the authorized context.
+
+## 2025-02-24 - [Server Action Exposure]
+**Vulnerability:** The `exportBook` service utility was marked with `"use server"`, exposing it as a public Server Action endpoint. This allowed potential IDOR attacks as it accepted complex data objects without authorization checks, trusting the client-provided input.
+**Learning:** Files in `lib/services` marked with `"use server"` automatically become public APIs. If they are intended as internal helpers, this exposes internal logic and bypasses route-level security controls.
+**Prevention:** Use `import "server-only"` for internal service modules. Ensure only dedicated action files (e.g., in `app/actions`) use `"use server"` and that they always implement proper authentication and input validation middleware.

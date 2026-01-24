@@ -1,5 +1,4 @@
-"use server";
-
+import "server-only";
 import path from "node:path";
 import { put } from "@vercel/blob";
 import { asc, eq } from "drizzle-orm";
