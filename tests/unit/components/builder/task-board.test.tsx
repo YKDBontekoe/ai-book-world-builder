@@ -241,8 +241,7 @@ describe("TaskBoard", () => {
 	it("renders items and handles navigation to details", async () => {
 		const mockIssue = createMockIssue();
 		vi.mocked(getIssues).mockImplementation(async (state) => {
-			if (state === "open")
-				return { success: true, data: [mockIssue] } as any;
+			if (state === "open") return { success: true, data: [mockIssue] } as any;
 			return { success: true, data: [] } as any;
 		});
 

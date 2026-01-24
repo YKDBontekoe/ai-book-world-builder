@@ -29,6 +29,13 @@ export function TaskCard({
 	onFix,
 	compact,
 }: TaskCardProps): JSX.Element {
+	const handleKeyDown = (e: React.KeyboardEvent) => {
+		if (e.key === "Enter" || e.key === " ") {
+			e.preventDefault();
+			onSelect(item);
+		}
+	};
+
 	const renderContent = () => {
 		switch (item.type) {
 			case "issue":
@@ -174,13 +181,16 @@ export function TaskCard({
 			initial={{ opacity: 0, y: 10, scale: 0.98 }}
 			animate={{ opacity: 1, y: 0, scale: 1 }}
 			exit={{ opacity: 0, scale: 0.95 }}
-			transition={{ duration: 0.2 }}
+			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			variant="liquid"
 			className={cn(
-				"cursor-pointer active:scale-[0.98] transition-all hover:shadow-lg hover:shadow-primary/5",
+				"cursor-pointer active:scale-[0.98] hover:shadow-lg hover:shadow-primary/5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
 				compact ? "p-3" : "p-4",
 			)}
 			onClick={() => onSelect(item)}
+			tabIndex={0}
+			role="button"
+			onKeyDown={handleKeyDown}
 		>
 			{renderContent()}
 		</MotionGlassCard>

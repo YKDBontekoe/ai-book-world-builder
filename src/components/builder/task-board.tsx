@@ -323,6 +323,7 @@ export function TaskBoard(): JSX.Element {
 					<motion.div
 						initial={{ opacity: 0, x: 20 }}
 						animate={{ opacity: 1, x: 0 }}
+						transition={{ type: "spring", stiffness: 400, damping: 25 }}
 						className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto"
 					>
 						<div className="relative w-full sm:w-64">
