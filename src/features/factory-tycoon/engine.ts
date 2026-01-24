@@ -8,7 +8,7 @@ import { runTransportSystem } from './systems/transportSystem';
 export function calculateCapacity(buildings: BuildingEntity[], baseCapacity: number = 50): number {
   return buildings.reduce((total, b) => {
     const config = BUILDINGS[b.type];
-    return total + (config.capacityBonus || 0);
+    return total + (config?.capacityBonus || 0);
   }, baseCapacity);
 }
 
