@@ -66,6 +66,9 @@ vi.mock("lucide-react", () => ({
 	Brain: () => <span data-testid="icon-brain" />,
 	Layout: () => <span data-testid="icon-layout" />,
 	CheckCircle: () => <span data-testid="icon-check-circle" />,
+	RefreshCw: () => <span data-testid="icon-refresh-cw" />,
+	Download: () => <span data-testid="icon-download" />,
+	ArrowDownWideNarrow: () => <span data-testid="icon-arrow-down-wide-narrow" />,
 }));
 
 // Mock GlassCard to forward onClick
