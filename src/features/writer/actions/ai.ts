@@ -16,8 +16,8 @@ const generationOptionsSchema = z.object({
 });
 
 const continueWritingSchema = z.object({
-	context: z.string().max(100000, "Context too long"),
-	previousContent: z.string().max(50000, "Previous content too long"),
+	context: z.string().max(50000, "Context too long"),
+	previousContent: z.string().max(25000, "Previous content too long"),
 	options: generationOptionsSchema.optional(),
 });
 
@@ -38,8 +38,8 @@ const draftSceneSchema = z.object({
 });
 
 const generateIdeasSchema = z.object({
-	context: z.string().max(100000, "Context too long"),
-	currentText: z.string().max(50000, "Current text too long"),
+	context: z.string().max(50000, "Context too long"),
+	currentText: z.string().max(25000, "Current text too long"),
 	options: generationOptionsSchema.optional(),
 });
 
