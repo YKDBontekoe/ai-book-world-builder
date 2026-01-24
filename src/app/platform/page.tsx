@@ -1,5 +1,5 @@
 import * as motion from "framer-motion/client";
-import { BookOpen, Code, Settings2, Sparkles } from "lucide-react";
+import { BookOpen, Code, Factory, Settings2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import type { JSX } from "react";
@@ -205,6 +205,34 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 									</GlassCard>
 								</div>
 							)}
+						</StaggerItem>
+
+						{/* Factory Tycoon */}
+						<StaggerItem>
+							<Link
+								href="/factory-tycoon"
+								className="group block h-full rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-zinc-900"
+							>
+								<GlassCard
+									variant="liquid"
+									className="h-full transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-amber-500/10"
+								>
+									<CardHeader>
+										<div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-600 shadow-sm transition-colors duration-500 group-hover:bg-amber-600 group-hover:text-white dark:bg-amber-900/30 dark:text-amber-400">
+											<Factory className="h-7 w-7" />
+										</div>
+										<CardTitle className="text-2xl">Factory Tycoon</CardTitle>
+										<CardDescription className="text-base mt-2 line-clamp-2">
+											A resource management tycoon game. Manage your factory empire and optimize production lines.
+										</CardDescription>
+									</CardHeader>
+									<CardContent>
+										<div className="mt-4 flex items-center text-sm font-medium text-amber-600 transition-colors group-hover:text-amber-700 dark:text-amber-400 dark:group-hover:text-amber-300">
+											Enter Workspace &rarr;
+										</div>
+									</CardContent>
+								</GlassCard>
+							</Link>
 						</StaggerItem>
 					</StaggerList>
 				</FadeIn>
