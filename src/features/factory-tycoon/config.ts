@@ -2,15 +2,24 @@ import { BuildingConfig, BuildingType, GameState } from './types';
 
 export const GRID_SIZE = 20;
 export const BASE_CAPACITY = 50;
+export const LOCAL_INVENTORY_CAPACITY = 50;
 export const TICK_RATE_MS = 1000;
 
-export const TECHS = {
+export interface Tech {
+    id: string;
+    name: string;
+    cost: number;
+    description: string;
+    unlocks?: BuildingType[];
+}
+
+export const TECHS: Record<string, Tech> = {
   mass_production: {
     id: 'mass_production',
     name: 'Mass Production',
     cost: 10,
     description: 'Unlocks Factory and Market buildings.',
-    unlocks: ['Factory', 'Market'] as BuildingType[],
+    unlocks: ['Factory', 'Market'],
   }
 };
 

@@ -1,20 +1,15 @@
 'use client';
 
-import { type ClassValue, clsx } from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight, ArrowUpFromLine, Ban, Beaker, Box, Factory, GitFork, HandCoins, Hourglass, Pickaxe, Store, Zap } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/atoms/tooltip';
 import { useSound } from '../audio/SoundContext';
 import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from '../config';
 import { useGame } from '../store';
-import type { BeltItem, BuildingType, Direction, Resource } from '../types';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import type { BeltItem, BuildingEntity, BuildingType, Direction, Resource } from '../types';
+import { cn } from '@/lib/utils';
 
 const ICONS: Record<BuildingType, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   Mine: Pickaxe,
@@ -93,7 +88,7 @@ function getRotation(type: BuildingType, dir: Direction): number {
     return standardRotation[dir];
 }
 
-export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingType | null }) {
+export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingType | null }): JSX.Element {
   const { state, addBuilding, removeBuilding, rotateBuilding, manualInteract } = useGame();
   const { playSound } = useSound();
   const [currentDirection, setCurrentDirection] = useState<Direction>('N');
@@ -150,7 +145,7 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
   };
 
   // Create a map for O(1) lookup
-  const buildingMap = new Map();
+  const buildingMap = new Map<string, BuildingEntity>();
   state.buildings.forEach(b => {
       buildingMap.set(`${b.x},${b.y}`, b);
   });
@@ -167,6 +162,12 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
               else if (b.direction === 'W') { itemX += (1 - p); itemY += 0.5; }
               else if (b.direction === 'S') { itemX += 0.5; itemY += p; }
               else if (b.direction === 'N') { itemX += 0.5; itemY += (1 - p); }
+              else {
+                  // Fallback for invalid direction
+                  console.warn(`Invalid direction '${b.direction}' for Belt at ${b.x},${b.y}`);
+                  itemX += 0.5;
+                  itemY += 0.5;
+              }
               
               allItems.push({ item, x: itemX, y: itemY, color: RESOURCE_COLORS[item.resource] });
           });
@@ -184,9 +185,6 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
           // p=1 is target center (offset dx, dy)
           // Relative to inserter center (b.x+0.5, b.y+0.5):
           // Offset = (p - 0.5) * 2 * (dx, dy)
-          // Wait, if p=0, offset is -0.5 * 2 * (dx, dy) = (-dx, -dy). Correct.
-          // if p=0.5, offset is 0. Correct.
-          // if p=1.0, offset is (dx, dy). Correct.
           itemX = b.x + 0.5 + (p - 0.5) * dx;
           itemY = b.y + 0.5 + (p - 0.5) * dy;
 
@@ -198,7 +196,7 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
     <TooltipProvider>
     <div className="flex-1 overflow-auto factory-grid-bg flex justify-center items-center p-8">
       <div 
-        className="relative rounded-lg overflow-hidden"
+        className="relative rounded-2xl overflow-hidden"
         style={{ 
             boxShadow: '0 0 60px rgba(245, 158, 11, 0.1), 0 25px 50px rgba(0, 0, 0, 0.5)',
             border: '1px solid var(--factory-border)',

@@ -1,5 +1,5 @@
 import { nanoid } from "nanoid";
-import { BUILDINGS } from "../config";
+import { BUILDINGS, LOCAL_INVENTORY_CAPACITY } from "../config";
 import type {
 	BuildingEntity,
 	Direction,
@@ -49,14 +49,15 @@ export const runProductionSystem = (
 	});
 	// Temporary inventory for this tick's calculations
 	const workingInventory = { ...currentInventory };
-	const _workingSpace = remainingSpace;
+	// const _workingSpace = remainingSpace; // Unused
 
 	for (const building of buildings) {
 		const config = BUILDINGS[building.type];
 
 		// Skip non-producers or Markets (handled separately)
 		if (config.type === "Market" || config.type === "Warehouse") continue;
-		if (!config.inputs && !config.outputs) continue;
+		// Check for empty objects instead of undefined
+		if (Object.keys(config.inputs).length === 0 && Object.keys(config.outputs).length === 0) continue;
 
 		let hasInputs = true;
 		let hasSpace = true;
@@ -99,7 +100,7 @@ export const runProductionSystem = (
 			}
 		}
 
-		// 2. Check Space for Outputs
+		// 2. Check Space for Outputs (Pre-check)
 		// If outputting to belt, we assume infinite space (it will just pile up or we can check belt fullness)
 		// For MVP, if outputToBelt is true, hasSpace = true.
 		if (!outputToBelt) {
@@ -117,7 +118,7 @@ export const runProductionSystem = (
 					if (res !== "cash" && res !== "science") {
 						const r = res as Resource;
 						const current = building.localInventory?.[r] || 0;
-						if (current + amount > 50) {
+						if (current + amount > LOCAL_INVENTORY_CAPACITY) {
 							hasSpace = false;
 							break;
 						}
@@ -188,17 +189,13 @@ export const runProductionSystem = (
 							} else {
 								if (!building.localInventory) building.localInventory = {};
 
-								// Check local capacity (simple max per slot or total?)
-								// Let's assume a stack limit of 50 per slot for now? Or just unlimited for MVP?
-								// Let's cap at 50 to force movement.
+								// Check local capacity (already checked in step 2, but safe to clamp)
 								const currentAmount = building.localInventory[r] || 0;
-								if (currentAmount < 50) {
+								if (currentAmount < LOCAL_INVENTORY_CAPACITY) {
 									building.localInventory[r] = currentAmount + amount;
 								} else {
-									building.status = "BLOCKED"; // Local output full
-									// Refund inputs? Too complex for this tick. Just waste cycle or block next?
-									// We already consumed inputs. So we lose production if full?
-									// Or better: Check space BEFORE consuming (Step 2).
+									// Should not happen if step 2 works
+									building.status = "BLOCKED";
 								}
 							}
 						}

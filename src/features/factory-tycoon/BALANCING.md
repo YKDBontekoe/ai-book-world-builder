@@ -1,6 +1,7 @@
 # Balancing
 
 ## Economy
+
 - Starting Cash: $20
 - Base Capacity: 50
 
@@ -15,6 +16,7 @@
 | Warehouse | $40  | -           | -           | -            | +50 Capacity |
 
 ## Strategy
+
 A perfect ratio chain requires:
 - 4 Mines (produce 4 Ore)
 - 2 Smelters (consume 4 Ore, produce 2 Ingots)

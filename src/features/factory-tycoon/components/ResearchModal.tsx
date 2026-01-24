@@ -1,24 +1,64 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useGame } from '../store';
 import { X, Beaker, Check, Lock, Unlock, Sparkles } from 'lucide-react';
 import { TECHS } from '../config';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { cn } from '@/lib/utils';
 
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-export function ResearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function ResearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }): JSX.Element | null {
   const { state, researchTech } = useGame();
+  const modalRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      // Focus modal when opened
+      modalRef.current?.focus();
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          onClose();
+        }
+        if (e.key === 'Tab') {
+            // Simple focus trap: prevent tabbing out if possible, or just cycle inside.
+            // For full focus trap, we'd need more logic or a library.
+            // MVP: Just allow Escape to close.
+            if (modalRef.current) {
+                const focusableElements = modalRef.current.querySelectorAll(
+                    'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+                );
+                const firstElement = focusableElements[0] as HTMLElement;
+                const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+                if (e.shiftKey) {
+                    if (document.activeElement === firstElement) {
+                        lastElement.focus();
+                        e.preventDefault();
+                    }
+                } else {
+                    if (document.activeElement === lastElement) {
+                        firstElement.focus();
+                        e.preventDefault();
+                    }
+                }
+            }
+        }
+      };
+
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 factory-modal-overlay z-50 flex items-center justify-center animate-in fade-in duration-200">
-      <div className="factory-modal w-[32rem] max-h-[80vh] overflow-hidden flex flex-col">
+      <div
+        ref={modalRef}
+        tabIndex={-1}
+        className="factory-modal w-[32rem] max-h-[80vh] overflow-hidden flex flex-col outline-none"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-[var(--factory-border)]">
           <h2 className="text-xl font-bold text-[var(--factory-text-primary)] flex items-center gap-3">
@@ -29,6 +69,7 @@ export function ResearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
           </h2>
           <button 
             onClick={onClose}
+            aria-label="Close"
             className="p-2 rounded-lg text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)] hover:bg-white/5 transition-colors"
           >
             <X className="w-5 h-5" />

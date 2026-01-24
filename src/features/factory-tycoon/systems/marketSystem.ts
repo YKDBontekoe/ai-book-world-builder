@@ -1,5 +1,5 @@
 import { BUILDINGS } from "../config";
-import { type BuildingEntity, GameState, type Resource } from "../types";
+import { type BuildingEntity, type Resource } from "../types";
 import type { SystemResult } from "./productionSystem";
 
 export const runMarketSystem = (
@@ -24,9 +24,10 @@ export const runMarketSystem = (
 		// Inputs check
 		if (config.inputs) {
 			for (const [res, amount] of Object.entries(config.inputs)) {
-				if (res !== "cash") {
+				if (res !== "cash" && res !== "science") {
 					const r = res as keyof typeof workingInventory;
-					if ((workingInventory[r] || 0) < amount) {
+					const amt = Number(amount);
+					if ((workingInventory[r] || 0) < amt) {
 						hasInputs = false;
 						break;
 					}
@@ -44,12 +45,13 @@ export const runMarketSystem = (
 			// Consume Gadgets
 			if (config.inputs) {
 				for (const [res, amount] of Object.entries(config.inputs)) {
-					if (res !== "cash") {
+					if (res !== "cash" && res !== "science") {
 						const r = res as keyof typeof workingInventory;
-						workingInventory[r] -= amount;
-						result.inventoryDelta[r] = (result.inventoryDelta[r] || 0) - amount;
+						const amt = Number(amount);
+						workingInventory[r] -= amt;
+						result.inventoryDelta[r] = (result.inventoryDelta[r] || 0) - amt;
 						// Consuming frees space effectively, but we track delta
-						result.consumedCapacity -= amount;
+						result.consumedCapacity -= amt;
 					}
 				}
 			}

@@ -4,10 +4,10 @@ import { auth } from '@/app/(auth)/auth'; // Using correct auth path
 import { db } from '@/lib/db';
 import { factoryTycoonSaves } from '@/lib/db/schema/factory-tycoon';
 import { eq } from 'drizzle-orm';
-import { GameState } from './types';
+import { GameState, BuildingType } from './types';
 import { INITIAL_STATE } from './config';
 
-export async function saveGameState(state: GameState) {
+export async function saveGameState(state: GameState): Promise<void> {
   const session = await auth();
   if (!session?.user?.id) {
     throw new Error('Unauthorized');
@@ -24,14 +24,14 @@ export async function saveGameState(state: GameState) {
     await db
       .update(factoryTycoonSaves)
       .set({
-        state: state as any, // Cast to any because jsonb types can be tricky
+        state: state,
         updatedAt: new Date(),
       })
       .where(eq(factoryTycoonSaves.id, existingSave.id));
   } else {
     await db.insert(factoryTycoonSaves).values({
       userId,
-      state: state as any,
+      state: state,
     });
   }
 }
@@ -50,7 +50,7 @@ export async function loadGameState(): Promise<GameState | null> {
 
   if (!save) return null;
 
-  const loadedState = save.state as unknown as Partial<GameState>;
+  const loadedState = save.state;
 
   // Merge with default state to ensure all fields exist (handling schema updates)
   // We deep merge inventory to ensure new resources are initialized
@@ -67,7 +67,7 @@ export async function loadGameState(): Promise<GameState | null> {
         'Belt',
         'Splitter',
         'Inserter'
-    ])) as any,
+    ])) as BuildingType[],
     researchedTechs: loadedState.researchedTechs ?? INITIAL_STATE.researchedTechs,
   };
 }

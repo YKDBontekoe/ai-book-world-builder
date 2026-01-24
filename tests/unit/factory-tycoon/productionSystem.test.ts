@@ -12,7 +12,8 @@ describe('Factory Tycoon Production System', () => {
         x: 0, 
         y: 0, 
         status: 'IDLE',
-        direction: 'INVALID' as unknown as Direction 
+        // @ts-expect-error Testing invalid direction handling
+        direction: 'INVALID'
     };
     
     const state: GameState = {

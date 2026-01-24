@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: 'A resource management tycoon game.',
 };
 
-export default function Page() {
+export default function Page(): JSX.Element {
   return (
     <main className="h-screen w-full">
       <TycoonGame />

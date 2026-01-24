@@ -24,8 +24,11 @@ function getTargetCoordinates(
 			return { x: x + 1, y };
 		case "W":
 			return { x: x - 1, y };
-		default:
+		default: {
+            const _exhaustive: never = dir;
+            console.warn(`Invalid direction encountered: ${dir}`);
 			return { x, y };
+        }
 	}
 }
 
@@ -52,6 +55,14 @@ export function runTransportSystem(state: GameState): GameState {
 				localInventory: { ...b.localInventory },
 			};
 		}
+        // Clone holdingItem
+        if (b.type === "Inserter" && b.holdingItem) {
+            return {
+                ...b,
+                holdingItem: { ...b.holdingItem },
+            };
+        }
+
 		return { ...b };
 	});
 
@@ -160,12 +171,17 @@ function processInserter(
 			}
 		}
 	} else if (source.localInventory) {
-		const res = Object.keys(source.localInventory)[0] as Resource;
-		if (res && (source.localInventory[res] || 0) > 0) {
-			pickedItem = { id: nanoid(), resource: res, position: 0 };
-			source.localInventory[res] = (source.localInventory[res] || 0) - 1;
-			if (source.localInventory[res] === 0) delete source.localInventory[res];
-		}
+        // Deterministic selection: Sort keys alphabetically and pick first available
+        const resources = Object.keys(source.localInventory).sort() as Resource[];
+
+        for (const res of resources) {
+            if ((source.localInventory[res] || 0) > 0) {
+                pickedItem = { id: nanoid(), resource: res, position: 0 };
+                source.localInventory[res] = (source.localInventory[res] || 0) - 1;
+                if (source.localInventory[res] === 0) delete source.localInventory[res];
+                break;
+            }
+        }
 	}
 
 	if (pickedItem) {
@@ -191,11 +207,6 @@ function processBelt(belt: BuildingEntity, map: Map<string, BuildingEntity>) {
 		const item = belt.beltItems[i];
 
 		// Check if blocked by item ahead
-		// Simple collision: if there is an item with position > current + spacing?
-		// For MVP, just let them overlap slightly or enforce hard spacing.
-		// Let's enforce: cannot pass position 1.0 unless next tile takes it.
-		// And cannot pass another item on same belt (simple queue).
-
 		const nextItem =
 			i < belt.beltItems.length - 1 ? belt.beltItems[i + 1] : null;
 		const maxPos = nextItem ? nextItem.position - 0.3 : 1.0; // 0.3 spacing
@@ -213,11 +224,6 @@ function processBelt(belt: BuildingEntity, map: Map<string, BuildingEntity>) {
 				if (targetB.type === "Belt") {
 					// Move to next belt
 					if (!targetB.beltItems) targetB.beltItems = [];
-					// Check entry space on next belt (needs to be < 0.3 or empty)
-					// We assume next belt items are sorted by position (ascending? no, we didn't sort).
-					// Let's assume index 0 is furthest back? No, usually index 0 is front?
-					// Let's keep array sorted: index 0 is oldest (furthest along).
-					// So we check the LAST item (newest/entry).
 					const lastItem =
 						targetB.beltItems.length > 0
 							? targetB.beltItems[targetB.beltItems.length - 1]
@@ -231,9 +237,6 @@ function processBelt(belt: BuildingEntity, map: Map<string, BuildingEntity>) {
 					}
 				} else if (targetB.type === "Splitter") {
 					if (!targetB.beltItems) targetB.beltItems = [];
-					// Splitter logic handled in processSplitter?
-					// Or just treat it like a belt for input?
-					// Treat like belt for input.
 					const lastItem =
 						targetB.beltItems.length > 0
 							? targetB.beltItems[targetB.beltItems.length - 1]
@@ -245,7 +248,6 @@ function processBelt(belt: BuildingEntity, map: Map<string, BuildingEntity>) {
 					}
 				} else {
 					// It's a machine (Smelter, etc.)
-					// Check if it accepts this resource
 					const config = BUILDINGS[targetB.type];
 					if (config.inputs?.[item.resource]) {
 						// Put in local inventory
@@ -266,25 +268,10 @@ function processSplitter(
 	splitter: BuildingEntity,
 	map: Map<string, BuildingEntity>,
 ) {
-	// Splitter logic:
-	// Takes items from input (handled by incoming belts pushing to it).
-	// Moves items to 2 outputs (Left and Right relative to direction).
-	// We need state to toggle left/right.
-	// For MVP: Random or toggle based on tick?
-	// We don't have persistent state in BuildingEntity for "lastOutputSide".
-	// We can use random for now.
-
 	if (!splitter.beltItems) return;
 
 	const leftDir = getLeftDir(splitter.direction);
-	const rightDir = getRightDir(splitter.direction); // Actually Splitter usually has Forward-Left and Forward-Right?
-	// Or just "Front" and "Side"?
-	// Factorio Splitter: 1x2 or 2x1. Takes 2 inputs, 2 outputs.
-	// User asked for "Splitter".
-	// Let's implement a 1x1 Splitter that takes input from *any* side (except output sides) and outputs to Left and Right.
-	// Outputs: Left and Right relative to facing? Or Forward and Right?
-	// Let's say: Outputs Forward and Right (T-junction). Or Left and Right (Y-junction).
-	// Let's do Y-junction: Outputs Left and Right. Inputs Back.
+	const rightDir = getRightDir(splitter.direction);
 
 	const out1Coords = getTargetCoordinates(splitter.x, splitter.y, leftDir);
 	const out2Coords = getTargetCoordinates(splitter.x, splitter.y, rightDir);
@@ -302,11 +289,10 @@ function processSplitter(
 		}
 
 		// Ready to split
-		// Try Output 1
+		// Use persisted toggle state for determinism
+        if (splitter.splitterToggle === undefined) splitter.splitterToggle = false;
 
-		// Simple toggle simulation: Check 1, then 2.
-		// To prevent bias, maybe randomize order?
-		const tryOrder = Math.random() > 0.5 ? [out1, out2] : [out2, out1];
+		const tryOrder = splitter.splitterToggle ? [out1, out2] : [out2, out1];
 
 		for (const target of tryOrder) {
 			if (target && target.type === "Belt") {
@@ -319,10 +305,11 @@ function processSplitter(
 					item.position = 0;
 					target.beltItems.push(item);
 					splitter.beltItems.splice(i, 1);
+                    // Flip toggle ONLY on successful transfer
+                    splitter.splitterToggle = !splitter.splitterToggle;
 					break;
 				}
 			}
-			// Logic for feeding machines from splitter directly?
 			else if (target) {
 				const config = BUILDINGS[target.type];
 				if (config.inputs?.[item.resource]) {
@@ -330,6 +317,7 @@ function processSplitter(
 					target.localInventory[item.resource] =
 						(target.localInventory[item.resource] || 0) + 1;
 					splitter.beltItems.splice(i, 1);
+                    splitter.splitterToggle = !splitter.splitterToggle;
 					break;
 				}
 			}

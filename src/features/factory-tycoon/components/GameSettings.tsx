@@ -1,32 +1,34 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useGame } from '../store';
-import { Trash2, Volume2, VolumeX, X, AlertTriangle } from 'lucide-react';
+import { Trash2, Volume2, VolumeX, X, AlertTriangle, Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { saveGameState } from '../actions';
 import { INITIAL_STATE } from '../config';
 import { useSound } from '../audio/SoundContext';
 
-export function GameSettings({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export function GameSettings({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }): JSX.Element | null {
   const { state, setIsRunning } = useGame();
   const { muted, toggleMute } = useSound();
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   
-  // Pause game when menu is open
+  // Pause game when menu is open, resume when closed
   React.useEffect(() => {
     if (isOpen) {
         setIsRunning(false);
-    } 
+    } else {
+        setIsRunning(true);
+        setShowResetConfirm(false); // Reset internal state
+    }
   }, [isOpen, setIsRunning]);
 
   const handleReset = async () => {
-    if (confirm('Are you sure? This will wipe your save file forever.')) {
-        try {
-            await saveGameState(INITIAL_STATE);
-            window.location.reload();
-        } catch {
-            toast.error('Failed to reset game');
-        }
+    try {
+        await saveGameState(INITIAL_STATE);
+        window.location.reload();
+    } catch {
+        toast.error('Failed to reset game');
     }
   };
 
@@ -80,13 +82,32 @@ export function GameSettings({ isOpen, onClose }: { isOpen: boolean; onClose: ()
                 <p className="text-xs text-[var(--factory-danger)]/80 mt-1">
                   Reset all progress and start fresh. This action cannot be undone.
                 </p>
-                <button 
-                  onClick={handleReset}
-                  className="factory-btn-danger mt-3 w-full flex items-center justify-center gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Reset All Progress
-                </button>
+
+                {!showResetConfirm ? (
+                    <button
+                        onClick={() => setShowResetConfirm(true)}
+                        className="factory-btn-danger mt-3 w-full flex items-center justify-center gap-2"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Reset All Progress
+                    </button>
+                ) : (
+                    <div className="mt-3 flex gap-2">
+                        <button
+                            onClick={handleReset}
+                            className="factory-btn-danger flex-1 flex items-center justify-center gap-2 text-xs"
+                        >
+                            <Check className="w-3 h-3" />
+                            Confirm
+                        </button>
+                        <button
+                            onClick={() => setShowResetConfirm(false)}
+                            className="bg-white border border-[var(--factory-border)] rounded-lg px-3 py-2 text-xs font-semibold hover:bg-gray-50 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                )}
               </div>
             </div>
           </div>
