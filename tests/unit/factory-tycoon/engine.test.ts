@@ -5,7 +5,7 @@ import { GameState, BuildingEntity } from '../../../src/features/factory-tycoon/
 
 describe('Factory Tycoon Engine', () => {
   it('Mine produces ore when capacity allows', () => {
-    const mine: BuildingEntity = { id: '1', type: 'Mine', x: 0, y: 0, status: 'IDLE' };
+    const mine: BuildingEntity = { id: '1', type: 'Mine', x: 0, y: 0, status: 'IDLE', direction: 'N' };
     const state: GameState = {
       ...INITIAL_STATE,
       buildings: [mine],
@@ -15,54 +15,61 @@ describe('Factory Tycoon Engine', () => {
     const nextState = simulateTick(state);
     
     expect(nextState.buildings[0].status).toBe('RUNNING');
-    expect(nextState.inventory.ore).toBe(1);
-    expect(nextState.lastTickDelta.ore).toBe(1);
+    // Output goes to local inventory
+    expect(nextState.buildings[0].localInventory?.ore).toBe(1);
+    // Global inventory remains unchanged for ore production (unless picked up)
+    expect(nextState.inventory.ore).toBe(0);
+    expect(nextState.lastTickDelta.ore).toBe(0);
   });
 
   it('Smelter converts ore->ingot only when ore >= 2', () => {
-    const smelter: BuildingEntity = { id: '1', type: 'Smelter', x: 0, y: 0, status: 'IDLE' };
+    const smelter: BuildingEntity = { id: '1', type: 'Smelter', x: 0, y: 0, status: 'IDLE', direction: 'N' };
     
     // Case 1: Not enough ore
     let state: GameState = {
         ...INITIAL_STATE,
         buildings: [smelter],
-        inventory: { ore: 1, ingot: 0, gadget: 0, science: 0 },
+        inventory: { ore: 1, ingot: 0, gadget: 0 },
+        science: 0,
     };
     state = simulateTick(state);
     expect(state.buildings[0].status).toBe('STARVED');
-    expect(state.inventory.ingot).toBe(0);
+    expect(state.buildings[0].localInventory?.ingot).toBeUndefined();
     
     // Case 2: Enough ore
     state = {
         ...INITIAL_STATE,
         buildings: [smelter],
-        inventory: { ore: 2, ingot: 0, gadget: 0, science: 0 },
+        inventory: { ore: 2, ingot: 0, gadget: 0 },
+        science: 0,
     };
     state = simulateTick(state);
     expect(state.buildings[0].status).toBe('RUNNING');
-    expect(state.inventory.ore).toBe(0); // 2 - 2
-    expect(state.inventory.ingot).toBe(1);
+    expect(state.inventory.ore).toBe(0); // 2 - 2 (Consumed from global)
+    expect(state.buildings[0].localInventory?.ingot).toBe(1); // Produced to local
   });
 
   it('Blocked behavior: if inventory is at capacity, producers become BLOCKED', () => {
-     const mine: BuildingEntity = { id: '1', type: 'Mine', x: 0, y: 0, status: 'IDLE' };
+     // Mines output to local inventory. Capacity is per-slot (50).
+     const mine: BuildingEntity = {
+         id: '1', type: 'Mine', x: 0, y: 0, status: 'IDLE', direction: 'N',
+         localInventory: { ore: 50 }
+     };
      const state: GameState = {
          ...INITIAL_STATE,
-         capacity: 10,
-         inventory: { ore: 10, ingot: 0, gadget: 0, science: 0 }, // Full
          buildings: [mine],
      };
      
      const nextState = simulateTick(state);
      expect(nextState.buildings[0].status).toBe('BLOCKED');
-     expect(nextState.inventory.ore).toBe(10); // No change
+     expect(nextState.buildings[0].localInventory?.ore).toBe(50); // No change
   });
   
   it('Market converts gadget->cash', () => {
-      const market: BuildingEntity = { id: '1', type: 'Market', x: 0, y: 0, status: 'IDLE' };
+      const market: BuildingEntity = { id: '1', type: 'Market', x: 0, y: 0, status: 'IDLE', direction: 'N' };
       const state: GameState = {
           ...INITIAL_STATE,
-          inventory: { ore: 0, ingot: 0, gadget: 1, science: 0 },
+          inventory: { ore: 0, ingot: 0, gadget: 1 },
           buildings: [market],
           cash: 0,
       };
@@ -76,12 +83,12 @@ describe('Factory Tycoon Engine', () => {
   it('Multiple buildings respect shared input limits', () => {
       // 2 Smelters, but only 3 Ore. (Need 4 total)
       // Only one should run.
-      const s1: BuildingEntity = { id: 'A', type: 'Smelter', x: 0, y: 0, status: 'IDLE' };
-      const s2: BuildingEntity = { id: 'B', type: 'Smelter', x: 1, y: 0, status: 'IDLE' };
+      const s1: BuildingEntity = { id: 'A', type: 'Smelter', x: 0, y: 0, status: 'IDLE', direction: 'N' };
+      const s2: BuildingEntity = { id: 'B', type: 'Smelter', x: 1, y: 0, status: 'IDLE', direction: 'N' };
       
       const state: GameState = {
           ...INITIAL_STATE,
-          inventory: { ore: 3, ingot: 0, gadget: 0, science: 0 },
+          inventory: { ore: 3, ingot: 0, gadget: 0 },
           buildings: [s1, s2],
       };
       
@@ -95,14 +102,15 @@ describe('Factory Tycoon Engine', () => {
       expect(resS2?.status).toBe('STARVED');
       
       expect(nextState.inventory.ore).toBe(1); // 3 - 2
-      expect(nextState.inventory.ingot).toBe(1); // +1
+      expect(resS1?.localInventory?.ingot).toBe(1); // +1 local
+      expect(resS2?.localInventory?.ingot).toBeUndefined(); // 0 local
   });
 
   it('TradingPost converts ingot->cash', () => {
-      const tp: BuildingEntity = { id: '1', type: 'TradingPost', x: 0, y: 0, status: 'IDLE' };
+      const tp: BuildingEntity = { id: '1', type: 'TradingPost', x: 0, y: 0, status: 'IDLE', direction: 'N' };
       const state: GameState = {
           ...INITIAL_STATE,
-          inventory: { ore: 0, ingot: 1, gadget: 0, science: 0 },
+          inventory: { ore: 0, ingot: 1, gadget: 0 },
           buildings: [tp],
           cash: 0,
       };
@@ -114,16 +122,17 @@ describe('Factory Tycoon Engine', () => {
   });
 
   it('Lab converts ingot->science', () => {
-      const lab: BuildingEntity = { id: '1', type: 'Lab', x: 0, y: 0, status: 'IDLE' };
+      const lab: BuildingEntity = { id: '1', type: 'Lab', x: 0, y: 0, status: 'IDLE', direction: 'N' };
       const state: GameState = {
           ...INITIAL_STATE,
-          inventory: { ore: 0, ingot: 1, gadget: 0, science: 0 },
+          inventory: { ore: 0, ingot: 1, gadget: 0 },
+          science: 0,
           buildings: [lab],
       };
       
       const nextState = simulateTick(state);
       expect(nextState.buildings[0].status).toBe('RUNNING');
       expect(nextState.inventory.ingot).toBe(0);
-      expect(nextState.inventory.science).toBe(1);
+      expect(nextState.science).toBe(1);
   });
 });
