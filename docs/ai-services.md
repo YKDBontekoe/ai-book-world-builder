@@ -109,6 +109,54 @@ sequenceDiagram
     Biz-->>Action: AnalysisResult
 ```
 
+## Analytics & Scoring Algorithms
+
+We use deterministic algorithms to quantify subjective metrics like "readiness" and "style". This ensures consistent feedback across the application.
+
+### Readiness Score (Project Health)
+*File: `src/lib/services/project-analytics.ts`*
+
+The **Readiness Score** (0-100) estimates how prepared a project is for full-book generation. It is a weighted sum of four components:
+
+| Component | Weight | Max Logic | Formula |
+| :--- | :--- | :--- | :--- |
+| **Characters** | 30% | Cap at 5 chars | `min(count * 20, 100)` |
+| **Locations** | 20% | Cap at 4 locs | `min(count * 25, 100)` |
+| **Outline** | 30% | Binary (Yes/No) | `hasOutline ? 100 : 0` |
+| **Chapters** | 20% | Cap at 10 chaps | `min(count * 10, 100)` |
+
+**Formula**:
+```typescript
+Score = (CharScore * 0.3) + (LocScore * 0.2) + (OutlineScore * 0.3) + (ChapScore * 0.2)
+```
+
+### Style Analytics (Tone & Voice)
+*File: `src/lib/services/analysis/style-analytics.ts`*
+
+The system analyzes text style using rule-based heuristics rather than LLMs (for speed and determinism).
+
+1.  **Tone** (`formal` | `casual` | `neutral`)
+    -   Counts occurrences of **Formal Words** (e.g., "therefore", "hence", "consequently").
+    -   Counts occurrences of **Casual Words** (e.g., "gonna", "wanna", "yeah").
+    -   Result is determined by the dominant category.
+
+2.  **Voice** (`active` | `passive` | `mixed`)
+    -   Detects passive construction using regex: `/\b(was|were|been|is|are)\s+\w+ed\b/`.
+    -   Calculates `PassiveRatio = PassiveMatches / TotalSentences`.
+    -   **Passive**: > 30%
+    -   **Active**: < 10%
+
+3.  **Sentence Variety** (`high` | `medium` | `low`)
+    -   Calculates the variance of sentence lengths (word count).
+    -   **High**: Variance > 100
+    -   **Low**: Variance < 25
+
+4.  **Descriptive Level** (`high` | `medium` | `low`)
+    -   Counts sensory adjectives/adverbs (e.g., "beautiful", "rough", "bitter").
+    -   Calculates `DescriptiveRatio = DescriptiveWords / TotalWords`.
+    -   **High**: > 5%
+    -   **Low**: < 1%
+
 ## Chat Transport Layer
 
 The `ChatTransport` (`lib/ai/chat-transport.ts`) serves as the abstraction layer between the UI and the Vercel AI SDK.
