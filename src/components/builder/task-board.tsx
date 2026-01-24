@@ -3,10 +3,13 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "framer-motion";
 import {
+	ArrowDownWideNarrow,
+	Download,
 	Filter,
 	LayoutList,
 	Maximize2,
 	Minimize2,
+	RefreshCw,
 	Search,
 	Sparkles,
 } from "lucide-react";
@@ -37,16 +40,14 @@ import { ItemDetail } from "../admin/github/item-detail";
 import { BuilderChatView } from "./chat/builder-chat-view";
 import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
+import {
+	type Column,
+	type SortOption,
+	generateCsv,
+	sortTasks,
+} from "./task-board-utils";
 import { TaskBoardSkeleton } from "./task-board-skeleton";
 import { TaskCard, type TaskItem } from "./task-card";
-
-type ColumnType = "backlog" | "in_progress" | "review" | "done";
-
-interface Column {
-	id: ColumnType;
-	title: string;
-	items: TaskItem[];
-}
 
 export function TaskBoard(): JSX.Element {
 	const [activeTab, setActiveTab] = useState<"board" | "chat">("board");
@@ -55,6 +56,10 @@ export function TaskBoard(): JSX.Element {
 	const [typeFilter, setTypeFilter] = useLocalStorage<
 		"all" | "issue" | "pr" | "session"
 	>("builder-type-filter", "all");
+	const [sortOption, setSortOption] = useLocalStorage<SortOption>(
+		"builder-sort-option",
+		"updated-desc",
+	);
 	const [isCompact, setIsCompact] = useLocalStorage(
 		"builder-compact-mode",
 		false,
@@ -176,6 +181,35 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
+	// --- Interaction ---
+
+	const handleFix = (issue: GitHubIssue) => {
+		if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
+			startFix(issue);
+		}
+	};
+
+	const handleRefresh = () => {
+		queryClient.invalidateQueries({ queryKey: ["github"] });
+		queryClient.invalidateQueries({ queryKey: ["jules"] });
+		toast.success("Refreshing data...");
+	};
+
+	const handleExportCsv = () => {
+		const csvContent = generateCsv(columns);
+		const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+		const url = URL.createObjectURL(blob);
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `builder_tasks_${new Date().toISOString().split("T")[0]}.csv`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		toast.success(
+			`Exported ${columns.reduce((acc, col) => acc + col.items.length, 0)} items to CSV`,
+		);
+	};
+
 	// --- Data Organization ---
 
 	const columns: Column[] = useMemo(() => {
@@ -234,29 +268,30 @@ export function TaskBoard(): JSX.Element {
 				type: "issue" as const,
 				data: i,
 			})),
-		]
-			.filter(filterItem)
-			.sort(
-				(a, b) =>
-					new Date(b.data.updated_at).getTime() -
-					new Date(a.data.updated_at).getTime(),
-			);
+		].filter(filterItem);
+
+		const sort = (items: TaskItem[]) => sortTasks(items, sortOption);
 
 		return [
-			{ id: "backlog", title: "Backlog", items: backlogItems },
-			{ id: "in_progress", title: "In Progress (Jules)", items: sessionItems },
-			{ id: "review", title: "Review", items: reviewItems },
-			{ id: "done", title: "Done", items: doneItems },
+			{ id: "backlog", title: "Backlog", items: sort(backlogItems) },
+			{
+				id: "in_progress",
+				title: "In Progress (Jules)",
+				items: sort(sessionItems),
+			},
+			{ id: "review", title: "Review", items: sort(reviewItems) },
+			{ id: "done", title: "Done", items: sort(doneItems) },
 		];
-	}, [issues, closedIssues, prs, closedPrs, sessions, searchQuery, typeFilter]);
-
-	// --- Interaction ---
-
-	const handleFix = (issue: GitHubIssue) => {
-		if (confirm(`Ask Jules to fix issue #${issue.number}?`)) {
-			startFix(issue);
-		}
-	};
+	}, [
+		issues,
+		closedIssues,
+		prs,
+		closedPrs,
+		sessions,
+		searchQuery,
+		typeFilter,
+		sortOption,
+	]);
 
 	const isLoading =
 		issuesLoading ||
@@ -320,6 +355,29 @@ export function TaskBoard(): JSX.Element {
 				</div>
 
 				{activeTab === "board" && (
+					<div className="flex items-center gap-1">
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={handleRefresh}
+							className="h-8 w-8 text-muted-foreground hover:text-foreground"
+							title="Refresh Data"
+						>
+							<RefreshCw className="h-4 w-4" />
+						</Button>
+						<Button
+							variant="ghost"
+							size="icon"
+							onClick={handleExportCsv}
+							className="h-8 w-8 text-muted-foreground hover:text-foreground"
+							title="Export to CSV"
+						>
+							<Download className="h-4 w-4" />
+						</Button>
+					</div>
+				)}
+
+				{activeTab === "board" && (
 					<motion.div
 						initial={{ opacity: 0, x: 20 }}
 						animate={{ opacity: 1, x: 0 }}
@@ -339,6 +397,24 @@ export function TaskBoard(): JSX.Element {
 
 						<div className="flex items-center gap-3">
 							<div className="flex items-center gap-2">
+								<Select
+									value={sortOption}
+									onValueChange={(v) => setSortOption(v as SortOption)}
+								>
+									<SelectTrigger className="w-[150px] h-9 bg-background/50 border-transparent focus:border-input focus:bg-background">
+										<div className="flex items-center gap-2">
+											<ArrowDownWideNarrow className="h-3.5 w-3.5 text-muted-foreground" />
+											<SelectValue placeholder="Sort" />
+										</div>
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="updated-desc">Recently Updated</SelectItem>
+										<SelectItem value="updated-asc">Least Recently Updated</SelectItem>
+										<SelectItem value="created-desc">Newest</SelectItem>
+										<SelectItem value="created-asc">Oldest</SelectItem>
+									</SelectContent>
+								</Select>
+
 								<Select
 									value={typeFilter}
 									onValueChange={(v) =>
