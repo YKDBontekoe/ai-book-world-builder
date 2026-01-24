@@ -7,3 +7,5 @@ CREATE TABLE "factory_tycoon_saves" (
 );
 --> statement-breakpoint
 ALTER TABLE "factory_tycoon_saves" ADD CONSTRAINT "factory_tycoon_saves_user_id_User_id_fk" FOREIGN KEY ("user_id") REFERENCES "public"."User"("id") ON DELETE cascade ON UPDATE no action;
+--> statement-breakpoint
+CREATE INDEX IF NOT EXISTS "idx_factory_tycoon_saves_user_id" ON "factory_tycoon_saves" ("user_id");

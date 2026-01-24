@@ -31,6 +31,7 @@ export interface BuildingEntity {
   beltItems?: BeltItem[];
   holdingItem?: BeltItem; // For Inserters
   localInventory?: Partial<Record<Resource, number>>;
+  splitterToggle?: boolean; // For deterministic splitting
 }
 
 export interface GameState {

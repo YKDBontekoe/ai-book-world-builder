@@ -129,7 +129,6 @@ function gameReducer(state: GameState, action: Action): GameState {
         const building = state.buildings[buildingIndex];
         const config = BUILDINGS[building.type];
         const newInventory = { ...state.inventory };
-        let interacted = false;
 
         // 1. Belt Pickup (Single Item)
         if (building.type === 'Belt' && building.beltItems && building.beltItems.length > 0) {
@@ -154,7 +153,8 @@ function gameReducer(state: GameState, action: Action): GameState {
         // 2. Machine Output Collection (All Items)
         if (building.localInventory && config.outputs) {
              const outputRes = Object.keys(config.outputs)[0] as Resource;
-             if (outputRes && building.localInventory[outputRes] && building.localInventory[outputRes]! > 0) {
+             // Safe check
+             if (outputRes && (building.localInventory[outputRes] ?? 0) > 0) {
                  
                  if (outputRes !== 'cash' && outputRes !== 'science') {
                      const validRes = outputRes as keyof GameState['inventory'];
@@ -266,7 +266,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const manualInteract = useCallback((x: number, y: number) => {
-      // Feedback Logic
+      // Feedback Logic - Calculated BEFORE dispatch using current state ref (or state from context if available)
+      // Since we are in the component that has `state` (from useReducer), we can use it.
+      // But `manualInteract` is memoized with `[state.buildings]` dependency below? No, previously it wasn't.
+      // We need to access the *current* state here.
+      // Using `state` from the scope.
+
       const b = state.buildings.find(b => b.x === x && b.y === y);
       if (b) {
           const config = BUILDINGS[b.type];
@@ -278,7 +283,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           // Machine Feedback
           else if (b.localInventory && config.outputs) {
                const outputRes = Object.keys(config.outputs)[0] as Resource;
-               if (outputRes && b.localInventory[outputRes] && b.localInventory[outputRes]! > 0) {
+               if (outputRes && (b.localInventory[outputRes] ?? 0) > 0) {
                     const amount = b.localInventory[outputRes];
                     toast.success(`Collected ${amount} ${outputRes}`);
                }
@@ -297,8 +302,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const forceSave = useCallback(async () => {
-      await saveGameState(stateRef.current);
-      toast.success('Game saved');
+      try {
+        await saveGameState(stateRef.current);
+        toast.success('Game saved');
+      } catch (error) {
+        toast.error(`Failed to save game: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
   }, []);
 
   return (

@@ -1,9 +1,20 @@
 import { describe, it, expect } from 'vitest';
-import { simulateTick } from '../../../src/features/factory-tycoon/engine';
+import { simulateTick, calculateCapacity } from '../../../src/features/factory-tycoon/engine';
 import { INITIAL_STATE } from '../../../src/features/factory-tycoon/config';
 import { GameState, BuildingEntity } from '../../../src/features/factory-tycoon/types';
 
 describe('Factory Tycoon Engine', () => {
+  describe('calculateCapacity', () => {
+    it('calculates total capacity correctly', () => {
+        const warehouse: BuildingEntity = { id: '1', type: 'Warehouse', x: 0, y: 0, status: 'IDLE', direction: 'N' };
+        const mine: BuildingEntity = { id: '2', type: 'Mine', x: 0, y: 0, status: 'IDLE', direction: 'N' };
+
+        expect(calculateCapacity([], 50)).toBe(50);
+        expect(calculateCapacity([warehouse], 50)).toBe(100);
+        expect(calculateCapacity([warehouse, mine], 50)).toBe(100); // Mine adds no capacity
+    });
+  });
+
   it('Mine produces ore when capacity allows', () => {
     const mine: BuildingEntity = { id: '1', type: 'Mine', x: 0, y: 0, status: 'IDLE', direction: 'N' };
     const state: GameState = {

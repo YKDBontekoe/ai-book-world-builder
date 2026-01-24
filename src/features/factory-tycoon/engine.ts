@@ -1,5 +1,5 @@
 import { BUILDINGS } from './config';
-import { GameState, Resource, BuildingEntity, BuildingStatus } from './types';
+import { GameState, Resource, BuildingEntity } from './types';
 import { runProductionSystem } from './systems/productionSystem';
 import { runMarketSystem } from './systems/marketSystem';
 import { runTransportSystem } from './systems/transportSystem';
@@ -26,7 +26,8 @@ export function simulateTick(currentState: GameState): GameState {
   };
 
   // Sort buildings by ID to ensure deterministic execution order
-  const sortedBuildings = nextState.buildings.sort((a, b) => a.id.localeCompare(b.id));
+  // Use non-mutating sort
+  const sortedBuildings = [...nextState.buildings].sort((a, b) => a.id.localeCompare(b.id));
 
   // Current State Snapshot for Checks
   const currentTotalVolume = Object.values(nextState.inventory).reduce((a, b) => a + b, 0);

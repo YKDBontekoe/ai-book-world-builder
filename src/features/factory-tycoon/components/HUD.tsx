@@ -1,17 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useGame } from '../store';
 import { Coins, Database, Activity, Play, Pause, Settings, Beaker, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { GameSettings } from './GameSettings';
 import { ResearchModal } from './ResearchModal';
 import { RESOURCE_VALUES } from '../config';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '@/lib/utils';
+import { Resource } from '../types';
 
 const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
   ore: { icon: '/images/factory-tycoon/ore.png', color: 'text-amber-600' },
@@ -20,7 +16,7 @@ const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
   science: { icon: '/images/factory-tycoon/science.png', color: 'text-purple-600' },
 };
 
-export function HUD() {
+export function HUD(): JSX.Element {
   const { state, isRunning, setIsRunning, sellResource } = useGame();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isResearchOpen, setIsResearchOpen] = useState(false);
@@ -28,6 +24,15 @@ export function HUD() {
   const totalVolume = Object.values(state.inventory).reduce((a, b) => a + b, 0);
   const capacityPct = Math.min(100, (totalVolume / state.capacity) * 100);
   const cashDelta = state.lastTickDelta.cash ?? 0;
+
+  const { runningCount, starvedCount, blockedCount } = useMemo(() => {
+    return state.buildings.reduce((acc, b) => {
+        if (b.status === 'RUNNING') acc.runningCount++;
+        else if (b.status === 'STARVED') acc.starvedCount++;
+        else if (b.status === 'BLOCKED') acc.blockedCount++;
+        return acc;
+    }, { runningCount: 0, starvedCount: 0, blockedCount: 0 });
+  }, [state.buildings]);
 
   return (
     <>
@@ -199,7 +204,7 @@ export function HUD() {
                   {value > 0 && (
                     <button 
                         type="button"
-                        onClick={() => sellResource(res as any)}
+                        onClick={() => sellResource(res as Resource)}
                         disabled={count <= 0}
                         className={cn(
                             "text-[10px] w-full py-1 rounded border transition-colors flex items-center justify-center gap-1",
@@ -223,19 +228,19 @@ export function HUD() {
       <div className="stats-grid">
         <div className="stat-item">
           <span className="stat-value text-[var(--factory-success)]">
-            {state.buildings.filter(b => b.status === 'RUNNING').length}
+            {runningCount}
           </span>
           <span className="stat-label">Running</span>
         </div>
         <div className="stat-item">
           <span className="stat-value text-[var(--factory-warning)]">
-            {state.buildings.filter(b => b.status === 'STARVED').length}
+            {starvedCount}
           </span>
           <span className="stat-label">Starved</span>
         </div>
         <div className="stat-item">
           <span className="stat-value text-[var(--factory-danger)]">
-            {state.buildings.filter(b => b.status === 'BLOCKED').length}
+            {blockedCount}
           </span>
           <span className="stat-label">Blocked</span>
         </div>

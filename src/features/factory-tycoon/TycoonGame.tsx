@@ -21,7 +21,7 @@ function TycoonGameContent() {
   );
 }
 
-export default function TycoonGame() {
+export default function TycoonGame(): JSX.Element {
   return (
     <SoundProvider>
         <GameProvider>

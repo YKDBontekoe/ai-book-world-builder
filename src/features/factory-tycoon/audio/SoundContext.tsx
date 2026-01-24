@@ -16,7 +16,8 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
   const [muted, setMuted] = useState(false);
   
   // Placeholders for Audio objects
-  // In a real app, we would load these from /public/sounds/
+  // TODO: load actual Audio objects from /public/sounds/ and handle lifecycle/errors
+  // Tracker: https://github.com/YKDBontekoe/ai-book-world-builder/issues/969
   const audioRefs = useRef<Record<SoundType, HTMLAudioElement | null>>({
     place: null, // new Audio('/sounds/place.mp3')
     delete: null,
@@ -29,7 +30,9 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     if (muted) return;
     
     // Fallback visual log if no audio
-    console.log(`[Audio] Playing ${type}`);
+    if (process.env.NODE_ENV !== 'production') {
+        // console.log(`[Audio] Playing ${type}`);
+    }
     
     // Real implementation:
     // const audio = audioRefs.current[type];
@@ -39,7 +42,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
     // }
   };
 
-  const toggleMute = () => setMuted(!muted);
+  const toggleMute = () => setMuted((prev) => !prev);
 
   return (
     <SoundContext.Provider value={{ playSound, muted, toggleMute }}>
