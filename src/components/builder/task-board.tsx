@@ -35,6 +35,7 @@ import { ItemDetail } from "../admin/github/item-detail";
 import { BuilderChatView } from "./chat/builder-chat-view";
 import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
+import { TaskBoardSkeleton } from "./task-board-skeleton";
 import { TaskCard, type TaskItem } from "./task-card";
 
 type ColumnType = "backlog" | "in_progress" | "review" | "done";
@@ -73,7 +74,11 @@ export function TaskBoard(): JSX.Element {
 	// Use the first available source for feature planning
 	const defaultSource = sources?.[0]?.name;
 
-	const { data: issues, error: issuesError } = useQuery({
+	const {
+		data: issues,
+		error: issuesError,
+		isLoading: isIssuesLoading,
+	} = useQuery({
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
@@ -132,7 +137,11 @@ export function TaskBoard(): JSX.Element {
 	//
 	// Let's check `src/lib/result.ts` to see if I can add code.
 
-	const { data: closedIssues, error: closedIssuesError } = useQuery({
+	const {
+		data: closedIssues,
+		error: closedIssuesError,
+		isLoading: isClosedIssuesLoading,
+	} = useQuery({
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
 			const res = await getIssues("closed");
@@ -141,7 +150,11 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: prs, error: prsError } = useQuery({
+	const {
+		data: prs,
+		error: prsError,
+		isLoading: isPrsLoading,
+	} = useQuery({
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
 			const res = await getPullRequests("open");
@@ -150,7 +163,11 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: closedPrs, error: closedPrsError } = useQuery({
+	const {
+		data: closedPrs,
+		error: closedPrsError,
+		isLoading: isClosedPrsLoading,
+	} = useQuery({
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
 			const res = await getPullRequests("closed");
@@ -208,7 +225,7 @@ export function TaskBoard(): JSX.Element {
 		}
 	}, [issuesError, closedIssuesError, prsError, closedPrsError]);
 
-	const { data: sessions } = useQuery({
+	const { data: sessions, isLoading: isSessionsLoading } = useQuery({
 		queryKey: ["jules", "sessions"],
 		queryFn: async () => {
 			const res = await getJulesSessionsAction({ pageSize: 50 });
@@ -239,6 +256,13 @@ export function TaskBoard(): JSX.Element {
 	});
 
 	// --- Data Organization ---
+
+	const isLoading =
+		isIssuesLoading ||
+		isClosedIssuesLoading ||
+		isPrsLoading ||
+		isClosedPrsLoading ||
+		isSessionsLoading;
 
 	const columns: Column[] = useMemo(() => {
 		const filterItem = (item: TaskItem) => {
@@ -432,6 +456,8 @@ export function TaskBoard(): JSX.Element {
 
 			{activeTab === "chat" ? (
 				<BuilderChatView />
+			) : isLoading ? (
+				<TaskBoardSkeleton />
 			) : (
 				<div className="flex-1 min-h-0 overflow-x-auto pb-4">
 					<div className="flex h-full gap-6 min-w-[1000px]">
