@@ -96,11 +96,11 @@ export const BUILDINGS: Record<BuildingType, BuildingConfig> = {
 
 export const INITIAL_STATE: GameState = {
   cash: 20,
+  science: 0,
   inventory: {
     ore: 0,
     ingot: 0,
     gadget: 0,
-    science: 0,
   },
   capacity: BASE_CAPACITY,
   buildings: [],
