@@ -41,6 +41,18 @@ const config: StorybookConfig = {
 						__dirname,
 						"../tests/mocks/story-generation.mock.ts",
 					),
+					"@/app/actions/user": resolve(
+						__dirname,
+						"../tests/mocks/user-actions.mock.ts",
+					),
+					"@/app/actions/appearance": resolve(
+						__dirname,
+						"../tests/mocks/appearance-actions.mock.ts",
+					),
+					"next-auth/react": resolve(
+						__dirname,
+						"../tests/mocks/next-auth-react.mock.ts",
+					),
 				},
 			},
 		});
