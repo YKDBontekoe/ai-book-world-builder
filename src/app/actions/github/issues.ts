@@ -7,7 +7,11 @@ import {
 	invalidateCache,
 	invalidateCachePattern,
 } from "@/lib/cache";
-import { getOctokit, getRepoDetails } from "@/lib/services/github-service";
+import {
+	executeFeaturePlan,
+	getOctokit,
+	getRepoDetails,
+} from "@/lib/services/github-service";
 import {
 	executeFeaturePlanSchema,
 	issueNumberSchema,
@@ -178,49 +182,7 @@ export async function closeIssueOrPR(
 const executeFeaturePlanActionInternal = createAdminAction({
 	input: executeFeaturePlanSchema,
 	handler: async ({ user, input }) => {
-		const octokit = getOctokit();
-		const { owner, repo, fullName } = await getRepoDetails(user.id);
-
-		// 1. Create Parent Issue
-		const parentRes = await octokit.rest.issues.create({
-			owner,
-			repo,
-			title: input.parentIssue.title,
-			body: input.parentIssue.body,
-			labels: input.parentIssue.labels,
-		});
-
-		const parentNumber = parentRes.data.number;
-		const createdIssues: number[] = [parentNumber];
-
-		// 2. Create Child Issues
-		for (const child of input.childIssues) {
-			const childRes = await octokit.rest.issues.create({
-				owner,
-				repo,
-				title: child.title,
-				body: `${child.body}\n\nRelated to #${parentNumber}`,
-				labels: child.labels,
-			});
-			createdIssues.push(childRes.data.number);
-		}
-
-		// 3. Update Parent with checklist of children
-		const checklist = createdIssues
-			.slice(1)
-			.map((num) => `- [ ] #${num}`)
-			.join("\n");
-		await octokit.rest.issues.update({
-			owner,
-			repo,
-			issue_number: parentNumber,
-			body: `${input.parentIssue.body}\n\n### Tasks\n${checklist}`,
-		});
-
-		// Invalidate caches
-		await invalidateCachePattern(`github:issues:${fullName}:*`);
-
-		return { parentNumber, createdIssues };
+		return await executeFeaturePlan(user.id, input);
 	},
 });
 
