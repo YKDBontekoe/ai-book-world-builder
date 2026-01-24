@@ -103,3 +103,21 @@ Downloads the current scene as a Markdown file.
 2.  Implement the `execute` method, calling the appropriate Server Action.
 3.  Add the tool to the `TOOLS` config in `tool-config.ts` (for UI).
 4.  Register the strategy in `toolStrategies` map.
+
+## Server-Side Agent Tools
+
+While the Power Dock tools above are triggered explicitly by user clicks (Client-Side Strategy), the **Chat Agent** (Jules/Assistant) uses a separate set of tools defined in `src/lib/ai/tool-registry.ts`.
+
+These tools are exposed to the LLM via the Vercel AI SDK, allowing the agent to autonomously decide which action to take.
+
+| Tool Name | Purpose |
+| :--- | :--- |
+| `orchestrateBook` | The "Brain" that decides the next step based on project health. See [`docs/agent-orchestrator.md`](agent-orchestrator.md). |
+| `manageEntities` | CRUD operations for characters, locations, and lore items. |
+| `manageStory` | Modifies the book structure (Chapters/Scenes). |
+| `analyzeBook` | Runs deep analysis on the manuscript. |
+| `createOutline` | Generates the initial book structure. |
+
+**Key Difference**:
+-   **Power Dock**: User clicks "Rewrite" -> Immediate execution of `rewriteScene`.
+-   **Chat Agent**: User says "Rewrite this scene" -> LLM calls `rewriteScene` tool.
