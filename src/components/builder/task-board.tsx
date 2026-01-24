@@ -1,6 +1,7 @@
 "use client";
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	Filter,
 	LayoutList,
@@ -30,11 +31,13 @@ import {
 	SelectValue,
 } from "@/components/atoms/select";
 import { Switch } from "@/components/atoms/switch";
+import { GlassCard } from "@/components/molecules/glass-card";
 import { GitHubConfigModal } from "@/components/organisms/github-config-modal";
 import { ItemDetail } from "../admin/github/item-detail";
 import { BuilderChatView } from "./chat/builder-chat-view";
 import { CreateFeatureDialog } from "./create-feature-dialog";
 import { JulesChat } from "./jules/jules-chat";
+import { TaskBoardSkeleton } from "./task-board-skeleton";
 import { TaskCard, type TaskItem } from "./task-card";
 
 type ColumnType = "backlog" | "in_progress" | "review" | "done";
@@ -73,29 +76,16 @@ export function TaskBoard(): JSX.Element {
 	// Use the first available source for feature planning
 	const defaultSource = sources?.[0]?.name;
 
-	const { data: issues, error: issuesError } = useQuery({
+	const {
+		data: issues,
+		error: issuesError,
+		isLoading: issuesLoading,
+	} = useQuery({
 		queryKey: ["github", "issues", "open"],
 		queryFn: async () => {
 			const res = await getIssues("open");
 			if (!res.success) {
 				if (res.error === "GITHUB_CONFIG_MISSING") {
-					// We can throw an error with a code property if the action returned just a string
-					// But our createAction middleware returns Result<T> where error is string.
-					// We need to rely on the error message string being the code if middleware passes it through,
-					// OR simply check if the message matches.
-					// Wait, the action middleware returns `err(getErrorMessage(error))`
-					// getErrorMessage returns error.message.
-					// If error is AppError, message is "GITHUB_OWNER and GITHUB_REPO..."
-					// BUT createAction could be updated to return the error CODE in the Result object?
-					// Currently Result is { success: false, error: string }
-					// So we are stuck with string matching on the client unless we change Result type.
-					// However, code review suggested: "update the service layer to throw a typed error ... then change the detection in the useEffect to test for that type or code"
-					// On the client, `res.error` is just a string message.
-					// We can't check `instanceof` because it's serialized.
-					// The middleware could be improved to return error code.
-					// BUT, for now, if I throw GitHubConfigError, the message is constant.
-					// AND if I look at `getErrorMessage`, if it's AppError it returns `error.message`.
-					// Wait, the middleware catches the error.
 					throw new Error(res.error);
 				}
 				throw new Error(res.error);
@@ -104,35 +94,11 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	// In the middleware:
-	// if (isAppError(error)) { return err(error.message); }
-	// So we only get the message string on the client.
-	// To strictly follow the advice "test for that type or code", we would need the error CODE to be returned to the client.
-	// I will update the middleware to optionally return an error code, or just rely on the specific message from the GitHubConfigError class.
-	// Actually, the PR comment says: "update the service layer to throw a typed error... then change the detection... to test for that type or code"
-	// On the client side, useQuery error is `Error` object.
-	// If I modify the fetch function to throw a specific error object...
-	//
-	// Let's look at `getIssues` action again.
-	// It calls `createAdminAction`.
-	// `createAction` catches error and returns `Result`.
-	// `Result` is `{ success: false, error: string }`.
-	// So we lose the error code.
-	//
-	// However, if the middleware puts the error CODE in the string, or if I parse it.
-	// OR, I can check if the string matches the GitHubConfigError.message.
-	//
-	// To properly implement "check for code", I should update `Result` type to include optional code.
-	// But that's a bigger change.
-	//
-	// Alternative: The `GitHubConfigError` has a specific message.
-	// checking `error.message === new GitHubConfigError().message` is better than hardcoding the string literal in the component.
-	//
-	// But the reviewer said: "update the service layer to throw a typed error ... then change the detection ... to test for that type or code"
-	//
-	// Let's check `src/lib/result.ts` to see if I can add code.
-
-	const { data: closedIssues, error: closedIssuesError } = useQuery({
+	const {
+		data: closedIssues,
+		error: closedIssuesError,
+		isLoading: closedIssuesLoading,
+	} = useQuery({
 		queryKey: ["github", "issues", "closed"],
 		queryFn: async () => {
 			const res = await getIssues("closed");
@@ -141,7 +107,11 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: prs, error: prsError } = useQuery({
+	const {
+		data: prs,
+		error: prsError,
+		isLoading: prsLoading,
+	} = useQuery({
 		queryKey: ["github", "prs", "open"],
 		queryFn: async () => {
 			const res = await getPullRequests("open");
@@ -150,7 +120,11 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
-	const { data: closedPrs, error: closedPrsError } = useQuery({
+	const {
+		data: closedPrs,
+		error: closedPrsError,
+		isLoading: closedPrsLoading,
+	} = useQuery({
 		queryKey: ["github", "prs", "closed"],
 		queryFn: async () => {
 			const res = await getPullRequests("closed");
@@ -159,43 +133,20 @@ export function TaskBoard(): JSX.Element {
 		},
 	});
 
+	const { data: sessions, isLoading: sessionsLoading } = useQuery({
+		queryKey: ["jules", "sessions"],
+		queryFn: async () => {
+			const res = await getJulesSessionsAction({ pageSize: 50 });
+			return res.success && res.data && Array.isArray(res.data.sessions)
+				? res.data.sessions
+				: [];
+		},
+		refetchInterval: 10000, // Poll for session updates
+	});
+
 	// Check for missing GitHub configuration
 	useEffect(() => {
 		const errors = [issuesError, closedIssuesError, prsError, closedPrsError];
-
-		// The error message from GitHubConfigError
-		// We can't import the class to compare messages easily because it's in @/lib/errors which might be server-only code?
-		// No, @/lib/errors seems shared.
-		// But on client, the error is an instance of Error, not GitHubConfigError.
-		// The message is "GITHUB_OWNER and GITHUB_REPO..."
-
-		// If I cannot easily pass the error code to the client without changing the Result type,
-		// I will rely on the specific message string from the error class if possible, or just the known string.
-		// The reviewer asked to use a typed error and check for it.
-		// Since I cannot check `instanceof GitHubConfigError` on the client (because the error comes from `throw new Error(res.error)` in queryFn),
-		// I will check the message.
-
-		// Wait, if I change `useQuery` to throw a custom error in `queryFn`:
-		/*
-		queryFn: async () => {
-			const res = await getIssues("open");
-			if (!res.success) {
-				if (res.error === new GitHubConfigError().message) { // This requires instantiating to get message
-					// Or I can export the constant message.
-				}
-				throw new Error(res.error);
-			}
-			...
-		}
-		*/
-
-		// Actually, let's just use the string for now, but referenced from a constant if possible?
-		// Or just hardcode it matching the class.
-		// The CodeRabbit comment specifically said: "update the service layer to throw a typed error ... then change the detection ... to test for that type or code"
-		// It might be assuming I can transport the type.
-
-		// Let's try to match the message from the constant in the error class.
-
 		const configErrorMessage =
 			"GITHUB_OWNER and GITHUB_REPO must be set in environment variables or user preferences";
 
@@ -208,17 +159,6 @@ export function TaskBoard(): JSX.Element {
 		}
 	}, [issuesError, closedIssuesError, prsError, closedPrsError]);
 
-	const { data: sessions } = useQuery({
-		queryKey: ["jules", "sessions"],
-		queryFn: async () => {
-			const res = await getJulesSessionsAction({ pageSize: 50 });
-			return res.success && res.data && Array.isArray(res.data.sessions)
-				? res.data.sessions
-				: [];
-		},
-		refetchInterval: 10000, // Poll for session updates
-	});
-
 	// --- Mutations ---
 
 	const { mutate: startFix } = useMutation({
@@ -230,8 +170,6 @@ export function TaskBoard(): JSX.Element {
 		onSuccess: (_newSession) => {
 			toast.success("Jules is working on the fix!");
 			queryClient.invalidateQueries({ queryKey: ["jules", "sessions"] });
-			// Optionally switch to the new session immediately?
-			// For now, let it appear in "In Progress"
 		},
 		onError: (err) => {
 			toast.error(`Failed to start fix: ${err.message}`);
@@ -320,6 +258,13 @@ export function TaskBoard(): JSX.Element {
 		}
 	};
 
+	const isLoading =
+		issuesLoading ||
+		closedIssuesLoading ||
+		prsLoading ||
+		closedPrsLoading ||
+		sessionsLoading;
+
 	if (selectedItem) {
 		if (selectedItem.type === "session") {
 			return (
@@ -347,15 +292,19 @@ export function TaskBoard(): JSX.Element {
 					queryClient.invalidateQueries({ queryKey: ["github"] });
 				}}
 			/>
+
 			{/* Power Toolbar */}
-			<div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-muted/30 p-3 rounded-lg border border-border/50">
+			<GlassCard
+				size="sm"
+				className="flex flex-col sm:flex-row gap-4 items-center justify-between p-2"
+			>
 				{/* View Switcher */}
-				<div className="flex items-center bg-background/50 p-1 rounded-md border">
+				<div className="flex items-center bg-muted/50 p-1 rounded-lg">
 					<Button
 						variant={activeTab === "board" ? "secondary" : "ghost"}
 						size="sm"
 						onClick={() => setActiveTab("board")}
-						className="h-7 text-xs"
+						className="h-8 text-xs font-medium px-4 shadow-sm"
 					>
 						Task Board
 					</Button>
@@ -363,37 +312,44 @@ export function TaskBoard(): JSX.Element {
 						variant={activeTab === "chat" ? "secondary" : "ghost"}
 						size="sm"
 						onClick={() => setActiveTab("chat")}
-						className="h-7 text-xs gap-2"
+						className="h-8 text-xs font-medium px-4 gap-2 shadow-sm"
 					>
-						<Sparkles className="w-3 h-3 text-primary" />
+						<Sparkles className="w-3.5 h-3.5 text-primary" />
 						Planner Chat
 					</Button>
 				</div>
 
 				{activeTab === "board" && (
-					<>
-						<div className="relative w-full sm:w-72">
+					<motion.div
+						initial={{ opacity: 0, x: 20 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ type: "spring", stiffness: 400, damping: 25 }}
+						className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto"
+					>
+						<div className="relative w-full sm:w-64">
 							<Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
 							<Input
 								placeholder="Filter tasks..."
 								value={searchQuery}
 								onChange={(e) => setSearchQuery(e.target.value)}
-								className="pl-9 h-9 bg-background/50"
+								className="pl-9 h-9 bg-background/50 border-transparent focus:border-input focus:bg-background transition-all"
 								aria-label="Filter tasks"
 							/>
 						</div>
 
-						<div className="flex items-center gap-4 w-full sm:w-auto">
+						<div className="flex items-center gap-3">
 							<div className="flex items-center gap-2">
-								<Filter className="h-4 w-4 text-muted-foreground" />
 								<Select
 									value={typeFilter}
 									onValueChange={(v) =>
 										setTypeFilter(v as "all" | "issue" | "pr" | "session")
 									}
 								>
-									<SelectTrigger className="w-[130px] h-9 bg-background/50">
-										<SelectValue placeholder="Type" />
+									<SelectTrigger className="w-[120px] h-9 bg-background/50 border-transparent focus:border-input focus:bg-background">
+										<div className="flex items-center gap-2">
+											<Filter className="h-3.5 w-3.5 text-muted-foreground" />
+											<SelectValue placeholder="Type" />
+										</div>
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="all">All Types</SelectItem>
@@ -404,34 +360,35 @@ export function TaskBoard(): JSX.Element {
 								</Select>
 							</div>
 
-							<div className="h-6 w-px bg-border" />
+							<div className="h-6 w-px bg-border/50" />
 
 							<div className="flex items-center gap-2">
 								<Label
 									htmlFor="compact-mode"
-									className="text-xs text-muted-foreground cursor-pointer flex items-center gap-2"
+									className="text-xs text-muted-foreground cursor-pointer flex items-center gap-2 select-none hover:text-foreground transition-colors"
 								>
 									{isCompact ? (
 										<Minimize2 className="h-4 w-4" />
 									) : (
 										<Maximize2 className="h-4 w-4" />
 									)}
-									<span className="hidden sm:inline">Compact</span>
 								</Label>
 								<Switch
 									id="compact-mode"
 									checked={isCompact}
 									onCheckedChange={setIsCompact}
-									className="scale-90"
+									className="scale-75"
 								/>
 							</div>
 						</div>
-					</>
+					</motion.div>
 				)}
-			</div>
+			</GlassCard>
 
 			{activeTab === "chat" ? (
 				<BuilderChatView />
+			) : isLoading ? (
+				<TaskBoardSkeleton />
 			) : (
 				<div className="flex-1 min-h-0 overflow-x-auto pb-4">
 					<div className="flex h-full gap-6 min-w-[1000px]">
@@ -440,10 +397,10 @@ export function TaskBoard(): JSX.Element {
 								key={col.id}
 								className="w-[300px] flex-shrink-0 flex flex-col"
 							>
-								<div className="flex items-center justify-between mb-3 px-1">
-									<h3 className="font-semibold text-sm flex items-center gap-2">
+								<div className="flex items-center justify-between mb-4 px-1">
+									<h3 className="font-semibold text-sm flex items-center gap-2 text-foreground/80">
 										{col.title}
-										<span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-full text-xs">
+										<span className="bg-muted text-muted-foreground px-2 py-0.5 rounded-full text-[10px] font-mono">
 											{col.items.length}
 										</span>
 									</h3>
@@ -452,27 +409,37 @@ export function TaskBoard(): JSX.Element {
 									)}
 								</div>
 
-								<div className="flex-1 overflow-y-auto pr-2 space-y-3">
-									{col.items.length === 0 ? (
-										<div className="flex flex-col items-center justify-center h-40 text-muted-foreground border-2 border-dashed rounded-lg bg-muted/10">
-											<LayoutList className="h-8 w-8 mb-2 opacity-50" />
-											<p className="text-xs">No items found</p>
-										</div>
-									) : (
-										col.items.map((item) => (
-											<TaskCard
-												key={
-													item.type === "session"
-														? item.data.id
-														: item.data.number
-												}
-												item={item}
-												onSelect={setSelectedItem}
-												onFix={item.type === "issue" ? handleFix : undefined}
-												compact={isCompact}
-											/>
-										))
-									)}
+								<div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-10">
+									<AnimatePresence mode="popLayout">
+										{col.items.length === 0 ? (
+											<motion.div
+												initial={{ opacity: 0, scale: 0.9 }}
+												animate={{ opacity: 1, scale: 1 }}
+												className="flex flex-col items-center justify-center h-40 text-muted-foreground border-2 border-dashed border-muted-foreground/10 rounded-xl bg-muted/5 p-6 text-center"
+											>
+												<div className="p-3 bg-muted/20 rounded-full mb-3">
+													<LayoutList className="h-6 w-6 opacity-50" />
+												</div>
+												<p className="text-xs font-medium">
+													No items in {col.title}
+												</p>
+											</motion.div>
+										) : (
+											col.items.map((item) => (
+												<TaskCard
+													key={
+														item.type === "session"
+															? item.data.id
+															: item.data.number
+													}
+													item={item}
+													onSelect={setSelectedItem}
+													onFix={item.type === "issue" ? handleFix : undefined}
+													compact={isCompact}
+												/>
+											))
+										)}
+									</AnimatePresence>
 								</div>
 							</div>
 						))}
