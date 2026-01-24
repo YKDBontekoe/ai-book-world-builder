@@ -17,12 +17,15 @@ import { BaseRepository, type FindOptions } from "./base-repository";
 // ============================================================================
 
 export interface CreateEntityInput {
+	id?: string;
 	projectId: string;
 	name: string;
 	kind: string;
 	summary?: string;
 	startDate?: Date;
 	endDate?: Date;
+	createdAt?: Date;
+	updatedAt?: Date;
 }
 
 export interface UpdateEntityInput {
@@ -35,6 +38,7 @@ export interface UpdateEntityInput {
 }
 
 export interface CreateAttributeInput {
+	id?: string;
 	projectId: string;
 	entityId: string;
 	name: string;
@@ -42,9 +46,11 @@ export interface CreateAttributeInput {
 	dataType: string;
 	startDate?: Date;
 	endDate?: Date;
+	createdAt?: Date;
 }
 
 export interface CreateRelationshipInput {
+	id?: string;
 	projectId: string;
 	sourceEntityId: string;
 	targetEntityId: string;
@@ -52,6 +58,7 @@ export interface CreateRelationshipInput {
 	description?: string;
 	startDate?: Date;
 	endDate?: Date;
+	createdAt?: Date;
 }
 
 export type EntityWithDetails = Entity & {
@@ -258,14 +265,15 @@ export class EntityRepository extends BaseRepository<
 			const [created] = await db
 				.insert(entity)
 				.values({
+					...(data.id ? { id: data.id } : {}),
 					projectId: data.projectId,
 					name: data.name,
 					kind: data.kind,
 					summary: data.summary,
 					startDate: data.startDate,
 					endDate: data.endDate,
-					createdAt: new Date(),
-					updatedAt: new Date(),
+					createdAt: data.createdAt ?? new Date(),
+					updatedAt: data.updatedAt ?? new Date(),
 				})
 				.returning();
 
@@ -449,7 +457,8 @@ export class EntityRepository extends BaseRepository<
 				.insert(entityAttribute)
 				.values({
 					...data,
-					createdAt: new Date(),
+					...(data.id ? { id: data.id } : {}),
+					createdAt: data.createdAt ?? new Date(),
 				})
 				.returning();
 
@@ -546,7 +555,8 @@ export class EntityRepository extends BaseRepository<
 				.insert(relationship)
 				.values({
 					...data,
-					createdAt: new Date(),
+					...(data.id ? { id: data.id } : {}),
+					createdAt: data.createdAt ?? new Date(),
 				})
 				.returning();
 

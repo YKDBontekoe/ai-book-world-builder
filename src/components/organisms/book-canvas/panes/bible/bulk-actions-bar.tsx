@@ -1,20 +1,28 @@
 "use client";
 
-import { Download, Trash2, X } from "lucide-react";
+import { ClipboardCopy, Download, FileJson, Trash2, X } from "lucide-react";
 import { Button } from "@/components/atoms/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "@/components/atoms/dropdown-menu";
 import { GlassCard } from "@/components/molecules/glass-card";
 
 interface BulkActionsBarProps {
 	selectedCount: number;
 	onDelete: () => void;
-	onExport: () => void;
+	onCopy: () => void;
+	onDownloadJSON: () => void;
 	onClearSelection: () => void;
 }
 
 export function BulkActionsBar({
 	selectedCount,
 	onDelete,
-	onExport,
+	onCopy,
+	onDownloadJSON,
 	onClearSelection,
 }: BulkActionsBarProps) {
 	if (selectedCount === 0) return null;
@@ -26,15 +34,30 @@ export function BulkActionsBar({
 					{selectedCount} selected
 				</div>
 				<div className="h-4 w-px bg-border mx-1" />
-				<Button
-					size="sm"
-					variant="ghost"
-					onClick={onExport}
-					className="h-7 px-3 rounded-full text-xs hover:bg-muted"
-				>
-					<Download className="mr-1.5 h-3.5 w-3.5" />
-					Export
-				</Button>
+
+				<DropdownMenu>
+					<DropdownMenuTrigger asChild>
+						<Button
+							size="sm"
+							variant="ghost"
+							className="h-7 px-3 rounded-full text-xs hover:bg-muted"
+						>
+							<Download className="mr-1.5 h-3.5 w-3.5" />
+							Export
+						</Button>
+					</DropdownMenuTrigger>
+					<DropdownMenuContent align="start" side="top" className="mb-2">
+						<DropdownMenuItem onClick={onCopy} className="text-xs">
+							<ClipboardCopy className="mr-2 h-3.5 w-3.5" />
+							Copy to Clipboard
+						</DropdownMenuItem>
+						<DropdownMenuItem onClick={onDownloadJSON} className="text-xs">
+							<FileJson className="mr-2 h-3.5 w-3.5" />
+							Download JSON
+						</DropdownMenuItem>
+					</DropdownMenuContent>
+				</DropdownMenu>
+
 				<Button
 					size="sm"
 					variant="ghost"
