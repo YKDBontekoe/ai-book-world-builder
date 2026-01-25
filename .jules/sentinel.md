@@ -33,3 +33,8 @@
 **Vulnerability:** The `exportBook` service utility was marked with `"use server"`, exposing it as a public Server Action endpoint. This allowed potential IDOR attacks as it accepted complex data objects without authorization checks, trusting the client-provided input.
 **Learning:** Files in `lib/services` marked with `"use server"` automatically become public APIs. If they are intended as internal helpers, this exposes internal logic and bypasses route-level security controls.
 **Prevention:** Use `import "server-only"` for internal service modules. Ensure only dedicated action files (e.g., in `app/actions`) use `"use server"` and that they always implement proper authentication and input validation middleware.
+
+## 2025-05-27 - [Scene Card IDOR]
+**Vulnerability:** `updateSceneCard` query allowed updating scene cards using only `sceneId`, ignoring project ownership boundaries.
+**Learning:** Helper queries for child resources must self-enforce ownership scoping. Relying solely on service-layer checks is brittle if the underlying query doesn't enforce the scope.
+**Prevention:** Update and delete queries for child resources must accept a parent ID (e.g., `projectId`) and enforce it in the `WHERE` clause.

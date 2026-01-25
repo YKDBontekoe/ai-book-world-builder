@@ -10,7 +10,11 @@ export async function updateSceneChronology(
 ) {
 	try {
 		await ensureProjectAccess(projectId, true);
-		await updateSceneCard({ sceneId, chronologicalSequence: sequence });
+		await updateSceneCard({
+			sceneId,
+			chronologicalSequence: sequence,
+			projectId,
+		});
 		return { success: true };
 	} catch (error) {
 		console.error("Failed to update chronology:", error);
