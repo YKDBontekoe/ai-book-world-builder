@@ -59,3 +59,4 @@ verification/screenshots/
 
 # Local Jules session metadata
 .data/
+coverage_report.txt
