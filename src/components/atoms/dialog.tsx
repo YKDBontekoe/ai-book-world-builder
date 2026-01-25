@@ -22,7 +22,7 @@ const DialogOverlay = React.forwardRef<
 			ref={ref}
 			initial={{ opacity: 0 }}
 			animate={{ opacity: 1 }}
-			transition={{ duration: 0.2 }}
+			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			className={cn(
 				"fixed inset-0 z-50 glass-overlay data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
 				className,
