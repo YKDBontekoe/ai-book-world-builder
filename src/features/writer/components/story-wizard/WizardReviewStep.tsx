@@ -49,12 +49,14 @@ export function WizardReviewStep({
 						onChange={(e) => onUpdatePlan("title", e.target.value)}
 						className="text-2xl font-bold bg-transparent border-0 px-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/50"
 						placeholder="Story Title"
+						aria-label="Story Title"
 					/>
 					<Input
 						value={plan.logline}
 						onChange={(e) => onUpdatePlan("logline", e.target.value)}
 						className="text-muted-foreground bg-transparent border-0 px-0 h-auto focus-visible:ring-0 placeholder:text-muted-foreground/50"
 						placeholder="Logline (One-sentence summary)"
+						aria-label="Logline"
 					/>
 				</div>
 				<div className="flex gap-2">
@@ -73,10 +75,14 @@ export function WizardReviewStep({
 				<ScrollArea className="flex-1 p-6">
 					<div className="space-y-8 max-w-3xl mx-auto">
 						<div className="space-y-2">
-							<Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+							<Label
+								htmlFor="plan-summary"
+								className="text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+							>
 								Summary
 							</Label>
 							<Textarea
+								id="plan-summary"
 								value={plan.summary}
 								onChange={(e) => onUpdatePlan("summary", e.target.value)}
 								className="min-h-[100px] resize-none glass-input"
@@ -106,6 +112,7 @@ export function WizardReviewStep({
 											size="icon"
 											className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
 											onClick={() => onDeleteChapter(i)}
+											aria-label={`Delete Chapter ${i + 1}`}
 										>
 											<Trash2 className="w-4 h-4" />
 										</Button>
@@ -121,6 +128,7 @@ export function WizardReviewStep({
 												}
 												className="font-semibold h-9 bg-transparent border-transparent hover:border-border focus:border-input transition-colors"
 												placeholder="Chapter Title"
+												aria-label={`Chapter ${i + 1} Title`}
 											/>
 										</div>
 										<Textarea
@@ -130,6 +138,7 @@ export function WizardReviewStep({
 											}
 											className="text-sm text-muted-foreground min-h-[80px] bg-transparent border-transparent hover:border-border focus:border-input resize-none transition-colors"
 											placeholder="Chapter Summary"
+											aria-label={`Chapter ${i + 1} Summary`}
 										/>
 									</div>
 								))}
