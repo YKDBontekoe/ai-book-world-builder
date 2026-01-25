@@ -25,4 +25,12 @@ describe("GlassCard", () => {
 		const card = container.firstChild as HTMLElement;
 		expect(card.className).toContain("cursor-pointer");
 	});
+
+	it("renders correctly with rounded 2xl", () => {
+		const { container } = render(
+			<GlassCard rounded="2xl">Rounded Content</GlassCard>,
+		);
+		const card = container.firstChild as HTMLElement;
+		expect(card.className).toContain("rounded-2xl");
+	});
 });
