@@ -2,7 +2,6 @@ import type { ProjectFolder } from "@/lib/db/schema";
 import { generateDummyPassword } from "@/lib/db/utils";
 
 export const isProductionEnvironment = process.env.NODE_ENV === "production";
-export const isDevelopmentEnvironment = process.env.NODE_ENV === "development";
 export const isTestEnvironment = Boolean(
 	process.env.PLAYWRIGHT_TEST_BASE_URL ||
 		process.env.PLAYWRIGHT ||
