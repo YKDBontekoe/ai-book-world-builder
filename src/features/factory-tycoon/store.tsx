@@ -205,10 +205,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     
     async function init() {
         try {
-            const savedState = await loadGameState();
+            const result = await loadGameState();
             if (mounted) {
-                if (savedState) {
-                    dispatch({ type: 'SET_STATE', payload: savedState });
+                if (result.success && result.data) {
+                    dispatch({ type: 'SET_STATE', payload: result.data });
                     toast.success('Game loaded successfully');
                 }
                 setIsLoading(false);
@@ -244,7 +244,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const saveInterval = setInterval(async () => {
           if (!stateRef.current) return;
           try {
-              await saveGameState(stateRef.current);
+              const result = await saveGameState(stateRef.current);
+              if (!result.success) {
+                  console.error("Auto-save failed", result.error);
+              }
           } catch (e) {
               console.error("Auto-save failed", e);
           }
@@ -297,8 +300,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const forceSave = useCallback(async () => {
-      await saveGameState(stateRef.current);
-      toast.success('Game saved');
+      const result = await saveGameState(stateRef.current);
+      if (result.success) {
+          toast.success('Game saved');
+      } else {
+          toast.error('Failed to save game');
+          console.error(result.error);
+      }
   }, []);
 
   return (
