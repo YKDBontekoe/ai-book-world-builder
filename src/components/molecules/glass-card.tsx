@@ -38,12 +38,34 @@ export interface GlassCardProps
 
 const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 	(
-		{ className, variant, size, gradient, interactive, children, ...props },
+		{
+			className,
+			variant,
+			size,
+			gradient,
+			interactive,
+			children,
+			onClick,
+			onKeyDown,
+			...props
+		},
 		ref,
 	) => {
+		const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+			if (interactive && (e.key === "Enter" || e.key === " ")) {
+				e.preventDefault();
+				onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>);
+			}
+			onKeyDown?.(e);
+		};
+
 		return (
 			<div
 				ref={ref}
+				role={interactive ? "button" : undefined}
+				tabIndex={interactive ? 0 : undefined}
+				onKeyDown={handleKeyDown}
+				onClick={onClick}
 				className={cn(
 					glassCardVariants({ variant, size }),
 					interactive &&
