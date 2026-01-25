@@ -1,3 +1,4 @@
+import Papa from "papaparse";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import type { JulesSession } from "@/lib/jules-client";
 import type { TaskItem } from "./task-card";
@@ -34,6 +35,45 @@ export function filterItem(
 	}
 
 	return true;
+}
+
+export function getItemId(item: TaskItem): string {
+	if (item.type === "session") {
+		return `session-${item.data.id}`;
+	}
+	return `${item.type}-${item.data.number}`;
+}
+
+export function generateCsv(items: TaskItem[]): string {
+	const data = items.map((item) => {
+		const common = {
+			Type: item.type,
+			Title:
+				item.type === "session"
+					? item.data.title || item.data.prompt
+					: item.data.title,
+			State: item.data.state,
+			Updated: item.data.updated_at,
+		};
+
+		if (item.type === "session") {
+			return {
+				ID: item.data.id,
+				...common,
+				User: "Jules",
+				URL: "",
+			};
+		}
+
+		return {
+			ID: item.data.number,
+			...common,
+			User: item.data.user?.login,
+			URL: item.data.html_url,
+		};
+	});
+
+	return Papa.unparse(data);
 }
 
 export function buildColumns(

@@ -1,7 +1,15 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Filter, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
+import {
+	Download,
+	Filter,
+	Maximize2,
+	Minimize2,
+	RefreshCw,
+	Search,
+	Sparkles,
+} from "lucide-react";
 import type { JSX } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
@@ -15,6 +23,7 @@ import {
 } from "@/components/atoms/select";
 import { Switch } from "@/components/atoms/switch";
 import { GlassCard } from "@/components/molecules/glass-card";
+import { cn } from "@/lib/utils";
 
 interface TaskBoardToolbarProps {
 	activeTab: "board" | "chat";
@@ -25,6 +34,9 @@ interface TaskBoardToolbarProps {
 	setTypeFilter: (filter: "all" | "issue" | "pr" | "session") => void;
 	isCompact: boolean;
 	setIsCompact: (compact: boolean) => void;
+	onRefresh: () => void;
+	onExport: () => void;
+	isRefreshing: boolean;
 }
 
 export function TaskBoardToolbar({
@@ -36,6 +48,9 @@ export function TaskBoardToolbar({
 	setTypeFilter,
 	isCompact,
 	setIsCompact,
+	onRefresh,
+	onExport,
+	isRefreshing,
 }: TaskBoardToolbarProps): JSX.Element {
 	return (
 		<GlassCard
@@ -102,6 +117,32 @@ export function TaskBoardToolbar({
 									<SelectItem value="session">Sessions</SelectItem>
 								</SelectContent>
 							</Select>
+						</div>
+
+						<div className="h-6 w-px bg-border/50" />
+
+						<div className="flex items-center gap-1">
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={onExport}
+								className="h-8 w-8 text-muted-foreground hover:text-foreground"
+								title="Export All to CSV (Cmd+E)"
+							>
+								<Download className="h-4 w-4" />
+							</Button>
+							<Button
+								variant="ghost"
+								size="icon"
+								onClick={onRefresh}
+								disabled={isRefreshing}
+								className="h-8 w-8 text-muted-foreground hover:text-foreground"
+								title="Refresh Data"
+							>
+								<RefreshCw
+									className={cn("h-4 w-4", isRefreshing && "animate-spin")}
+								/>
+							</Button>
 						</div>
 
 						<div className="h-6 w-px bg-border/50" />

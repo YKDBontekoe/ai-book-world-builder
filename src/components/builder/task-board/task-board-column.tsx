@@ -5,7 +5,7 @@ import { LayoutList } from "lucide-react";
 import type { JSX } from "react";
 import type { GitHubIssue } from "@/app/actions/github";
 import { CreateFeatureDialog } from "../create-feature-dialog";
-import type { Column } from "../task-board-utils";
+import { type Column, getItemId } from "../task-board-utils";
 import { TaskCard, type TaskItem } from "../task-card";
 
 interface TaskBoardColumnProps {
@@ -14,6 +14,8 @@ interface TaskBoardColumnProps {
 	defaultSource?: string;
 	onSelect: (item: TaskItem) => void;
 	onFix: (issue: GitHubIssue) => void;
+	selectedIds: Set<string>;
+	onToggleSelection: (id: string) => void;
 }
 
 export function TaskBoardColumn({
@@ -22,6 +24,8 @@ export function TaskBoardColumn({
 	defaultSource,
 	onSelect,
 	onFix,
+	selectedIds,
+	onToggleSelection,
 }: TaskBoardColumnProps): JSX.Element {
 	return (
 		<div className="w-[300px] flex-shrink-0 flex flex-col">
@@ -51,15 +55,21 @@ export function TaskBoardColumn({
 							<p className="text-xs font-medium">No items in {column.title}</p>
 						</motion.div>
 					) : (
-						column.items.map((item) => (
-							<TaskCard
-								key={item.type === "session" ? item.data.id : item.data.number}
-								item={item}
-								onSelect={onSelect}
-								onFix={item.type === "issue" ? onFix : undefined}
-								compact={isCompact}
-							/>
-						))
+						column.items.map((item) => {
+							const id = getItemId(item);
+							return (
+								<TaskCard
+									key={id}
+									item={item}
+									onSelect={onSelect}
+									onFix={item.type === "issue" ? onFix : undefined}
+									compact={isCompact}
+									isSelected={selectedIds.has(id)}
+									onToggleSelect={() => onToggleSelection(id)}
+									selectionMode={selectedIds.size > 0}
+								/>
+							);
+						})
 					)}
 				</AnimatePresence>
 			</div>
