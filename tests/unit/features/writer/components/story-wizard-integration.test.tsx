@@ -1,8 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type React from "react";
+import { toast } from "sonner";
 import { describe, expect, it, vi } from "vitest";
-import { StoryWizard } from "@/features/writer/components/story-wizard";
 import * as storyGenerationActions from "@/app/actions/story-generation";
+import { StoryWizard } from "@/features/writer/components/story-wizard";
 
 // Mock the server actions
 vi.mock("@/app/actions/story-generation", () => ({
@@ -22,9 +24,13 @@ vi.mock("sonner", () => ({
 
 // Mock ScrollArea to avoid layout issues in JSDOM
 vi.mock("@/components/atoms/scroll-area", () => ({
-	ScrollArea: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-		<div className={className}>{children}</div>
-	),
+	ScrollArea: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => <div className={className}>{children}</div>,
 }));
 
 // Mock framer-motion to avoid animation issues
@@ -32,9 +38,13 @@ vi.mock("framer-motion", async () => {
 	const actual = await vi.importActual("framer-motion");
 	return {
 		...actual,
-		AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+		AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+			<>{children}</>
+		),
 		motion: {
-			div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+			div: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+				<div {...props}>{children}</div>
+			),
 		},
 	};
 });
@@ -55,11 +65,11 @@ describe("StoryWizard Integration", () => {
 		const user = userEvent.setup();
 
 		// Setup mocks
-		(storyGenerationActions.generateBookPlan as any).mockResolvedValue({
+		vi.mocked(storyGenerationActions).generateBookPlan.mockResolvedValue({
 			success: true,
 			plan: mockPlan,
 		});
-		(storyGenerationActions.createBookFromPlan as any).mockResolvedValue({
+		vi.mocked(storyGenerationActions).createBookFromPlan.mockResolvedValue({
 			success: true,
 			data: { id: "new-story-id" },
 		});
@@ -72,11 +82,17 @@ describe("StoryWizard Integration", () => {
 		await user.click(templateButton);
 
 		// Verify fields are populated (optional check)
-		const promptInput = screen.getByPlaceholderText(/e.g. A cyberpunk detective/i) as HTMLTextAreaElement;
-		expect(promptInput.value).toContain("A young farm boy discovers he is the heir");
+		const promptInput = screen.getByPlaceholderText(
+			/e.g. A cyberpunk detective/i,
+		) as HTMLTextAreaElement;
+		expect(promptInput.value).toContain(
+			"A young farm boy discovers he is the heir",
+		);
 
 		// Click Generate
-		const generateButton = screen.getByRole("button", { name: /generate plan/i });
+		const generateButton = screen.getByRole("button", {
+			name: /generate plan/i,
+		});
 		await user.click(generateButton);
 
 		// 2. Generating Step (Loading)
@@ -112,7 +128,7 @@ describe("StoryWizard Integration", () => {
 				// Other fields should remain from mockPlan
 				logline: "Generated Logline",
 			}),
-			expect.anything() // style object
+			expect.anything(), // style object
 		);
 
 		// Verify onComplete called
@@ -124,7 +140,7 @@ describe("StoryWizard Integration", () => {
 	it("handles generation error by returning to input", async () => {
 		const user = userEvent.setup();
 
-		(storyGenerationActions.generateBookPlan as any).mockResolvedValue({
+		vi.mocked(storyGenerationActions).generateBookPlan.mockResolvedValue({
 			success: false,
 			error: "Failed",
 		});
@@ -133,22 +149,24 @@ describe("StoryWizard Integration", () => {
 
 		// Click Generate (assuming prompt is empty is fine or we fill it)
 		// Need to fill prompt first as button might be disabled or validation check
-		const promptInput = screen.getByPlaceholderText(/e.g. A cyberpunk detective/i);
+		const promptInput = screen.getByPlaceholderText(
+			/e.g. A cyberpunk detective/i,
+		);
 		await user.type(promptInput, "Test prompt");
 
-		const generateButton = screen.getByRole("button", { name: /generate plan/i });
+		const generateButton = screen.getByRole("button", {
+			name: /generate plan/i,
+		});
 		await user.click(generateButton);
 
 		// Should stay on or return to input step
 		// Verify we can still see the input
 		await waitFor(() => {
-			expect(screen.getByPlaceholderText(/e.g. A cyberpunk detective/i)).toBeInTheDocument();
+			expect(
+				screen.getByPlaceholderText(/e.g. A cyberpunk detective/i),
+			).toBeInTheDocument();
 		});
 
-		// And maybe a toast error (we mocked toast)
-		// import { toast } from "sonner"; expect(toast.error).toHaveBeenCalled();
-		// But we need to import toast mock to assert.
-		// Since we mocked "sonner" globally, we can just assert on the mock if we import it or exposed it.
-		// Ideally we should import it in the test file from the library to check the mock.
+		expect(toast.error).toHaveBeenCalled();
 	});
 });
