@@ -26,6 +26,8 @@ describe("SemanticCacheService", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		vi.stubGlobal("fetch", vi.fn());
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		vi.spyOn(console, "error").mockImplementation(() => {});
 	});
 
 	afterEach(() => {
