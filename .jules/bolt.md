@@ -51,3 +51,7 @@
 ## 2025-06-16 - Splitting Visualization Layout from Styling
 **Learning:** Expensive layout algorithms (like `dagre` in graph visualizations) are often coupled with cheap styling logic (like theme colors) in a single `useMemo`. This causes the expensive algorithm to re-run unnecessarily when only the cheap style changes.
 **Action:** Split the logic into two `useMemo` hooks: one for structure/layout (expensive, depends on data) and one for styling (cheap, depends on theme/layout). This preserves the expensive calculation across theme switches and can also preserve state (like user-dragged node positions).
+
+## 2025-06-17 - Context Granularity
+**Learning:** Monolithic context hooks like `useBookCanvas` that return everything (`layout`, `selection`, `actions`) cause re-renders in all consumers even when unrelated state changes.
+**Action:** Always prefer consuming granular hooks (`useBookCanvasLayout`, etc.) in leaf components. Legacy hooks should be deprecated or refactored.

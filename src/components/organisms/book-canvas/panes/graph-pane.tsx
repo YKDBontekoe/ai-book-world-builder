@@ -22,7 +22,11 @@ import "@xyflow/react/dist/style.css";
 import { getProjectIssuesAction } from "@/app/actions/analysis";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
 import { EmptyState } from "@/components/molecules/empty-state";
-import { useBookCanvas } from "@/components/organisms/book-canvas/book-canvas-context";
+import {
+	useBookCanvasActions,
+	useBookCanvasLayout,
+	useBookCanvasSelection,
+} from "@/components/organisms/book-canvas/book-canvas-context";
 import { getProjectStructure } from "@/features/writer/actions";
 import type { ConsistencyIssue } from "@/lib/db/schema/issues";
 import { QUERY_KEYS } from "@/lib/query-options";
@@ -86,7 +90,9 @@ const getLayoutedElements = (nodes: Node[], edges: Edge[]) => {
 };
 
 export function GraphPane() {
-	const { projectId, activeSceneId, setActiveSceneId } = useBookCanvas();
+	const { projectId } = useBookCanvasLayout();
+	const { activeSceneId } = useBookCanvasSelection();
+	const { setActiveSceneId } = useBookCanvasActions();
 	const { theme } = useTheme();
 
 	// Ref to track activeSceneId without triggering layout effects

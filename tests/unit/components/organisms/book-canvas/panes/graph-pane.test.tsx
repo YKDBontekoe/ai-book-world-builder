@@ -2,7 +2,11 @@ import { render, screen } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getProjectIssuesAction } from "../../../../../../src/app/actions/analysis";
-import { useBookCanvas } from "../../../../../../src/components/organisms/book-canvas/book-canvas-context";
+import {
+	useBookCanvasActions,
+	useBookCanvasLayout,
+	useBookCanvasSelection,
+} from "../../../../../../src/components/organisms/book-canvas/book-canvas-context";
 import { GraphPane } from "../../../../../../src/components/organisms/book-canvas/panes/graph-pane";
 import { getProjectStructure } from "../../../../../../src/features/writer/actions/structure";
 
@@ -10,7 +14,9 @@ import { getProjectStructure } from "../../../../../../src/features/writer/actio
 vi.mock(
 	"../../../../../../src/components/organisms/book-canvas/book-canvas-context",
 	() => ({
-		useBookCanvas: vi.fn(),
+		useBookCanvasLayout: vi.fn(),
+		useBookCanvasSelection: vi.fn(),
+		useBookCanvasActions: vi.fn(),
 	}),
 );
 
@@ -92,9 +98,13 @@ describe("GraphPane", () => {
 	});
 
 	it("renders without crashing", async () => {
-		(useBookCanvas as any).mockReturnValue({
+		(useBookCanvasLayout as any).mockReturnValue({
 			projectId: "test-project-id",
+		});
+		(useBookCanvasSelection as any).mockReturnValue({
 			activeSceneId: null,
+		});
+		(useBookCanvasActions as any).mockReturnValue({
 			setActiveSceneId: vi.fn(),
 		});
 
