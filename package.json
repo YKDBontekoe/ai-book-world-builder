@@ -35,7 +35,7 @@
 		"@ai-sdk/anthropic": "3.0.18",
 		"@ai-sdk/openai": "3.0.14",
 		"@ai-sdk/provider": "3.0.4",
-		"@ai-sdk/react": "3.0.46",
+		"@ai-sdk/react": "3.0.47",
 		"@ai-sdk/xai": "3.0.29",
 		"@auth/drizzle-adapter": "1.11.1",
 		"@codemirror/lang-javascript": "6.2.4",
