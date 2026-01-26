@@ -21,7 +21,7 @@ const AlertDialogOverlay = React.forwardRef<
 			animate={{ opacity: 1 }}
 			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			className={cn(
-				"fixed inset-0 z-50 bg-black/80 data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
+				"fixed inset-0 z-50 glass-overlay data-[state=closed]:animate-out data-[state=closed]:fade-out-0",
 				className,
 			)}
 			{...props}
