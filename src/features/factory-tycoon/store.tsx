@@ -267,7 +267,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const manualInteract = useCallback((x: number, y: number) => {
       // Feedback Logic
-      const b = state.buildings.find(b => b.x === x && b.y === y);
+      // Use ref to avoid re-creating this function every tick
+      const b = stateRef.current.buildings.find(b => b.x === x && b.y === y);
       if (b) {
           const config = BUILDINGS[b.type];
           // Belt Feedback
@@ -286,7 +287,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       }
       
       dispatch({ type: 'MANUAL_INTERACT', x, y });
-  }, [state.buildings]);
+  }, []);
   
   const researchTech = useCallback((techId: string) => {
     dispatch({ type: 'RESEARCH_TECH', techId });

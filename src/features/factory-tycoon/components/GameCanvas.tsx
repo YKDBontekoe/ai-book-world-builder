@@ -1,97 +1,16 @@
 'use client';
 
-import { type ClassValue, clsx } from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowRight, ArrowUpFromLine, Ban, Beaker, Box, Factory, GitFork, HandCoins, Hourglass, Pickaxe, Store, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/atoms/tooltip';
+import { TooltipProvider } from '@/components/atoms/tooltip';
 import { useSound } from '../audio/SoundContext';
-import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from '../config';
+import { GRID_SIZE, TICK_RATE_MS } from '../config';
 import { useGame } from '../store';
-import type { BeltItem, BuildingType, Direction, Resource } from '../types';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-const ICONS: Record<BuildingType, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
-  Mine: Pickaxe,
-  Smelter: Factory,
-  Factory: Factory, 
-  Warehouse: Box,
-  Market: Store,
-  TradingPost: HandCoins,
-  Lab: Beaker,
-  Belt: ArrowRight,
-  Splitter: GitFork,
-  Inserter: ArrowUpFromLine,
-};
-
-const STATUS_CONFIG = {
-  RUNNING: { 
-    color: 'var(--factory-success)', 
-    className: 'status-running',
-    label: 'Running: Producing resources',
-    Icon: Zap 
-  },
-  STARVED: { 
-    color: 'var(--factory-warning)', 
-    className: 'status-starved',
-    label: 'Starved: Missing input resources',
-    Icon: Hourglass 
-  },
-  BLOCKED: { 
-    color: 'var(--factory-danger)', 
-    className: 'status-blocked',
-    label: 'Blocked: Output full or no capacity',
-    Icon: Ban 
-  },
-  IDLE: { 
-    color: 'var(--factory-text-muted)', 
-    className: 'status-idle',
-    label: 'Idle: Passive building',
-    Icon: null 
-  },
-};
-
-const BUILDING_COLORS: Partial<Record<BuildingType, string>> = {
-  Mine: 'text-amber-600',
-  Smelter: 'text-orange-600',
-  Factory: 'text-blue-600',
-  Warehouse: 'text-slate-500',
-  Market: 'text-emerald-600',
-  TradingPost: 'text-yellow-600',
-  Lab: 'text-purple-600',
-  Belt: 'text-gray-500',
-  Splitter: 'text-cyan-600',
-  Inserter: 'text-yellow-500',
-};
-
-// Colors for resources on belts
-const RESOURCE_COLORS: Record<Resource, string> = {
-    ore: '#78350f', // amber-900
-    ingot: '#f59e0b', // amber-500
-    gadget: '#3b82f6', // blue-500
-    science: '#d8b4fe', // purple-300
-    cash: '#10b981', // emerald-500
-};
-
-function getRotation(type: BuildingType, dir: Direction): number {
-    const baseRotation = { 'N': -90, 'E': 0, 'S': 90, 'W': 180 }; // For ArrowRight (Belt)
-    const standardRotation = { 'N': 0, 'E': 90, 'S': 180, 'W': 270 }; // For Upright Icons
-
-    if (type === 'Belt') return baseRotation[dir];
-    if (type === 'Splitter') return baseRotation[dir]; // Assuming Splitter icon is also directional like arrow?
-    if (type === 'Inserter') return baseRotation[dir]; // ArrowUpFromLine points Up (North) by default
-    
-    // For others, if we want them to face "Out", we use standard
-    // But currently Miner/Smelter don't have "Direction" in their Icon visual really.
-    // Except Pickaxe handle? Factory chimney?
-    // Let's rotate them too so user knows which way is "Front".
-    return standardRotation[dir];
-}
+import type { BeltItem, BuildingType, Direction } from '../types';
+import GameTile from './GameTile';
+import { getRotation, RESOURCE_COLORS } from './visuals';
 
 export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingType | null }) {
   const { state, addBuilding, removeBuilding, rotateBuilding, manualInteract } = useGame();
@@ -130,7 +49,8 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
       return () => window.removeEventListener('keydown', handleKeyDown);
   }, [hoveredTile, state.buildings, rotateBuilding, playSound, cycleDirection]);
 
-  const handleTileClick = (x: number, y: number) => {
+  // Stable Handlers for GameTile
+  const handleTileClick = useCallback((x: number, y: number) => {
     if (selectedBuilding) {
         addBuilding(selectedBuilding, x, y, currentDirection);
         playSound('place');
@@ -139,15 +59,15 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
         manualInteract(x, y);
         playSound('pickup');
     }
-  };
+  }, [selectedBuilding, addBuilding, currentDirection, manualInteract, playSound]);
 
-  const handleContextMenu = (e: React.MouseEvent, id?: string) => {
+  const handleContextMenu = useCallback((e: React.MouseEvent, id?: string) => {
     e.preventDefault();
     if (id) {
         removeBuilding(id);
         playSound('delete');
     }
-  };
+  }, [removeBuilding, playSound]);
 
   // Create a map for O(1) lookup
   const buildingMap = new Map();
@@ -180,13 +100,6 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
           const dx = b.direction === 'E' ? 1 : b.direction === 'W' ? -1 : 0;
           const dy = b.direction === 'S' ? 1 : b.direction === 'N' ? -1 : 0;
           
-          // p=0 is source center (offset -dx, -dy)
-          // p=1 is target center (offset dx, dy)
-          // Relative to inserter center (b.x+0.5, b.y+0.5):
-          // Offset = (p - 0.5) * 2 * (dx, dy)
-          // Wait, if p=0, offset is -0.5 * 2 * (dx, dy) = (-dx, -dy). Correct.
-          // if p=0.5, offset is 0. Correct.
-          // if p=1.0, offset is (dx, dy). Correct.
           itemX = b.x + 0.5 + (p - 0.5) * dx;
           itemY = b.y + 0.5 + (p - 0.5) * dy;
 
@@ -212,139 +125,25 @@ export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingTyp
             onMouseLeave={() => setHoveredTile(null)}
         >
             {Array.from({ length: GRID_SIZE * GRID_SIZE }).map((_, i) => {
-            const x = i % GRID_SIZE;
-            const y = Math.floor(i / GRID_SIZE);
-            const building = buildingMap.get(`${x},${y}`);
-            const Icon = building ? ICONS[building.type as BuildingType] : null;
-            const statusConfig = building ? STATUS_CONFIG[building.status as keyof typeof STATUS_CONFIG] : null;
-            const StatusIcon = statusConfig?.Icon;
-            const buildingColor = building ? BUILDING_COLORS[building.type as BuildingType] : '';
-            
-            const rotation = building ? getRotation(building.type, building.direction) : 0;
+                const x = i % GRID_SIZE;
+                const y = Math.floor(i / GRID_SIZE);
+                const building = buildingMap.get(`${x},${y}`);
+                const isHovered = hoveredTile?.x === x && hoveredTile?.y === y;
 
-            const content = (
-                <div 
-                key={`${x}-${y}`}
-                onClick={() => handleTileClick(x, y)}
-                onContextMenu={(e) => handleContextMenu(e, building?.id)}
-                onMouseEnter={() => setHoveredTile({x, y})}
-                className={cn(
-                    "factory-tile group relative",
-                    building && "has-building",
-                    !building && selectedBuilding && "cursor-crosshair"
-                )}
-                style={{
-                    background: building 
-                    ? 'var(--factory-bg-elevated)' 
-                    : (x + y) % 2 === 0 
-                        ? 'var(--factory-bg-card)' 
-                        : 'var(--factory-bg-panel)'
-                }}
-                >
-                {building && Icon && (
-                    <>
-                    <div 
-                        className={cn(
-                            "relative z-10 transition-all duration-300",
-                            building.status === 'RUNNING' && building.type !== 'Belt' && "scale-110"
-                        )}
-                        style={{ transform: `rotate(${rotation}deg)` }}
-                    >
-                        <Icon className={cn(
-                        "w-7 h-7 transition-all duration-300",
-                        buildingColor || 'text-slate-400',
-                        building.status === 'RUNNING' && building.type !== 'Belt' && "drop-shadow-[0_0_8px_currentColor]",
-                        building.status === 'RUNNING' && building.type === 'Mine' && "animate-shake-vertical",
-                        building.status === 'RUNNING' && (building.type === 'Smelter' || building.type === 'Factory') && "animate-working-pulse",
-                        building.status === 'RUNNING' && building.type === 'Lab' && "animate-pulse",
-                        building.status === 'RUNNING' && building.type === 'Inserter' && "animate-swing"
-                        )} />
-                    </div>
-                    
-                    {/* Status Indicator (Not for Belt/Splitter to avoid clutter) */}
-                    {building.type !== 'Belt' && building.type !== 'Splitter' && (
-                        <div className={cn("status-indicator", statusConfig?.className)} />
-                    )}
-                    
-                    {/* Problem Overlay */}
-                    {building.status !== 'RUNNING' && building.status !== 'IDLE' && StatusIcon && building.type !== 'Belt' && (
-                        <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center animate-in fade-in zoom-in duration-200 z-20">
-                        <StatusIcon 
-                            className={cn(
-                            "w-6 h-6 drop-shadow-lg",
-                            building.status === 'BLOCKED' ? "text-red-400" : "text-amber-400"
-                            )} 
-                        />
-                        </div>
-                    )}
-                    </>
-                )}
-                
-                {/* Hover Preview for Empty Tiles */}
-                {!building && selectedBuilding && hoveredTile?.x === x && hoveredTile?.y === y && (
-                    <div className="absolute inset-0 flex items-center justify-center opacity-60 transition-opacity">
-                    {(() => {
-                        const PreviewIcon = ICONS[selectedBuilding];
-                        const previewRot = getRotation(selectedBuilding, currentDirection);
-                        return (
-                            <div style={{ transform: `rotate(${previewRot}deg)` }}>
-                                <PreviewIcon className="w-6 h-6 text-amber-400" />
-                            </div>
-                        );
-                    })()}
-                    </div>
-                )}
-                </div>
-            );
-
-            if (!building) return content;
-            if (building.type === 'Belt') return content; // No tooltip for belts
-
-            const config = BUILDINGS[building.type as BuildingType];
-
-            return (
-                <Tooltip key={`${x}-${y}`} delayDuration={200}>
-                    <TooltipTrigger asChild>
-                        {content}
-                    </TooltipTrigger>
-                    <TooltipContent 
-                        side="right" 
-                        className="factory-panel flex flex-col gap-2 p-3 min-w-[180px]"
-                    >
-                        <div className="flex items-center justify-between gap-3">
-                            <span className="font-bold text-[var(--factory-text-primary)]">
-                                {building.type}
-                            </span>
-                            <span 
-                                className="text-[10px] uppercase px-2 py-0.5 rounded-full font-bold"
-                                style={{ 
-                                background: statusConfig?.color,
-                                color: '#0a0e14'
-                                }}
-                            >
-                                {building.status}
-                            </span>
-                        </div>
-                        <p className="text-xs text-[var(--factory-text-secondary)]">
-                            {config.description}
-                        </p>
-                        <div className="text-xs border-t border-[var(--factory-border)] pt-2 text-[var(--factory-text-muted)]">
-                            {statusConfig?.label}
-                        </div>
-                        {building.localInventory && (
-                            <div className="text-xs border-t border-[var(--factory-border)] pt-2">
-                                <div>Inventory:</div>
-                                {Object.entries(building.localInventory).map(([k, v]) => (
-                                    <div key={k}>{k}: {v}</div>
-                                ))}
-                            </div>
-                        )}
-                        <div className="text-[10px] text-[var(--factory-amber)] italic">
-                            Right-click to demolish. R to rotate.
-                        </div>
-                    </TooltipContent>
-                </Tooltip>
-            );
+                return (
+                    <GameTile
+                        key={`${x}-${y}`}
+                        x={x}
+                        y={y}
+                        building={building}
+                        selectedBuilding={selectedBuilding}
+                        currentDirection={currentDirection}
+                        isHovered={isHovered}
+                        onInteract={handleTileClick}
+                        onContext={handleContextMenu}
+                        onHover={setHoveredTile}
+                    />
+                );
             })}
         </div>
         
