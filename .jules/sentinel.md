@@ -33,3 +33,8 @@
 **Vulnerability:** The `exportBook` service utility was marked with `"use server"`, exposing it as a public Server Action endpoint. This allowed potential IDOR attacks as it accepted complex data objects without authorization checks, trusting the client-provided input.
 **Learning:** Files in `lib/services` marked with `"use server"` automatically become public APIs. If they are intended as internal helpers, this exposes internal logic and bypasses route-level security controls.
 **Prevention:** Use `import "server-only"` for internal service modules. Ensure only dedicated action files (e.g., in `app/actions`) use `"use server"` and that they always implement proper authentication and input validation middleware.
+
+## 2025-02-25 - [Export Filename IDOR/Enumeration]
+**Vulnerability:** Book export filenames were constructed using only the project name and timestamp (e.g., `name_timestamp.pdf`). Since exports are public on Vercel Blob, this allowed potential enumeration of exported files if the project name was known.
+**Learning:** Using predictable identifiers (like timestamps) for publicly accessible resources effectively creates public access, even if the URL isn't explicitly listed.
+**Prevention:** Always include a high-entropy identifier (like UUID) in filenames for publicly accessible assets to prevent enumeration attacks.
