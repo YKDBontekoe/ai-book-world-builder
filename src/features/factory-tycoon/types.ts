@@ -44,3 +44,9 @@ export interface GameState {
   unlockedBuildings: BuildingType[];
   researchedTechs: string[];
 }
+
+export type SystemResult = {
+  inventoryDelta: Partial<Record<Resource, number>>;
+  cashDelta: number;
+  consumedCapacity: number; // Volume added/removed
+};

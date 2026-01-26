@@ -1,6 +1,10 @@
 import { BUILDINGS } from "../config";
-import { type BuildingEntity, GameState, type Resource } from "../types";
-import type { SystemResult } from "./productionSystem";
+import {
+	type BuildingEntity,
+	GameState,
+	type Resource,
+	type SystemResult,
+} from "../types";
 
 export const runMarketSystem = (
 	buildings: BuildingEntity[],
