@@ -1,7 +1,14 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Filter, Maximize2, Minimize2, Search, Sparkles } from "lucide-react";
+import {
+	Download,
+	Filter,
+	Maximize2,
+	Minimize2,
+	Search,
+	Sparkles,
+} from "lucide-react";
 import type { JSX } from "react";
 import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
@@ -25,6 +32,7 @@ interface TaskBoardToolbarProps {
 	setTypeFilter: (filter: "all" | "issue" | "pr" | "session") => void;
 	isCompact: boolean;
 	setIsCompact: (compact: boolean) => void;
+	onExport?: () => void;
 }
 
 export function TaskBoardToolbar({
@@ -36,6 +44,7 @@ export function TaskBoardToolbar({
 	setTypeFilter,
 	isCompact,
 	setIsCompact,
+	onExport,
 }: TaskBoardToolbarProps): JSX.Element {
 	return (
 		<GlassCard
@@ -103,6 +112,18 @@ export function TaskBoardToolbar({
 								</SelectContent>
 							</Select>
 						</div>
+
+						{onExport && (
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={onExport}
+								className="h-9 px-3 gap-2 bg-background/50 border-transparent hover:bg-background shadow-none"
+							>
+								<Download className="h-3.5 w-3.5 text-muted-foreground" />
+								<span className="sr-only sm:not-sr-only text-xs">Export</span>
+							</Button>
+						)}
 
 						<div className="h-6 w-px bg-border/50" />
 

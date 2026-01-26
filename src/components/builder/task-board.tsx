@@ -12,7 +12,7 @@ import { JulesChat } from "./jules/jules-chat";
 import { TaskBoardColumn } from "./task-board/task-board-column";
 import { TaskBoardToolbar } from "./task-board/task-board-toolbar";
 import { TaskBoardSkeleton } from "./task-board-skeleton";
-import { buildColumns } from "./task-board-utils";
+import { buildColumns, exportToCsv } from "./task-board-utils";
 import type { TaskItem } from "./task-card";
 
 export function TaskBoard(): JSX.Element {
@@ -77,6 +77,10 @@ export function TaskBoard(): JSX.Element {
 		}
 	};
 
+	const handleExport = () => {
+		exportToCsv(columns);
+	};
+
 	if (selectedItem) {
 		if (selectedItem.type === "session") {
 			return (
@@ -114,6 +118,7 @@ export function TaskBoard(): JSX.Element {
 				setTypeFilter={setTypeFilter}
 				isCompact={isCompact}
 				setIsCompact={setIsCompact}
+				onExport={handleExport}
 			/>
 
 			{activeTab === "chat" ? (

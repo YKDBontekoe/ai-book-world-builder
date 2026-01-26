@@ -1,3 +1,4 @@
+import Papa from "papaparse";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import type { JulesSession } from "@/lib/jules-client";
 import type { TaskItem } from "./task-card";
@@ -93,4 +94,43 @@ export function buildColumns(
 		{ id: "review", title: "Review", items: reviewItems },
 		{ id: "done", title: "Done", items: doneItems },
 	];
+}
+
+export function exportToCsv(columns: Column[]) {
+	const flatData = columns.flatMap((col) =>
+		col.items.map((item) => {
+			const common = {
+				Type: item.type,
+				Status: col.title,
+				// biome-ignore lint/suspicious/noExplicitAny: complex union type access
+				Title: (item.data as any).title || (item.data as any).prompt || "",
+				// biome-ignore lint/suspicious/noExplicitAny: complex union type access
+				ID: (item.data as any).number || (item.data as any).id,
+				// biome-ignore lint/suspicious/noExplicitAny: complex union type access
+				User: (item.data as any).user?.login || "System",
+				// biome-ignore lint/suspicious/noExplicitAny: complex union type access
+				URL: (item.data as any).html_url || "",
+				// biome-ignore lint/suspicious/noExplicitAny: complex union type access
+				Created: (item.data as any).created_at,
+				// biome-ignore lint/suspicious/noExplicitAny: complex union type access
+				Updated: (item.data as any).updated_at,
+			};
+			return common;
+		}),
+	);
+
+	const csv = Papa.unparse(flatData);
+	const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.setAttribute("href", url);
+	link.setAttribute(
+		"download",
+		`jules-tasks-${new Date().toISOString().split("T")[0]}.csv`,
+	);
+	link.style.visibility = "hidden";
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
+	URL.revokeObjectURL(url);
 }
