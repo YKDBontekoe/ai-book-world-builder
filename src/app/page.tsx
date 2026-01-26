@@ -160,6 +160,7 @@ function LandingPageContent() {
 							<StaggerItem>
 								<GlassCard
 									variant="liquid"
+									rounded="2xl"
 									className="flex flex-col items-center text-center p-8 relative overflow-hidden h-full"
 								>
 									<div className="absolute -right-10 -top-10 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl" />
@@ -178,6 +179,7 @@ function LandingPageContent() {
 							<StaggerItem>
 								<GlassCard
 									variant="liquid"
+									rounded="2xl"
 									className="flex flex-col items-center text-center p-8 relative overflow-hidden h-full"
 								>
 									<div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl" />
@@ -196,6 +198,7 @@ function LandingPageContent() {
 							<StaggerItem>
 								<GlassCard
 									variant="liquid"
+									rounded="2xl"
 									className="flex flex-col items-center text-center p-8 relative overflow-hidden h-full"
 								>
 									<div className="absolute -right-10 -top-10 w-32 h-32 bg-pink-500/10 rounded-full blur-2xl" />
@@ -307,6 +310,7 @@ function FeatureCard({
 	return (
 		<GlassCard
 			variant="liquid"
+			rounded="2xl"
 			className="group relative overflow-hidden p-6 hover:-translate-y-1 transition-transform duration-300 h-full"
 		>
 			<div

@@ -6,7 +6,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 const glassCardVariants = cva(
-	"relative overflow-hidden rounded-lg glass-panel transition-all duration-300",
+	"relative overflow-hidden glass-panel transition-all duration-300",
 	{
 		variants: {
 			variant: {
@@ -23,10 +23,18 @@ const glassCardVariants = cva(
 				lg: "p-8",
 				none: "p-0",
 			},
+			rounded: {
+				none: "rounded-none",
+				md: "rounded-md",
+				lg: "rounded-lg",
+				xl: "rounded-xl",
+				"2xl": "rounded-2xl",
+			},
 		},
 		defaultVariants: {
 			variant: "default",
 			size: "default",
+			rounded: "lg",
 		},
 	},
 );
@@ -44,6 +52,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 			className,
 			variant,
 			size,
+			rounded,
 			gradient,
 			interactive,
 			children,
@@ -64,12 +73,12 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 		return (
 			<div
 				ref={ref}
-				role={interactive ? "button" : undefined}
-				tabIndex={interactive ? 0 : undefined}
+				role={interactive || onClick ? "button" : undefined}
+				tabIndex={interactive || onClick ? 0 : undefined}
 				onKeyDown={handleKeyDown}
 				onClick={onClick}
 				className={cn(
-					glassCardVariants({ variant, size }),
+					glassCardVariants({ variant, size, rounded }),
 					interactive &&
 						"cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
 					className,
