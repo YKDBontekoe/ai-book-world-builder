@@ -45,7 +45,7 @@ type Action =
 	| { type: "SELL_RESOURCE"; resource: keyof GameState["inventory"] }
 	| { type: "MANUAL_INTERACT"; x: number; y: number };
 
-const GameContext = createContext<{
+export type GameContextValue = {
 	state: GameState;
 	addBuilding: (
 		type: BuildingType,
@@ -62,7 +62,9 @@ const GameContext = createContext<{
 	setIsRunning: (running: boolean) => void;
 	isLoading: boolean;
 	forceSave: () => Promise<void>;
-} | null>(null);
+};
+
+const GameContext = createContext<GameContextValue | null>(null);
 
 function getNextDirection(dir: Direction): Direction {
 	const dirs: Direction[] = ["N", "E", "S", "W"];
@@ -227,7 +229,11 @@ function gameReducer(state: GameState, action: Action): GameState {
 	}
 }
 
-export function GameProvider({ children }: { children: ReactNode }) {
+export function GameProvider({
+	children,
+}: {
+	children: ReactNode;
+}): JSX.Element {
 	const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
 	const [isRunning, setIsRunning] = useState(false); // Start paused until loaded
 	const [isLoading, setIsLoading] = useState(true);
@@ -369,7 +375,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
 	);
 }
 
-export function useGame() {
+export function useGame(): GameContextValue {
 	const context = useContext(GameContext);
 	if (!context) throw new Error("useGame must be used within GameProvider");
 	return context;

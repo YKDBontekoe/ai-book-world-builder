@@ -61,7 +61,7 @@ export function BuildingPalette({
 }: {
 	selected: BuildingType | null;
 	onSelect: (t: BuildingType | null) => void;
-}) {
+}): React.ReactElement {
 	const { state } = useGame();
 
 	const unlockedByCategory = Object.entries(BUILDING_CATEGORIES)

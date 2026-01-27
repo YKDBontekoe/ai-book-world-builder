@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type React from "react";
 import TycoonGame from "@/features/factory-tycoon/TycoonGame";
 
 export const metadata: Metadata = {
@@ -6,7 +7,7 @@ export const metadata: Metadata = {
 	description: "A resource management tycoon game.",
 };
 
-export default function Page() {
+export default function Page(): React.JSX.Element {
 	return (
 		<main className="h-screen w-full">
 			<TycoonGame />

@@ -17,6 +17,7 @@ import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { RESOURCE_VALUES } from "../config";
 import { useGame } from "../store";
+import type { GameState } from "../types";
 import { GameSettings } from "./GameSettings";
 import { ResearchModal } from "./ResearchModal";
 
@@ -34,7 +35,7 @@ const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
 	},
 };
 
-export function HUD() {
+export function HUD(): JSX.Element {
 	const { state, isRunning, setIsRunning, sellResource } = useGame();
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	const [isResearchOpen, setIsResearchOpen] = useState(false);
@@ -67,7 +68,7 @@ export function HUD() {
 						<button
 							type="button"
 							onClick={() => setIsResearchOpen(true)}
-							className="p-1.5 rounded-md text-[var(--factory-text-muted)] hover:text-purple-400 hover:bg-purple-500/10 transition-colors"
+							className="p-1.5 rounded-lg text-[var(--factory-text-muted)] hover:text-purple-400 hover:bg-purple-500/10 transition-colors"
 							title="Research"
 						>
 							<Beaker className="w-4 h-4" />
@@ -75,7 +76,7 @@ export function HUD() {
 						<button
 							type="button"
 							onClick={() => setIsSettingsOpen(true)}
-							className="p-1.5 rounded-md text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)] hover:bg-white/5 transition-colors"
+							className="p-1.5 rounded-lg text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)] hover:bg-white/5 transition-colors"
 							title="Settings"
 						>
 							<Settings className="w-4 h-4" />
@@ -219,7 +220,12 @@ export function HUD() {
 						</h3>
 
 						<div className="space-y-2">
-							{Object.entries(state.inventory).map(([res, count]) => {
+							{(
+								Object.entries(state.inventory) as [
+									keyof GameState["inventory"],
+									number,
+								][]
+							).map(([res, count]) => {
 								const delta =
 									state.lastTickDelta[res as keyof typeof state.inventory] ?? 0;
 								const config = RESOURCE_ICONS[res];
@@ -276,10 +282,10 @@ export function HUD() {
 										{value > 0 && (
 											<button
 												type="button"
-												onClick={() => sellResource(res as any)}
+												onClick={() => sellResource(res)}
 												disabled={count <= 0}
 												className={cn(
-													"text-[10px] w-full py-1 rounded border transition-colors flex items-center justify-center gap-1",
+													"text-[10px] w-full py-1 rounded-lg border transition-colors flex items-center justify-center gap-1",
 													count > 0
 														? "border-[var(--factory-success)] text-[var(--factory-success)] hover:bg-[var(--factory-success)] hover:text-white"
 														: "border-[var(--factory-border)] text-[var(--factory-text-muted)] opacity-50 cursor-not-allowed",

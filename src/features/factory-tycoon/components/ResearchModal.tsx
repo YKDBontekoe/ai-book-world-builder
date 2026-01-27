@@ -1,14 +1,10 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import { Beaker, Check, Lock, Sparkles, Unlock, X } from "lucide-react";
-import { twMerge } from "tailwind-merge";
+import type React from "react";
+import { cn } from "@/lib/utils";
 import { TECHS } from "../config";
 import { useGame } from "../store";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 export function ResearchModal({
 	isOpen,
@@ -16,7 +12,7 @@ export function ResearchModal({
 }: {
 	isOpen: boolean;
 	onClose: () => void;
-}) {
+}): React.ReactElement | null {
 	const { state, researchTech } = useGame();
 
 	if (!isOpen) return null;

@@ -28,7 +28,13 @@ import {
 import { useSound } from "../audio/SoundContext";
 import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from "../config";
 import { useGame } from "../store";
-import type { BeltItem, BuildingType, Direction, Resource } from "../types";
+import type {
+	BeltItem,
+	BuildingEntity,
+	BuildingType,
+	Direction,
+	Resource,
+} from "../types";
 
 function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs));
@@ -118,7 +124,7 @@ export function GameCanvas({
 	selectedBuilding,
 }: {
 	selectedBuilding: BuildingType | null;
-}) {
+}): React.ReactElement {
 	const { state, addBuilding, removeBuilding, rotateBuilding, manualInteract } =
 		useGame();
 	const { playSound } = useSound();
@@ -181,7 +187,7 @@ export function GameCanvas({
 	};
 
 	// Create a map for O(1) lookup
-	const buildingMap = new Map();
+	const buildingMap = new Map<string, BuildingEntity>();
 	state.buildings.forEach((b) => {
 		buildingMap.set(`${b.x},${b.y}`, b);
 	});

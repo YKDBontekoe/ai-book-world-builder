@@ -144,9 +144,9 @@ I need you to fix the following GitHub Issue.\n\n**Issue #" +
 				});
 
 				// 5. Update Issue with Session Link
-				// The session URL might be constructed or returned. JulesSession interface has 'url' but it might be the API resource name.
-				// We'll just post a comment with the ID for now.
-				const sessionUrl = `/admin/jules/chat/${session.id.split("/").pop()}`;
+				// The session URL might be constructed or returned. JulesSession interface has 'url'.
+				const sessionUrl =
+					session.url || `/admin/jules/chat/${session.id.split("/").pop()}`;
 
 				await octokit.rest.issues.createComment({
 					owner,

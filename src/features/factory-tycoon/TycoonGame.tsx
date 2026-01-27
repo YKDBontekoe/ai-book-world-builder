@@ -1,5 +1,6 @@
 "use client";
 
+import type React from "react";
 import { useState } from "react";
 import { SoundProvider } from "./audio/SoundContext";
 import { BuildingPalette } from "./components/BuildingPalette";
@@ -26,7 +27,7 @@ function TycoonGameContent() {
 	);
 }
 
-export default function TycoonGame() {
+export default function TycoonGame(): React.ReactElement {
 	return (
 		<SoundProvider>
 			<GameProvider>

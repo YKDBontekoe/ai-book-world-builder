@@ -14,7 +14,7 @@ export function GameSettings({
 }: {
 	isOpen: boolean;
 	onClose: () => void;
-}) {
+}): React.ReactElement | null {
 	const { state, setIsRunning } = useGame();
 	const { muted, toggleMute } = useSound();
 
