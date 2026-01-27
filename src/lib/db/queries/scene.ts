@@ -271,7 +271,11 @@ export async function updateSceneCard({
 	plannedReveal,
 	chronologicalSequence,
 	timeSetting,
-}: Partial<SceneCard> & { sceneId: string }): Promise<SceneCard> {
+	projectId,
+}: Partial<SceneCard> & {
+	sceneId: string;
+	projectId?: string;
+}): Promise<SceneCard> {
 	try {
 		const [updated] = await db
 			.update(sceneCard)
@@ -289,7 +293,14 @@ export async function updateSceneCard({
 				...(timeSetting ? { timeSetting } : {}),
 				updatedAt: new Date(),
 			})
-			.where(eq(sceneCard.sceneId, sceneId))
+			.where(
+				projectId
+					? and(
+							eq(sceneCard.sceneId, sceneId),
+							eq(sceneCard.projectId, projectId),
+						)
+					: eq(sceneCard.sceneId, sceneId),
+			)
 			.returning();
 
 		if (!updated) {
