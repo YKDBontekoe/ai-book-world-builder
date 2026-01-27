@@ -1,4 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
+import React from "react";
 import {
 	Clock,
 	FileText,
@@ -25,6 +26,7 @@ import { Textarea } from "@/components/atoms/textarea";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
 import type { ToolType } from "@/features/writer/components/tools/tool-strategies";
 import { cn } from "@/lib/utils";
+import type { HistoryItem } from "@/features/writer/components/hooks/use-power-dock-history";
 import {
 	PowerDockSuggestions,
 	type SuggestionItem,
@@ -46,10 +48,27 @@ interface PowerDockInputProps {
 	onExecute: () => void;
 	onReset: () => void;
 	onClearHistory: (tool: ToolType) => void;
-	getHistory: (tool: ToolType) => { input: string; timestamp: number }[];
+	getHistory: (tool: ToolType) => HistoryItem[];
 	entities?: Entity[];
 	onExport?: () => void;
 }
+
+const COMMANDS: SuggestionItem[] = [
+	{
+		id: "export",
+		label: "Export Scene",
+		value: "/export",
+		description: "Copy current scene to clipboard",
+		icon: FileText,
+	},
+	{
+		id: "clear",
+		label: "Clear Input",
+		value: "/clear",
+		description: "Clear the current input",
+		icon: Trash2,
+	},
+];
 
 export function PowerDockInput({
 	mode,
@@ -63,7 +82,7 @@ export function PowerDockInput({
 	getHistory,
 	entities = [],
 	onExport,
-}: PowerDockInputProps): JSX.Element {
+}: PowerDockInputProps): React.JSX.Element {
 	// Suggestion state
 	const [triggerMode, setTriggerMode] = useState<"entity" | "command" | null>(
 		null,
@@ -71,24 +90,6 @@ export function PowerDockInput({
 	const [query, setQuery] = useState("");
 	const [selectedIndex, setSelectedIndex] = useState(0);
 	const [cursorPosition, setCursorPosition] = useState(0);
-
-	// Command list
-	const commands: SuggestionItem[] = [
-		{
-			id: "export",
-			label: "Export Scene",
-			value: "/export",
-			description: "Copy current scene to clipboard",
-			icon: FileText,
-		},
-		{
-			id: "clear",
-			label: "Clear Input",
-			value: "/clear",
-			description: "Clear the current input",
-			icon: Trash2,
-		},
-	];
 
 	// Filter suggestions based on mode and query
 	const suggestions = useMemo(() => {
@@ -108,7 +109,7 @@ export function PowerDockInput({
 		}
 
 		if (triggerMode === "command") {
-			return commands.filter((c) =>
+			return COMMANDS.filter((c) =>
 				c.label.toLowerCase().includes(query.toLowerCase()),
 			);
 		}
@@ -160,10 +161,10 @@ export function PowerDockInput({
 			// Entity: Replace the typed trigger with the entity name
 			// We use cursorPosition to replace the text immediately preceding the cursor
 			const textBeforeCursor = input.slice(0, cursorPosition);
-			const trigger = "@" + query;
+			const lastAtIndex = textBeforeCursor.lastIndexOf("@");
 
-			if (textBeforeCursor.endsWith(trigger)) {
-				const prefix = input.slice(0, cursorPosition - trigger.length);
+			if (lastAtIndex !== -1) {
+				const prefix = input.slice(0, lastAtIndex);
 				const suffix = input.slice(cursorPosition);
 				setInput(prefix + item.value + " " + suffix);
 			} else {
