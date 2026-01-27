@@ -1,55 +1,77 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { and, eq } from "drizzle-orm";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { updateSceneCard } from "@/lib/db/queries/scene";
-import { eq, and } from "drizzle-orm";
 import { sceneCard } from "@/lib/db/schema";
 
 const mocks = vi.hoisted(() => {
-  return {
-    mockUpdate: vi.fn(),
-    mockSet: vi.fn(),
-    mockWhere: vi.fn(),
-    mockReturning: vi.fn(),
-  };
+	return {
+		mockUpdate: vi.fn(),
+		mockSet: vi.fn(),
+		mockWhere: vi.fn(),
+		mockReturning: vi.fn(),
+	};
 });
 
 vi.mock("@/lib/db", () => ({
-  db: {
-    update: mocks.mockUpdate,
-  },
+	db: {
+		update: mocks.mockUpdate,
+	},
 }));
 
 describe("Scene Card Security (IDOR)", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mocks.mockUpdate.mockReturnValue({ set: mocks.mockSet });
-    mocks.mockSet.mockReturnValue({ where: mocks.mockWhere });
-    mocks.mockWhere.mockReturnValue({ returning: mocks.mockReturning });
-    // Default success response
-    mocks.mockReturning.mockResolvedValue([{ id: "scene-card-1", sceneId: "scene-1" }]);
-  });
+	beforeEach(() => {
+		vi.clearAllMocks();
+		mocks.mockUpdate.mockReturnValue({ set: mocks.mockSet });
+		mocks.mockSet.mockReturnValue({ where: mocks.mockWhere });
+		mocks.mockWhere.mockReturnValue({ returning: mocks.mockReturning });
+		// Default success response
+		mocks.mockReturning.mockResolvedValue([
+			{ id: "scene-card-1", sceneId: "scene-1" },
+		]);
+	});
 
-  it("prevents IDOR: updateSceneCard enforces project ownership when projectId is provided", async () => {
-    const sceneId = "target-scene-id";
-    const projectId = "owner-project-id";
-    const data = { purpose: "Safe Purpose" };
+	it("prevents IDOR: updateSceneCard enforces project ownership when projectId is provided", async () => {
+		const sceneId = "target-scene-id";
+		const projectId = "owner-project-id";
+		const data = { purpose: "Safe Purpose" };
 
-    // Call the function WITH projectId
-    await updateSceneCard({ sceneId, projectId, ...data });
+		// Call the function WITH projectId
+		await updateSceneCard({ sceneId, projectId, ...data });
 
-    // Verify correct chain was called
-    expect(mocks.mockUpdate).toHaveBeenCalledWith(sceneCard);
+		// Verify correct chain was called
+		expect(mocks.mockUpdate).toHaveBeenCalledWith(sceneCard);
 
-    // Verify where clause
-    expect(mocks.mockWhere).toHaveBeenCalledTimes(1);
-    const actualQuery = mocks.mockWhere.mock.calls[0][0];
+		// Verify where clause
+		expect(mocks.mockWhere).toHaveBeenCalledTimes(1);
+		const actualQuery = mocks.mockWhere.mock.calls[0][0];
 
-    // Construct expected SECURE query: WHERE sceneId = target AND projectId = owner
-    const expectedSecureQuery = and(
-      eq(sceneCard.sceneId, sceneId),
-      eq(sceneCard.projectId, projectId)
-    );
+		// Construct expected SECURE query: WHERE sceneId = target AND projectId = owner
+		const expectedSecureQuery = and(
+			eq(sceneCard.sceneId, sceneId),
+			eq(sceneCard.projectId, projectId),
+		);
 
-    // This should now pass with the fix
-    expect(actualQuery).toEqual(expectedSecureQuery);
-  });
+		// This should now pass with the fix
+		expect(actualQuery).toEqual(expectedSecureQuery);
+	});
+
+	it("correctly uses sceneId-only filter when projectId is not provided", async () => {
+		const sceneId = "target-scene-id";
+		const data = { purpose: "Safe Purpose" };
+
+		// Call the function WITHOUT projectId
+		await updateSceneCard({ sceneId, ...data });
+
+		// Verify correct chain was called
+		expect(mocks.mockUpdate).toHaveBeenCalledWith(sceneCard);
+
+		// Verify where clause
+		expect(mocks.mockWhere).toHaveBeenCalledTimes(1);
+		const actualQuery = mocks.mockWhere.mock.calls[0][0];
+
+		// Construct expected query: WHERE sceneId = target
+		const expectedQuery = eq(sceneCard.sceneId, sceneId);
+
+		expect(actualQuery).toEqual(expectedQuery);
+	});
 });

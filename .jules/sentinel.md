@@ -34,6 +34,7 @@
 **Learning:** Files in `lib/services` marked with `"use server"` automatically become public APIs. If they are intended as internal helpers, this exposes internal logic and bypasses route-level security controls.
 **Prevention:** Use `import "server-only"` for internal service modules. Ensure only dedicated action files (e.g., in `app/actions`) use `"use server"` and that they always implement proper authentication and input validation middleware.
 
+
 ## 2025-02-26 - [Scene Card IDOR]
 **Vulnerability:** `updateSceneCard` allowed updating scene details via `sceneId` without verifying `projectId`, enabling IDOR if the caller (like `updateSceneChronology`) didn't enforce ownership at the DB layer.
 **Learning:** Checking ownership at the service layer/action is insufficient if the underlying DB query functions allow unscoped access.
