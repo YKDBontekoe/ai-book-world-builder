@@ -1,5 +1,5 @@
 import { BUILDINGS } from "../config";
-import { type BuildingEntity, GameState, type Resource } from "../types";
+import type { BuildingEntity, Resource } from "../types";
 import type { SystemResult } from "./productionSystem";
 
 export const runMarketSystem = (
@@ -17,7 +17,7 @@ export const runMarketSystem = (
 	for (const building of buildings) {
 		if (building.type !== "Market") continue;
 
-		const config = BUILDINGS["Market"];
+		const config = BUILDINGS.Market;
 		let hasInputs = true;
 
 		// Markets only consume, they don't produce items, so no space check needed usually.
@@ -55,7 +55,7 @@ export const runMarketSystem = (
 			}
 
 			// Produce Cash
-			if (config.outputs && config.outputs.cash) {
+			if (config.outputs?.cash) {
 				result.cashDelta += config.outputs.cash;
 			}
 		}

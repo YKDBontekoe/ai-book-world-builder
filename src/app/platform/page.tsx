@@ -223,7 +223,8 @@ export default async function PlatformPage(): Promise<JSX.Element> {
 										</div>
 										<CardTitle className="text-2xl">Factory Tycoon</CardTitle>
 										<CardDescription className="text-base mt-2 line-clamp-2">
-											A resource management tycoon game. Manage your factory empire and optimize production lines.
+											A resource management tycoon game. Manage your factory
+											empire and optimize production lines.
 										</CardDescription>
 									</CardHeader>
 									<CardContent>

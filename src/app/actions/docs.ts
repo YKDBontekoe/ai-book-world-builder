@@ -1,10 +1,10 @@
 "use server";
 
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
+import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
 import { retrieveContext } from "@/lib/ai/rag";
-import { z } from "zod";
 
 const searchDocsSchema = z.object({
 	query: z.string(),
@@ -25,8 +25,10 @@ export const searchDocsAction = createAdminAction({
 		for (const file of mdFiles) {
 			const content = await fs.readFile(path.join(docsDir, file), "utf-8");
 			// Split by headers or paragraphs. Simple split by double newline for now.
-			const fileChunks = content.split("\n\n").filter((c) => c.trim().length > 50);
-			
+			const fileChunks = content
+				.split("\n\n")
+				.filter((c) => c.trim().length > 50);
+
 			for (const chunk of fileChunks) {
 				chunks.push({
 					content: chunk,

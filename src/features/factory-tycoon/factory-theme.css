@@ -4,549 +4,641 @@
    Design Tokens & CSS Variables
    ========================================== */
 .factory-theme {
-  /* Background Colors - Light & Warm */
-  --factory-bg-deep: #f8fafc;
-  --factory-bg-dark: #f1f5f9;
-  --factory-bg-panel: #ffffff;
-  --factory-bg-card: #ffffff;
-  --factory-bg-elevated: #f8fafc;
+	/* Background Colors - Light & Warm */
+	--factory-bg-deep: #f8fafc;
+	--factory-bg-dark: #f1f5f9;
+	--factory-bg-panel: #ffffff;
+	--factory-bg-card: #ffffff;
+	--factory-bg-elevated: #f8fafc;
 
-  /* Accent Colors - Warm Orange/Amber */
-  --factory-amber: #ea580c;
-  --factory-amber-dim: #c2410c;
-  --factory-amber-glow: rgba(234, 88, 12, 0.15);
-  --factory-orange: #f97316;
-  --factory-orange-glow: rgba(249, 115, 22, 0.15);
+	/* Accent Colors - Warm Orange/Amber */
+	--factory-amber: #ea580c;
+	--factory-amber-dim: #c2410c;
+	--factory-amber-glow: rgba(234, 88, 12, 0.15);
+	--factory-orange: #f97316;
+	--factory-orange-glow: rgba(249, 115, 22, 0.15);
 
-  /* Status Colors */
-  --factory-success: #16a34a;
-  --factory-success-glow: rgba(22, 163, 74, 0.2);
-  --factory-warning: #ca8a04;
-  --factory-warning-glow: rgba(202, 138, 4, 0.2);
-  --factory-danger: #dc2626;
-  --factory-danger-glow: rgba(220, 38, 38, 0.2);
+	/* Status Colors */
+	--factory-success: #16a34a;
+	--factory-success-glow: rgba(22, 163, 74, 0.2);
+	--factory-warning: #ca8a04;
+	--factory-warning-glow: rgba(202, 138, 4, 0.2);
+	--factory-danger: #dc2626;
+	--factory-danger-glow: rgba(220, 38, 38, 0.2);
 
-  /* Text Colors */
-  --factory-text-primary: #0f172a;
-  --factory-text-secondary: #475569;
-  --factory-text-muted: #94a3b8;
+	/* Text Colors */
+	--factory-text-primary: #0f172a;
+	--factory-text-secondary: #475569;
+	--factory-text-muted: #94a3b8;
 
-  /* Border Colors */
-  --factory-border: #e2e8f0;
-  --factory-border-strong: #cbd5e1;
-  --factory-border-glow: rgba(234, 88, 12, 0.3);
+	/* Border Colors */
+	--factory-border: #e2e8f0;
+	--factory-border-strong: #cbd5e1;
+	--factory-border-glow: rgba(234, 88, 12, 0.3);
 
-  /* Gradients */
-  --factory-gradient-panel: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  --factory-gradient-metallic: linear-gradient(135deg, #ffffff 0%, #f1f5f9 50%, #ffffff 100%);
-  --factory-gradient-amber: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+	/* Gradients */
+	--factory-gradient-panel: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+	--factory-gradient-metallic: linear-gradient(
+		135deg,
+		#ffffff 0%,
+		#f1f5f9 50%,
+		#ffffff 100%
+	);
+	--factory-gradient-amber: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
 }
 
 /* ==========================================
    Base Theme Styles
    ========================================== */
 .factory-theme {
-  background: var(--factory-bg-deep);
-  color: var(--factory-text-primary);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+	background: var(--factory-bg-deep);
+	color: var(--factory-text-primary);
+	font-family: "Inter", system-ui, -apple-system, sans-serif;
 }
 
 /* ==========================================
    Game Canvas Background - Light Grid
    ========================================== */
 .factory-grid-bg {
-  background-color: #e8ecf0;
-  background-image:
-    linear-gradient(var(--factory-border-strong) 1px, transparent 1px),
-    linear-gradient(90deg, var(--factory-border-strong) 1px, transparent 1px),
-    radial-gradient(ellipse at 50% 50%, rgba(234, 88, 12, 0.03) 0%, transparent 70%);
-  background-size: 48px 48px, 48px 48px, 100% 100%;
-  position: relative;
+	background-color: #e8ecf0;
+	background-image:
+		linear-gradient(var(--factory-border-strong) 1px, transparent 1px),
+		linear-gradient(90deg, var(--factory-border-strong) 1px, transparent 1px),
+		radial-gradient(
+			ellipse at 50% 50%,
+			rgba(234, 88, 12, 0.03) 0%,
+			transparent 70%
+		);
+	background-size:
+		48px 48px,
+		48px 48px,
+		100% 100%;
+	position: relative;
 }
 
 .factory-grid-bg::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 30% 40%, rgba(249, 115, 22, 0.05) 0%, transparent 50%),
-              radial-gradient(circle at 70% 60%, rgba(234, 88, 12, 0.03) 0%, transparent 50%);
-  pointer-events: none;
+	content: "";
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(
+			circle at 30% 40%,
+			rgba(249, 115, 22, 0.05) 0%,
+			transparent 50%
+		),
+		radial-gradient(
+			circle at 70% 60%,
+			rgba(234, 88, 12, 0.03) 0%,
+			transparent 50%
+		);
+	pointer-events: none;
 }
 
 /* ==========================================
    Industrial Panel Styling - Light
    ========================================== */
 .factory-panel {
-  background: var(--factory-gradient-panel);
-  border: 1px solid var(--factory-border);
-  box-shadow: 
-    0 1px 3px rgba(0, 0, 0, 0.05),
-    0 4px 24px rgba(0, 0, 0, 0.08);
+	background: var(--factory-gradient-panel);
+	border: 1px solid var(--factory-border);
+	box-shadow:
+		0 1px 3px rgba(0, 0, 0, 0.05),
+		0 4px 24px rgba(0, 0, 0, 0.08);
 }
 
 .factory-panel-header {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-bottom: 1px solid var(--factory-border);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.75rem 1rem;
+	background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+	border-bottom: 1px solid var(--factory-border);
 }
 
 /* ==========================================
    Building Card Styling - Light
    ========================================== */
 .factory-building-card {
-  background: var(--factory-gradient-metallic);
-  border: 1px solid var(--factory-border);
-  border-radius: 0.75rem;
-  padding: 0.875rem;
-  transition: all 0.2s ease;
-  position: relative;
-  overflow: hidden;
+	background: var(--factory-gradient-metallic);
+	border: 1px solid var(--factory-border);
+	border-radius: 0.75rem;
+	padding: 0.875rem;
+	transition: all 0.2s ease;
+	position: relative;
+	overflow: hidden;
 }
 
 .factory-building-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, transparent 50%);
-  pointer-events: none;
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		135deg,
+		rgba(255, 255, 255, 0.8) 0%,
+		transparent 50%
+	);
+	pointer-events: none;
 }
 
 .factory-building-card:hover:not(:disabled) {
-  border-color: var(--factory-amber);
-  box-shadow: 0 4px 20px var(--factory-amber-glow), 0 2px 8px rgba(0, 0, 0, 0.08);
-  transform: translateY(-2px);
+	border-color: var(--factory-amber);
+	box-shadow:
+		0 4px 20px var(--factory-amber-glow),
+		0 2px 8px rgba(0, 0, 0, 0.08);
+	transform: translateY(-2px);
 }
 
 .factory-building-card.selected {
-  border-color: var(--factory-amber);
-  background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(234, 88, 12, 0.04) 100%);
-  box-shadow: 
-    0 0 0 3px var(--factory-amber-glow),
-    0 4px 20px var(--factory-amber-glow);
+	border-color: var(--factory-amber);
+	background: linear-gradient(
+		135deg,
+		rgba(249, 115, 22, 0.08) 0%,
+		rgba(234, 88, 12, 0.04) 100%
+	);
+	box-shadow:
+		0 0 0 3px var(--factory-amber-glow),
+		0 4px 20px var(--factory-amber-glow);
 }
 
 .factory-building-card:disabled {
-  opacity: 0.5;
-  filter: grayscale(0.4);
+	opacity: 0.5;
+	filter: grayscale(0.4);
 }
 
 /* ==========================================
    Game Grid Tile - Light
    ========================================== */
 .factory-tile {
-  width: 52px;
-  height: 52px;
-  background: var(--factory-bg-card);
-  border: 1px solid var(--factory-border);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  transition: all 0.15s ease;
-  cursor: pointer;
+	width: 52px;
+	height: 52px;
+	background: var(--factory-bg-card);
+	border: 1px solid var(--factory-border);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	position: relative;
+	transition: all 0.15s ease;
+	cursor: pointer;
 }
 
 .factory-tile:hover:not(.has-building) {
-  background: rgba(249, 115, 22, 0.08);
-  border-color: var(--factory-amber);
-  box-shadow: inset 0 0 20px rgba(249, 115, 22, 0.1);
+	background: rgba(249, 115, 22, 0.08);
+	border-color: var(--factory-amber);
+	box-shadow: inset 0 0 20px rgba(249, 115, 22, 0.1);
 }
 
 .factory-tile.has-building {
-  background: #ffffff;
-  border-color: var(--factory-border-strong);
-  box-shadow: 
-    inset 0 2px 4px rgba(0, 0, 0, 0.04),
-    0 1px 2px rgba(0, 0, 0, 0.05);
+	background: #ffffff;
+	border-color: var(--factory-border-strong);
+	box-shadow:
+		inset 0 2px 4px rgba(0, 0, 0, 0.04),
+		0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 /* ==========================================
    Status Indicator Animations
    ========================================== */
 .status-indicator {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  position: absolute;
-  top: 4px;
-  right: 4px;
-  box-shadow: 0 0 0 2px white;
+	width: 10px;
+	height: 10px;
+	border-radius: 50%;
+	position: absolute;
+	top: 4px;
+	right: 4px;
+	box-shadow: 0 0 0 2px white;
 }
 
 .status-running {
-  background: var(--factory-success);
-  animation: pulse-glow-green 2s ease-in-out infinite;
+	background: var(--factory-success);
+	animation: pulse-glow-green 2s ease-in-out infinite;
 }
 
 .status-starved {
-  background: var(--factory-warning);
-  animation: pulse-glow-amber 1.5s ease-in-out infinite;
+	background: var(--factory-warning);
+	animation: pulse-glow-amber 1.5s ease-in-out infinite;
 }
 
 .status-blocked {
-  background: var(--factory-danger);
-  animation: pulse-glow-red 1s ease-in-out infinite;
+	background: var(--factory-danger);
+	animation: pulse-glow-red 1s ease-in-out infinite;
 }
 
 .status-idle {
-  background: var(--factory-text-muted);
+	background: var(--factory-text-muted);
 }
 
 @keyframes pulse-glow-green {
-  0%, 100% { box-shadow: 0 0 0 2px white, 0 0 8px var(--factory-success-glow); }
-  50% { box-shadow: 0 0 0 2px white, 0 0 16px var(--factory-success-glow), 0 0 24px var(--factory-success-glow); }
+	0%,
+	100% {
+		box-shadow:
+			0 0 0 2px white,
+			0 0 8px var(--factory-success-glow);
+	}
+	50% {
+		box-shadow:
+			0 0 0 2px white,
+			0 0 16px var(--factory-success-glow),
+			0 0 24px var(--factory-success-glow);
+	}
 }
 
 @keyframes pulse-glow-amber {
-  0%, 100% { box-shadow: 0 0 0 2px white, 0 0 6px var(--factory-warning-glow); }
-  50% { box-shadow: 0 0 0 2px white, 0 0 12px var(--factory-warning-glow); }
+	0%,
+	100% {
+		box-shadow:
+			0 0 0 2px white,
+			0 0 6px var(--factory-warning-glow);
+	}
+	50% {
+		box-shadow:
+			0 0 0 2px white,
+			0 0 12px var(--factory-warning-glow);
+	}
 }
 
 @keyframes pulse-glow-red {
-  0%, 100% { box-shadow: 0 0 0 2px white, 0 0 6px var(--factory-danger-glow); }
-  50% { box-shadow: 0 0 0 2px white, 0 0 14px var(--factory-danger-glow); }
+	0%,
+	100% {
+		box-shadow:
+			0 0 0 2px white,
+			0 0 6px var(--factory-danger-glow);
+	}
+	50% {
+		box-shadow:
+			0 0 0 2px white,
+			0 0 14px var(--factory-danger-glow);
+	}
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 @keyframes shake-vertical {
-  0%, 100% { transform: translateY(0); }
-  25% { transform: translateY(-2px) rotate(-5deg); }
-  75% { transform: translateY(2px) rotate(5deg); }
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	25% {
+		transform: translateY(-2px) rotate(-5deg);
+	}
+	75% {
+		transform: translateY(2px) rotate(5deg);
+	}
 }
 
 @keyframes working-pulse {
-  0%, 100% { transform: scale(1); filter: brightness(1); }
-  50% { transform: scale(1.05); filter: brightness(1.1); }
+	0%,
+	100% {
+		transform: scale(1);
+		filter: brightness(1);
+	}
+	50% {
+		transform: scale(1.05);
+		filter: brightness(1.1);
+	}
 }
 
 @keyframes conveyor-slide {
-  0% { background-position: 0 0; }
-  100% { background-position: 100% 0; }
+	0% {
+		background-position: 0 0;
+	}
+	100% {
+		background-position: 100% 0;
+	}
 }
 
 /* Animation Utilities */
 .animate-shake-vertical {
-  animation: shake-vertical 1s ease-in-out infinite;
+	animation: shake-vertical 1s ease-in-out infinite;
 }
 
 .animate-working-pulse {
-  animation: working-pulse 2s ease-in-out infinite;
+	animation: working-pulse 2s ease-in-out infinite;
 }
 
 @keyframes swing {
-  0%, 100% { transform: translateY(0) scaleY(1); }
-  50% { transform: translateY(-4px) scaleY(1.2); }
+	0%,
+	100% {
+		transform: translateY(0) scaleY(1);
+	}
+	50% {
+		transform: translateY(-4px) scaleY(1.2);
+	}
 }
 
 .animate-swing {
-  animation: swing 0.5s ease-in-out infinite;
+	animation: swing 0.5s ease-in-out infinite;
 }
 
 /* ==========================================
    LED Display Styling - Light Version
    ========================================== */
 .led-display {
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid var(--factory-border);
-  border-radius: 0.5rem;
-  padding: 0.75rem 1rem;
-  position: relative;
-  overflow: hidden;
+	font-family: "JetBrains Mono", "Fira Code", monospace;
+	background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+	border: 1px solid var(--factory-border);
+	border-radius: 0.5rem;
+	padding: 0.75rem 1rem;
+	position: relative;
+	overflow: hidden;
 }
 
 .led-display::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.02) 2px,
-    rgba(0, 0, 0, 0.02) 4px
-  );
-  pointer-events: none;
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: repeating-linear-gradient(
+		0deg,
+		transparent,
+		transparent 2px,
+		rgba(0, 0, 0, 0.02) 2px,
+		rgba(0, 0, 0, 0.02) 4px
+	);
+	pointer-events: none;
 }
 
 .led-value {
-  font-size: 2rem;
-  font-weight: 700;
-  letter-spacing: 0.05em;
+	font-size: 2rem;
+	font-weight: 700;
+	letter-spacing: 0.05em;
 }
 
 .led-value.positive {
-  color: var(--factory-success);
+	color: var(--factory-success);
 }
 
 .led-value.negative {
-  color: var(--factory-danger);
+	color: var(--factory-danger);
 }
 
 .led-value.amber {
-  color: var(--factory-amber);
+	color: var(--factory-amber);
 }
 
 /* ==========================================
    Progress Bar Styling - Light
    ========================================== */
 .factory-progress {
-  height: 10px;
-  background: #e2e8f0;
-  border-radius: 5px;
-  border: 1px solid var(--factory-border);
-  overflow: hidden;
-  position: relative;
+	height: 10px;
+	background: #e2e8f0;
+	border-radius: 5px;
+	border: 1px solid var(--factory-border);
+	overflow: hidden;
+	position: relative;
 }
 
 .factory-progress-fill {
-  height: 100%;
-  border-radius: 4px;
-  transition: width 0.5s ease;
-  background: linear-gradient(90deg, #3b82f6, #2563eb);
-  box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
-  position: relative;
+	height: 100%;
+	border-radius: 4px;
+	transition: width 0.5s ease;
+	background: linear-gradient(90deg, #3b82f6, #2563eb);
+	box-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+	position: relative;
 }
 
 .factory-progress-fill::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.4) 50%,
-    transparent 100%
-  );
-  animation: shimmer 2s ease-in-out infinite;
+	content: "";
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(
+		90deg,
+		transparent 0%,
+		rgba(255, 255, 255, 0.4) 50%,
+		transparent 100%
+	);
+	animation: shimmer 2s ease-in-out infinite;
 }
 
 @keyframes shimmer {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100%); }
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
 }
 
 .factory-progress-fill.danger {
-  background: linear-gradient(90deg, #ef4444, #dc2626);
-  box-shadow: 0 0 8px var(--factory-danger-glow);
+	background: linear-gradient(90deg, #ef4444, #dc2626);
+	box-shadow: 0 0 8px var(--factory-danger-glow);
 }
 
 .factory-progress-fill.warning {
-  background: linear-gradient(90deg, #f59e0b, #d97706);
-  box-shadow: 0 0 8px var(--factory-warning-glow);
+	background: linear-gradient(90deg, #f59e0b, #d97706);
+	box-shadow: 0 0 8px var(--factory-warning-glow);
 }
 
 /* ==========================================
    Button Styling - Light
    ========================================== */
 .factory-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: 0.625rem 1.25rem;
-  font-weight: 600;
-  font-size: 0.875rem;
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
-  border: 1px solid var(--factory-border);
-  background: white;
-  color: var(--factory-text-primary);
-  cursor: pointer;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0.625rem 1.25rem;
+	font-weight: 600;
+	font-size: 0.875rem;
+	border-radius: 0.5rem;
+	transition: all 0.2s ease;
+	border: 1px solid var(--factory-border);
+	background: white;
+	color: var(--factory-text-primary);
+	cursor: pointer;
 }
 
 .factory-btn:hover {
-  border-color: var(--factory-amber);
-  box-shadow: 0 2px 8px var(--factory-amber-glow);
-  background: #fffbf5;
+	border-color: var(--factory-amber);
+	box-shadow: 0 2px 8px var(--factory-amber-glow);
+	background: #fffbf5;
 }
 
 .factory-btn-primary {
-  background: var(--factory-gradient-amber);
-  border-color: var(--factory-amber);
-  color: white;
+	background: var(--factory-gradient-amber);
+	border-color: var(--factory-amber);
+	color: white;
 }
 
 .factory-btn-primary:hover {
-  box-shadow: 0 4px 16px var(--factory-amber-glow), 0 2px 8px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+	box-shadow:
+		0 4px 16px var(--factory-amber-glow),
+		0 2px 8px rgba(0, 0, 0, 0.1);
+	transform: translateY(-1px);
 }
 
 .factory-btn-danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  border-color: #ef4444;
-  color: white;
+	background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+	border-color: #ef4444;
+	color: white;
 }
 
 .factory-btn-danger:hover {
-  box-shadow: 0 4px 16px var(--factory-danger-glow);
+	box-shadow: 0 4px 16px var(--factory-danger-glow);
 }
 
 /* ==========================================
    Resource Badge - Light
    ========================================== */
 .resource-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.375rem 0.625rem;
-  background: white;
-  border: 1px solid var(--factory-border);
-  border-radius: 0.375rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  font-family: 'JetBrains Mono', monospace;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
+	padding: 0.375rem 0.625rem;
+	background: white;
+	border: 1px solid var(--factory-border);
+	border-radius: 0.375rem;
+	font-size: 0.75rem;
+	font-weight: 600;
+	font-family: "JetBrains Mono", monospace;
 }
 
 .resource-badge.positive {
-  color: var(--factory-success);
-  background: rgba(22, 163, 74, 0.08);
-  border-color: rgba(22, 163, 74, 0.3);
+	color: var(--factory-success);
+	background: rgba(22, 163, 74, 0.08);
+	border-color: rgba(22, 163, 74, 0.3);
 }
 
 .resource-badge.negative {
-  color: var(--factory-danger);
-  background: rgba(220, 38, 38, 0.08);
-  border-color: rgba(220, 38, 38, 0.3);
+	color: var(--factory-danger);
+	background: rgba(220, 38, 38, 0.08);
+	border-color: rgba(220, 38, 38, 0.3);
 }
 
 /* ==========================================
    Inventory Item - Light
    ========================================== */
 .inventory-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem;
-  background: white;
-  border: 1px solid var(--factory-border);
-  border-radius: 0.5rem;
-  transition: all 0.2s ease;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.75rem;
+	background: white;
+	border: 1px solid var(--factory-border);
+	border-radius: 0.5rem;
+	transition: all 0.2s ease;
 }
 
 .inventory-item:hover {
-  border-color: var(--factory-amber);
-  box-shadow: 0 2px 8px var(--factory-amber-glow);
+	border-color: var(--factory-amber);
+	box-shadow: 0 2px 8px var(--factory-amber-glow);
 }
 
 .inventory-icon {
-  width: 36px;
-  height: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  border: 1px solid var(--factory-border);
-  border-radius: 0.5rem;
+	width: 36px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+	border: 1px solid var(--factory-border);
+	border-radius: 0.5rem;
 }
 
 /* ==========================================
    Modal Overlay - Light
    ========================================== */
 .factory-modal-overlay {
-  background: rgba(15, 23, 42, 0.3);
-  backdrop-filter: blur(8px);
+	background: rgba(15, 23, 42, 0.3);
+	backdrop-filter: blur(8px);
 }
 
 .factory-modal {
-  background: white;
-  border: 1px solid var(--factory-border);
-  border-radius: 1rem;
-  box-shadow: 
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0 25px 50px rgba(0, 0, 0, 0.15);
+	background: white;
+	border: 1px solid var(--factory-border);
+	border-radius: 1rem;
+	box-shadow:
+		0 0 0 1px rgba(0, 0, 0, 0.05),
+		0 25px 50px rgba(0, 0, 0, 0.15);
 }
 
 /* ==========================================
    Stats Footer - Light
    ========================================== */
 .stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.5rem;
-  padding: 1rem;
-  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-  border-top: 1px solid var(--factory-border);
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 0.5rem;
+	padding: 1rem;
+	background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+	border-top: 1px solid var(--factory-border);
 }
 
 .stat-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.625rem;
-  background: white;
-  border: 1px solid var(--factory-border);
-  border-radius: 0.5rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.25rem;
+	padding: 0.625rem;
+	background: white;
+	border: 1px solid var(--factory-border);
+	border-radius: 0.5rem;
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .stat-value {
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
+	font-size: 1.5rem;
+	font-weight: 700;
+	font-family: "JetBrains Mono", monospace;
 }
 
 .stat-label {
-  font-size: 0.625rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--factory-text-muted);
+	font-size: 0.625rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.1em;
+	color: var(--factory-text-muted);
 }
 
 /* ==========================================
    Custom Scrollbar - Light
    ========================================== */
 .factory-theme ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+	width: 8px;
+	height: 8px;
 }
 
 .factory-theme ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+	background: #f1f5f9;
 }
 
 .factory-theme ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 4px;
+	background: #cbd5e1;
+	border-radius: 4px;
 }
 
 .factory-theme ::-webkit-scrollbar-thumb:hover {
-  background: var(--factory-amber);
+	background: var(--factory-amber);
 }
 
 /* ==========================================
    Utility Classes
    ========================================== */
 .glow-amber {
-  box-shadow: 0 0 20px var(--factory-amber-glow);
+	box-shadow: 0 0 20px var(--factory-amber-glow);
 }
 
 .glow-success {
-  box-shadow: 0 0 20px var(--factory-success-glow);
+	box-shadow: 0 0 20px var(--factory-success-glow);
 }
 
 .text-amber {
-  color: var(--factory-amber);
+	color: var(--factory-amber);
 }
 
 .text-success {
-  color: var(--factory-success);
+	color: var(--factory-success);
 }
 
 .text-danger {
-  color: var(--factory-danger);
+	color: var(--factory-danger);
 }
 
 .border-glow {
-  border-color: var(--factory-amber);
-  box-shadow: 0 0 0 1px var(--factory-amber-glow);
+	border-color: var(--factory-amber);
+	box-shadow: 0 0 0 1px var(--factory-amber-glow);
 }
