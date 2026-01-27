@@ -4,7 +4,7 @@ import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
 import { CalendarIcon, Eye, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { type SyntheticEvent, useState } from "react";
 import { Button } from "@/components/atoms/button";
 import { Checkbox } from "@/components/atoms/checkbox";
 import { GridList } from "@/components/atoms/grid-list";
@@ -61,7 +61,7 @@ function ProjectCard({
 }) {
 	const [showPreview, setShowPreview] = useState(false);
 
-	const handleSelect = (e: React.SyntheticEvent, shiftKey = false) => {
+	const handleSelect = (e: SyntheticEvent, shiftKey = false) => {
 		if (onSelect) {
 			e.preventDefault();
 			e.stopPropagation();
@@ -94,7 +94,7 @@ function ProjectCard({
 								onClick={(e) => handleSelect(e, e.shiftKey)}
 								onKeyDown={(e) => {
 									if (e.key === "Enter" || e.key === " ") {
-										handleSelect(e);
+										handleSelect(e, e.shiftKey);
 									}
 								}}
 								role={onSelect ? "button" : undefined}
