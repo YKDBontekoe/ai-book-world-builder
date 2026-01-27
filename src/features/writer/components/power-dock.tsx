@@ -20,10 +20,13 @@ import { Separator } from "@/components/atoms/separator";
 import { TooltipProvider } from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { usePowerDock } from "@/features/writer/components/hooks/use-power-dock";
+import { useQuery } from "@tanstack/react-query";
+import { getEntities } from "@/app/actions/entities";
 import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
+import { QUERY_KEYS } from "@/lib/query-options";
 import { cn } from "@/lib/utils";
 import { ControlButton, ControlGroup } from "./power-dock/control-button";
 import { PowerDockInput } from "./power-dock/power-dock-input";
@@ -39,8 +42,22 @@ export const PowerDock = memo(function PowerDock() {
 		isSpotlightOpen,
 	} = useWriterControl();
 
-	const { activeSceneId } = useWriterContext();
+	const { activeSceneId, project } = useWriterContext();
 	const { sceneContent } = useWriterContent();
+
+	const { data: entities } = useQuery({
+		queryKey: project?.id
+			? QUERY_KEYS.entities(project.id)
+			: ["entities", "null"],
+		queryFn: async () => {
+			if (!project?.id) return [];
+			const result = await getEntities({ projectId: project.id });
+			if (!result.success) throw new Error(result.error);
+			return result.data;
+		},
+		enabled: !!project?.id,
+		staleTime: 1000 * 60 * 5, // 5 minutes
+	});
 
 	const layoutContext = useWriterLayoutContext();
 	const { viewMode, toggleCanvas, isCanvasOpen } = layoutContext;
@@ -123,6 +140,20 @@ export const PowerDock = memo(function PowerDock() {
 			toast.success("Copied to clipboard");
 		}
 	}, [result]);
+
+	const handleExport = useCallback(async () => {
+		if (sceneContent) {
+			try {
+				await navigator.clipboard.writeText(sceneContent);
+				toast.success("Scene copied to clipboard");
+			} catch (error) {
+				console.error("Failed to copy scene:", error);
+				toast.error("Failed to copy scene to clipboard");
+			}
+		} else {
+			toast.info("No content to export");
+		}
+	}, [sceneContent]);
 
 	return (
 		<TooltipProvider>
@@ -280,6 +311,8 @@ export const PowerDock = memo(function PowerDock() {
 							onReset={reset}
 							onClearHistory={clearToolHistory}
 							getHistory={getToolHistory}
+							entities={entities}
+							onExport={handleExport}
 						/>
 					</div>
 				</GlassCard>

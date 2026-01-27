@@ -17,6 +17,10 @@ vi.mock("sonner", () => ({
 	},
 }));
 
+vi.mock("@tanstack/react-query", () => ({
+	useQuery: () => ({ data: [], isLoading: false }),
+}));
+
 vi.mock("usehooks-ts", () => ({
 	useLocalStorage: <T,>(_key: string, initialValue: T) => {
 		const [state, setState] = React.useState(initialValue);

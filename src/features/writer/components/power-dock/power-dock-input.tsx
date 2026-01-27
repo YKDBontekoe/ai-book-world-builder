@@ -1,5 +1,16 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { Clock, HistoryIcon, Send, Sparkles, Trash2, X } from "lucide-react";
+import {
+	Clock,
+	FileText,
+	HistoryIcon,
+	MapPin,
+	Send,
+	Sparkles,
+	Trash2,
+	User,
+	X,
+} from "lucide-react";
+import { useMemo, useState } from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -14,6 +25,17 @@ import { Textarea } from "@/components/atoms/textarea";
 import { TOOLS } from "@/features/writer/components/tools/tool-config";
 import type { ToolType } from "@/features/writer/components/tools/tool-strategies";
 import { cn } from "@/lib/utils";
+import {
+	PowerDockSuggestions,
+	type SuggestionItem,
+} from "./power-dock-suggestions";
+
+interface Entity {
+	id: string;
+	name: string;
+	kind: string;
+	summary: string | null;
+}
 
 interface PowerDockInputProps {
 	mode: "default" | "tools" | "input";
@@ -25,6 +47,8 @@ interface PowerDockInputProps {
 	onReset: () => void;
 	onClearHistory: (tool: ToolType) => void;
 	getHistory: (tool: ToolType) => { input: string; timestamp: number }[];
+	entities?: Entity[];
+	onExport?: () => void;
 }
 
 export function PowerDockInput({
@@ -37,7 +61,155 @@ export function PowerDockInput({
 	onReset,
 	onClearHistory,
 	getHistory,
+	entities = [],
+	onExport,
 }: PowerDockInputProps): JSX.Element {
+	// Suggestion state
+	const [triggerMode, setTriggerMode] = useState<"entity" | "command" | null>(
+		null,
+	);
+	const [query, setQuery] = useState("");
+	const [selectedIndex, setSelectedIndex] = useState(0);
+	const [cursorPosition, setCursorPosition] = useState(0);
+
+	// Command list
+	const commands: SuggestionItem[] = [
+		{
+			id: "export",
+			label: "Export Scene",
+			value: "/export",
+			description: "Copy current scene to clipboard",
+			icon: FileText,
+		},
+		{
+			id: "clear",
+			label: "Clear Input",
+			value: "/clear",
+			description: "Clear the current input",
+			icon: Trash2,
+		},
+	];
+
+	// Filter suggestions based on mode and query
+	const suggestions = useMemo(() => {
+		if (!triggerMode) return [];
+
+		if (triggerMode === "entity") {
+			return entities
+				.filter((e) => e.name.toLowerCase().includes(query.toLowerCase()))
+				.slice(0, 5)
+				.map((e) => ({
+					id: e.id,
+					label: e.name,
+					value: e.name,
+					description: e.kind,
+					icon: e.kind === "location" ? MapPin : User,
+				}));
+		}
+
+		if (triggerMode === "command") {
+			return commands.filter((c) =>
+				c.label.toLowerCase().includes(query.toLowerCase()),
+			);
+		}
+
+		return [];
+	}, [triggerMode, query, entities]);
+
+	const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+		const val = e.target.value;
+		const pos = e.target.selectionStart;
+		setInput(val);
+		setCursorPosition(pos);
+
+		// Detect triggers
+		const textBeforeCursor = val.slice(0, pos);
+		const lastWord = textBeforeCursor.split(/\s+/).pop() || "";
+
+		if (lastWord.startsWith("@")) {
+			setTriggerMode("entity");
+			setQuery(lastWord.slice(1));
+			setSelectedIndex(0);
+		} else if (lastWord.startsWith("/")) {
+			setTriggerMode("command");
+			setQuery(lastWord.slice(1));
+			setSelectedIndex(0);
+		} else {
+			setTriggerMode(null);
+		}
+	};
+
+	const handleSelect = (e: React.SyntheticEvent<HTMLTextAreaElement>) => {
+		setCursorPosition(e.currentTarget.selectionStart);
+	};
+
+	const handleSelectSuggestion = (item: SuggestionItem) => {
+		if (!triggerMode) return;
+
+		if (triggerMode === "command") {
+			if (item.value === "/export") {
+				onExport?.();
+				setInput("");
+			} else if (item.value === "/clear") {
+				setInput("");
+			} else {
+				// Just insert
+				setInput(item.value);
+			}
+		} else {
+			// Entity: Replace the typed trigger with the entity name
+			// We use cursorPosition to replace the text immediately preceding the cursor
+			const textBeforeCursor = input.slice(0, cursorPosition);
+			const trigger = "@" + query;
+
+			if (textBeforeCursor.endsWith(trigger)) {
+				const prefix = input.slice(0, cursorPosition - trigger.length);
+				const suffix = input.slice(cursorPosition);
+				setInput(prefix + item.value + " " + suffix);
+			} else {
+				// Fallback: simple append if something went wrong with tracking
+				setInput(input + item.value);
+			}
+		}
+		setTriggerMode(null);
+	};
+
+	const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+		if (triggerMode && suggestions.length > 0) {
+			if (e.key === "ArrowUp") {
+				e.preventDefault();
+				setSelectedIndex((prev) =>
+					prev > 0 ? prev - 1 : suggestions.length - 1,
+				);
+				return;
+			}
+			if (e.key === "ArrowDown") {
+				e.preventDefault();
+				setSelectedIndex((prev) =>
+					prev < suggestions.length - 1 ? prev + 1 : 0,
+				);
+				return;
+			}
+			if (e.key === "Enter" || e.key === "Tab") {
+				e.preventDefault();
+				handleSelectSuggestion(suggestions[selectedIndex]);
+				return;
+			}
+			if (e.key === "Escape") {
+				setTriggerMode(null);
+				return;
+			}
+		}
+
+		if (e.key === "Enter" && !e.shiftKey) {
+			e.preventDefault();
+			onExecute();
+		}
+		if (e.key === "Escape") {
+			onReset();
+		}
+	};
+
 	const getPlaceholder = (tool: ToolType) => {
 		switch (tool) {
 			case "write":
@@ -57,7 +229,7 @@ export function PowerDockInput({
 			case "search":
 				return "Ask about plot threads, character arcs, or unresolved clues...";
 			default:
-				return "Enter instructions...";
+				return "Enter instructions (Type @ for entities, / for commands)...";
 		}
 	};
 
@@ -79,21 +251,26 @@ export function PowerDockInput({
 
 					<div className="flex-1 relative group flex gap-2 items-start">
 						<div className="relative flex-1">
+							{/* Suggestions Popup */}
+							<AnimatePresence>
+								{triggerMode && suggestions.length > 0 && (
+									<PowerDockSuggestions
+										items={suggestions}
+										selectedIndex={selectedIndex}
+										onSelect={handleSelectSuggestion}
+									/>
+								)}
+							</AnimatePresence>
+
 							<Textarea
 								value={input}
-								onChange={(e) => setInput(e.target.value)}
+								onChange={handleInputChange}
+								onKeyDown={handleKeyDown}
+								onSelect={handleSelect}
+								onClick={handleSelect}
 								placeholder={getPlaceholder(selectedTool)}
 								className="min-h-[36px] max-h-[100px] py-2 px-3 pr-10 resize-none focus:border-primary/50 text-sm w-full shadow-none"
 								autoFocus
-								onKeyDown={(e) => {
-									if (e.key === "Enter" && !e.shiftKey) {
-										e.preventDefault();
-										onExecute();
-									}
-									if (e.key === "Escape") {
-										onReset();
-									}
-								}}
 							/>
 							<button
 								type="button"
