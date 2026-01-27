@@ -1,18 +1,18 @@
 "use client";
 
 import { cva, type VariantProps } from "class-variance-authority";
+import { motion } from "framer-motion";
 import type React from "react";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 const glassCardVariants = cva(
-	"relative overflow-hidden rounded-lg glass-panel transition-all duration-300",
+	"relative overflow-hidden rounded-lg glass-panel transition-colors duration-300",
 	{
 		variants: {
 			variant: {
 				default: "hover:bg-white/60 dark:hover:bg-black/30",
-				interactive:
-					"cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
+				interactive: "cursor-pointer hover:shadow-lg hover:shadow-primary/5",
 				subtle: "bg-glass/20 border-glass-border/50 backdrop-blur-md",
 				liquid:
 					"bg-glass/50 backdrop-blur-[30px] border-white/20 shadow-glass hover:bg-glass/70 transition-all duration-500",
@@ -62,7 +62,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 		};
 
 		return (
-			<div
+			<motion.div
 				ref={ref}
 				role={interactive ? "button" : undefined}
 				tabIndex={interactive ? 0 : undefined}
@@ -71,9 +71,11 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 				className={cn(
 					glassCardVariants({ variant, size }),
 					interactive &&
-						"cursor-pointer hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/5",
+						"cursor-pointer hover:shadow-lg hover:shadow-primary/5",
 					className,
 				)}
+				whileHover={interactive ? { y: -4 } : undefined}
+				transition={{ type: "spring", stiffness: 400, damping: 25 }}
 				{...props}
 			>
 				{gradient && (
@@ -82,7 +84,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 					</div>
 				)}
 				<div className="relative z-10">{children}</div>
-			</div>
+			</motion.div>
 		);
 	},
 );
