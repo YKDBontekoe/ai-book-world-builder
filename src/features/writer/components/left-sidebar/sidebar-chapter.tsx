@@ -97,7 +97,7 @@ export const SidebarChapter = memo(function SidebarChapter({
 		<AccordionItem value={chapter.id} className="border-b-0 px-2">
 			<ContextMenu>
 				<ContextMenuTrigger disabled={readOnly}>
-					<AccordionTrigger className="hover:no-underline py-2 text-sm font-medium">
+					<AccordionTrigger className="hover:no-underline py-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors group">
 						{isEditing ? (
 							<Input
 								ref={inputRef}
@@ -142,7 +142,7 @@ export const SidebarChapter = memo(function SidebarChapter({
 			</ContextMenu>
 
 			<AccordionContent className="pb-2 pt-0">
-				<div className="flex flex-col gap-1 pl-2 relative ml-2">
+				<div className="flex flex-col gap-0.5 pl-2 relative ml-2 border-l border-border/40 my-1">
 					{chapter.scenes.map((scene) => (
 						<SceneItem
 							key={scene.id}

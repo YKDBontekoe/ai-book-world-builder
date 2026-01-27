@@ -19,6 +19,7 @@ import { Button } from "@/components/atoms/button";
 import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
+import { GlassCard } from "@/components/molecules/glass-card";
 import { SceneNavigationSkeleton } from "@/features/writer/components/left-sidebar/scene-navigation-skeleton";
 import { SidebarChapter } from "@/features/writer/components/left-sidebar/sidebar-chapter";
 import { useSceneNavigation } from "@/features/writer/hooks/use-scene-navigation";
@@ -139,7 +140,7 @@ export const SceneNavigation = memo(function SceneNavigation({
 	const displayStructure = filteredStructure || [];
 
 	return (
-		<div className="flex flex-col h-full">
+		<div className="flex flex-col h-full relative">
 			<div className="px-4 py-2 space-y-2">
 				<div className="relative">
 					<Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground pointer-events-none" />
@@ -261,27 +262,33 @@ export const SceneNavigation = memo(function SceneNavigation({
 				)}
 			</ScrollArea>
 			{isSelectionMode && (
-				<div className="p-2 border-t bg-muted/30 flex gap-2">
-					<Button
-						size="sm"
-						variant="destructive"
-						className="flex-1 text-xs"
-						onClick={handleBulkDelete}
-						disabled={selectedSceneIds.size === 0}
+				<div className="absolute bottom-4 left-4 right-4 z-20">
+					<GlassCard
+						variant="liquid"
+						className="p-1.5 flex gap-2 shadow-xl border-border/50"
 					>
-						<Trash2 className="mr-2 h-3 w-3" />
-						Delete ({selectedSceneIds.size})
-					</Button>
-					<Button
-						size="sm"
-						variant="outline"
-						className="flex-1 text-xs"
-						onClick={handleBulkExport}
-						disabled={selectedSceneIds.size === 0}
-					>
-						<Download className="mr-2 h-3 w-3" />
-						Export ({selectedSceneIds.size})
-					</Button>
+						<Button
+							size="sm"
+							variant="ghost"
+							className="flex-1 text-xs hover:bg-destructive/10 hover:text-destructive text-muted-foreground"
+							onClick={handleBulkDelete}
+							disabled={selectedSceneIds.size === 0}
+						>
+							<Trash2 className="mr-2 h-3 w-3" />
+							Delete ({selectedSceneIds.size})
+						</Button>
+						<div className="w-px bg-border/50 my-1" />
+						<Button
+							size="sm"
+							variant="ghost"
+							className="flex-1 text-xs text-muted-foreground hover:text-foreground"
+							onClick={handleBulkExport}
+							disabled={selectedSceneIds.size === 0}
+						>
+							<Download className="mr-2 h-3 w-3" />
+							Export ({selectedSceneIds.size})
+						</Button>
+					</GlassCard>
 				</div>
 			)}
 		</div>

@@ -5,31 +5,13 @@ import type {
 	Direction,
 	Resource,
 } from "../types";
+import { getTargetCoordinates } from "../utils/grid";
 
 export type SystemResult = {
 	inventoryDelta: Partial<Record<Resource, number>>;
 	cashDelta: number;
 	consumedCapacity: number; // Volume added/removed
 };
-
-function getTargetCoordinates(
-	x: number,
-	y: number,
-	dir: Direction,
-): { x: number; y: number } {
-	switch (dir) {
-		case "N":
-			return { x, y: y - 1 };
-		case "S":
-			return { x, y: y + 1 };
-		case "E":
-			return { x: x + 1, y };
-		case "W":
-			return { x: x - 1, y };
-		default:
-			return { x, y };
-	}
-}
 
 export const runProductionSystem = (
 	buildings: BuildingEntity[],
