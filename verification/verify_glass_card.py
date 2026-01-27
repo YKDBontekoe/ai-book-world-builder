@@ -1,4 +1,4 @@
-from playwright.sync_api import sync_playwright, expect
+from playwright.sync_api import sync_playwright, expect, TimeoutError, Error
 
 def run(playwright):
     browser = playwright.chromium.launch(headless=True)
@@ -18,10 +18,11 @@ def run(playwright):
         # Take screenshot
         page.screenshot(path="verification/home_page_glass_cards.png", full_page=True)
         print("Screenshot saved to verification/home_page_glass_cards.png")
-    except Exception as e:
+    except (TimeoutError, Error) as e:
         print(f"Error: {e}")
         # Take error screenshot
         page.screenshot(path="verification/error_screenshot.png")
+        raise e
     finally:
         browser.close()
 

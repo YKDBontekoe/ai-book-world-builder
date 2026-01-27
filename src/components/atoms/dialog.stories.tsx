@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { expect, userEvent, within } from "@storybook/test";
 import { Button } from "./button";
 import {
 	Dialog,
@@ -44,17 +45,20 @@ export const Default: Story = {
 						<input
 							id="name"
 							defaultValue="Pedro Duarte"
-							className="col-span-3 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+							className="col-span-3 flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 						/>
 					</div>
 					<div className="grid grid-cols-4 items-center gap-4">
-						<label htmlFor="username" className="text-right text-sm font-medium">
+						<label
+							htmlFor="username"
+							className="text-right text-sm font-medium"
+						>
 							Username
 						</label>
 						<input
 							id="username"
 							defaultValue="@peduarte"
-							className="col-span-3 flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+							className="col-span-3 flex h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
 						/>
 					</div>
 				</div>
@@ -64,9 +68,46 @@ export const Default: Story = {
 							Close
 						</Button>
 					</DialogClose>
-					<Button type="submit">Save changes</Button>
+					<Button type="button" onClick={() => console.log("Saved!")}>
+						Save changes
+					</Button>
 				</DialogFooter>
 			</DialogContent>
 		</Dialog>
 	),
+	play: async ({ canvasElement, step }) => {
+		const canvas = within(canvasElement);
+
+		await step("Open dialog", async () => {
+			await userEvent.click(
+				canvas.getByRole("button", { name: "Open Dialog" }),
+			);
+		});
+
+		// Dialog content is rendered in a portal, so we need to query document.body
+		const body = within(document.body);
+
+		await step("Interact with form", async () => {
+			const dialog = await body.findByRole("dialog");
+			await expect(dialog).toBeVisible();
+
+			const nameInput = body.getByLabelText("Name");
+			const usernameInput = body.getByLabelText("Username");
+
+			await userEvent.clear(nameInput);
+			await userEvent.type(nameInput, "John Doe");
+
+			await userEvent.clear(usernameInput);
+			await userEvent.type(usernameInput, "@johndoe");
+
+			await expect(nameInput).toHaveValue("John Doe");
+			await expect(usernameInput).toHaveValue("@johndoe");
+		});
+
+		await step("Save changes", async () => {
+			const saveButton = body.getByRole("button", { name: "Save changes" });
+			await userEvent.click(saveButton);
+			await expect(saveButton).toBeVisible();
+		});
+	},
 };
