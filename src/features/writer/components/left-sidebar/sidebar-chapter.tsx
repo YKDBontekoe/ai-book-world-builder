@@ -97,7 +97,7 @@ export const SidebarChapter = memo(function SidebarChapter({
 		<AccordionItem value={chapter.id} className="border-b-0 px-2">
 			<ContextMenu>
 				<ContextMenuTrigger disabled={readOnly}>
-					<AccordionTrigger className="hover:no-underline py-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors group">
+					<AccordionTrigger className="hover:no-underline py-2 text-sm font-semibold text-foreground/80 hover:text-foreground transition-colors">
 						{isEditing ? (
 							<Input
 								ref={inputRef}
