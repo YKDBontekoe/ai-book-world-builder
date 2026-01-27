@@ -67,7 +67,7 @@ export function HUD() {
         {/* Simulation Status */}
         <div className="led-display flex items-center justify-between">
           <div>
-            <div className="text-[10px] uppercase tracking-wider text-[var(--factory-text-muted)] font-bold">Tick</div>
+            <div className="text-[10px] uppercase tracking-wider text-[var(--factory-text-muted)] font-bold">Cycle</div>
             <div className="led-value amber text-2xl">{state.tickCount}</div>
           </div>
           <button 
@@ -101,7 +101,7 @@ export function HUD() {
                 {cashDelta > 0 ? <TrendingUp className="w-3 h-3" /> : 
                  cashDelta < 0 ? <TrendingDown className="w-3 h-3" /> : 
                  <Minus className="w-3 h-3" />}
-                {cashDelta > 0 ? '+' : ''}{cashDelta}/tick
+                {cashDelta > 0 ? '+' : ''}{cashDelta}/cycle
               </div>
             </div>
           </div>
@@ -123,7 +123,7 @@ export function HUD() {
               )}>
                 {(state.lastTickDelta.science ?? 0) > 0 ? <TrendingUp className="w-3 h-3" /> : 
                  <Minus className="w-3 h-3" />}
-                {(state.lastTickDelta.science ?? 0) > 0 ? '+' : ''}{state.lastTickDelta.science ?? 0}/tick
+                {(state.lastTickDelta.science ?? 0) > 0 ? '+' : ''}{state.lastTickDelta.science ?? 0}/cycle
               </div>
             </div>
           </div>

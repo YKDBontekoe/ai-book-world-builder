@@ -122,7 +122,10 @@ We separate controller logic (Server Actions) from business logic (Services):
     -   `StoryService`: Handles scene planning and text generation.
     -   `BookAnalysisService`: Orchestrates entity detection and consistency checks.
     -   `SceneSequenceService`: Centralizes logic for scene insertion, reordering, and shifting. It uses a **Doubly-Linked List** strategy (`prevSceneId`) alongside a `sequence` integer to ensure robust ordering and race-condition handling.
-    -   `ProjectDuplicationService`: Handles deep-cloning of projects. It employs a **Two-Pass Strategy** for scenes to resolve circular dependencies (linked lists) and an **ID Map** system to maintain referential integrity across all 15+ database tables.
+    -   `ProjectDuplicationService`: Handles deep-cloning of projects using a specialized ID mapping strategy.
+
+### Factory Tycoon
+For details on the Factory Tycoon engine, see [`docs/factory-tycoon.md`](factory-tycoon.md).
 
 ### StoryService vs GenerationOrchestrator
 It is important to distinguish between these two key services:
@@ -192,9 +195,14 @@ Scenes are ordered using a hybrid approach in `SceneSequenceService`:
 **Project Forking (Deep Cloning)**:
 The `ProjectDuplicationService` implements a "Deep Clone" operation to duplicate a project and all its entities (15+ tables).
 -   **ID Mapping**: We generate new UUIDs for every record but maintain an in-memory `Map<OldID, NewID>` during the transaction. This allows us to update foreign keys (e.g., `chapter.volumeId`) correctly on the fly.
--   **Two-Pass Insertion**: For scenes (which reference each other via `prevSceneId`), we use a two-pass strategy:
-    1.  **Pass 1**: Generate and map all new Scene IDs.
-    2.  **Pass 2**: Insert full scene records, resolving `prevSceneId` using the pre-populated map. This solves the "chicken-and-egg" problem of linked lists.
+-   **Single-Pass Strategy**: For scenes (which reference each other via `prevSceneId`), we employ a **Single-Pass with Pre-generation** strategy. We generate UUIDs for both the current scene *and* its `prevSceneId` (if it exists) and add them to the map *before* insertion. This allows us to resolve circular dependencies and insert the full record in one go, avoiding the overhead of a second update pass.
+
+**Smart Sync (Structure Editor)**:
+The Structure Editor (`src/features/writer/actions/structure.ts`) allows users to edit the book's outline as plain text. The **Smart Sync** algorithm reconciles these text changes with the database:
+1.  **Parse**: Converts text indentation into a tree structure.
+2.  **Match**: Fuzzy-matches titles (normalized) against existing DB records to preserve IDs and content.
+3.  **Diff**: Identifies creations, updates, and deletions.
+4.  **Batch Execute**: Performs all DB operations in a single transaction.
 
 **Productivity Tools Architecture**:
 The Sprint, Goals, and Insights widgets (`features/writer/components/tools/`) are purely client-side React components.

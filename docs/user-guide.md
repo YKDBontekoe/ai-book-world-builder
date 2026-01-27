@@ -243,3 +243,11 @@ Restore previous versions of your scene without losing progress.
 **4. "Models are not loading"**
 *   **Cause**: API key issues or OpenRouter service outages.
 *   **Fix**: Go to **Settings > Models** and try selecting a different default model (e.g., switch from "Middle" to "Light").
+
+## Extras
+
+### Factory Tycoon
+Need a break from writing? The **Factory Tycoon** is a built-in "Zen Mode" minigame where you build and manage a factory chain.
+
+-   **Access**: Navigate to `/factory-tycoon` in your browser.
+-   **Guide**: See the full [Factory Tycoon Guide](factory-tycoon.md) for rules and strategies.

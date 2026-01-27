@@ -231,10 +231,15 @@ export class ValidationError extends AppError {
 		return new ValidationError(message, field);
 	}
 
-	static fromZodError(zodError: {
-		errors: Array<{ path: (string | number)[]; message: string }>;
-	}) {
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	static fromZodError(zodError: any) {
 		const details: Record<string, string[]> = {};
+
+		// Guard against malformed error objects or non-iterable errors
+		if (!zodError || !Array.isArray(zodError.errors)) {
+			return new ValidationError("Validation failed");
+		}
+
 		for (const err of zodError.errors) {
 			const path = err.path.join(".");
 			if (!details[path]) {
