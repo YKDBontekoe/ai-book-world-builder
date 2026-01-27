@@ -133,6 +133,10 @@ export async function createNewChapter(projectId: string) {
 				})
 				.returning();
 
+			if (!newChapter) {
+				throw new Error("Failed to create chapter");
+			}
+
 			newChapterId = newChapter.id;
 		});
 
