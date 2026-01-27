@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { WriterView } from "@/features/writer/components/writer-view";
 import type { Project } from "@/lib/db/schema";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 vi.mock("usehooks-ts", async (importOriginal) => {
 	const actual = await importOriginal<typeof import("usehooks-ts")>();
@@ -111,12 +112,26 @@ const mockProject: Project = {
 	lastViewedSceneId: null,
 };
 
+const createTestQueryClient = () =>
+	new QueryClient({
+		defaultOptions: {
+			queries: {
+				retry: false,
+			},
+		},
+	});
+
 describe("WriterView", () => {
 	it("renders the 3-pane layout", async () => {
 		const { useMediaQuery } = await import("usehooks-ts");
 		vi.mocked(useMediaQuery).mockReturnValue(false);
 
-		render(<WriterView project={mockProject} />);
+		const queryClient = createTestQueryClient();
+		render(
+			<QueryClientProvider client={queryClient}>
+				<WriterView project={mockProject} />
+			</QueryClientProvider>,
+		);
 
 		expect(screen.getByTestId("writer-sidebar")).toBeInTheDocument();
 		expect(screen.getByTestId("book-canvas")).toBeInTheDocument();
@@ -127,7 +142,12 @@ describe("WriterView", () => {
 		const { useMediaQuery } = await import("usehooks-ts");
 		vi.mocked(useMediaQuery).mockReturnValue(true);
 
-		render(<WriterView project={mockProject} />);
+		const queryClient = createTestQueryClient();
+		render(
+			<QueryClientProvider client={queryClient}>
+				<WriterView project={mockProject} />
+			</QueryClientProvider>,
+		);
 
 		expect(
 			screen.queryByTestId("resizable-panel-group"),
