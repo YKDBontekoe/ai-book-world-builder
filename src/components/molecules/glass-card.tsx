@@ -62,6 +62,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 		};
 
 		return (
+			// biome-ignore lint/a11y/noStaticElementInteractions: handled conditionally via props
 			<div
 				ref={ref}
 				role={interactive ? "button" : undefined}

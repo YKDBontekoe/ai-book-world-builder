@@ -247,6 +247,7 @@ Restore previous versions of your scene without losing progress.
 ## Extras
 
 ### Factory Tycoon
+
 Need a break from writing? The **Factory Tycoon** is a built-in "Zen Mode" minigame where you build and manage a factory chain.
 
 -   **Access**: Navigate to `/factory-tycoon` in your browser.

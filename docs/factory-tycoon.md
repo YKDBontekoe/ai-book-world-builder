@@ -55,5 +55,5 @@ interface GameState {
 ### Key Implementation Details
 
 1.  **Tick-Based System**: The game advances in discrete "Cycles" (ticks). All calculations (production, movement, consumption) happen in the `simulateTick` function.
-2.  **Optimized Rendering**: The `GameTile` component uses `React.memo` with a custom comparator to preventing re-rendering of static tiles.
+2.  **Optimized Rendering**: The `GameTile` component uses `React.memo` with a custom comparator to prevent re-rendering of static tiles.
 3.  **Theme System**: The game uses a scoped CSS theme (`factory-theme.css`) to ensure its styles (colors, fonts) do not bleed into the main application.
