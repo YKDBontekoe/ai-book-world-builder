@@ -24,8 +24,8 @@ importers:
         specifier: 3.0.51
         version: 3.0.51(react@19.2.3)(zod@4.3.6)
       '@ai-sdk/xai':
-        specifier: 3.0.33
-        version: 3.0.33(zod@4.3.6)
+        specifier: 3.0.34
+        version: 3.0.34(zod@4.3.6)
       '@auth/drizzle-adapter':
         specifier: 1.11.1
         version: 1.11.1(@simplewebauthn/browser@9.0.1)(@simplewebauthn/server@13.2.2)
@@ -526,8 +526,8 @@ packages:
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
-  '@ai-sdk/xai@3.0.33':
-    resolution: {integrity: sha512-ilhzN7KVB1aT8hk64HdrL5lYwOxQ2i1d38zX0gHc/KcibVK/4zY6Z6UGvvvdJ6mHFFtt0nbhvCkNS6FkV7990g==}
+  '@ai-sdk/xai@3.0.34':
+    resolution: {integrity: sha512-SQxgUl+9P5R9QK7R2VYAJzqv8WhoOssCvK35IOx3N90ecoFrlUVMjs8lj8T0AIYPCDBU8ArhUQa29djDi48OMw==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3464,12 +3464,6 @@ packages:
     resolution: {integrity: sha512-MnA+YT8fwfJPgBx3m60MNqakm30XOkyIoH1y6huTQvC0PwZG7ki8NacLBcrPbNoo8vEZy7Jpuk7+jMO+CUovTQ==}
     engines: {node: '>= 14'}
 
-  ai@6.0.48:
-    resolution: {integrity: sha512-nON0rHNTEQgzT1HahGl7AeszJh7es5ibZ6LWqm3IiN+bUAQtXkdArXD9vDlVAPBiCd7ERclZ6lUpOE6ltgJb3w==}
-    engines: {node: '>=18'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
   ai@6.0.49:
     resolution: {integrity: sha512-LABniBX/0R6Tv+iUK5keUZhZLaZUe4YjP5M2rZ4wAdZ8iKV3EfTAoJxuL1aaWTSJKIilKa9QUEkCgnp89/32bw==}
     engines: {node: '>=18'}
@@ -6362,7 +6356,7 @@ snapshots:
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/xai@3.0.33(zod@4.3.6)':
+  '@ai-sdk/xai@3.0.34(zod@4.3.6)':
     dependencies:
       '@ai-sdk/openai-compatible': 2.0.18(zod@4.3.6)
       '@ai-sdk/provider': 3.0.5
@@ -9227,14 +9221,6 @@ snapshots:
   acorn@8.15.0: {}
 
   agent-base@7.1.4: {}
-
-  ai@6.0.48(zod@4.3.6):
-    dependencies:
-      '@ai-sdk/gateway': 3.0.22(zod@4.3.6)
-      '@ai-sdk/provider': 3.0.5
-      '@ai-sdk/provider-utils': 4.0.9(zod@4.3.6)
-      '@opentelemetry/api': 1.9.0
-      zod: 4.3.6
 
   ai@6.0.49(zod@4.3.6):
     dependencies:
