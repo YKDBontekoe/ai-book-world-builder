@@ -15,7 +15,6 @@ export default function Page() {
 	const router = useRouter();
 
 	const [email, setEmail] = useState("");
-	const [isSuccessful, setIsSuccessful] = useState(false);
 
 	const [state, formAction] = useActionState<RegisterActionState, FormData>(
 		register,
@@ -23,6 +22,8 @@ export default function Page() {
 			status: "idle",
 		},
 	);
+
+	const isSuccessful = state.status === "success";
 
 	const { update: updateSession } = useSession();
 
@@ -38,7 +39,6 @@ export default function Page() {
 		} else if (state.status === "success") {
 			toast({ type: "success", description: "Account created successfully!" });
 
-			setIsSuccessful(true);
 			updateSession();
 			router.refresh();
 		}

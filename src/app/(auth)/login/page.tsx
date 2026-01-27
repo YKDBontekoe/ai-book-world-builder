@@ -15,7 +15,6 @@ export default function Page() {
 	const router = useRouter();
 
 	const [email, setEmail] = useState("");
-	const [isSuccessful, setIsSuccessful] = useState(false);
 
 	const [state, formAction] = useActionState<LoginActionState, FormData>(
 		login,
@@ -23,6 +22,8 @@ export default function Page() {
 			status: "idle",
 		},
 	);
+
+	const isSuccessful = state.status === "success";
 
 	const { update: updateSession } = useSession();
 
@@ -39,7 +40,6 @@ export default function Page() {
 				description: "Failed validating your submission!",
 			});
 		} else if (state.status === "success") {
-			setIsSuccessful(true);
 			updateSession();
 			router.refresh();
 		}
