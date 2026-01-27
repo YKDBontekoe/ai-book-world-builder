@@ -61,87 +61,112 @@ function ProjectCard({
 }) {
 	const [showPreview, setShowPreview] = useState(false);
 
+	const handleSelect = (e: React.SyntheticEvent, shiftKey = false) => {
+		if (onSelect) {
+			e.preventDefault();
+			e.stopPropagation();
+			onSelect(project.id, shiftKey);
+		}
+	};
+
 	return (
 		<>
 			<div className="relative h-full group">
-				{/* Checkbox Overlay */}
-				{onSelect && (
-					// biome-ignore lint/a11y/useSemanticElements: this is an overlay wrapper for the checkbox
-					<div
-						className={cn(
-							"absolute top-4 left-4 z-20 transition-opacity duration-200 cursor-pointer",
-							selected
-								? "opacity-100"
-								: "opacity-0 group-hover:opacity-100 focus-within:opacity-100",
-						)}
-						onClick={(e) => {
-							e.stopPropagation();
-							onSelect(project.id, e.shiftKey);
-						}}
-						onKeyDown={(e) => {
-							if (e.key === "Enter" || e.key === " ") {
-								e.stopPropagation();
-								// No shift key support for keyboard selection easily unless we track it globally
-								onSelect(project.id, false);
-							}
-						}}
-						role="button"
-						tabIndex={0}
-					>
-						<Checkbox
-							checked={selected}
-							// We handle the change in the wrapper onClick to capture the event object
-							onCheckedChange={() => {}}
-							className="bg-background/80 backdrop-blur-sm data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50 h-5 w-5 pointer-events-none rounded shadow-sm"
-						/>
-					</div>
-				)}
+				<MotionGlassCard
+					variant="liquid"
+					whileHover={{ y: -4 }}
+					whileTap={{ scale: 0.98 }}
+					transition={{ type: "spring", stiffness: 400, damping: 25 }}
+					className={cn(
+						"relative h-full flex flex-col justify-between space-y-6 p-6 transition-colors",
+						selected && "ring-2 ring-primary bg-primary/5",
+					)}
+				>
+					<div className="space-y-4">
+						<div className="flex items-center gap-3 pr-8">
+							{/* Icon / Selection Trigger */}
+							<div
+								className={cn(
+									"relative z-20 flex-shrink-0 p-3 rounded-xl bg-primary/10 text-primary transition-all duration-300",
+									onSelect &&
+										"cursor-pointer hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+								)}
+								onClick={(e) => handleSelect(e, e.shiftKey)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" || e.key === " ") {
+										handleSelect(e);
+									}
+								}}
+								role={onSelect ? "button" : undefined}
+								tabIndex={onSelect ? 0 : undefined}
+								aria-label={
+									onSelect
+										? selected
+											? "Deselect project"
+											: "Select project"
+										: undefined
+								}
+							>
+								<FolderIcon
+									className={cn(
+										"h-6 w-6 transition-all duration-300",
+										selected ? "opacity-0 scale-75" : "scale-100",
+										onSelect && "group-hover:opacity-0 group-hover:scale-75",
+									)}
+								/>
 
-				<Link href={`/projects/${project.id}`} className="block h-full">
-					<MotionGlassCard
-						variant="liquid"
-						// We handle motion via framer-motion props, not CSS interactive variant
-						whileHover={{ y: -4 }}
-						whileTap={{ scale: 0.98 }}
-						transition={{ type: "spring", stiffness: 400, damping: 25 }}
-						className={cn(
-							"h-full flex flex-col justify-between space-y-6 p-6 cursor-pointer transition-colors",
-							selected && "ring-2 ring-primary bg-primary/5",
-						)}
-					>
-						<div className="space-y-4">
-							<div className="flex items-center gap-3 pr-8 pl-6">
-								<div className="p-3 rounded-xl bg-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
-									<FolderIcon className="h-6 w-6" />
-								</div>
-								<h3 className="font-bold text-lg truncate tracking-tight">
+								{onSelect && (
+									<div
+										className={cn(
+											"absolute inset-0 flex items-center justify-center transition-all duration-300",
+											selected
+												? "opacity-100 scale-100"
+												: "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100",
+										)}
+									>
+										<Checkbox
+											checked={selected}
+											onCheckedChange={() => {}} // Controlled by wrapper
+											tabIndex={-1}
+											className="h-5 w-5 pointer-events-none data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50"
+										/>
+									</div>
+								)}
+							</div>
+
+							<h3 className="font-bold text-lg truncate tracking-tight">
+								{/* Link Overlay Pattern: pseudo element covers the parent relative container */}
+								<Link
+									href={`/projects/${project.id}`}
+									className="static before:absolute before:inset-0 focus:outline-none"
+								>
 									{project.name}
-								</h3>
-							</div>
-							{project.description && (
-								<p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-									{project.description}
-								</p>
-							)}
+								</Link>
+							</h3>
 						</div>
-						<div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30">
-							<div className="flex items-center gap-1">
-								<CalendarIcon className="h-3.5 w-3.5" />
-								<span>
-									{formatDistanceToNow(project.createdAt, {
-										addSuffix: true,
-									})}
-								</span>
-							</div>
-							{project.visibility === "public" && (
-								<Globe className="h-3.5 w-3.5" />
-							)}
+						{project.description && (
+							<p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed pointer-events-none relative z-10">
+								{project.description}
+							</p>
+						)}
+					</div>
+					<div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/30 relative z-10 pointer-events-none">
+						<div className="flex items-center gap-1">
+							<CalendarIcon className="h-3.5 w-3.5" />
+							<span>
+								{formatDistanceToNow(project.createdAt, {
+									addSuffix: true,
+								})}
+							</span>
 						</div>
-					</MotionGlassCard>
-				</Link>
+						{project.visibility === "public" && (
+							<Globe className="h-3.5 w-3.5" />
+						)}
+					</div>
+				</MotionGlassCard>
 
 				{/* Actions (Top Right) */}
-				<div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 z-10">
+				<div className="absolute top-4 right-4 flex items-center gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity duration-200 z-30">
 					<TooltipProvider>
 						<Tooltip>
 							<TooltipTrigger asChild>
