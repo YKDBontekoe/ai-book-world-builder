@@ -5,7 +5,7 @@ import { getTargetCoordinates, getLeftDir, getRightDir } from '../../utils/grid'
 export function processSplitter(
 	splitter: BuildingEntity,
 	map: Map<string, BuildingEntity>,
-) {
+): void {
 	// Splitter logic:
 	// Takes items from input (handled by incoming belts pushing to it).
 	// Moves items to 2 outputs (Left and Right relative to direction).
@@ -49,7 +49,7 @@ export function processSplitter(
 		const tryOrder = Math.random() > 0.5 ? [out1, out2] : [out2, out1];
 
 		for (const target of tryOrder) {
-			if (target && target.type === "Belt") {
+			if (target && (target.type === "Belt" || target.type === "Splitter")) {
 				if (!target.beltItems) target.beltItems = [];
 				const lastItem =
 					target.beltItems.length > 0

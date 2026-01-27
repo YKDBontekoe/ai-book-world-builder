@@ -6,7 +6,7 @@ import { getTargetCoordinates, getOppositeDir } from '../../utils/grid';
 export function processInserter(
 	inserter: BuildingEntity,
 	map: Map<string, BuildingEntity>,
-) {
+): void {
 	// Inserter Logic:
 	// Source: Behind (Opposite of direction)
 	// Target: Front (Direction)

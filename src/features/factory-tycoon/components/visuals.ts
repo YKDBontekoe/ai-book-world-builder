@@ -1,6 +1,6 @@
 import { ArrowRight, ArrowUpFromLine, Ban, Beaker, Box, Factory, GitFork, HandCoins, Hourglass, Pickaxe, Store, Zap } from 'lucide-react';
 import type React from 'react';
-import { BuildingType, Direction, Resource } from '../types';
+import type { BuildingType, Direction, Resource } from '../types';
 
 export const ICONS: Record<BuildingType, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   Mine: Pickaxe,
@@ -15,7 +15,16 @@ export const ICONS: Record<BuildingType, React.ComponentType<React.SVGProps<SVGS
   Inserter: ArrowUpFromLine,
 };
 
-export const STATUS_CONFIG = {
+export type StatusKey = 'RUNNING' | 'STARVED' | 'BLOCKED' | 'IDLE';
+
+export interface StatusConfigEntry {
+  color: string;
+  className: string;
+  label: string;
+  Icon: React.ComponentType<any> | null;
+}
+
+export const STATUS_CONFIG: Record<StatusKey, StatusConfigEntry> = {
   RUNNING: {
     color: 'var(--factory-success)',
     className: 'status-running',
@@ -65,12 +74,15 @@ export const RESOURCE_COLORS: Record<Resource, string> = {
 };
 
 export function getRotation(type: BuildingType, dir: Direction): number {
-    const baseRotation = { 'N': -90, 'E': 0, 'S': 90, 'W': 180 }; // For ArrowRight (Belt)
+    // baseRotation maps movement direction to the icon rotation.
+    // ArrowRight (Belt) and ArrowUpFromLine (Inserter) default to pointing right/up respectively.
+    // This rotation aligns them to the grid direction.
+    const baseRotation = { 'N': -90, 'E': 0, 'S': 90, 'W': 180 };
     const standardRotation = { 'N': 0, 'E': 90, 'S': 180, 'W': 270 }; // For Upright Icons
 
     if (type === 'Belt') return baseRotation[dir];
-    if (type === 'Splitter') return baseRotation[dir]; // Assuming Splitter icon is also directional like arrow?
-    if (type === 'Inserter') return baseRotation[dir]; // ArrowUpFromLine points Up (North) by default
+    if (type === 'Splitter') return baseRotation[dir];
+    if (type === 'Inserter') return baseRotation[dir];
 
     // For others, if we want them to face "Out", we use standard
     // But currently Miner/Smelter don't have "Direction" in their Icon visual really.
