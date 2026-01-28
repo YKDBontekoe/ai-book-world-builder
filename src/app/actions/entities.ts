@@ -120,12 +120,16 @@ export const updateEntityAction = createUserAction({
 			);
 		}
 
-		const updatedEntity = await entityRepository.update(input.id, {
-			name: input.name,
-			kind: input.kind,
-			summary: input.summary,
-			attributes: input.attributes,
-		});
+		const updatedEntity = await entityRepository.update(
+			input.id,
+			{
+				name: input.name,
+				kind: input.kind,
+				summary: input.summary,
+				attributes: input.attributes,
+			},
+			project.id,
+		);
 
 		revalidatePath(`/projects/${input.projectId}`);
 
@@ -164,7 +168,7 @@ export const deleteEntityAction = createUserAction({
 			throw new ForbiddenError("Only project owner can delete entities");
 		}
 
-		await entityRepository.delete(input.id);
+		await entityRepository.delete(input.id, project.id);
 		revalidatePath("/(chat)", "page");
 
 		return { success: true };
