@@ -55,20 +55,30 @@ describe("Scene Card Security (IDOR)", () => {
 		expect(actualQuery).toEqual(expectedSecureQuery);
 	});
 
-	it("documents insecure fallback: updateSceneCard defaults to simple ID check when projectId is missing", async () => {
+	it("requires privileged flag for ID-only updates", async () => {
 		const sceneId = "target-scene-id";
 		const data = { purpose: "Insecure Update" };
 
-		// Call the function WITHOUT projectId
-		await updateSceneCard({ sceneId, ...data });
+		// Call the function WITHOUT projectId and WITHOUT privileged flag
+		await expect(updateSceneCard({ sceneId, ...data })).rejects.toThrow(
+			"Safety check: projectId required for non-privileged updates",
+		);
+	});
+
+	it("allows ID-only updates when privileged flag is true", async () => {
+		const sceneId = "target-scene-id";
+		const data = { purpose: "Privileged Update" };
+
+		// Call WITH privileged flag
+		await updateSceneCard({ sceneId, ...data, privileged: true });
 
 		// Verify where clause
 		expect(mocks.mockWhere).toHaveBeenCalledTimes(1);
 		const actualQuery = mocks.mockWhere.mock.calls[0][0];
 
-		// Construct expected INSECURE query: WHERE sceneId = target
-		const expectedInsecureQuery = eq(sceneCard.sceneId, sceneId);
+		// Construct expected ID-only query
+		const expectedQuery = eq(sceneCard.sceneId, sceneId);
 
-		expect(actualQuery).toEqual(expectedInsecureQuery);
+		expect(actualQuery).toEqual(expectedQuery);
 	});
 });

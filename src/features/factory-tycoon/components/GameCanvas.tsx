@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { useSound } from "../audio/SoundContext";
 import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from "../config";
 import { useGame } from "../store";
-import type { BeltItem, BuildingType, Direction } from "../types";
+import type { BeltItem, BuildingEntity, BuildingType, Direction } from "../types";
 import {
 	BUILDING_COLORS,
 	getRotation,
@@ -90,7 +90,7 @@ export function GameCanvas({
 	};
 
 	// Create a map for O(1) lookup
-	const buildingMap = useMemo(() => {
+	const buildingMap = useMemo<Map<string, BuildingEntity>>(() => {
 		const map = new Map();
 		state.buildings.forEach((b) => {
 			map.set(`${b.x},${b.y}`, b);

@@ -272,10 +272,19 @@ export async function updateSceneCard({
 	chronologicalSequence,
 	timeSetting,
 	projectId,
+	privileged,
 }: Partial<SceneCard> & {
 	sceneId: string;
 	projectId?: string;
+	privileged?: boolean;
 }): Promise<SceneCard> {
+	if (!projectId && !privileged) {
+		throw new ChatSDKError(
+			"forbidden:database",
+			"Safety check: projectId required for non-privileged updates",
+		);
+	}
+
 	try {
 		const [updated] = await db
 			.update(sceneCard)

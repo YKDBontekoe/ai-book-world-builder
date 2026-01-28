@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { INITIAL_STATE } from "../../../src/features/factory-tycoon/config";
 import { runTransportSystem } from "../../../src/features/factory-tycoon/systems/transportSystem";
 import type {
@@ -8,6 +8,10 @@ import type {
 } from "../../../src/features/factory-tycoon/types";
 
 describe("Transport System", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("Belt moves item forward", () => {
 		const item: BeltItem = { id: "i1", resource: "ore", position: 0.1 };
 		const belt: BuildingEntity = {
@@ -163,7 +167,5 @@ describe("Transport System", () => {
 
 		expect(totalOut + remaining).toBe(2);
 		expect(totalOut).toBeGreaterThan(0); // Should have moved at least one
-
-		randomSpy.mockRestore();
 	});
 });
