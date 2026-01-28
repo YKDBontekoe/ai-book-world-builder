@@ -224,10 +224,7 @@ export const {
 				}
 
 				// Handle Admin Promotion on Login (Once)
-				if (
-					user.email === process.env.ADMIN_EMAIL &&
-					user.role !== "admin"
-				) {
+				if (user.email === process.env.ADMIN_EMAIL && user.role !== "admin") {
 					try {
 						await db
 							.update(userTable)

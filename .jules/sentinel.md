@@ -38,6 +38,7 @@
 **Vulnerability:** Book export filenames were constructed using only the project name and timestamp (e.g., `name_timestamp.pdf`). Since exports are public on Vercel Blob, this allowed potential enumeration of exported files if the project name was known.
 **Learning:** Using predictable identifiers (like timestamps) for publicly accessible resources effectively creates public access, even if the URL isn't explicitly listed.
 **Prevention:** Always include a high-entropy identifier (like UUID) in filenames for publicly accessible assets to prevent enumeration attacks.
+
 ## 2025-02-26 - [Scene Card IDOR]
 **Vulnerability:** `updateSceneCard` allowed updating scene details via `sceneId` without verifying `projectId`, enabling IDOR if the caller (like `updateSceneChronology`) didn't enforce ownership at the DB layer.
 **Learning:** Checking ownership at the service layer/action is insufficient if the underlying DB query functions allow unscoped access.
