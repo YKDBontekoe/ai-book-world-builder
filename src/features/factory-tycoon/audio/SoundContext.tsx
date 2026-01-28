@@ -18,7 +18,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 
 	// Placeholders for Audio objects
 	// In a real app, we would load these from /public/sounds/
-	const audioRefs = useRef<Record<SoundType, HTMLAudioElement | null>>({
+	const _audioRefs = useRef<Record<SoundType, HTMLAudioElement | null>>({
 		place: null, // new Audio('/sounds/place.mp3')
 		delete: null,
 		cash: null,

@@ -2,7 +2,6 @@
 
 import { type ClassValue, clsx } from "clsx";
 import { Beaker, Check, Lock, Sparkles, Unlock, X } from "lucide-react";
-import React from "react";
 import { twMerge } from "tailwind-merge";
 import { TECHS } from "../config";
 import { useGame } from "../store";
@@ -34,6 +33,7 @@ export function ResearchModal({
 						Research Lab
 					</h2>
 					<button
+						type="button"
 						onClick={onClose}
 						className="p-2 rounded-lg text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)] hover:bg-white/5 transition-colors"
 					>
@@ -126,6 +126,7 @@ export function ResearchModal({
 
 								{!isResearched && (
 									<button
+										type="button"
 										disabled={!canAfford}
 										onClick={() => researchTech(tech.id)}
 										className={cn(

@@ -85,37 +85,24 @@ function ProjectCard({
 					<div className="space-y-4">
 						<div className="flex items-center gap-3 pr-8">
 							{/* Icon / Selection Trigger */}
-							<div
-								className={cn(
-									"relative z-20 flex-shrink-0 p-3 rounded-xl bg-primary/10 text-primary transition-all duration-300",
-									onSelect &&
-										"cursor-pointer hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
-								)}
-								onClick={(e) => handleSelect(e, e.shiftKey)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter" || e.key === " ") {
-										handleSelect(e, e.shiftKey);
-									}
-								}}
-								role={onSelect ? "button" : undefined}
-								tabIndex={onSelect ? 0 : undefined}
-								aria-label={
-									onSelect
-										? selected
-											? "Deselect project"
-											: "Select project"
-										: undefined
-								}
-							>
-								<FolderIcon
+							{onSelect ? (
+								<button
+									type="button"
 									className={cn(
-										"h-6 w-6 transition-all duration-300",
-										selected ? "opacity-0 scale-75" : "scale-100",
-										onSelect && "group-hover:opacity-0 group-hover:scale-75",
+										"relative z-20 flex-shrink-0 p-3 rounded-xl bg-primary/10 text-primary transition-all duration-300",
+										"cursor-pointer hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
 									)}
-								/>
+									onClick={(e) => handleSelect(e, e.shiftKey)}
+									aria-label={selected ? "Deselect project" : "Select project"}
+								>
+									<FolderIcon
+										className={cn(
+											"h-6 w-6 transition-all duration-300",
+											selected ? "opacity-0 scale-75" : "scale-100",
+											"group-hover:opacity-0 group-hover:scale-75",
+										)}
+									/>
 
-								{onSelect && (
 									<div
 										className={cn(
 											"absolute inset-0 flex items-center justify-center transition-all duration-300",
@@ -131,8 +118,12 @@ function ProjectCard({
 											className="h-5 w-5 pointer-events-none data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50"
 										/>
 									</div>
-								)}
-							</div>
+								</button>
+							) : (
+								<div className="relative z-20 flex-shrink-0 p-3 rounded-xl bg-primary/10 text-primary transition-all duration-300">
+									<FolderIcon className="h-6 w-6 scale-100" />
+								</div>
+							)}
 
 							<h3 className="font-bold text-lg truncate tracking-tight">
 								{/* Link Overlay Pattern: pseudo element covers the parent relative container */}

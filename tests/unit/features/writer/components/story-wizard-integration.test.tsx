@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type React from "react";
 import { toast } from "sonner";
@@ -71,7 +71,6 @@ describe("StoryWizard Integration", () => {
 		});
 		vi.mocked(storyGenerationActions).createBookFromPlan.mockResolvedValue({
 			success: true,
-			data: { id: "new-story-id" },
 		});
 
 		render(<StoryWizard projectId="test-project" onComplete={onComplete} />);

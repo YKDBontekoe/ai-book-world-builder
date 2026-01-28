@@ -1,6 +1,6 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import { tool } from "ai";
-import fs from "fs/promises";
-import path from "path";
 import { z } from "zod";
 import { JulesClient } from "@/lib/jules-client";
 import { getOctokit, getRepoDetails } from "@/lib/services/github-service";
@@ -111,7 +111,7 @@ export const createJulesTask = () =>
 				const sources = sourcesResult.sources || [];
 
 				// Try to find a source that matches the repo
-				const currentRepoName = `${owner}/${repo}`;
+				const _currentRepoName = `${owner}/${repo}`;
 				const matchingSource =
 					sources.find(
 						(s) => s.githubRepo?.owner === owner && s.githubRepo?.repo === repo,

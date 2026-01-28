@@ -1,7 +1,7 @@
 "use server";
 
-import fs from "fs/promises";
-import path from "path";
+import fs from "node:fs/promises";
+import path from "node:path";
 import { z } from "zod";
 import { createAdminAction } from "@/lib/action-middleware";
 import { retrieveContext } from "@/lib/ai/rag";

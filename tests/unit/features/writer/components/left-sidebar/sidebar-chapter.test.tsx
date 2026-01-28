@@ -15,7 +15,9 @@ vi.mock("@/components/atoms/context-menu", () => ({
 		<div data-testid="ctx-content">{children}</div>
 	),
 	ContextMenuItem: ({ children, onClick }: any) => (
-		<button onClick={onClick}>{children}</button>
+		<button type="button" onClick={onClick}>
+			{children}
+		</button>
 	),
 	ContextMenuSeparator: () => <hr />,
 }));
@@ -32,10 +34,18 @@ vi.mock("@/features/writer/components/left-sidebar/scene-item", () => ({
 	}: any) => (
 		<div data-testid={`scene-item-${scene.id}`}>
 			<span>{scene.title}</span>
-			<button onClick={() => onSelect(scene.id)}>Select</button>
-			<button onClick={() => onRename(scene.id, "New Title")}>Rename</button>
-			<button onClick={() => onDelete(scene.id)}>Delete</button>
-			<button onClick={() => onToggleSelect(scene.id)}>Toggle Select</button>
+			<button type="button" onClick={() => onSelect(scene.id)}>
+				Select
+			</button>
+			<button type="button" onClick={() => onRename(scene.id, "New Title")}>
+				Rename
+			</button>
+			<button type="button" onClick={() => onDelete(scene.id)}>
+				Delete
+			</button>
+			<button type="button" onClick={() => onToggleSelect(scene.id)}>
+				Toggle Select
+			</button>
 			{isSelected && <span>Selected</span>}
 		</div>
 	),
@@ -186,7 +196,6 @@ describe("SidebarChapter", () => {
 	});
 
 	it("disables actions when readOnly is true", async () => {
-		const user = userEvent.setup();
 		renderComponent({ ...defaultProps, readOnly: true });
 
 		// With mocked context menu, we can't check 'not.toBeInTheDocument' based on trigger interaction

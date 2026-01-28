@@ -114,6 +114,7 @@ export function BuildingPalette({
 
 								return (
 									<button
+										type="button"
 										key={type}
 										onClick={() => onSelect(isSelected ? null : type)}
 										disabled={!canAfford && !isSelected}

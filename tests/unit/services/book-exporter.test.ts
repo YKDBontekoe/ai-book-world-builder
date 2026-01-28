@@ -11,7 +11,7 @@ vi.mock("@vercel/blob", () => ({
 vi.mock("pdfkit", () => {
 	return {
 		default: vi.fn().mockImplementation(() => {
-			const handlers: Record<string, Function> = {};
+			const handlers: Record<string, (...args: unknown[]) => unknown> = {};
 			return {
 				on: vi.fn((event, cb) => {
 					handlers[event] = cb;
@@ -23,7 +23,7 @@ vi.mock("pdfkit", () => {
 				moveDown: vi.fn().mockReturnThis(),
 				addPage: vi.fn().mockReturnThis(),
 				end: vi.fn(() => {
-					if (handlers["end"]) handlers["end"]();
+					if (handlers.end) handlers.end();
 				}),
 			};
 		}),
