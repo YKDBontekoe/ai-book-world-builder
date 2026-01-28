@@ -1,4 +1,5 @@
 import "server-only";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 import { put } from "@vercel/blob";
 import { asc, eq } from "drizzle-orm";
@@ -315,6 +316,8 @@ export async function exportBook(
 		.replace(/[^a-z0-9]/gi, "_")
 		.toLowerCase();
 	const timestamp = Date.now();
+	// Add a random UUID to prevent file enumeration (IDOR protection)
+	const uniqueId = randomUUID();
 
 	let buffer: Buffer;
 	let filename: string;
@@ -322,11 +325,11 @@ export async function exportBook(
 
 	if (format === "pdf") {
 		buffer = await generatePdf(projectData);
-		filename = `exports/${sanitizedTitle}_${timestamp}.pdf`;
+		filename = `exports/${sanitizedTitle}_${timestamp}_${uniqueId}.pdf`;
 		contentType = "application/pdf";
 	} else {
 		buffer = await generateEpub(projectData);
-		filename = `exports/${sanitizedTitle}_${timestamp}.epub`;
+		filename = `exports/${sanitizedTitle}_${timestamp}_${uniqueId}.epub`;
 		contentType = "application/epub+zip";
 	}
 
