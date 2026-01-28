@@ -192,9 +192,10 @@ Scenes are ordered using a hybrid approach in `SceneSequenceService`:
 **Project Forking (Deep Cloning)**:
 The `ProjectDuplicationService` implements a "Deep Clone" operation to duplicate a project and all its entities (15+ tables).
 -   **ID Mapping**: We generate new UUIDs for every record but maintain an in-memory `Map<OldID, NewID>` during the transaction. This allows us to update foreign keys (e.g., `chapter.volumeId`) correctly on the fly.
--   **Two-Pass Insertion**: For scenes (which reference each other via `prevSceneId`), we use a two-pass strategy:
-    1.  **Pass 1**: Generate and map all new Scene IDs.
-    2.  **Pass 2**: Insert full scene records, resolving `prevSceneId` using the pre-populated map. This solves the "chicken-and-egg" problem of linked lists.
+-   **Refined Single-Pass Strategy**: For scenes (which reference each other via `prevSceneId`), we use an optimized single-pass approach:
+    1.  Iterate through scenes in batches.
+    2.  For each scene, if its new ID or its `prevSceneId`'s new ID is missing from the map, generate and cache them immediately.
+    3.  Insert the scene record with fully resolved IDs. This solves the "chicken-and-egg" problem of linked lists without needing a second iteration.
 
 **Productivity Tools Architecture**:
 The Sprint, Goals, and Insights widgets (`features/writer/components/tools/`) are purely client-side React components.
@@ -216,6 +217,9 @@ To enable the AI to write coherently over long contexts without a Vector DB, we 
 -   **Global Context**: Chapter notes and Outline parameters (POV, Tone) are always included.
 
 ### 14. AI Integration & Models
+
+**Dynamic Model Fetching**:
+The system fetches available models dynamically via the `getAvailableModels` Server Action. This ensures that the application supports new models (like Grok Lite or newer Claude versions) immediately as they become available via the gateway, without requiring code changes. While defaults are defined in `DEFAULT_MODELS`, they are used only as fallbacks.
 
 **Role-Based Routing**:
 We do not hardcode model IDs. Instead, we use a role-based system defined in `lib/ai/model-routing.ts`:
