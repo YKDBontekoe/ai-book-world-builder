@@ -7,6 +7,7 @@ import { simulateTick, calculateCapacity } from './engine';
 import { nanoid } from 'nanoid';
 import { saveGameState, loadGameState } from './actions';
 import { toast } from 'sonner';
+import { getInteractionResult, processInteraction } from './systems/interactionSystem';
 
 type Action =
   | { type: 'TICK' }
@@ -123,65 +124,7 @@ function gameReducer(state: GameState, action: Action): GameState {
     case 'SET_STATE':
         return action.payload;
     case 'MANUAL_INTERACT': {
-        const buildingIndex = state.buildings.findIndex(b => b.x === action.x && b.y === action.y);
-        if (buildingIndex === -1) return state;
-
-        const building = state.buildings[buildingIndex];
-        const config = BUILDINGS[building.type];
-        const newInventory = { ...state.inventory };
-        let interacted = false;
-
-        // 1. Belt Pickup (Single Item)
-        if (building.type === 'Belt' && building.beltItems && building.beltItems.length > 0) {
-             const item = building.beltItems[0];
-             if (item.resource !== 'cash' && item.resource !== 'science') {
-                 newInventory[item.resource] = (newInventory[item.resource] || 0) + 1;
-                 
-                 const newBuildings = [...state.buildings];
-                 newBuildings[buildingIndex] = {
-                     ...building,
-                     beltItems: building.beltItems.slice(1)
-                 };
-                 
-                 return {
-                     ...state,
-                     inventory: newInventory,
-                     buildings: newBuildings
-                 };
-             }
-        }
-
-        // 2. Machine Output Collection (All Items)
-        if (building.localInventory && config.outputs) {
-             const outputRes = Object.keys(config.outputs)[0] as Resource;
-             if (outputRes && building.localInventory[outputRes] && building.localInventory[outputRes]! > 0) {
-                 
-                 if (outputRes !== 'cash' && outputRes !== 'science') {
-                     const validRes = outputRes as keyof GameState['inventory'];
-                     const amount = building.localInventory[validRes] || 0;
-                     
-                     // Transfer ALL
-                     newInventory[validRes] = (newInventory[validRes] || 0) + amount;
-
-                     const newBuildings = [...state.buildings];
-                     newBuildings[buildingIndex] = {
-                         ...building,
-                         localInventory: {
-                             ...building.localInventory,
-                             [validRes]: 0
-                         }
-                     };
-                     
-                     return {
-                         ...state,
-                         inventory: newInventory,
-                         buildings: newBuildings
-                     };
-                 }
-             }
-        }
-        
-        return state;
+        return processInteraction(state, action.x, action.y);
     }
     default:
       return state;
@@ -267,26 +210,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
   const manualInteract = useCallback((x: number, y: number) => {
       // Feedback Logic
-      const b = state.buildings.find(b => b.x === x && b.y === y);
-      if (b) {
-          const config = BUILDINGS[b.type];
-          // Belt Feedback
-          if (b.type === 'Belt' && b.beltItems && b.beltItems.length > 0) {
-               const item = b.beltItems[0];
-               toast.success(`Picked up 1 ${item.resource}`);
-          }
-          // Machine Feedback
-          else if (b.localInventory && config.outputs) {
-               const outputRes = Object.keys(config.outputs)[0] as Resource;
-               if (outputRes && b.localInventory[outputRes] && b.localInventory[outputRes]! > 0) {
-                    const amount = b.localInventory[outputRes];
-                    toast.success(`Collected ${amount} ${outputRes}`);
-               }
-          }
+      const result = getInteractionResult(state, x, y);
+      if (result) {
+          toast.success(`Collected ${result.amount} ${result.resource}`);
       }
       
       dispatch({ type: 'MANUAL_INTERACT', x, y });
-  }, [state.buildings]);
+  }, [state]);
   
   const researchTech = useCallback((techId: string) => {
     dispatch({ type: 'RESEARCH_TECH', techId });
