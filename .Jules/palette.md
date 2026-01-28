@@ -374,3 +374,21 @@ The codebase remains compliant with strict TypeScript standards, including test 
 ### Learnings
 
 - Tests are first-class citizens and must adhere to the same strict type safety rules as source code; avoid `any` in mocks by using `React.ComponentProps<typeof Component>`.
+
+## 2026-01-28 - Test mock fidelity for streams
+
+### Context
+
+CodeRabbit flagged that the `MockPDFDocument` used in `book-exporter.test.ts` was not emitting 'data' events, causing the `chunks` buffer in the code under test to remain empty, which meant the export logic wasn't fully exercised.
+
+### Solution
+
+Updated the mock's `end()` method to explicitly emit a 'data' event with dummy content before emitting the 'end' event, ensuring the stream listeners in the production code are triggered correctly.
+
+### Outcome
+
+The unit test now accurately simulates data flowing through the PDF stream, providing better coverage of the buffering logic in `book-exporter.ts`.
+
+### Learnings
+
+- When mocking stream-based libraries (like PDFKit), ensure the mock emits all relevant lifecycle events ('data' before 'end') to prevent silent failures in buffering logic.

@@ -37,6 +37,10 @@ vi.mock("pdfkit", () => {
 				return this;
 			}
 			end() {
+				// Emit data event to populate chunks
+				if (this.handlers.data) {
+					this.handlers.data(Buffer.from("%PDF-1.4\n%..."));
+				}
 				if (this.handlers.end) {
 					this.handlers.end();
 				}
