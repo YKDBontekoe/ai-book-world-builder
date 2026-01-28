@@ -52,6 +52,7 @@ describe("ProjectService", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
 
 		// Default db behavior
 		(db.select as any).mockReturnValue(createMockQB([]));

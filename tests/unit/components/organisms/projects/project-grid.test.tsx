@@ -14,10 +14,10 @@ vi.mock("framer-motion", () => {
 		className,
 		onClick,
 		...props
-	}: React.ComponentProps<"button">) => (
-		<button type="button" className={className} onClick={onClick} {...props}>
+	}: React.ComponentProps<"div">) => (
+		<div className={className} onClick={onClick} {...props}>
 			{children}
-		</button>
+		</div>
 	);
 	return { motion: Object.assign(motion, { div }) };
 });
@@ -27,10 +27,10 @@ vi.mock("@/components/molecules/glass-card", () => ({
 		children,
 		className,
 		onClick,
-	}: React.ComponentProps<"button">) => (
-		<button type="button" className={className} onClick={onClick}>
+	}: React.ComponentProps<"div">) => (
+		<div className={className} onClick={onClick}>
 			{children}
-		</button>
+		</div>
 	),
 }));
 

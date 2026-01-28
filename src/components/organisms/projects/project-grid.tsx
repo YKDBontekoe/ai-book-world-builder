@@ -2,11 +2,10 @@
 
 import { formatDistanceToNow } from "date-fns";
 import { motion } from "framer-motion";
-import { CalendarIcon, Eye, FolderIcon, Globe } from "lucide-react";
+import { CalendarIcon, Check, Eye, FolderIcon, Globe } from "lucide-react";
 import Link from "next/link";
 import { type SyntheticEvent, useState } from "react";
 import { Button } from "@/components/atoms/button";
-import { Checkbox } from "@/components/atoms/checkbox";
 import { GridList } from "@/components/atoms/grid-list";
 import {
 	Tooltip,
@@ -93,6 +92,15 @@ function ProjectCard({
 										"cursor-pointer hover:bg-primary/20 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
 									)}
 									onClick={(e) => handleSelect(e, e.shiftKey)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											e.stopPropagation();
+											if (onSelect) {
+												onSelect(project.id, e.shiftKey);
+											}
+										}
+									}}
 									aria-label={selected ? "Deselect project" : "Select project"}
 								>
 									<FolderIcon
@@ -111,12 +119,16 @@ function ProjectCard({
 												: "opacity-0 scale-75 group-hover:opacity-100 group-hover:scale-100",
 										)}
 									>
-										<Checkbox
-											checked={selected}
-											onCheckedChange={() => {}} // Controlled by wrapper
-											tabIndex={-1}
-											className="h-5 w-5 pointer-events-none data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground border-primary/50"
-										/>
+										<div
+											className={cn(
+												"grid place-content-center h-5 w-5 rounded-sm border transition-colors",
+												selected
+													? "bg-primary text-primary-foreground border-primary"
+													: "border-primary/50 bg-transparent",
+											)}
+										>
+											{selected && <Check className="h-4 w-4" />}
+										</div>
 									</div>
 								</button>
 							) : (
