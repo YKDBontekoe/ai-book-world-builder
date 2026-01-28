@@ -38,6 +38,22 @@ vi.mock("@/app/(auth)/auth", () => ({
 	auth: mocks.auth,
 }));
 
+// Mock cache
+vi.mock("@/lib/cache", () => ({
+	getCached: vi.fn((_key, fn) => fn()),
+	invalidateCache: vi.fn(),
+	invalidateCachePattern: vi.fn(),
+}));
+
+// Mock db
+vi.mock("@/lib/db", () => ({
+	db: {
+		select: vi.fn().mockReturnThis(),
+		from: vi.fn().mockReturnThis(),
+		where: vi.fn().mockResolvedValue([]),
+	},
+}));
+
 describe("GitHub Actions", () => {
 	const originalEnv = process.env;
 
@@ -60,29 +76,35 @@ describe("GitHub Actions", () => {
 
 	describe("Authorization", () => {
 		it("should fail if user is not logged in", async () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 			mocks.auth.mockResolvedValue({ user: null });
 
 			const result = await githubActions.getRepoStats();
 
+			expect(consoleSpy).toHaveBeenCalled();
 			expect(result.success).toBe(false);
 			if (!result.success) {
 				expect(result.error).toBe(
 					"You must be logged in to perform this action",
 				);
 			}
+			consoleSpy.mockRestore();
 		});
 
 		it("should fail if user is not admin", async () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 			mocks.auth.mockResolvedValue({
 				user: { id: "user-id", role: "user" },
 			});
 
 			const result = await githubActions.getRepoStats();
 
+			expect(consoleSpy).toHaveBeenCalled();
 			expect(result.success).toBe(false);
 			if (!result.success) {
 				expect(result.error).toBe("Admin access required");
 			}
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -114,11 +136,14 @@ describe("GitHub Actions", () => {
 		});
 
 		it("should handle errors gracefully", async () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 			mocks.octokit.rest.repos.get.mockRejectedValue(new Error("API Error"));
 
 			const result = await githubActions.getRepoStats();
 
+			expect(consoleSpy).toHaveBeenCalled();
 			expect(result.success).toBe(false);
+			consoleSpy.mockRestore();
 		});
 	});
 

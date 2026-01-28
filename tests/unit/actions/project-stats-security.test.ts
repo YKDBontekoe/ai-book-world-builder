@@ -63,6 +63,7 @@ describe("Project Stats Security", () => {
 	});
 
 	it("should fail getProjectStats when accessing a private project belonging to another user", async () => {
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		mockGetProjectByIdWithAccess.mockResolvedValue(null);
 
 		// Setup: Data queries would return data if called
@@ -72,6 +73,7 @@ describe("Project Stats Security", () => {
 
 		const result = await getProjectStats({ projectId: PROJECT_ID });
 
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.error).toMatch(/permission/i);
@@ -86,13 +88,16 @@ describe("Project Stats Security", () => {
 		expect(mockGetRelationshipsForProject).not.toHaveBeenCalled();
 		expect(mockGetOutlinesForProject).not.toHaveBeenCalled();
 		expect(mockGetChaptersForProject).not.toHaveBeenCalled();
+		consoleSpy.mockRestore();
 	});
 
 	it("should fail getRelationships when accessing a private project belonging to another user", async () => {
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		mockGetProjectByIdWithAccess.mockResolvedValue(null);
 
 		const result = await getRelationships({ projectId: PROJECT_ID });
 
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.error).toMatch(/permission/i);
@@ -103,13 +108,16 @@ describe("Project Stats Security", () => {
 			userId: ATTACKER_ID,
 		});
 		expect(mockGetRelationshipsForProject).not.toHaveBeenCalled();
+		consoleSpy.mockRestore();
 	});
 
 	it("should fail getOutlineData when accessing a private project belonging to another user", async () => {
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		mockGetProjectByIdWithAccess.mockResolvedValue(null);
 
 		const result = await getOutlineData({ projectId: PROJECT_ID });
 
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.error).toMatch(/permission/i);
@@ -121,13 +129,16 @@ describe("Project Stats Security", () => {
 		});
 		expect(mockGetOutlinesForProject).not.toHaveBeenCalled();
 		expect(mockGetChaptersForProject).not.toHaveBeenCalled();
+		consoleSpy.mockRestore();
 	});
 
 	it("should fail getTimelineEvents when accessing a private project belonging to another user", async () => {
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		mockGetProjectByIdWithAccess.mockResolvedValue(null);
 
 		const result = await getTimelineEvents({ projectId: PROJECT_ID });
 
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.error).toMatch(/permission/i);
@@ -138,6 +149,7 @@ describe("Project Stats Security", () => {
 			userId: ATTACKER_ID,
 		});
 		expect(mockGetEntitiesForProject).not.toHaveBeenCalled();
+		consoleSpy.mockRestore();
 	});
 
 	it("should fail getChapterDraft when accessing a private project belonging to another user", async () => {
@@ -166,10 +178,12 @@ describe("Project Stats Security", () => {
 	});
 
 	it("should fail getGenerationLog when accessing a private project belonging to another user", async () => {
+		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		mockGetProjectByIdWithAccess.mockResolvedValue(null);
 
 		const result = await getGenerationLog({ projectId: PROJECT_ID });
 
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			expect(result.error).toMatch(/permission/i);
@@ -180,5 +194,6 @@ describe("Project Stats Security", () => {
 			userId: ATTACKER_ID,
 		});
 		expect(mockGetBookGenerationForProject).not.toHaveBeenCalled();
+		consoleSpy.mockRestore();
 	});
 });

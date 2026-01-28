@@ -121,6 +121,7 @@ describe("extended entities actions", () => {
 		});
 
 		it("fails if not owner", async () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 			mockedAuth.mockResolvedValue(buildSession());
 			mockedFindByIdWithAccess.mockResolvedValue(
 				buildProject({ userId: "other" }),
@@ -132,8 +133,10 @@ describe("extended entities actions", () => {
 				kind: "character",
 			});
 
+			expect(consoleSpy).toHaveBeenCalled();
 			expect(result.success).toBe(false);
 			expect(mockedCreate).not.toHaveBeenCalled();
+			consoleSpy.mockRestore();
 		});
 	});
 
@@ -161,6 +164,7 @@ describe("extended entities actions", () => {
 		});
 
 		it("fails if one entity belongs to another project", async () => {
+			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 			mockedAuth.mockResolvedValue(buildSession());
 			mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 
@@ -176,8 +180,10 @@ describe("extended entities actions", () => {
 				],
 			});
 
+			expect(consoleSpy).toHaveBeenCalled();
 			expect(result.success).toBe(false);
 			expect(mockedBulkDelete).not.toHaveBeenCalled();
+			consoleSpy.mockRestore();
 		});
 	});
 });
