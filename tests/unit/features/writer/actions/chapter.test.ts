@@ -129,8 +129,18 @@ describe("Chapter Actions", () => {
 			};
 			(db.insert as Mock).mockReturnValue(failingChain);
 
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
 			const result = await chapterActions.createNewChapter(projectId);
 			expect(result.success).toBe(false);
+
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Failed to create new chapter",
+				expect.any(Error),
+			);
+			consoleSpy.mockRestore();
 		});
 	});
 
