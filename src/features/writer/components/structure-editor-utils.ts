@@ -81,10 +81,10 @@ export function parseStructure(text: string): ParsedNode[] {
 				lineIndex: index,
 			};
 			nodes.push(currentChapter);
-		} else if (trimmed.match(/^(-|scene)/i)) {
+		} else if (trimmed.match(/^([-*]|scene)/i)) {
 			const sceneNode: ParsedNode = {
 				type: "scene",
-				title: trimmed.replace(/^[-]\s*/, ""),
+				title: trimmed.replace(/^[-*]\s*/, ""),
 				lineIndex: index,
 			};
 			if (currentChapter) {

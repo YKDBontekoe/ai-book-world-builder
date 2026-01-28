@@ -53,7 +53,10 @@ describe("StructureEditorDialog", () => {
 
 	it("edits text and saves", async () => {
 		const user = userEvent.setup();
-		(saveProjectStructure as any).mockResolvedValue({ success: true });
+		vi.mocked(saveProjectStructure).mockResolvedValue({
+			success: true,
+			data: { success: true },
+		});
 
 		render(
 			<StructureEditorDialog
@@ -86,7 +89,7 @@ describe("StructureEditorDialog", () => {
 
 	it("handles save error", async () => {
 		const user = userEvent.setup();
-		(saveProjectStructure as any).mockResolvedValue({ success: false, error: "Save failed" });
+		vi.mocked(saveProjectStructure).mockResolvedValue({ success: false, error: "Save failed" });
 
 		render(
 			<StructureEditorDialog

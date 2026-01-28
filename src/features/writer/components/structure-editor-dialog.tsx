@@ -40,6 +40,11 @@ interface StructureEditorDialogProps {
 	currentStructure: string;
 	onSave: () => void;
 	children: React.ReactNode;
+	/**
+	 * Optional server action override for testing or custom behavior.
+	 * Defaults to the real `saveProjectStructure`.
+	 */
+	saveAction?: typeof saveProjectStructure;
 }
 
 export function StructureEditorDialog({
@@ -47,6 +52,7 @@ export function StructureEditorDialog({
 	currentStructure,
 	onSave,
 	children,
+	saveAction = saveProjectStructure,
 }: StructureEditorDialogProps) {
 	const [open, setOpen] = useState(false);
 	const [text, setText] = useState(currentStructure);
@@ -63,7 +69,7 @@ export function StructureEditorDialog({
 
 	const handleSave = async () => {
 		setIsSaving(true);
-		const result = await saveProjectStructure({
+		const result = await saveAction({
 			projectId,
 			structureText: text,
 		});

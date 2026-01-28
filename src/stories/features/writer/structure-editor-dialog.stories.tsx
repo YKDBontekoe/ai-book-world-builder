@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import { expect, userEvent, within } from "@storybook/test";
+import { expect, userEvent, waitFor, within } from "@storybook/test";
 import { Button } from "@/components/atoms/button";
 import { StructureEditorDialog } from "@/features/writer/components/structure-editor-dialog";
 
@@ -42,6 +42,79 @@ export const Open: Story = {
 		// Wait for dialog to appear (it renders in a portal usually)
 		// Since we are in storybook, we look at document body for portal
 		const body = within(document.body);
+		await expect(
+			body.findByRole("dialog", { name: "Structure Editor" }),
+		).resolves.toBeInTheDocument();
+	},
+};
+
+export const Loading: Story = {
+	args: {
+		...Default.args,
+		saveAction: async () => {
+			await new Promise((resolve) => setTimeout(resolve, 1000));
+			return { success: true, data: { success: true } };
+		},
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const button = canvas.getByRole("button", { name: "Edit Structure" });
+		await userEvent.click(button);
+
+		const body = within(document.body);
+		await body.findByRole("dialog", { name: "Structure Editor" });
+
+		const saveBtn = body.getByRole("button", { name: "Save Changes" });
+		await userEvent.click(saveBtn);
+
+		await expect(saveBtn).toBeDisabled();
+	},
+};
+
+export const Success: Story = {
+	args: {
+		...Default.args,
+		saveAction: async () => ({ success: true, data: { success: true } }),
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const button = canvas.getByRole("button", { name: "Edit Structure" });
+		await userEvent.click(button);
+
+		const body = within(document.body);
+		await body.findByRole("dialog", { name: "Structure Editor" });
+
+		const saveBtn = body.getByRole("button", { name: "Save Changes" });
+		await userEvent.click(saveBtn);
+
+		await waitFor(() => {
+			expect(
+				body.queryByRole("dialog", { name: "Structure Editor" }),
+			).not.toBeInTheDocument();
+		});
+	},
+};
+
+export const Error: Story = {
+	args: {
+		...Default.args,
+		saveAction: async () => ({
+			success: false,
+			error: "Simulation of a save error",
+		}),
+	},
+	play: async ({ canvasElement }) => {
+		const canvas = within(canvasElement);
+		const button = canvas.getByRole("button", { name: "Edit Structure" });
+		await userEvent.click(button);
+
+		const body = within(document.body);
+		await body.findByRole("dialog", { name: "Structure Editor" });
+
+		const saveBtn = body.getByRole("button", { name: "Save Changes" });
+		await userEvent.click(saveBtn);
+
+		// Dialog should stay open
 		await expect(
 			body.findByRole("dialog", { name: "Structure Editor" }),
 		).resolves.toBeInTheDocument();

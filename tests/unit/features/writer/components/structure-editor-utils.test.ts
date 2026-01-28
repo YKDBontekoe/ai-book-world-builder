@@ -85,5 +85,15 @@ Chapter 2: Two`;
 			expect(result[0].type).toBe("chapter");
 			expect(result[0].title).toBe("Just a Title");
 		});
+
+		it("handles scene bullets using * marker", () => {
+			const input = `Chapter 1: One
+* Scene B`;
+			const result = parseStructure(input);
+
+			expect(result).toHaveLength(1);
+			expect(result[0].children).toHaveLength(1);
+			expect(result[0].children?.[0].title).toBe("Scene B");
+		});
 	});
 });
