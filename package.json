@@ -139,7 +139,7 @@
 		"tailwind-merge": "3.4.0",
 		"tailwindcss-animate": "1.0.7",
 		"tokenlens": "1.3.1",
-		"use-stick-to-bottom": "1.1.1",
+		"use-stick-to-bottom": "1.1.2",
 		"usehooks-ts": "3.1.1",
 		"zod": "4.3.6"
 	},
