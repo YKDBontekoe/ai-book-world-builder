@@ -1,43 +1,12 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
-import {
-	ArrowRight,
-	ArrowUpFromLine,
-	Beaker,
-	Box,
-	Coins,
-	Factory,
-	GitFork,
-	HandCoins,
-	Pickaxe,
-	Store,
-} from "lucide-react";
+import { Coins, Factory } from "lucide-react";
 import type React from "react";
-import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 import { BUILDINGS } from "../config";
 import { useGame } from "../store";
 import type { BuildingType } from "../types";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
-
-const ICONS: Record<
-	BuildingType,
-	React.ComponentType<React.SVGProps<SVGSVGElement>>
-> = {
-	Mine: Pickaxe,
-	Smelter: Factory,
-	Factory: Factory,
-	Warehouse: Box,
-	Market: Store,
-	TradingPost: HandCoins,
-	Lab: Beaker,
-	Belt: ArrowRight,
-	Splitter: GitFork,
-	Inserter: ArrowUpFromLine,
-};
+import { ICONS } from "./visuals";
 
 const BUILDING_CATEGORIES = {
 	Production: ["Mine", "Smelter", "Factory"],

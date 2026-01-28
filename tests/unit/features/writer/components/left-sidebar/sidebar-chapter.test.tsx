@@ -1,20 +1,24 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ComponentProps, PropsWithChildren } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Accordion } from "@/components/atoms/accordion";
 import { SidebarChapter } from "@/features/writer/components/left-sidebar/sidebar-chapter";
-import type { ChapterWithScenes } from "@/lib/types";
+import type { ChapterWithScenes, SceneWithPrev } from "@/lib/types";
 
 // Mock ContextMenu to avoid Radix UI interaction issues in JSDOM
 vi.mock("@/components/atoms/context-menu", () => ({
-	ContextMenu: ({ children }: any) => <div>{children}</div>,
-	ContextMenuTrigger: ({ children }: any) => (
+	ContextMenu: ({ children }: PropsWithChildren) => <div>{children}</div>,
+	ContextMenuTrigger: ({ children }: PropsWithChildren) => (
 		<div data-testid="ctx-trigger">{children}</div>
 	),
-	ContextMenuContent: ({ children }: any) => (
+	ContextMenuContent: ({ children }: PropsWithChildren) => (
 		<div data-testid="ctx-content">{children}</div>
 	),
-	ContextMenuItem: ({ children, onClick }: any) => (
+	ContextMenuItem: ({
+		children,
+		onClick,
+	}: PropsWithChildren<{ onClick?: () => void }>) => (
 		<button onClick={onClick}>{children}</button>
 	),
 	ContextMenuSeparator: () => <hr />,
@@ -29,7 +33,14 @@ vi.mock("@/features/writer/components/left-sidebar/scene-item", () => ({
 		onDelete,
 		isSelected,
 		onToggleSelect,
-	}: any) => (
+	}: {
+		scene: SceneWithPrev;
+		onSelect: (id: string) => void;
+		onRename: (id: string, name: string) => void;
+		onDelete: (id: string) => void;
+		isSelected: boolean;
+		onToggleSelect: (id: string) => void;
+	}) => (
 		<div data-testid={`scene-item-${scene.id}`}>
 			<span>{scene.title}</span>
 			<button onClick={() => onSelect(scene.id)}>Select</button>
@@ -54,7 +65,7 @@ vi.mock("lucide-react", () => ({
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
-const renderComponent = (props: any) => {
+const renderComponent = (props: ComponentProps<typeof SidebarChapter>) => {
 	return render(
 		<Accordion type="multiple" defaultValue={[props.chapter.id]}>
 			<SidebarChapter {...props} />
@@ -63,10 +74,34 @@ const renderComponent = (props: any) => {
 };
 
 describe("SidebarChapter", () => {
-	const mockScenes = [
-		{ id: "s1", title: "Scene 1", sequence: 1 },
-		{ id: "s2", title: "Scene 2", sequence: 2 },
-	] as any[];
+	const mockScenes: SceneWithPrev[] = [
+		{
+			id: "s1",
+			title: "Scene 1",
+			sequence: 1,
+			content: "",
+			wordCount: 0,
+			status: "drafted",
+			chapterId: "c1",
+			projectId: "p1",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			prevSceneId: null,
+		},
+		{
+			id: "s2",
+			title: "Scene 2",
+			sequence: 2,
+			content: "",
+			wordCount: 0,
+			status: "drafted",
+			chapterId: "c1",
+			projectId: "p1",
+			createdAt: new Date(),
+			updatedAt: new Date(),
+			prevSceneId: "s1",
+		},
+	];
 
 	const mockChapter: ChapterWithScenes = {
 		id: "c1",

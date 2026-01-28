@@ -54,4 +54,21 @@ describe("Scene Card Security (IDOR)", () => {
 		// This should now pass with the fix
 		expect(actualQuery).toEqual(expectedSecureQuery);
 	});
+
+	it("documents insecure fallback: updateSceneCard defaults to simple ID check when projectId is missing", async () => {
+		const sceneId = "target-scene-id";
+		const data = { purpose: "Insecure Update" };
+
+		// Call the function WITHOUT projectId
+		await updateSceneCard({ sceneId, ...data });
+
+		// Verify where clause
+		expect(mocks.mockWhere).toHaveBeenCalledTimes(1);
+		const actualQuery = mocks.mockWhere.mock.calls[0][0];
+
+		// Construct expected INSECURE query: WHERE sceneId = target
+		const expectedInsecureQuery = eq(sceneCard.sceneId, sceneId);
+
+		expect(actualQuery).toEqual(expectedInsecureQuery);
+	});
 });

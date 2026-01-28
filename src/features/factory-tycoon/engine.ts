@@ -34,7 +34,7 @@ export function simulateTick(currentState: GameState): GameState {
 	};
 
 	// Sort buildings by ID to ensure deterministic execution order
-	const sortedBuildings = nextState.buildings.sort((a, b) =>
+	const sortedBuildings = [...nextState.buildings].sort((a, b) =>
 		a.id.localeCompare(b.id),
 	);
 
