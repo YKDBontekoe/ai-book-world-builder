@@ -34,7 +34,7 @@ const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
 	},
 };
 
-export function HUD() {
+export function HUD(): JSX.Element {
 	const { state, isRunning, setIsRunning, sellResource } = useGame();
 	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 	const [isResearchOpen, setIsResearchOpen] = useState(false);
@@ -219,12 +219,15 @@ export function HUD() {
 						</h3>
 
 						<div className="space-y-2">
-							{Object.entries(state.inventory).map(([res, count]) => {
-								const delta =
-									state.lastTickDelta[res as keyof typeof state.inventory] ?? 0;
+							{(
+								Object.entries(state.inventory) as [
+									keyof typeof state.inventory,
+									number,
+								][]
+							).map(([res, count]) => {
+								const delta = state.lastTickDelta[res] ?? 0;
 								const config = RESOURCE_ICONS[res];
-								const value =
-									RESOURCE_VALUES[res as keyof typeof RESOURCE_VALUES] || 0;
+								const value = RESOURCE_VALUES[res] || 0;
 
 								return (
 									<div
@@ -275,7 +278,7 @@ export function HUD() {
 										{value > 0 && (
 											<button
 												type="button"
-												onClick={() => sellResource(res as any)}
+												onClick={() => sellResource(res)}
 												disabled={count <= 0}
 												className={cn(
 													"text-[10px] w-full py-1 rounded border transition-colors flex items-center justify-center gap-1",

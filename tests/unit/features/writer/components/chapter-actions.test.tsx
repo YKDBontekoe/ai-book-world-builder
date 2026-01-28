@@ -4,6 +4,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as storyGenerationActions from "@/app/actions/story-generation";
 import { ChapterActions } from "@/features/writer/components/chapter-actions";
 
+type PlanChapterScenesResult = Awaited<
+	ReturnType<typeof storyGenerationActions.planChapterScenes>
+>;
+type GenerateSceneTextResult = Awaited<
+	ReturnType<typeof storyGenerationActions.generateSceneText>
+>;
+
 // Mock ResizeObserver for framer-motion
 global.ResizeObserver = class ResizeObserver {
 	observe() {}
@@ -80,7 +87,7 @@ describe("ChapterActions", () => {
 						success: true,
 						sceneIds: ["scene-1", "scene-2"],
 					},
-				} as any;
+				} as PlanChapterScenesResult;
 			},
 		);
 
@@ -91,7 +98,7 @@ describe("ChapterActions", () => {
 				return {
 					success: true,
 					data: { success: true },
-				} as any;
+				} as GenerateSceneTextResult;
 			},
 		);
 
@@ -144,7 +151,7 @@ describe("ChapterActions", () => {
 		vi.mocked(storyGenerationActions.planChapterScenes).mockResolvedValue({
 			success: false,
 			error: "Planning failed miserably",
-		} as any);
+		} as PlanChapterScenesResult);
 
 		render(<ChapterActions {...defaultProps} />);
 
@@ -168,18 +175,18 @@ describe("ChapterActions", () => {
 				success: true,
 				sceneIds: ["scene-1", "scene-2"],
 			},
-		} as any);
+		} as PlanChapterScenesResult);
 
 		// Mock first scene fails, second succeeds
 		vi.mocked(storyGenerationActions.generateSceneText)
 			.mockResolvedValueOnce({
 				success: false,
 				error: "Generation error",
-			} as any)
+			} as GenerateSceneTextResult)
 			.mockResolvedValueOnce({
 				success: true,
 				data: { success: true },
-			} as any);
+			} as GenerateSceneTextResult);
 
 		render(<ChapterActions {...defaultProps} />);
 

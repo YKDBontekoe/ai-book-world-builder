@@ -1,5 +1,6 @@
 import { put } from "@vercel/blob";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { FullProjectData } from "@/lib/book-generation";
 import { exportBook } from "@/lib/services/book-exporter";
 
 // Mock @vercel/blob
@@ -10,23 +11,22 @@ vi.mock("@vercel/blob", () => ({
 // Mock pdfkit
 vi.mock("pdfkit", () => {
 	return {
-		default: vi.fn().mockImplementation(() => {
-			const handlers: Record<string, Function> = {};
-			return {
-				on: vi.fn((event, cb) => {
-					handlers[event] = cb;
-				}),
-				registerFont: vi.fn(),
-				fontSize: vi.fn().mockReturnThis(),
-				font: vi.fn().mockReturnThis(),
-				text: vi.fn().mockReturnThis(),
-				moveDown: vi.fn().mockReturnThis(),
-				addPage: vi.fn().mockReturnThis(),
-				end: vi.fn(() => {
-					if (handlers["end"]) handlers["end"]();
-				}),
-			};
-		}),
+		default: class MockPDFDocument {
+			handlers: Record<string, Function> = {};
+
+			on = vi.fn((event, cb) => {
+				this.handlers[event] = cb;
+			});
+			registerFont = vi.fn();
+			fontSize = vi.fn().mockReturnThis();
+			font = vi.fn().mockReturnThis();
+			text = vi.fn().mockReturnThis();
+			moveDown = vi.fn().mockReturnThis();
+			addPage = vi.fn().mockReturnThis();
+			end = vi.fn(() => {
+				if (this.handlers["end"]) this.handlers["end"]();
+			});
+		},
 	};
 });
 
@@ -40,7 +40,7 @@ describe("book-exporter security", () => {
 			project: { name: "My Secret Book" },
 			generation: null,
 			volumes: [],
-		} as any;
+		} as unknown as FullProjectData;
 
 		await exportBook(projectData, "pdf");
 

@@ -5,7 +5,7 @@ import { getTargetCoordinates } from "../../utils/grid";
 export function processBelt(
 	belt: BuildingEntity,
 	map: Map<string, BuildingEntity>,
-) {
+): void {
 	if (!belt.beltItems) return;
 
 	// Move items forward

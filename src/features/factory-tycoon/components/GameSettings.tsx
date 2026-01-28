@@ -69,6 +69,9 @@ export function GameSettings({
 						</div>
 						<button
 							onClick={toggleMute}
+							role="switch"
+							aria-checked={!muted}
+							aria-label="Sound Effects"
 							className={`
                 relative w-12 h-6 rounded-full transition-colors
                 ${muted ? "bg-[var(--factory-bg-card)]" : "bg-[var(--factory-amber)]"}

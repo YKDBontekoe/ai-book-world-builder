@@ -91,8 +91,12 @@ export function simulateTick(currentState: GameState): GameState {
 	nextState.lastTickDelta = finalDeltas;
 
 	// Handle Warehouse Idle Status
-	sortedBuildings.forEach((b) => {
-		if (b.type === "Warehouse") b.status = "IDLE";
+	// Clone objects to avoid mutating shared references from previous state
+	nextState.buildings = sortedBuildings.map((b) => {
+		if (b.type === "Warehouse") {
+			return { ...b, status: "IDLE" };
+		}
+		return b;
 	});
 
 	return nextState;

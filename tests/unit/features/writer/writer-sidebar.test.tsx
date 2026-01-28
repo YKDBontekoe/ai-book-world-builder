@@ -101,7 +101,7 @@ describe("WriterSidebar Integration", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: mockStructure,
@@ -131,7 +131,7 @@ describe("WriterSidebar Integration", () => {
 	});
 
 	it("handles empty structure", async () => {
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: [],

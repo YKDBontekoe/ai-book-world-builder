@@ -1,11 +1,10 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
-import { twMerge } from "tailwind-merge";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { cn } from "@/lib/utils";
 import {
 	Tooltip,
 	TooltipContent,
@@ -23,10 +22,6 @@ import {
 	RESOURCE_COLORS,
 	STATUS_CONFIG,
 } from "./visuals";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 export function GameCanvas({
 	selectedBuilding,
@@ -77,12 +72,14 @@ export function GameCanvas({
 
 	const handleTileClick = (x: number, y: number) => {
 		if (selectedBuilding) {
-			addBuilding(selectedBuilding, x, y, currentDirection);
-			playSound("place");
+			if (addBuilding(selectedBuilding, x, y, currentDirection)) {
+				playSound("place");
+			}
 		} else {
 			// Manual Interaction (Pickup items, collect output)
-			manualInteract(x, y);
-			playSound("pickup");
+			if (manualInteract(x, y)) {
+				playSound("pickup");
+			}
 		}
 	};
 
@@ -95,73 +92,79 @@ export function GameCanvas({
 	};
 
 	// Create a map for O(1) lookup
-	const buildingMap = new Map();
-	state.buildings.forEach((b) => {
-		buildingMap.set(`${b.x},${b.y}`, b);
-	});
+	const buildingMap = useMemo(() => {
+		const map = new Map();
+		state.buildings.forEach((b) => {
+			map.set(`${b.x},${b.y}`, b);
+		});
+		return map;
+	}, [state.buildings]);
 
 	// Collect all items for global rendering
-	const allItems: Array<{
-		item: BeltItem;
-		x: number;
-		y: number;
-		color: string;
-	}> = [];
-	state.buildings.forEach((b) => {
-		if (b.beltItems) {
-			b.beltItems.forEach((item) => {
+	const allItems = useMemo(() => {
+		const items: Array<{
+			item: BeltItem;
+			x: number;
+			y: number;
+			color: string;
+		}> = [];
+		state.buildings.forEach((b) => {
+			if (b.beltItems) {
+				b.beltItems.forEach((item) => {
+					let itemX = b.x;
+					let itemY = b.y;
+					const p = item.position;
+					if (b.direction === "E") {
+						itemX += p;
+						itemY += 0.5;
+					} else if (b.direction === "W") {
+						itemX += 1 - p;
+						itemY += 0.5;
+					} else if (b.direction === "S") {
+						itemX += 0.5;
+						itemY += p;
+					} else if (b.direction === "N") {
+						itemX += 0.5;
+						itemY += 1 - p;
+					}
+
+					items.push({
+						item,
+						x: itemX,
+						y: itemY,
+						color: RESOURCE_COLORS[item.resource],
+					});
+				});
+			}
+			if (b.holdingItem) {
+				const item = b.holdingItem;
 				let itemX = b.x;
 				let itemY = b.y;
-				const p = item.position;
-				if (b.direction === "E") {
-					itemX += p;
-					itemY += 0.5;
-				} else if (b.direction === "W") {
-					itemX += 1 - p;
-					itemY += 0.5;
-				} else if (b.direction === "S") {
-					itemX += 0.5;
-					itemY += p;
-				} else if (b.direction === "N") {
-					itemX += 0.5;
-					itemY += 1 - p;
-				}
+				const p = item.position; // 0 to 1
 
-				allItems.push({
+				const dx = b.direction === "E" ? 1 : b.direction === "W" ? -1 : 0;
+				const dy = b.direction === "S" ? 1 : b.direction === "N" ? -1 : 0;
+
+				// p=0 is source center (offset -dx, -dy)
+				// p=1 is target center (offset dx, dy)
+				// Relative to inserter center (b.x+0.5, b.y+0.5):
+				// Offset = (p - 0.5) * 2 * (dx, dy)
+				// Wait, if p=0, offset is -0.5 * 2 * (dx, dy) = (-dx, -dy). Correct.
+				// if p=0.5, offset is 0. Correct.
+				// if p=1.0, offset is (dx, dy). Correct.
+				itemX = b.x + 0.5 + (p - 0.5) * dx;
+				itemY = b.y + 0.5 + (p - 0.5) * dy;
+
+				items.push({
 					item,
 					x: itemX,
 					y: itemY,
 					color: RESOURCE_COLORS[item.resource],
 				});
-			});
-		}
-		if (b.holdingItem) {
-			const item = b.holdingItem;
-			let itemX = b.x;
-			let itemY = b.y;
-			const p = item.position; // 0 to 1
-
-			const dx = b.direction === "E" ? 1 : b.direction === "W" ? -1 : 0;
-			const dy = b.direction === "S" ? 1 : b.direction === "N" ? -1 : 0;
-
-			// p=0 is source center (offset -dx, -dy)
-			// p=1 is target center (offset dx, dy)
-			// Relative to inserter center (b.x+0.5, b.y+0.5):
-			// Offset = (p - 0.5) * 2 * (dx, dy)
-			// Wait, if p=0, offset is -0.5 * 2 * (dx, dy) = (-dx, -dy). Correct.
-			// if p=0.5, offset is 0. Correct.
-			// if p=1.0, offset is (dx, dy). Correct.
-			itemX = b.x + 0.5 + (p - 0.5) * dx;
-			itemY = b.y + 0.5 + (p - 0.5) * dy;
-
-			allItems.push({
-				item,
-				x: itemX,
-				y: itemY,
-				color: RESOURCE_COLORS[item.resource],
-			});
-		}
-	});
+			}
+		});
+		return items;
+	}, [state.buildings]);
 
 	return (
 		<TooltipProvider>
@@ -185,15 +188,13 @@ export function GameCanvas({
 							const x = i % GRID_SIZE;
 							const y = Math.floor(i / GRID_SIZE);
 							const building = buildingMap.get(`${x},${y}`);
-							const Icon = building
-								? ICONS[building.type as BuildingType]
-								: null;
+							const Icon = building ? ICONS[building.type] : null;
 							const statusConfig = building
-								? STATUS_CONFIG[building.status as keyof typeof STATUS_CONFIG]
+								? STATUS_CONFIG[building.status]
 								: null;
 							const StatusIcon = statusConfig?.Icon;
 							const buildingColor = building
-								? BUILDING_COLORS[building.type as BuildingType]
+								? BUILDING_COLORS[building.type]
 								: "";
 
 							const rotation = building
@@ -312,7 +313,7 @@ export function GameCanvas({
 							if (!building) return content;
 							if (building.type === "Belt") return content; // No tooltip for belts
 
-							const config = BUILDINGS[building.type as BuildingType];
+							const config = BUILDINGS[building.type];
 
 							return (
 								<Tooltip key={`${x}-${y}`} delayDuration={200}>

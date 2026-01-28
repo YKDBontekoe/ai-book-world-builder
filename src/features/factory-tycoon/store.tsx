@@ -29,7 +29,7 @@ import type {
 	Resource,
 } from "./types";
 
-type Action =
+export type Action =
 	| { type: "TICK" }
 	| {
 			type: "ADD_BUILDING";
@@ -52,10 +52,10 @@ const GameContext = createContext<{
 		x: number,
 		y: number,
 		direction?: Direction,
-	) => void;
+	) => boolean;
 	removeBuilding: (id: string) => void;
 	rotateBuilding: (id: string) => void;
-	manualInteract: (x: number, y: number) => void;
+	manualInteract: (x: number, y: number) => boolean;
 	researchTech: (techId: string) => void;
 	sellResource: (resource: keyof GameState["inventory"]) => void;
 	isRunning: boolean;
@@ -70,7 +70,7 @@ function getNextDirection(dir: Direction): Direction {
 	return dirs[(idx + 1) % 4];
 }
 
-function gameReducer(state: GameState, action: Action): GameState {
+export function gameReducer(state: GameState, action: Action): GameState {
 	switch (action.type) {
 		case "TICK":
 			return simulateTick(state);
@@ -303,9 +303,16 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
 	const addBuilding = useCallback(
 		(type: BuildingType, x: number, y: number, direction?: Direction) => {
+			const config = BUILDINGS[type];
+			// Check cost
+			if (state.cash < config.cost) return false;
+			// Check collision
+			if (state.buildings.some((b) => b.x === x && b.y === y)) return false;
+
 			dispatch({ type: "ADD_BUILDING", buildingType: type, x, y, direction });
+			return true;
 		},
-		[],
+		[state.buildings, state.cash],
 	);
 
 	const removeBuilding = useCallback((id: string) => {
@@ -318,26 +325,36 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
 	const manualInteract = useCallback(
 		(x: number, y: number) => {
-			// Feedback Logic
 			const b = state.buildings.find((b) => b.x === x && b.y === y);
-			if (b) {
-				const config = BUILDINGS[b.type];
-				// Belt Feedback
-				if (b.type === "Belt" && b.beltItems && b.beltItems.length > 0) {
-					const item = b.beltItems[0];
+			if (!b) return false;
+
+			const config = BUILDINGS[b.type];
+			let success = false;
+
+			// Belt Logic
+			if (b.type === "Belt" && b.beltItems && b.beltItems.length > 0) {
+				const item = b.beltItems[0];
+				if (item.resource !== "cash" && item.resource !== "science") {
 					toast.success(`Picked up 1 ${item.resource}`);
+					success = true;
 				}
-				// Machine Feedback
-				else if (b.localInventory && config.outputs) {
-					const outputRes = Object.keys(config.outputs)[0] as Resource;
-					if (outputRes && (b.localInventory[outputRes] || 0) > 0) {
+			}
+			// Machine Logic
+			else if (b.localInventory && config.outputs) {
+				const outputRes = Object.keys(config.outputs)[0] as Resource;
+				if (outputRes && (b.localInventory[outputRes] || 0) > 0) {
+					if (outputRes !== "cash" && outputRes !== "science") {
 						const amount = b.localInventory[outputRes];
 						toast.success(`Collected ${amount} ${outputRes}`);
+						success = true;
 					}
 				}
 			}
 
-			dispatch({ type: "MANUAL_INTERACT", x, y });
+			if (success) {
+				dispatch({ type: "MANUAL_INTERACT", x, y });
+			}
+			return success;
 		},
 		[state.buildings],
 	);
@@ -351,8 +368,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	const forceSave = useCallback(async () => {
-		await saveGameState(stateRef.current);
-		toast.success("Game saved");
+		try {
+			await saveGameState(stateRef.current);
+			toast.success("Game saved");
+		} catch (error) {
+			toast.error("Failed to save game");
+			console.error(error);
+		}
 	}, []);
 
 	return (

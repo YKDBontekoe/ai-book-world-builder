@@ -1,6 +1,6 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
+import { cn } from "@/lib/utils";
 import {
 	ArrowRight,
 	ArrowUpFromLine,
@@ -14,14 +14,9 @@ import {
 	Store,
 } from "lucide-react";
 import type React from "react";
-import { twMerge } from "tailwind-merge";
 import { BUILDINGS } from "../config";
 import { useGame } from "../store";
 import type { BuildingType } from "../types";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 const ICONS: Record<
 	BuildingType,

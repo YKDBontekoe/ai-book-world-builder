@@ -7,8 +7,8 @@ import type { Project } from "@/lib/db/schema";
 // Mock dependencies
 vi.mock("framer-motion", () => {
 	const motion =
-		(Component: React.ElementType) =>
-		(props: React.ComponentProps<typeof Component>) => <Component {...props} />;
+		<C extends React.ElementType>(Component: C) =>
+		(props: React.ComponentProps<C>) => <Component {...props} />;
 	const div = ({
 		children,
 		className,

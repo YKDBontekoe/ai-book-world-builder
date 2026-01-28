@@ -1,15 +1,10 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
+import { cn } from "@/lib/utils";
 import { Beaker, Check, Lock, Sparkles, Unlock, X } from "lucide-react";
 import React from "react";
-import { twMerge } from "tailwind-merge";
 import { TECHS } from "../config";
 import { useGame } from "../store";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 export function ResearchModal({
 	isOpen,
@@ -17,7 +12,7 @@ export function ResearchModal({
 }: {
 	isOpen: boolean;
 	onClose: () => void;
-}) {
+}): JSX.Element | null {
 	const { state, researchTech } = useGame();
 
 	if (!isOpen) return null;
@@ -35,6 +30,8 @@ export function ResearchModal({
 					</h2>
 					<button
 						onClick={onClose}
+						type="button"
+						aria-label="Close Research Lab"
 						className="p-2 rounded-lg text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)] hover:bg-white/5 transition-colors"
 					>
 						<X className="w-5 h-5" />
