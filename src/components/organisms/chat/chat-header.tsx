@@ -19,7 +19,10 @@ import {
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
-import { useBookCanvas } from "@/components/organisms/book-canvas";
+import {
+	useBookCanvasActions,
+	useBookCanvasLayout,
+} from "@/components/organisms/book-canvas";
 import {
 	VisibilitySelector,
 	type VisibilityType,
@@ -39,7 +42,8 @@ function PureChatHeader({
 }) {
 	const router = useRouter();
 	const { open } = useSidebar();
-	const { togglePanel, isOpen: isPanelOpen } = useBookCanvas();
+	const { togglePanel } = useBookCanvasActions();
+	const { isOpen: isPanelOpen } = useBookCanvasLayout();
 
 	const { width: windowWidth } = useWindowSize();
 
