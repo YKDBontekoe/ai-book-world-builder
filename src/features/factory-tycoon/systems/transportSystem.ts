@@ -1,7 +1,4 @@
-import type {
-	BuildingEntity,
-	GameState,
-} from "../types";
+import type { BuildingEntity, GameState } from "../types";
 import { processBelt } from "./transport/belt";
 import { processInserter } from "./transport/inserter";
 import { processSplitter } from "./transport/splitter";

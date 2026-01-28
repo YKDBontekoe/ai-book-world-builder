@@ -1,10 +1,6 @@
 import { nanoid } from "nanoid";
 import { BUILDINGS } from "../config";
-import type {
-	BuildingEntity,
-	Direction,
-	Resource,
-} from "../types";
+import type { BuildingEntity, Direction, Resource } from "../types";
 import { getTargetCoordinates } from "../utils/grid";
 
 export type SystemResult = {
