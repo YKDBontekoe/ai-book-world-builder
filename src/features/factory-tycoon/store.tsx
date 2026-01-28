@@ -210,6 +210,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
                 if (result.success && result.data) {
                     dispatch({ type: 'SET_STATE', payload: result.data });
                     toast.success('Game loaded successfully');
+                } else if (!result.success) {
+                    // Start fresh but warn
+                    toast.error(`Failed to load save: ${result.error}`);
+                    // Optionally could wipe save here but safer to let them start fresh in memory
                 }
                 setIsLoading(false);
                 setIsRunning(true);

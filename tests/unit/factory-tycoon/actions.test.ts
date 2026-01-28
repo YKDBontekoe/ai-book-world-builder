@@ -2,29 +2,30 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { saveGameState } from '../../../src/features/factory-tycoon/actions';
 import { INITIAL_STATE } from '../../../src/features/factory-tycoon/config';
 import { auth } from '@/app/(auth)/auth';
+import { GameState } from '../../../src/features/factory-tycoon/types';
 
 // Mock Auth
 vi.mock('@/app/(auth)/auth', () => ({
   auth: vi.fn(),
 }));
 
-// Mock DB
-const mockFindFirst = vi.fn();
-const mockInsert = vi.fn();
-const mockUpdate = vi.fn();
-const mockSet = vi.fn();
-const mockWhere = vi.fn();
-const mockValues = vi.fn();
+// Mock DB with hoisted variables
+const { mockFindFirst, mockValues, mockSet, mockWhere } = vi.hoisted(() => ({
+  mockFindFirst: vi.fn(),
+  mockValues: vi.fn(),
+  mockSet: vi.fn(),
+  mockWhere: vi.fn(),
+}));
 
 vi.mock('@/lib/db', () => ({
   db: {
     query: {
       factoryTycoonSaves: {
-        findFirst: (...args: any[]) => mockFindFirst(...args),
+        findFirst: mockFindFirst,
       },
     },
-    insert: () => ({ values: mockValues }),
-    update: () => ({ set: mockSet }),
+    insert: vi.fn(() => ({ values: mockValues })),
+    update: vi.fn(() => ({ set: mockSet })),
   },
 }));
 
@@ -32,15 +33,15 @@ describe('Factory Tycoon Actions', () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // Setup successful auth
-        (auth as any).mockResolvedValue({ user: { id: 'user-1' } });
+        vi.mocked(auth).mockResolvedValue({ user: { id: 'user-1' } } as any);
 
         // Setup chainable mocks
         mockSet.mockReturnValue({ where: mockWhere });
     });
 
     it('saveGameState should reject invalid schema (wrong type)', async () => {
-        const invalidState = { ...INITIAL_STATE, cash: 'LOTS OF MONEY' }; // Invalid string
-        const result = await saveGameState(invalidState as any);
+        const invalidState = { ...INITIAL_STATE, cash: 'LOTS OF MONEY' } satisfies Partial<unknown> as unknown as GameState; // Invalid string
+        const result = await saveGameState(invalidState);
 
         expect(result.success).toBe(false);
         if (!result.success) {
@@ -50,8 +51,8 @@ describe('Factory Tycoon Actions', () => {
     });
 
     it('saveGameState should reject missing required fields', async () => {
-        const invalidState = { cash: 100 }; // Missing everything else
-        const result = await saveGameState(invalidState as any);
+        const invalidState = { cash: 100 } satisfies Partial<unknown> as unknown as GameState; // Missing everything else
+        const result = await saveGameState(invalidState);
 
         expect(result.success).toBe(false);
     });

@@ -72,7 +72,7 @@ export const loadGameState = createUserAction({
           'Belt',
           'Splitter',
           'Inserter'
-      ])) as any,
+      ])) as GameState['unlockedBuildings'],
       researchedTechs: loadedState.researchedTechs ?? INITIAL_STATE.researchedTechs,
     };
 
