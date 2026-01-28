@@ -121,7 +121,9 @@ describe("extended entities actions", () => {
 		});
 
 		it("fails if not owner", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockedAuth.mockResolvedValue(buildSession());
 			mockedFindByIdWithAccess.mockResolvedValue(
 				buildProject({ userId: "other" }),
@@ -164,7 +166,9 @@ describe("extended entities actions", () => {
 		});
 
 		it("fails if one entity belongs to another project", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockedAuth.mockResolvedValue(buildSession());
 			mockedFindByIdWithAccess.mockResolvedValue(buildProject());
 
