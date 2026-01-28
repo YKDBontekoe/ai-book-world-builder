@@ -4,14 +4,17 @@ Factory Tycoon is a resource management simulation integrated into the AI Book W
 
 ## How to Play
 
+
 ### The Goal
 Build a profitable self-sustaining factory. You start with **$20** and a base storage capacity of **50 items**.
+
 
 ### Controls
 - **Select Building**: Left-click on any building in the bottom palette.
 - **Place Building**: Left-click on an empty grid tile to place the selected building.
 - **Remove Building**: Right-click on an existing building to destroy it. **Warning: You do not get a refund.**
 - **Pause/Resume**: Use the "Start/Pause" button in the HUD to control time.
+
 
 ### The Simulation Loop
 The game runs in "Ticks" (time cycles). Every tick:
@@ -20,6 +23,7 @@ The game runs in "Ticks" (time cycles). Every tick:
 3.  **Markets** sell finished goods for Cash.
 
 If your storage is full, production will stop ("Blocked"). You must expand storage or sell items to continue.
+
 
 ## Building Guide
 
@@ -31,11 +35,13 @@ If your storage is full, production will stop ("Blocked"). You must expand stora
 | **Market** | $80 | Sells gadgets to the public. | 1 Gadget | **$5 Cash** |
 | **Warehouse** | $40 | Increases global storage capacity. | None | +50 Capacity |
 
+
 ## Strategy Guide
 
 To create a perfectly balanced chain with no waste, you should aim for this ratio:
 
 > **4 Mines** → **2 Smelters** → **1 Factory** → **1 Market**
+
 
 ### Why this works:
 1.  **4 Mines** produce **4 Ore**.
@@ -45,6 +51,7 @@ To create a perfectly balanced chain with no waste, you should aim for this rati
 
 **Total Cost:** $230
 **Profit:** $5 per tick
+
 
 ### Tips
 -   **Watch your Storage:** If your "Storage" bar fills up, your mines will stop working. Build a Warehouse or ensure your Market is selling fast enough.
