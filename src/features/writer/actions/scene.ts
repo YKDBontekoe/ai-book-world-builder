@@ -10,6 +10,10 @@ import { type DbTransaction, db } from "@/lib/db";
 import { sceneRepository } from "@/lib/db/repositories";
 import { chapter, scene } from "@/lib/db/schema";
 import { checkUsageQuota } from "@/lib/quota";
+import {
+	generateEpubFromContent,
+	generatePdfFromContent,
+} from "@/lib/services/book-exporter";
 import { sceneSequenceService } from "@/lib/services/scene-sequence-service";
 import {
 	bulkDeleteScenesSchema,
@@ -432,5 +436,107 @@ export async function bulkDeleteScenes(sceneIds: string[]) {
 	} catch (error) {
 		console.error("Failed to bulk delete scenes", error);
 		return { success: false, error: "Failed to bulk delete scenes" };
+	}
+}
+
+export async function bulkExportScenesFormatted(
+	sceneIds: string[],
+	format: "md" | "txt" | "pdf" | "epub",
+) {
+	const validation = bulkExportScenesSchema.safeParse({ sceneIds });
+	if (!validation.success) {
+		return { success: false, error: validation.error.errors[0].message };
+	}
+
+	try {
+		if (sceneIds.length === 0)
+			return { success: true, content: "", filename: "", contentType: "" };
+
+		// 1. Get first scene to verify project access
+		const firstScene = await sceneRepository.findById(sceneIds[0]);
+		if (!firstScene) {
+			return { success: false, error: "One or more scenes not found" };
+		}
+
+		const { project } = await ensureProjectAccess(firstScene.projectId);
+
+		// 2. Fetch all scenes
+		const scenes = await db
+			.select({
+				id: scene.id,
+				title: scene.title,
+				content: scene.content,
+				projectId: scene.projectId,
+			})
+			.from(scene)
+			.where(inArray(scene.id, sceneIds));
+
+		// Security check
+		const unauthorized = scenes.some(
+			(s) => s.projectId !== firstScene.projectId,
+		);
+		if (unauthorized) {
+			return {
+				success: false,
+				error: "Security violation: Scenes from multiple projects",
+			};
+		}
+
+		// 3. Sort scenes based on input array order
+		const sceneMap = new Map(scenes.map((s) => [s.id, s]));
+		const sortedScenes = sceneIds.map((id) => sceneMap.get(id)).filter(Boolean);
+
+		const sanitizedTitle = project.name
+			.replace(/[^a-z0-9]/gi, "_")
+			.toLowerCase();
+		const timestamp = new Date().toISOString().split("T")[0];
+		const filenameBase = `${sanitizedTitle}_scenes_${timestamp}`;
+
+		// 4. Handle different formats
+		if (format === "pdf" || format === "epub") {
+			const bookContent = {
+				title: `${project.name} - Selected Scenes`,
+				chapters: sortedScenes.map((s) => ({
+					title: s?.title || "Untitled",
+					content: s?.content || "",
+				})),
+			};
+
+			let buffer: Buffer;
+			let extension: string;
+			let contentType: string;
+
+			if (format === "pdf") {
+				buffer = await generatePdfFromContent(bookContent);
+				extension = "pdf";
+				contentType = "application/pdf";
+			} else {
+				buffer = await generateEpubFromContent(bookContent);
+				extension = "epub";
+				contentType = "application/epub+zip";
+			}
+
+			return {
+				success: true,
+				content: buffer.toString("base64"),
+				filename: `${filenameBase}.${extension}`,
+				contentType,
+			};
+		}
+
+		// Default to Text/Markdown
+		const exportText = sortedScenes
+			.map((s) => `## ${s?.title}\n\n${s?.content || ""}`)
+			.join("\n\n***\n\n");
+
+		return {
+			success: true,
+			content: exportText,
+			filename: `${filenameBase}.${format === "md" ? "md" : "txt"}`,
+			contentType: "text/plain",
+		};
+	} catch (error) {
+		console.error("Failed to export scenes", error);
+		return { success: false, error: "Failed to export scenes" };
 	}
 }

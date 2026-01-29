@@ -5,7 +5,10 @@ import {
 	CheckSquare,
 	ChevronsDown,
 	ChevronsUp,
+	Copy,
 	Download,
+	File,
+	FileText,
 	Loader2,
 	Plus,
 	Search,
@@ -16,6 +19,13 @@ import {
 import { memo } from "react";
 import { Accordion } from "@/components/atoms/accordion";
 import { Button } from "@/components/atoms/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuSeparator,
+	DropdownMenuTrigger,
+} from "@/components/atoms/dropdown-menu";
 import { Input } from "@/components/atoms/input";
 import { ScrollArea } from "@/components/atoms/scroll-area";
 import { EmptyState } from "@/components/molecules/empty-state";
@@ -278,16 +288,42 @@ export const SceneNavigation = memo(function SceneNavigation({
 							Delete ({selectedSceneIds.size})
 						</Button>
 						<div className="w-px bg-border/50 my-1" />
-						<Button
-							size="sm"
-							variant="ghost"
-							className="flex-1 text-xs text-muted-foreground hover:text-foreground"
-							onClick={handleBulkExport}
-							disabled={selectedSceneIds.size === 0}
-						>
-							<Download className="mr-2 h-3 w-3" />
-							Export ({selectedSceneIds.size})
-						</Button>
+						<DropdownMenu>
+							<DropdownMenuTrigger asChild>
+								<Button
+									size="sm"
+									variant="ghost"
+									className="flex-1 text-xs text-muted-foreground hover:text-foreground"
+									disabled={selectedSceneIds.size === 0}
+								>
+									<Download className="mr-2 h-3 w-3" />
+									Export ({selectedSceneIds.size})
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent align="center" className="w-48">
+								<DropdownMenuItem onClick={() => handleBulkExport("copy")}>
+									<Copy className="mr-2 h-4 w-4" />
+									Copy to Clipboard
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onClick={() => handleBulkExport("txt")}>
+									<FileText className="mr-2 h-4 w-4" />
+									Text File (.txt)
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleBulkExport("md")}>
+									<File className="mr-2 h-4 w-4" />
+									Markdown (.md)
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleBulkExport("pdf")}>
+									<FileText className="mr-2 h-4 w-4" />
+									PDF Document
+								</DropdownMenuItem>
+								<DropdownMenuItem onClick={() => handleBulkExport("epub")}>
+									<BookPlus className="mr-2 h-4 w-4" />
+									EPUB eBook
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</GlassCard>
 				</div>
 			)}

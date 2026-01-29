@@ -16,17 +16,21 @@ type ExportResult = {
 	filename: string;
 };
 
+export type BookContent = {
+	title: string;
+	prologue?: string;
+	chapters: Array<{ title: string; content: string }>;
+	epilogue?: string;
+};
+
 /**
  * Collects all chapter draft content from the project data.
  * First tries to get content from generation steps (new system),
  * then falls back to chapter drafts (old system).
  */
-async function collectBookContent(projectData: FullProjectData): Promise<{
-	title: string;
-	prologue?: string;
-	chapters: Array<{ title: string; content: string }>;
-	epilogue?: string;
-}> {
+async function collectBookContent(
+	projectData: FullProjectData,
+): Promise<BookContent> {
 	const chapters: Array<{ title: string; content: string }> = [];
 	let prologue: string | undefined;
 	let epilogue: string | undefined;
@@ -112,13 +116,11 @@ async function collectBookContent(projectData: FullProjectData): Promise<{
 }
 
 /**
- * Generates a PDF buffer from project data.
+ * Generates a PDF buffer from content.
  */
-export async function generatePdf(
-	projectData: FullProjectData,
+export async function generatePdfFromContent(
+	bookContent: BookContent,
 ): Promise<Buffer> {
-	const bookContent = await collectBookContent(projectData);
-
 	return new Promise((resolve, reject) => {
 		const doc = new PDFDocument({
 			size: "A4",
@@ -182,6 +184,16 @@ export async function generatePdf(
 }
 
 /**
+ * Generates a PDF buffer from project data.
+ */
+export async function generatePdf(
+	projectData: FullProjectData,
+): Promise<Buffer> {
+	const bookContent = await collectBookContent(projectData);
+	return generatePdfFromContent(bookContent);
+}
+
+/**
  * Simple markdown to HTML converter for EPUB content.
  * Handles headers, bold, italic, and paragraphs.
  */
@@ -236,13 +248,11 @@ function markdownToHtml(markdown: string): string {
 }
 
 /**
- * Generates an EPUB buffer from project data.
+ * Generates an EPUB buffer from content.
  */
-export async function generateEpub(
-	projectData: FullProjectData,
+export async function generateEpubFromContent(
+	bookContent: BookContent,
 ): Promise<Buffer> {
-	const bookContent = await collectBookContent(projectData);
-
 	const epubOptions = {
 		title: bookContent.title,
 		author: "AI Book World Builder",
@@ -287,6 +297,16 @@ export async function generateEpub(
 
 	const epubBuffer = await epub(epubOptions, epubSections);
 	return epubBuffer;
+}
+
+/**
+ * Generates an EPUB buffer from project data.
+ */
+export async function generateEpub(
+	projectData: FullProjectData,
+): Promise<Buffer> {
+	const bookContent = await collectBookContent(projectData);
+	return generateEpubFromContent(bookContent);
 }
 
 /**
