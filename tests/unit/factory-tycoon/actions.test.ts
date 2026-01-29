@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 import { auth } from "@/app/(auth)/auth";
 import { saveGameState } from "../../../src/features/factory-tycoon/actions";
 import { INITIAL_STATE } from "../../../src/features/factory-tycoon/config";
@@ -33,7 +33,7 @@ describe("Factory Tycoon Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Setup successful auth
-		vi.mocked(auth as any).mockResolvedValue({
+		vi.mocked(auth as unknown as () => Promise<{ user: { id: string }; expires: string } | null>).mockResolvedValue({
 			user: { id: "user-1" },
 			expires: "2099-01-01",
 		});
@@ -76,7 +76,7 @@ describe("Factory Tycoon Actions", () => {
 		expect(result.success).toBe(true);
 		expect(mockFindFirst).toHaveBeenCalled();
 		// Use expect.anything() to bypass strict property checks on JSON fields
-		expect(mockValues as any).toHaveBeenCalledWith(
+		expect(mockValues).toHaveBeenCalledWith(
 			expect.objectContaining({
 				userId: "user-1",
 				state: expect.anything(),
@@ -91,7 +91,7 @@ describe("Factory Tycoon Actions", () => {
 		const result = await saveGameState(INITIAL_STATE as any);
 
 		expect(result.success).toBe(true);
-		expect(mockSet as any).toHaveBeenCalledWith(
+		expect(mockSet).toHaveBeenCalledWith(
 			expect.objectContaining({
 				state: expect.anything(),
 			}),

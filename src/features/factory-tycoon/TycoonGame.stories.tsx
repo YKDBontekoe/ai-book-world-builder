@@ -35,9 +35,9 @@ const mockLoadGame =
 		};
 	};
 
-const mockSaveGame = async (_state: GameState) => {
+const mockSaveGame = async (state: GameState) => {
 	await new Promise((resolve) => setTimeout(resolve, 500));
-	console.log("Saved state:", _state);
+	console.log("Saved state:", state);
 	return { success: true };
 };
 

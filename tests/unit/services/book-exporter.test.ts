@@ -13,7 +13,7 @@ vi.mock("@vercel/blob", () => ({
 vi.mock("pdfkit", () => {
 	return {
 		default: vi.fn().mockImplementation(function () {
-			const handlers: Record<string, (...args: any[]) => any> = {};
+			const handlers: Record<string, (...args: unknown[]) => unknown> = {};
 			return {
 				on: vi.fn((event, cb) => {
 					handlers[event] = cb;
@@ -38,11 +38,15 @@ describe("book-exporter security", () => {
 	});
 
 	it("uses a secure filename with UUID (IDOR protection)", async () => {
-		const projectData = {
-			project: { name: "My Secret Book" } as unknown as Project,
+		const projectData: FullProjectData = {
+			project: { name: "My Secret Book" } as Project,
+			entities: [],
+			attributes: [],
+			relationships: [],
+			outlines: [],
 			generation: null,
 			volumes: [],
-		} satisfies Partial<FullProjectData> as unknown as FullProjectData;
+		};
 
 		await exportBook(projectData, "pdf");
 
