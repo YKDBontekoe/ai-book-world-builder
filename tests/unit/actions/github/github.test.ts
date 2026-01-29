@@ -22,6 +22,14 @@ const mocks = vi.hoisted(() => ({
 		},
 	},
 	auth: vi.fn(),
+	db: {
+		select: vi.fn(),
+	},
+	cache: {
+		invalidateCachePattern: vi.fn(),
+		getCached: vi.fn(),
+		invalidateCache: vi.fn(),
+	},
 }));
 
 vi.mock("octokit", () => {
@@ -38,11 +46,28 @@ vi.mock("@/app/(auth)/auth", () => ({
 	auth: mocks.auth,
 }));
 
+// Mock db
+vi.mock("@/lib/db", () => ({
+	db: mocks.db,
+}));
+
+// Mock cache
+vi.mock("@/lib/cache", () => ({
+	invalidateCachePattern: mocks.cache.invalidateCachePattern,
+	getCached: mocks.cache.getCached,
+	invalidateCache: mocks.cache.invalidateCache,
+}));
+
 describe("GitHub Actions", () => {
 	const originalEnv = process.env;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+
+		// Mock console to suppress expected errors
+		vi.spyOn(console, "error").mockImplementation(() => {});
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+
 		process.env = { ...originalEnv, GITHUB_TOKEN: "mock-token" };
 		process.env.GITHUB_OWNER = "TestOwner";
 		process.env.GITHUB_REPO = "TestRepo";
@@ -52,10 +77,25 @@ describe("GitHub Actions", () => {
 		mocks.auth.mockResolvedValue({
 			user: { id: "admin-id", role: "admin" },
 		});
+
+		// Default DB mock (return empty array for preferences)
+		mocks.db.select.mockReturnValue({
+			from: vi.fn().mockReturnValue({
+				where: vi.fn().mockResolvedValue([]),
+			}),
+		});
+
+		// Default cache mock
+		mocks.cache.invalidateCachePattern.mockResolvedValue(undefined);
+		mocks.cache.invalidateCache.mockResolvedValue(undefined);
+		mocks.cache.getCached.mockImplementation(async (_key, fn) => {
+			return await fn();
+		});
 	});
 
 	afterEach(() => {
 		process.env = originalEnv;
+		vi.restoreAllMocks();
 	});
 
 	describe("Authorization", () => {

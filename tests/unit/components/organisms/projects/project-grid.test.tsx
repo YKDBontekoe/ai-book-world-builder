@@ -1,14 +1,20 @@
 import { fireEvent, render, screen } from "@testing-library/react";
-import React from "react";
+import type React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { ProjectGrid } from "@/components/organisms/projects/project-grid";
 import type { Project } from "@/lib/db/schema";
 
 // Mock dependencies
 vi.mock("framer-motion", () => {
-	const motion = (Component: React.ElementType) => (props: React.ComponentProps<typeof Component>) => <Component {...props} />;
-	const div = ({ children, className, onClick, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-		<div className={className} onClick={onClick} {...props}>
+	const motion =
+		(Component: React.ElementType) =>
+		(props: React.ComponentProps<typeof Component>) => <Component {...props} />;
+	const div = ({
+		children,
+		className,
+		...props
+	}: React.HTMLAttributes<HTMLDivElement>) => (
+		<div className={className} {...props}>
 			{children}
 		</div>
 	);
@@ -16,8 +22,12 @@ vi.mock("framer-motion", () => {
 });
 
 vi.mock("@/components/molecules/glass-card", () => ({
-	GlassCard: ({ children, className, onClick }: React.HTMLAttributes<HTMLDivElement>) => (
-		<div className={className} onClick={onClick}>
+	GlassCard: ({
+		children,
+		className,
+		...props
+	}: React.HTMLAttributes<HTMLDivElement>) => (
+		<div className={className} {...props}>
 			{children}
 		</div>
 	),
@@ -32,7 +42,15 @@ vi.mock("@/components/organisms/projects/project-preview-sheet", () => ({
 }));
 
 vi.mock("next/link", () => ({
-	default: ({ children, href, className }: { children: React.ReactNode; href: string; className?: string }) => (
+	default: ({
+		children,
+		href,
+		className,
+	}: {
+		children: React.ReactNode;
+		href: string;
+		className?: string;
+	}) => (
 		<a href={href} className={className}>
 			{children}
 		</a>
@@ -41,11 +59,21 @@ vi.mock("next/link", () => ({
 
 // Mock lucide-react icons
 vi.mock("lucide-react", () => ({
-	FolderIcon: ({ className }: { className?: string }) => <span data-testid="folder-icon" className={className} />,
-	CalendarIcon: ({ className }: { className?: string }) => <span data-testid="calendar-icon" className={className} />,
-	Globe: ({ className }: { className?: string }) => <span data-testid="globe-icon" className={className} />,
-	Eye: ({ className }: { className?: string }) => <span data-testid="eye-icon" className={className} />,
-	Check: ({ className }: { className?: string }) => <span data-testid="check-icon" className={className} />,
+	FolderIcon: ({ className }: { className?: string }) => (
+		<span data-testid="folder-icon" className={className} />
+	),
+	CalendarIcon: ({ className }: { className?: string }) => (
+		<span data-testid="calendar-icon" className={className} />
+	),
+	Globe: ({ className }: { className?: string }) => (
+		<span data-testid="globe-icon" className={className} />
+	),
+	Eye: ({ className }: { className?: string }) => (
+		<span data-testid="eye-icon" className={className} />
+	),
+	Check: ({ className }: { className?: string }) => (
+		<span data-testid="check-icon" className={className} />
+	),
 }));
 
 const mockProject: Project = {
@@ -67,7 +95,7 @@ describe("ProjectGrid", () => {
 				projects={[mockProject]}
 				selectedIds={new Set()}
 				onSelect={vi.fn()}
-			/>
+			/>,
 		);
 
 		expect(screen.getByText("Test Project")).toBeInTheDocument();
@@ -81,7 +109,7 @@ describe("ProjectGrid", () => {
 				projects={[mockProject]}
 				selectedIds={new Set()}
 				onSelect={onSelect}
-			/>
+			/>,
 		);
 
 		const trigger = screen.getByRole("button", { name: "Select project" });
@@ -97,7 +125,7 @@ describe("ProjectGrid", () => {
 				projects={[mockProject]}
 				selectedIds={new Set()}
 				onSelect={onSelect}
-			/>
+			/>,
 		);
 
 		const trigger = screen.getByRole("button", { name: "Select project" });
@@ -113,7 +141,7 @@ describe("ProjectGrid", () => {
 				projects={[mockProject]}
 				selectedIds={new Set()}
 				onSelect={onSelect}
-			/>
+			/>,
 		);
 
 		const trigger = screen.getByRole("button", { name: "Select project" });
@@ -129,7 +157,7 @@ describe("ProjectGrid", () => {
 				projects={[mockProject]}
 				selectedIds={new Set()}
 				onSelect={onSelect}
-			/>
+			/>,
 		);
 
 		const trigger = screen.getByRole("button", { name: "Select project" });
@@ -145,7 +173,7 @@ describe("ProjectGrid", () => {
 				projects={[mockProject]}
 				selectedIds={new Set()}
 				onSelect={onSelect}
-			/>
+			/>,
 		);
 
 		const trigger = screen.getByRole("button", { name: "Select project" });

@@ -48,7 +48,10 @@ export const Default: Story = {
 						/>
 					</div>
 					<div className="grid grid-cols-4 items-center gap-4">
-						<label htmlFor="username" className="text-right text-sm font-medium">
+						<label
+							htmlFor="username"
+							className="text-right text-sm font-medium"
+						>
 							Username
 						</label>
 						<input
