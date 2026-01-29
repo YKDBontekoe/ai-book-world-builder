@@ -5,12 +5,9 @@ import { BUILDINGS } from '../config';
 import type { BuildingType } from '../types';
 import { useGame } from '../store';
 import { Pickaxe, Factory, Store, Box, HandCoins, Beaker, Coins, ArrowRight, GitFork, ArrowUpFromLine } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '@/lib/utils';
+import { ScrollArea } from '@/components/atoms/scroll-area';
+import { Button } from '@/components/atoms/button';
 
 const ICONS: Record<BuildingType, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   Mine: Pickaxe,
@@ -50,95 +47,96 @@ export function BuildingPalette({ selected, onSelect }: { selected: BuildingType
   })).filter(cat => cat.buildings.length > 0);
 
   return (
-    <div className="flex flex-col w-72 shrink-0 h-full factory-panel overflow-hidden">
+    <div className="glass-panel flex flex-col w-72 shrink-0 h-full overflow-hidden border border-border/50 bg-background/50 backdrop-blur-xl">
       {/* Header */}
-      <div className="factory-panel-header">
-        <div className="w-8 h-8 rounded-md bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center">
-          <Factory className="w-4 h-4 text-black" />
+      <div className="flex items-center gap-3 p-4 border-b border-border/50 bg-background/40">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+          <Factory className="w-4 h-4 text-white" />
         </div>
         <div>
-          <h2 className="font-bold text-[var(--factory-text-primary)]">Buildings</h2>
-          <p className="text-[10px] text-[var(--factory-text-muted)]">Click to select, then place on grid</p>
+          <h2 className="font-bold text-foreground text-sm">Buildings</h2>
+          <p className="text-[10px] text-muted-foreground">Select to place on grid</p>
         </div>
       </div>
       
       {/* Building List */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {unlockedByCategory.map(({ category, buildings }) => (
-          <div key={category}>
-            <h3 className={cn(
-              "text-[10px] uppercase font-bold tracking-wider mb-2 flex items-center gap-2",
-              CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]
-            )}>
-              <span className="w-4 h-px bg-current opacity-50" />
-              {category}
-              <span className="flex-1 h-px bg-current opacity-20" />
-            </h3>
-            
-            <div className="space-y-2">
-              {buildings.map((type) => {
-                const config = BUILDINGS[type];
-                const Icon = ICONS[type];
-                const canAfford = state.cash >= config.cost;
-                const isSelected = selected === type;
-                
-                return (
-                  <button
-                    key={type}
-                    onClick={() => onSelect(isSelected ? null : type)}
-                    disabled={!canAfford && !isSelected}
-                    className={cn(
-                      "factory-building-card w-full text-left",
-                      isSelected && "selected"
-                    )}
-                  >
-                    <div className="flex items-start gap-3 relative z-10">
-                      <div className={cn(
-                        "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 transition-all",
-                        "bg-[var(--factory-bg-deep)] border border-[var(--factory-border)]",
-                        isSelected && "border-[var(--factory-amber)] shadow-[0_0_12px_var(--factory-amber-glow)]"
-                      )}>
-                        <Icon className={cn(
-                          "w-5 h-5 transition-colors",
-                          isSelected ? "text-[var(--factory-amber)]" : "text-[var(--factory-text-secondary)]"
-                        )} />
-                      </div>
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between gap-2">
-                          <span className={cn(
-                            "font-semibold text-sm",
-                            isSelected ? "text-[var(--factory-amber)]" : "text-[var(--factory-text-primary)]"
-                          )}>
-                            {type}
-                          </span>
-                          <span className={cn(
-                            "font-mono text-sm font-bold flex items-center gap-1",
-                            canAfford ? "text-[var(--factory-success)]" : "text-[var(--factory-danger)]"
-                          )}>
-                            <Coins className="w-3 h-3" />
-                            {config.cost}
-                          </span>
+      <ScrollArea className="flex-1">
+        <div className="p-4 space-y-6">
+          {unlockedByCategory.map(({ category, buildings }) => (
+            <div key={category}>
+              <h3 className={cn(
+                "text-[10px] uppercase font-bold tracking-wider mb-3 flex items-center gap-2",
+                CATEGORY_COLORS[category as keyof typeof CATEGORY_COLORS]
+              )}>
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
+                {category}
+                <span className="flex-1 h-px bg-border/60" />
+              </h3>
+
+              <div className="space-y-2">
+                {buildings.map((type) => {
+                  const config = BUILDINGS[type];
+                  const Icon = ICONS[type];
+                  const canAfford = state.cash >= config.cost;
+                  const isSelected = selected === type;
+
+                  return (
+                    <Button
+                      key={type}
+                      variant="ghost"
+                      onClick={() => onSelect(isSelected ? null : type)}
+                      disabled={!canAfford && !isSelected}
+                      className={cn(
+                        "w-full justify-start h-auto p-2.5 relative overflow-hidden group hover:bg-muted/50",
+                        isSelected && "bg-amber-500/10 hover:bg-amber-500/15 ring-1 ring-amber-500/50"
+                      )}
+                    >
+                      <div className="flex items-start gap-3 w-full text-left">
+                        <div className={cn(
+                          "w-10 h-10 rounded-md flex items-center justify-center shrink-0 transition-all border",
+                          isSelected
+                            ? "bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/20"
+                            : "bg-background border-border text-muted-foreground group-hover:text-foreground group-hover:border-amber-500/50"
+                        )}>
+                          <Icon className="w-5 h-5" />
                         </div>
-                        <p className="text-[11px] text-[var(--factory-text-muted)] leading-tight mt-0.5 line-clamp-2">
-                          {config.description}
-                        </p>
+
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className={cn(
+                              "font-semibold text-sm leading-none",
+                              isSelected ? "text-amber-700 dark:text-amber-400" : "text-foreground"
+                            )}>
+                              {type}
+                            </span>
+                            <span className={cn(
+                              "font-mono text-xs font-bold flex items-center gap-1 bg-background/50 px-1.5 py-0.5 rounded",
+                              canAfford ? "text-emerald-600 dark:text-emerald-400" : "text-red-500"
+                            )}>
+                              <Coins className="w-3 h-3" />
+                              {config.cost}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-muted-foreground leading-tight line-clamp-2">
+                            {config.description}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  </button>
-                );
-              })}
+                    </Button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </ScrollArea>
       
       {/* Footer Instructions */}
-      <div className="p-4 border-t border-[var(--factory-border)] bg-[var(--factory-bg-deep)]">
-        <p className="text-[11px] text-[var(--factory-text-muted)] leading-relaxed">
-          <span className="text-[var(--factory-amber)] font-semibold">Left-click</span> on grid to place building.
-          <br />
-          <span className="text-[var(--factory-danger)] font-semibold">Right-click</span> to demolish.
+      <div className="p-3 border-t border-border/50 bg-muted/30">
+        <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
+          <span className="text-foreground font-medium">Left-click</span> to place.
+          <span className="mx-1 opacity-30">|</span>
+          <span className="text-foreground font-medium">Right-click</span> to delete.
         </p>
       </div>
     </div>
