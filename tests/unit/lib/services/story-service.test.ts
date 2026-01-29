@@ -191,6 +191,7 @@ describe("StoryService", () => {
 			expect(storyRepository.updateSceneContent).toHaveBeenCalledWith(
 				sceneId,
 				"Generated text",
+				"p1",
 			);
 			expect(logGenerationUsage).toHaveBeenCalled();
 		});

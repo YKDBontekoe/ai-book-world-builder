@@ -10,7 +10,7 @@ vi.mock("@vercel/blob", () => ({
 // Mock pdfkit
 vi.mock("pdfkit", () => {
 	return {
-		default: vi.fn().mockImplementation(() => {
+		default: vi.fn().mockImplementation(function () {
 			const handlers: Record<string, Function> = {};
 			return {
 				on: vi.fn((event, cb) => {

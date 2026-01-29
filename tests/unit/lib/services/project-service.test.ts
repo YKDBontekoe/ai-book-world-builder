@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { type MockInstance, afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { db } from "@/lib/db";
 import { projectRepository } from "@/lib/db/repositories";
 import { projectService } from "@/lib/services/project-service";
@@ -49,9 +49,11 @@ const createMockQB = (result: any = []) => {
 
 describe("ProjectService", () => {
 	const userId = "user-1";
+	let consoleErrorSpy: MockInstance<typeof console.error>;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
 		// Default db behavior
 		(db.select as any).mockReturnValue(createMockQB([]));
@@ -67,6 +69,10 @@ describe("ProjectService", () => {
 			};
 			return cb(mockTx);
 		});
+	});
+
+	afterEach(() => {
+		consoleErrorSpy.mockRestore();
 	});
 
 	describe("deleteProjects", () => {
