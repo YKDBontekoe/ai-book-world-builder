@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Accordion } from "@/components/atoms/accordion";
 import { SidebarChapter } from "@/features/writer/components/left-sidebar/sidebar-chapter";
@@ -15,7 +16,9 @@ vi.mock("@/components/atoms/context-menu", () => ({
 		<div data-testid="ctx-content">{children}</div>
 	),
 	ContextMenuItem: ({ children, onClick }: any) => (
-		<button onClick={onClick}>{children}</button>
+		<button type="button" onClick={onClick}>
+			{children}
+		</button>
 	),
 	ContextMenuSeparator: () => <hr />,
 }));
@@ -32,10 +35,18 @@ vi.mock("@/features/writer/components/left-sidebar/scene-item", () => ({
 	}: any) => (
 		<div data-testid={`scene-item-${scene.id}`}>
 			<span>{scene.title}</span>
-			<button onClick={() => onSelect(scene.id)}>Select</button>
-			<button onClick={() => onRename(scene.id, "New Title")}>Rename</button>
-			<button onClick={() => onDelete(scene.id)}>Delete</button>
-			<button onClick={() => onToggleSelect(scene.id)}>Toggle Select</button>
+			<button type="button" onClick={() => onSelect(scene.id)}>
+				Select
+			</button>
+			<button type="button" onClick={() => onRename(scene.id, "New Title")}>
+				Rename
+			</button>
+			<button type="button" onClick={() => onDelete(scene.id)}>
+				Delete
+			</button>
+			<button type="button" onClick={() => onToggleSelect(scene.id)}>
+				Toggle Select
+			</button>
 			{isSelected && <span>Selected</span>}
 		</div>
 	),
@@ -54,7 +65,9 @@ vi.mock("lucide-react", () => ({
 // Mock scrollIntoView
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
-const renderComponent = (props: any) => {
+const renderComponent = (
+	props: React.ComponentProps<typeof SidebarChapter>,
+) => {
 	return render(
 		<Accordion type="multiple" defaultValue={[props.chapter.id]}>
 			<SidebarChapter {...props} />

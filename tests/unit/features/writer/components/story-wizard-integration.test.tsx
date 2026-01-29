@@ -71,6 +71,7 @@ describe("StoryWizard Integration", () => {
 		});
 		vi.mocked(storyGenerationActions).createBookFromPlan.mockResolvedValue({
 			success: true,
+			// @ts-ignore
 			data: { id: "new-story-id" },
 		});
 

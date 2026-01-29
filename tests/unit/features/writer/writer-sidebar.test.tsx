@@ -58,16 +58,18 @@ global.ResizeObserver = class ResizeObserver {
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 describe("WriterSidebar Integration", () => {
-	const mockProject: Project = {
+	const mockProject = {
 		id: "p1",
-		title: "Test Project",
+		name: "Test Project",
 		createdAt: new Date(),
-		updatedAt: new Date(),
 		userId: "u1",
-		wordCount: 0,
-		status: "active",
 		lastViewedSceneId: null,
-	} as any;
+		description: null,
+		visibility: "private",
+		folders: [],
+		forkedFromId: null,
+		// Removed status, wordCount, updatedAt
+	} satisfies Project;
 
 	const mockStructure: ChapterWithScenes[] = [
 		{
@@ -81,6 +83,7 @@ describe("WriterSidebar Integration", () => {
 			createdAt: new Date(),
 			updatedAt: new Date(),
 			notes: null,
+			// Removed orderIndex
 			scenes: [
 				{
 					id: "s1",
@@ -94,6 +97,7 @@ describe("WriterSidebar Integration", () => {
 					prevSceneId: null,
 					content: "Content",
 					wordCount: 100,
+					// Removed orderIndex, summary, outlineId, volumeId, version
 				},
 			],
 		},

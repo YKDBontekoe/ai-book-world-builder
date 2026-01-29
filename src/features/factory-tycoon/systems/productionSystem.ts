@@ -9,9 +9,11 @@ export type SystemResult = {
 	consumedCapacity: number; // Volume added/removed
 };
 
+type ResourceInventory = Record<Exclude<Resource, "cash">, number>;
+
 export const runProductionSystem = (
 	buildings: BuildingEntity[],
-	currentInventory: Record<Exclude<Resource, "cash">, number>,
+	currentInventory: ResourceInventory,
 	remainingSpace: number,
 ): SystemResult => {
 	const result: SystemResult = {
@@ -92,7 +94,7 @@ function getOutputTarget(
 function checkInputAvailability(
 	building: BuildingEntity,
 	config: BuildingConfig,
-	workingInventory: Record<string, number>,
+	workingInventory: ResourceInventory,
 ): boolean {
 	if (!config.inputs) return true;
 
@@ -102,7 +104,7 @@ function checkInputAvailability(
 			const localAmount = building.localInventory?.[r] || 0;
 			const neededFromGlobal = Math.max(0, amount - localAmount);
 
-			if ((workingInventory[r] || 0) < neededFromGlobal) {
+			if ((workingInventory[r as keyof ResourceInventory] || 0) < neededFromGlobal) {
 				return false;
 			}
 		}
@@ -141,7 +143,7 @@ function checkOutputCapacity(
 function processConsumption(
 	building: BuildingEntity,
 	config: BuildingConfig,
-	workingInventory: Record<string, number>,
+	workingInventory: ResourceInventory,
 	result: SystemResult,
 ) {
 	if (!config.inputs) return;
@@ -160,7 +162,8 @@ function processConsumption(
 			}
 
 			if (takeFromGlobal > 0) {
-				workingInventory[r] -= takeFromGlobal;
+				const key = r as keyof ResourceInventory;
+				workingInventory[key] -= takeFromGlobal;
 				result.inventoryDelta[r] =
 					(result.inventoryDelta[r] || 0) - takeFromGlobal;
 			}
@@ -191,7 +194,7 @@ function processProduction(
 				}
 			} else {
 				// Produce to Local Inventory or Global (Virtual)
-				if (r === "cash" || r === "science") {
+				if (r === "science") {
 					result.inventoryDelta[r] = (result.inventoryDelta[r] || 0) + amount;
 				} else {
 					if (!building.localInventory) building.localInventory = {};

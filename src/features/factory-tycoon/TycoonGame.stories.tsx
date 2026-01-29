@@ -35,9 +35,9 @@ const mockLoadGame =
 		};
 	};
 
-const mockSaveGame = async (state: GameState) => {
+const mockSaveGame = async (_state: GameState) => {
 	await new Promise((resolve) => setTimeout(resolve, 500));
-	console.log("Saved state:", state);
+	console.log("Saved state:", _state);
 	return { success: true };
 };
 
@@ -105,8 +105,8 @@ export const WithBuildings: Story = {
 		const canvas = within(canvasElement);
 		await expect(await canvas.findByText("$5000")).toBeInTheDocument();
 		// Check inventory counts
-		await expect(await canvas.findByText("50")).toBeInTheDocument();
-		await expect(await canvas.findByText("20")).toBeInTheDocument();
+		await expect(await canvas.findByTestId("ore-count")).toHaveTextContent("50");
+		await expect(await canvas.findByTestId("ingot-count")).toHaveTextContent("20");
 	},
 };
 

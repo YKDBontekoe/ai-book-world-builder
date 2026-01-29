@@ -1,17 +1,16 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
-import { twMerge } from "tailwind-merge";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { cn } from "@/lib/utils";
 import { useSound } from "../audio/SoundContext";
 import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from "../config";
 import { useGame } from "../store";
@@ -24,15 +23,11 @@ import {
 	STATUS_CONFIG,
 } from "./visuals";
 
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
-
 export function GameCanvas({
 	selectedBuilding,
 }: {
 	selectedBuilding: BuildingType | null;
-}) {
+}): JSX.Element {
 	const { state, addBuilding, removeBuilding, rotateBuilding, manualInteract } =
 		useGame();
 	const { playSound } = useSound();
@@ -95,73 +90,79 @@ export function GameCanvas({
 	};
 
 	// Create a map for O(1) lookup
-	const buildingMap = new Map();
-	state.buildings.forEach((b) => {
-		buildingMap.set(`${b.x},${b.y}`, b);
-	});
+	const buildingMap = useMemo(() => {
+		const map = new Map<string, (typeof state.buildings)[number]>();
+		state.buildings.forEach((b) => {
+			map.set(`${b.x},${b.y}`, b);
+		});
+		return map;
+	}, [state.buildings]);
 
 	// Collect all items for global rendering
-	const allItems: Array<{
-		item: BeltItem;
-		x: number;
-		y: number;
-		color: string;
-	}> = [];
-	state.buildings.forEach((b) => {
-		if (b.beltItems) {
-			b.beltItems.forEach((item) => {
+	const allItems = useMemo(() => {
+		const items: Array<{
+			item: BeltItem;
+			x: number;
+			y: number;
+			color: string;
+		}> = [];
+		state.buildings.forEach((b) => {
+			if (b.beltItems) {
+				b.beltItems.forEach((item) => {
+					let itemX = b.x;
+					let itemY = b.y;
+					const p = item.position;
+					if (b.direction === "E") {
+						itemX += p;
+						itemY += 0.5;
+					} else if (b.direction === "W") {
+						itemX += 1 - p;
+						itemY += 0.5;
+					} else if (b.direction === "S") {
+						itemX += 0.5;
+						itemY += p;
+					} else if (b.direction === "N") {
+						itemX += 0.5;
+						itemY += 1 - p;
+					}
+
+					items.push({
+						item,
+						x: itemX,
+						y: itemY,
+						color: RESOURCE_COLORS[item.resource],
+					});
+				});
+			}
+			if (b.holdingItem) {
+				const item = b.holdingItem;
 				let itemX = b.x;
 				let itemY = b.y;
-				const p = item.position;
-				if (b.direction === "E") {
-					itemX += p;
-					itemY += 0.5;
-				} else if (b.direction === "W") {
-					itemX += 1 - p;
-					itemY += 0.5;
-				} else if (b.direction === "S") {
-					itemX += 0.5;
-					itemY += p;
-				} else if (b.direction === "N") {
-					itemX += 0.5;
-					itemY += 1 - p;
-				}
+				const p = item.position; // 0 to 1
 
-				allItems.push({
+				const dx = b.direction === "E" ? 1 : b.direction === "W" ? -1 : 0;
+				const dy = b.direction === "S" ? 1 : b.direction === "N" ? -1 : 0;
+
+				// p=0 is source center (offset -dx, -dy)
+				// p=1 is target center (offset dx, dy)
+				// Relative to inserter center (b.x+0.5, b.y+0.5):
+				// Offset = (p - 0.5) * 2 * (dx, dy)
+				// Wait, if p=0, offset is -0.5 * 2 * (dx, dy) = (-dx, -dy). Correct.
+				// if p=0.5, offset is 0. Correct.
+				// if p=1.0, offset is (dx, dy). Correct.
+				itemX = b.x + 0.5 + (p - 0.5) * dx;
+				itemY = b.y + 0.5 + (p - 0.5) * dy;
+
+				items.push({
 					item,
 					x: itemX,
 					y: itemY,
 					color: RESOURCE_COLORS[item.resource],
 				});
-			});
-		}
-		if (b.holdingItem) {
-			const item = b.holdingItem;
-			let itemX = b.x;
-			let itemY = b.y;
-			const p = item.position; // 0 to 1
-
-			const dx = b.direction === "E" ? 1 : b.direction === "W" ? -1 : 0;
-			const dy = b.direction === "S" ? 1 : b.direction === "N" ? -1 : 0;
-
-			// p=0 is source center (offset -dx, -dy)
-			// p=1 is target center (offset dx, dy)
-			// Relative to inserter center (b.x+0.5, b.y+0.5):
-			// Offset = (p - 0.5) * 2 * (dx, dy)
-			// Wait, if p=0, offset is -0.5 * 2 * (dx, dy) = (-dx, -dy). Correct.
-			// if p=0.5, offset is 0. Correct.
-			// if p=1.0, offset is (dx, dy). Correct.
-			itemX = b.x + 0.5 + (p - 0.5) * dx;
-			itemY = b.y + 0.5 + (p - 0.5) * dy;
-
-			allItems.push({
-				item,
-				x: itemX,
-				y: itemY,
-				color: RESOURCE_COLORS[item.resource],
-			});
-		}
-	});
+			}
+		});
+		return items;
+	}, [state.buildings]);
 
 	return (
 		<TooltipProvider>
@@ -176,6 +177,7 @@ export function GameCanvas({
 				>
 					<div
 						className="grid"
+						role="grid"
 						style={{
 							gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
 						}}
@@ -203,9 +205,29 @@ export function GameCanvas({
 							const content = (
 								<div
 									key={`${x}-${y}`}
+									role="button"
+									tabIndex={0}
 									onClick={() => handleTileClick(x, y)}
 									onContextMenu={(e) => handleContextMenu(e, building?.id)}
 									onMouseEnter={() => setHoveredTile({ x, y })}
+									onFocus={() => setHoveredTile({ x, y })}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault(); // Prevent scroll for Space
+											handleTileClick(x, y);
+										} else if (
+											e.key === "ContextMenu" ||
+											(e.shiftKey && e.key === "F10")
+										) {
+											// Simulate right click logic if needed, but context menu event is usually separate.
+											// For now, we can manually trigger removal if building exists
+											if (building) {
+												e.preventDefault();
+												removeBuilding(building.id);
+												playSound("delete");
+											}
+										}
+									}}
 									className={cn(
 										"factory-tile group relative",
 										building && "has-building",
@@ -374,9 +396,9 @@ export function GameCanvas({
 										top: `${(y / GRID_SIZE) * 100}%`,
 									}}
 									transition={{
-										type: "tween",
-										ease: "linear",
-										duration: TICK_RATE_MS / 1000,
+										type: "spring",
+										stiffness: 400,
+										damping: 25,
 									}}
 									className="absolute w-2 h-2 rounded-full shadow-sm border border-black/20"
 									style={{

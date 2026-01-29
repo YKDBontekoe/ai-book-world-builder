@@ -87,7 +87,8 @@ export const createJulesTask = () =>
 		execute: async ({ title, description, labels }) => {
 			try {
 				const octokit = getOctokit();
-				const { owner, repo } = getRepoDetails();
+				// Ensure we await the promise returned by getRepoDetails
+				const { owner, repo } = await getRepoDetails();
 
 				// 1. Create GitHub Issue
 				const issueRes = await octokit.rest.issues.create({
@@ -122,17 +123,17 @@ export const createJulesTask = () =>
 				}
 
 				// 4. Create Jules Session
-				const prompt =
-					"\
-I need you to fix the following GitHub Issue.\n\n**Issue #" +
-					issueNumber +
-					": " +
-					title +
-					"**\ncreated by @" +
-					(issue.user?.login || "unknown") +
-					"\n\n**Description:**\n" +
-					description +
-					"\n\n**Goal:**\nPlease analyze this issue, plan a solution, and create a Pull Request to fix it.\n";
+				const prompt = `I need you to fix the following GitHub Issue.
+
+**Issue #${issueNumber}: ${title}**
+created by @${issue.user?.login || "unknown"}
+
+**Description:**
+${description}
+
+**Goal:**
+Please analyze this issue, plan a solution, and create a Pull Request to fix it.
+`;
 
 				const session = await jules.createSession({
 					prompt,
@@ -146,7 +147,8 @@ I need you to fix the following GitHub Issue.\n\n**Issue #" +
 				// 5. Update Issue with Session Link
 				// The session URL might be constructed or returned. JulesSession interface has 'url' but it might be the API resource name.
 				// We'll just post a comment with the ID for now.
-				const sessionUrl = `/admin/jules/chat/${session.id.split("/").pop()}`;
+				const sessionId = session.id.split("/").pop() || session.id;
+				const sessionUrl = `/admin/jules/chat/${sessionId}`;
 
 				await octokit.rest.issues.createComment({
 					owner,
