@@ -1,4 +1,12 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type MockInstance,
+	vi,
+} from "vitest";
 import * as githubActions from "@/app/actions/github";
 
 const mocks = vi.hoisted(() => ({
@@ -38,11 +46,33 @@ vi.mock("@/app/(auth)/auth", () => ({
 	auth: mocks.auth,
 }));
 
+// Mock db
+vi.mock("@/lib/db", () => ({
+	db: {
+		select: vi.fn().mockReturnThis(),
+		from: vi.fn().mockReturnThis(),
+		where: vi
+			.fn()
+			.mockResolvedValue([
+				{ julesPreferences: { repository: "TestOwner/TestRepo" } },
+			]),
+	},
+}));
+
+// Mock cache
+vi.mock("@/lib/cache", () => ({
+	invalidateCache: vi.fn(),
+	invalidateCachePattern: vi.fn(),
+	getCached: vi.fn((_key, fetchFn) => fetchFn()),
+}));
+
 describe("GitHub Actions", () => {
 	const originalEnv = process.env;
+	let consoleErrorSpy: MockInstance<Console["error"]>;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		process.env = { ...originalEnv, GITHUB_TOKEN: "mock-token" };
 		process.env.GITHUB_OWNER = "TestOwner";
 		process.env.GITHUB_REPO = "TestRepo";
@@ -56,6 +86,7 @@ describe("GitHub Actions", () => {
 
 	afterEach(() => {
 		process.env = originalEnv;
+		consoleErrorSpy.mockRestore();
 	});
 
 	describe("Authorization", () => {
