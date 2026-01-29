@@ -22,6 +22,16 @@ const mocks = vi.hoisted(() => ({
 		},
 	},
 	auth: vi.fn(),
+	db: {
+		select: vi.fn(),
+		from: vi.fn(),
+		where: vi.fn(),
+	},
+	cache: {
+		getCached: vi.fn((_key, fn) => fn()),
+		invalidateCache: vi.fn(),
+		invalidateCachePattern: vi.fn(),
+	},
 }));
 
 vi.mock("octokit", () => {
@@ -38,6 +48,18 @@ vi.mock("@/app/(auth)/auth", () => ({
 	auth: mocks.auth,
 }));
 
+// Mock DB
+vi.mock("@/lib/db", () => ({
+	db: mocks.db,
+}));
+
+// Mock Cache
+vi.mock("@/lib/cache", () => ({
+	getCached: mocks.cache.getCached,
+	invalidateCache: mocks.cache.invalidateCache,
+	invalidateCachePattern: mocks.cache.invalidateCachePattern,
+}));
+
 describe("GitHub Actions", () => {
 	const originalEnv = process.env;
 
@@ -52,6 +74,14 @@ describe("GitHub Actions", () => {
 		mocks.auth.mockResolvedValue({
 			user: { id: "admin-id", role: "admin" },
 		});
+
+		// Setup DB mocks
+		mocks.db.select.mockReturnThis();
+		mocks.db.from.mockReturnThis();
+		mocks.db.where.mockResolvedValue([]); // Return empty array by default
+
+		// Re-apply cache implementation
+		mocks.cache.getCached.mockImplementation((_key, fn) => fn());
 	});
 
 	afterEach(() => {

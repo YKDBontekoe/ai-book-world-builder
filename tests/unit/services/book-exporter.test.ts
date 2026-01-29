@@ -10,11 +10,12 @@ vi.mock("@vercel/blob", () => ({
 // Mock pdfkit
 vi.mock("pdfkit", () => {
 	return {
-		default: vi.fn().mockImplementation(() => {
+		default: function () {
 			const handlers: Record<string, Function> = {};
-			return {
-				on: vi.fn((event, cb) => {
+			const doc = {
+				on: vi.fn(function (this: any, event, cb) {
 					handlers[event] = cb;
+					return this;
 				}),
 				registerFont: vi.fn(),
 				fontSize: vi.fn().mockReturnThis(),
@@ -26,7 +27,8 @@ vi.mock("pdfkit", () => {
 					if (handlers["end"]) handlers["end"]();
 				}),
 			};
-		}),
+			return doc;
+		},
 	};
 });
 
