@@ -133,11 +133,10 @@ function gameReducer(state: GameState, action: Action): GameState {
 
 export function GameProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
-  const [isRunning, setIsRunning] = useState(false); // Start paused until loaded
+  const [isRunning, setIsRunning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const stateRef = useRef(state); // Keep ref for interval closures
+  const stateRef = useRef(state);
 
-  // Keep ref updated
   useEffect(() => {
       stateRef.current = state;
   }, [state]);
@@ -161,7 +160,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             console.error("Failed to load game", error);
             if (mounted) {
                 setIsLoading(false);
-                setIsRunning(true); // Start fresh if fail
+                setIsRunning(true);
             }
         }
     }
@@ -209,14 +208,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const manualInteract = useCallback((x: number, y: number) => {
-      // Feedback Logic
-      const result = getInteractionResult(state, x, y);
+      // Gebruik stateRef om te voorkomen dat manualInteract bij elke state change (tick) opnieuw wordt aangemaakt
+      const result = getInteractionResult(stateRef.current, x, y);
       if (result) {
           toast.success(`Collected ${result.amount} ${result.resource}`);
       }
       
       dispatch({ type: 'MANUAL_INTERACT', x, y });
-  }, [state]);
+  }, []);
   
   const researchTech = useCallback((techId: string) => {
     dispatch({ type: 'RESEARCH_TECH', techId });

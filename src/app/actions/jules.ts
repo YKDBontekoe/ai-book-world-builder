@@ -302,7 +302,7 @@ export const listJulesSourcesAction = createAdminAction({
 				const sources: JulesSource[] = [];
 				let pageToken: string | undefined;
 				let pagesFetched = 0;
-				const MAX_PAGES = 1000;
+				const MAX_PAGES = 20;
 
 				do {
 					if (pagesFetched >= MAX_PAGES) {
