@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { GET } from "@/app/api/cron/process-feedback/route";
 
 // Mock the service
@@ -7,12 +7,16 @@ vi.mock("@/lib/services/feedback-service", () => ({
 }));
 
 describe("Cron API Auth", () => {
+	let consoleErrorSpy: MockInstance<Console['error']>;
+
 	beforeEach(() => {
 		vi.resetModules();
+		consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 	});
 
 	afterEach(() => {
 		vi.unstubAllEnvs();
+		consoleErrorSpy.mockRestore();
 	});
 
 	it("should return 500 if CRON_SECRET is not set", async () => {

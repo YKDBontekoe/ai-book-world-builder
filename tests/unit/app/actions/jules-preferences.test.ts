@@ -85,10 +85,13 @@ describe("getJulesPreferencesAction", () => {
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("should handle missing column error (42703) gracefully", async () => {
+		// Suppress expected warning
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+
 		// Mock db.select to throw a properly typed Postgres error
 		const dbError = Object.assign(
 			new Error("column julesPreferences does not exist"),
@@ -128,10 +131,14 @@ describe("saveJulesPreferencesAction", () => {
 	});
 
 	afterEach(() => {
-		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("should handle missing column error (42703) gracefully by returning an error", async () => {
+		// Suppress expected logs
+		vi.spyOn(console, "warn").mockImplementation(() => {});
+		vi.spyOn(console, "error").mockImplementation(() => {});
+
 		// Mock db.insert to throw a properly typed Postgres error
 		const dbError = Object.assign(
 			new Error("column julesPreferences does not exist"),

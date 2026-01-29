@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 // Hoist mocks
 const mocks = vi.hoisted(() => ({
@@ -35,9 +35,19 @@ import { z } from "zod";
 import { aiClient } from "@/lib/ai/services/ai-client";
 
 describe("AI Client", () => {
+	let consoleErrorSpy: MockInstance<Console['error']>;
+	let consoleWarnSpy: MockInstance<Console['warn']>;
+
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mocks.getSelectedModelId.mockResolvedValue("default-model");
+		consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+		consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+	});
+
+	afterEach(() => {
+		consoleErrorSpy.mockRestore();
+		consoleWarnSpy.mockRestore();
 	});
 
 	describe("generateText", () => {
