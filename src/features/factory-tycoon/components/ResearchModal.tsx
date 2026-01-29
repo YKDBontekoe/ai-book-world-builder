@@ -34,6 +34,7 @@ export function ResearchModal({
 						Research Lab
 					</h2>
 					<button
+						type="button"
 						onClick={onClose}
 						className="p-2 rounded-lg text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)] hover:bg-white/5 transition-colors"
 					>
@@ -126,6 +127,7 @@ export function ResearchModal({
 
 								{!isResearched && (
 									<button
+										type="button"
 										disabled={!canAfford}
 										onClick={() => researchTech(tech.id)}
 										className={cn(

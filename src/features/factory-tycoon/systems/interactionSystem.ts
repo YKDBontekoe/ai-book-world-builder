@@ -31,13 +31,10 @@ export function getInteractionResult(
 	// 2. Machine Output Collection (All Items)
 	if (building.localInventory && config.outputs) {
 		const outputRes = Object.keys(config.outputs)[0] as Resource;
-		if (
-			outputRes &&
-			building.localInventory[outputRes] &&
-			(building.localInventory[outputRes] || 0) > 0
-		) {
+		const amount = building.localInventory[outputRes] || 0;
+
+		if (amount > 0) {
 			if (outputRes !== "cash" && outputRes !== "science") {
-				const amount = building.localInventory[outputRes] || 0;
 				return { resource: outputRes, amount };
 			}
 		}

@@ -1,6 +1,5 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import {
 	ArrowRight,
 	ArrowUpFromLine,
@@ -14,14 +13,10 @@ import {
 	Store,
 } from "lucide-react";
 import type React from "react";
-import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 import { BUILDINGS } from "../config";
 import { useGame } from "../store";
 import type { BuildingType } from "../types";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 const ICONS: Record<
 	BuildingType,
@@ -114,6 +109,7 @@ export function BuildingPalette({
 
 								return (
 									<button
+										type="button"
 										key={type}
 										onClick={() => onSelect(isSelected ? null : type)}
 										disabled={!canAfford && !isSelected}

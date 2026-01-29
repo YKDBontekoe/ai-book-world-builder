@@ -1,21 +1,20 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useState } from "react";
-import { twMerge } from "tailwind-merge";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { cn } from "@/lib/utils";
 import { useSound } from "../audio/SoundContext";
 import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from "../config";
 import { useGame } from "../store";
-import type { BeltItem, BuildingType, Direction } from "../types";
+import type { BeltItem, BuildingEntity, BuildingType, Direction } from "../types";
 import {
 	BUILDING_COLORS,
 	getRotation,
@@ -23,10 +22,6 @@ import {
 	RESOURCE_COLORS,
 	STATUS_CONFIG,
 } from "./visuals";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 export function GameCanvas({
 	selectedBuilding,
@@ -86,7 +81,7 @@ export function GameCanvas({
 		}
 	};
 
-	const handleContextMenu = (e: React.MouseEvent, id?: string) => {
+	const handleContextMenu = (e: React.SyntheticEvent, id?: string) => {
 		e.preventDefault();
 		if (id) {
 			removeBuilding(id);
@@ -95,7 +90,7 @@ export function GameCanvas({
 	};
 
 	// Create a map for O(1) lookup
-	const buildingMap = new Map();
+	const buildingMap = new Map<string, BuildingEntity>();
 	state.buildings.forEach((b) => {
 		buildingMap.set(`${b.x},${b.y}`, b);
 	});
@@ -176,6 +171,8 @@ export function GameCanvas({
 				>
 					<div
 						className="grid"
+						role="presentation"
+						tabIndex={-1}
 						style={{
 							gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
 						}}
@@ -203,7 +200,26 @@ export function GameCanvas({
 							const content = (
 								<div
 									key={`${x}-${y}`}
+									role="button"
+									tabIndex={0}
+									aria-label={
+										building
+											? `${building.type} at ${x},${y}, status ${building.status}`
+											: `Empty tile at ${x},${y}`
+									}
 									onClick={() => handleTileClick(x, y)}
+									onKeyDown={(e) => {
+										if (e.key === "Enter" || e.key === " ") {
+											e.preventDefault();
+											handleTileClick(x, y);
+										} else if (
+											e.key === "ContextMenu" ||
+											(e.shiftKey && e.key === "F10")
+										) {
+											e.preventDefault();
+											handleContextMenu(e, building?.id);
+										}
+									}}
 									onContextMenu={(e) => handleContextMenu(e, building?.id)}
 									onMouseEnter={() => setHoveredTile({ x, y })}
 									className={cn(

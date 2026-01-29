@@ -239,9 +239,16 @@ describe("StoryRepository", () => {
 
 	describe("updateSceneContent", () => {
 		it("should update scene content and status", async () => {
-			mocks.result = [];
+			mocks.result = [{ id: "s1" }];
 			await storyRepository.updateSceneContent("s1", "new content");
 			expect(mocks.update).toHaveBeenCalled();
+		});
+
+		it("should throw if no scene updated", async () => {
+			mocks.result = [];
+			await expect(
+				storyRepository.updateSceneContent("s1", "new content"),
+			).rejects.toThrow("Scene not found or access denied");
 		});
 	});
 });
