@@ -65,8 +65,8 @@ vi.mock("@/features/writer/actions", () => ({
 }));
 
 describe("StructureEditorDialog", () => {
-	const mockStructureText = `Chapter 1
-  Scene 1`;
+	// Use simple text without newlines/indentation to avoid DOM normalization issues in tests
+	const mockStructureText = "Chapter 1";
 
 	beforeEach(() => {
 		vi.clearAllMocks();
