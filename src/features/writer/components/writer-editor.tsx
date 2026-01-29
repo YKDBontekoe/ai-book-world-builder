@@ -2,6 +2,8 @@
 
 import { useCallback } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
+import { toast } from "sonner";
+import { exportProject } from "@/features/writer/actions";
 import { ActiveSceneEditor } from "@/features/writer/components/editor-states/active-scene-editor";
 import { WriterEmptyState } from "@/features/writer/components/editor-states/writer-empty-state";
 import { TimeTravelControls } from "@/features/writer/components/time-travel-controls";
@@ -12,14 +14,30 @@ import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
 import { WriterHeader } from "@/features/writer/components/writer-header";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
+import { useSceneOperations } from "@/features/writer/hooks/use-scene-operations";
 import { useEditorHistory } from "@/hooks/use-editor-history";
 
 export function WriterEditor() {
-	const { project, activeSceneId, structure, isReadOnly } = useWriterContext();
+	const {
+		project,
+		activeSceneId,
+		structure,
+		isReadOnly,
+		setActiveSceneId,
+		fetchStructure,
+	} = useWriterContext();
 	const { sceneContent, handleContentChange } = useWriterContent();
 
 	const { isDirectorMode } = useWriterLayoutContext();
 	const { toggleChat } = useWriterControl();
+
+	const { handleCreateSceneManually } = useSceneOperations({
+		projectId: project.id,
+		activeSceneId,
+		onSceneSelect: setActiveSceneId,
+		onStructureUpdate: fetchStructure,
+		structure,
+	});
 
 	const hasStructure = !!(structure && structure.length > 0);
 
@@ -58,6 +76,55 @@ export function WriterEditor() {
 		},
 		{ enableOnFormTags: true, description: "Trigger AI Assistant" },
 		[toggleChat],
+	);
+
+	useHotkeys(
+		"mod+shift+e",
+		async (e) => {
+			e.preventDefault();
+			const toastId = toast.loading("Exporting project...");
+			try {
+				const result = await exportProject(project.id);
+				if (result.success && result.content) {
+					await navigator.clipboard.writeText(result.content);
+					toast.success("Project exported to clipboard", { id: toastId });
+				} else {
+					toast.error(result.error || "Failed to export", { id: toastId });
+				}
+			} catch (_error) {
+				toast.error("Error exporting project", { id: toastId });
+			}
+		},
+		{ enableOnFormTags: true, description: "Export Project" },
+		[project.id],
+	);
+
+	useHotkeys(
+		"mod+alt+n",
+		async (e) => {
+			e.preventDefault();
+
+			// Determine chapter ID
+			let targetChapterId: string | null = null;
+			if (activeSceneId && structure) {
+				const chapter = structure.find((c) =>
+					c.scenes.some((s) => s.id === activeSceneId),
+				);
+				if (chapter) targetChapterId = chapter.id;
+			}
+
+			if (!targetChapterId && structure && structure.length > 0) {
+				targetChapterId = structure[structure.length - 1].id;
+			}
+
+			if (targetChapterId) {
+				await handleCreateSceneManually(targetChapterId);
+			} else {
+				toast.error("No chapter found to create scene in");
+			}
+		},
+		{ enableOnFormTags: true, description: "New Scene" },
+		[activeSceneId, structure, handleCreateSceneManually],
 	);
 
 	return (
