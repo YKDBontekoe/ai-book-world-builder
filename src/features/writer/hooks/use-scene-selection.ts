@@ -6,7 +6,9 @@ import {
 } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import { bulkExportScenes } from "@/features/writer/actions";
+import { bulkExportScenesFormatted } from "@/features/writer/actions";
+
+export type ExportAction = "copy" | "md" | "txt" | "pdf" | "epub";
 
 export interface UseSceneSelectionReturn {
 	isSelectionMode: boolean;
@@ -15,7 +17,7 @@ export interface UseSceneSelectionReturn {
 	setSelectedSceneIds: Dispatch<SetStateAction<Set<string>>>;
 	toggleSelectionMode: () => void;
 	toggleSceneSelect: (sceneId: string) => void;
-	handleBulkExport: () => Promise<void>;
+	handleBulkExport: (format?: ExportAction) => Promise<void>;
 	handleBulkDelete: () => void;
 }
 
@@ -49,22 +51,47 @@ export function useSceneSelection(
 		});
 	}, []);
 
-	const handleBulkExport = useCallback(async () => {
-		const toastId = toast.loading("Exporting scenes...");
-		try {
-			const ids = Array.from(selectedSceneIds);
-			const result = await bulkExportScenes(ids);
-			if (result.success && result.content) {
-				await navigator.clipboard.writeText(result.content);
-				toast.success("Copied to clipboard", { id: toastId });
-				toggleSelectionMode();
-			} else {
-				toast.error(result.error || "Failed to export", { id: toastId });
+	const handleBulkExport = useCallback(
+		async (format: ExportAction = "copy") => {
+			const toastId = toast.loading("Exporting scenes...");
+			try {
+				const ids = Array.from(selectedSceneIds);
+				// For copy, we fetch markdown
+				const serverFormat = format === "copy" ? "md" : format;
+				const result = await bulkExportScenesFormatted(ids, serverFormat);
+
+				if (result.success && result.content) {
+					if (format === "copy") {
+						await navigator.clipboard.writeText(result.content);
+						toast.success("Copied to clipboard", { id: toastId });
+					} else {
+						// Handle download
+						const isBinary = format === "pdf" || format === "epub";
+						const blobContent = isBinary
+							? Uint8Array.from(atob(result.content), (c) => c.charCodeAt(0))
+							: result.content;
+
+						const blob = new Blob([blobContent], { type: result.contentType });
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement("a");
+						a.href = url;
+						a.download = result.filename || "export.txt";
+						document.body.appendChild(a);
+						a.click();
+						document.body.removeChild(a);
+						URL.revokeObjectURL(url);
+						toast.success("Export downloaded", { id: toastId });
+					}
+					toggleSelectionMode();
+				} else {
+					toast.error(result.error || "Failed to export", { id: toastId });
+				}
+			} catch (_error) {
+				toast.error("Error exporting scenes", { id: toastId });
 			}
-		} catch (_error) {
-			toast.error("Error exporting scenes", { id: toastId });
-		}
-	}, [selectedSceneIds, toggleSelectionMode]);
+		},
+		[selectedSceneIds, toggleSelectionMode],
+	);
 
 	const handleBulkDelete = useCallback(() => {
 		const ids = Array.from(selectedSceneIds);
