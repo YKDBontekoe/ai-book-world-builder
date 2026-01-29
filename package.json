@@ -193,7 +193,8 @@
 	"packageManager": "pnpm@10.28.1",
 	"pnpm": {
 		"overrides": {
-			"@auth/core": "0.41.1"
+			"@auth/core": "0.41.1",
+			"@ai-sdk/gateway": "3.0.23"
 		}
 	}
 }

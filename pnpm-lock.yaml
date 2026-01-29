@@ -6,6 +6,7 @@ settings:
 
 overrides:
   '@auth/core': 0.41.1
+  '@ai-sdk/gateway': 3.0.23
 
 importers:
 
