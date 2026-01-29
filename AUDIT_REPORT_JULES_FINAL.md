@@ -1,7 +1,7 @@
 # Security & Code Quality Audit Report
 
 **Auditor:** Jules (Senior Next.js Security Researcher)
-**Date:** May 2024
+**Date:** January 2026
 **Scope:** Server Actions, Factory Tycoon Feature, Quota Logic
 
 ## Executive Summary
@@ -61,11 +61,13 @@ Add an explicit check for `process.env.NODE_ENV === 'production'` to log a clean
 
 **The Bug:**
 The `manualInteract` callback depends on `state.buildings`.
+
 ```typescript
 const manualInteract = useCallback((x, y) => {
     // ...
 }, [state.buildings]);
 ```
+
 Since the game loop updates `state` (and thus `buildings`) on every tick (e.g., 10-60 times/second), this function is recreated every tick. This forces all child components receiving it (e.g., Grid Tiles) to re-render constantly, destroying performance.
 
 **The Impact:**
