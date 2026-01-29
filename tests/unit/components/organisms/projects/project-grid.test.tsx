@@ -14,7 +14,7 @@ vi.mock("framer-motion", () => {
 		className,
 		onClick,
 		...props
-	}: React.HTMLAttributes<HTMLDivElement>) => (
+	}: React.ComponentProps<"div">) => (
 		<div className={className} onClick={onClick} {...props}>
 			{children}
 		</div>
@@ -27,7 +27,7 @@ vi.mock("@/components/molecules/glass-card", () => ({
 		children,
 		className,
 		onClick,
-	}: React.HTMLAttributes<HTMLDivElement>) => (
+	}: React.ComponentProps<"div">) => (
 		<div className={className} onClick={onClick}>
 			{children}
 		</div>

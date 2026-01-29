@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Use vi.hoisted to share mock state across different imports
 const {
@@ -97,8 +97,13 @@ function buildScene(overrides?: Partial<Scene>): Scene {
 }
 
 describe("scenes server actions", () => {
+	beforeEach(() => {
+		vi.spyOn(console, "error").mockImplementation(() => {});
+	});
+
 	afterEach(() => {
 		vi.clearAllMocks();
+		vi.restoreAllMocks();
 	});
 
 	it("updates a scene when the user owns the project and invalidates cache if title changes", async () => {

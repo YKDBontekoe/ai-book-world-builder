@@ -174,8 +174,10 @@ export function GameCanvas({
 						border: "1px solid var(--factory-border)",
 					}}
 				>
+					{/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse leave needed for grid interaction */}
 					<div
 						className="grid"
+						role="presentation"
 						style={{
 							gridTemplateColumns: `repeat(${GRID_SIZE}, 1fr)`,
 						}}
@@ -201,13 +203,14 @@ export function GameCanvas({
 								: 0;
 
 							const content = (
-								<div
+								<button
+									type="button"
 									key={`${x}-${y}`}
 									onClick={() => handleTileClick(x, y)}
 									onContextMenu={(e) => handleContextMenu(e, building?.id)}
 									onMouseEnter={() => setHoveredTile({ x, y })}
 									className={cn(
-										"factory-tile group relative",
+										"factory-tile group relative w-full h-full p-0 border-0 block text-left",
 										building && "has-building",
 										!building && selectedBuilding && "cursor-crosshair",
 									)}
@@ -306,7 +309,7 @@ export function GameCanvas({
 												})()}
 											</div>
 										)}
-								</div>
+								</button>
 							);
 
 							if (!building) return content;

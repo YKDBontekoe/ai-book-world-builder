@@ -13,7 +13,7 @@ import {
 	TrendingDown,
 	TrendingUp,
 } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 import { RESOURCE_VALUES } from "../config";
 import { useGame } from "../store";
@@ -235,6 +235,7 @@ export function HUD() {
 											<div className="flex items-center gap-3">
 												<div className="inventory-icon bg-white p-1">
 													{/* eslint-disable-next-line @next/next/no-img-element */}
+													{/* biome-ignore lint/performance/noImgElement: Local assets */}
 													<img
 														src={config?.icon}
 														alt={res}

@@ -72,6 +72,8 @@ describe("Chapter Actions", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		vi.spyOn(console, "error").mockImplementation(() => {});
+
 		(ensureProjectAccess as Mock).mockResolvedValue({
 			project: { id: projectId },
 			user: { id: "user-123" },

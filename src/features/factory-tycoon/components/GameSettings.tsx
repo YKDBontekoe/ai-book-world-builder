@@ -47,6 +47,7 @@ export function GameSettings({
 						Game Settings
 					</h2>
 					<button
+						type="button"
 						onClick={onClose}
 						className="p-2 rounded-lg text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)] hover:bg-white/5 transition-colors"
 					>
@@ -68,6 +69,7 @@ export function GameSettings({
 							</span>
 						</div>
 						<button
+							type="button"
 							onClick={toggleMute}
 							className={`
                 relative w-12 h-6 rounded-full transition-colors
@@ -96,6 +98,7 @@ export function GameSettings({
 									undone.
 								</p>
 								<button
+									type="button"
 									onClick={handleReset}
 									className="factory-btn-danger mt-3 w-full flex items-center justify-center gap-2"
 								>

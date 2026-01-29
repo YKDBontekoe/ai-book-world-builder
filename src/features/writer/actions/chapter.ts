@@ -133,7 +133,9 @@ export async function createNewChapter(projectId: string) {
 				})
 				.returning();
 
-			newChapterId = newChapter.id;
+			if (newChapter) {
+				newChapterId = newChapter.id;
+			}
 		});
 
 		if (!newChapterId) {
