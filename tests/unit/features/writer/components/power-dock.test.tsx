@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { PowerDock } from "@/features/writer/components/power-dock";
@@ -17,8 +18,8 @@ vi.mock("sonner", () => ({
 	},
 }));
 
-vi.mock("@tanstack/react-query", () => ({
-	useQuery: () => ({ data: [], isLoading: false }),
+vi.mock("@/app/actions/entities", () => ({
+	getEntities: vi.fn().mockResolvedValue({ success: true, data: [] }),
 }));
 
 vi.mock("usehooks-ts", () => ({
@@ -155,27 +156,42 @@ vi.mock("@/features/writer/components/tools/tool-strategies", () => ({
 	},
 }));
 
+const queryClient = new QueryClient({
+	defaultOptions: {
+		queries: {
+			retry: false,
+		},
+	},
+});
+
+const renderWithClient = (ui: React.ReactNode) => {
+	return render(
+		<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>,
+	);
+};
+
 describe("PowerDock", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		queryClient.clear();
 		mockExecute.mockResolvedValue({ success: true, result: "Result text" });
 	});
 
 	it("renders correctly in default mode", () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 		expect(screen.getByLabelText("Spotlight")).toBeInTheDocument();
 		expect(screen.getByLabelText("AI Tools")).toBeInTheDocument();
 	});
 
 	it("switches to tools mode", () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 		const toolsButton = screen.getByLabelText("AI Tools");
 		fireEvent.click(toolsButton);
 		expect(screen.getByLabelText("Batch Write")).toBeInTheDocument();
 	});
 
 	it("selects a tool and enters input mode", () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 		fireEvent.click(screen.getByLabelText("AI Tools"));
 		fireEvent.click(screen.getByLabelText("Batch Write"));
 		expect(
@@ -184,7 +200,7 @@ describe("PowerDock", () => {
 	});
 
 	it("saves command to history on success", async () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 		// Navigate to tool
 		fireEvent.click(screen.getByLabelText("AI Tools"));
 		fireEvent.click(screen.getByLabelText("Batch Write"));
@@ -214,7 +230,7 @@ describe("PowerDock", () => {
 	});
 
 	it.skip("limits history to 20 items", async () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 		fireEvent.click(screen.getByLabelText("AI Tools"));
 		fireEvent.click(screen.getByLabelText("Batch Write"));
 
@@ -235,7 +251,7 @@ describe("PowerDock", () => {
 	});
 
 	it("deduplicates identical recent commands", async () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 		fireEvent.click(screen.getByLabelText("AI Tools"));
 		fireEvent.click(screen.getByLabelText("Batch Write"));
 
@@ -258,7 +274,7 @@ describe("PowerDock", () => {
 	});
 
 	it("clears history for a tool", async () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 		fireEvent.click(screen.getByLabelText("AI Tools"));
 		fireEvent.click(screen.getByLabelText("Batch Write"));
 
@@ -286,7 +302,7 @@ describe("PowerDock", () => {
 	});
 
 	it("maintains separate history for each tool", async () => {
-		render(<PowerDock />);
+		renderWithClient(<PowerDock />);
 
 		// Add command for "Batch Write"
 		fireEvent.click(screen.getByLabelText("AI Tools"));

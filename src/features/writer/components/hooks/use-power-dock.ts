@@ -1,6 +1,9 @@
 import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { usePowerDockHistory } from "@/features/writer/components/hooks/use-power-dock-history";
+import {
+	type HistoryItem,
+	usePowerDockHistory,
+} from "@/features/writer/components/hooks/use-power-dock-history";
 import {
 	type ToolType,
 	toolStrategies,
@@ -22,7 +25,7 @@ export interface UsePowerDockReturn {
 	reset: () => void;
 	handleToolSelect: (toolId: ToolType) => Promise<void>;
 	handleExecute: () => Promise<void>;
-	getToolHistory: (tool: ToolType) => string[];
+	getToolHistory: (tool: ToolType) => HistoryItem[];
 	clearToolHistory: (tool: ToolType) => void;
 	activeSceneId: string | null;
 }

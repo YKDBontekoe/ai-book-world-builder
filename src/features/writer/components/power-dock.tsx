@@ -1,5 +1,6 @@
 "use client";
 
+import { useQuery } from "@tanstack/react-query";
 import { AnimatePresence, motion, type Variants } from "framer-motion";
 import {
 	Copy,
@@ -16,12 +17,11 @@ import Link from "next/link";
 import { memo, useCallback } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
+import { getEntities } from "@/app/actions/entities";
 import { Separator } from "@/components/atoms/separator";
 import { TooltipProvider } from "@/components/atoms/tooltip";
 import { GlassCard } from "@/components/molecules/glass-card";
 import { usePowerDock } from "@/features/writer/components/hooks/use-power-dock";
-import { useQuery } from "@tanstack/react-query";
-import { getEntities } from "@/app/actions/entities";
 import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
 import { useWriterControl } from "@/features/writer/components/writer-control-context";
@@ -46,9 +46,7 @@ export const PowerDock = memo(function PowerDock() {
 	const { sceneContent } = useWriterContent();
 
 	const { data: entities } = useQuery({
-		queryKey: project?.id
-			? QUERY_KEYS.entities(project.id)
-			: ["entities", "null"],
+		queryKey: project?.id ? QUERY_KEYS.entities(project.id) : ["entities"],
 		queryFn: async () => {
 			if (!project?.id) return [];
 			const result = await getEntities({ projectId: project.id });
@@ -140,20 +138,6 @@ export const PowerDock = memo(function PowerDock() {
 			toast.success("Copied to clipboard");
 		}
 	}, [result]);
-
-	const handleExport = useCallback(async () => {
-		if (sceneContent) {
-			try {
-				await navigator.clipboard.writeText(sceneContent);
-				toast.success("Scene copied to clipboard");
-			} catch (error) {
-				console.error("Failed to copy scene:", error);
-				toast.error("Failed to copy scene to clipboard");
-			}
-		} else {
-			toast.info("No content to export");
-		}
-	}, [sceneContent]);
 
 	return (
 		<TooltipProvider>
@@ -312,7 +296,7 @@ export const PowerDock = memo(function PowerDock() {
 							onClearHistory={clearToolHistory}
 							getHistory={getToolHistory}
 							entities={entities}
-							onExport={handleExport}
+							onExport={handleCopyScene}
 						/>
 					</div>
 				</GlassCard>

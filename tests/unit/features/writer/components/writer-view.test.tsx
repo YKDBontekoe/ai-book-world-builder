@@ -75,6 +75,14 @@ vi.mock("@/features/writer/components/writer-editor", () => ({
 	WriterEditor: () => <div data-testid="writer-editor">Writer Editor</div>,
 }));
 
+vi.mock("@/features/writer/components/power-dock", () => ({
+	PowerDock: () => <div data-testid="power-dock">Power Dock</div>,
+}));
+
+vi.mock("@/features/writer/components/tools/writer-spotlight", () => ({
+	WriterSpotlight: () => <div data-testid="writer-spotlight">Writer Spotlight</div>,
+}));
+
 // Mock the hook that caused the crash
 vi.mock("@/hooks/use-project-entities", () => ({
 	useProjectEntities: () => ({ data: [] }),

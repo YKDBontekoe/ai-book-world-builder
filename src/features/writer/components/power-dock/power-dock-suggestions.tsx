@@ -31,7 +31,7 @@ export function PowerDockSuggestions({
 			initial={{ opacity: 0, y: 10, scale: 0.95 }}
 			animate={{ opacity: 1, y: 0, scale: 1 }}
 			exit={{ opacity: 0, y: 10, scale: 0.95 }}
-			transition={{ duration: 0.2 }}
+			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			className="absolute bottom-full left-0 mb-2 w-full min-w-[300px] z-50"
 		>
 			<GlassCard
