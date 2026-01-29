@@ -1,7 +1,7 @@
-import { nanoid } from 'nanoid';
-import { BeltItem, BuildingEntity, Resource } from '../../types';
-import { getTargetCoordinates, getOppositeDir } from '../../utils/grid';
-import { tryPushItemToTarget } from './utils';
+import { nanoid } from "nanoid";
+import type { BeltItem, BuildingEntity, Resource } from "../../types";
+import { getOppositeDir, getTargetCoordinates } from "../../utils/grid";
+import { tryPushItemToTarget } from "./utils";
 
 export function processInserter(
 	inserter: BuildingEntity,
