@@ -32,21 +32,6 @@ import type { z } from "zod";
 export type ModelTier = "light" | "middle" | "large";
 
 /**
- * Model tiers with their intended use cases:
- *
- * | Tier     | Speed    | Cost   | Best For                                    |
- * |----------|----------|--------|---------------------------------------------|
- * | `light`  | Fastest  | Lowest | Simple tasks, summarization, quick lookups |
- * | `middle` | Balanced | Medium | Most tasks, balanced quality and speed      |
- * | `large`  | Slowest  | Highest| Complex reasoning, planning, creative writing|
- */
-export const MODEL_TIER_DESCRIPTIONS: Record<ModelTier, string> = {
-	light: "Fast & cheap - simple tasks, summaries, quick responses",
-	middle: "Balanced - most tasks, good quality at reasonable speed",
-	large: "Most capable - complex reasoning, planning, creative writing",
-};
-
-/**
  * Model Role - Semantic roles for different pipeline stages.
  *
  * Each role maps to a model tier to ensure the right capability level.
@@ -128,22 +113,6 @@ export interface AIGenerationOptions {
 	system?: string;
 }
 
-/**
- * Options for text generation.
- */
-export interface AITextOptions extends AIGenerationOptions {
-	prompt: string;
-}
-
-/**
- * Options for structured object generation.
- */
-export interface AIObjectOptions<T extends z.ZodType>
-	extends AIGenerationOptions {
-	prompt: string;
-	schema: T;
-}
-
 // =============================================================================
 // Generation Results
 // =============================================================================
@@ -201,14 +170,6 @@ export function aiError(error: string): AIError {
 // =============================================================================
 // Common Generation Result Types
 // =============================================================================
-
-export interface TextGenerationResult {
-	text: string;
-}
-
-export interface ObjectGenerationResult<T> {
-	object: T;
-}
 
 export interface AIGenerationResult {
 	usage?: LanguageModelUsage;

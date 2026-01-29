@@ -4,7 +4,6 @@ import {
 	type AISuccess,
 	aiError,
 	aiSuccess,
-	MODEL_TIER_DESCRIPTIONS,
 	type ModelRole,
 	type ModelTier,
 	ROLE_TO_TIER,
@@ -15,12 +14,6 @@ describe("AI Services Types", () => {
 		it("should have three tiers: light, middle, large", () => {
 			const tiers: ModelTier[] = ["light", "middle", "large"];
 			expect(tiers).toHaveLength(3);
-		});
-
-		it("should have descriptions for all tiers", () => {
-			expect(MODEL_TIER_DESCRIPTIONS.light).toContain("Fast");
-			expect(MODEL_TIER_DESCRIPTIONS.middle).toContain("Balanced");
-			expect(MODEL_TIER_DESCRIPTIONS.large).toContain("capable");
 		});
 	});
 

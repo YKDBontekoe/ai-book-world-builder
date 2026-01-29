@@ -20,5 +20,3 @@ export * from "./source-material-repository";
 export { sourceMaterialRepository } from "./source-material-repository";
 export * from "./story-repository";
 export { storyRepository } from "./story-repository";
-export * from "./volume-repository";
-export { volumeRepository } from "./volume-repository";
