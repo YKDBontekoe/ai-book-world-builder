@@ -10,8 +10,9 @@ vi.mock("@vercel/blob", () => ({
 // Mock pdfkit
 vi.mock("pdfkit", () => {
 	return {
-		default: vi.fn().mockImplementation(() => {
-			const handlers: Record<string, Function> = {};
+		// biome-ignore lint/complexity/useArrowFunction: Must be a regular function to be constructable
+		default: vi.fn().mockImplementation(function () {
+			const handlers: Record<string, (...args: unknown[]) => void> = {};
 			return {
 				on: vi.fn((event, cb) => {
 					handlers[event] = cb;
@@ -23,7 +24,7 @@ vi.mock("pdfkit", () => {
 				moveDown: vi.fn().mockReturnThis(),
 				addPage: vi.fn().mockReturnThis(),
 				end: vi.fn(() => {
-					if (handlers["end"]) handlers["end"]();
+					if (handlers.end) handlers.end();
 				}),
 			};
 		}),
