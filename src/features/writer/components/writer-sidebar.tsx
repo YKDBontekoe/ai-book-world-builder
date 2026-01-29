@@ -46,7 +46,7 @@ export function WriterSidebar() {
 				</Button>
 			</div>
 
-			<div className="px-4 py-3 flex items-center justify-between sticky top-0 z-10 glass-surface border-y border-border/50">
+			<div className="px-4 py-3 flex items-center justify-between sticky top-0 z-10 glass border-b border-glass-border">
 				<div className="flex items-center gap-2.5">
 					<Button
 						variant="ghost"
