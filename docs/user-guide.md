@@ -210,11 +210,26 @@ Access powerful actions instantly. Press `Cmd+K` (Mac) or `Ctrl+K` (Windows).
 -   **Navigate**: Instantly jump to any scene or entity.
 -   **Actions**: Run commands like "Toggle Zen Mode" or "Ask AI Assistant".
 
-### Model Settings
-You can customize which AI models are used for different tasks in the **Settings > Models** menu. We categorize models into three roles:
-*   **Light**: Fast and efficient (for chat and simple tasks).
-*   **Middle**: Balanced performance (for most writing tasks).
-*   **Large**: High intelligence (for complex reasoning and outlining).
+### Model Selection & Settings
+You can customize which AI models are used for different tasks in the **Settings > Models** menu.
+
+**Model Selector**
+When choosing a model, you can use the enhanced dropdown menu which features:
+*   **Search**: Type to instantly find models by name (e.g., "Grok", "Claude").
+*   **Filtering**: Models are grouped by provider.
+*   **Details**: View pricing and context window size at a glance.
+
+**Available Models**
+We support a wide range of models, including:
+*   **Grok Lite (xAI)**: A highly cost-effective, text-only model perfect for drafting and brainstorming without burning through your budget.
+*   **Claude 3.5 (Anthropic)**: The gold standard for creative writing and nuance.
+*   **GPT-4o (OpenAI)**: Excellent for reasoning and complex instructions.
+
+**Role-Based Configuration**
+We categorize models into three roles to optimize performance and cost:
+*   **Light**: Fast and efficient (e.g., Grok Lite). Used for chat and simple tasks.
+*   **Middle**: Balanced performance (e.g., Claude 3.5 Sonnet). Used for most writing tasks.
+*   **Large**: High intelligence (e.g., Claude 3.5 Opus). Used for complex reasoning and outlining.
 
 ### Time Travel
 Restore previous versions of your scene without losing progress.
