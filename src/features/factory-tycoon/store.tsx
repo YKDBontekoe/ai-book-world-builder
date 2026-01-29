@@ -28,6 +28,7 @@ import type {
 	GameState,
 	Resource,
 } from "./types";
+import { canAddBuilding } from "./utils/validation";
 
 export type Action =
 	| { type: "TICK" }
@@ -89,12 +90,12 @@ export function gameReducer(state: GameState, action: Action): GameState {
 			};
 		}
 		case "ADD_BUILDING": {
-			const config = BUILDINGS[action.buildingType];
-			if (state.cash < config.cost) return state;
-
-			if (state.buildings.some((b) => b.x === action.x && b.y === action.y))
+			if (
+				!canAddBuilding(state, action.buildingType, action.x, action.y)
+			)
 				return state;
 
+			const config = BUILDINGS[action.buildingType];
 			const newBuilding: BuildingEntity = {
 				id: nanoid(),
 				type: action.buildingType,
@@ -303,16 +304,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
 
 	const addBuilding = useCallback(
 		(type: BuildingType, x: number, y: number, direction?: Direction) => {
-			const config = BUILDINGS[type];
-			// Check cost
-			if (state.cash < config.cost) return false;
-			// Check collision
-			if (state.buildings.some((b) => b.x === x && b.y === y)) return false;
+			if (!canAddBuilding(state, type, x, y)) return false;
 
 			dispatch({ type: "ADD_BUILDING", buildingType: type, x, y, direction });
 			return true;
 		},
-		[state.buildings, state.cash],
+		[state.buildings, state.cash, state],
 	);
 
 	const removeBuilding = useCallback((id: string) => {

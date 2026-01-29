@@ -9,13 +9,16 @@ vi.mock("@vercel/blob", () => ({
 }));
 
 // Mock pdfkit
+type PDFEventHandler = (...args: unknown[]) => void;
+
 vi.mock("pdfkit", () => {
 	return {
 		default: class MockPDFDocument {
-			handlers: Record<string, Function> = {};
+			handlers: Record<string, PDFEventHandler> = {};
 
-			on = vi.fn((event, cb) => {
+			on = vi.fn((event: string, cb: PDFEventHandler) => {
 				this.handlers[event] = cb;
+				return this;
 			});
 			registerFont = vi.fn();
 			fontSize = vi.fn().mockReturnThis();
