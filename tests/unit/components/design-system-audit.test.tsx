@@ -1,13 +1,41 @@
 import { render } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { axe } from "vitest-axe";
-
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/atoms/alert-dialog";
 import { Button } from "@/components/atoms/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@/components/atoms/card";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/atoms/dialog";
+import {
+	Sheet,
+	SheetContent,
+	SheetDescription,
+	SheetHeader,
+	SheetTitle,
+	SheetTrigger,
+} from "@/components/atoms/sheet";
 import { GlassCard } from "@/components/molecules/glass-card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/atoms/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/atoms/alert-dialog";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/atoms/sheet";
 
 // Mock ResizeObserver for Radix UI
 class ResizeObserver {
@@ -66,7 +94,7 @@ describe("Design System Accessibility Audit", () => {
 					</DialogHeader>
 					<p>Dialog content.</p>
 				</DialogContent>
-			</Dialog>
+			</Dialog>,
 		);
 		// Check the entire document because Dialog renders in a Portal
 		const results = await axe(baseElement);
@@ -87,7 +115,7 @@ describe("Design System Accessibility Audit", () => {
 						<AlertDialogAction>Action</AlertDialogAction>
 					</AlertDialogFooter>
 				</AlertDialogContent>
-			</AlertDialog>
+			</AlertDialog>,
 		);
 		const results = await axe(baseElement);
 		expect(results.violations).toEqual([]);
@@ -104,7 +132,7 @@ describe("Design System Accessibility Audit", () => {
 					</SheetHeader>
 					<p>Sheet content.</p>
 				</SheetContent>
-			</Sheet>
+			</Sheet>,
 		);
 		const results = await axe(baseElement);
 		expect(results.violations).toEqual([]);
