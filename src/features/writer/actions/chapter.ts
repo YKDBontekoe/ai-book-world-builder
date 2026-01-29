@@ -133,6 +133,7 @@ export async function createNewChapter(projectId: string) {
 				})
 				.returning();
 
+			if (!newChapter) throw new Error("Failed to insert chapter");
 			newChapterId = newChapter.id;
 		});
 
