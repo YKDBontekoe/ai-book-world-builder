@@ -76,7 +76,9 @@ describe("GitHub Actions", () => {
 
 	describe("Authorization", () => {
 		it("should fail if user is not logged in", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.auth.mockResolvedValue({ user: null });
 
 			const result = await githubActions.getRepoStats();
@@ -92,7 +94,9 @@ describe("GitHub Actions", () => {
 		});
 
 		it("should fail if user is not admin", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.auth.mockResolvedValue({
 				user: { id: "user-id", role: "user" },
 			});
@@ -136,7 +140,9 @@ describe("GitHub Actions", () => {
 		});
 
 		it("should handle errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mocks.octokit.rest.repos.get.mockRejectedValue(new Error("API Error"));
 
 			const result = await githubActions.getRepoStats();
