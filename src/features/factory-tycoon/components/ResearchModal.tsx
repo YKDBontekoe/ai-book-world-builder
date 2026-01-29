@@ -4,12 +4,7 @@ import React from 'react';
 import { useGame } from '../store';
 import { X, Beaker, Check, Lock, Unlock, Sparkles } from 'lucide-react';
 import { TECHS } from '../config';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '@/lib/utils';
 
 export function ResearchModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { state, researchTech } = useGame();

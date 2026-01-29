@@ -25,8 +25,8 @@ export function simulateTick(currentState: GameState): GameState {
     tickCount: currentState.tickCount + 1,
   };
 
-  // Sort buildings by ID to ensure deterministic execution order
-  const sortedBuildings = nextState.buildings.sort((a, b) => a.id.localeCompare(b.id));
+  // Buildings are maintained sorted by ID in the reducer to ensure deterministic execution order
+  const sortedBuildings = nextState.buildings;
 
   // Current State Snapshot for Checks
   const currentTotalVolume = Object.values(nextState.inventory).reduce((a, b) => a + b, 0);

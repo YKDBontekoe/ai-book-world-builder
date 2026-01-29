@@ -1,12 +1,11 @@
 'use client';
 
-import { type ClassValue, clsx } from 'clsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import type React from 'react';
 import { useCallback, useEffect, useState } from 'react';
-import { twMerge } from 'tailwind-merge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/atoms/tooltip';
+import { cn } from '@/lib/utils';
 import { useSound } from '../audio/SoundContext';
 import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from '../config';
 import { useGame } from '../store';
@@ -18,10 +17,6 @@ import {
     RESOURCE_COLORS,
     getRotation
 } from './visuals';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 export function GameCanvas({ selectedBuilding }: { selectedBuilding: BuildingType | null }) {
   const { state, addBuilding, removeBuilding, rotateBuilding, manualInteract } = useGame();

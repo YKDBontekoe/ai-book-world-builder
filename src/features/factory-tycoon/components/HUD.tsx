@@ -3,15 +3,10 @@
 import React, { useState } from 'react';
 import { useGame } from '../store';
 import { Coins, Database, Activity, Play, Pause, Settings, Beaker, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import { cn } from '@/lib/utils';
 import { GameSettings } from './GameSettings';
 import { ResearchModal } from './ResearchModal';
 import { RESOURCE_VALUES } from '../config';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
   ore: { icon: '/images/factory-tycoon/ore.png', color: 'text-amber-600' },

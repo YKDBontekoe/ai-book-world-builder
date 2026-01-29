@@ -5,12 +5,7 @@ import { BUILDINGS } from '../config';
 import type { BuildingType } from '../types';
 import { useGame } from '../store';
 import { Pickaxe, Factory, Store, Box, HandCoins, Beaker, Coins, ArrowRight, GitFork, ArrowUpFromLine } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '@/lib/utils';
 
 const ICONS: Record<BuildingType, React.ComponentType<React.SVGProps<SVGSVGElement>>> = {
   Mine: Pickaxe,
