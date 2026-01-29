@@ -89,7 +89,7 @@ function buildEntity(overrides?: Partial<Entity>): Entity {
 }
 
 describe("entities server actions", () => {
-	let consoleSpy: MockInstance;
+	let consoleSpy: MockInstance<Console["error"]>;
 
 	afterEach(() => {
 		consoleSpy?.mockRestore();
