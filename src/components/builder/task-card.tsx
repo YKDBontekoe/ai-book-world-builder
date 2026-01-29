@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { AlertCircle, Bot, GitPullRequest } from "lucide-react";
+import { AlertCircle, Bot, Check, GitPullRequest } from "lucide-react";
 import type { JSX } from "react";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import { Button } from "@/components/atoms/button";
@@ -19,6 +19,8 @@ interface TaskCardProps {
 	onSelect: (item: TaskItem) => void;
 	onFix?: (issue: GitHubIssue) => void;
 	compact?: boolean;
+	isSelected?: boolean;
+	onToggleSelection?: (item: TaskItem) => void;
 }
 
 const MotionGlassCard = motion.create(GlassCard);
@@ -28,10 +30,22 @@ export function TaskCard({
 	onSelect,
 	onFix,
 	compact,
+	isSelected,
+	onToggleSelection,
 }: TaskCardProps): JSX.Element {
 	const handleKeyDown = (e: React.KeyboardEvent) => {
 		if (e.key === "Enter" || e.key === " ") {
 			e.preventDefault();
+			onSelect(item);
+		}
+	};
+
+	const handleClick = (e: React.MouseEvent) => {
+		if (onToggleSelection && (e.metaKey || e.ctrlKey)) {
+			e.preventDefault();
+			e.stopPropagation();
+			onToggleSelection(item);
+		} else {
 			onSelect(item);
 		}
 	};
@@ -184,14 +198,20 @@ export function TaskCard({
 			transition={{ type: "spring", stiffness: 400, damping: 25 }}
 			variant="liquid"
 			className={cn(
-				"cursor-pointer active:scale-[0.98] hover:shadow-lg hover:shadow-primary/5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+				"cursor-pointer active:scale-[0.98] hover:shadow-lg hover:shadow-primary/5 focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none relative",
 				compact ? "p-3" : "p-4",
+				isSelected && "ring-2 ring-primary bg-primary/5",
 			)}
-			onClick={() => onSelect(item)}
+			onClick={handleClick}
 			tabIndex={0}
 			role="button"
 			onKeyDown={handleKeyDown}
 		>
+			{isSelected && (
+				<div className="absolute -top-1.5 -right-1.5 h-5 w-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center shadow-sm z-10 animate-in zoom-in-50 duration-200">
+					<Check className="h-3 w-3" />
+				</div>
+			)}
 			{renderContent()}
 		</MotionGlassCard>
 	);

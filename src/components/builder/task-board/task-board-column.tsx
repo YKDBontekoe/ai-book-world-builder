@@ -15,6 +15,8 @@ interface TaskBoardColumnProps {
 	defaultSource?: string;
 	onSelect: (item: TaskItem) => void;
 	onFix: (issue: GitHubIssue) => void;
+	selectedItems: Set<string>;
+	onToggleSelection: (item: TaskItem) => void;
 }
 
 export function TaskBoardColumn({
@@ -23,6 +25,8 @@ export function TaskBoardColumn({
 	defaultSource,
 	onSelect,
 	onFix,
+	selectedItems,
+	onToggleSelection,
 }: TaskBoardColumnProps): JSX.Element {
 	const getEmptyStateContent = () => {
 		switch (column.id) {
@@ -87,15 +91,23 @@ export function TaskBoardColumn({
 							className="h-40 min-h-40 p-6"
 						/>
 					) : (
-						column.items.map((item) => (
-							<TaskCard
-								key={item.type === "session" ? item.data.id : item.data.number}
-								item={item}
-								onSelect={onSelect}
-								onFix={item.type === "issue" ? onFix : undefined}
-								compact={isCompact}
-							/>
-						))
+						column.items.map((item) => {
+							const itemId =
+								item.type === "session"
+									? item.data.id
+									: item.data.number.toString();
+							return (
+								<TaskCard
+									key={itemId}
+									item={item}
+									onSelect={onSelect}
+									onFix={item.type === "issue" ? onFix : undefined}
+									compact={isCompact}
+									isSelected={selectedItems.has(itemId)}
+									onToggleSelection={onToggleSelection}
+								/>
+							);
+						})
 					)}
 				</AnimatePresence>
 			</div>

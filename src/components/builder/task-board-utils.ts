@@ -1,3 +1,4 @@
+import Papa from "papaparse";
 import type { GitHubIssue, GitHubPR } from "@/app/actions/github";
 import type { JulesSession } from "@/lib/jules-client";
 import type { TaskItem } from "./task-card";
@@ -93,4 +94,45 @@ export function buildColumns(
 		{ id: "review", title: "Review", items: reviewItems },
 		{ id: "done", title: "Done", items: doneItems },
 	];
+}
+
+export function exportToCSV(items: TaskItem[]) {
+	const data = items.map((item) => {
+		if (item.type === "session") {
+			return {
+				ID: item.data.id,
+				Type: "Session",
+				Title: item.data.title || item.data.prompt,
+				State: item.data.state,
+				URL: item.data.url || "",
+				Assignee: "",
+				Created: item.data.createTime,
+				Updated: item.data.updateTime,
+			};
+		}
+		// issue or pr
+		return {
+			ID: item.data.number,
+			Type: item.type === "issue" ? "Issue" : "PR",
+			Title: item.data.title,
+			State: item.data.state,
+			URL: item.data.html_url,
+			Assignee: item.data.assignee?.login || "",
+			Created: item.data.created_at,
+			Updated: item.data.updated_at,
+		};
+	});
+
+	const csv = Papa.unparse(data);
+	const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+	const url = URL.createObjectURL(blob);
+	const link = document.createElement("a");
+	link.href = url;
+	link.setAttribute(
+		"download",
+		`task_board_export_${new Date().toISOString().split("T")[0]}.csv`,
+	);
+	document.body.appendChild(link);
+	link.click();
+	document.body.removeChild(link);
 }
