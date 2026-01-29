@@ -27,6 +27,7 @@
 - **[Agentic Workflow](docs/agentic-workflow.md)**: Fully automated CI/CD with Jules, CodeRabbit, and Renovate.
 - **[Generation Architecture](docs/generation-architecture.md)**: Technical deep dive into the Orchestrator, Writer Agent, and Step Handlers.
 - **[AI Services](docs/ai-services.md)**: Explanation of Model Routing, Context Flooding, and RAG strategies.
+- **[Factory Tycoon Guide](docs/factory-tycoon.md)**: How to play and win the factory simulation.
 - **[Design System](docs/design-system.md)**: Guidelines for the Native macOS aesthetic and component usage.
 
 
@@ -50,6 +51,11 @@ A step-by-step wizard to go from concept to draft:
 - **World Canvas**: Visualize your entities and their relationships.
 - **Entity Management**: Organize your world's lore in a structured database.
 - **Productivity Tools**: Built-in sprint timer, daily goals, and session analytics.
+
+### 🏭 Factory Tycoon
+- **Simulation**: A deterministic factory building minigame.
+- **Supply Chain**: Manage resources from ore to cash.
+- **Optimization**: Balance production ratios and storage.
 
 ## Design System
 

@@ -352,6 +352,7 @@ export class SceneRepository extends BaseRepository<
 	async updateSceneCard(
 		sceneId: string,
 		data: Partial<Omit<CreateSceneCardInput, "projectId" | "sceneId">>,
+		projectId?: string,
 	): Promise<SceneCard> {
 		try {
 			const [updated] = await db
@@ -360,7 +361,14 @@ export class SceneRepository extends BaseRepository<
 					...data,
 					updatedAt: new Date(),
 				})
-				.where(eq(sceneCard.sceneId, sceneId))
+				.where(
+					projectId
+						? and(
+								eq(sceneCard.sceneId, sceneId),
+								eq(sceneCard.projectId, projectId),
+							)
+						: eq(sceneCard.sceneId, sceneId),
+				)
 				.returning();
 
 			if (!updated) {

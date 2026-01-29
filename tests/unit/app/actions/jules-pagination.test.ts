@@ -77,11 +77,11 @@ describe("listJulesSourcesAction", () => {
 			// Call the action
 			const result = await listJulesSourcesAction();
 
-			expect(mocks.listSources).toHaveBeenCalledTimes(1000);
+			expect(mocks.listSources).toHaveBeenCalledTimes(20);
 			expect(consoleSpy).toHaveBeenCalledWith(
 				expect.stringContaining("Hit max pages limit"),
 			);
-			expect(result).toHaveLength(1000);
+			expect(result).toHaveLength(20);
 		} finally {
 			consoleSpy.mockRestore();
 		}

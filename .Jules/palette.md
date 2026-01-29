@@ -356,3 +356,21 @@ Replaced the raw button with the shared `Button` component:
 ### Learnings
 
 - Standard components like `Button` should be flexible enough to handle "micro" use cases without needing a new component, as long as the base geometry (`rounded-lg`) is respected.
+
+## 2026-01-27 - Strict typing in unit tests
+
+### Context
+
+Code review flagged that unit tests for `ProjectGrid` were using `any` for mocked component props, violating the project's strict TypeScript mandate.
+
+### Solution
+
+Refactored the mocks to use explicit types like `React.ComponentProps` and `React.HTMLAttributes`, ensuring that even mocked components adhere to type safety without relying on `any`.
+
+### Outcome
+
+The codebase remains compliant with strict TypeScript standards, including test files, preventing type regression and maintaining high code quality.
+
+### Learnings
+
+- Tests are first-class citizens and must adhere to the same strict type safety rules as source code; avoid `any` in mocks by using `React.ComponentProps<typeof Component>`.

@@ -122,11 +122,13 @@ export const SceneItem = memo(function SceneItem({
 			<ContextMenu>
 				<ContextMenuTrigger disabled={readOnly} className="w-full">
 					<Button
-						variant={isActive ? "secondary" : "ghost"}
+						variant="ghost"
 						size="sm"
 						className={cn(
-							"justify-start h-8 w-full px-2 text-xs font-normal",
-							isActive && "bg-secondary/50 font-medium",
+							"justify-start h-8 w-full px-2 text-xs font-normal transition-all duration-200 group",
+							isActive
+								? "bg-primary text-primary-foreground font-medium shadow-sm hover:bg-primary/90 hover:text-primary-foreground"
+								: "hover:bg-accent/50 text-muted-foreground hover:text-foreground",
 						)}
 						onClick={() => {
 							if (isSelectionMode) {
@@ -139,7 +141,12 @@ export const SceneItem = memo(function SceneItem({
 							!readOnly && !isSelectionMode && setIsEditing(true)
 						}
 					>
-						<FileText className="mr-2 h-3 w-3 opacity-70" />
+						<FileText
+							className={cn(
+								"mr-2 h-3 w-3 transition-opacity",
+								isActive ? "opacity-100" : "opacity-70 group-hover:opacity-100",
+							)}
+						/>
 						<span className="truncate">{scene.title}</span>
 					</Button>
 				</ContextMenuTrigger>

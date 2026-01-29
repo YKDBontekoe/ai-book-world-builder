@@ -2,7 +2,9 @@ import { BuildingConfig, BuildingType, GameState } from './types';
 
 export const GRID_SIZE = 20;
 export const BASE_CAPACITY = 50;
+export const STACK_SIZE = 50;
 export const TICK_RATE_MS = 1000;
+export const BELT_SPEED = 0.2;
 
 export const TECHS = {
   mass_production: {

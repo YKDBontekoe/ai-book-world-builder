@@ -1,35 +1,17 @@
 import { nanoid } from "nanoid";
-import { BUILDINGS } from "../config";
+import { BUILDINGS, STACK_SIZE } from "../config";
 import type {
+	BuildingConfig,
 	BuildingEntity,
-	Direction,
 	Resource,
 } from "../types";
+import { getTargetCoordinates } from "../utils/grid";
 
 export type SystemResult = {
 	inventoryDelta: Partial<Record<Resource, number>>;
 	cashDelta: number;
 	consumedCapacity: number; // Volume added/removed
 };
-
-function getTargetCoordinates(
-	x: number,
-	y: number,
-	dir: Direction,
-): { x: number; y: number } {
-	switch (dir) {
-		case "N":
-			return { x, y: y - 1 };
-		case "S":
-			return { x, y: y + 1 };
-		case "E":
-			return { x: x + 1, y };
-		case "W":
-			return { x: x - 1, y };
-		default:
-			return { x, y };
-	}
-}
 
 export const runProductionSystem = (
 	buildings: BuildingEntity[],
@@ -49,7 +31,6 @@ export const runProductionSystem = (
 	});
 	// Temporary inventory for this tick's calculations
 	const workingInventory = { ...currentInventory };
-	const _workingSpace = remainingSpace;
 
 	for (const building of buildings) {
 		const config = BUILDINGS[building.type];
@@ -58,75 +39,13 @@ export const runProductionSystem = (
 		if (config.type === "Market" || config.type === "Warehouse") continue;
 		if (!config.inputs && !config.outputs) continue;
 
-		let hasInputs = true;
-		let hasSpace = true;
-		let outputToBelt = false;
-		let targetBelt: BuildingEntity | undefined;
+        const targetBelt = getOutputTarget(building, config, buildingsMap);
+        const outputToBelt = !!targetBelt;
 
-		// 0. Pre-calculation: Check Output Destination
-		// Only check for the first non-cash output
-		const outputRes = Object.keys(config.outputs || {}).find(
-			(k) => k !== "cash",
-		) as Resource;
-		if (outputRes) {
-			const targetCoords = getTargetCoordinates(
-				building.x,
-				building.y,
-				building.direction,
-			);
-			targetBelt = buildingsMap.get(`${targetCoords.x},${targetCoords.y}`);
-			if (
-				targetBelt &&
-				(targetBelt.type === "Belt" || targetBelt.type === "Splitter")
-			) {
-				outputToBelt = true;
-			}
-		}
+        const hasInputs = checkInputAvailability(building, config, workingInventory);
+        const hasSpace = checkOutputCapacity(building, config, outputToBelt);
 
-		// 1. Check Inputs (Hybrid: Local -> Global)
-		if (config.inputs) {
-			for (const [res, amount] of Object.entries(config.inputs)) {
-				if (res !== "cash") {
-					const r = res as Resource;
-					const localAmount = building.localInventory?.[r] || 0;
-					const neededFromGlobal = Math.max(0, amount - localAmount);
-
-					if ((workingInventory[r] || 0) < neededFromGlobal) {
-						hasInputs = false;
-						break;
-					}
-				}
-			}
-		}
-
-		// 2. Check Space for Outputs
-		// If outputting to belt, we assume infinite space (it will just pile up or we can check belt fullness)
-		// For MVP, if outputToBelt is true, hasSpace = true.
-		if (!outputToBelt) {
-			const outputVolume = Object.entries(config.outputs || {}).reduce(
-				(vol, [res, amount]) => {
-					return res === "cash" || res === "science" ? vol : vol + amount;
-				},
-				0,
-			);
-
-			if (outputVolume > 0) {
-				// Check local inventory space instead of global 'workingSpace'
-				// We only check if the specific output resource slots are full
-				for (const [res, amount] of Object.entries(config.outputs || {})) {
-					if (res !== "cash" && res !== "science") {
-						const r = res as Resource;
-						const current = building.localInventory?.[r] || 0;
-						if (current + amount > 50) {
-							hasSpace = false;
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		// 3. Update Status
+		// Update Status
 		if (!hasInputs) {
 			building.status = "STARVED";
 		} else if (!hasSpace) {
@@ -135,80 +54,158 @@ export const runProductionSystem = (
 			building.status = "RUNNING";
 		}
 
-		// 4. Execute
+		// Execute
 		if (building.status === "RUNNING") {
-			// Consume
-			if (config.inputs) {
-				for (const [res, amount] of Object.entries(config.inputs)) {
-					if (res !== "cash") {
-						const r = res as Resource;
-						const localAmount = building.localInventory?.[r] || 0;
-						const takeFromLocal = Math.min(localAmount, amount);
-						const takeFromGlobal = amount - takeFromLocal;
-
-						if (takeFromLocal > 0) {
-							if (!building.localInventory) building.localInventory = {};
-							building.localInventory[r] =
-								(building.localInventory[r] || 0) - takeFromLocal;
-						}
-
-						if (takeFromGlobal > 0) {
-							workingInventory[r] -= takeFromGlobal;
-							result.inventoryDelta[r] =
-								(result.inventoryDelta[r] || 0) - takeFromGlobal;
-							// Consumption from global doesn't free space in this phase
-						}
-					}
-				}
-			}
-
-			// Produce
-			if (config.outputs) {
-				for (const [res, amount] of Object.entries(config.outputs)) {
-					if (res !== "cash") {
-						const r = res as Resource;
-						if (outputToBelt && targetBelt) {
-							// Produce to Belt
-							if (!targetBelt.beltItems) targetBelt.beltItems = [];
-							for (let i = 0; i < amount; i++) {
-								targetBelt.beltItems.push({
-									id: nanoid(),
-									resource: r,
-									position: 0,
-								});
-							}
-						} else {
-							// Produce to Local Inventory (Buffer) instead of Global
-							// This allows Inserters to pick it up.
-							// Only 'cash' and 'science' go global immediately (virtual resources)
-							if (r === "cash" || r === "science") {
-								result.inventoryDelta[r] =
-									(result.inventoryDelta[r] || 0) + amount;
-								// Science doesn't consume capacity? Let's say it doesn't.
-							} else {
-								if (!building.localInventory) building.localInventory = {};
-
-								// Check local capacity (simple max per slot or total?)
-								// Let's assume a stack limit of 50 per slot for now? Or just unlimited for MVP?
-								// Let's cap at 50 to force movement.
-								const currentAmount = building.localInventory[r] || 0;
-								if (currentAmount < 50) {
-									building.localInventory[r] = currentAmount + amount;
-								} else {
-									building.status = "BLOCKED"; // Local output full
-									// Refund inputs? Too complex for this tick. Just waste cycle or block next?
-									// We already consumed inputs. So we lose production if full?
-									// Or better: Check space BEFORE consuming (Step 2).
-								}
-							}
-						}
-					} else {
-						result.cashDelta += amount;
-					}
-				}
-			}
+            processConsumption(building, config, workingInventory, result);
+            processProduction(building, config, targetBelt, result);
 		}
 	}
 
 	return result;
 };
+
+// --- Helper Functions ---
+
+function getOutputTarget(
+    building: BuildingEntity,
+    config: BuildingConfig,
+    buildingsMap: Map<string, BuildingEntity>
+): BuildingEntity | undefined {
+    const outputRes = Object.keys(config.outputs || {}).find(
+        (k) => k !== "cash",
+    ) as Resource;
+
+    if (outputRes) {
+        const targetCoords = getTargetCoordinates(
+            building.x,
+            building.y,
+            building.direction,
+        );
+        const target = buildingsMap.get(`${targetCoords.x},${targetCoords.y}`);
+        if (
+            target &&
+            (target.type === "Belt" || target.type === "Splitter")
+        ) {
+            return target;
+        }
+    }
+    return undefined;
+}
+
+function checkInputAvailability(
+    building: BuildingEntity,
+    config: BuildingConfig,
+    workingInventory: Record<string, number>
+): boolean {
+    if (!config.inputs) return true;
+
+    for (const [res, amount] of Object.entries(config.inputs)) {
+        if (res !== "cash") {
+            const r = res as Resource;
+            const localAmount = building.localInventory?.[r] || 0;
+            const neededFromGlobal = Math.max(0, amount - localAmount);
+
+            if ((workingInventory[r] || 0) < neededFromGlobal) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function checkOutputCapacity(
+    building: BuildingEntity,
+    config: BuildingConfig,
+    outputToBelt: boolean
+): boolean {
+    if (outputToBelt) return true; // Assume belt takes it (or pile up logic)
+
+    const outputVolume = Object.entries(config.outputs || {}).reduce(
+        (vol, [res, amount]) => {
+            return res === "cash" || res === "science" ? vol : vol + amount;
+        },
+        0,
+    );
+
+    if (outputVolume > 0) {
+        for (const [res, amount] of Object.entries(config.outputs || {})) {
+            if (res !== "cash" && res !== "science") {
+                const r = res as Resource;
+                const current = building.localInventory?.[r] || 0;
+                if (current + amount > STACK_SIZE) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
+function processConsumption(
+    building: BuildingEntity,
+    config: BuildingConfig,
+    workingInventory: Record<string, number>,
+    result: SystemResult
+) {
+    if (!config.inputs) return;
+
+    for (const [res, amount] of Object.entries(config.inputs)) {
+        if (res !== "cash") {
+            const r = res as Resource;
+            const localAmount = building.localInventory?.[r] || 0;
+            const takeFromLocal = Math.min(localAmount, amount);
+            const takeFromGlobal = amount - takeFromLocal;
+
+            if (takeFromLocal > 0) {
+                if (!building.localInventory) building.localInventory = {};
+                building.localInventory[r] =
+                    (building.localInventory[r] || 0) - takeFromLocal;
+            }
+
+            if (takeFromGlobal > 0) {
+                workingInventory[r] -= takeFromGlobal;
+                result.inventoryDelta[r] =
+                    (result.inventoryDelta[r] || 0) - takeFromGlobal;
+            }
+        }
+    }
+}
+
+function processProduction(
+    building: BuildingEntity,
+    config: BuildingConfig,
+    targetBelt: BuildingEntity | undefined,
+    result: SystemResult
+) {
+    if (!config.outputs) return;
+
+    for (const [res, amount] of Object.entries(config.outputs)) {
+        if (res !== "cash") {
+            const r = res as Resource;
+            if (targetBelt) {
+                // Produce to Belt
+                if (!targetBelt.beltItems) targetBelt.beltItems = [];
+                for (let i = 0; i < amount; i++) {
+                    targetBelt.beltItems.push({
+                        id: nanoid(),
+                        resource: r,
+                        position: 0,
+                    });
+                }
+            } else {
+                // Produce to Local Inventory or Global (Virtual)
+                if (r === "cash" || r === "science") {
+                    result.inventoryDelta[r] =
+                        (result.inventoryDelta[r] || 0) + amount;
+                } else {
+                    if (!building.localInventory) building.localInventory = {};
+
+                    const currentAmount = building.localInventory[r] || 0;
+                     building.localInventory[r] = currentAmount + amount;
+                }
+            }
+        } else {
+            result.cashDelta += amount;
+        }
+    }
+}

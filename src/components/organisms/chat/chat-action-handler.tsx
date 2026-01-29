@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import {
 	type ChatAction,
-	useBookCanvasValue,
+	useBookCanvasSelection,
 } from "@/components/organisms/book-canvas/book-canvas-context";
 
 interface ChatActionHandlerProps {
@@ -15,7 +15,7 @@ export function ChatActionHandler({
 	sendMessage,
 	triggerChatAction,
 }: ChatActionHandlerProps) {
-	const { chatAction } = useBookCanvasValue();
+	const { chatAction } = useBookCanvasSelection();
 
 	useEffect(() => {
 		if (chatAction?.type === "send_message") {

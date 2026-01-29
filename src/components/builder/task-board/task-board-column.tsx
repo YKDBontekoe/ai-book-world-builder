@@ -1,9 +1,10 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import { LayoutList } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
+import { Bot, CheckCircle2, GitPullRequest, Inbox } from "lucide-react";
 import type { JSX } from "react";
 import type { GitHubIssue } from "@/app/actions/github";
+import { EmptyState } from "@/components/molecules/empty-state";
 import { CreateFeatureDialog } from "../create-feature-dialog";
 import type { Column } from "../task-board-utils";
 import { TaskCard, type TaskItem } from "../task-card";
@@ -27,6 +28,43 @@ export function TaskBoardColumn({
 	selectedItems,
 	onToggleSelection,
 }: TaskBoardColumnProps): JSX.Element {
+	const getEmptyStateContent = () => {
+		switch (column.id) {
+			case "backlog":
+				return {
+					icon: Inbox,
+					title: "No backlog items",
+					description: "You're all caught up!",
+				};
+			case "in_progress":
+				return {
+					icon: Bot,
+					title: "No active sessions",
+					description: "Ask Jules to start working.",
+				};
+			case "review":
+				return {
+					icon: GitPullRequest,
+					title: "No PRs in review",
+					description: "Code is shipping smoothly.",
+				};
+			case "done":
+				return {
+					icon: CheckCircle2,
+					title: "No completed items",
+					description: "Time to get to work!",
+				};
+			default:
+				return {
+					icon: Inbox,
+					title: `No items in ${column.title}`,
+					description: "This column is empty.",
+				};
+		}
+	};
+
+	const emptyState = getEmptyStateContent();
+
 	return (
 		<div className="w-[300px] flex-shrink-0 flex flex-col">
 			<div className="flex items-center justify-between mb-4 px-1">
@@ -44,16 +82,14 @@ export function TaskBoardColumn({
 			<div className="flex-1 overflow-y-auto pr-2 space-y-3 pb-10">
 				<AnimatePresence mode="popLayout">
 					{column.items.length === 0 ? (
-						<motion.div
-							initial={{ opacity: 0, scale: 0.9 }}
-							animate={{ opacity: 1, scale: 1 }}
-							className="flex flex-col items-center justify-center h-40 text-muted-foreground border-2 border-dashed border-muted-foreground/10 rounded-xl bg-muted/5 p-6 text-center"
-						>
-							<div className="p-3 bg-muted/20 rounded-full mb-3">
-								<LayoutList className="h-6 w-6 opacity-50" />
-							</div>
-							<p className="text-xs font-medium">No items in {column.title}</p>
-						</motion.div>
+						<EmptyState
+							key="empty-state"
+							icon={emptyState.icon}
+							title={emptyState.title}
+							description={emptyState.description}
+							variant="dashed"
+							className="h-40 min-h-40 p-6"
+						/>
 					) : (
 						column.items.map((item) => {
 							const itemId =

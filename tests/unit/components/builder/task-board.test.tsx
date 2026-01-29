@@ -45,6 +45,7 @@ vi.mock("lucide-react", () => ({
 	AlertCircle: () => <span data-testid="icon-alert" />,
 	Bot: () => <span data-testid="icon-bot" />,
 	GitPullRequest: () => <span data-testid="icon-pr" />,
+	Inbox: () => <span data-testid="icon-inbox" />,
 	Loader2: () => <span data-testid="icon-loader" />,
 	ArrowLeft: () => <span data-testid="icon-arrow-left" />,
 	Send: () => <span data-testid="icon-send" />,
@@ -68,6 +69,7 @@ vi.mock("lucide-react", () => ({
 	CheckCircle: () => <span data-testid="icon-check-circle" />,
 	Copy: () => <span data-testid="icon-copy" />,
 	Download: () => <span data-testid="icon-download" />,
+	CheckCircle2: () => <span data-testid="icon-check-circle-2" />,
 }));
 
 // Mock GlassCard to forward onClick
@@ -211,10 +213,8 @@ describe("TaskBoard", () => {
 
 		await waitFor(() => {
 			expect(screen.getByText("Backlog")).toBeInTheDocument();
-			expect(screen.getByText("No items in Backlog")).toBeInTheDocument();
-			expect(
-				screen.getByText("No items in In Progress (Jules)"),
-			).toBeInTheDocument();
+			expect(screen.getByText("No backlog items")).toBeInTheDocument();
+			expect(screen.getByText("No active sessions")).toBeInTheDocument();
 		});
 	});
 
@@ -236,7 +236,7 @@ describe("TaskBoard", () => {
 
 		await waitFor(() => {
 			expect(screen.getByText("Backlog")).toBeInTheDocument();
-			expect(screen.getByText("No items in Backlog")).toBeInTheDocument();
+			expect(screen.getByText("No backlog items")).toBeInTheDocument();
 		});
 	});
 

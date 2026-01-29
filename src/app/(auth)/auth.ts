@@ -222,6 +222,23 @@ export const {
 				if (existingUsers.length > 0 && existingUsers[0].bannedAt) {
 					return false;
 				}
+
+				// Handle Admin Promotion on Login (Once)
+				if (
+					user.email === process.env.ADMIN_EMAIL &&
+					user.role !== "admin"
+				) {
+					try {
+						await db
+							.update(userTable)
+							.set({ role: "admin" })
+							.where(eq(userTable.email, user.email));
+						// Update local user object so it propagates to JWT
+						user.role = "admin";
+					} catch (error) {
+						console.error("Failed to promote admin user", error);
+					}
+				}
 			}
 			return true;
 		},
@@ -229,25 +246,7 @@ export const {
 			if (user) {
 				token.id = user.id as string;
 				token.type = "regular";
-
-				// Handle Admin Promotion on Login
-				let role = user.role;
-				if (
-					user.email &&
-					user.email === process.env.ADMIN_EMAIL &&
-					role !== "admin"
-				) {
-					try {
-						await db
-							.update(userTable)
-							.set({ role: "admin" })
-							.where(eq(userTable.email, user.email));
-						role = "admin";
-					} catch (error) {
-						console.error("Failed to promote admin user", error);
-					}
-				}
-				token.role = role || "user";
+				token.role = user.role || "user";
 			}
 
 			return token;

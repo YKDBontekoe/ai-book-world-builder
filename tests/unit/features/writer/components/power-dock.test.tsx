@@ -204,9 +204,11 @@ describe("PowerDock", () => {
 		// Check if "Test command" appears in the history items (DropdownMenuItem)
 		// We added data-testid="history-item" to the mock
 		fireEvent.click(screen.getByLabelText("Command history"));
-		const historyItems = screen.getAllByTestId("history-item");
-		expect(historyItems).toHaveLength(1);
-		expect(historyItems[0]).toHaveTextContent("Test command");
+		await waitFor(() => {
+			const historyItems = screen.getAllByTestId("history-item");
+			expect(historyItems).toHaveLength(1);
+			expect(historyItems[0]).toHaveTextContent("Test command");
+		});
 	});
 
 	it.skip("limits history to 20 items", async () => {
@@ -249,8 +251,10 @@ describe("PowerDock", () => {
 		await waitFor(() => expect(mockExecute).toHaveBeenCalledTimes(2));
 
 		fireEvent.click(screen.getByLabelText("Command history"));
-		const historyItems = screen.getAllByTestId("history-item");
-		expect(historyItems).toHaveLength(1);
+		await waitFor(() => {
+			const historyItems = screen.getAllByTestId("history-item");
+			expect(historyItems).toHaveLength(1);
+		});
 	});
 
 	it("clears history for a tool", async () => {
@@ -272,13 +276,17 @@ describe("PowerDock", () => {
 		});
 
 		fireEvent.click(screen.getByLabelText("Command history"));
-		expect(screen.getAllByTestId("history-item")).toHaveLength(1);
+		await waitFor(() => {
+			expect(screen.getAllByTestId("history-item")).toHaveLength(1);
+		});
 
 		fireEvent.click(screen.getByLabelText("Clear history for this tool"));
 
 		// Dropdown closes, so we need to re-open to check
 		fireEvent.click(screen.getByLabelText("Command history"));
-		expect(screen.getByText("No recent history")).toBeInTheDocument();
+		await waitFor(() => {
+			expect(screen.getByText("No recent history")).toBeInTheDocument();
+		});
 	});
 
 	it("maintains separate history for each tool", async () => {
