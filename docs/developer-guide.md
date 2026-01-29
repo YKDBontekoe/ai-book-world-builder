@@ -233,6 +233,7 @@ Tools are defined in `lib/ai/tools/`. They must:
 2.  Return typed results.
 3.  Be registered in `lib/ai/tool-registry.ts`.
 
+
 ### 15. Factory Tycoon Architecture
 Located in `src/features/factory-tycoon`, this feature implements a deterministic simulation loop.
 
