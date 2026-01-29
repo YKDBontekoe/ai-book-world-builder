@@ -248,6 +248,14 @@ Located in `src/features/factory-tycoon`, this feature implements a deterministi
 - Uses a `useReducer` pattern with a specialized `GameProvider`.
 - **Canvas Rendering**: The grid is rendered using absolute positioning and CSS transitions for performance.
 
+### 16. Feedback Automation
+To close the loop between user feedback and development, we use an automated pipeline defined in `lib/services/feedback-service.ts`.
+
+-   **Cron Job**: A daily job (`api/cron/process-feedback`) triggers the analysis.
+-   **AI Grouping**: An LLM analyzes all pending feedback items and groups them into features or bug reports.
+-   **Jules Hand-off**: The system automatically creates a **Jules Session** for each group, instructing the agent to "Implement or improve the feature".
+-   **Traceability**: Feedback items are linked to the generated Plan/PR, allowing us to notify users when their request is built.
+
 ## Design System
 
 The project adheres to a **Native macOS Aesthetic** ("Liquid Glass"):
