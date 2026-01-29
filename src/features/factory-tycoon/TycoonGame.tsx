@@ -13,7 +13,7 @@ function TycoonGameContent() {
   const [selectedBuilding, setSelectedBuilding] = useState<BuildingType | null>(null);
 
   return (
-    <div className="factory-theme flex h-screen w-full overflow-hidden">
+    <div className="factory-theme flex h-screen w-full overflow-hidden p-4 gap-4">
       <BuildingPalette selected={selectedBuilding} onSelect={setSelectedBuilding} />
       <GameCanvas selectedBuilding={selectedBuilding} />
       <HUD />
