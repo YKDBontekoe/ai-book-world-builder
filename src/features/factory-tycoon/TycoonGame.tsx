@@ -1,38 +1,58 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { GameProvider } from './store';
-import { GameCanvas } from './components/GameCanvas';
-import { BuildingPalette } from './components/BuildingPalette';
-import { HUD } from './components/HUD';
-import { BuildingType } from './types';
-import { SoundProvider } from './audio/SoundContext';
-import { loadGameState, saveGameState } from './actions';
-import './factory-theme.css';
+import React, { useState } from "react";
+import type { loadGameState, saveGameState } from "./actions";
+import { SoundProvider } from "./audio/SoundContext";
+import { BuildingPalette } from "./components/BuildingPalette";
+import { GameCanvas } from "./components/GameCanvas";
+import { HUD } from "./components/HUD";
+import { GameProvider, useGame } from "./store";
+import type { BuildingType } from "./types";
+import "./factory-theme.css";
 
 function TycoonGameContent() {
-  const [selectedBuilding, setSelectedBuilding] = useState<BuildingType | null>(null);
+	const [selectedBuilding, setSelectedBuilding] = useState<BuildingType | null>(
+		null,
+	);
+	const { isLoading } = useGame();
 
-  return (
-    <div className="factory-theme flex h-screen w-full overflow-hidden">
-      <BuildingPalette selected={selectedBuilding} onSelect={setSelectedBuilding} />
-      <GameCanvas selectedBuilding={selectedBuilding} />
-      <HUD />
-    </div>
-  );
+	return (
+		<div className="factory-theme flex h-screen w-full overflow-hidden relative">
+			<BuildingPalette
+				selected={selectedBuilding}
+				onSelect={setSelectedBuilding}
+			/>
+			<GameCanvas selectedBuilding={selectedBuilding} />
+			<HUD />
+			{isLoading && (
+				<div
+					className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 text-white font-mono text-xl backdrop-blur-sm"
+					data-testid="loading-indicator"
+				>
+					INITIALIZING SYSTEMS...
+				</div>
+			)}
+		</div>
+	);
 }
 
 interface TycoonGameProps {
-  loadGameAction?: typeof loadGameState;
-  saveGameAction?: typeof saveGameState;
+	loadGameAction?: typeof loadGameState;
+	saveGameAction?: typeof saveGameState;
 }
 
-export default function TycoonGame({ loadGameAction, saveGameAction }: TycoonGameProps) {
-  return (
-    <SoundProvider>
-        <GameProvider loadGameAction={loadGameAction} saveGameAction={saveGameAction}>
-          <TycoonGameContent />
-        </GameProvider>
-    </SoundProvider>
-  );
+export default function TycoonGame({
+	loadGameAction,
+	saveGameAction,
+}: TycoonGameProps): JSX.Element {
+	return (
+		<SoundProvider>
+			<GameProvider
+				loadGameAction={loadGameAction}
+				saveGameAction={saveGameAction}
+			>
+				<TycoonGameContent />
+			</GameProvider>
+		</SoundProvider>
+	);
 }
