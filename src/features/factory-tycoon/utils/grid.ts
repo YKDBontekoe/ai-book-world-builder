@@ -1,4 +1,4 @@
-import { Direction } from '../types';
+import type { Direction } from "../types";
 
 export function getTargetCoordinates(
 	x: number,

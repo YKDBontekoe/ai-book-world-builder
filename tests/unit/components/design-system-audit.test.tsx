@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { axe } from "vitest-axe";
 
 import { Button } from "@/components/atoms/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/atoms/card";
+import {
+	Card,
+	CardContent,
+	CardHeader,
+	CardTitle,
+} from "@/components/atoms/card";
 import { GlassCard } from "@/components/molecules/glass-card";
 
 describe("Design System Accessibility Audit", () => {
