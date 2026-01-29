@@ -54,10 +54,10 @@ export const WriterHeader = memo(function WriterHeader(): React.JSX.Element {
 		<TooltipProvider>
 			<header
 				className={cn(
-					"flex items-center justify-between gap-4 px-4 h-14 shrink-0 z-20 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]",
-					"border-b border-border/40 bg-background/60 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60",
+					"flex items-center justify-between gap-4 px-4 h-14 shrink-0 z-20 transition-all duration-500 ease-spring",
+					"bg-glass backdrop-blur-[50px] backdrop-saturate-150 border-b border-glass-border",
 					isZen &&
-						"opacity-0 hover:opacity-100 -mt-14 hover:mt-0 bg-background/90 border-b-border/60",
+						"opacity-0 hover:opacity-100 -mt-14 hover:mt-0",
 				)}
 			>
 				{/* LEFT: Navigation & Context */}

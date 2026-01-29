@@ -151,7 +151,7 @@ function WriterViewContent({
 			<div className="flex h-full w-full overflow-hidden bg-background">
 				{/* Left Panel: Sidebar (20%) - matches skeleton */}
 				{!isZen && isSidebarOpen && (
-					<div className="w-[20%] min-w-[250px] border-r bg-muted/10 flex flex-col hidden md:flex">
+					<div className="w-[20%] min-w-[250px] border-r border-sidebar-border bg-sidebar flex flex-col hidden md:flex">
 						<WriterSidebar />
 					</div>
 				)}
