@@ -52,6 +52,12 @@ A step-by-step wizard to go from concept to draft:
 - **Entity Management**: Organize your world's lore in a structured database.
 - **Productivity Tools**: Built-in sprint timer, daily goals, and session analytics.
 
+### 🤖 Software Builder (Admin)
+An autonomous agent interface for software development:
+- **Issue Tracking**: Import issues directly from GitHub.
+- **Planning**: AI agent analyzes requirements and proposes implementation plans.
+- **Execution**: Automatically generates code, runs tests, and opens Pull Requests.
+
 ### 🏭 Factory Tycoon
 - **Simulation**: A deterministic factory building minigame.
 - **Supply Chain**: Manage resources from ore to cash.

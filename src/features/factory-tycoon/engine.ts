@@ -33,7 +33,7 @@ export function simulateTick(currentState: GameState): GameState {
   const remainingSpace = nextState.capacity - currentTotalVolume;
 
   // 1. Run Production (Mines, Smelters, Factories)
-  // They consume inputs and produce items, checking against remainingSpace.
+  // Consumes inputs and produces items, checking against remainingSpace.
   const productionResult = runProductionSystem(
       sortedBuildings, 
       nextState.inventory, 
@@ -41,18 +41,10 @@ export function simulateTick(currentState: GameState): GameState {
   );
 
   // 2. Run Market
-  // They consume items (freeing up space implicitly for next tick, but not for this tick's production phase)
-  // We pass the *original* inventory to Market too, or should we pass the one modified by production?
-  // Use Case: If I have 1 Ore, and Smelter consumes it, Market shouldn't be able to sell it if it was an item.
-  // But Markets sell Gadgets. Production produces Gadgets.
-  // Standard Tycoon Logic: Systems run in phases. 
-  // Let's assume Market runs on the state *after* production consumption? 
-  // Or parallel?
-  // Parallel is safer for determinism on limited resources: "Snapshot Isolation".
-  // Both see the `currentState.inventory`. If they compete for the same input, we have a race condition.
-  // BUT: Smelters consume Ore/Ingot. Markets consume Gadgets. They don't compete for the same resource keys in this MVP.
-  // So Parallel is fine.
-  
+  // Consumes end-products (Gadgets) to generate cash.
+  // Note: Market runs in parallel with Production using the same inventory snapshot.
+  // This "Snapshot Isolation" ensures determinism.
+  // Since Production consumes Ore/Ingot and Market consumes Gadgets, there is no resource contention.
   const marketResult = runMarketSystem(
       sortedBuildings,
       nextState.inventory
