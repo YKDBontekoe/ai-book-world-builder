@@ -42,3 +42,8 @@
 **Vulnerability:** `updateSceneCard` allowed updating scene details via `sceneId` without verifying `projectId`, enabling IDOR if the caller (like `updateSceneChronology`) didn't enforce ownership at the DB layer.
 **Learning:** Checking ownership at the service layer/action is insufficient if the underlying DB query functions allow unscoped access.
 **Prevention:** Always include `projectId` (or parent resource ID) in the `WHERE` clause of database update queries, even if valid IDs are provided.
+
+## 2026-01-28 - [Entity Repository IDOR]
+**Vulnerability:** `EntityRepository` update and delete methods allowed operations on entities by ID alone, trusting the service layer's check.
+**Learning:** Database repositories must support and enforce ownership scoping as a defense-in-depth measure. Relying solely on service-layer checks leaves a gap if those checks are bypassed or flawed.
+**Prevention:** Extend repository methods to accept an optional parent ID (e.g., `projectId`) and strictly scope `WHERE` clauses to that parent ID when provided.
