@@ -4,7 +4,7 @@ import { getProjectStructure } from "@/features/writer/actions";
 import { WriterProvider } from "@/features/writer/components/writer-context";
 import { WriterSidebar } from "@/features/writer/components/writer-sidebar";
 import type { Project } from "@/lib/db/schema";
-import type { ChapterWithScenes } from "@/lib/types";
+import type { ChapterWithScenes, SceneWithPrev } from "@/lib/types";
 
 // Mock Server Actions
 vi.mock("@/features/writer/actions", () => ({
@@ -60,14 +60,15 @@ window.HTMLElement.prototype.scrollIntoView = vi.fn();
 describe("WriterSidebar Integration", () => {
 	const mockProject: Project = {
 		id: "p1",
-		title: "Test Project",
+		name: "Test Project",
 		createdAt: new Date(),
-		updatedAt: new Date(),
 		userId: "u1",
-		wordCount: 0,
-		status: "active",
+		description: null,
+		visibility: "private",
+		folders: [],
+		forkedFromId: null,
 		lastViewedSceneId: null,
-	} as any;
+	};
 
 	const mockStructure: ChapterWithScenes[] = [
 		{
@@ -94,14 +95,14 @@ describe("WriterSidebar Integration", () => {
 					prevSceneId: null,
 					content: "Content",
 					wordCount: 100,
-				},
+				} as SceneWithPrev,
 			],
 		},
 	];
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: mockStructure,
@@ -131,7 +132,7 @@ describe("WriterSidebar Integration", () => {
 	});
 
 	it("handles empty structure", async () => {
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: [],

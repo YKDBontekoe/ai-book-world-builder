@@ -1,6 +1,5 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import { motion } from "framer-motion";
 import {
 	Activity,
@@ -16,20 +15,17 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { twMerge } from "tailwind-merge";
 import { Badge } from "@/components/atoms/badge";
 import { Button } from "@/components/atoms/button";
 import { Card, CardContent } from "@/components/atoms/card";
 import { Progress } from "@/components/atoms/progress";
 import { ScrollArea } from "@/components/atoms/scroll-area";
+import { cn } from "@/lib/utils";
 import { RESOURCE_VALUES } from "../config";
 import { useGame } from "../store";
+import type { BuildingEntity, GameState } from "../types";
 import { GameSettings } from "./GameSettings";
 import { ResearchModal } from "./ResearchModal";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
 	ore: { icon: "/images/factory-tycoon/ore.png", color: "text-amber-600" },
@@ -222,9 +218,9 @@ function InventorySection({
 	lastTickDelta,
 	onSell,
 }: {
-	inventory: Record<string, number>;
-	lastTickDelta: Record<string, number>;
-	onSell: (res: any) => void;
+	inventory: GameState["inventory"];
+	lastTickDelta: GameState["lastTickDelta"];
+	onSell: (res: keyof GameState["inventory"]) => void;
 }) {
 	return (
 		<div className="space-y-2">
@@ -303,7 +299,7 @@ function InventorySection({
 	);
 }
 
-function StatsFooter({ buildings }: { buildings: any[] }) {
+function StatsFooter({ buildings }: { buildings: BuildingEntity[] }) {
 	const running = buildings.filter((b) => b.status === "RUNNING").length;
 	const starved = buildings.filter((b) => b.status === "STARVED").length;
 	const blocked = buildings.filter((b) => b.status === "BLOCKED").length;

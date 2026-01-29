@@ -164,7 +164,6 @@ function gameReducer(state: GameState, action: Action): GameState {
 			const building = state.buildings[buildingIndex];
 			const config = BUILDINGS[building.type];
 			const newInventory = { ...state.inventory };
-			const interacted = false;
 
 			// 1. Belt Pickup (Single Item)
 			if (

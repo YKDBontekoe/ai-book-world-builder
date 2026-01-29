@@ -9,24 +9,30 @@ vi.mock("@vercel/blob", () => ({
 
 // Mock pdfkit
 vi.mock("pdfkit", () => {
+	// Create a class to ensure it can be instantiated with 'new'
+	class MockPDFDocument {
+		handlers: Record<string, (...args: unknown[]) => void> = {};
+
+		on = vi.fn((event: string, cb: (...args: unknown[]) => void) => {
+			this.handlers[event] = cb;
+			return this;
+		});
+
+		registerFont = vi.fn().mockReturnThis();
+		fontSize = vi.fn().mockReturnThis();
+		font = vi.fn().mockReturnThis();
+		text = vi.fn().mockReturnThis();
+		moveDown = vi.fn().mockReturnThis();
+		addPage = vi.fn().mockReturnThis();
+
+		end = vi.fn(() => {
+			if (this.handlers["end"]) this.handlers["end"]();
+			return this;
+		});
+	}
+
 	return {
-		default: vi.fn().mockImplementation(() => {
-			const handlers: Record<string, Function> = {};
-			return {
-				on: vi.fn((event, cb) => {
-					handlers[event] = cb;
-				}),
-				registerFont: vi.fn(),
-				fontSize: vi.fn().mockReturnThis(),
-				font: vi.fn().mockReturnThis(),
-				text: vi.fn().mockReturnThis(),
-				moveDown: vi.fn().mockReturnThis(),
-				addPage: vi.fn().mockReturnThis(),
-				end: vi.fn(() => {
-					if (handlers["end"]) handlers["end"]();
-				}),
-			};
-		}),
+		default: MockPDFDocument,
 	};
 });
 
@@ -37,10 +43,24 @@ describe("book-exporter security", () => {
 
 	it("uses a secure filename with UUID (IDOR protection)", async () => {
 		const projectData = {
-			project: { name: "My Secret Book" },
+			project: {
+				name: "My Secret Book",
+				id: "p1",
+				userId: "u1",
+				createdAt: new Date(),
+				description: null,
+				visibility: "private",
+				folders: [],
+				forkedFromId: null,
+				lastViewedSceneId: null,
+			},
 			generation: null,
 			volumes: [],
-		} as any;
+			entities: [],
+			attributes: [],
+			relationships: [],
+			outlines: [],
+		} satisfies Parameters<typeof exportBook>[0];
 
 		await exportBook(projectData, "pdf");
 

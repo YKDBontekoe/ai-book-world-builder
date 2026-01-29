@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { INITIAL_STATE } from "../../../src/features/factory-tycoon/config";
 import { runTransportSystem } from "../../../src/features/factory-tycoon/systems/transportSystem";
 import type {
@@ -105,6 +105,9 @@ describe("Transport System", () => {
 	});
 
 	it("Splitter distributes items", () => {
+		// Mock Math.random to be deterministic (0.25 < 0.5 means try first output first)
+		const randomSpy = vi.spyOn(Math, "random").mockReturnValue(0.25);
+
 		// Splitter at (0,0) facing North. Inputs: from South (0,1). Outputs: West (-1,0) and East (1,0) (based on our simplified logic or standard Factorio logic?)
 		// Our logic said: Left and Right. If Facing N: Left is W, Right is E.
 
@@ -150,12 +153,6 @@ describe("Transport System", () => {
 		// Tick 1: One item should move to one side
 		const nextState = runTransportSystem(state);
 
-		// Tick 2: Second item should try other side (randomized in current impl, so we can't guarantee distinct split in 2 ticks deterministically if it uses Math.random)
-		// Wait, current impl uses `Math.random`?
-		// "const tryOrder = Math.random() > 0.5 ? [out1, out2] : [out2, out1];"
-		// Yes. So we can't test strict 50/50 distribution easily without mocking Math.random.
-		// But we can check that it moves somewhere.
-
 		const nextSplitter = nextState.buildings.find((b) => b.id === "s1");
 		const nextLeft = nextState.buildings.find((b) => b.id === "bl");
 		const nextRight = nextState.buildings.find((b) => b.id === "br");
@@ -166,5 +163,7 @@ describe("Transport System", () => {
 
 		expect(totalOut + remaining).toBe(2);
 		expect(totalOut).toBeGreaterThan(0); // Should have moved at least one
+
+		randomSpy.mockRestore();
 	});
 });

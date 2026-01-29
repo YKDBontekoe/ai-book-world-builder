@@ -70,9 +70,16 @@ describe("ChapterActions", () => {
 	it("handles successful generation flow", async () => {
 		const user = userEvent.setup();
 
+		type PlanReturn = Awaited<
+			ReturnType<typeof storyGenerationActions.planChapterScenes>
+		>;
+		type GenerateReturn = Awaited<
+			ReturnType<typeof storyGenerationActions.generateSceneText>
+		>;
+
 		// 1. Mock plan with delay
 		vi.mocked(storyGenerationActions.planChapterScenes).mockImplementation(
-			async () => {
+			async (): Promise<PlanReturn> => {
 				await new Promise((resolve) => setTimeout(resolve, 300));
 				return {
 					success: true,
@@ -80,18 +87,18 @@ describe("ChapterActions", () => {
 						success: true,
 						sceneIds: ["scene-1", "scene-2"],
 					},
-				} as any;
+				};
 			},
 		);
 
 		// 2. Mock scene generation with delay
 		vi.mocked(storyGenerationActions.generateSceneText).mockImplementation(
-			async () => {
+			async (): Promise<GenerateReturn> => {
 				await new Promise((resolve) => setTimeout(resolve, 300));
 				return {
 					success: true,
 					data: { success: true },
-				} as any;
+				};
 			},
 		);
 
@@ -144,7 +151,7 @@ describe("ChapterActions", () => {
 		vi.mocked(storyGenerationActions.planChapterScenes).mockResolvedValue({
 			success: false,
 			error: "Planning failed miserably",
-		} as any);
+		});
 
 		render(<ChapterActions {...defaultProps} />);
 
@@ -168,18 +175,18 @@ describe("ChapterActions", () => {
 				success: true,
 				sceneIds: ["scene-1", "scene-2"],
 			},
-		} as any);
+		});
 
 		// Mock first scene fails, second succeeds
 		vi.mocked(storyGenerationActions.generateSceneText)
 			.mockResolvedValueOnce({
 				success: false,
 				error: "Generation error",
-			} as any)
+			})
 			.mockResolvedValueOnce({
 				success: true,
 				data: { success: true },
-			} as any);
+			});
 
 		render(<ChapterActions {...defaultProps} />);
 

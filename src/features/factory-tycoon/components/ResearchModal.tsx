@@ -17,7 +17,7 @@ export function ResearchModal({
 }: {
 	isOpen: boolean;
 	onClose: () => void;
-}) {
+}): JSX.Element | null {
 	const { state, researchTech } = useGame();
 
 	if (!isOpen) return null;
