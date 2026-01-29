@@ -10,23 +10,36 @@ vi.mock("@vercel/blob", () => ({
 // Mock pdfkit
 vi.mock("pdfkit", () => {
 	return {
-		default: vi.fn().mockImplementation(() => {
-			const handlers: Record<string, Function> = {};
-			return {
-				on: vi.fn((event, cb) => {
-					handlers[event] = cb;
-				}),
-				registerFont: vi.fn(),
-				fontSize: vi.fn().mockReturnThis(),
-				font: vi.fn().mockReturnThis(),
-				text: vi.fn().mockReturnThis(),
-				moveDown: vi.fn().mockReturnThis(),
-				addPage: vi.fn().mockReturnThis(),
-				end: vi.fn(() => {
-					if (handlers["end"]) handlers["end"]();
-				}),
-			};
-		}),
+		default: class PDFDocument {
+			private handlers: Record<string, Function> = {};
+
+			constructor() {}
+
+			on(event: string, cb: Function) {
+				this.handlers[event] = cb;
+			}
+			registerFont() {
+				return this;
+			}
+			fontSize() {
+				return this;
+			}
+			font() {
+				return this;
+			}
+			text() {
+				return this;
+			}
+			moveDown() {
+				return this;
+			}
+			addPage() {
+				return this;
+			}
+			end() {
+				if (this.handlers["end"]) this.handlers["end"]();
+			}
+		},
 	};
 });
 

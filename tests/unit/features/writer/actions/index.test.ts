@@ -7,6 +7,12 @@ Object.defineProperty(global, "crypto", {
 	},
 });
 
+// Mock @vercel/blob (must be before imports)
+vi.mock("@vercel/blob", () => ({
+	list: vi.fn().mockResolvedValue({ blobs: [] }),
+	put: vi.fn().mockResolvedValue({ url: "https://fake-url.com/file.pdf" }),
+}));
+
 vi.mock("@/lib/db", () => {
 	const mockChapter = {
 		id: "123e4567-e89b-12d3-a456-426614174001",
@@ -15,75 +21,15 @@ vi.mock("@/lib/db", () => {
 		notes: "Notes",
 	};
 
-	// Helper factories for query chains
-	const _createChapterQuery = () => ({
-		from: () => ({
-			where: () => ({
-				limit: () => Promise.resolve([mockChapter]),
-			}),
-		}),
-	});
-
-	const _createSequenceQuery = () => ({
-		from: () => ({
-			where: () => Promise.resolve([{ max: 2 }]),
-		}),
-	});
-
-	const _createSceneQuery = () => ({
-		from: () => ({
-			where: () => Promise.resolve([{ id: "scene-1", sequence: 1 }]),
-		}),
-	});
-
-	// Main select mock that routes based on usage context if possible,
-	// or we can just return a merged object if we can't distinguish.
-	// However, the prompt asks for explicit per-call or distinct mock objects.
-	// Since `generateScene` calls `db.select` multiple times (chapter, max sequence, prev scene),
-	// we can use `mockImplementationOnce` in the test setup or here.
-	// But since this is a global mock factory, we'll try to make it robust.
-
-	// A simplified robust mock that returns a chainable object capable of handling the specific calls in generateScene
-	const _mockSelect = vi.fn(() => ({
-		from: (_table: any) => {
-			return {
-				where: () => {
-					return {
-						// For `limit(1)` which is used for chapter fetch
-						limit: () => Promise.resolve([mockChapter]),
-						// For `orderBy` which might be used (though removed in favor of repo in generateScene?)
-						// Actually generateScene uses repository for finding scenes context,
-						// but uses transaction for max sequence and prev scene.
-						// Max sequence query: select({ max: ... }).from(scene).where(...) -> returns array
-						// So `where` needs to be awaitable/thenable? Drizzle queries are thenable.
-						// biome-ignore lint/suspicious/noThenProperty: Mocking Promise-like interface
-						then: (resolve: any) => {
-							// If it's the max sequence query (mock heuristic)
-							// It's hard to distinguish without inspecting arguments.
-							// For simplicity in this unit test, let's return a superset or default.
-							resolve([{ max: 1 }]);
-						},
-						// For finding specific scene (prevScene)
-						// It returns [mockScene]
-					};
-				},
-			};
-		},
-	}));
-
-	// Let's refine mockSelect to use `mockImplementation` so we can control it from the test if needed,
-	// or just make the default implementation handle the known paths.
-	// The prompt specifically requested removing the fragile branching.
-	// We will use a factory that returns a builder.
-
 	const builder = {
 		from: vi.fn().mockReturnThis(),
 		where: vi.fn().mockReturnThis(),
 		limit: vi.fn().mockResolvedValue([mockChapter]),
 		orderBy: vi.fn().mockResolvedValue([]),
+		leftJoin: vi.fn().mockReturnThis(), // Added for semantic cache query
 		// Promise interface
 		// biome-ignore lint/suspicious/noThenProperty: Mocking Promise-like interface
-		then: (resolve: any) => resolve([{ max: 1 }]), // Default for max sequence
+		then: (resolve: any) => resolve([{ max: 1 }]),
 	};
 
 	const mockSelectFn = vi.fn(() => builder);
