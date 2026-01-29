@@ -3,7 +3,6 @@
 import { useCallback } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import { exportProject } from "@/features/writer/actions";
 import { ActiveSceneEditor } from "@/features/writer/components/editor-states/active-scene-editor";
 import { WriterEmptyState } from "@/features/writer/components/editor-states/writer-empty-state";
 import { TimeTravelControls } from "@/features/writer/components/time-travel-controls";
@@ -15,6 +14,7 @@ import { useWriterControl } from "@/features/writer/components/writer-control-co
 import { WriterHeader } from "@/features/writer/components/writer-header";
 import { useWriterLayoutContext } from "@/features/writer/components/writer-layout-context";
 import { useSceneOperations } from "@/features/writer/hooks/use-scene-operations";
+import { exportProjectToClipboard } from "@/features/writer/utils/export-utils";
 import { useEditorHistory } from "@/hooks/use-editor-history";
 
 export function WriterEditor() {
@@ -82,18 +82,7 @@ export function WriterEditor() {
 		"mod+shift+e",
 		async (e) => {
 			e.preventDefault();
-			const toastId = toast.loading("Exporting project...");
-			try {
-				const result = await exportProject(project.id);
-				if (result.success && result.content) {
-					await navigator.clipboard.writeText(result.content);
-					toast.success("Project exported to clipboard", { id: toastId });
-				} else {
-					toast.error(result.error || "Failed to export", { id: toastId });
-				}
-			} catch (_error) {
-				toast.error("Error exporting project", { id: toastId });
-			}
+			await exportProjectToClipboard(project.id);
 		},
 		{ enableOnFormTags: true, description: "Export Project" },
 		[project.id],

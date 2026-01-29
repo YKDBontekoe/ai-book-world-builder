@@ -3,7 +3,6 @@
 import { Download, History, Loader2, Sparkles } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { toast } from "sonner";
 import { Button } from "@/components/atoms/button";
 import {
 	Popover,
@@ -11,12 +10,12 @@ import {
 	PopoverTrigger,
 } from "@/components/atoms/popover";
 import { Separator } from "@/components/atoms/separator";
-import { exportProject } from "@/features/writer/actions";
 import { SessionInsights } from "@/features/writer/components/tools/session-insights";
 import { SprintWidget } from "@/features/writer/components/tools/sprint-widget";
 import { WritingGoals } from "@/features/writer/components/tools/writing-goals";
 import { useWriterContent } from "@/features/writer/components/writer-content-context";
 import { useWriterContext } from "@/features/writer/components/writer-context";
+import { exportProjectToClipboard } from "@/features/writer/utils/export-utils";
 
 interface SnapshotButtonProps {
 	onClick: () => void;
@@ -49,20 +48,8 @@ export function WriterToolsMenu(): React.ReactElement {
 
 	const handleExport = async () => {
 		setIsExporting(true);
-		const toastId = toast.loading("Exporting project...");
-		try {
-			const result = await exportProject(project.id);
-			if (result.success && result.content) {
-				await navigator.clipboard.writeText(result.content);
-				toast.success("Project exported to clipboard", { id: toastId });
-			} else {
-				toast.error(result.error || "Failed to export", { id: toastId });
-			}
-		} catch (_error) {
-			toast.error("Error exporting project", { id: toastId });
-		} finally {
-			setIsExporting(false);
-		}
+		await exportProjectToClipboard(project.id);
+		setIsExporting(false);
 	};
 
 	return (

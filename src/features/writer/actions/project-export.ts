@@ -5,7 +5,15 @@ import { ensureProjectAccess } from "@/lib/actions-utils";
 import { db } from "@/lib/db";
 import { chapter, scene } from "@/lib/db/schema";
 
-export async function exportProject(projectId: string) {
+export interface ExportResult {
+	success: boolean;
+	content?: string;
+	error?: string;
+}
+
+export async function exportProject(
+	projectId: string,
+): Promise<ExportResult> {
 	try {
 		await ensureProjectAccess(projectId);
 
@@ -38,9 +46,6 @@ export async function exportProject(projectId: string) {
 		for (const ch of chapters) {
 			content += `# ${ch.title}\n\n`;
 			const chScenes = scenesByChapter.get(ch.id) || [];
-
-            // Re-sort in memory to be sure
-            chScenes.sort((a, b) => a.sequence - b.sequence);
 
 			for (const sc of chScenes) {
 				content += `## ${sc.title}\n\n`;
