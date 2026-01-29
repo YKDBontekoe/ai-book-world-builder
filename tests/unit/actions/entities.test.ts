@@ -147,12 +147,16 @@ describe("entities server actions", () => {
 			entity.projectId,
 			userId,
 		);
-		expect(mockedUpdate).toHaveBeenCalledWith(entity.id, {
-			name: updatedEntity.name,
-			kind: undefined,
-			summary: undefined,
-			attributes: undefined,
-		});
+		expect(mockedUpdate).toHaveBeenCalledWith(
+			entity.id,
+			{
+				name: updatedEntity.name,
+				kind: undefined,
+				summary: undefined,
+				attributes: undefined,
+			},
+			projectId,
+		);
 		expect(result.name).toBe(updatedEntity.name);
 		expect(result.updatedAt).toBe(updatedEntity.updatedAt.toISOString());
 	});
@@ -199,7 +203,7 @@ describe("entities server actions", () => {
 
 		unwrap(await deleteEntityAction({ id: entity.id }));
 
-		expect(mockedDelete).toHaveBeenCalledWith(entity.id);
+		expect(mockedDelete).toHaveBeenCalledWith(entity.id, projectId);
 		expect(mockedRevalidatePath).toHaveBeenCalledWith("/(chat)", "page");
 	});
 

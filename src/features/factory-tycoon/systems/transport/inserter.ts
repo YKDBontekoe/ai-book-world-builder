@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
-import { BUILDINGS } from '../../config';
 import { BeltItem, BuildingEntity, Resource } from '../../types';
 import { getTargetCoordinates, getOppositeDir } from '../../utils/grid';
+import { tryPushItemToTarget } from './utils';
 
 export function processInserter(
 	inserter: BuildingEntity,
@@ -25,34 +25,9 @@ export function processInserter(
 			const target = map.get(`${targetCoords.x},${targetCoords.y}`);
 
 			if (target) {
-				let placed = false;
-				if (target.type === "Belt" || target.type === "Splitter") {
-					if (!target.beltItems) target.beltItems = [];
-					const lastItem =
-						target.beltItems.length > 0
-							? target.beltItems[target.beltItems.length - 1]
-							: null;
-					if (!lastItem || lastItem.position > 0.3) {
-						inserter.holdingItem.position = 0;
-						target.beltItems.push(inserter.holdingItem);
-						inserter.holdingItem = undefined;
-						placed = true;
-					}
-				} else {
-					const config = BUILDINGS[target.type];
-					const accepts =
-						target.type === "Warehouse" ||
-						config.inputs?.[inserter.holdingItem.resource];
-					if (accepts) {
-						if (!target.localInventory) target.localInventory = {};
-						target.localInventory[inserter.holdingItem.resource] =
-							(target.localInventory[inserter.holdingItem.resource] || 0) + 1;
-						inserter.holdingItem = undefined;
-						placed = true;
-					}
-				}
-
-				if (placed) {
+				// Use helper with allowWarehouse=true
+				if (tryPushItemToTarget(target, inserter.holdingItem, true)) {
+					inserter.holdingItem = undefined;
 					inserter.status = "RUNNING";
 					return;
 				}
