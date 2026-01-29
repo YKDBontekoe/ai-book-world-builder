@@ -374,3 +374,23 @@ The codebase remains compliant with strict TypeScript standards, including test 
 ### Learnings
 
 - Tests are first-class citizens and must adhere to the same strict type safety rules as source code; avoid `any` in mocks by using `React.ComponentProps<typeof Component>`.
+
+## 2026-01-29 - Robust verification scripts and standardized tokens
+
+### Context
+
+Verification scripts using hardcoded paths and generic exception handling were brittle, and UI components used manual CSS tokens instead of standardized utilities.
+
+### Solution
+
+Refactored `verify_writer_ui.py` to use `argparse` for configuration and `playwright.sync_api.Error` for precise error handling. Replaced manual CSS classes in `WriterHeader` with the standardized `.glass` utility.
+
+### Outcome
+
+The verification script is now reusable in different environments, and the UI component adheres to the project's design system source of truth.
+
+### Learnings
+
+- Verification scripts should always be configurable (URL, paths) via CLI arguments to support different environments.
+- Use specific exception handling (`playwright.sync_api.Error`) in Playwright scripts to distinguish actual test failures from script bugs.
+- Always prefer standardized utility classes (like `.glass`) over manual token replication to maintain consistency.
