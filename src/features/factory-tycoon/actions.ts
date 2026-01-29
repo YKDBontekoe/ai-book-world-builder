@@ -20,18 +20,20 @@ export async function saveGameState(state: GameState): Promise<void> {
 		where: eq(factoryTycoonSaves.userId, userId),
 	});
 
+	const statePayload = state as typeof factoryTycoonSaves.$inferInsert.state;
+
 	if (existingSave) {
 		await db
 			.update(factoryTycoonSaves)
 			.set({
-				state,
+				state: statePayload,
 				updatedAt: new Date(),
 			})
 			.where(eq(factoryTycoonSaves.id, existingSave.id));
 	} else {
 		await db.insert(factoryTycoonSaves).values({
 			userId,
-			state,
+			state: statePayload,
 		});
 	}
 }

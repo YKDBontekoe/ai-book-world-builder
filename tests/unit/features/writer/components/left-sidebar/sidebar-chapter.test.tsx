@@ -1,6 +1,10 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { type ComponentProps, type PropsWithChildren } from "react";
+import {
+	type ComponentProps,
+	type PropsWithChildren,
+	type ReactNode,
+} from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Accordion } from "@/components/atoms/accordion";
 import { SceneItem } from "@/features/writer/components/left-sidebar/scene-item";
@@ -20,9 +24,7 @@ vi.mock("@/components/atoms/context-menu", () => ({
 		children,
 		onClick,
 	}: PropsWithChildren<{ onClick?: () => void }>) => (
-		<button type="button" onClick={onClick}>
-			{children}
-		</button>
+		<button onClick={onClick}>{children}</button>
 	),
 	ContextMenuSeparator: () => <hr />,
 }));
@@ -39,21 +41,10 @@ vi.mock("@/features/writer/components/left-sidebar/scene-item", () => ({
 	}: ComponentProps<typeof SceneItem>) => (
 		<div data-testid={`scene-item-${scene.id}`}>
 			<span>{scene.title}</span>
-			<button type="button" onClick={() => onSelect?.(scene.id)}>
-				Select
-			</button>
-			<button
-				type="button"
-				onClick={() => onRename?.(scene.id, "New Title")}
-			>
-				Rename
-			</button>
-			<button type="button" onClick={() => onDelete?.(scene.id)}>
-				Delete
-			</button>
-			<button type="button" onClick={() => onToggleSelect?.(scene.id)}>
-				Toggle Select
-			</button>
+			<button onClick={() => onSelect?.(scene.id)}>Select</button>
+			<button onClick={() => onRename?.(scene.id, "New Title")}>Rename</button>
+			<button onClick={() => onDelete?.(scene.id)}>Delete</button>
+			<button onClick={() => onToggleSelect?.(scene.id)}>Toggle Select</button>
 			{isSelected && <span>Selected</span>}
 		</div>
 	),

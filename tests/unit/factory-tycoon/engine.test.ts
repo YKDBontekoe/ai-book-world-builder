@@ -192,4 +192,26 @@ describe("Factory Tycoon Engine", () => {
 		expect(nextState.inventory.ingot).toBe(0);
 		expect(nextState.science).toBe(1);
 	});
+
+	it("Warehouse objects are cloned before mutation to preserve immutability", () => {
+		const warehouse: BuildingEntity = {
+			id: "W1",
+			type: "Warehouse",
+			x: 0,
+			y: 0,
+			status: "IDLE",
+			direction: "N",
+		};
+		const state: GameState = {
+			...INITIAL_STATE,
+			buildings: [warehouse],
+		};
+
+		// Ensure nextState has a new object reference
+		const nextState = simulateTick(state);
+
+		expect(nextState.buildings[0]).not.toBe(warehouse); // Reference check
+		expect(nextState.buildings[0].id).toBe(warehouse.id);
+		expect(nextState.buildings[0].status).toBe("IDLE");
+	});
 });
