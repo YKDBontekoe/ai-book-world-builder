@@ -147,8 +147,14 @@ export function useSceneOperations({
 	const handleCreateSceneManually = useCallback(
 		async (chapterId: string) => {
 			const toastId = toast.loading("Creating scene...");
+
+			// Smart Scene Naming
+			const chapter = structure?.find((c) => c.id === chapterId);
+			const sceneCount = chapter?.scenes.length || 0;
+			const smartTitle = `Scene ${sceneCount + 1}`;
+
 			try {
-				const result = await createSceneInChapter(chapterId, "New Scene");
+				const result = await createSceneInChapter(chapterId, smartTitle);
 				if (result.success && result.sceneId) {
 					toast.success("Scene created", { id: toastId });
 					onStructureUpdate?.();
@@ -163,7 +169,7 @@ export function useSceneOperations({
 				toast.error("Error creating scene", { id: toastId });
 			}
 		},
-		[onStructureUpdate, onSceneSelect],
+		[onStructureUpdate, onSceneSelect, structure],
 	);
 
 	const handleRenameScene = useCallback(
