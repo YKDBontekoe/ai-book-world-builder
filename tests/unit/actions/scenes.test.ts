@@ -1,4 +1,12 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	type MockInstance,
+	vi,
+} from "vitest";
 
 // Use vi.hoisted to share mock state across different imports
 const {
@@ -97,7 +105,14 @@ function buildScene(overrides?: Partial<Scene>): Scene {
 }
 
 describe("scenes server actions", () => {
+	let consoleErrorSpy: MockInstance<Console["error"]>;
+
+	beforeEach(() => {
+		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+	});
+
 	afterEach(() => {
+		consoleErrorSpy.mockRestore();
 		vi.clearAllMocks();
 	});
 

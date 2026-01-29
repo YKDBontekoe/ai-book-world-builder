@@ -5,6 +5,7 @@ import {
 	expect,
 	it,
 	type Mock,
+	type MockInstance,
 	vi,
 } from "vitest";
 import * as chapterActions from "@/features/writer/actions/chapter";
@@ -69,9 +70,12 @@ describe("Chapter Actions", () => {
 	const volumeId = "123e4567-e89b-12d3-a456-426614174002";
 
 	let mockChain: MockChain;
+	let consoleErrorSpy: MockInstance<Console["error"]>;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
 		(ensureProjectAccess as Mock).mockResolvedValue({
 			project: { id: projectId },
 			user: { id: "user-123" },
@@ -101,6 +105,7 @@ describe("Chapter Actions", () => {
 	});
 
 	afterEach(() => {
+		consoleErrorSpy.mockRestore();
 		vi.restoreAllMocks();
 	});
 
