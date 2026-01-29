@@ -1,3 +1,4 @@
+import throttle from "lodash/throttle";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export function useScrollToBottom() {
@@ -39,15 +40,19 @@ export function useScrollToBottom() {
 
 		let scrollTimeout: ReturnType<typeof setTimeout>;
 
+		const checkAtBottomThrottled = throttle(() => {
+			const atBottom = checkIfAtBottom();
+			setIsAtBottom(atBottom);
+			isAtBottomRef.current = atBottom;
+		}, 100);
+
 		const handleScroll = () => {
 			// Mark as user scrolling
 			isUserScrollingRef.current = true;
 			clearTimeout(scrollTimeout);
 
-			// Update isAtBottom state
-			const atBottom = checkIfAtBottom();
-			setIsAtBottom(atBottom);
-			isAtBottomRef.current = atBottom;
+			// Check if at bottom (throttled)
+			checkAtBottomThrottled();
 
 			// Reset user scrolling flag after scroll ends
 			scrollTimeout = setTimeout(() => {
@@ -59,6 +64,7 @@ export function useScrollToBottom() {
 		return () => {
 			container.removeEventListener("scroll", handleScroll);
 			clearTimeout(scrollTimeout);
+			checkAtBottomThrottled.cancel();
 		};
 	}, [checkIfAtBottom]);
 
