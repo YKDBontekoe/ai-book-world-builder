@@ -61,7 +61,7 @@ export function ReaderControls({
 						initial={{ opacity: 0, y: -50 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: -50 }}
-						className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-b p-4 flex items-center justify-between"
+						className="fixed z-50 flex items-center justify-between glass-panel shadow-lg transition-all duration-300 top-0 left-0 right-0 p-4 border-b md:top-6 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-auto md:min-w-[400px] md:rounded-full md:px-6 md:py-3 md:border"
 					>
 						<Button variant="ghost" size="icon" onClick={() => router.back()}>
 							<ArrowLeft className="h-5 w-5" />
@@ -79,7 +79,7 @@ export function ReaderControls({
 						initial={{ opacity: 0, y: 50 }}
 						animate={{ opacity: 1, y: 0 }}
 						exit={{ opacity: 0, y: 50 }}
-						className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur border-t p-6 pb-8 space-y-6"
+						className="fixed z-50 glass-panel shadow-2xl space-y-6 transition-all duration-300 bottom-0 left-0 right-0 border-t p-6 pb-8 md:bottom-8 md:left-1/2 md:right-auto md:-translate-x-1/2 md:w-[600px] md:rounded-2xl md:p-8 md:border"
 					>
 						{/* Navigation (Mobile mostly) */}
 						<div className="flex items-center justify-between lg:hidden mb-4">
