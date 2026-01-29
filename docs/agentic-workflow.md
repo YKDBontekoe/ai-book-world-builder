@@ -49,4 +49,5 @@ Simplified AI-driven CI/CD workflow for AI Book World Builder.
 | File | Purpose |
 |------|---------|
 | `.github/workflows/agentic-supervisor.yml` | Main workflow |
-| `.github/scripts/supervisor.ts` | Decision logic |
+| `.github/scripts/supervisor/` | Decision logic modules |
+| `.github/scripts/invoke-jules.ts` | Jules API Client |
