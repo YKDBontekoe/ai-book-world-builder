@@ -22,8 +22,13 @@ export function GameSettings({ isOpen, onClose }: { isOpen: boolean; onClose: ()
   const handleReset = async () => {
     if (confirm('Are you sure? This will wipe your save file forever.')) {
         try {
-            await saveGameState(INITIAL_STATE);
-            window.location.reload();
+            const result = await saveGameState(INITIAL_STATE);
+            if (result.success) {
+                window.location.reload();
+            } else {
+                toast.error('Failed to reset game');
+                console.error(result.error);
+            }
         } catch {
             toast.error('Failed to reset game');
         }
