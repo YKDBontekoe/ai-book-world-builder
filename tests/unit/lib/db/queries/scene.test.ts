@@ -54,8 +54,8 @@ vi.mock("@/lib/db", () => ({
 
 import { and } from "drizzle-orm";
 
-vi.mock("drizzle-orm", () => ({
-	and: vi.fn(),
+const ormMocks = vi.hoisted(() => ({
+	and: vi.fn().mockReturnValue("AND_CLAUSE"),
 	asc: vi.fn(),
 	desc: vi.fn(),
 	eq: vi.fn(),
@@ -64,6 +64,8 @@ vi.mock("drizzle-orm", () => ({
 		{ raw: vi.fn() },
 	),
 }));
+
+vi.mock("drizzle-orm", () => ormMocks);
 
 describe("Scene Queries", () => {
 	beforeEach(() => {
@@ -110,7 +112,8 @@ describe("Scene Queries", () => {
 			expect(mocks.update).toHaveBeenCalled();
 
 			// Verify that 'and' was called to combine the checks
-			expect(and).toHaveBeenCalled();
+			expect(ormMocks.and).toHaveBeenCalled();
+			expect(mocks.where).toHaveBeenCalledWith("AND_CLAUSE");
 		});
 	});
 });
