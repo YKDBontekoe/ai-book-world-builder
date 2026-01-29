@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
 const authMock = vi.hoisted(() => ({
 	auth: vi.fn(),
@@ -89,7 +89,10 @@ function buildEntity(overrides?: Partial<Entity>): Entity {
 }
 
 describe("entities server actions", () => {
+	let consoleSpy: MockInstance;
+
 	afterEach(() => {
+		consoleSpy?.mockRestore();
 		vi.clearAllMocks();
 	});
 
@@ -115,10 +118,12 @@ describe("entities server actions", () => {
 	});
 
 	it("throws when the project is inaccessible", async () => {
+		consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		mockedAuth.mockResolvedValue(buildSession());
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		const result = await getEntities({ projectId });
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result).toEqual({
 			success: false,
 			error: `Project not found: ${projectId}`,
@@ -158,6 +163,7 @@ describe("entities server actions", () => {
 	});
 
 	it("rejects updates when the user lacks access", async () => {
+		consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		const entity = buildEntity();
 
 		mockedAuth.mockResolvedValue(buildSession());
@@ -165,6 +171,7 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		const result = await updateEntityAction({ id: entity.id, projectId });
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result).toEqual({
 			success: false,
 			error: "Access denied to entity",
@@ -173,6 +180,7 @@ describe("entities server actions", () => {
 	});
 
 	it("rejects updates when the entity belongs to another project", async () => {
+		consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		const entity = buildEntity({ projectId: "other-project" });
 
 		mockedAuth.mockResolvedValue(buildSession());
@@ -182,6 +190,7 @@ describe("entities server actions", () => {
 		);
 
 		const result = await updateEntityAction({ id: entity.id, projectId });
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result).toEqual({
 			success: false,
 			error: "Entity does not belong to the provided project",
@@ -204,6 +213,7 @@ describe("entities server actions", () => {
 	});
 
 	it("fails deletion when the user cannot access the project", async () => {
+		consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		const entity = buildEntity();
 
 		mockedAuth.mockResolvedValue(buildSession());
@@ -211,6 +221,7 @@ describe("entities server actions", () => {
 		mockedFindByIdWithAccess.mockResolvedValue(null);
 
 		const result = await deleteEntityAction({ id: entity.id });
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result).toEqual({
 			success: false,
 			error: "Access denied to entity",
@@ -219,6 +230,7 @@ describe("entities server actions", () => {
 	});
 
 	it("VULNERABILITY FIX: rejects update when user does not own the project (even if public)", async () => {
+		consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		const entity = buildEntity();
 		// Attacker session
 		(mockedAuth as any).mockResolvedValue({
@@ -247,6 +259,7 @@ describe("entities server actions", () => {
 			projectId: entity.projectId,
 			name: "Hacked",
 		});
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result).toEqual({
 			success: false,
 			error: "Only project owner can modify entities",
@@ -256,6 +269,7 @@ describe("entities server actions", () => {
 	});
 
 	it("VULNERABILITY FIX: rejects deletion when user does not own the project (even if public)", async () => {
+		consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 		const entity = buildEntity();
 		// Attacker session
 		(mockedAuth as any).mockResolvedValue({
@@ -280,6 +294,7 @@ describe("entities server actions", () => {
 		);
 
 		const result = await deleteEntityAction({ id: entity.id });
+		expect(consoleSpy).toHaveBeenCalled();
 		expect(result).toEqual({
 			success: false,
 			error: "Only project owner can delete entities",
