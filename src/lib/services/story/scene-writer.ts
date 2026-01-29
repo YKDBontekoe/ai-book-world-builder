@@ -49,7 +49,11 @@ export class SceneWriter {
 		}
 
 		// 5. Update DB
-		await storyRepository.updateSceneContent(sceneId, result.text);
+		await storyRepository.updateSceneContent(
+			sceneId,
+			result.text,
+			targetScene.projectId,
+		);
 
 		// 6. Log Usage (Fire and forget)
 		logGenerationUsage({

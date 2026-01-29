@@ -1,6 +1,10 @@
-import { BUILDINGS, BELT_SPEED } from '../../config';
-import { BuildingEntity } from '../../types';
-import { getTargetCoordinates, getLeftDir, getRightDir } from '../../utils/grid';
+import { BELT_SPEED, BUILDINGS } from "../../config";
+import type { BuildingEntity } from "../../types";
+import {
+	getLeftDir,
+	getRightDir,
+	getTargetCoordinates,
+} from "../../utils/grid";
 
 export function processSplitter(
 	splitter: BuildingEntity,

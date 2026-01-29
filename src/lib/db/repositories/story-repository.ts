@@ -1,5 +1,5 @@
 import "server-only";
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray } from "drizzle-orm";
 import { type DbTransaction, db } from "@/lib/db";
 import {
 	chapter,
@@ -189,7 +189,11 @@ export class StoryRepository {
 		};
 	}
 
-	async updateSceneContent(sceneId: string, content: string) {
+	async updateSceneContent(
+		sceneId: string,
+		content: string,
+		projectId?: string,
+	) {
 		await db
 			.update(scene)
 			.set({
@@ -197,7 +201,11 @@ export class StoryRepository {
 				status: "drafting",
 				updatedAt: new Date(),
 			})
-			.where(eq(scene.id, sceneId));
+			.where(
+				projectId
+					? and(eq(scene.id, sceneId), eq(scene.projectId, projectId))
+					: eq(scene.id, sceneId),
+			);
 	}
 
 	/**

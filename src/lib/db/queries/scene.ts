@@ -149,10 +149,12 @@ export async function updateSceneContent({
 	sceneId,
 	content,
 	status,
+	projectId,
 }: {
 	sceneId: string;
 	content: string;
 	status?: string;
+	projectId?: string;
 }): Promise<Scene | null> {
 	try {
 		const [updated] = await db
@@ -162,7 +164,11 @@ export async function updateSceneContent({
 				status: status ?? "drafted",
 				updatedAt: new Date(),
 			})
-			.where(eq(scene.id, sceneId))
+			.where(
+				projectId
+					? and(eq(scene.id, sceneId), eq(scene.projectId, projectId))
+					: eq(scene.id, sceneId),
+			)
 			.returning();
 
 		return updated ?? null;

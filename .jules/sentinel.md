@@ -47,3 +47,8 @@
 **Vulnerability:** `EntityRepository` update and delete methods allowed operations on entities by ID alone, trusting the service layer's check.
 **Learning:** Database repositories must support and enforce ownership scoping as a defense-in-depth measure. Relying solely on service-layer checks leaves a gap if those checks are bypassed or flawed.
 **Prevention:** Extend repository methods to accept an optional parent ID (e.g., `projectId`) and strictly scope `WHERE` clauses to that parent ID when provided.
+
+## 2026-02-02 - [Legacy Query IDOR]
+**Vulnerability:** `updateSceneContent` in `src/lib/db/queries/scene.ts` duplicated logic from the repository but lacked the `projectId` ownership check, allowing IDOR via the AI writing service.
+**Learning:** Legacy query files (often in `lib/db/queries`) can bypass security improvements made in newer Repository classes. Code duplication between "Queries" and "Repositories" is a major security risk.
+**Prevention:** Audit and deprecate legacy query files. If they must exist, ensure they implement the same security checks (ownership validation in WHERE clauses) as the repositories.

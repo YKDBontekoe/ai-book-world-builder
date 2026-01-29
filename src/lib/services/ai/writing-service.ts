@@ -55,6 +55,7 @@ export const writingService = {
 						sceneId: sceneItem.id,
 						content: text,
 						status: "drafted",
+						projectId: sceneItem.projectId,
 					});
 					return true;
 				}
