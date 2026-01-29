@@ -63,7 +63,7 @@ vi.mock("@/lib/db", () => ({
 vi.mock("@/lib/cache", () => ({
 	invalidateCache: vi.fn(),
 	invalidateCachePattern: vi.fn(),
-	getCached: vi.fn((_key, fetchFn) => fetchFn()),
+	getCached: vi.fn(<T>(_key: string, fetchFn: () => Promise<T>) => fetchFn()),
 }));
 
 describe("GitHub Actions", () => {
