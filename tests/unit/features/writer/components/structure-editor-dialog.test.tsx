@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { saveProjectStructure } from "@/features/writer/actions";
 import { StructureEditorDialog } from "@/features/writer/components/structure-editor-dialog";
@@ -16,7 +17,7 @@ window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 // Mock DND kit to avoid complex setup
 vi.mock("@dnd-kit/core", () => ({
-	DndContext: ({ children }: any) => <div>{children}</div>,
+	DndContext: ({ children }: React.PropsWithChildren) => <div>{children}</div>,
 	useSensor: vi.fn(),
 	useSensors: vi.fn(),
 	PointerSensor: vi.fn(),
@@ -25,7 +26,7 @@ vi.mock("@dnd-kit/core", () => ({
 }));
 
 vi.mock("@dnd-kit/sortable", () => ({
-	SortableContext: ({ children }: any) => <div>{children}</div>,
+	SortableContext: ({ children }: React.PropsWithChildren) => <div>{children}</div>,
 	useSortable: () => ({
 		attributes: {},
 		listeners: {},
@@ -43,6 +44,20 @@ vi.mock("@dnd-kit/utilities", () => ({
 		},
 	},
 }));
+
+// Mock Framer Motion to avoid animation issues
+vi.mock("framer-motion", async () => {
+	const actual = await vi.importActual<typeof import("framer-motion")>("framer-motion");
+	return {
+		...actual,
+		motion: {
+			div: ({ children, ...props }: React.ComponentProps<"div">) => <div {...props}>{children}</div>,
+			span: ({ children, ...props }: React.ComponentProps<"span">) => <span {...props}>{children}</span>,
+			// Add other elements if needed
+		},
+		AnimatePresence: ({ children }: React.PropsWithChildren) => <>{children}</>,
+	};
+});
 
 // Mock Lucide icons
 vi.mock("lucide-react", () => ({
@@ -104,8 +119,12 @@ describe("StructureEditorDialog", () => {
 
 		await user.click(screen.getByText("Open Editor"));
 
-		expect(screen.getByText("Structure Editor")).toBeInTheDocument();
-		expect(screen.getByDisplayValue(mockStructureText)).toBeInTheDocument();
+		await waitFor(() => {
+			expect(screen.getByText("Structure Editor")).toBeInTheDocument();
+			const textarea = screen.getByRole("textbox");
+			expect(textarea).toBeInTheDocument();
+			expect(textarea).toHaveValue(mockStructureText);
+		});
 	});
 
 	it("saves changes", async () => {
@@ -124,7 +143,10 @@ describe("StructureEditorDialog", () => {
 		await user.click(screen.getByText("Open Editor"));
 
 		// Modify text
-		const textarea = screen.getByDisplayValue(mockStructureText);
+		await waitFor(() => {
+			expect(screen.getByRole("textbox")).toBeInTheDocument();
+		});
+		const textarea = screen.getByRole("textbox");
 		await user.clear(textarea);
 		await user.type(textarea, "Updated Content");
 
@@ -156,7 +178,10 @@ describe("StructureEditorDialog", () => {
 		await user.click(screen.getByText("Open Editor"));
 
 		// Modify text
-		const textarea = screen.getByDisplayValue(mockStructureText);
+		await waitFor(() => {
+			expect(screen.getByRole("textbox")).toBeInTheDocument();
+		});
+		const textarea = screen.getByRole("textbox");
 		await user.type(textarea, "Updated Content");
 
 		// Click Cancel
