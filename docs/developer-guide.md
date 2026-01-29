@@ -233,6 +233,20 @@ Tools are defined in `lib/ai/tools/`. They must:
 2.  Return typed results.
 3.  Be registered in `lib/ai/tool-registry.ts`.
 
+### 15. Factory Tycoon Architecture
+Located in `src/features/factory-tycoon`, this feature implements a deterministic simulation loop.
+
+**Core Loop (`simulateTick`)**:
+- **Determinism**: The state is cloned and buildings are sorted by ID before processing to ensure consistent results across renders.
+- **Phases**:
+  1. **Transport**: Moves items between buildings using a shared grid system.
+  2. **Production**: Consumes inputs and produces outputs (if storage permits).
+  3. **Market**: Consumes end-products (Gadgets) and generates Cash.
+
+**State Management**:
+- Uses a `useReducer` pattern with a specialized `GameProvider`.
+- **Canvas Rendering**: The grid is rendered using absolute positioning and CSS transitions for performance.
+
 ## Design System
 
 The project adheres to a **Native macOS Aesthetic** ("Liquid Glass"):
