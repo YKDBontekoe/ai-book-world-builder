@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
-import { DatabaseError, NotFoundError } from "@/lib/errors";
+import { DatabaseError, NotFoundError, ValidationError } from "@/lib/errors";
 import { BaseRepository, type FindOptions } from "./base-repository";
 
 // ============================================================================
@@ -188,6 +188,9 @@ export class SceneRepository extends BaseRepository<
 		data: UpdateSceneInput,
 		projectId?: string,
 	): Promise<Scene> {
+		if (!projectId) {
+			throw new ValidationError("projectId is required for update operation");
+		}
 		try {
 			const updateData: Record<string, unknown> = { updatedAt: new Date() };
 			if (data.title !== undefined) updateData.title = data.title;
@@ -200,11 +203,7 @@ export class SceneRepository extends BaseRepository<
 			const [updated] = await db
 				.update(scene)
 				.set(updateData)
-				.where(
-					projectId
-						? and(eq(scene.id, id), eq(scene.projectId, projectId))
-						: eq(scene.id, id),
-				)
+				.where(and(eq(scene.id, id), eq(scene.projectId, projectId)))
 				.returning();
 
 			if (!updated) {
@@ -213,7 +212,8 @@ export class SceneRepository extends BaseRepository<
 
 			return updated;
 		} catch (error) {
-			if (error instanceof NotFoundError) throw error;
+			if (error instanceof NotFoundError || error instanceof ValidationError)
+				throw error;
 			console.error("SceneRepository.update error:", error);
 			throw new DatabaseError("Failed to update scene");
 		}
@@ -228,6 +228,11 @@ export class SceneRepository extends BaseRepository<
 		status?: string,
 		projectId?: string,
 	): Promise<Scene> {
+		if (!projectId) {
+			throw new ValidationError(
+				"projectId is required for updateContent operation",
+			);
+		}
 		try {
 			const [updated] = await db
 				.update(scene)
@@ -236,11 +241,7 @@ export class SceneRepository extends BaseRepository<
 					status: status ?? "drafted",
 					updatedAt: new Date(),
 				})
-				.where(
-					projectId
-						? and(eq(scene.id, id), eq(scene.projectId, projectId))
-						: eq(scene.id, id),
-				)
+				.where(and(eq(scene.id, id), eq(scene.projectId, projectId)))
 				.returning();
 
 			if (!updated) {
@@ -249,7 +250,8 @@ export class SceneRepository extends BaseRepository<
 
 			return updated;
 		} catch (error) {
-			if (error instanceof NotFoundError) throw error;
+			if (error instanceof NotFoundError || error instanceof ValidationError)
+				throw error;
 			console.error("SceneRepository.updateContent error:", error);
 			throw new DatabaseError("Failed to update scene content");
 		}
@@ -259,21 +261,21 @@ export class SceneRepository extends BaseRepository<
 	 * Delete a scene by ID
 	 */
 	async delete(id: string, projectId?: string): Promise<void> {
+		if (!projectId) {
+			throw new ValidationError("projectId is required for delete operation");
+		}
 		try {
 			const [deleted] = await db
 				.delete(scene)
-				.where(
-					projectId
-						? and(eq(scene.id, id), eq(scene.projectId, projectId))
-						: eq(scene.id, id),
-				)
+				.where(and(eq(scene.id, id), eq(scene.projectId, projectId)))
 				.returning();
 
 			if (!deleted) {
 				throw NotFoundError.forResource("Scene", id);
 			}
 		} catch (error) {
-			if (error instanceof NotFoundError) throw error;
+			if (error instanceof NotFoundError || error instanceof ValidationError)
+				throw error;
 			console.error("SceneRepository.delete error:", error);
 			throw new DatabaseError("Failed to delete scene");
 		}
@@ -354,6 +356,11 @@ export class SceneRepository extends BaseRepository<
 		data: Partial<Omit<CreateSceneCardInput, "projectId" | "sceneId">>,
 		projectId?: string,
 	): Promise<SceneCard> {
+		if (!projectId) {
+			throw new ValidationError(
+				"projectId is required for updateSceneCard operation",
+			);
+		}
 		try {
 			const [updated] = await db
 				.update(sceneCard)
@@ -362,12 +369,7 @@ export class SceneRepository extends BaseRepository<
 					updatedAt: new Date(),
 				})
 				.where(
-					projectId
-						? and(
-								eq(sceneCard.sceneId, sceneId),
-								eq(sceneCard.projectId, projectId),
-							)
-						: eq(sceneCard.sceneId, sceneId),
+					and(eq(sceneCard.sceneId, sceneId), eq(sceneCard.projectId, projectId)),
 				)
 				.returning();
 
@@ -377,7 +379,8 @@ export class SceneRepository extends BaseRepository<
 
 			return updated;
 		} catch (error) {
-			if (error instanceof NotFoundError) throw error;
+			if (error instanceof NotFoundError || error instanceof ValidationError)
+				throw error;
 			console.error("SceneRepository.updateSceneCard error:", error);
 			throw new DatabaseError("Failed to update scene card");
 		}

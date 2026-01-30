@@ -306,7 +306,11 @@ describe("EntityRepository", () => {
 			const mockEntity = { id: "e1", name: "Updated", projectId: "p1" };
 			mocks.result = [mockEntity];
 
-			const result = await entityRepository.update("e1", { name: "Updated" });
+			const result = await entityRepository.update(
+				"e1",
+				{ name: "Updated" },
+				"p1",
+			);
 			expect(result).toEqual(mockEntity);
 			expect(mocks.transaction).toHaveBeenCalled();
 		});
@@ -320,9 +324,13 @@ describe("EntityRepository", () => {
 				[], // insert new attributes
 			];
 
-			await entityRepository.update("e1", {
-				attributes: [{ name: "Age", value: "31" }],
-			});
+			await entityRepository.update(
+				"e1",
+				{
+					attributes: [{ name: "Age", value: "31" }],
+				},
+				"p1",
+			);
 
 			expect(mocks.delete).toHaveBeenCalled();
 			expect(mocks.insert).toHaveBeenCalled();
@@ -332,23 +340,27 @@ describe("EntityRepository", () => {
 			mocks.result = []; // Update returns nothing
 
 			await expect(
-				entityRepository.update("e1", { name: "New" }),
+				entityRepository.update("e1", { name: "New" }, "p1"),
 			).rejects.toThrow(NotFoundError);
 		});
 
 		it("should throw ValidationError if date range invalid", async () => {
 			await expect(
-				entityRepository.update("e1", {
-					startDate: new Date("2023-01-02"),
-					endDate: new Date("2023-01-01"),
-				}),
+				entityRepository.update(
+					"e1",
+					{
+						startDate: new Date("2023-01-02"),
+						endDate: new Date("2023-01-01"),
+					},
+					"p1",
+				),
 			).rejects.toThrow(ValidationError);
 		});
 
 		it("should throw DatabaseError on unexpected error", async () => {
 			mocks.error = new Error("DB Error");
 			await expect(
-				entityRepository.update("e1", { name: "New" }),
+				entityRepository.update("e1", { name: "New" }, "p1"),
 			).rejects.toThrow(DatabaseError);
 		});
 	});
@@ -356,7 +368,7 @@ describe("EntityRepository", () => {
 	describe("delete", () => {
 		it("should delete entity and related records in transaction", async () => {
 			mocks.result = [];
-			await entityRepository.delete("e1");
+			await entityRepository.delete("e1", "p1");
 			expect(mocks.transaction).toHaveBeenCalled();
 			expect(mocks.delete).toHaveBeenCalledTimes(3); // attributes, relationships, entity
 		});
@@ -364,7 +376,7 @@ describe("EntityRepository", () => {
 		it("should throw DatabaseError on failure", async () => {
 			// Mock transaction to fail
 			mocks.transaction = vi.fn(() => Promise.reject(new Error("DB Error")));
-			await expect(entityRepository.delete("e1")).rejects.toThrow(
+			await expect(entityRepository.delete("e1", "p1")).rejects.toThrow(
 				DatabaseError,
 			);
 		});

@@ -1,3 +1,5 @@
+import { ZodError } from "zod";
+
 export type ErrorType =
 	| "bad_request"
 	| "unauthorized"
@@ -231,11 +233,9 @@ export class ValidationError extends AppError {
 		return new ValidationError(message, field);
 	}
 
-	static fromZodError(zodError: {
-		errors: Array<{ path: (string | number)[]; message: string }>;
-	}) {
+	static fromZodError(zodError: ZodError) {
 		const details: Record<string, string[]> = {};
-		for (const err of zodError.errors) {
+		for (const err of zodError.issues) {
 			const path = err.path.join(".");
 			if (!details[path]) {
 				details[path] = [];

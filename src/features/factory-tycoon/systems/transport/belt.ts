@@ -1,9 +1,12 @@
-import { BELT_SPEED } from '../../config';
-import { BuildingEntity } from '../../types';
-import { getTargetCoordinates } from '../../utils/grid';
-import { tryPushItemToTarget } from './utils';
+import { BELT_SPEED } from "../../config";
+import type { BuildingEntity } from "../../types";
+import { getTargetCoordinates } from "../../utils/grid";
+import { tryPushItemToTarget } from "./utils";
 
-export function processBelt(belt: BuildingEntity, map: Map<string, BuildingEntity>) {
+export function processBelt(
+	belt: BuildingEntity,
+	map: Map<string, BuildingEntity>,
+) {
 	if (!belt.beltItems) return;
 
 	// Move items forward
