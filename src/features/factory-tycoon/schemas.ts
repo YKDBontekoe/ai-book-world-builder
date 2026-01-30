@@ -45,7 +45,7 @@ export const buildingEntitySchema = z.object({
 	direction: directionSchema,
 	beltItems: z.array(beltItemSchema).optional(),
 	holdingItem: beltItemSchema.optional(),
-	localInventory: z.record(z.string(), z.number()).optional(),
+	localInventory: z.partialRecord(resourceSchema, z.number()).optional(),
 });
 
 export const gameStateSchema = z.object({
@@ -59,7 +59,7 @@ export const gameStateSchema = z.object({
 	capacity: z.number(),
 	buildings: z.array(buildingEntitySchema),
 	tickCount: z.number(),
-	lastTickDelta: z.record(z.string(), z.number()).optional(),
+	lastTickDelta: z.partialRecord(resourceSchema, z.number()).optional(),
 	unlockedBuildings: z.array(buildingTypeSchema),
 	researchedTechs: z.array(z.string()),
 });

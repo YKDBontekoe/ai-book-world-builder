@@ -285,6 +285,9 @@ export class EntityRepository extends BaseRepository<
 		data: UpdateEntityInput,
 		projectId?: string,
 	): Promise<Entity> {
+		if (!projectId) {
+			throw new ValidationError("projectId is required for update operation");
+		}
 		validateDateRange(data.startDate, data.endDate);
 
 		try {
@@ -344,37 +347,31 @@ export class EntityRepository extends BaseRepository<
 	 * Delete an entity and all related data
 	 */
 	async delete(id: string, projectId?: string): Promise<void> {
+		if (!projectId) {
+			throw new ValidationError("projectId is required for delete operation");
+		}
 		try {
 			await db.transaction(async (tx: any) => {
-				const attrWhere = projectId
-					? and(
-							eq(entityAttribute.entityId, id),
-							eq(entityAttribute.projectId, projectId),
-						)
-					: eq(entityAttribute.entityId, id);
+				const attrWhere = and(
+					eq(entityAttribute.entityId, id),
+					eq(entityAttribute.projectId, projectId),
+				);
 
 				// Delete related attributes first
 				await tx.delete(entityAttribute).where(attrWhere);
 
-				const relWhere = projectId
-					? and(
-							or(
-								eq(relationship.sourceEntityId, id),
-								eq(relationship.targetEntityId, id),
-							),
-							eq(relationship.projectId, projectId),
-						)
-					: or(
-							eq(relationship.sourceEntityId, id),
-							eq(relationship.targetEntityId, id),
-						);
+				const relWhere = and(
+					or(
+						eq(relationship.sourceEntityId, id),
+						eq(relationship.targetEntityId, id),
+					),
+					eq(relationship.projectId, projectId),
+				);
 
 				// Delete related relationships
 				await tx.delete(relationship).where(relWhere);
 
-				const entWhere = projectId
-					? and(eq(entity.id, id), eq(entity.projectId, projectId))
-					: eq(entity.id, id);
+				const entWhere = and(eq(entity.id, id), eq(entity.projectId, projectId));
 
 				// Delete the entity
 				await tx.delete(entity).where(entWhere);

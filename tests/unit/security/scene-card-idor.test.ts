@@ -55,20 +55,13 @@ describe("Scene Card Security (IDOR)", () => {
 		expect(actualQuery).toEqual(expectedSecureQuery);
 	});
 
-	it("constructs unsafe query when projectId is omitted (warning test)", async () => {
+	it("rejects calls when projectId is omitted", async () => {
 		const sceneId = "target-scene-id";
 		const data = { purpose: "Safe Purpose" };
 
-		// Call the function WITHOUT projectId
-		await updateSceneCard({ sceneId, ...data });
+		// Call the function WITHOUT projectId -> Should throw
+		await expect(updateSceneCard({ sceneId, ...data })).rejects.toThrow();
 
-		// Verify where clause lacks projectId
-		expect(mocks.mockWhere).toHaveBeenCalledTimes(1);
-		const actualQuery = mocks.mockWhere.mock.calls[0][0];
-
-		// Expected unsafe query: WHERE sceneId = target
-		const expectedUnsafeQuery = eq(sceneCard.sceneId, sceneId);
-
-		expect(actualQuery).toEqual(expectedUnsafeQuery);
+		expect(mocks.mockUpdate).not.toHaveBeenCalled();
 	});
 });
