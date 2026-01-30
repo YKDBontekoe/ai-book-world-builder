@@ -11,7 +11,7 @@ vi.mock("@vercel/blob", () => ({
 // Mock pdfkit
 vi.mock("pdfkit", () => {
 	return {
-		// biome-ignore lint/complexity/useArrowFunction: Must use function for constructor
+		// biome-ignore lint/complexity/useArrowFunction: Mocking constructor
 		default: vi.fn().mockImplementation(function () {
 			// biome-ignore lint/complexity/noBannedTypes: Mocking internal types
 			const handlers: Record<string, Function> = {};

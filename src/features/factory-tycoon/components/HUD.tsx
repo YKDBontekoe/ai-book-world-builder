@@ -1,6 +1,5 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import {
 	Activity,
 	Beaker,
@@ -13,7 +12,7 @@ import {
 	TrendingDown,
 	TrendingUp,
 } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { RESOURCE_VALUES } from "../config";
 import { useGame } from "../store";
