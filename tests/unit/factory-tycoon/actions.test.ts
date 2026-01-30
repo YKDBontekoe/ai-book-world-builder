@@ -35,10 +35,19 @@ describe("Factory Tycoon Actions", () => {
 		vi.clearAllMocks();
 		// Setup successful auth
 		const mockSession: Session = {
-			user: { id: "user-1", name: "Test User", email: "test@example.com" },
+			user: {
+				id: "user-1",
+				name: "Test User",
+				email: "test@example.com",
+				type: "regular",
+				role: "user",
+			},
 			expires: new Date().toISOString(),
 		};
-		vi.mocked(auth).mockResolvedValue(mockSession);
+		// Cast auth to avoid NextMiddleware overload type mismatch
+		(vi.mocked(auth) as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+			mockSession,
+		);
 
 		// Setup chainable mocks
 		mockSet.mockReturnValue({ where: mockWhere });
