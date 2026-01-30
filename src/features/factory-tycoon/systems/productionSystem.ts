@@ -71,9 +71,9 @@ function getOutputTarget(
 	config: BuildingConfig,
 	buildingsMap: Map<string, BuildingEntity>,
 ): BuildingEntity | undefined {
-	const outputRes = Object.keys(config.outputs || {}).find(
+	const outputRes = (Object.keys(config.outputs || {}) as Resource[]).find(
 		(k) => k !== "cash",
-	) as Resource;
+	);
 
 	if (outputRes) {
 		const targetCoords = getTargetCoordinates(

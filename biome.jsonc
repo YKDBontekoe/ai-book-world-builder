@@ -9,6 +9,13 @@
 		"ignoreUnknown": true,
 		"includes": ["src/**/*", "tests/**/*"]
 	},
+	"overrides": [
+		{
+			"includes": ["src/lib/db/migrations/meta/_journal.json"],
+			"linter": { "enabled": false },
+			"formatter": { "enabled": false }
+		}
+	],
 	"linter": {
 		"rules": {
 			"suspicious": {

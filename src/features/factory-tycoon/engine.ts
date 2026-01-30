@@ -4,7 +4,7 @@ import { runProductionSystem } from "./systems/productionSystem";
 import { runTransportSystem } from "./systems/transportSystem";
 import {
 	type BuildingEntity,
-	BuildingStatus,
+	type BuildingStatus,
 	type GameState,
 	type Resource,
 } from "./types";
