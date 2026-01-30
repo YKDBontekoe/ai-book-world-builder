@@ -1,10 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Accordion } from "@/components/atoms/accordion";
-import type { ChapterWithScenes } from "@/lib/types";
+import type { ChapterWithScenes, SceneWithPrev } from "@/lib/types";
 import { SidebarChapter } from "./sidebar-chapter";
 
 // Mock data
-const mockScenes = [
+const mockScenes: SceneWithPrev[] = [
 	{
 		id: "scene-1",
 		title: "The Beginning",
@@ -31,7 +31,7 @@ const mockScenes = [
 		content: "Scene content...",
 		wordCount: 200,
 	},
-] as any[];
+];
 
 const mockChapter: ChapterWithScenes = {
 	id: "chapter-1",

@@ -9,9 +9,11 @@ export type SystemResult = {
 	consumedCapacity: number; // Volume added/removed
 };
 
+type ResourceInventory = Record<Exclude<Resource, "cash" | "science">, number>;
+
 export const runProductionSystem = (
 	buildings: BuildingEntity[],
-	currentInventory: Record<Exclude<Resource, "cash">, number>,
+	currentInventory: ResourceInventory,
 	remainingSpace: number,
 ): SystemResult => {
 	const result: SystemResult = {
@@ -92,13 +94,13 @@ function getOutputTarget(
 function checkInputAvailability(
 	building: BuildingEntity,
 	config: BuildingConfig,
-	workingInventory: Record<string, number>,
+	workingInventory: ResourceInventory,
 ): boolean {
 	if (!config.inputs) return true;
 
 	for (const [res, amount] of Object.entries(config.inputs)) {
-		if (res !== "cash") {
-			const r = res as Resource;
+		if (res !== "cash" && res !== "science") {
+			const r = res as keyof ResourceInventory;
 			const localAmount = building.localInventory?.[r] || 0;
 			const neededFromGlobal = Math.max(0, amount - localAmount);
 
@@ -141,14 +143,14 @@ function checkOutputCapacity(
 function processConsumption(
 	building: BuildingEntity,
 	config: BuildingConfig,
-	workingInventory: Record<string, number>,
+	workingInventory: ResourceInventory,
 	result: SystemResult,
 ) {
 	if (!config.inputs) return;
 
 	for (const [res, amount] of Object.entries(config.inputs)) {
-		if (res !== "cash") {
-			const r = res as Resource;
+		if (res !== "cash" && res !== "science") {
+			const r = res as keyof ResourceInventory;
 			const localAmount = building.localInventory?.[r] || 0;
 			const takeFromLocal = Math.min(localAmount, amount);
 			const takeFromGlobal = amount - takeFromLocal;
@@ -191,7 +193,7 @@ function processProduction(
 				}
 			} else {
 				// Produce to Local Inventory or Global (Virtual)
-				if (r === "cash" || r === "science") {
+				if (r === "science") {
 					result.inventoryDelta[r] = (result.inventoryDelta[r] || 0) + amount;
 				} else {
 					if (!building.localInventory) building.localInventory = {};

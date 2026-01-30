@@ -5,7 +5,7 @@ import { createContext, useContext, useRef, useState } from "react";
 
 type SoundType = "place" | "delete" | "cash" | "rotate" | "pickup";
 
-interface SoundContextType {
+export interface SoundContextType {
 	playSound: (type: SoundType) => void;
 	muted: boolean;
 	toggleMute: () => void;
@@ -13,7 +13,9 @@ interface SoundContextType {
 
 const SoundContext = createContext<SoundContextType | null>(null);
 
-export function SoundProvider({ children }: { children: React.ReactNode }) {
+export function SoundProvider({
+	children,
+}: { children: React.ReactNode }): JSX.Element {
 	const [muted, setMuted] = useState(false);
 
 	// Placeholders for Audio objects
@@ -49,7 +51,7 @@ export function SoundProvider({ children }: { children: React.ReactNode }) {
 	);
 }
 
-export function useSound() {
+export function useSound(): SoundContextType {
 	const context = useContext(SoundContext);
 	if (!context) throw new Error("useSound must be used within SoundProvider");
 	return context;

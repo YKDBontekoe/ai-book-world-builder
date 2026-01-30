@@ -6,7 +6,7 @@ import { tryPushItemToTarget } from "./utils";
 export function processBelt(
 	belt: BuildingEntity,
 	map: Map<string, BuildingEntity>,
-) {
+): void {
 	if (!belt.beltItems) return;
 
 	// Move items forward

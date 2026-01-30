@@ -106,6 +106,7 @@ describe("WizardReviewStep", () => {
 	it("should have no accessibility violations", async () => {
 		const { container } = render(<WizardReviewStep {...defaultProps} />);
 		const results = await axe(container);
+		// @ts-expect-error -- matcher type missing
 		expect(results).toHaveNoViolations();
 	});
 });

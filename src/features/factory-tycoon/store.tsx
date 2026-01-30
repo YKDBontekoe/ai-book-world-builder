@@ -135,7 +135,7 @@ export function GameProvider({
 	}, []);
 
 	const manualInteract = useCallback((x: number, y: number) => {
-		// Gebruik stateRef om te voorkomen dat manualInteract bij elke state change (tick) opnieuw wordt aangemaakt
+		// Use stateRef to prevent manualInteract from being recreated on every state change (tick)
 		const result = getInteractionResult(stateRef.current, x, y);
 		if (result) {
 			toast.success(`Collected ${result.amount} ${result.resource}`);

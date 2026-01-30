@@ -1,5 +1,7 @@
 import { put } from "@vercel/blob";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { FullProjectData } from "@/lib/book-generation";
+import type { Project } from "@/lib/db/schema";
 import { exportBook } from "@/lib/services/book-exporter";
 
 // Mock @vercel/blob
@@ -11,7 +13,7 @@ vi.mock("@vercel/blob", () => ({
 vi.mock("pdfkit", () => {
 	return {
 		default: vi.fn().mockImplementation(function () {
-			const handlers: Record<string, Function> = {};
+			const handlers: Record<string, (...args: unknown[]) => unknown> = {};
 			return {
 				on: vi.fn((event, cb) => {
 					handlers[event] = cb;
@@ -36,11 +38,15 @@ describe("book-exporter security", () => {
 	});
 
 	it("uses a secure filename with UUID (IDOR protection)", async () => {
-		const projectData = {
-			project: { name: "My Secret Book" },
+		const projectData: FullProjectData = {
+			project: { name: "My Secret Book" } as Project,
+			entities: [],
+			attributes: [],
+			relationships: [],
+			outlines: [],
 			generation: null,
 			volumes: [],
-		} as any;
+		};
 
 		await exportBook(projectData, "pdf");
 

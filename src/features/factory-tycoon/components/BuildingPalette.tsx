@@ -61,7 +61,7 @@ export function BuildingPalette({
 }: {
 	selected: BuildingType | null;
 	onSelect: (t: BuildingType | null) => void;
-}) {
+}): JSX.Element {
 	const { state } = useGame();
 
 	const unlockedByCategory = Object.entries(BUILDING_CATEGORIES)
@@ -115,6 +115,7 @@ export function BuildingPalette({
 								return (
 									<button
 										key={type}
+										type="button"
 										onClick={() => onSelect(isSelected ? null : type)}
 										disabled={!canAfford && !isSelected}
 										className={cn(
