@@ -544,8 +544,8 @@
    ========================================== */
 .factory-modal-overlay {
 	/* Using glass-panel token equivalent or utility class in JSX */
-	/* background: rgba(15, 23, 42, 0.3); */
-	/* backdrop-filter: blur(8px); */
+	background: rgba(15, 23, 42, 0.3);
+	backdrop-filter: blur(8px);
 }
 
 .factory-modal {

@@ -34,9 +34,11 @@ describe("Factory Tycoon Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Setup successful auth
-		vi.mocked(auth as unknown as () => Promise<Session | null>).mockResolvedValue({
-			user: { id: "user-1" },
-		} as unknown as Session);
+		const mockSession: Session = {
+			user: { id: "user-1", name: "Test User", email: "test@example.com" },
+			expires: new Date().toISOString(),
+		};
+		vi.mocked(auth).mockResolvedValue(mockSession);
 
 		// Setup chainable mocks
 		mockSet.mockReturnValue({ where: mockWhere });

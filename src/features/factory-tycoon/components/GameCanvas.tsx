@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Trash2, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ import {
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
 import { useSound } from "../audio/SoundContext";
-import { BUILDINGS, GRID_SIZE, TICK_RATE_MS } from "../config";
+import { BUILDINGS, GRID_SIZE } from "../config";
 import { useGame } from "../store";
 import type { BeltItem, BuildingType, Direction } from "../types";
 import {
@@ -22,6 +22,13 @@ import {
 	RESOURCE_COLORS,
 	STATUS_CONFIG,
 } from "./visuals";
+
+interface ContextMenuState {
+	isOpen: boolean;
+	gridX: number;
+	gridY: number;
+	buildingId?: string;
+}
 
 export function GameCanvas({
 	selectedBuilding,
@@ -36,6 +43,7 @@ export function GameCanvas({
 		x: number;
 		y: number;
 	} | null>(null);
+	const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
 
 	const cycleDirection = useCallback(() => {
 		const dirs: Direction[] = ["N", "E", "S", "W"];
@@ -55,7 +63,7 @@ export function GameCanvas({
 					);
 					if (building) {
 						rotateBuilding(building.id);
-						playSound("rotate"); // assume sound exists or fail gracefully
+						playSound("rotate");
 					} else {
 						// Rotate placement
 						cycleDirection();
@@ -71,6 +79,11 @@ export function GameCanvas({
 	}, [hoveredTile, state.buildings, rotateBuilding, playSound, cycleDirection]);
 
 	const handleTileClick = (x: number, y: number) => {
+		if (contextMenu?.isOpen) {
+			setContextMenu(null);
+			return;
+		}
+
 		if (selectedBuilding) {
 			addBuilding(selectedBuilding, x, y, currentDirection);
 			playSound("place");
@@ -81,11 +94,24 @@ export function GameCanvas({
 		}
 	};
 
-	const handleContextMenu = (e: React.MouseEvent, id?: string) => {
-		e.preventDefault();
-		if (id) {
-			removeBuilding(id);
+	const openContextMenu = (x: number, y: number, buildingId?: string) => {
+		setContextMenu({
+			isOpen: true,
+			gridX: x,
+			gridY: y,
+			buildingId,
+		});
+	};
+
+	const closeContextMenu = () => {
+		setContextMenu(null);
+	};
+
+	const handleDemolish = () => {
+		if (contextMenu?.buildingId) {
+			removeBuilding(contextMenu.buildingId);
 			playSound("delete");
+			closeContextMenu();
 		}
 	};
 
@@ -160,7 +186,7 @@ export function GameCanvas({
 
 	return (
 		<TooltipProvider>
-			<div className="flex-1 overflow-auto factory-grid-bg flex justify-center items-center p-8">
+			<div className="flex-1 overflow-auto factory-grid-bg flex justify-center items-center p-8 relative">
 				<div
 					className="relative rounded-lg overflow-hidden"
 					style={{
@@ -202,7 +228,10 @@ export function GameCanvas({
 									tabIndex={0}
 									aria-label={`Tile ${x},${y} ${building ? building.type : "Empty"}`}
 									onClick={() => handleTileClick(x, y)}
-									onContextMenu={(e) => handleContextMenu(e, building?.id)}
+									onContextMenu={(e) => {
+										e.preventDefault();
+										openContextMenu(x, y, building?.id);
+									}}
 									onKeyDown={(e) => {
 										if (e.key === "Enter" || e.key === " ") {
 											e.preventDefault();
@@ -210,7 +239,7 @@ export function GameCanvas({
 										}
 										if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
 											e.preventDefault();
-											handleContextMenu(e as unknown as React.MouseEvent, building?.id);
+											openContextMenu(x, y, building?.id);
 										}
 									}}
 									onMouseEnter={() => setHoveredTile({ x, y })}
@@ -263,7 +292,7 @@ export function GameCanvas({
 												/>
 											</div>
 
-											{/* Status Indicator (Not for Belt/Splitter to avoid clutter) */}
+											{/* Status Indicator */}
 											{building.type !== "Belt" &&
 												building.type !== "Splitter" && (
 													<div
@@ -363,7 +392,7 @@ export function GameCanvas({
 											</div>
 										)}
 										<div className="text-[10px] text-[var(--factory-amber)] italic">
-											Right-click to demolish. R to rotate.
+											Right-click for options. R to rotate.
 										</div>
 									</TooltipContent>
 								</Tooltip>
@@ -396,9 +425,61 @@ export function GameCanvas({
 							))}
 						</AnimatePresence>
 					</div>
+
+					{/* Context Menu Overlay */}
+					{contextMenu?.isOpen && (
+						<div
+							className="absolute z-50 animate-in fade-in zoom-in-95 duration-100"
+							style={{
+								left: `${(contextMenu.gridX / GRID_SIZE) * 100}%`,
+								top: `${(contextMenu.gridY / GRID_SIZE) * 100}%`,
+								transform: "translate(25%, 25%)", // Offset slightly from center
+							}}
+						>
+							<div className="bg-[var(--factory-bg-panel)] border border-[var(--factory-border)] rounded-lg shadow-xl p-1 min-w-[150px] flex flex-col gap-1">
+								<div className="flex items-center justify-between px-2 py-1 border-b border-[var(--factory-border)] mb-1">
+									<span className="text-xs font-bold text-[var(--factory-text-muted)]">
+										Options
+									</span>
+									<button
+										type="button"
+										onClick={closeContextMenu}
+										className="text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)]"
+									>
+										<X className="w-3 h-3" />
+									</button>
+								</div>
+								{contextMenu.buildingId ? (
+									<button
+										type="button"
+										onClick={handleDemolish}
+										className="flex items-center gap-2 px-2 py-1.5 text-sm text-left hover:bg-red-50 hover:text-red-600 rounded transition-colors w-full"
+									>
+										<Trash2 className="w-4 h-4" />
+										Demolish
+									</button>
+								) : (
+									<div className="px-2 py-1.5 text-sm text-[var(--factory-text-muted)] italic">
+										Empty Tile
+									</div>
+								)}
+							</div>
+							{/* Backdrop to close on click outside (scoped to canvas) */}
+							<div
+								className="fixed inset-0 z-[-1]"
+								onClick={closeContextMenu}
+								onKeyDown={(e) => {
+									if (e.key === "Escape") closeContextMenu();
+								}}
+								role="button"
+								tabIndex={-1}
+								aria-label="Close context menu"
+							/>
+						</div>
+					)}
 				</div>
 
-				{/* Current Direction Indicator (Bottom Right of Canvas) */}
+				{/* Current Direction Indicator */}
 				<div className="absolute bottom-8 right-8 bg-[var(--factory-bg-panel)] p-4 rounded border border-[var(--factory-border)]">
 					<div className="text-xs text-[var(--factory-text-muted)] mb-1">
 						Rotation (R)

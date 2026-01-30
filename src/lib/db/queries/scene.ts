@@ -2,7 +2,7 @@ import "server-only";
 import { and, asc, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { type Scene, type SceneCard, scene, sceneCard } from "@/lib/db/schema";
-import { ChatSDKError } from "@/lib/errors";
+import { ChatSDKError, ValidationError } from "@/lib/errors";
 
 export async function getScenesForChapter({
 	chapterId,
@@ -276,6 +276,11 @@ export async function updateSceneCard({
 	sceneId: string;
 	projectId?: string;
 }): Promise<SceneCard> {
+	if (!projectId) {
+		throw new ValidationError(
+			"projectId is required for updateSceneCard operation",
+		);
+	}
 	try {
 		const [updated] = await db
 			.update(sceneCard)
@@ -294,12 +299,7 @@ export async function updateSceneCard({
 				updatedAt: new Date(),
 			})
 			.where(
-				projectId
-					? and(
-							eq(sceneCard.sceneId, sceneId),
-							eq(sceneCard.projectId, projectId),
-						)
-					: eq(sceneCard.sceneId, sceneId),
+				and(eq(sceneCard.sceneId, sceneId), eq(sceneCard.projectId, projectId)),
 			)
 			.returning();
 
