@@ -10,55 +10,36 @@ Vitest dirname: /app
 [1m[46m RUN [49m[22m [36mv4.0.18 [39m[90m/app[39m
       [2mCoverage enabled with [22m[33mv8[39m
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/source-material-repository.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 37[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/scene-repository.test.ts [2m([22m[2m39 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/source-material-repository.test.ts [2m([22m[2m36 tests[22m[2m)[22m[32m 41[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/scene-repository.test.ts [2m([22m[2m39 tests[22m[2m)[22m[32m 44[2mms[22m[39m
  [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/entity-repository.test.ts [2m([22m[2m42 tests[22m[2m)[22m[32m 46[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/project-repository.test.ts [2m([22m[2m39 tests[22m[2m)[22m[32m 42[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/chapter-repository.test.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 36[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/power-dock.test.tsx [2m([22m[2m8 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[33m 1852[2mms[22m[39m
-     [33m[2m✓[22m[39m saves command to history on success [33m 503[2mms[22m[39m
-     [33m[2m✓[22m[39m maintains separate history for each tool [33m 507[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/story-generation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 39[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/message-repository.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 30[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/chat-repository.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 31[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/builder/task-board.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 3302[2mms[22m[39m
-     [33m[2m✓[22m[39m renders successfully with empty data [33m 539[2mms[22m[39m
-     [33m[2m✓[22m[39m renders items and handles navigation to details [33m 738[2mms[22m[39m
-     [33m[2m✓[22m[39m handles start fix action success [33m 390[2mms[22m[39m
-     [33m[2m✓[22m[39m handles start fix action failure [33m 331[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/semantic-cache.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 29[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/volume-repository.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 30[2mms[22m[39m
-[90mstderr[2m | tests/unit/lib/services/project-service.test.ts[2m > [22m[2mProjectService[2m > [22m[2mdeleteProjects[2m > [22m[2mshould handle errors during deletion
-[22m[39mDelete projects error: Error: DB Error
-    at [90m/app/[39mtests/unit/lib/services/project-service.test.ts:127:46
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:145:11
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:26
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
-    at new Promise (<anonymous>)
-    at runWithTimeout [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
-    at Traces.$ [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.18_@opentelemetry+api@1.9.0_@types+node@24.10.9_@vitest+browser-playwright@4_aeee6ad457541a86e7fae5cc56a69020/node_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
-    at trace [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.18_@opentelemetry+api@1.9.0_@types+node@24.10.9_@vitest+browser-playwright@4_aeee6ad457541a86e7fae5cc56a69020/node_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
-    at runTest [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
-
-[90mstderr[2m | tests/unit/lib/services/project-service.test.ts[2m > [22m[2mProjectService[2m > [22m[2mforkProject[2m > [22m[2mshould handle errors during fork
-[22m[39mFork project error: Error: Fork failed
-    at [90m/app/[39mtests/unit/lib/services/project-service.test.ts:256:46
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:145:11
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:26
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1243:20
-    at new Promise (<anonymous>)
-    at runWithTimeout [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1209:10[90m)[39m
-    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1653:37
-    at Traces.$ [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.18_@opentelemetry+api@1.9.0_@types+node@24.10.9_@vitest+browser-playwright@4_aeee6ad457541a86e7fae5cc56a69020/node_modules/[4mvitest[24m/dist/chunks/traces.CCmnQaNT.js:142:27[90m)[39m
-    at trace [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.18_@opentelemetry+api@1.9.0_@types+node@24.10.9_@vitest+browser-playwright@4_aeee6ad457541a86e7fae5cc56a69020/node_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
-    at runTest [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
-
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/project-service.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 31[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/files-upload.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 43[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/project-repository.test.ts [2m([22m[2m39 tests[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/chapter-repository.test.ts [2m([22m[2m29 tests[22m[2m)[22m[32m 143[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/power-dock.test.tsx [2m([22m[2m8 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[33m 3290[2mms[22m[39m
+     [33m[2m✓[22m[39m saves command to history on success [33m 815[2mms[22m[39m
+     [33m[2m✓[22m[39m deduplicates identical recent commands [33m 466[2mms[22m[39m
+     [33m[2m✓[22m[39m clears history for a tool [33m 418[2mms[22m[39m
+     [33m[2m✓[22m[39m maintains separate history for each tool [33m 824[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/story-generation.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 76[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/message-repository.test.ts [2m([22m[2m28 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/builder/task-board.test.tsx [2m([22m[2m9 tests[22m[2m)[22m[33m 6209[2mms[22m[39m
+     [33m[2m✓[22m[39m renders successfully with empty data [33m 798[2mms[22m[39m
+     [33m[2m✓[22m[39m handles non-array API responses gracefully without crashing [33m 453[2mms[22m[39m
+     [33m[2m✓[22m[39m handles failed API responses gracefully [33m 547[2mms[22m[39m
+     [33m[2m✓[22m[39m renders items and handles navigation to details [33m 1450[2mms[22m[39m
+     [33m[2m✓[22m[39m renders session items and handles navigation to chat [33m 367[2mms[22m[39m
+     [33m[2m✓[22m[39m shows CreateFeatureDialog when sources are available [33m 360[2mms[22m[39m
+     [33m[2m✓[22m[39m handles start fix action success [33m 900[2mms[22m[39m
+     [33m[2m✓[22m[39m handles start fix action failure [33m 904[2mms[22m[39m
+     [33m[2m✓[22m[39m polls for session updates [33m 418[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/chat-repository.test.ts [2m([22m[2m25 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/semantic-cache.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 78[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/project-service.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 58[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/volume-repository.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 61[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/files-upload.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 51[2mms[22m[39m
 [90mstderr[2m | tests/unit/actions/entities.test.ts[2m > [22m[2mentities server actions[2m > [22m[2mthrows when the project is inaccessible
 [22m[39mAction error: NotFoundError: Project not found: 550e8400-e29b-41d4-a716-446655440001
-    at Function.forResource [90m(/app/[39msrc/lib/errors.ts:206:10[90m)[39m
+    at Function.forResource [90m(/app/[39msrc/lib/errors.ts:208:10[90m)[39m
     at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:76:24[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
@@ -75,7 +56,7 @@ Vitest dirname: /app
     at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:110:10[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
-    at [90m/app/[39mtests/unit/actions/entities.test.ts:167:18
+    at [90m/app/[39mtests/unit/actions/entities.test.ts:171:18
     at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
   statusCode: [33m403[39m,
   code: [32m'FORBIDDEN'[39m
@@ -86,7 +67,7 @@ Vitest dirname: /app
     at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:118:10[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
-    at [90m/app/[39mtests/unit/actions/entities.test.ts:184:18
+    at [90m/app/[39mtests/unit/actions/entities.test.ts:188:18
     at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
   statusCode: [33m403[39m,
   code: [32m'FORBIDDEN'[39m
@@ -94,10 +75,10 @@ Vitest dirname: /app
 
 [90mstderr[2m | tests/unit/actions/entities.test.ts[2m > [22m[2mentities server actions[2m > [22m[2mfails deletion when the user cannot access the project
 [22m[39mAction error: ForbiddenError: Access denied to entity
-    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:160:10[90m)[39m
+    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:164:10[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
-    at [90m/app/[39mtests/unit/actions/entities.test.ts:213:18
+    at [90m/app/[39mtests/unit/actions/entities.test.ts:217:18
     at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
   statusCode: [33m403[39m,
   code: [32m'FORBIDDEN'[39m
@@ -108,7 +89,7 @@ Vitest dirname: /app
     at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:114:10[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
-    at [90m/app/[39mtests/unit/actions/entities.test.ts:245:18
+    at [90m/app/[39mtests/unit/actions/entities.test.ts:249:18
     at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
   statusCode: [33m403[39m,
   code: [32m'FORBIDDEN'[39m
@@ -116,34 +97,34 @@ Vitest dirname: /app
 
 [90mstderr[2m | tests/unit/actions/entities.test.ts[2m > [22m[2mentities server actions[2m > [22m[2mVULNERABILITY FIX: rejects deletion when user does not own the project (even if public)
 [22m[39mAction error: ForbiddenError: Only project owner can delete entities
-    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:164:10[90m)[39m
+    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:168:10[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
-    at [90m/app/[39mtests/unit/actions/entities.test.ts:282:18
+    at [90m/app/[39mtests/unit/actions/entities.test.ts:286:18
     at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
   statusCode: [33m403[39m,
   code: [32m'FORBIDDEN'[39m
 }
 
  [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/entities.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 34[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/hooks/use-scene-operations.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 133[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/hooks/use-scene-operations.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[32m 137[2mms[22m[39m
 [90mstderr[2m | tests/unit/features/writer/actions/chapter.test.ts[2m > [22m[2mChapter Actions[2m > [22m[2mcreateNewChapter[2m > [22m[2mshould throw error if creation fails (race condition case where no ID returned)
-[22m[39mFailed to create new chapter TypeError: Cannot read properties of undefined (reading 'id')
-    at [90m/app/[39msrc/features/writer/actions/chapter.ts:136:30
+[22m[39mFailed to create new chapter Error: Failed to insert chapter
+    at [90m/app/[39msrc/features/writer/actions/chapter.ts:136:27
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/actions/chapter.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 32[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/writer-editor.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 128[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/tools/batch-create-entities.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 31[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/story-repository.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 28[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/bible-pane.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 978[2mms[22m[39m
-     [33m[2m✓[22m[39m sorts entities by name descending [33m 335[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/queries/passkeys.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 22[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/actions/structure.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 21[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/left-sidebar/sidebar-chapter.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1514[2mms[22m[39m
-     [33m[2m✓[22m[39m renders chapter title and scenes [33m 334[2mms[22m[39m
-     [33m[2m✓[22m[39m calls onCreateSceneManually when Add Scene button is clicked [33m 307[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/story-service.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/actions/chapter.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/writer-editor.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 146[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/tools/batch-create-entities.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/bible-pane.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1098[2mms[22m[39m
+     [33m[2m✓[22m[39m sorts entities by name descending [33m 356[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/repositories/story-repository.test.ts [2m([22m[2m15 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/queries/passkeys.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/actions/structure.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/story-service.test.ts [2m([22m[2m8 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/left-sidebar/sidebar-chapter.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1658[2mms[22m[39m
+     [33m[2m✓[22m[39m renders chapter title and scenes [33m 337[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onCreateSceneManually when Add Scene button is clicked [33m 331[2mms[22m[39m
 [90mstderr[2m | tests/unit/actions/project-stats-security.test.ts[2m > [22m[2mProject Stats Security[2m > [22m[2mshould fail getProjectStats when accessing a private project belonging to another user
 [22m[39mAction error: ForbiddenError: You do not have permission to access this project
     at ensureProjectAccess [90m(/app/[39msrc/app/actions/project-stats.ts:62:9[90m)[39m
@@ -204,11 +185,8 @@ Vitest dirname: /app
   code: [32m'FORBIDDEN'[39m
 }
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/project-stats-security.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 32[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/generator-pane.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1099[2mms[22m[39m
-[90mstderr[2m | tests/unit/features/writer/components/chapter-actions.test.tsx[2m > [22m[2mChapterActions[2m > [22m[2mhandles successful generation flow
-[22m[39mWarning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
-
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/project-stats-security.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 37[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/generator-pane.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1340[2mms[22m[39m
 [90mstderr[2m | tests/unit/features/writer/actions/index.test.ts[2m > [22m[2mgenerateScene[2m > [22m[2mshould generate a scene successfully
 [22m[39mFailed to inject semantic context: TypeError: __vite_ssr_import_5__.db.select(...).from(...).leftJoin is not a function
     at SemanticCacheService.fetchScenes [90m(/app/[39msrc/lib/ai/semantic-cache.ts:328:5[90m)[39m
@@ -222,6 +200,13 @@ Vitest dirname: /app
 [90mstderr[2m | tests/unit/features/writer/actions/index.test.ts[2m > [22m[2mgenerateScene[2m > [22m[2mshould generate a scene successfully
 [22m[39m[Quota] Bypassing quota check for user user-1. Implementation required for production.
 
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/actions/index.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 675[2mms[22m[39m
+     [33m[2m✓[22m[39m should generate a scene successfully [33m 666[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/writer-spotlight.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 477[2mms[22m[39m
+[90mstderr[2m | tests/unit/features/writer/components/chapter-actions.test.tsx[2m > [22m[2mChapterActions[2m > [22m[2mhandles successful generation flow
+[22m[39mWarning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/errors.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 32[2mms[22m[39m
 [90mstderr[2m | tests/unit/features/writer/components/chapter-actions.test.tsx[2m > [22m[2mChapterActions[2m > [22m[2mhandles planning error
 [22m[39mWarning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
 
@@ -231,23 +216,29 @@ Vitest dirname: /app
 [90mstderr[2m | tests/unit/features/writer/components/chapter-actions.test.tsx[2m > [22m[2mChapterActions[2m > [22m[2mhandles scene generation error but continues
 [22m[39mFailed to generate scene 1: Generation error
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/actions/index.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 577[2mms[22m[39m
-     [33m[2m✓[22m[39m should generate a scene successfully [33m 569[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/chapter-actions.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 2463[2mms[22m[39m
-     [33m[2m✓[22m[39m opens dropdown and shows generate option [33m 517[2mms[22m[39m
-     [33m[2m✓[22m[39m handles successful generation flow [33m 1178[2mms[22m[39m
-     [33m[2m✓[22m[39m handles planning error [33m 323[2mms[22m[39m
-     [33m[2m✓[22m[39m handles scene generation error but continues [33m 329[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/writer-spotlight.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 379[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/errors.test.ts [2m([22m[2m18 tests[22m[2m)[22m[32m 27[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/engine.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 28[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/transportSystem.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/chapter-actions.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 2988[2mms[22m[39m
+     [33m[2m✓[22m[39m opens dropdown and shows generate option [33m 699[2mms[22m[39m
+     [33m[2m✓[22m[39m handles successful generation flow [33m 1276[2mms[22m[39m
+     [33m[2m✓[22m[39m handles planning error [33m 441[2mms[22m[39m
+     [33m[2m✓[22m[39m handles scene generation error but continues [33m 460[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/components/GameCanvas.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 8517[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the canvas with tiles [33m 3032[2mms[22m[39m
+     [33m[2m✓[22m[39m opens context menu on right click and shows accessible close button [33m 2490[2mms[22m[39m
+     [33m[2m✓[22m[39m closes context menu via Escape key [33m 590[2mms[22m[39m
+     [33m[2m✓[22m[39m closes context menu via backdrop click [33m 2172[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/model-selector.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1412[2mms[22m[39m
+     [33m[2m✓[22m[39m shows favorite toggle state optimistically [33m 1073[2mms[22m[39m
+     [33m[2m✓[22m[39m uses configured model preferences when available [33m 330[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/story-wizard-integration.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 4307[2mms[22m[39m
+     [33m[2m✓[22m[39m completes the full story creation flow [33m 1760[2mms[22m[39m
+     [33m[2m✓[22m[39m handles generation error by returning to input [33m 2530[2mms[22m[39m
 [90mstderr[2m | tests/unit/actions/scenes.test.ts[2m > [22m[2mscenes server actions[2m > [22m[2mreturns error when the project is inaccessible
 [22m[39mAction error: NotFoundError: Project not found: 123e4567-e89b-12d3-a456-426614174000
-    at Function.forResource [90m(/app/[39msrc/lib/errors.ts:206:10[90m)[39m
+    at Function.forResource [90m(/app/[39msrc/lib/errors.ts:208:10[90m)[39m
     at ensureProjectAccess [90m(/app/[39msrc/lib/actions-utils.ts:128:23[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
-    at withProjectAccess [90m(/app/[39msrc/lib/actions-utils.ts:147:19[90m)[39m
+    at Object.handler [90m(/app/[39msrc/app/actions/scenes.ts:26:3[90m)[39m
+    at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
     at [90m/app/[39mtests/unit/actions/scenes.test.ts:171:18
     at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
   statusCode: [33m404[39m,
@@ -258,23 +249,21 @@ Vitest dirname: /app
 
 [90mstderr[2m | tests/unit/actions/scenes.test.ts[2m > [22m[2mscenes server actions[2m > [22m[2mreturns Unauthorized when not logged in
 [22m[39mAction error: UnauthorizedError: You must be logged in to perform this action
-    at getAuthenticatedUser [90m(/app/[39msrc/lib/actions-utils.ts:53:9[90m)[39m
+    at verifyAuth [90m(/app/[39msrc/lib/action-middleware.ts:119:9[90m)[39m
+    at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:185:17[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
-    at ensureProjectAccess [90m(/app/[39msrc/lib/actions-utils.ts:121:15[90m)[39m
-    at withProjectAccess [90m(/app/[39msrc/lib/actions-utils.ts:147:19[90m)[39m {
+    at [90m/app/[39mtests/unit/actions/scenes.test.ts:185:18
+    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
   statusCode: [33m401[39m,
   code: [32m'UNAUTHORIZED'[39m
 }
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/scenes.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 26[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/model-selector.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 998[2mms[22m[39m
-     [33m[2m✓[22m[39m shows favorite toggle state optimistically [33m 775[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/story-wizard-integration.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 2287[2mms[22m[39m
-     [33m[2m✓[22m[39m completes the full story creation flow [33m 1276[2mms[22m[39m
-     [33m[2m✓[22m[39m handles generation error by returning to input [33m 1004[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/scenes.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 102[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/engine.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 93[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/transportSystem.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 56[2mms[22m[39m
 [90mstderr[2m | tests/unit/actions/entities-extended.test.ts[2m > [22m[2mextended entities actions[2m > [22m[2mcreateEntityAction[2m > [22m[2mfails if not owner
 [22m[39mAction error: ForbiddenError: Only project owner can create entities
-    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:190:10[90m)[39m
+    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:194:10[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
     at [90m/app/[39mtests/unit/actions/entities-extended.test.ts:129:19
@@ -285,7 +274,7 @@ Vitest dirname: /app
 
 [90mstderr[2m | tests/unit/actions/entities-extended.test.ts[2m > [22m[2mextended entities actions[2m > [22m[2mbulkDeleteEntitiesAction[2m > [22m[2mfails if one entity belongs to another project
 [22m[39mAction error: ForbiddenError: One or more entities do not belong to the project
-    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:262:10[90m)[39m
+    at Object.handler [90m(/app/[39msrc/app/actions/entities.ts:266:10[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
     at [90m/app/[39mtests/unit/actions/entities-extended.test.ts:171:19
@@ -294,8 +283,8 @@ Vitest dirname: /app
   code: [32m'FORBIDDEN'[39m
 }
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/entities-extended.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 33[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/chat/widgets/generation-widget.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 422[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/entities-extended.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/chat/widgets/generation-widget.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 380[2mms[22m[39m
 [90mstderr[2m | tests/unit/lib/ai/services/ai-client.test.ts[2m > [22m[2mAI Client[2m > [22m[2mgenerateText[2m > [22m[2mshould return error on failure
 [22m[39m[AIClient] Text generation failed: Error: API Error
     at [90m/app/[39mtests/unit/lib/ai/services/ai-client.test.ts:85:41
@@ -323,9 +312,10 @@ Vitest dirname: /app
     at trace [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.18_@opentelemetry+api@1.9.0_@types+node@24.10.9_@vitest+browser-playwright@4_aeee6ad457541a86e7fae5cc56a69020/node_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
     at runTest [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/services/ai-client.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 28[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/projects/project-grid.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 786[2mms[22m[39m
-     [33m[2m✓[22m[39m calls onSelect with correct arguments when clicked [33m 326[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/services/ai-client.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/projects/project-grid.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 790[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onSelect with correct arguments when clicked [33m 313[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/security/entity-repository-idor.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 23[2mms[22m[39m
 [90mstderr[2m | tests/unit/actions/github/github.test.ts[2m > [22m[2mGitHub Actions[2m > [22m[2mAuthorization[2m > [22m[2mshould fail if user is not logged in
 [22m[39mAction error: UnauthorizedError: You must be logged in to perform this action
     at verifyAuth [90m(/app/[39msrc/lib/action-middleware.ts:119:9[90m)[39m
@@ -424,8 +414,8 @@ Failed to invalidate cache pattern github:prs:TestOwner/TestRepo:*: TypeError: "
     at Immediate.<anonymous> [90m(/app/[39mnode_modules/[4m.pnpm[24m/@redis+client@5.10.0/node_modules/[4m@redis/client[24m/dist/lib/client/index.js:720:24[90m)[39m
 [90m    at processImmediate (node:internal/timers:485:21)[39m
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/github/github.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 621[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/chat-actions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/github/github.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 605[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/chat-actions.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 18[2mms[22m[39m
 [90mstderr[2m | tests/unit/lib/cache.test.ts[2m > [22m[2mCache Utils[2m > [22m[2mgetCached[2m > [22m[2mhandles json parse error by deleting key and fetching fresh
 [22m[39mFailed to parse cache for key test-key SyntaxError: Unexpected token 'i', "invalid-json" is not valid JSON
     at JSON.parse (<anonymous>)
@@ -486,21 +476,33 @@ Failed to invalidate cache pattern github:prs:TestOwner/TestRepo:*: TypeError: "
     at trace [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/vitest@4.0.18_@opentelemetry+api@1.9.0_@types+node@24.10.9_@vitest+browser-playwright@4_aeee6ad457541a86e7fae5cc56a69020/node_modules/[4mvitest[24m/dist/chunks/test.B8ej_ZHS.js:239:21[90m)[39m
     at runTest [90m(file:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:1653:12[90m)[39m
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/cache.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 29[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/writer-view.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 519[2mms[22m[39m
-     [33m[2m✓[22m[39m renders the 3-pane layout [33m 380[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/left-sidebar/scene-navigation-undo.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1117[2mms[22m[39m
-     [33m[2m✓[22m[39m optimistically removes scene [33m 767[2mms[22m[39m
-     [33m[2m✓[22m[39m restores scene when undo is clicked [33m 342[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/left-sidebar/scene-navigation.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1180[2mms[22m[39m
-     [33m[2m✓[22m[39m renders empty state when there are no chapters [33m 351[2mms[22m[39m
-     [33m[2m✓[22m[39m filters scenes based on search input [33m 660[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/builder/task-card.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 497[2mms[22m[39m
-     [33m[2m✓[22m[39m renders the Fix button with correct classes and handles click [33m 490[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/graph-pane.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 72[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/story-wizard.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 888[2mms[22m[39m
-     [33m[2m✓[22m[39m renders all story templates [33m 336[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/messages/preview-message-memo.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 77[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/cache.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/structure-editor-dialog.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 3875[2mms[22m[39m
+     [33m[2m✓[22m[39m opens dialog and shows content [33m 610[2mms[22m[39m
+     [33m[2m✓[22m[39m edits text and saves [33m 1135[2mms[22m[39m
+     [33m[2m✓[22m[39m handles save error [33m 497[2mms[22m[39m
+     [33m[2m✓[22m[39m toggles preview [33m 720[2mms[22m[39m
+     [33m[2m✓[22m[39m uses smart format [33m 633[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/writer-view.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 439[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the 3-pane layout [33m 330[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/left-sidebar/scene-navigation-undo.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 1143[2mms[22m[39m
+     [33m[2m✓[22m[39m optimistically removes scene [33m 801[2mms[22m[39m
+     [33m[2m✓[22m[39m restores scene when undo is clicked [33m 333[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/left-sidebar/scene-navigation.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1072[2mms[22m[39m
+     [33m[2m✓[22m[39m filters scenes based on search input [33m 634[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/graph-pane.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 69[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/builder/task-card.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 447[2mms[22m[39m
+     [33m[2m✓[22m[39m renders the Fix button with correct classes and handles click [33m 440[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/story-wizard.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 756[2mms[22m[39m
+     [33m[2m✓[22m[39m renders all story templates [33m 327[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/messages/preview-message-memo.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[32m 84[2mms[22m[39m
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/app/actions/project-preview.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 14[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/design-system-audit.test.tsx [2m([22m[2m7 tests[22m[2m)[22m[33m 1319[2mms[22m[39m
+     [33m[2m✓[22m[39m Button should have no accessibility violations [33m 345[2mms[22m[39m
+     [33m[2m✓[22m[39m Dialog should have no accessibility violations [33m 386[2mms[22m[39m
 [90mstderr[2m | tests/unit/app/actions/jules-preferences.test.ts[2m > [22m[2mgetJulesPreferencesAction[2m > [22m[2mshould handle missing column error (42703) gracefully
 [22m[39mJules preferences column missing, returning defaults: column julesPreferences does not exist
 
@@ -518,30 +520,28 @@ Failed to invalidate cache pattern github:prs:TestOwner/TestRepo:*: TypeError: "
   code: [32m'DATABASE_ERROR'[39m
 }
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/app/actions/jules-preferences.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 30[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/writer-sidebar.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 874[2mms[22m[39m
-     [33m[2m✓[22m[39m fetches and renders project structure [33m 589[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/app/actions/project-preview.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/projects.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/hooks/use-model-preferences.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 222[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/utils.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 28[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/ai-operations.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 19[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/messages/tool-renderer.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 160[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/outline-pane.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 847[2mms[22m[39m
-     [33m[2m✓[22m[39m renders outline data correctly [33m 626[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/app/actions/jules-preferences.test.ts [2m([22m[2m5 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/projects.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/utils.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/writer-sidebar.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 869[2mms[22m[39m
+     [33m[2m✓[22m[39m fetches and renders project structure [33m 580[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/hooks/use-model-preferences.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 224[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/ai-operations.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/messages/tool-renderer.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 144[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/book-canvas/panes/outline-pane.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 773[2mms[22m[39m
+     [33m[2m✓[22m[39m renders outline data correctly [33m 541[2mms[22m[39m
  [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/chapter-ops-security.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 10[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/writer/writer-view-hotkeys.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 410[2mms[22m[39m
-     [33m[2m✓[22m[39m toggles sidebar on Cmd+B [33m 401[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/writer/writer-view-hotkeys.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 393[2mms[22m[39m
+     [33m[2m✓[22m[39m toggles sidebar on Cmd+B [33m 387[2mms[22m[39m
 Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/wizard-review-step.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1093[2mms[22m[39m
-     [33m[2m✓[22m[39m calls onDeleteChapter when delete button is clicked [33m 442[2mms[22m[39m
-     [33m[2m✓[22m[39m should have no accessibility violations [33m 456[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/tools/manage-entities.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 16[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/book-canvas.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 159[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/projects/project-browser.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 428[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/wizard-review-step.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 1144[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onDeleteChapter when delete button is clicked [33m 504[2mms[22m[39m
+     [33m[2m✓[22m[39m should have no accessibility violations [33m 475[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/tools/manage-entities.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/book-canvas.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 281[2mms[22m[39m
 [90mstderr[2m | tests/unit/reader-progress.test.ts[2m > [22m[2mReader Progress Action[2m > [22m[2mshould fail gracefully if project access denied
 [22m[39mAction error: NotFoundError: Project not found: 123e4567-e89b-12d3-a456-426614174001
-    at Function.forResource [90m(/app/[39msrc/lib/errors.ts:206:10[90m)[39m
+    at Function.forResource [90m(/app/[39msrc/lib/errors.ts:208:10[90m)[39m
     at Object.handler [90m(/app/[39msrc/app/actions/reader.ts:36:24[90m)[39m
 [90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
     at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:191:19[90m)[39m
@@ -564,91 +564,129 @@ Not implemented: HTMLCanvasElement's getContext() method: without installing the
   code: [32m'UNAUTHORIZED'[39m
 }
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/reader-progress.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 26[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/ai-suggestions/route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 27[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/model-routing.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 15[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/consistency-service.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 21[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/dialog.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1359[2mms[22m[39m
-     [33m[2m✓[22m[39m should have no violations when open [33m 639[2mms[22m[39m
-     [33m[2m✓[22m[39m should have no violations when open [33m 525[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/sidebar/provider.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 134[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/db/schema.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 17[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/tools/update-scene-content.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 24[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/services/types.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 18[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/app/actions/jules-pagination.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 27[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/messages/messages.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 113[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/story/story-context-builder.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 14[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/sidebar/components.test.tsx [2m([22m[2m3 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 112[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/ui/empty-state.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 205[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/reader/reader-controls.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 965[2mms[22m[39m
-     [33m[2m✓[22m[39m renders correctly when visible [33m 348[2mms[22m[39m
-     [33m[2m✓[22m[39m calls onPreviousChapter when prev button is clicked [33m 595[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/dashboard-security.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 22[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/tools/update-document.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 16[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/story/story-context-builder.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/organisms/projects/project-browser.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 619[2mms[22m[39m
+     [33m[2m✓[22m[39m renders all projects initially [33m 336[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/reader-progress.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 33[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/ai-suggestions/route.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 45[2mms[22m[39m
+[90mstderr[2m | tests/unit/factory-tycoon/actions.test.ts[2m > [22m[2mFactory Tycoon Actions[2m > [22m[2msaveGameState should reject invalid schema (wrong type)
+[22m[39mAction error: ValidationError: Validation failed
+    at Function.fromZodError [90m(/app/[39msrc/lib/errors.ts:245:10[90m)[39m
+    at validateInput [90m(/app/[39msrc/lib/action-middleware.ts:142:25[90m)[39m
+    at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:188:27[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90m/app/[39mtests/unit/factory-tycoon/actions.test.ts:52:18
+    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
+  statusCode: [33m400[39m,
+  code: [32m'VALIDATION_ERROR'[39m,
+  field: [90mundefined[39m,
+  details: { cash: [ [32m'Invalid input: expected number, received string'[39m ] }
+}
+
+[90mstderr[2m | tests/unit/factory-tycoon/actions.test.ts[2m > [22m[2mFactory Tycoon Actions[2m > [22m[2msaveGameState should reject missing required fields
+[22m[39mAction error: ValidationError: Validation failed
+    at Function.fromZodError [90m(/app/[39msrc/lib/errors.ts:245:10[90m)[39m
+    at validateInput [90m(/app/[39msrc/lib/action-middleware.ts:142:25[90m)[39m
+    at Module.<anonymous> [90m(/app/[39msrc/lib/action-middleware.ts:188:27[90m)[39m
+[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
+    at [90m/app/[39mtests/unit/factory-tycoon/actions.test.ts:65:18
+    at [90mfile:///app/[39mnode_modules/[4m.pnpm[24m/@vitest+runner@4.0.18/node_modules/[4m@vitest/runner[24m/dist/index.js:915:20 {
+  statusCode: [33m400[39m,
+  code: [32m'VALIDATION_ERROR'[39m,
+  field: [90mundefined[39m,
+  details: {
+    science: [ [32m'Invalid input: expected number, received undefined'[39m ],
+    inventory: [ [32m'Invalid input: expected object, received undefined'[39m ],
+    capacity: [ [32m'Invalid input: expected number, received undefined'[39m ],
+    buildings: [ [32m'Invalid input: expected array, received undefined'[39m ],
+    tickCount: [ [32m'Invalid input: expected number, received undefined'[39m ],
+    unlockedBuildings: [ [32m'Invalid input: expected array, received undefined'[39m ],
+    researchedTechs: [ [32m'Invalid input: expected array, received undefined'[39m ]
+  }
+}
+
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/actions.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/model-routing.test.ts [2m([22m[2m10 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/components/structure-editor-utils.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/consistency-service.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/dialog.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 1886[2mms[22m[39m
+     [33m[2m✓[22m[39m should have no violations when open [33m 878[2mms[22m[39m
+     [33m[2m✓[22m[39m should have no violations when open [33m 704[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/interactionSystem.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/db/schema.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/tools/update-scene-content.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/sidebar/provider.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 185[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/hooks/use-scroll-to-bottom.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 110[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/services/types.test.ts [2m([22m[2m9 tests[22m[2m)[22m[32m 21[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/app/actions/jules-pagination.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 30[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/messages/messages.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 121[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/story/story-context-builder.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/sidebar/components.test.tsx [2m([22m[2m3 tests[22m[2m | [22m[33m1 skipped[39m[2m)[22m[32m 89[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/reader/reader-controls.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 649[2mms[22m[39m
+     [33m[2m✓[22m[39m calls onPreviousChapter when prev button is clicked [33m 356[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/ui/empty-state.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[32m 157[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/actions/dashboard-security.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/tools/update-document.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 15[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/security/scene-card-idor.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/glass-card.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 449[2mms[22m[39m
+     [33m[2m✓[22m[39m should have no accessibility violations [33m 307[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/story/story-context-builder.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 10[2mms[22m[39m
  [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/prompts.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 11[2mms[22m[39m
-Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
-Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/glass-card.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 491[2mms[22m[39m
-     [33m[2m✓[22m[39m should have no accessibility violations [33m 336[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/empty-state.test.tsx [2m([22m[2m6 tests[22m[2m)[22m[33m 520[2mms[22m[39m
+     [33m[2m✓[22m[39m should have no accessibility violations [33m 380[2mms[22m[39m
 [90mstderr[2m | tests/unit/api/cron.test.ts[2m > [22m[2mCron API Auth[2m > [22m[2mshould return 500 if CRON_SECRET is not set
 [22m[39mSecurity: CRON_SECRET is not configured
 
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/cron.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 42[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/chat/suggested-actions.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 173[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/security/scene-card-idor.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 24[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/book-exporter.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/button.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 482[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/analysis/style-analytics.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 12[2mms[22m[39m
-Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
-Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
-Not implemented: HTMLCanvasElement's getContext() method: without installing the canvas npm package
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/design-system-audit.test.tsx [2m([22m[2m4 tests[22m[2m)[22m[33m 535[2mms[22m[39m
-     [33m[2m✓[22m[39m Button should have no accessibility violations [33m 338[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/db/sqlite-driver.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1340[2mms[22m[39m
-     [33m[2m✓[22m[39m initializes sqlite when DB_DRIVER=sqlite [33m 1334[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/dashboard-controls.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 180[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/safe-query.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 18[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/api/cron.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/book-exporter.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/chat/suggested-actions.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 277[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/services/analysis/style-analytics.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/button.test.tsx [2m([22m[2m5 tests[22m[2m)[22m[33m 594[2mms[22m[39m
+     [33m[2m✓[22m[39m renders correctly with default props [33m 374[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/db/sqlite-driver.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 1593[2mms[22m[39m
+     [33m[2m✓[22m[39m initializes sqlite when DB_DRIVER=sqlite [33m 1585[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/dashboard-controls.test.tsx [2m([22m[2m1 test[22m[2m)[22m[32m 275[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/db/safe-query.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/icons.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 32[2mms[22m[39m
 Not implemented: Window's scrollTo() method
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/icons.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[32m 40[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/process-logs.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 794[2mms[22m[39m
-     [33m[2m✓[22m[39m renders with correct accessibility attributes [33m 350[2mms[22m[39m
-     [33m[2m✓[22m[39m toggles expansion and updates accessibility attributes [33m 434[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/productionSystem.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 13[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/manuscript-utils.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/primitives.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 365[2mms[22m[39m
-       [33m[2m✓[22m[39m renders glass variant correctly [33m 317[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/templates.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 12[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/hooks/use-scene-content.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 42[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/process-logs.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[33m 734[2mms[22m[39m
+     [33m[2m✓[22m[39m renders with correct accessibility attributes [33m 309[2mms[22m[39m
+     [33m[2m✓[22m[39m toggles expansion and updates accessibility attributes [33m 418[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/primitives.test.tsx [2m([22m[2m3 tests[22m[2m)[22m[33m 319[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/services/manuscript-utils.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/factory-tycoon/productionSystem.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/features/writer/hooks/use-scene-content.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/templates.test.ts [2m([22m[2m3 tests[22m[2m)[22m[32m 13[2mms[22m[39m
  [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/ai/model-utils.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 10[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/sheet.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 632[2mms[22m[39m
-     [33m[2m✓[22m[39m should have no violations when open [33m 621[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/random-title.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 11[2mms[22m[39m
- [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/skeleton.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 84[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/lib/random-title.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 12[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/sheet.test.tsx [2m([22m[2m1 test[22m[2m)[22m[33m 636[2mms[22m[39m
+     [33m[2m✓[22m[39m should have no violations when open [33m 629[2mms[22m[39m
+ [32m✓[39m [30m[42m unit [49m[39m tests/unit/components/atoms/skeleton.test.tsx [2m([22m[2m2 tests[22m[2m)[22m[32m 86[2mms[22m[39m
 
-[2m Test Files [22m [1m[32m106 passed[39m[22m[90m (106)[39m
-[2m      Tests [22m [1m[32m702 passed[39m[22m[2m | [22m[33m2 skipped[39m[90m (704)[39m
-[2m   Start at [22m 12:34:07
-[2m   Duration [22m 125.92s[2m (transform 8.49s, setup 59.00s, import 142.90s, tests 35.54s, environment 92.00s)[22m
+[2m Test Files [22m [1m[32m114 passed[39m[22m[90m (114)[39m
+[2m      Tests [22m [1m[32m742 passed[39m[22m[2m | [22m[33m2 skipped[39m[90m (744)[39m
+[2m   Start at [22m 12:53:08
+[2m   Duration [22m 170.11s[2m (transform 11.67s, setup 79.25s, import 182.76s, tests 58.50s, environment 125.91s)[22m
 
 [34m % [39m[2mCoverage report from [22m[33mv8[39m
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   51.29 |    43.56 |   42.36 |   52.08 |
+All files          |    51.9 |    44.24 |   42.98 |    52.7 |
  app/(auth)        |    2.35 |        0 |       0 |     2.4 |
   auth.config.ts   |    6.25 |        0 |       0 |    6.66 | 14-36
-  auth.ts          |    1.44 |        0 |       0 |    1.47 | 90-261
- app/(chat)        |   47.36 |    61.11 |   18.18 |      50 |
-  actions.ts       |   47.36 |    61.11 |   18.18 |      50 | 24-62,77,82,112
+  auth.ts          |    1.44 |        0 |       0 |    1.47 | 90-258
+ app/(chat)        |   52.63 |    44.44 |   18.18 |   52.77 |
+  actions.ts       |   52.63 |    44.44 |   18.18 |   52.77 | 32-75,86
  ...i/files/upload |   82.22 |       75 |      40 |   84.09 |
   route.ts         |   82.22 |       75 |      40 |   84.09 | ...05,168-171,191
- app/actions       |   38.42 |    28.18 |   36.69 |   39.06 |
+ app/actions       |   38.67 |    28.33 |   36.44 |   39.31 |
   ai-operations.ts |   24.07 |        0 |   21.42 |   24.07 | 36-40,58-181
   chapter-ops.ts   |   22.03 |        0 |      20 |    22.8 | ...14-177,190-230
   dashboard.ts     |      80 |       50 |     100 |   78.57 | 41,69-70
   ...es-schemas.ts |     100 |      100 |     100 |     100 |
-  entities.ts      |   86.76 |    78.26 |      90 |   86.56 | ...51,186,239,243
+  entities.ts      |   86.76 |    78.26 |      90 |   86.56 | ...55,190,243,247
   github.ts        |       0 |        0 |       0 |       0 |
   jules-ai.ts      |   22.85 |        0 |       0 |   22.85 | ...44-173,183-215
   ...es-schemas.ts |     100 |      100 |     100 |     100 |
@@ -659,9 +697,9 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   project-stats.ts |    11.2 |     1.47 |   33.33 |   12.38 | ...84-400,412-415
   projects.ts      |   19.29 |    18.75 |   14.28 |   19.29 | 32-127,133,140
   reader.ts        |     100 |      100 |     100 |     100 |
-  scenes.ts        |   76.92 |       75 |   66.66 |   76.92 | 31-34
+  scenes.ts        |     100 |      100 |     100 |     100 |
   settings.ts      |   44.44 |        0 |       0 |   44.44 | 29-34,46-62,71
-  ...generation.ts |   64.81 |     42.3 |     100 |   64.81 | ...43,150,159-164
+  ...generation.ts |      65 |    43.33 |     100 |      65 | ...51,158,170-177
  ...actions/github |   33.57 |        0 |      25 |   34.32 |
   issues.ts        |      50 |      100 |    37.5 |   48.64 | ...55-176,185-192
   pull-requests.ts |   16.43 |        0 |      15 |   17.14 | ...91-271,277-303
@@ -672,15 +710,15 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   route.ts         |   81.81 |       65 |   33.33 |   81.81 | 39,46,135-136
  ...ocess-feedback |   85.71 |      100 |     100 |   85.71 |
   route.ts         |   85.71 |      100 |     100 |   85.71 | 29,40-41
- components/atoms  |   86.71 |     57.6 |   62.16 |   86.71 |
+ components/atoms  |   88.19 |     57.6 |   67.56 |   88.19 |
   accordion.tsx    |     100 |      100 |     100 |     100 |
-  alert-dialog.tsx |   92.59 |      100 |      75 |   92.59 | 60,74
+  alert-dialog.tsx |     100 |      100 |     100 |     100 |
   animated.tsx     |      50 |    11.76 |      20 |      50 | 52-67,96,123
   button.tsx       |     100 |      100 |     100 |     100 |
   card.tsx         |   89.47 |      100 |   66.66 |   89.47 | 69,89
   checkbox.tsx     |     100 |      100 |     100 |     100 |
   context-menu.tsx |   75.75 |        0 |   11.11 |   75.75 | ...18,142,158,170
-  dialog.tsx       |   95.45 |      100 |   83.33 |   95.45 | 87
+  dialog.tsx       |     100 |      100 |     100 |     100 |
   ...down-menu.tsx |   78.78 |    28.57 |   22.22 |   78.78 | ...23,147,163,175
   grid-list.tsx    |     100 |    81.25 |     100 |     100 | 121,123,126
   input.tsx        |     100 |      100 |     100 |     100 |
@@ -689,7 +727,7 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   scroll-area.tsx  |     100 |       80 |     100 |     100 | 21,38
   select.tsx       |   91.66 |      100 |   71.42 |   91.66 | 106,141
   separator.tsx    |     100 |       75 |     100 |     100 | 20
-  sheet.tsx        |   91.66 |    57.14 |   66.66 |   91.66 | 103,117
+  sheet.tsx        |   95.83 |    57.14 |   83.33 |   95.83 | 117
   skeleton.tsx     |     100 |      100 |     100 |     100 |
   slider.tsx       |     100 |      100 |     100 |     100 |
   switch.tsx       |     100 |      100 |     100 |     100 |
@@ -705,21 +743,22 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   index.ts         |       0 |        0 |       0 |       0 |
   layout.tsx       |   69.69 |    63.63 |   11.11 |   69.69 | ...10,225-227,246
   provider.tsx     |   94.87 |    77.77 |     100 |   94.73 | 31,66
- ...onents/builder |   76.81 |    53.24 |   77.77 |    79.1 |
+ ...onents/builder |    46.8 |    41.96 |   44.68 |   49.25 |
   ...-skeleton.tsx |     100 |      100 |     100 |     100 |
-  ...oard-utils.ts |   60.86 |    47.05 |      70 |   66.66 | 23-33,67,74,86
-  task-board.tsx   |   89.65 |    78.57 |   77.77 |   89.65 | 58,85,104
-  task-card.tsx    |   71.42 |    48.27 |      80 |   71.42 | 33-35,132
+  ...oard-utils.ts |   38.88 |    36.36 |   58.33 |   41.17 | ...,75,87,100-137
+  task-board.tsx   |   44.57 |    36.66 |   25.92 |   47.43 | ...72-174,186,205
+  task-card.tsx    |   63.15 |    52.63 |      80 |   63.15 | 37-39,45-47,146
  ...s/builder/chat |       0 |        0 |       0 |       0 |
   ...chat-view.tsx |       0 |        0 |       0 |       0 | 23-85
   ...sage-list.tsx |       0 |        0 |       0 |       0 | 15-33
   ...osal-card.tsx |       0 |        0 |       0 |       0 | 28-57
   ...anner-chat.ts |       0 |        0 |       0 |       0 | 30-197
- ...der/task-board |   66.66 |    81.81 |      50 |   66.66 |
-  ...rd-column.tsx |      90 |    92.85 |     100 |      90 | 54
-  ...d-toolbar.tsx |      20 |     62.5 |      20 |      20 | 50-89
- ...ents/molecules |   51.25 |    50.48 |    42.3 |   53.24 |
-  empty-state.tsx  |     100 |    92.85 |     100 |     100 | 112,132
+ ...der/task-board |   70.58 |    80.76 |   55.55 |   70.58 |
+  ...s-toolbar.tsx |     100 |       50 |     100 |     100 | 23
+  ...rd-column.tsx |    90.9 |    92.85 |     100 |    90.9 | 58
+  ...d-toolbar.tsx |      20 |       70 |      20 |      20 | 59-98
+ ...ents/molecules |   51.25 |    51.42 |    42.3 |   53.24 |
+  empty-state.tsx  |     100 |    93.33 |     100 |     100 | 128,148
   glass-card.tsx   |     100 |    86.66 |     100 |     100 | 57,81
   prompt-input.tsx |    31.7 |        0 |   15.38 |    31.7 | ...73,200,228,239
   ...on-header.tsx |     100 |     87.5 |     100 |     100 | 34
@@ -780,36 +819,45 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   ...ct-browser.ts |   29.75 |    21.42 |   29.16 |    30.7 | ...29,236,244-246
  ...ganisms/reader |   27.27 |     62.5 |   11.11 |   27.27 |
   ...-controls.tsx |   27.27 |     62.5 |   11.11 |   27.27 | 52,66-177
- ...factory-tycoon |   89.18 |    55.55 |      75 |   91.17 |
+ ...factory-tycoon |   81.66 |    36.84 |      70 |   84.48 |
+  actions.ts       |   53.33 |       20 |      50 |   57.14 | 50-82
   config.ts        |     100 |      100 |     100 |     100 |
-  engine.ts        |    86.2 |    55.55 |      75 |   88.46 | 9-11
- ...tycoon/systems |   89.47 |    72.09 |     100 |   92.06 |
+  engine.ts        |    86.2 |    55.55 |      75 |   89.28 | 17-19
+  schemas.ts       |     100 |      100 |     100 |     100 |
+ ...oon/components |   45.86 |    25.61 |   53.33 |   45.23 |
+  GameCanvas.tsx   |   44.16 |    26.08 |   51.72 |    43.1 | ...47-352,366-422
+  visuals.ts       |   61.53 |    16.66 |     100 |      70 | 88-95
+ ...tycoon/systems |   90.05 |    76.04 |     100 |   94.23 |
+  ...tionSystem.ts |     100 |    85.71 |     100 |     100 | 26-32,37-40,78
   marketSystem.ts  |   89.65 |     62.5 |     100 |   89.28 | 30-31,38
-  ...tionSystem.ts |   86.74 |    71.42 |     100 |    90.9 | ...33,154-156,180
-  ...portSystem.ts |     100 |    92.85 |     100 |     100 | 22
- ...tems/transport |   45.23 |    31.35 |      75 |   48.67 |
-  belt.ts          |   54.28 |    34.21 |     100 |      60 | 52-77
-  inserter.ts      |   29.31 |    24.07 |      50 |   31.48 | ...4-75,80-84,101
-  splitter.ts      |   63.63 |     42.3 |     100 |   68.96 | 40-41,64-73
+  ...tionSystem.ts |   84.09 |    72.41 |     100 |    92.3 | ...57-158,184-186
+  ...portSystem.ts |     100 |    92.85 |     100 |     100 | 19
+ ...tems/transport |    56.6 |    44.79 |      80 |   60.41 |
+  belt.ts          |   93.33 |    64.28 |     100 |     100 | 10-20,31-32
+  inserter.ts      |   41.46 |    38.23 |      50 |   43.58 | ...49-50,55-59,76
+  splitter.ts      |   63.63 |       50 |     100 |   68.96 | 44-45,68-77
+  utils.ts         |   47.05 |    36.36 |     100 |   53.33 | 28-34,38-44
  ...y-tycoon/utils |   91.66 |       80 |     100 |   91.66 |
   grid.ts          |   91.66 |       80 |     100 |   91.66 | 12
- ...writer/actions |   40.93 |    36.18 |    37.2 |   41.97 |
-  chapter.ts       |   66.66 |    56.66 |   77.77 |   67.85 | ...33,245,277-278
+ ...writer/actions |   38.74 |    35.62 |   35.55 |   39.59 |
+  chapter.ts       |   67.41 |    59.37 |   77.77 |   68.23 | ...34,246,278-279
   index.ts         |       0 |        0 |       0 |       0 |
+  ...ect-export.ts |       0 |        0 |       0 |       0 | 9-58
   project.ts       |   11.76 |        0 |       0 |   12.12 | 29-110,117-124
   scene.ts         |   13.15 |       10 |    12.5 |    13.6 | ...36,147,176-434
   structure.ts     |   67.25 |    61.53 |   43.75 |   69.09 | ...37-343,388-394
- ...ter/components |   58.04 |    57.89 |   55.68 |   59.15 |
-  ...r-actions.tsx |    71.6 |    51.28 |   71.42 |   70.88 | ...50-151,160-168
+ ...ter/components |   70.05 |    70.44 |    61.7 |   71.42 |
+  ...r-actions.tsx |   71.25 |    51.28 |   71.42 |   70.51 | ...48-149,158-166
   ...ss-dialog.tsx |      90 |    98.21 |   71.42 |   89.47 | 194-209
   power-dock.tsx   |   44.44 |    54.54 |      20 |   44.44 | ...21-123,141-195
   story-wizard.tsx |   66.66 |      100 |      50 |   66.66 | 67
-  ...or-dialog.tsx |   21.05 |    10.16 |      25 |   21.59 | ...75-208,242-370
+  ...or-dialog.tsx |   63.82 |    71.42 |   66.66 |   66.66 | ...54,212-213,271
+  ...itor-utils.ts |      96 |    90.32 |     100 |     100 | 16,20,48
   ...-controls.tsx |   66.66 |       50 |     100 |   66.66 | 38
   ...t-context.tsx |      80 |       50 |     100 |      80 | 21
   ...r-context.tsx |      70 |    44.44 |   83.33 |   72.22 | 70-75,140
   ...l-context.tsx |   68.42 |       50 |    37.5 |   81.25 | 39,60,65
-  ...er-editor.tsx |      75 |     87.5 |   33.33 |      75 | 46,55-57
+  ...er-editor.tsx |   32.43 |    25.92 |   14.28 |   34.28 | ...,84-95,105-123
   ...t-context.tsx |      80 |       50 |     100 |      80 | 26
   ...r-sidebar.tsx |      75 |       75 |      50 |      75 | 73
   ...-skeleton.tsx |     100 |      100 |     100 |     100 |
@@ -841,35 +889,36 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   tool-config.ts   |     100 |      100 |     100 |     100 |
   ...strategies.ts |    0.81 |        0 |       0 |    0.82 | 43-279
   ...spotlight.tsx |   58.82 |    61.76 |   84.61 |   59.37 | 40-56,138
- ...s/writer/hooks |   53.33 |    47.61 |   51.81 |   54.35 |
+ ...s/writer/hooks |   53.77 |    47.64 |   52.25 |    54.7 |
   ...-structure.ts |      50 |     62.5 |   33.33 |   55.17 | 61-62,71-90
   ...ne-content.ts |   49.33 |     43.9 |      50 |   48.57 | ...61-164,174-175
   ...navigation.ts |   71.92 |    63.63 |   57.14 |      76 | ...15,120,124-125
-  ...perations.tsx |   56.02 |    45.83 |   60.52 |   55.55 | ...25-335,344-400
+  ...perations.tsx |   57.05 |       46 |   61.53 |   56.36 | ...31-341,350-406
   ...-selection.ts |   22.85 |     7.14 |    12.5 |   23.52 | ...53-65,70-74,80
   ...navigation.ts |      50 |    63.15 |   33.33 |   57.14 | 48,55-58,76-83
   ...iter-state.ts |   55.17 |    33.33 |      70 |   58.33 | 71-78,92-96
- hooks             |   63.24 |    38.62 |    67.6 |   63.79 |
-  ...visibility.ts |       0 |        0 |       0 |       0 | 16-43
+ hooks             |   63.51 |    36.53 |   66.29 |   63.97 |
+  ...visibility.ts |       0 |        0 |      25 |       0 | 16-43
   ...or-history.ts |   34.78 |    14.28 |   22.22 |   36.36 | ...02-103,107-111
   ...y-grouping.ts |   94.44 |    71.42 |     100 |   94.44 | 49
   ...references.ts |   60.25 |    23.52 |   68.42 |   62.85 | ...26,138-168,193
   ...-selection.ts |   51.94 |    16.17 |   70.58 |    50.7 | ...44-167,196-204
+  ...to-bottom.tsx |    64.7 |    15.78 |   55.55 |    64.7 | ...19-136,154-160
   ...ght-items.tsx |   96.96 |     90.9 |      90 |   96.77 | 110
   ...board-data.ts |   95.12 |    93.75 |     100 |   97.22 | 37
- lib               |    61.3 |     53.1 |    53.7 |   61.94 |
-  ...middleware.ts |   68.18 |    65.38 |   66.66 |   69.76 | 115,142,266-283
-  actions-utils.ts |   40.47 |    47.61 |   36.36 |   40.47 | ...32,163,188-212
+ lib               |   59.62 |    53.06 |   52.77 |   60.22 |
+  ...middleware.ts |   70.45 |    69.23 |   66.66 |   72.09 | 115,266-283
+  actions-utils.ts |   21.42 |    42.85 |   18.18 |   21.42 | ...98,132,146-212
   animations.ts    |     100 |      100 |     100 |     100 |
   api-client.ts    |   27.77 |       25 |    37.5 |   25.71 | ...4,59-64,90-127
   ...generation.ts |       0 |        0 |       0 |       0 | 50-93
   cache.ts         |    90.9 |    69.23 |     100 |   96.77 | 15
   constants.ts     |     100 |      100 |     100 |     100 |
-  errors.ts        |   83.52 |     67.5 |   94.44 |   83.52 | ...31-135,283-289
+  errors.ts        |   83.52 |     67.5 |   94.44 |   83.52 | ...33-137,283-289
   mime-types.ts    |      50 |      100 |       0 |      50 | 9
   query-options.ts |   27.27 |      100 |   15.78 |   27.27 | 2-8,10-11,14-20
-  quota.ts         |      75 |       50 |     100 |     100 | 9
-  random-title.ts  |      70 |      100 |      50 |      70 | 64-66
+  quota.ts         |   66.66 |       50 |     100 |      80 | 15
+  random-title.ts  |      80 |      100 |   66.66 |      80 | 65-66
   redis.ts         |      70 |       50 |       0 |   77.77 | 6,18
   result.ts        |   17.85 |     6.25 |      40 |   17.85 | 47,58-128
   ...-materials.ts |      75 |       50 |      50 |      75 | 26,67-96
@@ -913,7 +962,7 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   index.ts         |       0 |        0 |       0 |       0 |
   safe-query.ts    |     100 |      100 |     100 |     100 |
   utils.ts         |   66.66 |      100 |   66.66 |   66.66 | 11-12
- lib/db/queries    |     5.4 |      5.2 |    5.55 |    5.53 |
+ lib/db/queries    |    5.77 |     5.55 |    5.55 |    5.91 |
   book-export.ts   |       0 |        0 |       0 |       0 | 12-54
   ...generation.ts |       0 |        0 |       0 |       0 | 19-132
   chapter.ts       |       0 |        0 |       0 |       0 | 18-137
@@ -926,23 +975,23 @@ All files          |   51.29 |    43.56 |   42.36 |   52.08 |
   outline.ts       |       0 |        0 |       0 |       0 | 24-92
   passkeys.ts      |   91.66 |      100 |     100 |   91.66 | 60,104
   project.ts       |       0 |        0 |       0 |       0 | 20-104
-  scene.ts         |    8.16 |     23.4 |   11.11 |    8.16 | ...59,307,311-312
+  scene.ts         |   11.76 |    25.53 |   11.11 |   11.76 | ...59,307,311-312
   ...e-material.ts |       0 |        0 |       0 |       0 | 37-493
   story-state.ts   |       0 |        0 |       0 |       0 | 12-100
   stream.ts        |       0 |        0 |       0 |       0 | 16-39
   ...references.ts |    4.34 |        0 |       0 |    4.54 | 15-110
   user.ts          |       0 |      100 |       0 |       0 | 9-25
   volume.ts        |       0 |        0 |       0 |       0 | 27-198
- ...b/repositories |   90.97 |    90.34 |   88.96 |    91.6 |
+ ...b/repositories |   90.65 |    90.16 |   88.96 |   91.29 |
   ...repository.ts |       0 |        0 |       0 |       0 | 61-74
   ...repository.ts |     100 |     90.9 |     100 |     100 | 173,218
   ...repository.ts |     100 |    95.83 |     100 |     100 | 89
-  ...repository.ts |   84.28 |    86.76 |   80.76 |   86.61 | 179,188,369-415
+  ...repository.ts |   85.13 |    86.48 |   80.76 |    87.4 | 179,188,389-435
   ...repository.ts |    4.16 |        0 |       0 |    4.34 | 19-85
   index.ts         |       0 |        0 |       0 |       0 |
   ...repository.ts |     100 |      100 |     100 |     100 |
   ...repository.ts |   96.84 |    93.02 |     100 |   96.62 | 66,77-78
-  ...repository.ts |   95.69 |    84.31 |     100 |   98.82 | 198
+  ...repository.ts |   92.07 |    84.74 |     100 |   94.84 | ...01,232,265,360
   ...repository.ts |     100 |    98.68 |     100 |     100 | 328
   ...repository.ts |   77.77 |    88.88 |    90.9 |   73.68 | 208-228
   ...repository.ts |   98.59 |      100 |   93.33 |    98.5 | 77
