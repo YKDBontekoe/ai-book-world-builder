@@ -369,7 +369,10 @@ export class SceneRepository extends BaseRepository<
 					updatedAt: new Date(),
 				})
 				.where(
-					and(eq(sceneCard.sceneId, sceneId), eq(sceneCard.projectId, projectId)),
+					and(
+						eq(sceneCard.sceneId, sceneId),
+						eq(sceneCard.projectId, projectId),
+					),
 				)
 				.returning();
 

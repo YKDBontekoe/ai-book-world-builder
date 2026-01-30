@@ -2,7 +2,6 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import cx from "classnames";
 import { motion } from "framer-motion";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useWindowSize } from "usehooks-ts";
@@ -17,6 +16,7 @@ import { useArtifact } from "@/hooks/use-artifact";
 import { api } from "@/lib/api-client";
 import type { Document } from "@/lib/db/schema";
 import { QUERY_KEYS } from "@/lib/query-options";
+import { cn } from "@/lib/utils";
 
 const ArtifactComponent = () => {
 	const { artifact, setArtifact } = useArtifact();
@@ -132,7 +132,7 @@ const ArtifactComponent = () => {
 				x: isArtifactVisible ? 0 : "100%",
 				width: windowWidth && windowWidth < 768 ? "100%" : "50%",
 			}}
-			className={cx(
+			className={cn(
 				"fixed top-0 right-0 z-50 h-dvh bg-background shadow-2xl transition-all duration-300 ease-in-out print:static print:h-auto print:w-full print:shadow-none",
 				{
 					"border-l": isArtifactVisible,

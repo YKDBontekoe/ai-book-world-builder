@@ -1,6 +1,5 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import {
 	Activity,
 	Beaker,
@@ -13,13 +12,13 @@ import {
 	TrendingDown,
 	TrendingUp,
 } from "lucide-react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { RESOURCE_VALUES } from "../config";
 import { useGame } from "../store";
+import type { Resource } from "../types";
 import { GameSettings } from "./GameSettings";
 import { ResearchModal } from "./ResearchModal";
-import type { Resource } from "../types";
 
 const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
 	ore: { icon: "/images/factory-tycoon/ore.png", color: "text-amber-600" },

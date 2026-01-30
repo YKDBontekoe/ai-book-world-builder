@@ -1,4 +1,4 @@
-import { isEqual } from "lodash";
+import isEqual from "fast-deep-equal";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { createChapterSnapshot } from "@/features/writer/actions";

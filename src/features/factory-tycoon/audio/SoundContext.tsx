@@ -15,7 +15,9 @@ const SoundContext = createContext<SoundContextType | null>(null);
 
 export function SoundProvider({
 	children,
-}: { children: React.ReactNode }): React.JSX.Element {
+}: {
+	children: React.ReactNode;
+}): React.JSX.Element {
 	const [muted, setMuted] = useState(false);
 
 	// Placeholders for Audio objects
