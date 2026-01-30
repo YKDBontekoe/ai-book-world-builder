@@ -1,7 +1,20 @@
 import throttle from "lodash/throttle";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+	type RefObject,
+	useCallback,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 
-export function useScrollToBottom() {
+export function useScrollToBottom(): {
+	containerRef: RefObject<HTMLDivElement | null>;
+	endRef: RefObject<HTMLDivElement | null>;
+	isAtBottom: boolean;
+	scrollToBottom: (behavior?: ScrollBehavior) => void;
+	onViewportEnter: () => void;
+	onViewportLeave: () => void;
+} {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const endRef = useRef<HTMLDivElement>(null);
 	const [isAtBottom, setIsAtBottom] = useState(true);

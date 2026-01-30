@@ -1,10 +1,6 @@
 import { nanoid } from "nanoid";
 import { BUILDINGS, STACK_SIZE } from "../config";
-import type {
-	BuildingConfig,
-	BuildingEntity,
-	Resource,
-} from "../types";
+import type { BuildingConfig, BuildingEntity, Resource } from "../types";
 import { getTargetCoordinates } from "../utils/grid";
 
 export type SystemResult = {
@@ -39,11 +35,15 @@ export const runProductionSystem = (
 		if (config.type === "Market" || config.type === "Warehouse") continue;
 		if (!config.inputs && !config.outputs) continue;
 
-        const targetBelt = getOutputTarget(building, config, buildingsMap);
-        const outputToBelt = !!targetBelt;
+		const targetBelt = getOutputTarget(building, config, buildingsMap);
+		const outputToBelt = !!targetBelt;
 
-        const hasInputs = checkInputAvailability(building, config, workingInventory);
-        const hasSpace = checkOutputCapacity(building, config, outputToBelt);
+		const hasInputs = checkInputAvailability(
+			building,
+			config,
+			workingInventory,
+		);
+		const hasSpace = checkOutputCapacity(building, config, outputToBelt);
 
 		// Update Status
 		if (!hasInputs) {
@@ -56,8 +56,8 @@ export const runProductionSystem = (
 
 		// Execute
 		if (building.status === "RUNNING") {
-            processConsumption(building, config, workingInventory, result);
-            processProduction(building, config, targetBelt, result);
+			processConsumption(building, config, workingInventory, result);
+			processProduction(building, config, targetBelt, result);
 		}
 	}
 
@@ -67,145 +67,141 @@ export const runProductionSystem = (
 // --- Helper Functions ---
 
 function getOutputTarget(
-    building: BuildingEntity,
-    config: BuildingConfig,
-    buildingsMap: Map<string, BuildingEntity>
+	building: BuildingEntity,
+	config: BuildingConfig,
+	buildingsMap: Map<string, BuildingEntity>,
 ): BuildingEntity | undefined {
-    const outputRes = Object.keys(config.outputs || {}).find(
-        (k) => k !== "cash",
-    ) as Resource;
+	const outputRes = Object.keys(config.outputs || {}).find(
+		(k) => k !== "cash",
+	) as Resource;
 
-    if (outputRes) {
-        const targetCoords = getTargetCoordinates(
-            building.x,
-            building.y,
-            building.direction,
-        );
-        const target = buildingsMap.get(`${targetCoords.x},${targetCoords.y}`);
-        if (
-            target &&
-            (target.type === "Belt" || target.type === "Splitter")
-        ) {
-            return target;
-        }
-    }
-    return undefined;
+	if (outputRes) {
+		const targetCoords = getTargetCoordinates(
+			building.x,
+			building.y,
+			building.direction,
+		);
+		const target = buildingsMap.get(`${targetCoords.x},${targetCoords.y}`);
+		if (target && (target.type === "Belt" || target.type === "Splitter")) {
+			return target;
+		}
+	}
+	return undefined;
 }
 
 function checkInputAvailability(
-    building: BuildingEntity,
-    config: BuildingConfig,
-    workingInventory: Record<string, number>
+	building: BuildingEntity,
+	config: BuildingConfig,
+	workingInventory: Record<string, number>,
 ): boolean {
-    if (!config.inputs) return true;
+	if (!config.inputs) return true;
 
-    for (const [res, amount] of Object.entries(config.inputs)) {
-        if (res !== "cash") {
-            const r = res as Resource;
-            const localAmount = building.localInventory?.[r] || 0;
-            const neededFromGlobal = Math.max(0, amount - localAmount);
+	for (const [res, amount] of Object.entries(config.inputs)) {
+		if (res !== "cash") {
+			const r = res as Resource;
+			const localAmount = building.localInventory?.[r] || 0;
+			const neededFromGlobal = Math.max(0, amount - localAmount);
 
-            if ((workingInventory[r] || 0) < neededFromGlobal) {
-                return false;
-            }
-        }
-    }
-    return true;
+			if ((workingInventory[r] || 0) < neededFromGlobal) {
+				return false;
+			}
+		}
+	}
+	return true;
 }
 
 function checkOutputCapacity(
-    building: BuildingEntity,
-    config: BuildingConfig,
-    outputToBelt: boolean
+	building: BuildingEntity,
+	config: BuildingConfig,
+	outputToBelt: boolean,
 ): boolean {
-    if (outputToBelt) return true; // Assume belt takes it (or pile up logic)
+	if (outputToBelt) return true; // Assume belt takes it (or pile up logic)
 
-    const outputVolume = Object.entries(config.outputs || {}).reduce(
-        (vol, [res, amount]) => {
-            return res === "cash" || res === "science" ? vol : vol + amount;
-        },
-        0,
-    );
+	const outputVolume = Object.entries(config.outputs || {}).reduce(
+		(vol, [res, amount]) => {
+			return res === "cash" || res === "science" ? vol : vol + amount;
+		},
+		0,
+	);
 
-    if (outputVolume > 0) {
-        for (const [res, amount] of Object.entries(config.outputs || {})) {
-            if (res !== "cash" && res !== "science") {
-                const r = res as Resource;
-                const current = building.localInventory?.[r] || 0;
-                if (current + amount > STACK_SIZE) {
-                    return false;
-                }
-            }
-        }
-    }
-    return true;
+	if (outputVolume > 0) {
+		for (const [res, amount] of Object.entries(config.outputs || {})) {
+			if (res !== "cash" && res !== "science") {
+				const r = res as Resource;
+				const current = building.localInventory?.[r] || 0;
+				if (current + amount > STACK_SIZE) {
+					return false;
+				}
+			}
+		}
+	}
+	return true;
 }
 
 function processConsumption(
-    building: BuildingEntity,
-    config: BuildingConfig,
-    workingInventory: Record<string, number>,
-    result: SystemResult
+	building: BuildingEntity,
+	config: BuildingConfig,
+	workingInventory: Record<string, number>,
+	result: SystemResult,
 ) {
-    if (!config.inputs) return;
+	if (!config.inputs) return;
 
-    for (const [res, amount] of Object.entries(config.inputs)) {
-        if (res !== "cash") {
-            const r = res as Resource;
-            const localAmount = building.localInventory?.[r] || 0;
-            const takeFromLocal = Math.min(localAmount, amount);
-            const takeFromGlobal = amount - takeFromLocal;
+	for (const [res, amount] of Object.entries(config.inputs)) {
+		if (res !== "cash") {
+			const r = res as Resource;
+			const localAmount = building.localInventory?.[r] || 0;
+			const takeFromLocal = Math.min(localAmount, amount);
+			const takeFromGlobal = amount - takeFromLocal;
 
-            if (takeFromLocal > 0) {
-                if (!building.localInventory) building.localInventory = {};
-                building.localInventory[r] =
-                    (building.localInventory[r] || 0) - takeFromLocal;
-            }
+			if (takeFromLocal > 0) {
+				if (!building.localInventory) building.localInventory = {};
+				building.localInventory[r] =
+					(building.localInventory[r] || 0) - takeFromLocal;
+			}
 
-            if (takeFromGlobal > 0) {
-                workingInventory[r] -= takeFromGlobal;
-                result.inventoryDelta[r] =
-                    (result.inventoryDelta[r] || 0) - takeFromGlobal;
-            }
-        }
-    }
+			if (takeFromGlobal > 0) {
+				workingInventory[r] -= takeFromGlobal;
+				result.inventoryDelta[r] =
+					(result.inventoryDelta[r] || 0) - takeFromGlobal;
+			}
+		}
+	}
 }
 
 function processProduction(
-    building: BuildingEntity,
-    config: BuildingConfig,
-    targetBelt: BuildingEntity | undefined,
-    result: SystemResult
+	building: BuildingEntity,
+	config: BuildingConfig,
+	targetBelt: BuildingEntity | undefined,
+	result: SystemResult,
 ) {
-    if (!config.outputs) return;
+	if (!config.outputs) return;
 
-    for (const [res, amount] of Object.entries(config.outputs)) {
-        if (res !== "cash") {
-            const r = res as Resource;
-            if (targetBelt) {
-                // Produce to Belt
-                if (!targetBelt.beltItems) targetBelt.beltItems = [];
-                for (let i = 0; i < amount; i++) {
-                    targetBelt.beltItems.push({
-                        id: nanoid(),
-                        resource: r,
-                        position: 0,
-                    });
-                }
-            } else {
-                // Produce to Local Inventory or Global (Virtual)
-                if (r === "cash" || r === "science") {
-                    result.inventoryDelta[r] =
-                        (result.inventoryDelta[r] || 0) + amount;
-                } else {
-                    if (!building.localInventory) building.localInventory = {};
+	for (const [res, amount] of Object.entries(config.outputs)) {
+		if (res !== "cash") {
+			const r = res as Resource;
+			if (targetBelt) {
+				// Produce to Belt
+				if (!targetBelt.beltItems) targetBelt.beltItems = [];
+				for (let i = 0; i < amount; i++) {
+					targetBelt.beltItems.push({
+						id: nanoid(),
+						resource: r,
+						position: 0,
+					});
+				}
+			} else {
+				// Produce to Local Inventory or Global (Virtual)
+				if (r === "cash" || r === "science") {
+					result.inventoryDelta[r] = (result.inventoryDelta[r] || 0) + amount;
+				} else {
+					if (!building.localInventory) building.localInventory = {};
 
-                    const currentAmount = building.localInventory[r] || 0;
-                     building.localInventory[r] = currentAmount + amount;
-                }
-            }
-        } else {
-            result.cashDelta += amount;
-        }
-    }
+					const currentAmount = building.localInventory[r] || 0;
+					building.localInventory[r] = currentAmount + amount;
+				}
+			}
+		} else {
+			result.cashDelta += amount;
+		}
+	}
 }

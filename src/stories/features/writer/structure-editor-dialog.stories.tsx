@@ -62,7 +62,9 @@ export const WithPreview: Story = {
 		await body.findByRole("dialog", { name: "Structure Editor" });
 
 		// Toggle preview
-		const previewBtn = await body.findByRole("button", { name: "Toggle Preview" });
+		const previewBtn = await body.findByRole("button", {
+			name: "Toggle Preview",
+		});
 		await userEvent.click(previewBtn);
 
 		await expect(
