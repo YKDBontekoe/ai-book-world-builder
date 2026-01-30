@@ -37,12 +37,14 @@ The default Kanban view for managing active development.
 -   **Columns**: Organized by lifecycle stage (Backlog -> In Progress -> Review -> Done).
 
 ### 2. Roadmap View
+
 A high-level view for product planning and feature discovery.
 -   **Brainstorm Ideas**: Uses the Jules Agent to analyze the current codebase and project docs to suggest new features (High/Medium/Low Impact).
 -   **Active Features**: Displays a list of parent issues (Epics) that track major features.
 -   **Plan This Feature**: Click the hammer icon on any suggestion to instantly open the planning dialog.
 
 ### 3. Jules Console (Planner Chat)
+
 A specialized chat interface for brainstorming and architecting new features before they become issues.
 -   **Access**: Select "Jules Console" from the view toggle.
 -   **Workflow**:
