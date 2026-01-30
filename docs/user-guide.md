@@ -96,6 +96,17 @@ The Canvas (Right Panel) is your command center for world-building and analysis.
 *   **Diagnostics**: Runs health checks on your story (e.g., "Missing Character Descriptions", "Empty Scenes").
 *   **Log**: A history of changes and AI generations.
 
+### Writer View Modes
+Customize your writing environment using the controls in the top header.
+
+*   **Director Mode (Activity Icon)**
+    *   **Purpose**: Real-time analysis of your writing style.
+    *   **Features**: Displays a floating "Writing Style" card with metrics for Tone, Voice, Sentence Variety, Descriptive Level, and Pacing Score.
+*   **Typewriter Mode (Align Icon)**
+    *   **Purpose**: Keeps your cursor centered on the screen for focused drafting.
+*   **Zen Mode (Maximize Icon)**
+    *   **Purpose**: Hides all sidebars and UI elements for a distraction-free experience.
+
 ## Reader Mode
 
 **Reader Mode** offers a distraction-free environment to review your work as a finished book.

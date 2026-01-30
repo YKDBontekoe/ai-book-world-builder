@@ -26,7 +26,7 @@ JULES_API_KEY=AIza...       # API Key for Jules (Google)
 
 ## Software Builder Interface
 
-The interface (`/builder`) is designed for high-density information and features two primary views:
+The interface (`/builder`) is designed for high-density information and features three primary views:
 
 ### 1. Task Board
 The default Kanban view for managing active development.
@@ -36,9 +36,15 @@ The default Kanban view for managing active development.
     -   **Compact Mode**: A toggle to reduce card size for higher information density.
 -   **Columns**: Organized by lifecycle stage (Backlog -> In Progress -> Review -> Done).
 
-### 2. Planner Chat
+### 2. Roadmap View
+A high-level view for product planning and feature discovery.
+-   **Brainstorm Ideas**: Uses the Jules Agent to analyze the current codebase and project docs to suggest new features (High/Medium/Low Impact).
+-   **Active Features**: Displays a list of parent issues (Epics) that track major features.
+-   **Plan This Feature**: Click the hammer icon on any suggestion to instantly open the planning dialog.
+
+### 3. Jules Console (Planner Chat)
 A specialized chat interface for brainstorming and architecting new features before they become issues.
--   **Access**: Click the "Planner Chat" toggle in the top toolbar.
+-   **Access**: Select "Jules Console" from the view toggle.
 -   **Workflow**:
     1.  **Discuss**: Chat with the "Architect" agent to flesh out a feature idea.
     2.  **Propose**: The agent uses the `propose_plan` tool to structure the idea into a Title, Description, and Sub-tasks.
