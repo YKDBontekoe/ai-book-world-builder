@@ -17,7 +17,7 @@ import { CreateFeatureDialog } from "./create-feature-dialog";
 // Types
 // ============================================================================
 
-type SuggestedFeature = {
+export type SuggestedFeature = {
 	title: string;
 	description: string;
 	reasoning: string;
@@ -25,7 +25,7 @@ type SuggestedFeature = {
 	type: "Feature" | "Refactor" | "Test" | "Docs";
 };
 
-type RoadmapIssue = {
+export type RoadmapIssue = {
 	number: number;
 	title: string;
 	body: string | null;
@@ -163,8 +163,11 @@ export function RoadmapView(): JSX.Element {
 						? error.message
 						: "Something went wrong while brainstorming ideas.";
 
+				// Log the original error for debugging but don't show to user
+				console.error("Brainstorming error:", error);
+
 				// Map common technical errors to user-friendly messages
-				let friendlyMessage = rawMessage;
+				let friendlyMessage = "Something went wrong while brainstorming ideas.";
 				if (rawMessage.includes("context_length_exceeded")) {
 					friendlyMessage =
 						"Project context is too large. Try archiving old documents.";
