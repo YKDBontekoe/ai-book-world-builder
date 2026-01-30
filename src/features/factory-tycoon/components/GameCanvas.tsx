@@ -465,14 +465,10 @@ export function GameCanvas({
 								)}
 							</div>
 							{/* Backdrop to close on click outside (scoped to canvas) */}
-							<div
+							<button
+								type="button"
 								className="fixed inset-0 z-[-1]"
 								onClick={closeContextMenu}
-								onKeyDown={(e) => {
-									if (e.key === "Escape") closeContextMenu();
-								}}
-								role="button"
-								tabIndex={-1}
 								aria-label="Close context menu"
 							/>
 						</div>
