@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { withProjectWriteAccess } from "@/lib/actions-utils";
+import { createUserAction } from "@/lib/action-middleware";
+import { ensureProjectAccess } from "@/lib/actions-utils";
 import { invalidateCache } from "@/lib/cache";
 import { sceneRepository } from "@/lib/db/repositories";
 import { sceneStatus } from "@/lib/db/schema/scenes";
-import { err } from "@/lib/result";
 
 const updateSceneSchema = z.object({
 	id: z.string().uuid(),
@@ -19,24 +19,12 @@ const updateSceneSchema = z.object({
 		.optional(),
 });
 
-export async function updateSceneAction(params: {
-	id: string;
-	title?: string;
-	status?: string;
-	content?: string;
-	projectId: string;
-}) {
-	const validation = updateSceneSchema.safeParse(params);
-	if (!validation.success) {
-		const errorMessage = validation.error.issues
-			.map((i) => i.message)
-			.join(", ");
-		return err(`Validation failed: ${errorMessage}`);
-	}
+export const updateSceneAction = createUserAction({
+	input: updateSceneSchema,
+	handler: async ({ input: { id, projectId, title, status, content } }) => {
+		// Ensure the user has write access to the project
+		await ensureProjectAccess(projectId, true);
 
-	const { id, title, status, content, projectId } = validation.data;
-
-	return withProjectWriteAccess(projectId, async () => {
 		const updatedScene = await sceneRepository.update(
 			id,
 			{
@@ -58,5 +46,5 @@ export async function updateSceneAction(params: {
 			createdAt: updatedScene.createdAt.toISOString(),
 			updatedAt: updatedScene.updatedAt.toISOString(),
 		};
-	});
-}
+	},
+});

@@ -164,7 +164,8 @@ vi.mock("@/lib/actions-utils", () => ({
 		// and then call the callback
 		// We can spy that ensureProjectAccess was called if needed, but since we mock the whole wrapper,
 		// we just execute the callback.
-		return await cb({ project: { id: projectId }, user: { id: "user-1" } });
+		const data = await cb({ project: { id: projectId }, user: { id: "user-1" } });
+		return { success: true, data };
 	}),
 }));
 
@@ -310,12 +311,8 @@ describe("Story Generation Actions", () => {
 			const result = await planChapterScenes(validChapterId);
 			expect(result.success).toBe(true);
 			if (result.success) {
-				// Unwrap data with cast
-				const resultData = (result as any).data;
-				if (resultData?.success) {
-					expect(resultData.sceneIds).toHaveLength(1);
-					expect(resultData.sceneIds?.[0]).toBe("mock-id");
-				}
+				expect(result.sceneIds).toHaveLength(1);
+				expect(result.sceneIds?.[0]).toBe("mock-id");
 			}
 		});
 	});

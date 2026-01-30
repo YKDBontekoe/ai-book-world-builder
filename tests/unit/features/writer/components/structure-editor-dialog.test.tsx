@@ -1,8 +1,8 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { StructureEditorDialog } from "@/features/writer/components/structure-editor-dialog";
 import { saveProjectStructure } from "@/features/writer/actions";
+import { StructureEditorDialog } from "@/features/writer/components/structure-editor-dialog";
 
 // Mock the server action
 vi.mock("@/features/writer/actions", () => ({
@@ -29,7 +29,9 @@ describe("StructureEditorDialog", () => {
 			</StructureEditorDialog>,
 		);
 
-		expect(screen.getByRole("button", { name: "Open Editor" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Open Editor" }),
+		).toBeInTheDocument();
 	});
 
 	it("opens dialog and shows content", async () => {
@@ -46,7 +48,9 @@ describe("StructureEditorDialog", () => {
 
 		await user.click(screen.getByRole("button", { name: "Open Editor" }));
 
-		expect(screen.getByRole("dialog", { name: "Structure Editor" })).toBeInTheDocument();
+		expect(
+			screen.getByRole("dialog", { name: "Structure Editor" }),
+		).toBeInTheDocument();
 		const textarea = screen.getByRole("textbox");
 		expect(textarea).toHaveValue(currentStructure);
 	});
@@ -78,15 +82,18 @@ describe("StructureEditorDialog", () => {
 		});
 
 		await waitFor(() => {
-            expect(onSave).toHaveBeenCalled();
-        });
+			expect(onSave).toHaveBeenCalled();
+		});
 
-        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 	});
 
 	it("handles save error", async () => {
 		const user = userEvent.setup();
-		(saveProjectStructure as any).mockResolvedValue({ success: false, error: "Save failed" });
+		(saveProjectStructure as any).mockResolvedValue({
+			success: false,
+			error: "Save failed",
+		});
 
 		render(
 			<StructureEditorDialog
@@ -104,12 +111,12 @@ describe("StructureEditorDialog", () => {
 
 		expect(saveProjectStructure).toHaveBeenCalled();
 		expect(onSave).not.toHaveBeenCalled();
-        // Dialog should stay open
-        expect(screen.getByRole("dialog")).toBeInTheDocument();
+		// Dialog should stay open
+		expect(screen.getByRole("dialog")).toBeInTheDocument();
 	});
 
-    it("toggles preview", async () => {
-        const user = userEvent.setup();
+	it("toggles preview", async () => {
+		const user = userEvent.setup();
 		render(
 			<StructureEditorDialog
 				projectId={projectId}
@@ -122,17 +129,19 @@ describe("StructureEditorDialog", () => {
 
 		await user.click(screen.getByRole("button", { name: "Open Editor" }));
 
-        // Toggle Preview
-        const previewButton = screen.getByRole("button", { name: "Toggle Preview" });
-        await user.click(previewButton);
+		// Toggle Preview
+		const previewButton = screen.getByRole("button", {
+			name: "Toggle Preview",
+		});
+		await user.click(previewButton);
 
-        expect(screen.getByText("Structure Preview")).toBeInTheDocument();
-        expect(screen.getByText("Chapter 1: Start")).toBeInTheDocument();
-    });
+		expect(screen.getByText("Structure Preview")).toBeInTheDocument();
+		expect(screen.getByText("Chapter 1: Start")).toBeInTheDocument();
+	});
 
-    it("uses smart format", async () => {
-        const user = userEvent.setup();
-        const messyStructure = "Chapter 1\nScene A";
+	it("uses smart format", async () => {
+		const user = userEvent.setup();
+		const messyStructure = "Chapter 1\nScene A";
 		render(
 			<StructureEditorDialog
 				projectId={projectId}
@@ -145,11 +154,13 @@ describe("StructureEditorDialog", () => {
 
 		await user.click(screen.getByRole("button", { name: "Open Editor" }));
 
-        const formatButton = screen.getByRole("button", { name: "Smart Format" });
-        await user.click(formatButton);
+		const formatButton = screen.getByRole("button", { name: "Smart Format" });
+		await user.click(formatButton);
 
-        // Smart format output depends on the util.
-        expect(screen.getByDisplayValue(/Chapter 1: Untitled Chapter/)).toBeInTheDocument();
-        expect(screen.getByDisplayValue(/Scene 1: A/)).toBeInTheDocument();
-    });
+		// Smart format output depends on the util.
+		expect(
+			screen.getByDisplayValue(/Chapter 1: Untitled Chapter/),
+		).toBeInTheDocument();
+		expect(screen.getByDisplayValue(/Scene 1: A/)).toBeInTheDocument();
+	});
 });

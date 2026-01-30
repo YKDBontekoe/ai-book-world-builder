@@ -2,7 +2,7 @@ import { BUILDINGS } from "./config";
 import { runMarketSystem } from "./systems/marketSystem";
 import { runProductionSystem } from "./systems/productionSystem";
 import { runTransportSystem } from "./systems/transportSystem";
-import type { BuildingEntity, GameState, Resource } from "./types";
+import type { BuildingEntity, BuildingStatus, GameState, Resource } from "./types";
 
 // Helper to calculate total capacity based on buildings
 export function calculateCapacity(

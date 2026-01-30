@@ -72,17 +72,15 @@ export function ChapterActions({
 				return;
 			}
 
-			// Unwrap data with cast to handle TS union narrowing limitations
-			const resultData = (planResult as any).data;
-			if (!resultData?.success || !resultData.sceneIds) {
+			if (!planResult.success || !planResult.sceneIds) {
 				setPhase("error");
-				setError(resultData?.error || "Failed to plan scenes");
+				setError(planResult.error || "Failed to plan scenes");
 				setLoading(false);
 				return;
 			}
 
 			// Initialize scene progress with titles (we'll get titles from the response)
-			const initialScenes: SceneProgress[] = resultData.sceneIds.map(
+			const initialScenes: SceneProgress[] = planResult.sceneIds.map(
 				(id: string, index: number) => ({
 					id,
 					title: `Scene ${index + 1}`,
@@ -95,7 +93,7 @@ export function ChapterActions({
 			onUpdate(); // Show empty scenes immediately
 
 			// 2. Generate Content Sequentially
-			const total = resultData.sceneIds.length;
+			const total = planResult.sceneIds.length;
 
 			for (let i = 0; i < total; i++) {
 				if (cancelled) {
@@ -104,7 +102,7 @@ export function ChapterActions({
 					return;
 				}
 
-				const sceneId = resultData.sceneIds[i];
+				const sceneId = planResult.sceneIds[i];
 
 				// Update scene status to generating
 				setScenes((prev) =>

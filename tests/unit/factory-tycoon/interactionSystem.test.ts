@@ -1,61 +1,97 @@
-import { describe, expect, it } from 'vitest';
-import { getInteractionResult, processInteraction } from '../../../src/features/factory-tycoon/systems/interactionSystem';
-import { GameState } from '../../../src/features/factory-tycoon/types';
-import { INITIAL_STATE } from '../../../src/features/factory-tycoon/config';
+import { describe, expect, it } from "vitest";
+import { INITIAL_STATE } from "../../../src/features/factory-tycoon/config";
+import {
+	getInteractionResult,
+	processInteraction,
+} from "../../../src/features/factory-tycoon/systems/interactionSystem";
+import type { GameState } from "../../../src/features/factory-tycoon/types";
 
-describe('Interaction System', () => {
-    it('should pick up item from belt', () => {
-        const state: GameState = {
-            ...INITIAL_STATE,
-            buildings: [{
-                id: '1',
-                type: 'Belt',
-                x: 0,
-                y: 0,
-                direction: 'N',
-                status: 'IDLE',
-                beltItems: [{ id: 'i1', resource: 'ore', position: 0.5 }]
-            }],
-            inventory: { ore: 0, ingot: 0, gadget: 0 }
-        };
+describe("Interaction System", () => {
+	it("should pick up item from belt", () => {
+		const state: GameState = {
+			...INITIAL_STATE,
+			buildings: [
+				{
+					id: "1",
+					type: "Belt",
+					x: 0,
+					y: 0,
+					direction: "N",
+					status: "IDLE",
+					beltItems: [{ id: "i1", resource: "ore", position: 0.5 }],
+				},
+			],
+			inventory: { ore: 0, ingot: 0, gadget: 0 },
+		};
 
-        const result = getInteractionResult(state, 0, 0);
-        expect(result).toEqual({ resource: 'ore', amount: 1 });
+		const result = getInteractionResult(state, 0, 0);
+		expect(result).toEqual({ resource: "ore", amount: 1 });
 
-        const newState = processInteraction(state, 0, 0);
-        expect(newState.inventory.ore).toBe(1);
-        expect(newState.buildings[0].beltItems).toHaveLength(0);
-    });
+		const newState = processInteraction(state, 0, 0);
+		expect(newState.inventory.ore).toBe(1);
+		expect(newState.buildings[0].beltItems).toHaveLength(0);
+	});
 
-    it('should collect output from machine', () => {
-        const state: GameState = {
-            ...INITIAL_STATE,
-            buildings: [{
-                id: '1',
-                type: 'Mine',
-                x: 0,
-                y: 0,
-                direction: 'N',
-                status: 'IDLE',
-                localInventory: { ore: 5 }
-            }],
-            inventory: { ore: 0, ingot: 0, gadget: 0 }
-        };
+	it("should collect output from machine", () => {
+		const state: GameState = {
+			...INITIAL_STATE,
+			buildings: [
+				{
+					id: "1",
+					type: "Mine",
+					x: 0,
+					y: 0,
+					direction: "N",
+					status: "IDLE",
+					localInventory: { ore: 5 },
+				},
+			],
+			inventory: { ore: 0, ingot: 0, gadget: 0 },
+		};
 
-        const result = getInteractionResult(state, 0, 0);
-        expect(result).toEqual({ resource: 'ore', amount: 5 });
+		const result = getInteractionResult(state, 0, 0);
+		expect(result).toEqual({ resource: "ore", amount: 5 });
 
-        const newState = processInteraction(state, 0, 0);
-        expect(newState.inventory.ore).toBe(5);
-        expect(newState.buildings[0].localInventory?.ore).toBe(0);
-    });
+		const newState = processInteraction(state, 0, 0);
+		expect(newState.inventory.ore).toBe(5);
+		expect(newState.buildings[0].localInventory?.ore).toBe(0);
+	});
 
-    it('should do nothing if no interaction', () => {
-        const state = INITIAL_STATE;
-        const result = getInteractionResult(state, 0, 0);
-        expect(result).toBeNull();
+	it("should do nothing if no interaction", () => {
+		const state = INITIAL_STATE;
+		const result = getInteractionResult(state, 0, 0);
+		expect(result).toBeNull();
 
-        const newState = processInteraction(state, 0, 0);
-        expect(newState).toBe(state);
-    });
+		const newState = processInteraction(state, 0, 0);
+		expect(newState).toBe(state);
+	});
+
+	it("should ignore cash and science interaction", () => {
+		const state: GameState = {
+			...INITIAL_STATE,
+			buildings: [
+				{
+					id: "1",
+					type: "Factory",
+					x: 0,
+					y: 0,
+					direction: "N",
+					status: "IDLE",
+					localInventory: { cash: 100, science: 50, ore: 0 },
+				},
+			],
+			inventory: { ore: 0, ingot: 0, gadget: 0 },
+		};
+
+		// Should not return cash/science
+		const result = getInteractionResult(state, 0, 0);
+		expect(result).toBeNull();
+
+		// Should not modify inventory or building
+		const newState = processInteraction(state, 0, 0);
+		expect(newState.buildings[0].localInventory?.cash).toBe(100);
+		expect(newState.buildings[0].localInventory?.science).toBe(50);
+		expect(newState.cash).toBe(INITIAL_STATE.cash);
+		expect(newState.science).toBe(INITIAL_STATE.science);
+	});
 });
