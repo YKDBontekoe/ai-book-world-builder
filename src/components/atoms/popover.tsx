@@ -1,12 +1,35 @@
 "use client";
 
 import * as PopoverPrimitive from "@radix-ui/react-popover";
-import { motion } from "framer-motion";
+import { useControllableState } from "@radix-ui/react-use-controllable-state";
+import { AnimatePresence, motion } from "framer-motion";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-const Popover = PopoverPrimitive.Root;
+const PopoverContext = React.createContext<{ open: boolean }>({ open: false });
+
+const Popover = ({
+	children,
+	open: openProp,
+	defaultOpen,
+	onOpenChange,
+	...props
+}: React.ComponentProps<typeof PopoverPrimitive.Root>) => {
+	const [open = false, setOpen] = useControllableState({
+		prop: openProp,
+		defaultProp: defaultOpen,
+		onChange: onOpenChange,
+	});
+
+	return (
+		<PopoverContext.Provider value={{ open }}>
+			<PopoverPrimitive.Root open={open} onOpenChange={setOpen} {...props}>
+				{children}
+			</PopoverPrimitive.Root>
+		</PopoverContext.Provider>
+	);
+};
 
 const PopoverTrigger = PopoverPrimitive.Trigger;
 
@@ -19,30 +42,38 @@ const PopoverContent = React.forwardRef<
 	(
 		{ className, align = "center", sideOffset = 4, children, ...props },
 		ref,
-	) => (
-		<PopoverPrimitive.Portal>
-			<PopoverPrimitive.Content
-				ref={ref}
-				align={align}
-				sideOffset={sideOffset}
-				className="z-50 outline-none"
-				{...props}
-			>
-				<motion.div
-					initial={{ opacity: 0, scale: 0.95 }}
-					animate={{ opacity: 1, scale: 1 }}
-					exit={{ opacity: 0, scale: 0.95 }}
-					transition={{ type: "spring", stiffness: 400, damping: 25 }}
-					className={cn(
-						"w-72 rounded-lg border glass-panel p-4 text-popover-foreground shadow-md",
-						className,
-					)}
+	) => {
+		const { open } = React.useContext(PopoverContext);
+		return (
+			<PopoverPrimitive.Portal>
+				<PopoverPrimitive.Content
+					ref={ref}
+					align={align}
+					sideOffset={sideOffset}
+					className="z-50 outline-none"
+					forceMount
+					{...props}
 				>
-					{children}
-				</motion.div>
-			</PopoverPrimitive.Content>
-		</PopoverPrimitive.Portal>
-	),
+					<AnimatePresence>
+						{open && (
+							<motion.div
+								initial={{ opacity: 0, scale: 0.95 }}
+								animate={{ opacity: 1, scale: 1 }}
+								exit={{ opacity: 0, scale: 0.95 }}
+								transition={{ type: "spring", stiffness: 400, damping: 25 }}
+								className={cn(
+									"w-72 rounded-lg border glass-panel p-4 text-popover-foreground shadow-md",
+									className,
+								)}
+							>
+								{children}
+							</motion.div>
+						)}
+					</AnimatePresence>
+				</PopoverPrimitive.Content>
+			</PopoverPrimitive.Portal>
+		);
+	},
 );
 PopoverContent.displayName = PopoverPrimitive.Content.displayName;
 

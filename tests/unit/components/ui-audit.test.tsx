@@ -34,9 +34,13 @@ expect.extend(matchers);
 // Mock framer-motion to avoid animation issues in tests
 vi.mock("framer-motion", () => ({
 	motion: {
-		div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+		div: ({ children, ...props }: import("react").ComponentProps<"div">) => (
+			<div {...props}>{children}</div>
+		),
 	},
-	AnimatePresence: ({ children }: any) => <>{children}</>,
+	AnimatePresence: ({ children }: { children: import("react").ReactNode }) => (
+		<>{children}</>
+	),
 }));
 
 // ResizeObserver mock

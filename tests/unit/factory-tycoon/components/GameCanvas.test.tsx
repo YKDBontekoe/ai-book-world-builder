@@ -51,12 +51,14 @@ vi.mock("@/features/factory-tycoon/audio/SoundContext", () => ({
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
-	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
 	motion: {
-		div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+		div: ({ children, ...props }: import("react").ComponentProps<"div">) => (
+			<div {...props}>{children}</div>
+		),
 	},
-	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
-	AnimatePresence: ({ children }: any) => <>{children}</>,
+	AnimatePresence: ({ children }: { children: import("react").ReactNode }) => (
+		<>{children}</>
+	),
 }));
 
 // Mock lucide-react
