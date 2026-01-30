@@ -13,8 +13,7 @@ vi.mock("pdfkit", () => {
 	return {
 		// biome-ignore lint/complexity/useArrowFunction: Mocking constructor
 		default: vi.fn().mockImplementation(function () {
-			// biome-ignore lint/complexity/noBannedTypes: Mocking internal types
-			const handlers: Record<string, Function> = {};
+			const handlers: Record<string, (...args: any[]) => unknown> = {};
 			return {
 				on: vi.fn((event, cb) => {
 					handlers[event] = cb;
@@ -26,7 +25,7 @@ vi.mock("pdfkit", () => {
 				moveDown: vi.fn().mockReturnThis(),
 				addPage: vi.fn().mockReturnThis(),
 				end: vi.fn(() => {
-					if (handlers["end"]) handlers["end"]();
+					if (handlers.end) handlers.end();
 				}),
 			};
 		}),
