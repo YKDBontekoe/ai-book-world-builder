@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import React from "react";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GameCanvas } from "../../../../src/features/factory-tycoon/components/GameCanvas";
 
@@ -52,7 +52,9 @@ vi.mock("@/features/factory-tycoon/audio/SoundContext", () => ({
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
 	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
-	motion: { div: ({ children, ...props }: any) => <div {...props}>{children}</div> },
+	motion: {
+		div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+	},
 	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
 	AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
@@ -80,7 +82,9 @@ vi.mock("@/components/atoms/tooltip", () => ({
 	TooltipProvider: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),
-	Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	Tooltip: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
 	TooltipTrigger: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),

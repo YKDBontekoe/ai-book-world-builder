@@ -56,7 +56,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 		const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
 			if (interactive && (e.key === "Enter" || e.key === " ")) {
 				e.preventDefault();
-				onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>);
+				e.currentTarget.click();
 			}
 			onKeyDown?.(e);
 		};
