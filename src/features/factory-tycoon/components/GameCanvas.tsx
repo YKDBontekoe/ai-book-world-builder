@@ -468,6 +468,7 @@ export function GameCanvas({
 											type="button"
 											onClick={closeContextMenu}
 											className="text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)]"
+											aria-label="Close context menu"
 										>
 											<X className="w-3 h-3" />
 										</button>
