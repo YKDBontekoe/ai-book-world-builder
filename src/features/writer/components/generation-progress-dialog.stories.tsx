@@ -60,7 +60,7 @@ export const Complete: Story = {
 	},
 };
 
-export const Error: Story = {
+export const GenerationError: Story = {
 	args: {
 		phase: "error",
 		error: "Failed to generate plan. Please try again.",

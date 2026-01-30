@@ -60,14 +60,15 @@ window.HTMLElement.prototype.scrollIntoView = vi.fn();
 describe("WriterSidebar Integration", () => {
 	const mockProject: Project = {
 		id: "p1",
-		title: "Test Project",
+		name: "Test Project",
 		createdAt: new Date(),
-		updatedAt: new Date(),
 		userId: "u1",
-		wordCount: 0,
-		status: "active",
 		lastViewedSceneId: null,
-	} as any;
+		description: null,
+		visibility: "private",
+		folders: [],
+		forkedFromId: null,
+	};
 
 	const mockStructure: ChapterWithScenes[] = [
 		{
@@ -101,7 +102,7 @@ describe("WriterSidebar Integration", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: mockStructure,
@@ -131,7 +132,7 @@ describe("WriterSidebar Integration", () => {
 	});
 
 	it("handles empty structure", async () => {
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: [],

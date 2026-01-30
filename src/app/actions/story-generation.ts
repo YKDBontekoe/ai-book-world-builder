@@ -126,10 +126,18 @@ export async function planChapterScenes(chapterId: string) {
 		}
 
 		// Authorize & Execute
-		return withProjectWriteAccess(chapter.projectId, async () => {
-			const sceneIds = await storyService.planChapterScenes(chapterId);
-			return { success: true, sceneIds };
-		});
+		const result = await withProjectWriteAccess(
+			chapter.projectId,
+			async () => {
+				const sceneIds = await storyService.planChapterScenes(chapterId);
+				return { sceneIds };
+			},
+		);
+
+		if (result.success) {
+			return { success: true, sceneIds: result.data.sceneIds };
+		}
+		return { success: false, error: result.error };
 	} catch (error) {
 		console.error("Failed to plan chapter scenes", error);
 		const msg = error instanceof Error ? error.message : "Planning failed";
@@ -151,10 +159,15 @@ export async function generateSceneText(sceneId: string) {
 		}
 
 		// Authorize & Execute
-		return withProjectWriteAccess(scene.projectId, async () => {
+		const result = await withProjectWriteAccess(scene.projectId, async () => {
 			await storyService.generateSceneText(sceneId);
-			return { success: true };
+			return {};
 		});
+
+		if (result.success) {
+			return { success: true };
+		}
+		return { success: false, error: result.error };
 	} catch (error) {
 		console.error("Failed to generate scene text", error);
 		const errorMessage =

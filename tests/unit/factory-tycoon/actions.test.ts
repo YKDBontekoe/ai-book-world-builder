@@ -1,3 +1,4 @@
+import type { Session } from "next-auth";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { auth } from "@/app/(auth)/auth";
 import { saveGameState } from "../../../src/features/factory-tycoon/actions";
@@ -33,7 +34,11 @@ describe("Factory Tycoon Actions", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		// Setup successful auth
-		vi.mocked(auth).mockResolvedValue({ user: { id: "user-1" } } as any);
+		const mockSession: Session = {
+			user: { id: "user-1", name: "Test User", email: "test@example.com" },
+			expires: new Date().toISOString(),
+		};
+		vi.mocked(auth).mockResolvedValue(mockSession);
 
 		// Setup chainable mocks
 		mockSet.mockReturnValue({ where: mockWhere });

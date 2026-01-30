@@ -49,8 +49,8 @@ describe("Entity Repository Security (IDOR)", () => {
 		const entityId = "target-entity-id";
 		const projectId = "owner-project-id";
 
-		// Call the function WITH projectId (casting to any since signature isn't updated yet)
-		await (entityRepository as any).delete(entityId, projectId);
+		// Call the function WITH projectId
+		await entityRepository.delete(entityId, projectId);
 
 		// Verify 3 deletes happened (attributes, relationships, entity)
 		expect(mocks.mockDelete).toHaveBeenCalledTimes(3);
@@ -103,7 +103,7 @@ describe("Entity Repository Security (IDOR)", () => {
 		const data = { name: "New Name" };
 
 		// Call update with projectId
-		await (entityRepository as any).update(entityId, data, projectId);
+		await entityRepository.update(entityId, data, projectId);
 
 		// Verify update called
 		expect(mocks.mockUpdate).toHaveBeenCalledWith(entity);
@@ -119,5 +119,25 @@ describe("Entity Repository Security (IDOR)", () => {
 		);
 
 		expect(updateWhereArg).toEqual(expectedUpdateQuery);
+	});
+
+	it("rejects delete calls without projectId", async () => {
+		const entityId = "target-entity-id";
+
+		// Call delete WITHOUT projectId -> Should throw
+		await expect(entityRepository.delete(entityId)).rejects.toThrow();
+
+		// Verify deletes did NOT happen
+		expect(mocks.mockDelete).not.toHaveBeenCalled();
+	});
+
+	it("rejects update calls without projectId", async () => {
+		const entityId = "target-entity-id";
+		const data = { name: "New Name" };
+
+		// Call update WITHOUT projectId -> Should throw
+		await expect(entityRepository.update(entityId, data)).rejects.toThrow();
+
+		expect(mocks.mockUpdate).not.toHaveBeenCalled();
 	});
 });

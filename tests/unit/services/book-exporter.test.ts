@@ -1,5 +1,6 @@
 import { put } from "@vercel/blob";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { FullProjectData } from "@/lib/book-generation";
 import { exportBook } from "@/lib/services/book-exporter";
 
 // Mock @vercel/blob
@@ -37,11 +38,25 @@ describe("book-exporter security", () => {
 	});
 
 	it("uses a secure filename with UUID (IDOR protection)", async () => {
-		const projectData = {
-			project: { name: "My Secret Book" },
+		const projectData: FullProjectData = {
+			project: {
+				id: "1",
+				name: "My Secret Book",
+				createdAt: new Date(),
+				userId: "user-1",
+				lastViewedSceneId: null,
+				description: null,
+				visibility: "private",
+				folders: [],
+				forkedFromId: null,
+			},
 			generation: null,
 			volumes: [],
-		} as any;
+			entities: [],
+			attributes: [],
+			relationships: [],
+			outlines: [],
+		};
 
 		await exportBook(projectData, "pdf");
 

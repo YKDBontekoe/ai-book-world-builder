@@ -54,4 +54,14 @@ describe("Scene Card Security (IDOR)", () => {
 		// This should now pass with the fix
 		expect(actualQuery).toEqual(expectedSecureQuery);
 	});
+
+	it("rejects calls when projectId is omitted", async () => {
+		const sceneId = "target-scene-id";
+		const data = { purpose: "Safe Purpose" };
+
+		// Call the function WITHOUT projectId -> Should throw
+		await expect(updateSceneCard({ sceneId, ...data })).rejects.toThrow();
+
+		expect(mocks.mockUpdate).not.toHaveBeenCalled();
+	});
 });
