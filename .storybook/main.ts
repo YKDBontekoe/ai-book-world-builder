@@ -53,6 +53,14 @@ const config: StorybookConfig = {
 						__dirname,
 						"../tests/mocks/next-auth-react.mock.ts",
 					),
+					"@/features/writer/actions": resolve(
+						__dirname,
+						"../tests/mocks/writer-actions.mock.ts",
+					),
+					"@/app/actions/entities": resolve(
+						__dirname,
+						"../tests/mocks/entities-actions.mock.ts",
+					),
 				},
 			},
 		});
