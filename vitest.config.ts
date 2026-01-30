@@ -22,7 +22,10 @@ export default defineConfig({
 				test: {
 					name: "unit",
 					environment: "jsdom",
-					include: ["tests/unit/**/*.{test,spec}.{ts,tsx}"],
+					include: [
+						"tests/unit/**/*.{test,spec}.{ts,tsx}",
+						"tests/integration/**/*.{test,spec}.{ts,tsx}",
+					],
 					setupFiles: ["./tests/vitest.setup.ts"],
 					server: {
 						deps: {

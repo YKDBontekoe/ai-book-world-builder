@@ -7,7 +7,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 const glassCardVariants = cva(
-	"relative overflow-hidden rounded-lg glass-panel transition-colors duration-300",
+	"relative overflow-hidden rounded-2xl glass-panel transition-colors duration-300",
 	{
 		variants: {
 			variant: {
@@ -56,7 +56,7 @@ const GlassCard = forwardRef<HTMLDivElement, GlassCardProps>(
 		const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
 			if (interactive && (e.key === "Enter" || e.key === " ")) {
 				e.preventDefault();
-				onClick?.(e as unknown as React.MouseEvent<HTMLDivElement>);
+				e.currentTarget.click();
 			}
 			onKeyDown?.(e);
 		};

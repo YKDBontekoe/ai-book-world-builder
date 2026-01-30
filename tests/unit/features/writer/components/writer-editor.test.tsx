@@ -1,9 +1,22 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type * as writerContentContext from "@/features/writer/components/writer-content-context";
 import type * as writerContext from "@/features/writer/components/writer-context";
 import { WriterControlProvider } from "@/features/writer/components/writer-control-context";
 import { WriterEditor } from "@/features/writer/components/writer-editor";
+
+// --- Mocks ---
+
+// Mock Server Actions
+const mockExportProject = vi.fn();
+vi.mock("@/features/writer/actions", () => ({
+	initializeProject: vi.fn(),
+	exportProject: (...args: any[]) => mockExportProject(...args),
+	createSceneInChapter: vi.fn(),
+}));
+
+import { exportProject } from "@/features/writer/actions";
 
 // Mock Appearance Provider
 vi.mock("@/components/providers/appearance-provider", () => ({
@@ -69,6 +82,10 @@ vi.mock("@/features/writer/components/tools/writing-style-analyzer", () => ({
 	),
 }));
 
+vi.mock("@/features/writer/components/time-travel-controls", () => ({
+	TimeTravelControls: () => <div data-testid="time-travel-controls">Time Travel Controls</div>,
+}));
+
 vi.mock("@/hooks/use-narrative-intelligence", () => ({
 	useNarrativeIntelligence: vi.fn(() => ({
 		wordCount: 100,
@@ -80,11 +97,6 @@ vi.mock("@/hooks/use-narrative-intelligence", () => ({
 		sentenceCount: 10,
 		pacingGraphData: [],
 	})),
-}));
-
-// Mock Server Actions
-vi.mock("@/features/writer/actions", () => ({
-	initializeProject: vi.fn(),
 }));
 
 // Mock app/actions/story-generation to prevent DB connection
@@ -153,6 +165,27 @@ vi.mock(
 	},
 );
 
+// Mock Sonner
+const mockToastError = vi.fn();
+vi.mock("sonner", () => ({
+	toast: {
+		success: vi.fn(),
+		error: (...args: any[]) => mockToastError(...args),
+		loading: vi.fn(),
+		dismiss: vi.fn(),
+	},
+}));
+
+// Mock Clipboard
+const mockWriteText = vi.fn();
+Object.defineProperty(navigator, 'clipboard', {
+	value: {
+		writeText: mockWriteText,
+	},
+	writable: true,
+	configurable: true,
+});
+
 // Helper to render with providers
 const renderWithProviders = (ui: React.ReactNode) => {
 	return render(<WriterControlProvider>{ui}</WriterControlProvider>);
@@ -165,6 +198,8 @@ describe("WriterEditor", () => {
 		activeSceneId: null,
 		structure: [],
 		isReadOnly: false,
+		fetchStructure: vi.fn(),
+		setActiveSceneId: vi.fn(),
 	};
 
 	const defaultContentContext = {
@@ -178,6 +213,9 @@ describe("WriterEditor", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockExportProject.mockReset();
+		mockToastError.mockReset();
+
 		mockUseWriterContext.mockReturnValue(defaultStructureContext);
 		mockUseWriterContent.mockReturnValue(defaultContentContext);
 		mockUseWriterLayoutContext.mockReturnValue({
@@ -187,6 +225,7 @@ describe("WriterEditor", () => {
 			toggleZenMode: vi.fn(),
 			isTypewriterMode: false,
 			toggleTypewriterMode: vi.fn(),
+			isDirectorMode: false, // Ensure this is present
 		});
 	});
 
@@ -220,7 +259,6 @@ describe("WriterEditor", () => {
 		});
 		renderWithProviders(<WriterEditor />);
 
-		// In this case, empty state is rendered but with different content
 		expect(screen.getByTestId("empty-state")).toBeInTheDocument();
 		expect(screen.getByText("No Scene Selected")).toBeInTheDocument();
 	});
@@ -249,5 +287,26 @@ describe("WriterEditor", () => {
 		fireEvent.click(completeButton);
 
 		expect(mockRefresh).toHaveBeenCalled();
+	});
+
+	it("handles export error gracefully", async () => {
+		const user = userEvent.setup();
+		mockExportProject.mockRejectedValue(new Error("Network error"));
+
+		mockUseWriterContext.mockReturnValue({
+			...defaultStructureContext,
+			structure: [],
+		});
+
+		renderWithProviders(<WriterEditor />);
+
+		// Trigger Export Hotkey
+		await user.keyboard("{Meta>}{Shift>}e{/Shift}{/Meta}");
+
+		await waitFor(() => {
+			expect(mockExportProject).toHaveBeenCalled();
+		});
+
+		expect(mockToastError).toHaveBeenCalledWith("Error exporting project", expect.anything());
 	});
 });
