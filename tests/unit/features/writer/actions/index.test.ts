@@ -29,7 +29,8 @@ vi.mock("@/lib/db", () => {
 		leftJoin: vi.fn().mockReturnThis(), // Added for semantic cache query
 		// Promise interface
 		// biome-ignore lint/suspicious/noThenProperty: Mocking Promise-like interface
-		then: (resolve: any) => resolve([{ max: 1 }]),
+		then: (resolve: (value: { max: number }[]) => unknown) =>
+			resolve([{ max: 1 }]),
 	};
 
 	const mockSelectFn = vi.fn(() => builder);
