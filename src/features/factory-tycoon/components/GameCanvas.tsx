@@ -150,8 +150,8 @@ export function GameCanvas({
 				// Wait, if p=0, offset is -0.5 * 2 * (dx, dy) = (-dx, -dy). Correct.
 				// if p=0.5, offset is 0. Correct.
 				// if p=1.0, offset is (dx, dy). Correct.
-				itemX = b.x + 0.5 + (p - 0.5) * dx;
-				itemY = b.y + 0.5 + (p - 0.5) * dy;
+				itemX = b.x + 0.5 + (p - 0.5) * 2 * dx;
+				itemY = b.y + 0.5 + (p - 0.5) * 2 * dy;
 
 				items.push({
 					item,
@@ -203,19 +203,15 @@ export function GameCanvas({
 								: 0;
 
 							const content = (
-								<div
+								<button
+									type="button"
 									key={`${x}-${y}`}
-									role="button"
-									tabIndex={0}
 									onClick={() => handleTileClick(x, y)}
 									onContextMenu={(e) => handleContextMenu(e, building?.id)}
 									onMouseEnter={() => setHoveredTile({ x, y })}
 									onFocus={() => setHoveredTile({ x, y })}
 									onKeyDown={(e) => {
-										if (e.key === "Enter" || e.key === " ") {
-											e.preventDefault(); // Prevent scroll for Space
-											handleTileClick(x, y);
-										} else if (
+										if (
 											e.key === "ContextMenu" ||
 											(e.shiftKey && e.key === "F10")
 										) {
@@ -328,7 +324,7 @@ export function GameCanvas({
 												})()}
 											</div>
 										)}
-								</div>
+								</button>
 							);
 
 							if (!building) return content;

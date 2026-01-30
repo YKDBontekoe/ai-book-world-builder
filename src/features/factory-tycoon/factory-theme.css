@@ -544,7 +544,6 @@
    ========================================== */
 .factory-modal-overlay {
 	background: rgba(0, 0, 0, 0.3);
-	backdrop-filter: blur(12px);
 }
 
 .factory-modal {
@@ -552,7 +551,7 @@
 	backdrop-filter: blur(50px);
 	border: 1px solid hsl(var(--sidebar-border));
 	box-shadow: var(--glass-shadow);
-	border-radius: 1.5rem;
+	border-radius: 16px;
 }
 
 /* ==========================================

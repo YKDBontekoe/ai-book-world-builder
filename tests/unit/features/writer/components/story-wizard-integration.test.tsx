@@ -71,9 +71,8 @@ describe("StoryWizard Integration", () => {
 		});
 		vi.mocked(storyGenerationActions).createBookFromPlan.mockResolvedValue({
 			success: true,
-			// @ts-ignore
 			data: { id: "new-story-id" },
-		});
+		} as unknown as Awaited<ReturnType<typeof storyGenerationActions.createBookFromPlan>>);
 
 		render(<StoryWizard projectId="test-project" onComplete={onComplete} />);
 

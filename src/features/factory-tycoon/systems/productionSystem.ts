@@ -9,7 +9,7 @@ export type SystemResult = {
 	consumedCapacity: number; // Volume added/removed
 };
 
-type ResourceInventory = Record<Exclude<Resource, "cash">, number>;
+type ResourceInventory = Record<Exclude<Resource, "cash" | "science">, number>;
 
 export const runProductionSystem = (
 	buildings: BuildingEntity[],
@@ -99,12 +99,12 @@ function checkInputAvailability(
 	if (!config.inputs) return true;
 
 	for (const [res, amount] of Object.entries(config.inputs)) {
-		if (res !== "cash") {
-			const r = res as Resource;
+		if (res !== "cash" && res !== "science") {
+			const r = res as keyof ResourceInventory;
 			const localAmount = building.localInventory?.[r] || 0;
 			const neededFromGlobal = Math.max(0, amount - localAmount);
 
-			if ((workingInventory[r as keyof ResourceInventory] || 0) < neededFromGlobal) {
+			if ((workingInventory[r] || 0) < neededFromGlobal) {
 				return false;
 			}
 		}
@@ -149,8 +149,8 @@ function processConsumption(
 	if (!config.inputs) return;
 
 	for (const [res, amount] of Object.entries(config.inputs)) {
-		if (res !== "cash") {
-			const r = res as Resource;
+		if (res !== "cash" && res !== "science") {
+			const r = res as keyof ResourceInventory;
 			const localAmount = building.localInventory?.[r] || 0;
 			const takeFromLocal = Math.min(localAmount, amount);
 			const takeFromGlobal = amount - takeFromLocal;
@@ -162,8 +162,7 @@ function processConsumption(
 			}
 
 			if (takeFromGlobal > 0) {
-				const key = r as keyof ResourceInventory;
-				workingInventory[key] -= takeFromGlobal;
+				workingInventory[r] -= takeFromGlobal;
 				result.inventoryDelta[r] =
 					(result.inventoryDelta[r] || 0) - takeFromGlobal;
 			}
