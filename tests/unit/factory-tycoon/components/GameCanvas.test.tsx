@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from "@testing-library/react";
-import React from "react";
+import type React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GameCanvas } from "../../../../src/features/factory-tycoon/components/GameCanvas";
 
@@ -51,9 +51,9 @@ vi.mock("@/features/factory-tycoon/audio/SoundContext", () => ({
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
-	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
-	motion: { div: ({ children, ...props }: any) => <div {...props}>{children}</div> },
-	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
+	motion: {
+		div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
+	},
 	AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
@@ -80,7 +80,9 @@ vi.mock("@/components/atoms/tooltip", () => ({
 	TooltipProvider: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),
-	Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	Tooltip: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
 	TooltipTrigger: ({ children }: { children: React.ReactNode }) => (
 		<div>{children}</div>
 	),
@@ -120,13 +122,9 @@ describe("GameCanvas", () => {
 		expect(closeButtons.length).toBeGreaterThanOrEqual(1);
 
 		// Verify specifically the button with X icon exists
-		const closeButtonWithIcon = closeButtons.find((btn) => {
-			try {
-				return within(btn).queryByTestId("x-icon") !== null;
-			} catch {
-				return false;
-			}
-		});
+		const closeButtonWithIcon = closeButtons.find(
+			(btn) => within(btn).queryByTestId("x-icon") !== null,
+		);
 
 		expect(closeButtonWithIcon).toBeInTheDocument();
 	});
@@ -164,7 +162,10 @@ describe("GameCanvas", () => {
 		});
 
 		expect(backdrop).toBeInTheDocument();
-		fireEvent.click(backdrop!);
+		if (!backdrop) {
+			throw new Error("Backdrop button not found");
+		}
+		fireEvent.click(backdrop);
 
 		expect(screen.queryByText("Options")).not.toBeInTheDocument();
 	});

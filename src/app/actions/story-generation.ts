@@ -126,13 +126,10 @@ export async function planChapterScenes(chapterId: string) {
 		}
 
 		// Authorize & Execute
-		const result = await withProjectWriteAccess(
-			chapter.projectId,
-			async () => {
-				const sceneIds = await storyService.planChapterScenes(chapterId);
-				return { sceneIds };
-			},
-		);
+		const result = await withProjectWriteAccess(chapter.projectId, async () => {
+			const sceneIds = await storyService.planChapterScenes(chapterId);
+			return { sceneIds };
+		});
 
 		if (result.success) {
 			return { success: true, sceneIds: result.data.sceneIds };

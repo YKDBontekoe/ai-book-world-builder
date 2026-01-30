@@ -164,7 +164,10 @@ vi.mock("@/lib/actions-utils", () => ({
 		// and then call the callback
 		// We can spy that ensureProjectAccess was called if needed, but since we mock the whole wrapper,
 		// we just execute the callback.
-		const data = await cb({ project: { id: projectId }, user: { id: "user-1" } });
+		const data = await cb({
+			project: { id: projectId },
+			user: { id: "user-1" },
+		});
 		return { success: true, data };
 	}),
 }));
