@@ -11,7 +11,6 @@ vi.mock("@vercel/blob", () => ({
 // Mock pdfkit
 vi.mock("pdfkit", () => {
 	return {
-		// biome-ignore lint/complexity/useArrowFunction: Mock constructor must be a standard function
 		default: vi.fn().mockImplementation(function () {
 			const handlers: Record<string, Function> = {};
 			return {

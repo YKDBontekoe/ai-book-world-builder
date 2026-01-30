@@ -36,7 +36,7 @@ export async function createProjectAction(params: {
 
 	const validation = createProjectSchema.safeParse(params);
 	if (!validation.success) {
-		return { error: validation.error.errors[0].message };
+		return { error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -82,7 +82,7 @@ export async function renameProject(
 
 	const validation = renameProjectSchema.safeParse({ name, description });
 	if (!validation.success) {
-		return { error: validation.error.errors[0].message };
+		return { error: validation.error.issues[0].message };
 	}
 
 	const result = await withProjectWriteAccess(projectId, async () => {
@@ -112,7 +112,7 @@ export async function deleteProjects(projectIds: string[]) {
 
 	const validation = deleteProjectsSchema.safeParse({ projectIds });
 	if (!validation.success) {
-		return { error: validation.error.errors[0].message };
+		return { error: validation.error.issues[0].message };
 	}
 
 	const result = await projectService.deleteProjects(

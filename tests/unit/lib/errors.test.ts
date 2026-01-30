@@ -106,7 +106,7 @@ describe("Error Classes", () => {
 
 		it("ValidationError.fromZodError maps paths correctly", () => {
 			const zodError = {
-				errors: [
+				issues: [
 					{ path: ["user", "name"], message: "Too short" },
 					{ path: ["email"], message: "Invalid" },
 				],
