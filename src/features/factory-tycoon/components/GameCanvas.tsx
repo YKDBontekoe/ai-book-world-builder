@@ -2,15 +2,14 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Trash2, X } from "lucide-react";
-import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/atoms/tooltip";
+import { cn } from "@/lib/utils";
 import { useSound } from "../audio/SoundContext";
 import { BUILDINGS, GRID_SIZE } from "../config";
 import { useGame } from "../store";
@@ -103,9 +102,9 @@ export function GameCanvas({
 		});
 	};
 
-	const closeContextMenu = () => {
+	const closeContextMenu = useCallback(() => {
 		setContextMenu(null);
-	};
+	}, []);
 
 	const handleDemolish = () => {
 		if (contextMenu?.buildingId) {
@@ -114,6 +113,19 @@ export function GameCanvas({
 			closeContextMenu();
 		}
 	};
+
+	// Close context menu on Escape
+	useEffect(() => {
+		if (contextMenu?.isOpen) {
+			const handleKeyDown = (e: KeyboardEvent) => {
+				if (e.key === "Escape") {
+					closeContextMenu();
+				}
+			};
+			window.addEventListener("keydown", handleKeyDown);
+			return () => window.removeEventListener("keydown", handleKeyDown);
+		}
+	}, [contextMenu?.isOpen, closeContextMenu]);
 
 	// Create a map for O(1) lookup
 	const buildingMap = useMemo(() => {
@@ -237,7 +249,10 @@ export function GameCanvas({
 											e.preventDefault();
 											handleTileClick(x, y);
 										}
-										if (e.key === "ContextMenu" || (e.shiftKey && e.key === "F10")) {
+										if (
+											e.key === "ContextMenu" ||
+											(e.shiftKey && e.key === "F10")
+										) {
 											e.preventDefault();
 											openContextMenu(x, y, building?.id);
 										}
@@ -428,50 +443,52 @@ export function GameCanvas({
 
 					{/* Context Menu Overlay */}
 					{contextMenu?.isOpen && (
-						<div
-							className="absolute z-50 animate-in fade-in zoom-in-95 duration-100"
-							style={{
-								left: `${(contextMenu.gridX / GRID_SIZE) * 100}%`,
-								top: `${(contextMenu.gridY / GRID_SIZE) * 100}%`,
-								transform: "translate(25%, 25%)", // Offset slightly from center
-							}}
-						>
-							<div className="bg-[var(--factory-bg-panel)] border border-[var(--factory-border)] rounded-lg shadow-xl p-1 min-w-[150px] flex flex-col gap-1">
-								<div className="flex items-center justify-between px-2 py-1 border-b border-[var(--factory-border)] mb-1">
-									<span className="text-xs font-bold text-[var(--factory-text-muted)]">
-										Options
-									</span>
-									<button
-										type="button"
-										onClick={closeContextMenu}
-										className="text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)]"
-									>
-										<X className="w-3 h-3" />
-									</button>
-								</div>
-								{contextMenu.buildingId ? (
-									<button
-										type="button"
-										onClick={handleDemolish}
-										className="flex items-center gap-2 px-2 py-1.5 text-sm text-left hover:bg-red-50 hover:text-red-600 rounded transition-colors w-full"
-									>
-										<Trash2 className="w-4 h-4" />
-										Demolish
-									</button>
-								) : (
-									<div className="px-2 py-1.5 text-sm text-[var(--factory-text-muted)] italic">
-										Empty Tile
-									</div>
-								)}
-							</div>
+						<>
 							{/* Backdrop to close on click outside (scoped to canvas) */}
 							<button
 								type="button"
-								className="fixed inset-0 z-[-1]"
+								className="absolute inset-0 z-40 cursor-default"
 								onClick={closeContextMenu}
 								aria-label="Close context menu"
 							/>
-						</div>
+							<div
+								className="absolute z-50 animate-in fade-in zoom-in-95 duration-100"
+								style={{
+									left: `${(contextMenu.gridX / GRID_SIZE) * 100}%`,
+									top: `${(contextMenu.gridY / GRID_SIZE) * 100}%`,
+									transform: "translate(25%, 25%)", // Offset slightly from center
+								}}
+							>
+								<div className="bg-[var(--factory-bg-panel)] border border-[var(--factory-border)] rounded-lg shadow-xl p-1 min-w-[150px] flex flex-col gap-1">
+									<div className="flex items-center justify-between px-2 py-1 border-b border-[var(--factory-border)] mb-1">
+										<span className="text-xs font-bold text-[var(--factory-text-muted)]">
+											Options
+										</span>
+										<button
+											type="button"
+											onClick={closeContextMenu}
+											className="text-[var(--factory-text-muted)] hover:text-[var(--factory-text-primary)]"
+										>
+											<X className="w-3 h-3" />
+										</button>
+									</div>
+									{contextMenu.buildingId ? (
+										<button
+											type="button"
+											onClick={handleDemolish}
+											className="flex items-center gap-2 px-2 py-1.5 text-sm text-left hover:bg-red-50 hover:text-red-600 rounded transition-colors w-full"
+										>
+											<Trash2 className="w-4 h-4" />
+											Demolish
+										</button>
+									) : (
+										<div className="px-2 py-1.5 text-sm text-[var(--factory-text-muted)] italic">
+											Empty Tile
+										</div>
+									)}
+								</div>
+							</div>
+						</>
 					)}
 				</div>
 
