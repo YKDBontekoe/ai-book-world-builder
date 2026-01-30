@@ -49,8 +49,8 @@ describe("Entity Repository Security (IDOR)", () => {
 		const entityId = "target-entity-id";
 		const projectId = "owner-project-id";
 
-		// Call the function WITH projectId (casting to any since signature isn't updated yet)
-		await (entityRepository as any).delete(entityId, projectId);
+		// Call the function WITH projectId
+		await entityRepository.delete(entityId, projectId);
 
 		// Verify 3 deletes happened (attributes, relationships, entity)
 		expect(mocks.mockDelete).toHaveBeenCalledTimes(3);
@@ -103,7 +103,7 @@ describe("Entity Repository Security (IDOR)", () => {
 		const data = { name: "New Name" };
 
 		// Call update with projectId
-		await (entityRepository as any).update(entityId, data, projectId);
+		await entityRepository.update(entityId, data, projectId);
 
 		// Verify update called
 		expect(mocks.mockUpdate).toHaveBeenCalledWith(entity);
@@ -119,5 +119,33 @@ describe("Entity Repository Security (IDOR)", () => {
 		);
 
 		expect(updateWhereArg).toEqual(expectedUpdateQuery);
+	});
+
+	it("handles calls without projectId (no IDOR protection enforced by repo layer)", async () => {
+		const entityId = "target-entity-id";
+
+		// Call delete WITHOUT projectId
+		await entityRepository.delete(entityId);
+
+		// Verify deletes happened
+		expect(mocks.mockDelete).toHaveBeenCalled();
+
+		const entityWhereArg = mocks.mockWhere.mock.calls[2][0]; // 3rd call is entity
+		// Should only check ID
+		const expectedQuery = eq(entity.id, entityId);
+		expect(entityWhereArg).toEqual(expectedQuery);
+	});
+
+	it("handles update calls without projectId", async () => {
+		const entityId = "target-entity-id";
+		const data = { name: "New Name" };
+
+		// Call update WITHOUT projectId
+		await entityRepository.update(entityId, data);
+
+		const updateWhereArg = mocks.mockWhere.mock.calls[0][0];
+		// Should only check ID
+		const expectedQuery = eq(entity.id, entityId);
+		expect(updateWhereArg).toEqual(expectedQuery);
 	});
 });

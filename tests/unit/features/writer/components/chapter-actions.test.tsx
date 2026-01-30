@@ -76,11 +76,8 @@ describe("ChapterActions", () => {
 				await new Promise((resolve) => setTimeout(resolve, 300));
 				return {
 					success: true,
-					data: {
-						success: true,
-						sceneIds: ["scene-1", "scene-2"],
-					},
-				} as any;
+					sceneIds: ["scene-1", "scene-2"],
+				};
 			},
 		);
 
@@ -90,8 +87,7 @@ describe("ChapterActions", () => {
 				await new Promise((resolve) => setTimeout(resolve, 300));
 				return {
 					success: true,
-					data: { success: true },
-				} as any;
+				};
 			},
 		);
 
@@ -144,7 +140,7 @@ describe("ChapterActions", () => {
 		vi.mocked(storyGenerationActions.planChapterScenes).mockResolvedValue({
 			success: false,
 			error: "Planning failed miserably",
-		} as any);
+		});
 
 		render(<ChapterActions {...defaultProps} />);
 
@@ -164,22 +160,18 @@ describe("ChapterActions", () => {
 		// Mock successful plan
 		vi.mocked(storyGenerationActions.planChapterScenes).mockResolvedValue({
 			success: true,
-			data: {
-				success: true,
-				sceneIds: ["scene-1", "scene-2"],
-			},
-		} as any);
+			sceneIds: ["scene-1", "scene-2"],
+		});
 
 		// Mock first scene fails, second succeeds
 		vi.mocked(storyGenerationActions.generateSceneText)
 			.mockResolvedValueOnce({
 				success: false,
 				error: "Generation error",
-			} as any)
+			})
 			.mockResolvedValueOnce({
 				success: true,
-				data: { success: true },
-			} as any);
+			});
 
 		render(<ChapterActions {...defaultProps} />);
 

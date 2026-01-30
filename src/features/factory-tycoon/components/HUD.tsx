@@ -14,15 +14,12 @@ import {
 	TrendingUp,
 } from "lucide-react";
 import React, { useState } from "react";
-import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 import { RESOURCE_VALUES } from "../config";
 import { useGame } from "../store";
 import { GameSettings } from "./GameSettings";
 import { ResearchModal } from "./ResearchModal";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
+import type { Resource } from "../types";
 
 const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
 	ore: { icon: "/images/factory-tycoon/ore.png", color: "text-amber-600" },
@@ -275,7 +272,17 @@ export function HUD() {
 										{value > 0 && (
 											<button
 												type="button"
-												onClick={() => sellResource(res as any)}
+												onClick={() => {
+													// Ensure safe cast by checking valid resources
+													if (
+														res === "ore" ||
+														res === "ingot" ||
+														res === "gadget" ||
+														res === "science"
+													) {
+														sellResource(res as Resource);
+													}
+												}}
 												disabled={count <= 0}
 												className={cn(
 													"text-[10px] w-full py-1 rounded border transition-colors flex items-center justify-center gap-1",

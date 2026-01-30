@@ -65,4 +65,33 @@ describe("Interaction System", () => {
 		const newState = processInteraction(state, 0, 0);
 		expect(newState).toBe(state);
 	});
+
+	it("should ignore cash and science interaction", () => {
+		const state: GameState = {
+			...INITIAL_STATE,
+			buildings: [
+				{
+					id: "1",
+					type: "Factory",
+					x: 0,
+					y: 0,
+					direction: "N",
+					status: "IDLE",
+					localInventory: { cash: 100, science: 50, ore: 0 },
+				},
+			],
+			inventory: { ore: 0, ingot: 0, gadget: 0 },
+		};
+
+		// Should not return cash/science
+		const result = getInteractionResult(state, 0, 0);
+		expect(result).toBeNull();
+
+		// Should not modify inventory or building
+		const newState = processInteraction(state, 0, 0);
+		expect(newState.buildings[0].localInventory?.cash).toBe(100);
+		expect(newState.buildings[0].localInventory?.science).toBe(50);
+		expect(newState.cash).toBe(INITIAL_STATE.cash);
+		expect(newState.science).toBe(INITIAL_STATE.science);
+	});
 });
