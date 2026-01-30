@@ -459,7 +459,7 @@ export function GameCanvas({
 									transform: "translate(25%, 25%)", // Offset slightly from center
 								}}
 							>
-								<div className="bg-[var(--factory-bg-panel)] border border-[var(--factory-border)] rounded-lg shadow-xl p-1 min-w-[150px] flex flex-col gap-1">
+								<div className="bg-[var(--factory-bg-panel)] border border-[var(--factory-border)] rounded-2xl shadow-xl p-1 min-w-[150px] flex flex-col gap-1">
 									<div className="flex items-center justify-between px-2 py-1 border-b border-[var(--factory-border)] mb-1">
 										<span className="text-xs font-bold text-[var(--factory-text-muted)]">
 											Options
