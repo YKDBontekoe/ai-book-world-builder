@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GameCanvas } from "../../../../src/features/factory-tycoon/components/GameCanvas";
@@ -113,13 +113,72 @@ describe("GameCanvas", () => {
 		// Check if context menu is open
 		expect(screen.getByText("Options")).toBeInTheDocument();
 
-		// Find the close button with the specific aria-label
-		const closeButtons = screen.getAllByLabelText("Close context menu");
+		// Find all buttons with the specific aria-label
+		const closeButtons = screen.getAllByRole("button", {
+			name: "Close context menu",
+		});
 		expect(closeButtons.length).toBeGreaterThanOrEqual(1);
 
-		// Verify specifically the button with X icon has the label
-		const xIcon = screen.getByTestId("x-icon");
-		const closeButton = xIcon.closest("button");
-		expect(closeButton).toHaveAttribute("aria-label", "Close context menu");
+		// Verify specifically the button with X icon exists
+		const closeButtonWithIcon = closeButtons.find((btn) => {
+			try {
+				return within(btn).queryByTestId("x-icon") !== null;
+			} catch {
+				return false;
+			}
+		});
+
+		expect(closeButtonWithIcon).toBeInTheDocument();
+	});
+
+	it("closes context menu via Escape key", () => {
+		render(<GameCanvas selectedBuilding={null} />);
+
+		// Open context menu
+		const tile = screen.getByLabelText(/Tile 0,0/i);
+		fireEvent.contextMenu(tile);
+		expect(screen.getByText("Options")).toBeInTheDocument();
+
+		// Press Escape
+		fireEvent.keyDown(window, { key: "Escape" });
+
+		// Assert menu closed
+		expect(screen.queryByText("Options")).not.toBeInTheDocument();
+	});
+
+	it("closes context menu via backdrop click", () => {
+		render(<GameCanvas selectedBuilding={null} />);
+
+		// Open context menu
+		const tile = screen.getByLabelText(/Tile 0,0/i);
+		fireEvent.contextMenu(tile);
+		expect(screen.getByText("Options")).toBeInTheDocument();
+
+		// Find the backdrop button. It has the same aria-label but no icon.
+		const closeButtons = screen.getAllByRole("button", {
+			name: "Close context menu",
+		});
+		const backdrop = closeButtons.find((btn) => {
+			// The backdrop is empty (no icon inside)
+			return within(btn).queryByTestId("x-icon") === null;
+		});
+
+		expect(backdrop).toBeInTheDocument();
+		fireEvent.click(backdrop!);
+
+		expect(screen.queryByText("Options")).not.toBeInTheDocument();
+	});
+
+	it("triggers context menu via keyboard (Shift+F10)", () => {
+		render(<GameCanvas selectedBuilding={null} />);
+
+		const tile = screen.getByLabelText(/Tile 0,0/i);
+		// Focus the tile first
+		tile.focus();
+
+		// Press Shift+F10
+		fireEvent.keyDown(tile, { key: "F10", shiftKey: true });
+
+		expect(screen.getByText("Options")).toBeInTheDocument();
 	});
 });
