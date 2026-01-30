@@ -39,8 +39,8 @@ export async function exportProject(projectId: string) {
 			content += `# ${ch.title}\n\n`;
 			const chScenes = scenesByChapter.get(ch.id) || [];
 
-            // Re-sort in memory to be sure
-            chScenes.sort((a, b) => a.sequence - b.sequence);
+			// Re-sort in memory to be sure
+			chScenes.sort((a, b) => a.sequence - b.sequence);
 
 			for (const sc of chScenes) {
 				content += `## ${sc.title}\n\n`;

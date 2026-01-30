@@ -306,7 +306,7 @@ export function validateInput<T>(
 
 	// Format error messages
 	const details: Record<string, string[]> = {};
-	for (const error of result.error.errors) {
+	for (const error of result.error.issues) {
 		const path = error.path.join(".") || "_root";
 		if (!details[path]) {
 			details[path] = [];
@@ -315,7 +315,7 @@ export function validateInput<T>(
 	}
 
 	// Get first error for simple error message
-	const firstError = result.error.errors[0];
+	const firstError = result.error.issues[0];
 	const errorMessage = firstError
 		? `${firstError.path.join(".") || "Input"}: ${firstError.message}`
 		: "Validation failed";

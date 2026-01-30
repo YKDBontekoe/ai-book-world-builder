@@ -231,7 +231,11 @@ describe("SceneRepository", () => {
 			const mockScene = { id: "s1", title: "Updated" };
 			mocks.result = [mockScene];
 
-			const result = await sceneRepository.update("s1", { title: "Updated" });
+			const result = await sceneRepository.update(
+				"s1",
+				{ title: "Updated" },
+				"p1",
+			);
 			expect(result).toEqual(mockScene);
 			expect(mocks.update).toHaveBeenCalled();
 		});
@@ -252,7 +256,7 @@ describe("SceneRepository", () => {
 		it("should throw NotFoundError if scene does not exist", async () => {
 			mocks.result = [];
 			await expect(
-				sceneRepository.update("s1", { title: "Updated" }),
+				sceneRepository.update("s1", { title: "Updated" }, "p1"),
 			).rejects.toThrow(NotFoundError);
 		});
 
@@ -262,7 +266,7 @@ describe("SceneRepository", () => {
 				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
 			await expect(
-				sceneRepository.update("s1", { title: "Up" }),
+				sceneRepository.update("s1", { title: "Up" }, "p1"),
 			).rejects.toThrow(DatabaseError);
 			consoleSpy.mockRestore();
 		});
@@ -273,7 +277,12 @@ describe("SceneRepository", () => {
 			const mockScene = { id: "s1", content: "New Content", status: "drafted" };
 			mocks.result = [mockScene];
 
-			const result = await sceneRepository.updateContent("s1", "New Content");
+			const result = await sceneRepository.updateContent(
+				"s1",
+				"New Content",
+				undefined,
+				"p1",
+			);
 			expect(result).toEqual(mockScene);
 			expect(mocks.set).toHaveBeenCalledWith(
 				expect.objectContaining({ content: "New Content", status: "drafted" }),
@@ -284,7 +293,12 @@ describe("SceneRepository", () => {
 			const mockScene = { id: "s1", content: "C", status: "review" };
 			mocks.result = [mockScene];
 
-			const result = await sceneRepository.updateContent("s1", "C", "review");
+			const result = await sceneRepository.updateContent(
+				"s1",
+				"C",
+				"review",
+				"p1",
+			);
 			expect(result).toEqual(mockScene);
 			expect(mocks.set).toHaveBeenCalledWith(
 				expect.objectContaining({ status: "review" }),
@@ -293,7 +307,33 @@ describe("SceneRepository", () => {
 
 		it("should throw NotFoundError if scene not found", async () => {
 			mocks.result = [];
-			await expect(sceneRepository.updateContent("s1", "C")).rejects.toThrow(
+			await expect(
+				sceneRepository.updateContent("s1", "C", undefined, "p1"),
+			).rejects.toThrow(NotFoundError);
+		});
+
+		it("should throw DatabaseError on failure", async () => {
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+			mocks.error = new Error("DB Error");
+			await expect(
+				sceneRepository.updateContent("s1", "C", undefined, "p1"),
+			).rejects.toThrow(DatabaseError);
+			consoleSpy.mockRestore();
+		});
+	});
+
+	describe("delete", () => {
+		it("should delete scene", async () => {
+			mocks.result = [{ id: "s1" }];
+			await sceneRepository.delete("s1", "p1");
+			expect(mocks.delete).toHaveBeenCalled();
+		});
+
+		it("should throw NotFoundError if scene does not exist", async () => {
+			mocks.result = [];
+			await expect(sceneRepository.delete("s1", "p1")).rejects.toThrow(
 				NotFoundError,
 			);
 		});
@@ -303,31 +343,9 @@ describe("SceneRepository", () => {
 				.spyOn(console, "error")
 				.mockImplementation(() => {});
 			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.updateContent("s1", "C")).rejects.toThrow(
+			await expect(sceneRepository.delete("s1", "p1")).rejects.toThrow(
 				DatabaseError,
 			);
-			consoleSpy.mockRestore();
-		});
-	});
-
-	describe("delete", () => {
-		it("should delete scene", async () => {
-			mocks.result = [{ id: "s1" }];
-			await sceneRepository.delete("s1");
-			expect(mocks.delete).toHaveBeenCalled();
-		});
-
-		it("should throw NotFoundError if scene does not exist", async () => {
-			mocks.result = [];
-			await expect(sceneRepository.delete("s1")).rejects.toThrow(NotFoundError);
-		});
-
-		it("should throw DatabaseError on failure", async () => {
-			const consoleSpy = vi
-				.spyOn(console, "error")
-				.mockImplementation(() => {});
-			mocks.error = new Error("DB Error");
-			await expect(sceneRepository.delete("s1")).rejects.toThrow(DatabaseError);
 			consoleSpy.mockRestore();
 		});
 	});
@@ -430,9 +448,13 @@ describe("SceneRepository", () => {
 				const mockCard = { id: "card1", sceneId: "s1", purpose: "Updated" };
 				mocks.result = [mockCard];
 
-				const result = await sceneRepository.updateSceneCard("s1", {
-					purpose: "Updated",
-				});
+				const result = await sceneRepository.updateSceneCard(
+					"s1",
+					{
+						purpose: "Updated",
+					},
+					"p1",
+				);
 				expect(result).toEqual(mockCard);
 				expect(mocks.update).toHaveBeenCalled();
 			});
@@ -440,7 +462,7 @@ describe("SceneRepository", () => {
 			it("should throw NotFoundError if card does not exist", async () => {
 				mocks.result = [];
 				await expect(
-					sceneRepository.updateSceneCard("s1", { purpose: "Updated" }),
+					sceneRepository.updateSceneCard("s1", { purpose: "Updated" }, "p1"),
 				).rejects.toThrow(NotFoundError);
 			});
 
@@ -450,7 +472,7 @@ describe("SceneRepository", () => {
 					.mockImplementation(() => {});
 				mocks.error = new Error("DB Error");
 				await expect(
-					sceneRepository.updateSceneCard("s1", { purpose: "Up" }),
+					sceneRepository.updateSceneCard("s1", { purpose: "Up" }, "p1"),
 				).rejects.toThrow(DatabaseError);
 				consoleSpy.mockRestore();
 			});

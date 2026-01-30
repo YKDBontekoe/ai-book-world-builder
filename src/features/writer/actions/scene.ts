@@ -26,7 +26,7 @@ import {
 export async function getSceneContent(projectId: string, sceneId: string) {
 	const validation = getSceneContentSchema.safeParse({ projectId, sceneId });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -53,7 +53,7 @@ export async function getSceneContent(projectId: string, sceneId: string) {
 export async function updateSceneContent(sceneId: string, content: string) {
 	const validation = updateSceneContentSchema.safeParse({ sceneId, content });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -97,7 +97,7 @@ export async function generateScene(
 ): Promise<{ success: boolean; sceneId?: string; error?: string }> {
 	const validation = generateSceneSchema.safeParse({ chapterId, prevSceneId });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -181,7 +181,7 @@ export async function generateScene(
 export async function updateSceneTitle(sceneId: string, title: string) {
 	const validation = updateSceneTitleSchema.safeParse({ sceneId, title });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -209,7 +209,7 @@ export async function deleteScene(
 ): Promise<{ success: boolean; error?: string }> {
 	const validation = deleteSceneSchema.safeParse({ sceneId });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -243,7 +243,7 @@ export async function createSceneInChapter(
 		insertAfterSceneId,
 	});
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -300,7 +300,7 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 
 	const validation = reorderScenesSchema.safeParse({ sceneIds, chapterId });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -349,7 +349,7 @@ export async function reorderScenes(sceneIds: string[], chapterId: string) {
 export async function bulkExportScenes(sceneIds: string[]) {
 	const validation = bulkExportScenesSchema.safeParse({ sceneIds });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {
@@ -404,7 +404,7 @@ export async function bulkExportScenes(sceneIds: string[]) {
 export async function bulkDeleteScenes(sceneIds: string[]) {
 	const validation = bulkDeleteScenesSchema.safeParse({ sceneIds });
 	if (!validation.success) {
-		return { success: false, error: validation.error.errors[0].message };
+		return { success: false, error: validation.error.issues[0].message };
 	}
 
 	try {

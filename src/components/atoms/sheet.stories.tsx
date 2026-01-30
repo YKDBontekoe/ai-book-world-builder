@@ -1,5 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Button } from "./button";
+import { Input } from "./input";
+import { Label } from "./label";
 import {
 	Sheet,
 	SheetClose,
@@ -10,8 +12,6 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "./sheet";
-import { Input } from "./input";
-import { Label } from "./label";
 
 const meta = {
 	title: "Atoms/Sheet",
@@ -20,8 +20,7 @@ const meta = {
 		layout: "centered",
 	},
 	tags: ["autodocs"],
-	argTypes: {
-	},
+	argTypes: {},
 } satisfies Meta<typeof Sheet>;
 
 export default meta;
@@ -45,13 +44,21 @@ const SheetTemplate: Story = {
 						<Label htmlFor="name" className="text-right">
 							Name
 						</Label>
-						<Input id="name" defaultValue="Pedro Duarte" className="col-span-3" />
+						<Input
+							id="name"
+							defaultValue="Pedro Duarte"
+							className="col-span-3"
+						/>
 					</div>
 					<div className="grid grid-cols-4 items-center gap-4">
 						<Label htmlFor="username" className="text-right">
 							Username
 						</Label>
-						<Input id="username" defaultValue="@peduarte" className="col-span-3" />
+						<Input
+							id="username"
+							defaultValue="@peduarte"
+							className="col-span-3"
+						/>
 					</div>
 				</div>
 				<SheetFooter>

@@ -5,9 +5,11 @@ import { useScrollToBottom } from "@/hooks/use-scroll-to-bottom";
 function TestComponent() {
 	const { containerRef, isAtBottom } = useScrollToBottom();
 	return (
+		// biome-ignore lint/a11y/useSemanticElements: Testing accessibility attributes on div
 		<div
 			ref={containerRef}
-			data-testid="container"
+			aria-label="scroll container"
+			role="region"
 			style={{ height: "100px", overflow: "auto" }}
 		>
 			<div style={{ height: "1000px" }}>Content</div>
@@ -21,6 +23,7 @@ function TestComponent() {
 describe("useScrollToBottom", () => {
 	beforeEach(() => {
 		vi.useFakeTimers();
+		// biome-ignore lint/complexity/useArrowFunction: ResizeObserver is a constructor
 		global.ResizeObserver = vi.fn().mockImplementation(function () {
 			return {
 				observe: vi.fn(),
@@ -37,7 +40,7 @@ describe("useScrollToBottom", () => {
 
 	it("throttles calls to scroll check", async () => {
 		render(<TestComponent />);
-		const container = screen.getByTestId("container");
+		const container = screen.getByLabelText("scroll container");
 
 		// Mock scroll properties
 		Object.defineProperty(container, "scrollHeight", {
