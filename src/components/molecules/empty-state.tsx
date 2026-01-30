@@ -54,41 +54,57 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 					damping: 25,
 					delay: 0.1,
 				}}
-				className="flex flex-col items-center text-center w-full"
+				className="relative z-10 flex flex-col items-center text-center w-full max-w-md mx-auto"
 			>
 				{Icon && (
-					<motion.div
-						initial={{ opacity: 0, scale: 0.8 }}
-						animate={{ opacity: 1, scale: 1 }}
-						transition={{
-							type: "spring",
-							stiffness: 400,
-							damping: 25,
-							delay: 0.2,
-						}}
-						className={cn(
-							"mb-6 flex items-center justify-center",
-							variant === "glass"
-								? "rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 p-5 ring-1 ring-primary/20 shadow-sm"
-								: "rounded-full bg-muted/20 p-4",
+					<div className="relative mb-8">
+						{variant === "glass" && (
+							<motion.div
+								animate={{
+									scale: [1, 1.1, 1],
+									opacity: [0.3, 0.6, 0.3],
+								}}
+								transition={{
+									duration: 4,
+									repeat: Number.POSITIVE_INFINITY,
+									ease: "easeInOut",
+								}}
+								className="absolute inset-0 rounded-3xl bg-primary/20 blur-xl"
+							/>
 						)}
-					>
-						<Icon
+						<motion.div
+							initial={{ opacity: 0, scale: 0.8 }}
+							animate={{ opacity: 1, scale: 1 }}
+							transition={{
+								type: "spring",
+								stiffness: 400,
+								damping: 25,
+								delay: 0.2,
+							}}
 							className={cn(
+								"relative flex items-center justify-center transition-all duration-300",
 								variant === "glass"
-									? "h-8 w-8 text-primary"
-									: "h-6 w-6 text-muted-foreground/50",
-								iconClassName,
+									? "rounded-3xl bg-gradient-to-br from-primary/10 to-primary/5 p-6 ring-1 ring-primary/20 shadow-[0_0_20px_-12px_rgba(var(--primary),0.3)]"
+									: "rounded-full bg-muted/20 p-4",
 							)}
-							aria-hidden="true"
-						/>
-					</motion.div>
+						>
+							<Icon
+								className={cn(
+									variant === "glass"
+										? "h-10 w-10 text-primary drop-shadow-sm"
+										: "h-6 w-6 text-muted-foreground/50",
+									iconClassName,
+								)}
+								aria-hidden="true"
+							/>
+						</motion.div>
+					</div>
 				)}
-				<h4 className="font-bold text-lg tracking-tight text-foreground">
+				<h4 className="font-semibold text-xl tracking-tight text-foreground/90">
 					{title}
 				</h4>
 				{description && (
-					<p className="mt-2 max-w-sm text-sm text-muted-foreground leading-relaxed">
+					<p className="mt-3 text-base text-muted-foreground/80 leading-relaxed font-medium">
 						{description}
 					</p>
 				)}
@@ -151,11 +167,14 @@ const EmptyState = React.forwardRef<HTMLDivElement, EmptyStateProps>(
 					variant="liquid"
 					data-testid="empty-state-container"
 					className={cn(
-						"flex flex-col items-center justify-center p-12 min-h-[300px]",
+						"group relative overflow-hidden flex flex-col items-center justify-center p-12 min-h-[400px]",
 						className,
 					)}
 					{...props}
 				>
+					{/* Ambient Background Glow */}
+					<div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-1/2 bg-gradient-to-b from-primary/5 to-transparent blur-3xl opacity-50" />
+
 					{Content}
 				</GlassCard>
 			);

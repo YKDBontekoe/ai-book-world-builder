@@ -13,6 +13,7 @@ vi.mock("pdfkit", () => {
 	return {
 		// biome-ignore lint/complexity/useArrowFunction: Must use function for constructor
 		default: vi.fn().mockImplementation(function () {
+			// biome-ignore lint/complexity/noBannedTypes: Mocking internal types
 			const handlers: Record<string, Function> = {};
 			return {
 				on: vi.fn((event, cb) => {
