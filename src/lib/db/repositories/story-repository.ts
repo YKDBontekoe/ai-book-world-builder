@@ -194,7 +194,7 @@ export class StoryRepository {
 		content: string,
 		projectId?: string,
 	) {
-		await db
+		const updated = await db
 			.update(scene)
 			.set({
 				content: content,
@@ -205,7 +205,12 @@ export class StoryRepository {
 				projectId
 					? and(eq(scene.id, sceneId), eq(scene.projectId, projectId))
 					: eq(scene.id, sceneId),
-			);
+			)
+			.returning({ id: scene.id });
+
+		if (updated.length === 0) {
+			throw new Error("Scene not found or access denied");
+		}
 	}
 
 	/**

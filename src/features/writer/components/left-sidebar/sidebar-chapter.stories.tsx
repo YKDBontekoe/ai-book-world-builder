@@ -4,7 +4,7 @@ import type { ChapterWithScenes } from "@/lib/types";
 import { SidebarChapter } from "./sidebar-chapter";
 
 // Mock data
-const mockScenes = [
+const mockScenes: ChapterWithScenes["scenes"] = [
 	{
 		id: "scene-1",
 		title: "The Beginning",
@@ -31,7 +31,7 @@ const mockScenes = [
 		content: "Scene content...",
 		wordCount: 200,
 	},
-] as any[];
+];
 
 const mockChapter: ChapterWithScenes = {
 	id: "chapter-1",

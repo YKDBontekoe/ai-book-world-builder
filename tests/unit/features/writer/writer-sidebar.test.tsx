@@ -20,16 +20,6 @@ vi.mock("@/features/writer/actions", () => ({
 	generateNextScene: vi.fn(),
 }));
 
-// Mock Next Navigation
-vi.mock("next/navigation", () => ({
-	useRouter: () => ({
-		push: vi.fn(),
-		refresh: vi.fn(),
-	}),
-	usePathname: () => "/projects/p1/write",
-	useParams: () => ({ projectId: "p1" }),
-}));
-
 // Mock Layout Context
 vi.mock("@/features/writer/components/writer-layout-context", () => ({
 	useWriterLayoutContext: () => ({
@@ -58,7 +48,7 @@ global.ResizeObserver = class ResizeObserver {
 window.HTMLElement.prototype.scrollIntoView = vi.fn();
 
 describe("WriterSidebar Integration", () => {
-	const mockProject: Project = {
+	const mockProject = {
 		id: "p1",
 		title: "Test Project",
 		createdAt: new Date(),
@@ -67,7 +57,7 @@ describe("WriterSidebar Integration", () => {
 		wordCount: 0,
 		status: "active",
 		lastViewedSceneId: null,
-	} as any;
+	} satisfies Partial<Project> as Project;
 
 	const mockStructure: ChapterWithScenes[] = [
 		{
@@ -101,7 +91,7 @@ describe("WriterSidebar Integration", () => {
 
 	beforeEach(() => {
 		vi.resetAllMocks();
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: mockStructure,
@@ -131,7 +121,7 @@ describe("WriterSidebar Integration", () => {
 	});
 
 	it("handles empty structure", async () => {
-		(getProjectStructure as any).mockResolvedValue({
+		vi.mocked(getProjectStructure).mockResolvedValue({
 			success: true,
 			data: {
 				structure: [],

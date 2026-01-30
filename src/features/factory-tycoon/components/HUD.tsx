@@ -1,6 +1,5 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import {
 	Activity,
 	Beaker,
@@ -14,15 +13,12 @@ import {
 	TrendingUp,
 } from "lucide-react";
 import React, { useState } from "react";
-import { twMerge } from "tailwind-merge";
+import { cn } from "@/lib/utils";
 import { RESOURCE_VALUES } from "../config";
 import { useGame } from "../store";
+import type { GameState } from "../types";
 import { GameSettings } from "./GameSettings";
 import { ResearchModal } from "./ResearchModal";
-
-function cn(...inputs: ClassValue[]) {
-	return twMerge(clsx(inputs));
-}
 
 const RESOURCE_ICONS: Record<string, { icon: string; color: string }> = {
 	ore: { icon: "/images/factory-tycoon/ore.png", color: "text-amber-600" },
@@ -219,9 +215,13 @@ export function HUD() {
 						</h3>
 
 						<div className="space-y-2">
-							{Object.entries(state.inventory).map(([res, count]) => {
-								const delta =
-									state.lastTickDelta[res as keyof typeof state.inventory] ?? 0;
+							{(
+								Object.entries(state.inventory) as [
+									keyof GameState["inventory"],
+									number,
+								][]
+							).map(([res, count]) => {
+								const delta = state.lastTickDelta[res] ?? 0;
 								const config = RESOURCE_ICONS[res];
 								const value =
 									RESOURCE_VALUES[res as keyof typeof RESOURCE_VALUES] || 0;
@@ -275,7 +275,7 @@ export function HUD() {
 										{value > 0 && (
 											<button
 												type="button"
-												onClick={() => sellResource(res as any)}
+												onClick={() => sellResource(res)}
 												disabled={count <= 0}
 												className={cn(
 													"text-[10px] w-full py-1 rounded border transition-colors flex items-center justify-center gap-1",

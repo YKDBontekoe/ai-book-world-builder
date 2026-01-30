@@ -2,7 +2,26 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { updateSceneContent } from "@/lib/db/queries/scene";
 
 const mocks = vi.hoisted(() => {
-	const mockChain: any = {
+	type MockMethod = ReturnType<typeof vi.fn>;
+	interface MockChain {
+		select: MockMethod;
+		from: MockMethod;
+		where: MockMethod;
+		orderBy: MockMethod;
+		limit: MockMethod;
+		offset: MockMethod;
+		insert: MockMethod;
+		values: MockMethod;
+		returning: MockMethod;
+		update: MockMethod;
+		set: MockMethod;
+		delete: MockMethod;
+		then: MockMethod;
+		result: any[];
+		error: any;
+	}
+
+	const mockChain = {
 		select: vi.fn(),
 		from: vi.fn(),
 		where: vi.fn(),
@@ -24,9 +43,9 @@ const mocks = vi.hoisted(() => {
 		}),
 		result: [],
 		error: null,
-	};
+	} as MockChain;
 
-	const methods = [
+	const methods: (keyof MockChain)[] = [
 		"select",
 		"from",
 		"where",
@@ -51,8 +70,6 @@ const mocks = vi.hoisted(() => {
 vi.mock("@/lib/db", () => ({
 	db: mocks,
 }));
-
-import { and } from "drizzle-orm";
 
 const ormMocks = vi.hoisted(() => ({
 	and: vi.fn().mockReturnValue("AND_CLAUSE"),
@@ -91,6 +108,7 @@ describe("Scene Queries", () => {
 			expect(result).toEqual(mockScene);
 			expect(mocks.update).toHaveBeenCalled();
 			expect(mocks.where).toHaveBeenCalled();
+			expect(ormMocks.and).not.toHaveBeenCalled();
 		});
 
 		it("should update content with projectId check", async () => {
