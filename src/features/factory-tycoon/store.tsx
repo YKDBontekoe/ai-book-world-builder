@@ -25,12 +25,12 @@ import {
 	getInteractionResult,
 	processInteraction,
 } from "./systems/interactionSystem";
-import {
-	type BuildingEntity,
-	type BuildingType,
-	type Direction,
-	type GameState,
-	type Resource,
+import type {
+	BuildingEntity,
+	BuildingType,
+	Direction,
+	GameState,
+	Resource,
 } from "./types";
 
 type Action =
@@ -171,7 +171,9 @@ function gameReducer(state: GameState, action: Action): GameState {
 
 export function GameProvider({
 	children,
-}: { children: ReactNode }): JSX.Element {
+}: {
+	children: ReactNode;
+}): JSX.Element {
 	const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
 	const [isRunning, setIsRunning] = useState(false);
 	const [isLoading, setIsLoading] = useState(true);

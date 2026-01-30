@@ -371,7 +371,10 @@ export class EntityRepository extends BaseRepository<
 				// Delete related relationships
 				await tx.delete(relationship).where(relWhere);
 
-				const entWhere = and(eq(entity.id, id), eq(entity.projectId, projectId));
+				const entWhere = and(
+					eq(entity.id, id),
+					eq(entity.projectId, projectId),
+				);
 
 				// Delete the entity
 				await tx.delete(entity).where(entWhere);
