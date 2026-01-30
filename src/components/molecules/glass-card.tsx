@@ -7,7 +7,7 @@ import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
 const glassCardVariants = cva(
-	"relative overflow-hidden rounded-lg glass-panel transition-colors duration-300",
+	"relative overflow-hidden rounded-2xl glass-panel transition-colors duration-300",
 	{
 		variants: {
 			variant: {

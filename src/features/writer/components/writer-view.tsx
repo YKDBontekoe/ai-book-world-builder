@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { memo, useEffect, useMemo, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
@@ -19,6 +20,8 @@ import { WriterEditor } from "@/features/writer/components/writer-editor";
 import { WriterLayoutContext } from "@/features/writer/components/writer-layout-context";
 import { WriterSidebar } from "@/features/writer/components/writer-sidebar";
 import { WriterSkeleton } from "@/features/writer/components/writer-skeleton";
+import { springs } from "@/lib/animations";
+import { cn } from "@/lib/utils";
 import type { ChatModel } from "@/lib/ai/models";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
@@ -132,7 +135,7 @@ function WriterViewContent({
 
 	const editorPanel = useMemo(
 		() => (
-			<div className="relative z-10 h-full w-full bg-background border-x border-border/10">
+			<div className="relative z-10 h-full w-full">
 				<WriterEditor />
 				<PowerDock />
 				<WriterSpotlight />
@@ -148,25 +151,44 @@ function WriterViewContent({
 	// Layout matching skeleton: 20% sidebar | flex-1 editor | 30% canvas
 	return (
 		<WriterLayoutContext.Provider value={layoutContextValue}>
-			<div className="flex h-full w-full overflow-hidden bg-background">
-				{/* Left Panel: Sidebar (20%) - matches skeleton */}
-				{!isZen && isSidebarOpen && (
-					<div className="w-[20%] min-w-[250px] border-r bg-muted/10 flex flex-col hidden md:flex">
-						<WriterSidebar />
-					</div>
-				)}
+			<div className="flex h-full w-full overflow-hidden bg-muted/30 p-2 gap-2">
+				<AnimatePresence mode="popLayout">
+					{/* Left Panel: Sidebar (20%) - matches skeleton */}
+					{!isZen && isSidebarOpen && (
+						<motion.div
+							initial={{ width: 0, opacity: 0, x: -20 }}
+							animate={{ width: "20%", opacity: 1, x: 0 }}
+							exit={{ width: 0, opacity: 0, x: -20 }}
+							transition={springs.liquid}
+							className="min-w-[250px] flex flex-col hidden md:flex rounded-2xl overflow-hidden glass-panel border bg-background/60 backdrop-blur-xl shadow-sm"
+						>
+							<WriterSidebar />
+						</motion.div>
+					)}
+				</AnimatePresence>
 
 				{/* Center Panel: Editor (flex-1) - matches skeleton */}
-				<div className="flex-1 flex flex-col min-w-0 bg-background/50 relative">
+				<motion.div
+					layout
+					className="flex-1 flex flex-col min-w-0 relative rounded-2xl overflow-hidden glass-panel border bg-background/60 backdrop-blur-xl shadow-sm transition-all duration-300 ease-spring"
+				>
 					{editorPanel}
-				</div>
+				</motion.div>
 
-				{/* Right Panel: Canvas (30%) - matches skeleton */}
-				{!isZen && isCanvasOpen && (
-					<div className="w-[30%] min-w-[300px] border-l hidden lg:flex flex-col bg-muted/5">
-						<BookCanvas variant="embedded" />
-					</div>
-				)}
+				<AnimatePresence mode="popLayout">
+					{/* Right Panel: Canvas (30%) - matches skeleton */}
+					{!isZen && isCanvasOpen && (
+						<motion.div
+							initial={{ width: 0, opacity: 0, x: 20 }}
+							animate={{ width: "30%", opacity: 1, x: 0 }}
+							exit={{ width: 0, opacity: 0, x: 20 }}
+							transition={springs.liquid}
+							className="min-w-[300px] hidden lg:flex flex-col rounded-2xl overflow-hidden glass-panel border bg-background/60 backdrop-blur-xl shadow-sm"
+						>
+							<BookCanvas variant="embedded" />
+						</motion.div>
+					)}
+				</AnimatePresence>
 
 				<FloatingAssistant
 					projectId={project.id}
