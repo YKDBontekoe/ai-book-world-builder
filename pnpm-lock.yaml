@@ -24,8 +24,8 @@ importers:
         specifier: 3.0.59
         version: 3.0.59(react@19.2.3)(zod@4.3.6)
       '@ai-sdk/xai':
-        specifier: 3.0.38
-        version: 3.0.38(zod@4.3.6)
+        specifier: 3.0.39
+        version: 3.0.39(zod@4.3.6)
       '@auth/drizzle-adapter':
         specifier: 1.11.1
         version: 1.11.1(@simplewebauthn/browser@9.0.1)(@simplewebauthn/server@13.2.2)
@@ -508,8 +508,8 @@ packages:
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
-  '@ai-sdk/xai@3.0.38':
-    resolution: {integrity: sha512-b6/ieI1lTZvwEuN8YFwSVg6Uq9lxKfe8kGvSo+fr7X8HvHP7BwLFG3eQKTQuDvxSBBkf1VraKNVqu1WCBrywDA==}
+  '@ai-sdk/xai@3.0.39':
+    resolution: {integrity: sha512-VtPff/i7AhcIuFEMGUoXxoRzBBI75Q2QX6FDlw1k0ockdho3APkv3mXe/JllReo3JCRpQhBxZzfRQOep3V8Ttg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -6294,7 +6294,7 @@ snapshots:
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/xai@3.0.38(zod@4.3.6)':
+  '@ai-sdk/xai@3.0.39(zod@4.3.6)':
     dependencies:
       '@ai-sdk/openai-compatible': 2.0.21(zod@4.3.6)
       '@ai-sdk/provider': 3.0.5
