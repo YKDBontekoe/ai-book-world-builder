@@ -32,11 +32,11 @@
 		]
 	},
 	"dependencies": {
-		"@ai-sdk/anthropic": "3.0.33",
-		"@ai-sdk/openai": "3.0.23",
+		"@ai-sdk/anthropic": "3.0.34",
+		"@ai-sdk/openai": "3.0.24",
 		"@ai-sdk/provider": "3.0.6",
-		"@ai-sdk/react": "3.0.66",
-		"@ai-sdk/xai": "3.0.44",
+		"@ai-sdk/react": "3.0.68",
+		"@ai-sdk/xai": "3.0.45",
 		"@auth/drizzle-adapter": "1.11.1",
 		"@codemirror/lang-javascript": "6.2.4",
 		"@codemirror/lang-python": "6.2.1",
