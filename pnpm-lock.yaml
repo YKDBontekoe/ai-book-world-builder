@@ -138,8 +138,8 @@ importers:
         specifier: 1.6.1
         version: 1.6.1(next@16.1.6(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(react@19.2.3)
       '@vercel/blob':
-        specifier: 2.0.1
-        version: 2.0.1
+        specifier: 2.1.0
+        version: 2.1.0
       '@vercel/functions':
         specifier: 3.4.1
         version: 3.4.1
@@ -3290,8 +3290,8 @@ packages:
       vue-router:
         optional: true
 
-  '@vercel/blob@2.0.1':
-    resolution: {integrity: sha512-DeJmC/B5oH1ExazYh/UvjbN6Mg0q0wlDz29GPIPNhi4COjVzqYRkyPYjOcAZd+RgXVzWqGXholZWtGcLCPuL8A==}
+  '@vercel/blob@2.1.0':
+    resolution: {integrity: sha512-nNYlMJb1LrUyP9bx0ApLorsoRDSzluHq2wlkGCWtGIHHdjCq5pD4i2IY3dnsmTX0WS7G/1aTtyGMb4DF8VrUWg==}
     engines: {node: '>=20.0.0'}
 
   '@vercel/functions@3.4.1':
@@ -8903,7 +8903,7 @@ snapshots:
       next: 16.1.6(@babel/core@7.28.5)(@opentelemetry/api@1.9.0)(@playwright/test@1.58.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react: 19.2.3
 
-  '@vercel/blob@2.0.1':
+  '@vercel/blob@2.1.0':
     dependencies:
       async-retry: 1.3.3
       is-buffer: 2.0.5
