@@ -1,0 +1,21 @@
+import{j as e}from"./jsx-runtime-BSms4suT.js";import{w as f,u as S,e as j}from"./index-Do1wm97G.js";import{r as p}from"./iframe-CD-8zb5r.js";import{T as v}from"./index-CyvIFlIL.js";import{B as a}from"./button-haVztOmM.js";import{u as N}from"./use-scene-operations-BSUAfXsQ.js";import"./preload-helper-PPVm8Dsz.js";import"./_commonjsHelpers-CE1G-McA.js";import"./index-xicVLTDX.js";import"./index-9042-JMB.js";import"./index-B_jtOnfb.js";import"./utils-CDN07tui.js";import"./glass-card-CY1EpjGv.js";import"./proxy-Q0AlP_pG.js";import"./index-BMjvtKZ0.js";import"./action-middleware-BabcuNwe.js";import"./query-builder-DqlqoWZ8.js";import"./db-BM4m06C0.js";import"./db-NsvaeLHo.js";import"./tslib.es6-C91NJfYC.js";import"./___vite-browser-external_commonjs-proxy-DMh1aSo_.js";import"./structure-B8bd37M5.js";import"./createLucideIcon-DVZ3ZsuI.js";const o="chapter-1",m="project-1",r="scene-1",C=[{id:o,projectId:m,title:"Chapter 1",sequence:1,createdAt:new Date,updatedAt:new Date,notes:null,status:"draft",outlineId:"outline-1",volumeId:"volume-1",scenes:[{id:r,chapterId:o,projectId:m,title:"Scene 1",sequence:1,content:"Content...",status:"drafted",prevSceneId:null,createdAt:new Date,updatedAt:new Date,wordCount:0}]}],b=()=>{const[t,n]=p.useState(null),[c]=p.useState(C),{isGenerating:i,isCreatingChapter:l,deletedSceneIds:d,handleGenerateNextScene:u,handleCreateSceneManually:h,handleDeleteScene:x,handleCreateChapter:g}=N({projectId:m,activeSceneId:t,onSceneSelect:n,onStructureUpdate:()=>console.log("Structure updated"),structure:c});return e.jsxs("div",{className:"p-8 space-y-6 max-w-2xl mx-auto border rounded-xl bg-card text-card-foreground",children:[e.jsxs("div",{className:"space-y-2",children:[e.jsx("h2",{className:"text-2xl font-bold",children:"Scene Operations Demo"}),e.jsx("p",{className:"text-muted-foreground",children:"Interact with the buttons to trigger hook actions. Watch for Toasts."})]}),e.jsxs("div",{className:"grid grid-cols-2 gap-4",children:[e.jsxs("div",{className:"p-4 border rounded-lg space-y-2",children:[e.jsx("h3",{className:"font-semibold",children:"Generation"}),e.jsx(a,{onClick:()=>u(o),disabled:i,className:"w-full",children:i?"Generating...":"Generate Next Scene"})]}),e.jsxs("div",{className:"p-4 border rounded-lg space-y-2",children:[e.jsx("h3",{className:"font-semibold",children:"Manual Creation"}),e.jsx(a,{onClick:()=>h(o),className:"w-full",variant:"secondary",children:"Create Scene Manually"})]}),e.jsxs("div",{className:"p-4 border rounded-lg space-y-2",children:[e.jsx("h3",{className:"font-semibold",children:"Chapter"}),e.jsx(a,{onClick:()=>g(),disabled:l,className:"w-full",variant:"outline",children:l?"Creating...":"Create Chapter"})]}),e.jsxs("div",{className:"p-4 border rounded-lg space-y-2",children:[e.jsx("h3",{className:"font-semibold",children:"Deletion"}),e.jsx(a,{onClick:()=>x(r),className:"w-full",variant:"destructive",disabled:d.has(r),children:d.has(r)?"Deleted (Undo available)":"Delete Scene 1"})]})]}),e.jsxs("div",{className:"p-4 bg-muted rounded-lg",children:[e.jsx("h3",{className:"font-mono text-sm font-bold mb-2",children:"Internal State"}),e.jsx("pre",{className:"text-xs overflow-auto",children:JSON.stringify({isGenerating:i,isCreatingChapter:l,deletedSceneIds:Array.from(d),activeSceneId:t},null,2)})]}),e.jsx(v,{})]})},z={title:"Features/Writer/Hooks/UseSceneOperations",component:b,parameters:{layout:"centered"}},s={play:async({canvasElement:t})=>{const n=f(t),c=n.getByRole("button",{name:/Generate Next Scene/i});await S.click(c),await j(n.getByRole("button",{name:/Generating.../i})).toBeInTheDocument()}};s.parameters={...s.parameters,docs:{...s.parameters?.docs,source:{originalSource:`{
+  play: async ({
+    canvasElement
+  }) => {
+    const canvas = within(canvasElement);
+
+    // Find the Generate button
+    const generateButton = canvas.getByRole("button", {
+      name: /Generate Next Scene/i
+    });
+
+    // Click it
+    await userEvent.click(generateButton);
+
+    // Verify it changes text to "Generating..."
+    // Note: The hook state update happens immediately
+    await expect(canvas.getByRole("button", {
+      name: /Generating.../i
+    })).toBeInTheDocument();
+  }
+}`,...s.parameters?.docs?.source}}};const L=["Default"];export{s as Default,L as __namedExportsOrder,z as default};
