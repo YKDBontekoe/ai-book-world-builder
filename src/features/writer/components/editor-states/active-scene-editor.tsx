@@ -71,7 +71,7 @@ export function ActiveSceneEditor({
 			onContentChange(content);
 			historyProps.pushHistory(content);
 		},
-		[onContentChange, historyProps.pushHistory],
+		[onContentChange, historyProps.pushHistory, historyProps],
 	);
 
 	return (

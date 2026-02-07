@@ -51,11 +51,9 @@ vi.mock("@/features/factory-tycoon/audio/SoundContext", () => ({
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
-	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
 	motion: {
 		div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 	},
-	// biome-ignore lint/suspicious/noExplicitAny: Mocking library internals
 	AnimatePresence: ({ children }: any) => <>{children}</>,
 }));
 
@@ -168,7 +166,9 @@ describe("GameCanvas", () => {
 		});
 
 		expect(backdrop).toBeInTheDocument();
-		fireEvent.click(backdrop!);
+		if (backdrop) {
+			fireEvent.click(backdrop);
+		}
 
 		expect(screen.queryByText("Options")).not.toBeInTheDocument();
 	});

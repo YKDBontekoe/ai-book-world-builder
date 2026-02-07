@@ -1,6 +1,5 @@
 "use client";
 
-import { type ClassValue, clsx } from "clsx";
 import {
 	ArrowRight,
 	ArrowUpFromLine,

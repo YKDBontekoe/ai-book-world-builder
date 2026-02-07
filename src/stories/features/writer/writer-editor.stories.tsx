@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
+import { WriterProvider } from "@/features/writer/components/writer-context";
 import { WriterControlProvider } from "@/features/writer/components/writer-control-context";
 import { WriterEditor } from "@/features/writer/components/writer-editor";
 import { WriterLayoutContext } from "@/features/writer/components/writer-layout-context";
-import { WriterProvider } from "@/features/writer/components/writer-context";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
 
@@ -119,10 +119,7 @@ const Template = (args: {
 
 export const Default: Story = {
 	render: () => (
-		<Template
-			initialStructure={mockStructure}
-			lastViewedSceneId="scene-1"
-		/>
+		<Template initialStructure={mockStructure} lastViewedSceneId="scene-1" />
 	),
 };
 

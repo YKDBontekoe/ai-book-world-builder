@@ -20,9 +20,8 @@ import { WriterEditor } from "@/features/writer/components/writer-editor";
 import { WriterLayoutContext } from "@/features/writer/components/writer-layout-context";
 import { WriterSidebar } from "@/features/writer/components/writer-sidebar";
 import { WriterSkeleton } from "@/features/writer/components/writer-skeleton";
-import { springs } from "@/lib/animations";
-import { cn } from "@/lib/utils";
 import type { ChatModel } from "@/lib/ai/models";
+import { springs } from "@/lib/animations";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
 

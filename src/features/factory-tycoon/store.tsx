@@ -1,7 +1,7 @@
 "use client";
 
 import { nanoid } from "nanoid";
-import React, {
+import {
 	createContext,
 	type ReactNode,
 	useCallback,
@@ -30,7 +30,6 @@ import type {
 	BuildingType,
 	Direction,
 	GameState,
-	Resource,
 } from "./types";
 
 type Action =

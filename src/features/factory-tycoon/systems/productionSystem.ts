@@ -12,7 +12,7 @@ export type SystemResult = {
 export const runProductionSystem = (
 	buildings: BuildingEntity[],
 	currentInventory: Record<Exclude<Resource, "cash">, number>,
-	remainingSpace: number,
+	_remainingSpace: number,
 ): SystemResult => {
 	const result: SystemResult = {
 		inventoryDelta: { ore: 0, ingot: 0, gadget: 0, science: 0 },

@@ -207,6 +207,7 @@ export function GameCanvas({
 						border: "1px solid var(--factory-border)",
 					}}
 				>
+					{/* biome-ignore lint/a11y/noStaticElementInteractions: Mouse leave cleanup only */}
 					<div
 						className="grid"
 						style={{
@@ -234,10 +235,9 @@ export function GameCanvas({
 								: 0;
 
 							const content = (
-								<div
+								<button
+									type="button"
 									key={`${x}-${y}`}
-									role="button"
-									tabIndex={0}
 									aria-label={`Tile ${x},${y} ${building ? building.type : "Empty"}`}
 									onClick={() => handleTileClick(x, y)}
 									onContextMenu={(e) => {
@@ -359,7 +359,7 @@ export function GameCanvas({
 												})()}
 											</div>
 										)}
-								</div>
+								</button>
 							);
 
 							if (!building) return content;

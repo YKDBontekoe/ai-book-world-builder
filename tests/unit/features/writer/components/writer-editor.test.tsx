@@ -16,8 +16,6 @@ vi.mock("@/features/writer/actions", () => ({
 	createSceneInChapter: vi.fn(),
 }));
 
-import { exportProject } from "@/features/writer/actions";
-
 // Mock Appearance Provider
 vi.mock("@/components/providers/appearance-provider", () => ({
 	useAppearance: () => ({
@@ -83,7 +81,9 @@ vi.mock("@/features/writer/components/tools/writing-style-analyzer", () => ({
 }));
 
 vi.mock("@/features/writer/components/time-travel-controls", () => ({
-	TimeTravelControls: () => <div data-testid="time-travel-controls">Time Travel Controls</div>,
+	TimeTravelControls: () => (
+		<div data-testid="time-travel-controls">Time Travel Controls</div>
+	),
 }));
 
 vi.mock("@/hooks/use-narrative-intelligence", () => ({
@@ -178,7 +178,7 @@ vi.mock("sonner", () => ({
 
 // Mock Clipboard
 const mockWriteText = vi.fn();
-Object.defineProperty(navigator, 'clipboard', {
+Object.defineProperty(navigator, "clipboard", {
 	value: {
 		writeText: mockWriteText,
 	},
@@ -307,6 +307,9 @@ describe("WriterEditor", () => {
 			expect(mockExportProject).toHaveBeenCalled();
 		});
 
-		expect(mockToastError).toHaveBeenCalledWith("Error exporting project", expect.anything());
+		expect(mockToastError).toHaveBeenCalledWith(
+			"Error exporting project",
+			expect.anything(),
+		);
 	});
 });

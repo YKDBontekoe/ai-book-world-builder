@@ -30,7 +30,7 @@ export async function exportProject(projectId: string) {
 			if (!scenesByChapter.has(chId)) {
 				scenesByChapter.set(chId, []);
 			}
-			scenesByChapter.get(chId)!.push(s);
+			scenesByChapter.get(chId)?.push(s);
 		}
 
 		let content = "";

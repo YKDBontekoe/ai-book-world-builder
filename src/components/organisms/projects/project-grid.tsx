@@ -85,7 +85,8 @@ function ProjectCard({
 					<div className="space-y-4">
 						<div className="flex items-center gap-3 pr-8">
 							{/* Icon / Selection Trigger */}
-							<div
+							<button
+								type="button"
 								className={cn(
 									"relative z-20 flex-shrink-0 p-3 rounded-xl bg-primary/10 text-primary transition-all duration-300",
 									onSelect &&
@@ -97,8 +98,7 @@ function ProjectCard({
 										handleSelect(e, e.shiftKey);
 									}
 								}}
-								role={onSelect ? "button" : undefined}
-								tabIndex={onSelect ? 0 : undefined}
+								disabled={!onSelect}
 								aria-label={
 									onSelect
 										? selected
@@ -132,7 +132,7 @@ function ProjectCard({
 										/>
 									</div>
 								)}
-							</div>
+							</button>
 
 							<h3 className="font-bold text-lg truncate tracking-tight">
 								{/* Link Overlay Pattern: pseudo element covers the parent relative container */}

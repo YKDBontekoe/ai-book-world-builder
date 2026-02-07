@@ -196,7 +196,7 @@ describe("SidebarChapter", () => {
 	});
 
 	it("disables actions when readOnly is true", async () => {
-		const user = userEvent.setup();
+		const _user = userEvent.setup();
 		renderComponent({ ...defaultProps, readOnly: true });
 
 		// With mocked context menu, we can't check 'not.toBeInTheDocument' based on trigger interaction

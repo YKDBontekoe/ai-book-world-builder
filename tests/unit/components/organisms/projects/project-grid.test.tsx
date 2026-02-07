@@ -14,10 +14,10 @@ vi.mock("framer-motion", () => {
 		className,
 		onClick,
 		...props
-	}: React.HTMLAttributes<HTMLDivElement>) => (
-		<div className={className} onClick={onClick} {...props}>
+	}: React.ButtonHTMLAttributes<HTMLButtonElement>) => (
+		<button type="button" className={className} onClick={onClick} {...props}>
 			{children}
-		</div>
+		</button>
 	);
 	return { motion: Object.assign(motion, { div }) };
 });
@@ -27,10 +27,10 @@ vi.mock("@/components/molecules/glass-card", () => ({
 		children,
 		className,
 		onClick,
-	}: React.HTMLAttributes<HTMLDivElement>) => (
-		<div className={className} onClick={onClick}>
+	}: React.HTMLAttributes<HTMLButtonElement>) => (
+		<button type="button" className={className} onClick={onClick}>
 			{children}
-		</div>
+		</button>
 	),
 }));
 

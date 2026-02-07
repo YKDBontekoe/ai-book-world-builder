@@ -26,7 +26,7 @@ vi.mock("pdfkit", () => {
 				moveDown: vi.fn().mockReturnThis(),
 				addPage: vi.fn().mockReturnThis(),
 				end: vi.fn(() => {
-					if (handlers["end"]) handlers["end"]();
+					if (handlers.end) handlers.end();
 				}),
 			};
 		}),

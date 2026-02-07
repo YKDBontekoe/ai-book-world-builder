@@ -1,10 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { WriterProvider } from "@/features/writer/components/writer-context";
 import { WriterControlProvider } from "@/features/writer/components/writer-control-context";
 import { WriterEditor } from "@/features/writer/components/writer-editor";
 import { WriterLayoutContext } from "@/features/writer/components/writer-layout-context";
-import { WriterProvider } from "@/features/writer/components/writer-context";
 import type { Project } from "@/lib/db/schema";
 import type { ChapterWithScenes } from "@/lib/types";
 
@@ -12,14 +12,23 @@ import type { ChapterWithScenes } from "@/lib/types";
 
 // Mock Server Actions
 vi.mock("@/features/writer/actions", () => ({
-	exportProject: vi.fn().mockResolvedValue({ success: true, content: "Exported Content" }),
-	createSceneInChapter: vi.fn().mockResolvedValue({ success: true, sceneId: "new-scene-id" }),
-	getProjectStructure: vi.fn().mockResolvedValue({ success: true, data: { structure: [], structureText: "" } }),
+	exportProject: vi
+		.fn()
+		.mockResolvedValue({ success: true, content: "Exported Content" }),
+	createSceneInChapter: vi
+		.fn()
+		.mockResolvedValue({ success: true, sceneId: "new-scene-id" }),
+	getProjectStructure: vi.fn().mockResolvedValue({
+		success: true,
+		data: { structure: [], structureText: "" },
+	}),
 	updateLastViewedScene: vi.fn().mockResolvedValue({ success: true }),
-	getSceneContent: vi.fn().mockResolvedValue({ success: true, data: "Hello World" }),
+	getSceneContent: vi
+		.fn()
+		.mockResolvedValue({ success: true, data: "Hello World" }),
 }));
 
-import { exportProject, createSceneInChapter } from "@/features/writer/actions";
+import { createSceneInChapter, exportProject } from "@/features/writer/actions";
 
 // Mock Child Components
 vi.mock("@/components/organisms/editor/text-editor", () => ({
@@ -43,9 +52,12 @@ vi.mock("@/features/writer/components/tools/writing-style-analyzer", () => ({
 vi.mock("@/features/writer/components/writer-header", () => ({
 	WriterHeader: () => <div data-testid="writer-header" />,
 }));
-vi.mock("@/features/writer/components/editor-states/writer-empty-state", () => ({
-	WriterEmptyState: () => <div data-testid="writer-empty-state" />,
-}));
+vi.mock(
+	"@/features/writer/components/editor-states/writer-empty-state",
+	() => ({
+		WriterEmptyState: () => <div data-testid="writer-empty-state" />,
+	}),
+);
 vi.mock("@/features/writer/components/time-travel-controls", () => ({
 	TimeTravelControls: () => <div data-testid="time-travel-controls" />,
 }));
@@ -100,7 +112,7 @@ vi.mock("@/components/organisms/book-canvas/book-canvas-context", () => ({
 
 // Mock Clipboard
 const mockWriteText = vi.fn();
-Object.defineProperty(navigator, 'clipboard', {
+Object.defineProperty(navigator, "clipboard", {
 	value: {
 		writeText: mockWriteText,
 	},
@@ -165,7 +177,10 @@ const defaultLayoutContext = {
 	toggleDirectorMode: vi.fn(),
 };
 
-function renderEditor(initialStructure = mockStructure, lastViewedSceneId: string | null = "scene-1") {
+function renderEditor(
+	initialStructure = mockStructure,
+	lastViewedSceneId: string | null = "scene-1",
+) {
 	currentActiveSceneId = lastViewedSceneId; // Reset state
 	return render(
 		<WriterLayoutContext.Provider value={defaultLayoutContext}>
@@ -177,7 +192,7 @@ function renderEditor(initialStructure = mockStructure, lastViewedSceneId: strin
 					<WriterEditor />
 				</WriterControlProvider>
 			</WriterProvider>
-		</WriterLayoutContext.Provider>
+		</WriterLayoutContext.Provider>,
 	);
 }
 
@@ -204,7 +219,7 @@ describe("WriterEditor Integration", () => {
 	it("triggers project export on hotkey (Mod+Shift+E)", async () => {
 		const user = userEvent.setup();
 		// userEvent might replace clipboard, so we spy on the current instance
-		const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText');
+		const writeTextSpy = vi.spyOn(navigator.clipboard, "writeText");
 
 		renderEditor();
 

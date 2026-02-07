@@ -25,7 +25,7 @@ describe("StructureEditorDialog", () => {
 				currentStructure={currentStructure}
 				onSave={onSave}
 			>
-				<button>Open Editor</button>
+				<button type="button">Open Editor</button>
 			</StructureEditorDialog>,
 		);
 
@@ -42,7 +42,7 @@ describe("StructureEditorDialog", () => {
 				currentStructure={currentStructure}
 				onSave={onSave}
 			>
-				<button>Open Editor</button>
+				<button type="button">Open Editor</button>
 			</StructureEditorDialog>,
 		);
 
@@ -65,7 +65,7 @@ describe("StructureEditorDialog", () => {
 				currentStructure={currentStructure}
 				onSave={onSave}
 			>
-				<button>Open Editor</button>
+				<button type="button">Open Editor</button>
 			</StructureEditorDialog>,
 		);
 
@@ -101,7 +101,7 @@ describe("StructureEditorDialog", () => {
 				currentStructure={currentStructure}
 				onSave={onSave}
 			>
-				<button>Open Editor</button>
+				<button type="button">Open Editor</button>
 			</StructureEditorDialog>,
 		);
 
@@ -123,7 +123,7 @@ describe("StructureEditorDialog", () => {
 				currentStructure={currentStructure}
 				onSave={onSave}
 			>
-				<button>Open Editor</button>
+				<button type="button">Open Editor</button>
 			</StructureEditorDialog>,
 		);
 
@@ -148,7 +148,7 @@ describe("StructureEditorDialog", () => {
 				currentStructure={messyStructure}
 				onSave={onSave}
 			>
-				<button>Open Editor</button>
+				<button type="button">Open Editor</button>
 			</StructureEditorDialog>,
 		);
 

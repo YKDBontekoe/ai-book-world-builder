@@ -1,7 +1,6 @@
 "use client";
 
 import { Beaker, Check, Lock, Sparkles, Unlock, X } from "lucide-react";
-import React from "react";
 import { cn } from "@/lib/utils";
 import { TECHS } from "../config";
 import { useGame } from "../store";

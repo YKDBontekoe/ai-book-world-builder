@@ -40,9 +40,15 @@ export const updateSceneContent = fn().mockResolvedValue({
 export const updateSceneTitle = fn().mockResolvedValue({ success: true });
 export const deleteScene = fn().mockResolvedValue({ success: true });
 export const reorderScenes = fn().mockResolvedValue({ success: true });
-export const bulkExportScenes = fn().mockResolvedValue({ success: true, content: "" });
+export const bulkExportScenes = fn().mockResolvedValue({
+	success: true,
+	content: "",
+});
 export const updateChapterTitle = fn().mockResolvedValue({ success: true });
 export const deleteChapter = fn().mockResolvedValue({ success: true });
 export const bulkDeleteScenes = fn().mockResolvedValue({ success: true });
-export const generateScene = fn().mockResolvedValue({ success: true, sceneId: "gen-scene" });
+export const generateScene = fn().mockResolvedValue({
+	success: true,
+	sceneId: "gen-scene",
+});
 export const createChapterSnapshot = fn().mockResolvedValue({ success: true });
