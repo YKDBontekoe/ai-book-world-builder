@@ -69,7 +69,7 @@
 		"@simplewebauthn/server": "13.2.2",
 		"@simplewebauthn/types": "12.0.0",
 		"@tanstack/query-sync-storage-persister": "5.90.22",
-		"@tanstack/react-query": "5.90.20",
+		"@tanstack/react-query": "5.90.21",
 		"@tanstack/react-query-persist-client": "5.90.22",
 		"@types/dagre": "0.7.53",
 		"@types/pdfkit": "0.17.4",
