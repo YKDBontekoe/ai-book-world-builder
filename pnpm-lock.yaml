@@ -21,11 +21,11 @@ importers:
         specifier: 3.0.8
         version: 3.0.8
       '@ai-sdk/react':
-        specifier: 3.0.86
-        version: 3.0.86(react@19.2.3)(zod@4.3.6)
+        specifier: 3.0.87
+        version: 3.0.87(react@19.2.3)(zod@4.3.6)
       '@ai-sdk/xai':
-        specifier: 3.0.55
-        version: 3.0.55(zod@4.3.6)
+        specifier: 3.0.56
+        version: 3.0.56(zod@4.3.6)
       '@auth/drizzle-adapter':
         specifier: 1.11.1
         version: 1.11.1(@simplewebauthn/browser@9.0.1)(@simplewebauthn/server@13.2.2)
@@ -180,8 +180,8 @@ importers:
         specifier: 1.0.5
         version: 1.0.5
       dotenv:
-        specifier: 17.3.0
-        version: 17.3.0
+        specifier: 17.3.1
+        version: 17.3.1
       drizzle-orm:
         specifier: 0.45.1
         version: 0.45.1(@opentelemetry/api@1.9.0)(@types/better-sqlite3@7.6.13)(better-sqlite3@12.6.2)(postgres@3.4.8)
@@ -480,6 +480,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  '@ai-sdk/gateway@3.0.45':
+    resolution: {integrity: sha512-ZB6kHV+D8mLCRnkpWotLCV/rZK4NiODxx4Kv7JdT9QmQknbG/scbE4iyoT4JLFdULA8Y/IVbMvyE0Nwq3Dceqw==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   '@ai-sdk/openai-compatible@2.0.30':
     resolution: {integrity: sha512-iTjumHf1/u4NhjXYFn/aONM2GId3/o7J1Lp5ql8FCbgIMyRwrmanR5xy1S3aaVkfTscuDvLTzWiy1mAbGzK3nQ==}
     engines: {node: '>=18'}
@@ -502,14 +508,14 @@ packages:
     resolution: {integrity: sha512-oGMAgGoQdBXbZqNG0Ze56CHjDZ1IDYOwGYxYjO5KLSlz5HiNQ9udIXsPZ61VWaHGZ5XW/jyjmr6t2xz2jGVwbQ==}
     engines: {node: '>=18'}
 
-  '@ai-sdk/react@3.0.86':
-    resolution: {integrity: sha512-ScgLI7Nli0MYeO/9pdF1FgeszRBf9xve9nSl8cuW0XkJTfEvtLW6YRHjypjOgP3k8B8yx8yT9PAGNew3Q70blg==}
+  '@ai-sdk/react@3.0.87':
+    resolution: {integrity: sha512-qa4Ywm08g27Voys1xuF2WeX3s8shd4hLJCCxi/Ws6cUZsWpMnFW2rtEfCcKRlWyJ4NRypauiNmcvQKz4v6u0/A==}
     engines: {node: '>=18'}
     peerDependencies:
       react: ^18 || ~19.0.1 || ~19.1.2 || ^19.2.1
 
-  '@ai-sdk/xai@3.0.55':
-    resolution: {integrity: sha512-7PGU/uATymSOgEDx3/uL+O1fk8vCLFY56kDBWI89ZwBNi09Bhq/mRDYywLVPz2pPAQ1deyBEuUqcMjtjYlpTOg==}
+  '@ai-sdk/xai@3.0.56':
+    resolution: {integrity: sha512-EbceQ0YkrAi0y4TRxFkgNgc/y8KhJhf+Gtxvmn7+hoV7OETP/q9Q3pgZLcLkLAHptM4hlliOMYpZux/9ADuY2Q==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
@@ -3463,6 +3469,12 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
+  ai@6.0.85:
+    resolution: {integrity: sha512-2bP7M+OcNQGSIH8I3jdujUadxj4tAwuHBvLhpmDSlcjRXXry3zNGEajjjRraOjObHMO/Yqa37PJWhPVHIHt2TQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4.1.8
+
   ansi-escapes@7.2.0:
     resolution: {integrity: sha512-g6LhBsl+GBPRWGWsBtutpzBYuIIdBkLEvad5C/va/74Db018+5TZiyA26cZJAr3Rft5lprVqOIPxf5Vid6tqAw==}
     engines: {node: '>=18'}
@@ -3961,8 +3973,8 @@ packages:
     resolution: {integrity: sha512-tE7ztYzXHIeyvc7N+hR3oi7FIbf/NIjVP9hmAt3yMXzrQ072/fpjGLx2GxNxGxUl5V73MEqYzioOMoVhGMJ5cA==}
     engines: {node: '>=10'}
 
-  dotenv@17.3.0:
-    resolution: {integrity: sha512-i3z5dx/8F45f+Dj0B/qG8oKip9luzyHz6dfJMOKG7zQW/12tT7CrIjs/0J10uNK/Z5O7O0UtfEmx6yFKRQCl4g==}
+  dotenv@17.3.1:
+    resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
 
   drizzle-kit@0.31.8:
@@ -6267,6 +6279,13 @@ snapshots:
       '@vercel/oidc': 3.1.0
       zod: 4.3.6
 
+  '@ai-sdk/gateway@3.0.45(zod@4.3.6)':
+    dependencies:
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
+      '@vercel/oidc': 3.1.0
+      zod: 4.3.6
+
   '@ai-sdk/openai-compatible@2.0.30(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider': 3.0.8
@@ -6290,17 +6309,17 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@3.0.86(react@19.2.3)(zod@4.3.6)':
+  '@ai-sdk/react@3.0.87(react@19.2.3)(zod@4.3.6)':
     dependencies:
       '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
-      ai: 6.0.84(zod@4.3.6)
+      ai: 6.0.85(zod@4.3.6)
       react: 19.2.3
       swr: 2.3.8(react@19.2.3)
       throttleit: 2.1.0
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/xai@3.0.55(zod@4.3.6)':
+  '@ai-sdk/xai@3.0.56(zod@4.3.6)':
     dependencies:
       '@ai-sdk/openai-compatible': 2.0.30(zod@4.3.6)
       '@ai-sdk/provider': 3.0.8
@@ -9124,6 +9143,14 @@ snapshots:
       '@opentelemetry/api': 1.9.0
       zod: 4.3.6
 
+  ai@6.0.85(zod@4.3.6):
+    dependencies:
+      '@ai-sdk/gateway': 3.0.45(zod@4.3.6)
+      '@ai-sdk/provider': 3.0.8
+      '@ai-sdk/provider-utils': 4.0.15(zod@4.3.6)
+      '@opentelemetry/api': 1.9.0
+      zod: 4.3.6
+
   ansi-escapes@7.2.0:
     dependencies:
       environment: 1.1.0
@@ -9560,7 +9587,7 @@ snapshots:
     dependencies:
       is-obj: 2.0.0
 
-  dotenv@17.3.0: {}
+  dotenv@17.3.1: {}
 
   drizzle-kit@0.31.8:
     dependencies:
