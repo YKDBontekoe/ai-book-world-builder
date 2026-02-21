@@ -1,5 +1,0 @@
-import{S as e}from"./slider-DEpj_u-s.js";import"./jsx-runtime-CgTA2Ffm.js";import"./iframe-CSaT3Zrw.js";import"./preload-helper-PPVm8Dsz.js";import"./_commonjsHelpers-CE1G-McA.js";import"./index-BdQq_4o_.js";import"./index-Dc_FVRD7.js";import"./index-CqEzyjUb.js";import"./index-HmFr_79w.js";import"./index-bhjg92NJ.js";import"./index-C5AbpTkB.js";import"./index-RcxhhmbX.js";import"./index-Bdo1A7HX.js";import"./index-BBcrdBKy.js";import"./index-CLnKk84U.js";import"./index-Bb2K0iPa.js";import"./index-CpKUUkQH.js";import"./utils-CiB0LXSo.js";const _={title:"Design System/Atoms/Slider",component:e,tags:["autodocs"],args:{defaultValue:[50],max:100,step:1,className:"w-[60%]"}},r={},t={args:{defaultValue:[25,75]}};r.parameters={...r.parameters,docs:{...r.parameters?.docs,source:{originalSource:"{}",...r.parameters?.docs?.source}}};t.parameters={...t.parameters,docs:{...t.parameters?.docs,source:{originalSource:`{
-  args: {
-    defaultValue: [25, 75]
-  }
-}`,...t.parameters?.docs?.source}}};const w=["Default","Range"];export{r as Default,t as Range,w as __namedExportsOrder,_ as default};
