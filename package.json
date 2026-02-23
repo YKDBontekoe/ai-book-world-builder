@@ -147,7 +147,7 @@
 		"@storybook/addon-docs": "10.2.10",
 		"@storybook/addon-interactions": "8.6.14",
 		"@storybook/addon-onboarding": "10.2.10",
-		"@storybook/addon-vitest": "10.2.8",
+		"@storybook/addon-vitest": "10.2.10",
 		"@storybook/nextjs-vite": "10.2.10",
 		"@storybook/react": "10.2.10",
 		"@storybook/test": "8.6.15",
