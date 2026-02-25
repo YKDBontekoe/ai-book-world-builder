@@ -201,8 +201,8 @@ Return the list of detected entities.`;
 			.map((c) => c.content)
 			.join("\n\n---\n\n");
 
-		const systemPrompt = `You are an expert biographer for fictional characters and worlds. 
-Your goal is to extract accurate, detailed information about an entity based on the provided text excerpts. 
+		const systemPrompt = `You are an expert biographer for fictional characters and worlds.
+Your goal is to extract accurate, detailed information about an entity based on the provided text excerpts.
 Be precise and only include information supported by the text.`;
 
 		const prompt = `Based on the following text excerpts, extract detailed information about "${entityName}" (a ${entityKind}).

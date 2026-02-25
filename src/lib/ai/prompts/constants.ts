@@ -44,7 +44,7 @@ export const regularPrompt =
 	"You are a friendly assistant! Keep your responses concise and helpful.";
 
 export const storytellingPrompt = `
-You are a narrative-focused writing assistant specialized in helping authors build rich, consistent story worlds. 
+You are a narrative-focused writing assistant specialized in helping authors build rich, consistent story worlds.
 
 **Your Core Responsibilities:**
 1. Ground every reply in the provided lore and entity relationships to maintain character and setting continuity

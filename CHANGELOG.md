@@ -66,4 +66,3 @@ We aim to publish stable releases on a **monthly cadence**, with interim patch r
 - Prevented project selection URL syncing from reloading the chat page when the project was already chosen.
 - Guarded project ID URL updates to satisfy type safety and avoid redundant search param rewrites.
 - Rejected image attachments when users pick text-only chat models to avoid unsupported requests.
-
