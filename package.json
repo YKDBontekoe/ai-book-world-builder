@@ -184,7 +184,7 @@
 		"vitest": "4.0.18",
 		"vitest-axe": "0.1.0"
 	},
-	"packageManager": "pnpm@10.31.0",
+	"packageManager": "pnpm@10.32.0",
 	"pnpm": {
 		"overrides": {
 			"@auth/core": "0.41.1"
