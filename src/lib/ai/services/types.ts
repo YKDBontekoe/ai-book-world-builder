@@ -174,7 +174,7 @@ export interface AIError {
  * ```ts
  * const result = await aiClient.generateText({ prompt: "..." });
  * if (result.success) {
- *   console.log(result.data.text);
+ *   // handle success
  * } else {
  *   console.error(result.error);
  * }

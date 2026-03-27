@@ -251,14 +251,6 @@ export type Middleware<TContext, TNextContext> = (
 
 /**
  * Compose multiple middlewares into a single function
- *
- * @example
- * const withLogging: Middleware = async (ctx, next) => {
- *   console.log("Before");
- *   const result = await next(ctx);
- *   console.log("After");
- *   return result;
- * };
  */
 export function compose<T>(
 	...middlewares: Array<(ctx: T, next: () => Promise<T>) => Promise<T>>

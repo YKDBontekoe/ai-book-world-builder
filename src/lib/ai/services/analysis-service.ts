@@ -11,7 +11,8 @@ import "server-only";
 
 import { z } from "zod";
 import { retrieveContext } from "@/lib/ai/rag";
-import { BaseAIService } from "@/lib/ai/services/base-ai-service";
+import { aiClient } from "@/lib/ai/services/ai-client";
+import { BaseService } from "@/lib/services/base-service";
 import { getChunksForSourceMaterial, getSampledChunks } from "@/lib/db/queries";
 import type { SourceMaterialChunk } from "@/lib/db/schema";
 
@@ -103,7 +104,7 @@ const relationshipSchema = z.object({
 // Service
 // =============================================================================
 
-export class AnalysisService extends BaseAIService {
+export class AnalysisService extends BaseService {
 	/**
 	 * Detect entities from sampled chunks of source material.
 	 */
@@ -134,14 +135,14 @@ ${combinedText}
 
 Return the list of detected entities.`;
 
-		const result = await this.generateObjectWithSystem(
-			systemPrompt,
+		const result = await aiClient.generateObject({
 			prompt,
-			entityDetectionSchema,
-			{
+			schema: entityDetectionSchema,
+			options: {
+				system: systemPrompt,
 				modelRole: "context",
 			},
-		);
+		});
 
 		if (!result.success) {
 			throw new Error(result.error);
@@ -212,14 +213,14 @@ ${relevantText}
 
 Provide a summary, key attributes, and relevant quotes.`;
 
-		const result = await this.generateObjectWithSystem(
-			systemPrompt,
+		const result = await aiClient.generateObject({
 			prompt,
-			entityDetailsSchema,
-			{
+			schema: entityDetailsSchema,
+			options: {
+				system: systemPrompt,
 				modelRole: "context",
 			},
-		);
+		});
 
 		if (!result.success) {
 			return {
@@ -311,14 +312,14 @@ ${contextText}
 
 Identify how they interact and what their relationship is.`;
 
-			const result = await this.generateObjectWithSystem(
-				systemPrompt,
+			const result = await aiClient.generateObject({
 				prompt,
-				relationshipSchema,
-				{
+				schema: relationshipSchema,
+				options: {
+					system: systemPrompt,
 					modelRole: "context",
 				},
-			);
+			});
 
 			if (result.success) {
 				allRelationships.push(
