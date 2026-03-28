@@ -374,3 +374,22 @@ The codebase remains compliant with strict TypeScript standards, including test 
 ### Learnings
 
 - Tests are first-class citizens and must adhere to the same strict type safety rules as source code; avoid `any` in mocks by using `React.ComponentProps<typeof Component>`.
+
+## 2026-01-27 - Jules API v1alpha Integration
+
+### Context
+
+The agent supervisor pipeline relied on an external GitHub Action and limited CLI tools, which prevented leveraging the latest Jules capabilities like repoless sessions and fine-grained source context control. Codecov integration was also rudimentary, missing actionable details.
+
+### Solution
+
+Refactored the supervisor into modular TypeScript scripts using `octokit` for reliability and implemented a direct client for the Jules v1alpha REST API. Enhanced Codecov processing to parse coverage drops from comments and generate targeted prompts.
+
+### Outcome
+
+The pipeline now interacts directly with the latest Jules API, enabling full control over session creation and prompt context. Codecov alerts are smarter, providing specific file contexts for fixes.
+
+### Learnings
+
+- Direct API integration often provides better control and velocity than third-party wrappers when APIs are rapidly evolving (v1alpha).
+- Modularizing monolithic CI scripts (`supervisor.ts` -> `supervisor/`) improves testability and maintenance.

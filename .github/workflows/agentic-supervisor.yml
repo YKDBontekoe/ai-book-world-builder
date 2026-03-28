@@ -47,8 +47,10 @@ jobs:
         with:
           node-version: "20"
 
-      - name: Install tsx
-        run: npm install -g tsx
+      - name: Install tsx and dependencies
+        run: |
+          npm install -g tsx
+          npm install octokit
 
       - name: Run Supervisor
         id: run
@@ -57,7 +59,7 @@ jobs:
           GITHUB_EVENT_PATH: ${{ github.event_path }}
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-        run: tsx .github/scripts/supervisor.ts
+        run: tsx .github/scripts/supervisor/index.ts
 
   # Invoke Jules API for bot/human PRs
   invoke-jules:
@@ -66,6 +68,17 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Checkout
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        with:
+          node-version: "20"
+
+      - name: Install tsx
+        run: npm install -g tsx
+
       - name: Post status comment
         env:
           GH_TOKEN: ${{ secrets.CUSTOM_PAT }}
@@ -80,10 +93,9 @@ jobs:
           **Method:** API Invoke (full context)" --repo "${{ github.repository }}"
 
       - name: Invoke Jules API
-        uses: google-labs-code/jules-action@bff7875eaa123cac6742b7cfc51005b95ba4d566 # v1.0.0
-        with:
-          jules_api_key: ${{ secrets.JULES_API_KEY }}
-          starting_branch: ${{ needs.supervisor.outputs.branch }}
-          prompt: ${{ needs.supervisor.outputs.prompt }}
-          include_last_commit: true
-          include_commit_log: true
+        env:
+          JULES_API_KEY: ${{ secrets.JULES_API_KEY }}
+          STARTING_BRANCH: ${{ needs.supervisor.outputs.branch }}
+          PROMPT: ${{ needs.supervisor.outputs.prompt }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: tsx .github/scripts/invoke-jules.ts
