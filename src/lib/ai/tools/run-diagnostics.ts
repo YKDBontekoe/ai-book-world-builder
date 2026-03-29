@@ -63,13 +63,13 @@ export const runDiagnostics = ({ session }: { session: Session | null }) =>
 				}),
 				prompt: `
         You are The Logic Checker. Analyze Chapter ${chapterId} for plot holes, continuity errors, and logical inconsistencies.
-        
+
         Project Context:
         Title: ${projectData.project.name}
-        
+
         Chapter Text:
         ${chapterText}
-        
+
         Perform a deep reasoning step to find subtle issues.
         `,
 			});
