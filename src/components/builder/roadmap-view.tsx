@@ -158,11 +158,25 @@ export function RoadmapView(): JSX.Element {
 				setSuggestions(data);
 			},
 			onError: (error) => {
-				setBrainstormError(
+				const rawMessage =
 					error instanceof Error
 						? error.message
-						: "Something went wrong while brainstorming ideas.",
-				);
+						: "Something went wrong while brainstorming ideas.";
+
+				// Map common technical errors to user-friendly messages
+				let friendlyMessage = rawMessage;
+				if (rawMessage.includes("context_length_exceeded")) {
+					friendlyMessage =
+						"Project context is too large. Try archiving old documents.";
+				} else if (rawMessage.includes("rate_limit")) {
+					friendlyMessage =
+						"AI service usage limit reached. Please try again later.";
+				} else if (rawMessage.includes("401") || rawMessage.includes("403")) {
+					friendlyMessage =
+						"Authorization failed. Please check your Jules API key.";
+				}
+
+				setBrainstormError(friendlyMessage);
 			},
 		},
 	);
@@ -228,7 +242,7 @@ export function RoadmapView(): JSX.Element {
 								<div className="flex flex-col items-center justify-center gap-3 h-[200px] text-center">
 									<Lightbulb className="w-8 h-8 mb-1 opacity-50 text-destructive" />
 									<p className="text-sm font-medium text-destructive">
-										Brainstorm failed
+										Brainstorming Interrupted
 									</p>
 									<p className="text-xs text-muted-foreground max-w-xs">
 										{brainstormError}
