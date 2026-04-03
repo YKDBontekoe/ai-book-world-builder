@@ -4,10 +4,12 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createUserAction } from "@/lib/action-middleware";
 import { entityRepository, projectRepository } from "@/lib/db/repositories";
+import { toDateOrUndefined } from "@/lib/db/repositories/entity-repository";
 import { ForbiddenError, NotFoundError } from "@/lib/errors";
 import {
 	bulkDeleteEntitiesSchema,
 	createEntitySchema,
+	restoreEntitiesSchema,
 } from "./entities-schemas";
 
 // ============================================================================
@@ -255,7 +257,7 @@ export const bulkDeleteEntitiesAction = createUserAction({
 		// So we MUST verify ownership of the IDs.
 
 		const entitiesToCheck = await Promise.all(
-			input.ids.map((id) => entityRepository.findById(id)),
+			input.ids.map((id) => entityRepository.findByIdWithDetails(id)),
 		);
 
 		const invalidEntity = entitiesToCheck.find(
@@ -268,9 +270,131 @@ export const bulkDeleteEntitiesAction = createUserAction({
 			);
 		}
 
+		// Prepare backup data (serializing dates)
+		const backup = entitiesToCheck
+			.filter((e): e is NonNullable<typeof e> => e !== null)
+			.map((e) => ({
+				...e,
+				createdAt: e.createdAt.toISOString(),
+				updatedAt: e.updatedAt.toISOString(),
+				startDate: e.startDate?.toISOString(),
+				endDate: e.endDate?.toISOString(),
+				attributes: e.attributes.map((a) => ({
+					...a,
+					createdAt: a.createdAt.toISOString(),
+					startDate: a.startDate?.toISOString(),
+					endDate: a.endDate?.toISOString(),
+				})),
+				relationships: e.relationships.map((r) => ({
+					...r,
+					createdAt: r.createdAt.toISOString(),
+					startDate: r.startDate?.toISOString(),
+					endDate: r.endDate?.toISOString(),
+				})),
+			}));
+
 		await entityRepository.bulkDelete(input.ids);
 		revalidatePath(`/projects/${input.projectId}`);
 
-		return { success: true };
+		return { success: true, backup };
+	},
+});
+
+/**
+ * Restore entities from backup
+ */
+export const restoreEntitiesAction = createUserAction({
+	input: restoreEntitiesSchema,
+	handler: async ({ user, input }) => {
+		const project = await projectRepository.findByIdWithAccess(
+			input.projectId,
+			user.id,
+		);
+
+		if (!project) {
+			throw NotFoundError.forResource("Project", input.projectId);
+		}
+
+		if (project.userId !== user.id) {
+			throw new ForbiddenError("Only project owner can restore entities");
+		}
+
+		// Restore entities transactionally would be ideal, but repositories handle transactions internally per method.
+		// We'll restore sequentially for now, or Promise.all.
+		// Order matters if there are internal relationships. Relationships must come after Entities.
+
+		const results = await Promise.all(
+			input.entities.map(async (entityData) => {
+				// 1. Restore Entity
+				await entityRepository.create({
+					id: entityData.id,
+					projectId: input.projectId,
+					name: entityData.name,
+					kind: entityData.kind,
+					summary: entityData.summary ?? undefined,
+					startDate: toDateOrUndefined(entityData.startDate),
+					endDate: toDateOrUndefined(entityData.endDate),
+					createdAt: toDateOrUndefined(entityData.createdAt),
+					updatedAt: toDateOrUndefined(entityData.updatedAt),
+				});
+
+				// 2. Restore Attributes
+				if (entityData.attributes.length > 0) {
+					await Promise.all(
+						entityData.attributes.map((attr) =>
+							entityRepository.createAttribute({
+								id: attr.id,
+								projectId: input.projectId,
+								entityId: entityData.id,
+								name: attr.name,
+								value: attr.value,
+								dataType: attr.dataType,
+								startDate: toDateOrUndefined(attr.startDate),
+								endDate: toDateOrUndefined(attr.endDate),
+								createdAt: toDateOrUndefined(attr.createdAt),
+							}),
+						),
+					);
+				}
+
+				return entityData.id;
+			}),
+		);
+
+		// 3. Restore Relationships (must happen after all entities are created)
+		// We collect all relationships from all restored entities
+		const allRelationships = input.entities.flatMap((e) => e.relationships);
+
+		// We need to deduplicate relationships because they appear in both source and target entities
+		const uniqueRelationships = Array.from(
+			new Map(allRelationships.map((r) => [r.id, r])).values(),
+		);
+
+		await Promise.all(
+			uniqueRelationships.map(async (rel) => {
+				try {
+					await entityRepository.createRelationship({
+						id: rel.id,
+						projectId: input.projectId,
+						sourceEntityId: rel.sourceEntityId,
+						targetEntityId: rel.targetEntityId,
+						type: rel.type,
+						description: rel.description ?? undefined,
+						startDate: toDateOrUndefined(rel.startDate),
+						endDate: toDateOrUndefined(rel.endDate),
+						createdAt: toDateOrUndefined(rel.createdAt),
+					});
+				} catch (error) {
+					console.warn(
+						`Failed to restore relationship ${rel.id}:`,
+						(error as Error).message,
+					);
+				}
+			}),
+		);
+
+		revalidatePath(`/projects/${input.projectId}`);
+
+		return { success: true, restoredCount: results.length };
 	},
 });

@@ -9,10 +9,16 @@ import {
 	Undo2,
 	X,
 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { toast } from "sonner";
-import { bulkDeleteEntitiesAction, getEntities } from "@/app/actions/entities";
+import { z } from "zod";
+import {
+	bulkDeleteEntitiesAction,
+	getEntities,
+	restoreEntitiesAction,
+} from "@/app/actions/entities";
+import { entityBackupSchema } from "@/app/actions/entities-schemas";
 import { getRelationships } from "@/app/actions/project-stats";
 import { Button } from "@/components/atoms/button";
 import { LoadingSpinner } from "@/components/atoms/loading-spinner";
@@ -52,9 +58,6 @@ export function BiblePane(): React.JSX.Element {
 	// Selection state
 	const [isSelectionMode, setIsSelectionMode] = useState(false);
 	const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-	const pendingDeletionsRef = useRef<Map<string | number, NodeJS.Timeout>>(
-		new Map(),
-	);
 
 	const { data: entities, isLoading: entitiesLoading } = useQuery({
 		queryKey: projectId ? QUERY_KEYS.entities(projectId) : ["entities", "null"],
@@ -179,29 +182,43 @@ export function BiblePane(): React.JSX.Element {
 
 	const [hiddenIds, setHiddenIds] = useState<Set<string>>(new Set());
 
-	const handleUndo = useCallback(
-		(toastId: string | number, idsToRestore: string[]) => {
-			const timeoutId = pendingDeletionsRef.current.get(toastId);
-			if (timeoutId) {
-				clearTimeout(timeoutId);
-				pendingDeletionsRef.current.delete(toastId);
-			}
-
-			setHiddenIds((prev) => {
-				const next = new Set(prev);
-				idsToRestore.forEach((id) => {
-					next.delete(id);
-				});
-				return next;
-			});
-
+	const handleRestore = useCallback(
+		async (
+			toastId: string | number,
+			backup: z.infer<typeof entityBackupSchema>[],
+		) => {
+			if (!projectId) return;
 			toast.dismiss(toastId);
-			toast.success("Deletion undone");
+
+			const loadingToast = toast.loading("Restoring entities...");
+
+			try {
+				const result = await restoreEntitiesAction({
+					projectId,
+					entities: backup,
+				});
+
+				if (result.success) {
+					toast.success(`Restored ${result.data?.restoredCount} entities`);
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.entities(projectId),
+					});
+					queryClient.invalidateQueries({
+						queryKey: QUERY_KEYS.relationships(projectId),
+					});
+				} else {
+					toast.error("Failed to restore entities");
+				}
+			} catch (error) {
+				toast.error("Failed to restore entities");
+			} finally {
+				toast.dismiss(loadingToast);
+			}
 		},
-		[],
+		[projectId, queryClient],
 	);
 
-	const handleBulkDelete = useCallback(() => {
+	const handleBulkDelete = useCallback(async () => {
 		const idsToDelete = Array.from(selectedIds);
 		if (idsToDelete.length === 0 || !projectId) return;
 
@@ -214,71 +231,71 @@ export function BiblePane(): React.JSX.Element {
 			return next;
 		});
 
-		toggleSelectionMode(); // Exit selection mode
+		toggleSelectionMode();
 
-		// Show Undo Toast
-		const toastId = toast.custom(
-			(t) => (
-				<GlassCard
-					variant="liquid"
-					className="flex items-center gap-4 p-4 w-full max-w-md mx-auto pointer-events-auto"
-				>
-					<div className="flex-1 text-sm">
-						Deleted {idsToDelete.length} entities
-					</div>
-					<Button
-						size="sm"
-						variant="outline"
-						className="gap-2 h-8"
-						onClick={() => handleUndo(t, idsToDelete)}
-					>
-						<Undo2 className="h-3.5 w-3.5" />
-						Undo
-					</Button>
-				</GlassCard>
-			),
-			{ duration: 4000 },
-		);
+		try {
+			const result = await bulkDeleteEntitiesAction({
+				projectId,
+				ids: idsToDelete,
+			});
 
-		// Delayed execution
-		const timeout = setTimeout(async () => {
-			pendingDeletionsRef.current.delete(toastId);
+			if (result.success && result.data?.backup) {
+				const backup = result.data.backup;
 
-			try {
-				const result = await bulkDeleteEntitiesAction({
-					projectId,
-					ids: idsToDelete,
+				// Show Undo Toast
+				toast.custom(
+					(t) => (
+						<GlassCard
+							variant="liquid"
+							className="flex items-center gap-4 p-4 w-full max-w-md mx-auto pointer-events-auto"
+						>
+							<div className="flex-1 text-sm">
+								Deleted {idsToDelete.length} entities
+							</div>
+							<Button
+								size="sm"
+								variant="outline"
+								className="gap-2 h-8"
+								onClick={() => handleRestore(t, backup)}
+							>
+								<Undo2 className="h-3.5 w-3.5" />
+								Undo
+							</Button>
+						</GlassCard>
+					),
+					{ duration: 8000 },
+				);
+
+				// Cleanup hiddenIds (data is gone from DB, so refreshing queries will hide them naturally)
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.entities(projectId),
+				});
+				queryClient.invalidateQueries({
+					queryKey: QUERY_KEYS.relationships(projectId),
 				});
 
-				if (result.success) {
-					// Invalidate queries to ensure sync
-					queryClient.invalidateQueries({
-						queryKey: QUERY_KEYS.entities(projectId),
+				setHiddenIds((prev) => {
+					const next = new Set(prev);
+					idsToDelete.forEach((id) => {
+						next.delete(id);
 					});
-					queryClient.invalidateQueries({
-						queryKey: QUERY_KEYS.relationships(projectId),
-					});
-					// Cleanup hiddenIds
-					setHiddenIds((prev) => {
-						const next = new Set(prev);
-						idsToDelete.forEach((id) => {
-							next.delete(id);
-						});
-						return next;
-					});
-				} else {
-					toast.error("Failed to delete entities");
-					// Restore
-					handleUndo(toastId, idsToDelete);
-				}
-			} catch (_error) {
-				toast.error("Error deleting entities");
-				handleUndo(toastId, idsToDelete);
+					return next;
+				});
+			} else {
+				throw new Error(result.error || "Failed to delete");
 			}
-		}, 4000);
-
-		pendingDeletionsRef.current.set(toastId, timeout);
-	}, [selectedIds, projectId, toggleSelectionMode, handleUndo, queryClient]);
+		} catch (_error) {
+			toast.error("Error deleting entities");
+			// Restore visibility
+			setHiddenIds((prev) => {
+				const next = new Set(prev);
+				idsToDelete.forEach((id) => {
+					next.delete(id);
+				});
+				return next;
+			});
+		}
+	}, [selectedIds, projectId, toggleSelectionMode, handleRestore, queryClient]);
 
 	// Shortcuts
 	useHotkeys(
@@ -318,17 +335,15 @@ export function BiblePane(): React.JSX.Element {
 		[isSelectionMode, toggleSelectionMode],
 	);
 
-	const handleBulkExport = useCallback(async () => {
+	const handleCopyClipboard = useCallback(async () => {
 		const idsToExport = Array.from(selectedIds);
 		if (idsToExport.length === 0) return;
 
-		// Find entities to export
 		const entitiesToExport = entities?.filter((e) =>
 			idsToExport.includes(e.id),
 		);
 		if (!entitiesToExport) return;
 
-		// Format as JSON or text
 		const exportData = JSON.stringify(entitiesToExport, null, 2);
 
 		try {
@@ -338,6 +353,30 @@ export function BiblePane(): React.JSX.Element {
 		} catch (_error) {
 			toast.error("Failed to copy to clipboard");
 		}
+	}, [selectedIds, entities, toggleSelectionMode]);
+
+	const handleDownloadJSON = useCallback(() => {
+		const idsToExport = Array.from(selectedIds);
+		if (idsToExport.length === 0) return;
+
+		const entitiesToExport = entities?.filter((e) =>
+			idsToExport.includes(e.id),
+		);
+		if (!entitiesToExport) return;
+
+		const exportData = JSON.stringify(entitiesToExport, null, 2);
+		const blob = new Blob([exportData], { type: "application/json" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `story-bible-export-${new Date().toISOString().split("T")[0]}.json`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+
+		toast.success(`Downloaded ${entitiesToExport.length} entities`);
+		toggleSelectionMode();
 	}, [selectedIds, entities, toggleSelectionMode]);
 
 	// Filter out hidden entities
@@ -487,7 +526,8 @@ export function BiblePane(): React.JSX.Element {
 			<BulkActionsBar
 				selectedCount={selectedIds.size}
 				onDelete={handleBulkDelete}
-				onExport={handleBulkExport}
+				onCopy={handleCopyClipboard}
+				onDownloadJSON={handleDownloadJSON}
 				onClearSelection={toggleSelectionMode}
 			/>
 		</div>
