@@ -33,7 +33,7 @@ jobs:
       shard-matrix: ${{ steps.set-matrix.outputs.matrix }}
       shard-total: ${{ steps.set-matrix.outputs.total }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - id: set-matrix
         run: |
           # Count unit test files
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/setup
       
       - name: Run Static Checks
@@ -73,7 +73,7 @@ jobs:
       matrix:
         shard: ${{ fromJSON(needs.setup-tests.outputs.shard-matrix) }}
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/setup
       - run: pnpm test:unit --coverage --shard=${{ matrix.shard }}/${{ needs.setup-tests.outputs.shard-total }} --reporter=default --reporter=json --outputFile=test-results.json
       
@@ -98,7 +98,7 @@ jobs:
     env:
       GENERATE_SOURCEMAP: false
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/setup
 
       - name: Cache Next.js build
@@ -116,7 +116,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
-      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: ./.github/actions/setup
       - run: pnpm db:check
 
@@ -125,7 +125,7 @@ jobs:
     if: github.event_name == 'pull_request'
     steps:
       - name: Checkout code
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
       - name: Check for merge conflicts
