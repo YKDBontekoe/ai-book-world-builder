@@ -73,7 +73,7 @@
 		"@tanstack/react-query-persist-client": "5.90.24",
 		"@types/dagre": "0.7.54",
 		"@types/pdfkit": "0.17.5",
-		"@vercel/analytics": "1.6.1",
+		"@vercel/analytics": "2.0.1",
 		"@vercel/blob": "2.3.1",
 		"@vercel/functions": "3.4.3",
 		"@vercel/otel": "2.1.1",
